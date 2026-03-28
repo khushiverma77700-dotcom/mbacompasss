@@ -25,6 +25,11 @@ import AdminInstitutes from "./pages/admin/AdminInstitutes";
 import AdminArticles from "./pages/admin/AdminArticles";
 import AdminBanners from "./pages/admin/AdminBanners";
 import AdminInquiries from "./pages/admin/AdminInquiries";
+import AdminCourses from "./pages/admin/AdminCourses";
+import AdminColleges from "./pages/admin/AdminColleges";
+import AdminSubscribers from "./pages/admin/AdminSubscribers";
+import AdminExams from "./pages/admin/AdminExams";
+import AdminCategories from "./pages/admin/AdminCategories";
 import DashboardPage from "./pages/DashboardPage";
 import CollegeDetailPage from "./pages/CollegeDetailPage";
 import CollegeFilterPage from "./pages/CollegeFilterPage";
@@ -56,6 +61,11 @@ const App = () => (
               <Route path="articles" element={<AdminArticles />} />
               <Route path="banners" element={<AdminBanners />} />
               <Route path="inquiries" element={<AdminInquiries />} />
+              <Route path="courses" element={<AdminCourses />} />
+              <Route path="colleges" element={<AdminColleges />} />
+              <Route path="subscribers" element={<AdminSubscribers />} />
+              <Route path="exams" element={<AdminExams />} />
+              <Route path="categories" element={<AdminCategories />} />
             </Route>
             <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
             <Route path="/category/:slug" element={<PublicLayout><CategoryPage /></PublicLayout>} />
