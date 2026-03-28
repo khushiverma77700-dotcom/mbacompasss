@@ -100,6 +100,9 @@ const Navbar = () => {
           </nav>
           {user ? (
             <div className="mt-3 space-y-2">
+              <Button variant="outline" className="w-full" size="sm" asChild>
+                <Link to="/dashboard" onClick={() => setMobileOpen(false)}><LayoutDashboard className="w-4 h-4 mr-1" /> Dashboard</Link>
+              </Button>
               {isAdmin && (
                 <Button variant="outline" className="w-full" size="sm" asChild>
                   <Link to="/admin" onClick={() => setMobileOpen(false)}><Shield className="w-4 h-4 mr-1" /> Admin Panel</Link>
