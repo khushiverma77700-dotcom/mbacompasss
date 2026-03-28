@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useInstituteBySlug } from "@/hooks/useInstitutes";
 import { useAuth } from "@/contexts/AuthContext";
+import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 
 const testimonials = [
   { name: "Ankit Verma", text: "IMS coaching transformed my CAT prep. Scored 99.2 percentile. The faculty's approach to Quant was game-changing.", rating: 5, batch: "CAT 2024", type: "text" },
@@ -533,12 +534,7 @@ const InstitutePage = () => {
                       {user ? <Tag className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
                       {user ? "Get Best Offer" : "Login to Get Best Offer"}
                     </Button>
-                    {showOfferLogin && !user && (
-                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="mt-3">
-                        <p className="text-xs text-muted-foreground mb-2">Sign in to unlock exclusive offers</p>
-                        <Button variant="outline" size="sm" className="w-full" onClick={() => navigate("/auth")}>Sign In / Sign Up</Button>
-                      </motion.div>
-                    )}
+                    <LoginRequiredDialog open={showOfferLogin && !user} onOpenChange={setShowOfferLogin} message="Sign in or create an account to unlock exclusive offers and coupon codes." />
                   </>
                 ) : (
                   <div className="bg-primary/10 rounded-lg p-3">
