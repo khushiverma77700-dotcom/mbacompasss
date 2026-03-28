@@ -689,6 +689,75 @@ export type Database = {
           },
         ]
       }
+      site_settings: {
+        Row: {
+          id: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          id?: string
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
+      testimonials: {
+        Row: {
+          active: boolean | null
+          content: string | null
+          created_at: string
+          designation: string | null
+          featured: boolean | null
+          id: string
+          image_url: string | null
+          institute: string | null
+          name: string
+          rating: number | null
+          sort_order: number | null
+          type: string
+          video_url: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          content?: string | null
+          created_at?: string
+          designation?: string | null
+          featured?: boolean | null
+          id?: string
+          image_url?: string | null
+          institute?: string | null
+          name: string
+          rating?: number | null
+          sort_order?: number | null
+          type?: string
+          video_url?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          content?: string | null
+          created_at?: string
+          designation?: string | null
+          featured?: boolean | null
+          id?: string
+          image_url?: string | null
+          institute?: string | null
+          name?: string
+          rating?: number | null
+          sort_order?: number | null
+          type?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

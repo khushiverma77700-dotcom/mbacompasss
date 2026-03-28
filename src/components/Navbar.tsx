@@ -4,12 +4,12 @@ import { Menu, X, GraduationCap, LogIn, LogOut, Shield, LayoutDashboard } from "
 import { Button } from "@/components/ui/button";
 import SmartSearch from "@/components/SmartSearch";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
-const navLinks = [
+const fallbackLinks = [
   { label: "Home", path: "/" },
   { label: "CAT Coaching", path: "/category/cat" },
   { label: "GMAT Prep", path: "/category/gmat" },
-  { label: "XAT & SNAP", path: "/category/xat-snap" },
   { label: "Compare", path: "/compare" },
   { label: "Colleges", path: "/colleges" },
   { label: "Blog", path: "/blog" },
@@ -19,6 +19,10 @@ const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { user, isAdmin, signOut } = useAuth();
+  const { data: header } = useSiteSettings("header");
+
+  const navLinks = header?.nav_links || fallbackLinks;
+  const brandName = header?.brand_name || "MBAHub";
 
   return (
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
@@ -28,12 +32,14 @@ const Navbar = () => {
             <GraduationCap className="w-5 h-5 text-primary-foreground" />
           </div>
           <span className="font-heading font-bold text-xl text-foreground">
-            MBA<span className="text-gradient">Hub</span>
+            {brandName.includes("Hub") ? (
+              <>{brandName.replace("Hub", "")}<span className="text-gradient">Hub</span></>
+            ) : brandName}
           </span>
         </Link>
 
         <nav className="hidden lg:flex items-center gap-1">
-          {navLinks.map((link) => (
+          {navLinks.map((link: any) => (
             <Link
               key={link.path}
               to={link.path}
@@ -83,7 +89,7 @@ const Navbar = () => {
       {mobileOpen && (
         <div className="lg:hidden bg-card border-b border-border px-4 pb-4">
           <nav className="flex flex-col gap-1">
-            {navLinks.map((link) => (
+            {navLinks.map((link: any) => (
               <Link
                 key={link.path}
                 to={link.path}

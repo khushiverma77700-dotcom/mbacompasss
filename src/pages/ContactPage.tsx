@@ -6,11 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 const ContactPage = () => {
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { data: settings } = useSiteSettings("contact_page");
+
+  const heading = settings?.heading || "Contact Us";
+  const email = settings?.email || "info@mbahub.in";
+  const phone = settings?.phone || "+91 98765 43210";
+  const address = settings?.address || "Connaught Place, New Delhi, India 110001";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +34,7 @@ const ContactPage = () => {
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-4xl">
-      <h1 className="font-heading text-3xl font-bold text-foreground mb-8">Contact Us</h1>
+      <h1 className="font-heading text-3xl font-bold text-foreground mb-8">{heading}</h1>
       <div className="grid md:grid-cols-2 gap-8">
         <Card>
           <CardHeader><CardTitle>Send us a message</CardTitle></CardHeader>
@@ -46,21 +53,21 @@ const ContactPage = () => {
             <Mail className="w-5 h-5 text-primary mt-1" />
             <div>
               <h3 className="font-heading font-semibold text-foreground">Email</h3>
-              <p className="text-muted-foreground">info@mbahub.in</p>
+              <p className="text-muted-foreground">{email}</p>
             </div>
           </div>
           <div className="flex items-start gap-4">
             <Phone className="w-5 h-5 text-primary mt-1" />
             <div>
               <h3 className="font-heading font-semibold text-foreground">Phone</h3>
-              <p className="text-muted-foreground">+91 98765 43210</p>
+              <p className="text-muted-foreground">{phone}</p>
             </div>
           </div>
           <div className="flex items-start gap-4">
             <MapPin className="w-5 h-5 text-primary mt-1" />
             <div>
               <h3 className="font-heading font-semibold text-foreground">Address</h3>
-              <p className="text-muted-foreground">Connaught Place, New Delhi, India 110001</p>
+              <p className="text-muted-foreground">{address}</p>
             </div>
           </div>
         </div>
