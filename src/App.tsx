@@ -65,6 +65,7 @@ const App = () => (
             <Route path="/article/:id" element={<PublicLayout><ArticlePage /></PublicLayout>} />
             <Route path="/colleges" element={<PublicLayout><CollegesPage /></PublicLayout>} />
             <Route path="/college/:slug" element={<PublicLayout><CollegeDetailPage /></PublicLayout>} />
+            <Route path="/colleges/:region" element={<PublicLayout><CollegeFilterPage /></PublicLayout>} />
             <Route path="/exam/:slug" element={<PublicLayout><ExamDetailPage /></PublicLayout>} />
             <Route path="/auth" element={<PublicLayout><AuthPage /></PublicLayout>} />
             <Route path="/dashboard" element={<PublicLayout><DashboardPage /></PublicLayout>} />
