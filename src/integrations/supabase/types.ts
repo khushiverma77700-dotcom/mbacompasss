@@ -152,6 +152,97 @@ export type Database = {
         }
         Relationships: []
       }
+      coaching_of_week: {
+        Row: {
+          active: boolean | null
+          banner_url: string | null
+          created_at: string
+          description: string | null
+          headline: string | null
+          id: string
+          institute_id: string
+          offer_details: string | null
+          offer_text: string | null
+          results_summary: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          headline?: string | null
+          id?: string
+          institute_id: string
+          offer_details?: string | null
+          offer_text?: string | null
+          results_summary?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          banner_url?: string | null
+          created_at?: string
+          description?: string | null
+          headline?: string | null
+          id?: string
+          institute_id?: string
+          offer_details?: string | null
+          offer_text?: string | null
+          results_summary?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coaching_of_week_institute_id_fkey"
+            columns: ["institute_id"]
+            isOneToOne: false
+            referencedRelation: "institutes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      college_sections: {
+        Row: {
+          college_id: string
+          content: string | null
+          created_at: string
+          data: Json | null
+          id: string
+          section_type: string
+          sort_order: number | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          college_id: string
+          content?: string | null
+          created_at?: string
+          data?: Json | null
+          id?: string
+          section_type: string
+          sort_order?: number | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          college_id?: string
+          content?: string | null
+          created_at?: string
+          data?: Json | null
+          id?: string
+          section_type?: string
+          sort_order?: number | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "college_sections_college_id_fkey"
+            columns: ["college_id"]
+            isOneToOne: false
+            referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       colleges: {
         Row: {
           accreditations: string[] | null
@@ -250,6 +341,91 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      coupon_claims: {
+        Row: {
+          claimed_at: string
+          coupon_id: string
+          id: string
+          login_source: string | null
+          target_exam: string | null
+          user_id: string
+        }
+        Insert: {
+          claimed_at?: string
+          coupon_id: string
+          id?: string
+          login_source?: string | null
+          target_exam?: string | null
+          user_id: string
+        }
+        Update: {
+          claimed_at?: string
+          coupon_id?: string
+          id?: string
+          login_source?: string | null
+          target_exam?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_claims_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupons: {
+        Row: {
+          active: boolean | null
+          code: string
+          created_at: string
+          current_uses: number | null
+          description: string | null
+          discount_text: string | null
+          id: string
+          institute_id: string | null
+          max_uses: number | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          code: string
+          created_at?: string
+          current_uses?: number | null
+          description?: string | null
+          discount_text?: string | null
+          id?: string
+          institute_id?: string | null
+          max_uses?: number | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          code?: string
+          created_at?: string
+          current_uses?: number | null
+          description?: string | null
+          discount_text?: string | null
+          id?: string
+          institute_id?: string | null
+          max_uses?: number | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupons_institute_id_fkey"
+            columns: ["institute_id"]
+            isOneToOne: false
+            referencedRelation: "institutes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       courses: {
         Row: {
@@ -445,6 +621,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "inquiries_institute_id_fkey"
+            columns: ["institute_id"]
+            isOneToOne: false
+            referencedRelation: "institutes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institute_results: {
+        Row: {
+          college_name: string
+          created_at: string
+          description: string | null
+          id: string
+          institute_id: string
+          students_selected: number | null
+          year: number
+        }
+        Insert: {
+          college_name: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          institute_id: string
+          students_selected?: number | null
+          year: number
+        }
+        Update: {
+          college_name?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          institute_id?: string
+          students_selected?: number | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institute_results_institute_id_fkey"
             columns: ["institute_id"]
             isOneToOne: false
             referencedRelation: "institutes"
@@ -720,6 +934,7 @@ export type Database = {
           id: string
           image_url: string | null
           institute: string | null
+          institute_id: string | null
           name: string
           rating: number | null
           sort_order: number | null
@@ -735,6 +950,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           institute?: string | null
+          institute_id?: string | null
           name: string
           rating?: number | null
           sort_order?: number | null
@@ -750,13 +966,22 @@ export type Database = {
           id?: string
           image_url?: string | null
           institute?: string | null
+          institute_id?: string | null
           name?: string
           rating?: number | null
           sort_order?: number | null
           type?: string
           video_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "testimonials_institute_id_fkey"
+            columns: ["institute_id"]
+            isOneToOne: false
+            referencedRelation: "institutes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
