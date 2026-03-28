@@ -84,10 +84,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setSession(null);
     setIsAdmin(false);
-    localStorage.removeItem("supabase.auth.token");
 
-    const { error } = await supabase.auth.signOut({ scope: "local" });
-    if (error) throw error;
+    try {
+      await supabase.auth.signOut({ scope: "local" });
+    } catch (e) {
+      console.warn("signOut error (non-blocking):", e);
+    }
   };
 
   return (

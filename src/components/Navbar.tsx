@@ -25,19 +25,16 @@ const Navbar = () => {
   const { user, isAdmin, signOut } = useAuth();
   const { data: header } = useSiteSettings("header");
 
-  const handleSignOut = async () => {
+  const handleSignOut = () => {
     if (isSigningOut) return;
-
+    setIsSigningOut(true);
     setShowSignOutDialog(false);
     setMobileOpen(false);
-    setIsSigningOut(true);
 
-    try {
-      await signOut();
+    signOut().finally(() => {
+      setIsSigningOut(false);
       navigate("/auth", { replace: true });
-    } finally {
-      window.location.href = "/auth";
-    }
+    });
   };
 
   const navLinks = header?.nav_links || fallbackLinks;
