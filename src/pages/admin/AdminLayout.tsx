@@ -1,14 +1,17 @@
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, Users, MessageSquare, GraduationCap, Mail } from "lucide-react";
+import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X } from "lucide-react";
+import { useState } from "react";
 
 const adminNav = [
   { label: "Dashboard", path: "/admin", icon: LayoutDashboard },
   { label: "Institutes", path: "/admin/institutes", icon: Building2 },
   { label: "Courses", path: "/admin/courses", icon: BookOpen },
+  { label: "Colleges", path: "/admin/colleges", icon: GraduationCap },
+  { label: "Exams", path: "/admin/exams", icon: FileText },
+  { label: "Categories", path: "/admin/categories", icon: Tag },
   { label: "Banners", path: "/admin/banners", icon: Image },
   { label: "Articles", path: "/admin/articles", icon: Newspaper },
-  { label: "Colleges", path: "/admin/colleges", icon: GraduationCap },
   { label: "Inquiries", path: "/admin/inquiries", icon: MessageSquare },
   { label: "Subscribers", path: "/admin/subscribers", icon: Mail },
 ];
@@ -16,32 +19,57 @@ const adminNav = [
 const AdminLayout = () => {
   const { user, isAdmin, loading } = useAuth();
   const location = useLocation();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
   if (!user || !isAdmin) return <Navigate to="/auth" replace />;
 
+  const isActive = (path: string) => location.pathname === path;
+
+  const SidebarContent = () => (
+    <>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="font-heading font-bold text-lg text-foreground">Admin Panel</h2>
+        <button className="lg:hidden" onClick={() => setSidebarOpen(false)}><X className="w-5 h-5" /></button>
+      </div>
+      <nav className="space-y-1">
+        {adminNav.map((item) => (
+          <Link
+            key={item.path}
+            to={item.path}
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              isActive(item.path)
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            }`}
+          >
+            <item.icon className="w-4 h-4" />
+            {item.label}
+          </Link>
+        ))}
+      </nav>
+      <div className="mt-auto pt-6 border-t border-border mt-6">
+        <Link to="/" className="text-xs text-muted-foreground hover:text-foreground transition-colors">← Back to Website</Link>
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-screen flex bg-muted/30">
-      <aside className="w-64 bg-card border-r border-border p-4 hidden lg:block">
-        <h2 className="font-heading font-bold text-lg mb-6 text-foreground">Admin Panel</h2>
-        <nav className="space-y-1">
-          {adminNav.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                location.pathname === item.path
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}
-            >
-              <item.icon className="w-4 h-4" />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+      {/* Mobile menu button */}
+      <button className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-card border border-border rounded-lg shadow-sm" onClick={() => setSidebarOpen(true)}>
+        <Menu className="w-5 h-5" />
+      </button>
+
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && <div className="fixed inset-0 bg-foreground/20 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+
+      {/* Sidebar */}
+      <aside className={`${sidebarOpen ? "fixed inset-y-0 left-0 z-50" : "hidden"} lg:block w-64 bg-card border-r border-border p-4 flex flex-col`}>
+        <SidebarContent />
       </aside>
-      <main className="flex-1 p-6 overflow-auto">
+      <main className="flex-1 p-6 overflow-auto lg:ml-0">
         <Outlet />
       </main>
     </div>
