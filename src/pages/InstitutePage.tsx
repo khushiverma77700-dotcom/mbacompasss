@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
+import SEOHead, { generateInstituteSchema } from "@/components/SEOHead";
 import { Star, MapPin, Clock, Users, Award, BookOpen, ArrowLeft, Download, Tag, TrendingUp, GraduationCap, CheckCircle, ChevronDown, ChevronUp, Heart, Lock, Play, Quote, Columns2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -79,6 +80,8 @@ const InstitutePage = () => {
   const categoryName = (institute.categories as any)?.name || "MBA";
 
   document.title = `${institute.name} — Best MBA Coaching in ${institute.city} | MBAHub`;
+
+  const seoSchema = generateInstituteSchema(institute);
 
   // Filter courses based on selected target
   const filteredCourses = selectedTarget
@@ -164,6 +167,14 @@ const InstitutePage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={`${institute.name} — Best MBA Coaching in ${institute.city} | MBAHub`}
+        description={institute.meta_description || `${institute.name} offers top MBA coaching in ${institute.city}. ${institute.success_rate}% success rate, ${courses.length} courses.`}
+        keywords={institute.keywords as string[] || []}
+        canonical={`${window.location.origin}/institute/${institute.slug}`}
+        jsonLd={seoSchema}
+        ogImage={institute.banner_url || institute.logo_url || undefined}
+      />
       {/* Hero */}
       <div className="hero-gradient py-10 md:py-14 relative overflow-hidden">
         {institute.banner_url && (
