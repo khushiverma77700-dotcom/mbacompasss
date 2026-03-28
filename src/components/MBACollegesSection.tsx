@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, MapPin, Star, GraduationCap } from "lucide-react";
+import { ArrowRight, MapPin, GraduationCap, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { mbaColleges } from "@/data/mockData";
 
 const tabs = [
@@ -13,10 +14,17 @@ const tabs = [
   { label: "University", type: "University" },
 ] as const;
 
+const cityTabs = ["All", "Noida", "Bangalore", "Kolkata", "Mumbai", "Delhi"] as const;
+
 const MBACollegesSection = () => {
   const [activeTab, setActiveTab] = useState<string>("IIM");
+  const [activeCity, setActiveCity] = useState<string>("All");
 
-  const filtered = mbaColleges.filter((c) => c.type === activeTab);
+  const filtered = mbaColleges.filter((c) => {
+    if (c.type !== activeTab) return false;
+    if (activeCity !== "All" && c.city !== activeCity) return false;
+    return true;
+  });
 
   return (
     <section className="py-14 bg-muted/50">
@@ -26,17 +34,15 @@ const MBACollegesSection = () => {
             <h2 className="font-heading text-2xl md:text-3xl font-bold text-foreground mb-1">
               Top MBA <span className="text-gradient">Colleges in India</span>
             </h2>
-            <p className="text-muted-foreground">Explore colleges by category, city & course</p>
+            <p className="text-muted-foreground">Category-wise, city-wise & course-wise directory</p>
           </div>
           <Link to="/colleges">
-            <Button variant="outline" size="sm" className="gap-1">
-              View All <ArrowRight className="w-4 h-4" />
-            </Button>
+            <Button variant="outline" size="sm" className="gap-1">View All <ArrowRight className="w-4 h-4" /></Button>
           </Link>
         </div>
 
-        {/* Tabs */}
-        <div className="flex flex-wrap gap-2 mb-6">
+        {/* Type Tabs */}
+        <div className="flex flex-wrap gap-2 mb-4">
           {tabs.map((tab) => (
             <button
               key={tab.type}
@@ -52,7 +58,23 @@ const MBACollegesSection = () => {
           ))}
         </div>
 
-        {/* College grid */}
+        {/* City filter */}
+        <div className="flex flex-wrap gap-1.5 mb-6">
+          {cityTabs.map((city) => (
+            <button
+              key={city}
+              onClick={() => setActiveCity(city)}
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                activeCity === city
+                  ? "bg-secondary text-secondary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {city}
+            </button>
+          ))}
+        </div>
+
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.slice(0, 6).map((college, i) => (
             <motion.div
@@ -71,24 +93,15 @@ const MBACollegesSection = () => {
                     #{college.ranking}
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-heading font-semibold text-foreground text-sm group-hover:text-primary transition-colors line-clamp-1">
-                      {college.name}
-                    </h3>
+                    <h3 className="font-heading font-semibold text-foreground text-sm group-hover:text-primary transition-colors line-clamp-1">{college.name}</h3>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
-                      <MapPin className="w-3 h-3" />
-                      {college.city}, {college.state}
+                      <MapPin className="w-3 h-3" />{college.city}, {college.state}
                     </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-                  <div>
-                    <span className="text-muted-foreground">Fees: </span>
-                    <span className="font-semibold text-foreground">{college.fees}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Avg Package: </span>
-                    <span className="font-semibold text-primary">{college.avgPackage}</span>
-                  </div>
+                  <div><span className="text-muted-foreground">Fees: </span><span className="font-semibold text-foreground">{college.fees}</span></div>
+                  <div><span className="text-muted-foreground">Avg Package: </span><span className="font-semibold text-primary">{college.avgPackage}</span></div>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {college.examsAccepted.map((exam) => (
@@ -99,6 +112,10 @@ const MBACollegesSection = () => {
             </motion.div>
           ))}
         </div>
+
+        {filtered.length === 0 && (
+          <div className="text-center py-8 text-muted-foreground text-sm">No colleges found for this combination. Try a different city or category.</div>
+        )}
       </div>
     </section>
   );
