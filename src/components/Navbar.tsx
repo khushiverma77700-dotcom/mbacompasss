@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, GraduationCap, LogIn, LogOut, Shield, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import SmartSearch from "@/components/SmartSearch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
@@ -17,9 +18,17 @@ const fallbackLinks = [
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [showSignOutDialog, setShowSignOutDialog] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAdmin, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    setMobileOpen(false);
+    setShowSignOutDialog(false);
+    navigate("/");
+  };
   const { data: header } = useSiteSettings("header");
 
   const navLinks = header?.nav_links || fallbackLinks;
@@ -67,7 +76,7 @@ const Navbar = () => {
                   <Link to="/admin"><Shield className="w-4 h-4 mr-1" /> Admin</Link>
                 </Button>
               )}
-              <Button variant="ghost" size="sm" onClick={async () => { await signOut(); navigate("/"); }}>
+              <Button variant="ghost" size="sm" onClick={() => setShowSignOutDialog(true)}>
                 <LogOut className="w-4 h-4 mr-1" /> Sign Out
               </Button>
             </div>
@@ -115,7 +124,7 @@ const Navbar = () => {
                   <Link to="/admin" onClick={() => setMobileOpen(false)}><Shield className="w-4 h-4 mr-1" /> Admin Panel</Link>
                 </Button>
               )}
-              <Button variant="ghost" className="w-full" size="sm" onClick={async () => { await signOut(); setMobileOpen(false); navigate("/"); }}>
+              <Button variant="ghost" className="w-full" size="sm" onClick={() => setShowSignOutDialog(true)}>
                 <LogOut className="w-4 h-4 mr-1" /> Sign Out
               </Button>
             </div>
@@ -126,6 +135,19 @@ const Navbar = () => {
           )}
         </div>
       )}
+
+      <AlertDialog open={showSignOutDialog} onOpenChange={setShowSignOutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Sign out?</AlertDialogTitle>
+            <AlertDialogDescription>Are you sure you want to sign out of your account?</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSignOut}>Sign Out</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </header>
   );
 };
