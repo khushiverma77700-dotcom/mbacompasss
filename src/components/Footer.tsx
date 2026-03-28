@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import { GraduationCap, Mail, Phone, MapPin } from "lucide-react";
+import { Mail, Phone, MapPin } from "lucide-react";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import mbahubLogo from "@/assets/mbahub-logo.png";
 
 const Footer = () => {
   const { data: footer } = useSiteSettings("footer");
@@ -19,9 +20,7 @@ const Footer = () => {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           <div>
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <GraduationCap className="w-4 h-4 text-primary-foreground" />
-              </div>
+              <img src={mbahubLogo} alt="MBAHub Logo" className="w-8 h-8 rounded-lg object-contain" />
               <div className="flex flex-col leading-tight">
                 <span className="font-heading font-bold text-lg text-primary-foreground">MBAHub</span>
                 <span className="text-[8px] font-medium text-primary-foreground/50 -mt-0.5 tracking-wide">by B School Buzz</span>
