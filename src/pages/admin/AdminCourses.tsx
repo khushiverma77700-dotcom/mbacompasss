@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -11,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X } from "lucide-react";
+import RichTextEditor from "@/components/admin/RichTextEditor";
+import FileUpload from "@/components/admin/FileUpload";
 
 const emptyForm = {
   name: "", description: "", institute_id: "", duration: "", fees: 0,
@@ -51,12 +52,9 @@ const AdminCourses = () => {
       return;
     }
     const payload = {
-      name: form.name,
-      description: form.description || null,
-      institute_id: form.institute_id,
-      duration: form.duration || null,
-      fees: form.fees || null,
-      batch_info: form.batch_info || null,
+      name: form.name, description: form.description || null,
+      institute_id: form.institute_id, duration: form.duration || null,
+      fees: form.fees || null, batch_info: form.batch_info || null,
       syllabus_url: form.syllabus_url || null,
       curriculum: form.curriculum.length > 0 ? form.curriculum : null,
     };
@@ -69,32 +67,23 @@ const AdminCourses = () => {
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     }
     toast({ title: editId ? "Course updated" : "Course created" });
-    setDialogOpen(false);
-    setForm(emptyForm);
-    setEditId(null);
-    fetchData();
+    setDialogOpen(false); setForm(emptyForm); setEditId(null); fetchData();
   };
 
   const handleEdit = (course: any) => {
     setForm({
-      name: course.name,
-      description: course.description ?? "",
-      institute_id: course.institute_id,
-      duration: course.duration ?? "",
-      fees: course.fees ?? 0,
-      batch_info: course.batch_info ?? "",
-      syllabus_url: course.syllabus_url ?? "",
-      curriculum: course.curriculum ?? [],
+      name: course.name, description: course.description ?? "",
+      institute_id: course.institute_id, duration: course.duration ?? "",
+      fees: course.fees ?? 0, batch_info: course.batch_info ?? "",
+      syllabus_url: course.syllabus_url ?? "", curriculum: course.curriculum ?? [],
     });
-    setEditId(course.id);
-    setDialogOpen(true);
+    setEditId(course.id); setDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this course?")) return;
     await supabase.from("courses").delete().eq("id", id);
-    fetchData();
-    toast({ title: "Course deleted" });
+    fetchData(); toast({ title: "Course deleted" });
   };
 
   return (
@@ -103,9 +92,7 @@ const AdminCourses = () => {
         <h1 className="font-heading text-2xl font-bold text-foreground">Manage Courses</h1>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => { setForm(emptyForm); setEditId(null); }}>
-              <Plus className="w-4 h-4 mr-2" /> Add Course
-            </Button>
+            <Button onClick={() => { setForm(emptyForm); setEditId(null); }}><Plus className="w-4 h-4 mr-2" /> Add Course</Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
             <DialogHeader><DialogTitle>{editId ? "Edit" : "Add"} Course</DialogTitle></DialogHeader>
@@ -125,7 +112,7 @@ const AdminCourses = () => {
               </div>
               <div>
                 <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Description</Label>
-                <Textarea placeholder="Course description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={3} />
+                <RichTextEditor content={form.description} onChange={(html) => setForm({ ...form, description: html })} placeholder="Course description..." />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
@@ -141,10 +128,14 @@ const AdminCourses = () => {
                 <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Batch Info</Label>
                 <Input placeholder="e.g. 30-40 students | Starts April 2026" value={form.batch_info} onChange={(e) => setForm({ ...form, batch_info: e.target.value })} />
               </div>
-              <div>
-                <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Syllabus URL</Label>
-                <Input placeholder="Link to syllabus PDF" value={form.syllabus_url} onChange={(e) => setForm({ ...form, syllabus_url: e.target.value })} />
-              </div>
+              <FileUpload
+                bucket="uploads"
+                folder="courses/syllabus"
+                value={form.syllabus_url}
+                onChange={(url) => setForm({ ...form, syllabus_url: url })}
+                accept=".pdf,.doc,.docx"
+                label="Syllabus (Upload PDF)"
+              />
               <div>
                 <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Curriculum Items</Label>
                 <div className="flex gap-2 mb-2">

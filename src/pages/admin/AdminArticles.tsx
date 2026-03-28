@@ -2,8 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,8 +11,10 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Eye, Search, X, Bold, Italic, Heading1, Heading2, Heading3, Link2, Table2, List, ListOrdered, Image } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, Search, X } from "lucide-react";
 import SEOChecklist from "@/components/admin/SEOChecklist";
+import RichTextEditor from "@/components/admin/RichTextEditor";
+import FileUpload from "@/components/admin/FileUpload";
 
 const categories = ["news", "exam-tips", "career", "success-stories", "reviews", "college-news", "coaching", "gd-pi", "placements", "scholarships"];
 const statusOptions = [
@@ -38,7 +39,6 @@ const AdminArticles = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
   const { toast } = useToast();
-  const contentRef = useState<HTMLTextAreaElement | null>(null);
 
   const fetchArticles = async () => {
     const { data } = await supabase.from("articles").select("*").order("created_at", { ascending: false });
@@ -47,15 +47,8 @@ const AdminArticles = () => {
 
   useEffect(() => { fetchArticles(); }, []);
 
-  // Auto-generate slug from title
   const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .replace(/^-|-$/g, "")
-      .slice(0, 75);
+    return title.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 75);
   };
 
   const handleTitleChange = (title: string) => {
@@ -81,47 +74,17 @@ const AdminArticles = () => {
     setForm({ ...form, keywords: form.keywords.filter(k => k !== kw) });
   };
 
-  // Rich text toolbar actions
-  const insertTag = (before: string, after: string = "") => {
-    const textarea = document.getElementById("content-editor") as HTMLTextAreaElement;
-    if (!textarea) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selected = textarea.value.substring(start, end);
-    const newContent = textarea.value.substring(0, start) + before + selected + after + textarea.value.substring(end);
-    setForm({ ...form, content: newContent });
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + before.length, start + before.length + selected.length);
-    }, 0);
-  };
-
-  const insertTable = () => {
-    const table = `\n<table class="w-full border-collapse border border-gray-300">\n<thead>\n<tr><th class="border border-gray-300 p-2">Column 1</th><th class="border border-gray-300 p-2">Column 2</th><th class="border border-gray-300 p-2">Column 3</th></tr>\n</thead>\n<tbody>\n<tr><td class="border border-gray-300 p-2">Data 1</td><td class="border border-gray-300 p-2">Data 2</td><td class="border border-gray-300 p-2">Data 3</td></tr>\n<tr><td class="border border-gray-300 p-2">Data 4</td><td class="border border-gray-300 p-2">Data 5</td><td class="border border-gray-300 p-2">Data 6</td></tr>\n</tbody>\n</table>\n`;
-    setForm({ ...form, content: form.content + table });
-  };
-
   const handleSave = async () => {
     const slug = form.slug || generateSlug(form.title);
     const published = form.status === "live";
     const payload = {
-      title: form.title,
-      slug,
-      excerpt: form.excerpt || null,
-      content: form.content || null,
-      category: form.category,
-      author: form.author || null,
-      published,
-      meta_title: form.meta_title || null,
-      meta_description: form.meta_description || null,
+      title: form.title, slug, excerpt: form.excerpt || null, content: form.content || null,
+      category: form.category, author: form.author || null, published,
+      meta_title: form.meta_title || null, meta_description: form.meta_description || null,
       keywords: form.keywords.length > 0 ? form.keywords : null,
-      priority: form.priority,
-      featured: form.featured,
-      status: form.status,
-      intro: form.intro || null,
-      banner_url: form.banner_url || null,
-      image_url: form.image_url || null,
-      h1_tag: form.h1_tag || null,
+      priority: form.priority, featured: form.featured, status: form.status,
+      intro: form.intro || null, banner_url: form.banner_url || null,
+      image_url: form.image_url || null, h1_tag: form.h1_tag || null,
     };
 
     if (editId) {
@@ -140,23 +103,14 @@ const AdminArticles = () => {
 
   const handleEdit = (article: any) => {
     setForm({
-      title: article.title || "",
-      slug: article.slug || "",
-      excerpt: article.excerpt || "",
-      content: article.content || "",
-      category: article.category || "news",
-      author: article.author || "",
-      published: article.published || false,
-      meta_title: article.meta_title || "",
-      meta_description: article.meta_description || "",
-      keywords: article.keywords || [],
-      priority: article.priority || 0,
-      featured: article.featured || false,
-      status: article.status || "draft",
-      intro: article.intro || "",
-      banner_url: article.banner_url || "",
-      image_url: article.image_url || "",
-      h1_tag: article.h1_tag || "",
+      title: article.title || "", slug: article.slug || "", excerpt: article.excerpt || "",
+      content: article.content || "", category: article.category || "news",
+      author: article.author || "", published: article.published || false,
+      meta_title: article.meta_title || "", meta_description: article.meta_description || "",
+      keywords: article.keywords || [], priority: article.priority || 0,
+      featured: article.featured || false, status: article.status || "draft",
+      intro: article.intro || "", banner_url: article.banner_url || "",
+      image_url: article.image_url || "", h1_tag: article.h1_tag || "",
     });
     setEditId(article.id);
     setDialogOpen(true);
@@ -197,7 +151,6 @@ const AdminArticles = () => {
                 <TabsTrigger value="settings">Settings</TabsTrigger>
               </TabsList>
 
-              {/* Content Tab */}
               <TabsContent value="content" className="space-y-4">
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Title *</Label>
@@ -224,45 +177,18 @@ const AdminArticles = () => {
                 </div>
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Intro / Summary</Label>
-                  <Textarea placeholder="Brief intro paragraph shown at the top" value={form.intro} onChange={(e) => setForm({ ...form, intro: e.target.value })} rows={3} />
+                  <RichTextEditor content={form.intro} onChange={(html) => setForm({ ...form, intro: html })} placeholder="Brief intro paragraph..." />
                 </div>
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Excerpt (for cards/previews)</Label>
-                  <Textarea placeholder="Short excerpt" value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} rows={2} />
+                  <Input placeholder="Short excerpt" value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} />
                 </div>
                 <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <Label className="text-xs font-semibold text-muted-foreground">Content (HTML supported)</Label>
-                  </div>
-                  {/* Toolbar */}
-                  <div className="flex flex-wrap gap-1 mb-2 p-2 bg-muted/50 rounded-lg border border-border">
-                    <Button type="button" variant="ghost" size="sm" onClick={() => insertTag("<h1>", "</h1>")} className="h-7 w-7 p-0"><Heading1 className="w-3.5 h-3.5" /></Button>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => insertTag("<h2>", "</h2>")} className="h-7 w-7 p-0"><Heading2 className="w-3.5 h-3.5" /></Button>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => insertTag("<h3>", "</h3>")} className="h-7 w-7 p-0"><Heading3 className="w-3.5 h-3.5" /></Button>
-                    <div className="w-px h-7 bg-border mx-1" />
-                    <Button type="button" variant="ghost" size="sm" onClick={() => insertTag("<strong>", "</strong>")} className="h-7 w-7 p-0"><Bold className="w-3.5 h-3.5" /></Button>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => insertTag("<em>", "</em>")} className="h-7 w-7 p-0"><Italic className="w-3.5 h-3.5" /></Button>
-                    <div className="w-px h-7 bg-border mx-1" />
-                    <Button type="button" variant="ghost" size="sm" onClick={() => insertTag('<a href="URL">', "</a>")} className="h-7 w-7 p-0"><Link2 className="w-3.5 h-3.5" /></Button>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => insertTag('<img src="URL" alt="description" class="w-full rounded-lg" />', "")} className="h-7 w-7 p-0"><Image className="w-3.5 h-3.5" /></Button>
-                    <div className="w-px h-7 bg-border mx-1" />
-                    <Button type="button" variant="ghost" size="sm" onClick={() => insertTag("<ul>\n<li>", "</li>\n</ul>")} className="h-7 w-7 p-0"><List className="w-3.5 h-3.5" /></Button>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => insertTag("<ol>\n<li>", "</li>\n</ol>")} className="h-7 w-7 p-0"><ListOrdered className="w-3.5 h-3.5" /></Button>
-                    <div className="w-px h-7 bg-border mx-1" />
-                    <Button type="button" variant="ghost" size="sm" onClick={insertTable} className="h-7 px-2 gap-1 text-xs"><Table2 className="w-3.5 h-3.5" /> Table</Button>
-                  </div>
-                  <Textarea
-                    id="content-editor"
-                    placeholder="Write your article content here. HTML tags supported for rich formatting."
-                    value={form.content}
-                    onChange={(e) => setForm({ ...form, content: e.target.value })}
-                    rows={16}
-                    className="font-mono text-sm"
-                  />
+                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Content</Label>
+                  <RichTextEditor content={form.content} onChange={(html) => setForm({ ...form, content: html })} placeholder="Write your article content here..." />
                 </div>
               </TabsContent>
 
-              {/* SEO Tab */}
               <TabsContent value="seo" className="space-y-4">
                 <SEOChecklist data={form} />
                 <div>
@@ -276,18 +202,15 @@ const AdminArticles = () => {
                 </div>
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Description (max 160 chars)</Label>
-                  <Textarea placeholder="SEO description for search results" value={form.meta_description} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} rows={3} maxLength={170} />
+                  <Input placeholder="SEO description" value={form.meta_description} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} maxLength={170} />
                   <span className="text-xs text-muted-foreground">{form.meta_description.length}/160</span>
                 </div>
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Target Keywords</Label>
                   <div className="flex gap-2 mb-2">
-                    <Input
-                      placeholder="Add keyword and press Enter"
-                      value={keywordInput}
+                    <Input placeholder="Add keyword and press Enter" value={keywordInput}
                       onChange={(e) => setKeywordInput(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addKeyword(); } }}
-                    />
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addKeyword(); } }} />
                     <Button type="button" variant="outline" size="sm" onClick={addKeyword}>Add</Button>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
@@ -300,22 +223,19 @@ const AdminArticles = () => {
                   </div>
                 </div>
                 <div>
-                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Priority (0=normal, higher=more important)</Label>
+                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Priority</Label>
                   <Input type="number" value={form.priority} onChange={(e) => setForm({ ...form, priority: parseInt(e.target.value) || 0 })} min={0} max={100} />
                 </div>
-
-                {/* SEO Preview */}
                 <div className="border border-border rounded-lg p-4">
                   <h4 className="text-xs font-semibold text-muted-foreground mb-2">Google Preview</h4>
                   <div className="space-y-1">
                     <div className="text-primary text-base font-medium truncate">{form.meta_title || form.title || "Page Title"} | MBAHub</div>
                     <div className="text-green-700 dark:text-green-400 text-xs">mbahub.com/article/{form.slug || "page-slug"}</div>
-                    <div className="text-sm text-muted-foreground line-clamp-2">{form.meta_description || form.excerpt || "Add a meta description to control what appears in search results."}</div>
+                    <div className="text-sm text-muted-foreground line-clamp-2">{form.meta_description || form.excerpt || "Add a meta description..."}</div>
                   </div>
                 </div>
               </TabsContent>
 
-              {/* Settings Tab */}
               <TabsContent value="settings" className="space-y-4">
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Status</Label>
@@ -330,14 +250,8 @@ const AdminArticles = () => {
                   <Switch checked={form.featured} onCheckedChange={(v) => setForm({ ...form, featured: v })} />
                   <Label>Featured on Homepage</Label>
                 </div>
-                <div>
-                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Banner Image URL</Label>
-                  <Input placeholder="https://..." value={form.banner_url} onChange={(e) => setForm({ ...form, banner_url: e.target.value })} />
-                </div>
-                <div>
-                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Featured Image URL</Label>
-                  <Input placeholder="https://..." value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
-                </div>
+                <FileUpload bucket="uploads" folder="articles/banners" value={form.banner_url} onChange={(url) => setForm({ ...form, banner_url: url })} accept="image/*" label="Banner Image" />
+                <FileUpload bucket="uploads" folder="articles/images" value={form.image_url} onChange={(url) => setForm({ ...form, image_url: url })} accept="image/*" label="Featured Image" />
               </TabsContent>
             </Tabs>
 
@@ -349,7 +263,6 @@ const AdminArticles = () => {
         </Dialog>
       </div>
 
-      {/* Filters */}
       <div className="flex gap-3 mb-4 flex-wrap">
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />

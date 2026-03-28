@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -12,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X } from "lucide-react";
+import RichTextEditor from "@/components/admin/RichTextEditor";
+import FileUpload from "@/components/admin/FileUpload";
 
 const emptyForm = {
   name: "", slug: "", description: "", city: "", state: "", type: "Private",
@@ -81,10 +82,7 @@ const AdminColleges = () => {
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     }
     toast({ title: editId ? "College updated" : "College created" });
-    setDialogOpen(false);
-    setForm(emptyForm);
-    setEditId(null);
-    fetchColleges();
+    setDialogOpen(false); setForm(emptyForm); setEditId(null); fetchColleges();
   };
 
   const handleEdit = async (id: string) => {
@@ -104,15 +102,13 @@ const AdminColleges = () => {
       meta_title: data.meta_title ?? "", meta_description: data.meta_description ?? "",
       keywords: data.keywords ?? [],
     });
-    setEditId(id);
-    setDialogOpen(true);
+    setEditId(id); setDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this college?")) return;
     await supabase.from("colleges").delete().eq("id", id);
-    fetchColleges();
-    toast({ title: "College deleted" });
+    fetchColleges(); toast({ title: "College deleted" });
   };
 
   const TagInput = ({ field, label }: { field: keyof typeof tagInputs; label: string }) => (
@@ -159,7 +155,10 @@ const AdminColleges = () => {
                   setForm({ ...form, name, slug: editId ? form.slug : generateSlug(name) });
                 }} />
                 <Input placeholder="Slug" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="font-mono text-sm" />
-                <Textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={4} />
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Description</Label>
+                  <RichTextEditor content={form.description} onChange={(html) => setForm({ ...form, description: html })} placeholder="College description..." />
+                </div>
                 <div className="grid grid-cols-3 gap-3">
                   <Input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
                   <Input placeholder="State" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
@@ -177,10 +176,8 @@ const AdminColleges = () => {
                   <Input type="number" placeholder="Ranking" value={form.ranking || ""} onChange={(e) => setForm({ ...form, ranking: parseInt(e.target.value) || 0 })} />
                   <Input placeholder="Fees (e.g. ₹20L)" value={form.fees} onChange={(e) => setForm({ ...form, fees: e.target.value })} />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <Input placeholder="Logo URL" value={form.logo_url} onChange={(e) => setForm({ ...form, logo_url: e.target.value })} />
-                  <Input placeholder="Banner URL" value={form.banner_url} onChange={(e) => setForm({ ...form, banner_url: e.target.value })} />
-                </div>
+                <FileUpload bucket="uploads" folder="colleges/logos" value={form.logo_url} onChange={(url) => setForm({ ...form, logo_url: url })} accept="image/*" label="College Logo" />
+                <FileUpload bucket="uploads" folder="colleges/banners" value={form.banner_url} onChange={(url) => setForm({ ...form, banner_url: url })} accept="image/*" label="Banner Image" />
                 <Input placeholder="Website URL" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
               </TabsContent>
 
@@ -207,7 +204,10 @@ const AdminColleges = () => {
                   <Input placeholder="Campus Size" value={form.campus_size} onChange={(e) => setForm({ ...form, campus_size: e.target.value })} />
                   <Input type="number" placeholder="Total Students" value={form.total_students || ""} onChange={(e) => setForm({ ...form, total_students: parseInt(e.target.value) || 0 })} />
                 </div>
-                <Textarea placeholder="Admission Process" value={form.admission_process} onChange={(e) => setForm({ ...form, admission_process: e.target.value })} rows={4} />
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Admission Process</Label>
+                  <RichTextEditor content={form.admission_process} onChange={(html) => setForm({ ...form, admission_process: html })} placeholder="Describe the admission process..." />
+                </div>
                 <TagInput field="courses" label="Courses Offered" />
                 <TagInput field="accreditations" label="Accreditations" />
                 <TagInput field="exams_accepted" label="Exams Accepted" />
@@ -221,7 +221,7 @@ const AdminColleges = () => {
                 </div>
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Description</Label>
-                  <Textarea value={form.meta_description} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} rows={3} maxLength={170} />
+                  <Input value={form.meta_description} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} maxLength={170} />
                   <span className="text-xs text-muted-foreground">{form.meta_description.length}/160</span>
                 </div>
                 <TagInput field="keywords" label="Target Keywords" />
