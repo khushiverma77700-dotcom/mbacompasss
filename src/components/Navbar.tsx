@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Search, Menu, X, GraduationCap, LogIn, LogOut, Shield } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { Menu, X, GraduationCap, LogIn, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import SmartSearch from "@/components/SmartSearch";
 import { useAuth } from "@/contexts/AuthContext";
 
 const navLinks = [
@@ -17,18 +17,8 @@ const navLinks = [
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const location = useLocation();
-  const navigate = useNavigate();
   const { user, isAdmin, signOut } = useAuth();
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/category/cat?q=${encodeURIComponent(searchQuery)}`);
-      setSearchQuery("");
-    }
-  };
 
   return (
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
@@ -59,15 +49,7 @@ const Navbar = () => {
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
-          <form onSubmit={handleSearch} className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search MBA coaching..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 w-48 h-9 text-sm bg-muted border-none"
-            />
-          </form>
+          <SmartSearch className="w-56" />
           {user ? (
             <div className="flex items-center gap-2">
               {isAdmin && (
