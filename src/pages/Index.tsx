@@ -1,6 +1,6 @@
 import HeroSection from "@/components/HeroSection";
 import AnnouncementBanner from "@/components/AnnouncementBanner";
-import BannerSlider from "@/components/BannerSlider";
+
 import ExamCategoriesBar from "@/components/ExamCategoriesBar";
 import CategoryCards from "@/components/CategoryCards";
 import FeaturedInstitutes from "@/components/FeaturedInstitutes";
