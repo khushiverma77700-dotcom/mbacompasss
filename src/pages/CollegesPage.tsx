@@ -94,7 +94,7 @@ const CollegesPage = () => {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((college: any, i: number) => (
             <motion.div key={college.id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-              <div className="group bg-card rounded-xl p-5 card-shadow hover:card-shadow-hover transition-all duration-300 hover:-translate-y-1 border border-border">
+              <Link to={`/college/${college.slug}`} className="group block bg-card rounded-xl p-5 card-shadow hover:card-shadow-hover transition-all duration-300 hover:-translate-y-1 border border-border">
                 <div className="flex items-start gap-3 mb-3">
                   <div className="w-10 h-10 rounded-lg hero-gradient flex items-center justify-center text-primary-foreground font-bold text-sm flex-shrink-0">#{college.ranking}</div>
                   <div className="min-w-0">
