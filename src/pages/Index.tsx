@@ -15,8 +15,8 @@ const Index = () => {
       <AnnouncementBanner />
       <HeroSection />
       <ExamCategoriesBar />
-      <OfferBanners />
       <BannerSlider />
+      <OfferBanners />
       <CategoryCards />
       <FeaturedInstitutes />
       <MBACollegesSection />
