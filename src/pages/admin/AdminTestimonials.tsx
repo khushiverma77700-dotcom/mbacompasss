@@ -54,7 +54,7 @@ const AdminTestimonials = () => {
       toast({ title: "Error", description: "Name is required", variant: "destructive" });
       return;
     }
-    const payload = { ...form };
+    const payload = { ...form, institute_id: form.institute_id || null };
     if (editId) {
       const { error } = await supabase.from("testimonials").update(payload).eq("id", editId);
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
