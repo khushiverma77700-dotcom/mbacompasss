@@ -10,6 +10,7 @@ const navLinks = [
   { label: "GMAT Prep", path: "/category/gmat" },
   { label: "XAT & SNAP", path: "/category/xat-snap" },
   { label: "Compare", path: "/compare" },
+  { label: "Colleges", path: "/colleges" },
   { label: "Blog", path: "/blog" },
 ];
 
