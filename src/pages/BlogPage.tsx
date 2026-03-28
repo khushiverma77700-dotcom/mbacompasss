@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import SEOHead, { generateListingSchema } from "@/components/SEOHead";
 
 const BlogPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -27,6 +28,27 @@ const BlogPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="MBA Blog & News — Exam Tips, Career Advice, Coaching Reviews | BestMBACoaching.com"
+        description="Read expert articles on MBA entrance exams, coaching reviews, career advice, interview tips, and the latest MBA news. Get preparation strategies for CAT, GMAT, XAT, SNAP."
+        keywords={["MBA blog", "CAT preparation tips", "MBA coaching reviews", "MBA career advice", "GMAT tips", "MBA news India"]}
+        canonical="https://bestmbacoaching.com/blog"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Blog",
+          name: "BestMBACoaching Blog",
+          url: "https://bestmbacoaching.com/blog",
+          description: "Expert articles on MBA preparation, coaching reviews, and career advice",
+        }}
+      />
+
+      <nav className="container mx-auto px-4 pt-4" aria-label="Breadcrumb">
+        <ol className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <li><Link to="/" className="hover:text-primary transition-colors">Home</Link></li>
+          <li className="flex items-center gap-1.5"><span>/</span><span className="text-foreground font-medium">Blog</span></li>
+        </ol>
+      </nav>
+
       <div className="hero-gradient py-10 md:py-14">
         <div className="container mx-auto px-4 text-center">
           <h1 className="font-heading text-2xl md:text-4xl font-bold text-primary-foreground mb-2">MBA Blog & News</h1>
@@ -53,7 +75,7 @@ const BlogPage = () => {
                 <Link to={`/article/${item.slug}`} className="group block bg-card rounded-xl overflow-hidden card-shadow hover:card-shadow-hover transition-all duration-300 border border-border h-full">
                   {item.image_url ? (
                     <div className="h-36 overflow-hidden">
-                      <img src={item.image_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <img src={item.image_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" />
                     </div>
                   ) : (
                     <div className="h-36 hero-gradient flex items-center justify-center">

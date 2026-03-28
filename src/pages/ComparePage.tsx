@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { X, Star, Tag, CheckCircle, ArrowRight, BarChart3, TrendingUp, Clock, Users, BookOpen, GraduationCap, Award, Sparkles, Scale, IndianRupee } from "lucide-react";
+import { X, Star, Tag, CheckCircle, ArrowRight, BarChart3, TrendingUp, Clock, Users, BookOpen, GraduationCap, Award, Sparkles, Scale, IndianRupee, ThumbsUp, Shield, Zap, HelpCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
-import SEOHead, { generateListingSchema } from "@/components/SEOHead";
+import SEOHead, { generateComparisonSchema, generateFAQSchema, generateBreadcrumbSchema } from "@/components/SEOHead";
 
 type DBCourse = {
   id: string; name: string; duration: string | null; fees: number | null;
@@ -20,10 +20,20 @@ type DBCourse = {
 
 type Selection = DBCourse | null;
 
+const compareFaqs = [
+  { q: "How do I compare MBA coaching courses on BestMBACoaching.com?", a: "Simply select up to 3 courses from the dropdown menus above. Our tool will automatically generate a detailed side-by-side comparison covering fees, curriculum, success rates, faculty, batch timings, and more. You can switch between Overview, Curriculum, Offers, and Best for You tabs for different perspectives." },
+  { q: "What factors does the 'Best for You' algorithm consider?", a: "Our proprietary algorithm weighs three critical factors: Institute Rating (40%), Historical Success Rate (35%), and Value-for-Money based on fees (25%). This gives you a personalized recommendation based on which coaching institute offers the best overall package for your MBA preparation." },
+  { q: "Are the coaching fees shown inclusive of all charges?", a: "The fees displayed are the base course fees as listed by the coaching institutes. Additional charges for premium study material, extra mock tests, personal mentoring sessions, or optional modules like GD-PI preparation may apply separately. We recommend contacting the institute directly for a complete fee breakdown." },
+  { q: "Can I compare online and offline MBA coaching courses?", a: "Yes! Our comparison tool works across all teaching modes — online, offline, and hybrid. You can compare a Delhi-based classroom course with a Bangalore online course seamlessly. The 'Teaching Mode' row in the comparison table clearly indicates the delivery format." },
+  { q: "How often is the comparison data updated?", a: "We update our coaching data regularly. Fees, batch information, and success rates are verified periodically with the coaching institutes to ensure accuracy. However, we recommend confirming the latest fees directly with the institute before enrollment." },
+  { q: "Which MBA entrance exams do these coaching courses prepare for?", a: "Most coaching courses listed on our platform prepare students for major MBA entrance exams including CAT, XAT, GMAT, SNAP, NMAT, IIFT, CMAT, and MAT. Each course listing specifies which exams it covers." },
+];
+
 const ComparePage = () => {
   const [courses, setCourses] = useState<DBCourse[]>([]);
   const [selections, setSelections] = useState<[Selection, Selection, Selection]>([null, null, null]);
   const [loading, setLoading] = useState(true);
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
   useEffect(() => {
     const fetch = async () => {
@@ -64,23 +74,37 @@ const ComparePage = () => {
   }, [active]);
 
   const maxFees = Math.max(...active.map(c => c.fees || 0), 1);
-  const maxRating = 5;
+
+  const breadcrumbs = [
+    { name: "Home", url: "/" },
+    { name: "Compare MBA Courses", url: "/compare" },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Compare MBA Courses & Coaching Institutes Side by Side | MBAHub"
-        description="Compare top MBA coaching courses, fees, curriculum, success rates, and faculty. Make an informed decision with detailed side-by-side comparison of CAT, XAT, GMAT preparation courses."
-        keywords={["compare MBA courses", "MBA coaching comparison", "CAT coaching compare", "best MBA coaching fees", "coaching institute comparison"]}
-        canonical={`${window.location.origin}/compare`}
-        jsonLd={{
-          "@context": "https://schema.org",
-          "@type": "WebPage",
-          name: "Compare MBA Courses",
-          description: "Side-by-side comparison of top MBA coaching courses across India",
-          url: `${window.location.origin}/compare`,
-        }}
+        title="Compare MBA Coaching Courses — Fees, Curriculum, Success Rates | BestMBACoaching.com"
+        description="Compare top MBA coaching courses side by side. Analyze fees, curriculum, success rates, faculty strength, batch sizes & student reviews across India's best CAT, GMAT, XAT coaching institutes."
+        keywords={["compare MBA courses", "MBA coaching comparison", "CAT coaching compare", "best MBA coaching fees", "coaching institute comparison", "MBA course fees comparison", "CAT coaching success rate", "GMAT coaching comparison India", "best coaching for CAT", "MBA coaching reviews comparison"]}
+        canonical="https://bestmbacoaching.com/compare"
+        jsonLd={generateComparisonSchema(active)}
       />
+
+      {/* Breadcrumb */}
+      <nav className="container mx-auto px-4 pt-4" aria-label="Breadcrumb">
+        <ol className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          {breadcrumbs.map((item, i) => (
+            <li key={i} className="flex items-center gap-1.5">
+              {i > 0 && <span>/</span>}
+              {i < breadcrumbs.length - 1 ? (
+                <Link to={item.url} className="hover:text-primary transition-colors">{item.name}</Link>
+              ) : (
+                <span className="text-foreground font-medium">{item.name}</span>
+              )}
+            </li>
+          ))}
+        </ol>
+      </nav>
 
       {/* Hero */}
       <div className="hero-gradient py-12 md:py-16">
@@ -90,11 +114,22 @@ const ComparePage = () => {
               <Scale className="w-3.5 h-3.5 mr-1" /> Smart Comparison Tool
             </Badge>
             <h1 className="font-heading text-3xl md:text-5xl font-bold text-primary-foreground mb-3">
-              Compare MBA Courses
+              Compare MBA Coaching Courses
             </h1>
-            <p className="text-primary-foreground/70 max-w-2xl mx-auto text-lg">
-              Select up to 3 MBA coaching courses to compare fees, curriculum, success rates, faculty strength, and more — all in one view.
+            <p className="text-primary-foreground/70 max-w-3xl mx-auto text-lg mb-6">
+              Make an informed decision — compare fees, curriculum, success rates, faculty strength, batch sizes, and student reviews of India's top MBA coaching institutes side by side.
             </p>
+            <div className="flex flex-wrap justify-center gap-3 text-sm">
+              {[
+                { icon: Shield, text: "Verified Data" },
+                { icon: Zap, text: "Instant Results" },
+                { icon: ThumbsUp, text: "Unbiased Comparison" },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-1.5 bg-primary-foreground/10 rounded-full px-4 py-1.5 text-primary-foreground/80">
+                  <item.icon className="w-3.5 h-3.5" /> {item.text}
+                </div>
+              ))}
+            </div>
           </motion.div>
         </div>
       </div>
@@ -116,7 +151,7 @@ const ComparePage = () => {
                       </button>
                       <div className="text-center">
                         {selections[i]!.institutes?.logo_url ? (
-                          <img src={selections[i]!.institutes!.logo_url!} alt="" className="w-14 h-14 rounded-xl object-contain bg-muted p-1 mx-auto mb-3" />
+                          <img src={selections[i]!.institutes!.logo_url!} alt={`${selections[i]!.institutes?.name} logo`} className="w-14 h-14 rounded-xl object-contain bg-muted p-1 mx-auto mb-3" />
                         ) : (
                           <div className="w-14 h-14 hero-gradient rounded-xl flex items-center justify-center mx-auto mb-3 text-primary-foreground font-bold text-lg">
                             {selections[i]!.institutes?.name?.charAt(0) || "?"}
@@ -199,7 +234,7 @@ const ComparePage = () => {
                 {/* Detailed Comparison Table */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="font-heading flex items-center gap-2"><BarChart3 className="w-5 h-5 text-primary" /> Detailed Comparison</CardTitle>
+                    <CardTitle className="font-heading flex items-center gap-2"><BarChart3 className="w-5 h-5 text-primary" /> Detailed Side-by-Side Comparison</CardTitle>
                   </CardHeader>
                   <CardContent className="overflow-x-auto">
                     <table className="w-full text-sm">
@@ -210,7 +245,7 @@ const ComparePage = () => {
                             <th key={s.id} className="text-left py-3 px-4 font-heading font-semibold text-primary min-w-[180px]">
                               <div className="flex items-center gap-2">
                                 {s.institutes?.logo_url ? (
-                                  <img src={s.institutes.logo_url} className="w-6 h-6 rounded object-contain" alt="" />
+                                  <img src={s.institutes.logo_url} className="w-6 h-6 rounded object-contain" alt={`${s.institutes.name} logo`} />
                                 ) : null}
                                 <div>
                                   <div className="text-foreground">{s.institutes?.name}</div>
@@ -324,7 +359,7 @@ const ComparePage = () => {
                       <CardHeader className="pb-3">
                         <div className="flex items-center gap-3">
                           {s.institutes?.logo_url ? (
-                            <img src={s.institutes.logo_url} className="w-10 h-10 rounded-lg object-contain bg-muted p-1" alt="" />
+                            <img src={s.institutes.logo_url} className="w-10 h-10 rounded-lg object-contain bg-muted p-1" alt={`${s.institutes.name} logo`} />
                           ) : (
                             <div className="w-10 h-10 hero-gradient rounded-lg flex items-center justify-center text-primary-foreground font-bold">
                               {s.institutes?.name?.charAt(0)}
@@ -386,7 +421,7 @@ const ComparePage = () => {
                       <CardContent className="pt-6">
                         <div className="text-center mb-5">
                           {s.institutes?.logo_url ? (
-                            <img src={s.institutes.logo_url} className="w-14 h-14 rounded-xl object-contain bg-muted p-1 mx-auto mb-3" alt="" />
+                            <img src={s.institutes.logo_url} className="w-14 h-14 rounded-xl object-contain bg-muted p-1 mx-auto mb-3" alt={`${s.institutes.name} logo`} />
                           ) : (
                             <div className="w-14 h-14 hero-gradient rounded-xl flex items-center justify-center mx-auto mb-3 text-primary-foreground font-bold text-lg">
                               {s.institutes?.name?.charAt(0)}
@@ -517,19 +552,20 @@ const ComparePage = () => {
           </motion.div>
         )}
 
-        {/* SEO Content */}
-        <div className="mt-16 space-y-8">
+        {/* SEO Content Section */}
+        <section className="mt-16 space-y-10">
+          {/* How to Compare Guide */}
           <Card className="bg-secondary/20">
-            <CardContent className="pt-8 pb-8 prose prose-sm max-w-none">
-              <h2 className="font-heading text-2xl font-bold text-foreground">How to Compare MBA Coaching Courses</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Choosing the right MBA coaching institute is one of the most important decisions in your MBA preparation journey. With numerous coaching centers offering varying course structures, fee plans, and study materials, a side-by-side comparison helps you make an informed decision.
+            <CardContent className="pt-8 pb-8">
+              <h2 className="font-heading text-2xl font-bold text-foreground mb-4">How to Compare MBA Coaching Courses Effectively</h2>
+              <p className="text-muted-foreground leading-relaxed mb-6">
+                Choosing the right MBA coaching institute is one of the most critical decisions in your MBA preparation journey. With hundreds of coaching centres across India offering varying course structures, fee plans, study materials, and teaching methodologies, a systematic side-by-side comparison helps you make a well-informed decision. Here's what you should look for:
               </p>
-              <div className="grid md:grid-cols-3 gap-6 mt-6 not-prose">
+              <div className="grid md:grid-cols-3 gap-6">
                 {[
-                  { icon: BarChart3, title: "Compare Key Metrics", desc: "Evaluate success rates, student reviews, faculty experience, and batch sizes across institutes to understand which delivers the best results." },
-                  { icon: IndianRupee, title: "Analyze Value for Money", desc: "Don't just compare fees — consider what's included: mock tests, study material, doubt-clearing sessions, and interview preparation." },
-                  { icon: Award, title: "Check Track Record", desc: "Look at historical results, IIM conversion rates, and alumni network strength to gauge the institute's effectiveness." },
+                  { icon: BarChart3, title: "Compare Key Metrics", desc: "Evaluate success rates, student reviews, faculty experience, batch sizes, and past year IIM conversion rates across institutes to understand which delivers the best results for your target exam." },
+                  { icon: IndianRupee, title: "Analyze Value for Money", desc: "Don't just compare fees — consider the full package: number of mock tests, quality of study material, doubt-clearing sessions, GD-PI preparation, interview coaching, and post-admission mentoring." },
+                  { icon: Award, title: "Check Track Record", desc: "Look at historical results over multiple years, IIM call conversion rates, CAT 99+ percentile count, and the strength of their alumni network to gauge long-term effectiveness." },
                 ].map((item, i) => (
                   <div key={i} className="bg-card rounded-xl p-5 border border-border">
                     <item.icon className="w-8 h-8 text-primary mb-3" />
@@ -541,25 +577,104 @@ const ComparePage = () => {
             </CardContent>
           </Card>
 
+          {/* Why Use Our Tool */}
           <Card className="bg-secondary/20">
             <CardContent className="pt-8 pb-8">
-              <h2 className="font-heading text-2xl font-bold text-foreground mb-4">Frequently Asked Questions</h2>
-              <div className="space-y-4">
+              <h2 className="font-heading text-2xl font-bold text-foreground mb-4">Why Use Our MBA Coaching Comparison Tool?</h2>
+              <div className="grid md:grid-cols-2 gap-6">
                 {[
-                  { q: "How many courses can I compare at once?", a: "You can compare up to 3 MBA coaching courses side by side. This allows for a comprehensive yet manageable comparison." },
-                  { q: "What factors does the 'Best for You' algorithm consider?", a: "Our algorithm weighs institute rating (40%), historical success rate (35%), and value-for-money based on fees (25%) to give you a personalized recommendation." },
-                  { q: "Are the fees shown inclusive of all charges?", a: "The fees displayed are the base course fees as reported by the institutes. Additional charges for study material, mock tests, or optional modules may apply. We recommend contacting the institute directly for a complete fee breakdown." },
-                  { q: "Can I compare courses from different cities?", a: "Yes! Our comparison tool works across all cities and modes (online, offline, hybrid). You can compare a Delhi-based classroom course with a Bangalore online course seamlessly." },
-                ].map((faq, i) => (
-                  <div key={i} className="bg-card rounded-lg p-5 border border-border">
-                    <h3 className="font-heading font-semibold text-foreground mb-1">{faq.q}</h3>
-                    <p className="text-sm text-muted-foreground">{faq.a}</p>
+                  { title: "Unbiased & Transparent", desc: "We present data as-is from verified coaching institutes. No paid rankings, no sponsored placements in comparison results. Every data point is verified." },
+                  { title: "Comprehensive Data Points", desc: "Compare 12+ parameters including fees, duration, curriculum, success rates, batch sizes, teaching mode, faculty credentials, and available discounts — all in one view." },
+                  { title: "AI-Powered Recommendations", desc: "Our 'Best for You' algorithm analyzes rating, success rate, and value-for-money to give you a personalized recommendation based on what matters most." },
+                  { title: "Updated Regularly", desc: "Course fees, batch details, and success metrics are updated frequently in coordination with coaching institutes to ensure you're comparing the latest data." },
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-4">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-1">
+                      <CheckCircle className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-heading font-semibold text-foreground mb-1">{item.title}</h3>
+                      <p className="text-sm text-muted-foreground">{item.desc}</p>
+                    </div>
                   </div>
                 ))}
               </div>
             </CardContent>
           </Card>
-        </div>
+
+          {/* Key Factors */}
+          <Card className="bg-secondary/20">
+            <CardContent className="pt-8 pb-8">
+              <h2 className="font-heading text-2xl font-bold text-foreground mb-4">Key Factors When Choosing MBA Coaching</h2>
+              <div className="space-y-4">
+                {[
+                  { title: "Faculty Quality & Experience", desc: "The faculty is the backbone of any coaching institute. Look for experienced educators with IIM/top B-school backgrounds, industry experience, and a proven track record of producing high percentilers. Our comparison tool shows faculty credentials for each institute." },
+                  { title: "Study Material & Test Series", desc: "Quality study material makes a huge difference in MBA preparation. Check if the institute provides comprehensive topic-wise notes, sectional tests, full-length mock tests (at least 50+), and previous year paper analysis. Some institutes also offer adaptive learning platforms." },
+                  { title: "Batch Size & Personal Attention", desc: "Smaller batch sizes typically mean more personalized attention. Institutes with 30-40 students per batch generally provide better doubt resolution. Check if the institute offers personal mentoring, one-on-one doubt sessions, and performance tracking." },
+                  { title: "Online vs Offline vs Hybrid Mode", desc: "Consider your learning style and location. Offline classes offer discipline and peer learning, online provides flexibility, and hybrid combines both. Our tool lets you compare courses across all modes to find what suits you best." },
+                  { title: "Post-Exam Support (GD-PI-WAT)", desc: "MBA preparation doesn't end with the exam. Top coaching institutes offer comprehensive GD-PI-WAT preparation, mock interviews with industry professionals, essay writing workshops, and profile-building guidance. This can be a decisive factor in final conversions." },
+                ].map((item, i) => (
+                  <div key={i} className="bg-card rounded-xl p-5 border border-border">
+                    <h3 className="font-heading font-semibold text-foreground mb-2">{item.title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* FAQ Section with Schema */}
+          <Card className="bg-secondary/20">
+            <CardContent className="pt-8 pb-8">
+              <h2 className="font-heading text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
+                <HelpCircle className="w-6 h-6 text-primary" /> Frequently Asked Questions
+              </h2>
+              <div className="space-y-3">
+                {compareFaqs.map((faq, i) => (
+                  <div key={i} className="bg-card rounded-xl border border-border overflow-hidden">
+                    <button
+                      onClick={() => setExpandedFaq(expandedFaq === i ? null : i)}
+                      className="w-full flex items-center justify-between p-5 text-left"
+                    >
+                      <h3 className="font-heading font-semibold text-foreground pr-4">{faq.q}</h3>
+                      {expandedFaq === i ? <ChevronUp className="w-5 h-5 text-muted-foreground flex-shrink-0" /> : <ChevronDown className="w-5 h-5 text-muted-foreground flex-shrink-0" />}
+                    </button>
+                    {expandedFaq === i && (
+                      <div className="px-5 pb-5 -mt-2">
+                        <p className="text-sm text-muted-foreground leading-relaxed">{faq.a}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {/* Inject FAQ Schema */}
+              <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(generateFAQSchema(compareFaqs)) }}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Internal Links */}
+          <Card className="bg-secondary/20">
+            <CardContent className="pt-8 pb-8">
+              <h2 className="font-heading text-2xl font-bold text-foreground mb-4">Explore More on BestMBACoaching.com</h2>
+              <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
+                {[
+                  { label: "Top MBA Colleges", path: "/colleges", desc: "Rankings, fees & placements" },
+                  { label: "MBA Blog & News", path: "/blog", desc: "Exam tips & career advice" },
+                  { label: "MBA Exams Guide", path: "/", desc: "CAT, XAT, GMAT & more" },
+                  { label: "Contact Us", path: "/contact", desc: "Get personalized guidance" },
+                ].map((link, i) => (
+                  <Link key={i} to={link.path} className="bg-card rounded-xl p-4 border border-border hover:border-primary/40 transition-colors group">
+                    <h3 className="font-heading font-semibold text-foreground group-hover:text-primary transition-colors text-sm">{link.label}</h3>
+                    <p className="text-xs text-muted-foreground mt-1">{link.desc}</p>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
       </div>
     </div>
   );

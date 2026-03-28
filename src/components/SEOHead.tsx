@@ -1,5 +1,7 @@
 import { useEffect } from "react";
 
+const SITE_URL = "https://bestmbacoaching.com";
+
 interface SEOHeadProps {
   title?: string;
   description?: string;
@@ -37,6 +39,8 @@ const SEOHead = ({ title, description, keywords, canonical, jsonLd, ogImage }: S
       setMeta("og:image", ogImage, "property");
       setMeta("twitter:image", ogImage);
     }
+    setMeta("og:site_name", "Best MBA Coaching", "property");
+    setMeta("og:type", "website", "property");
 
     // Canonical
     if (canonical) {
@@ -77,16 +81,16 @@ export const generateArticleSchema = (article: any) => ({
   "@type": "Article",
   headline: article.meta_title || article.title,
   description: article.meta_description || article.excerpt || "",
-  author: { "@type": "Person", name: article.author || "MBAHub Team" },
+  author: { "@type": "Person", name: article.author || "Best MBA Coaching Team" },
   datePublished: article.created_at,
   dateModified: article.updated_at,
   image: article.image_url || article.banner_url,
   publisher: {
     "@type": "Organization",
-    name: "MBAHub",
-    logo: { "@type": "ImageObject", url: `${window.location.origin}/placeholder.svg` },
+    name: "Best MBA Coaching",
+    url: SITE_URL,
   },
-  mainEntityOfPage: { "@type": "WebPage", "@id": window.location.href },
+  mainEntityOfPage: { "@type": "WebPage", "@id": `${SITE_URL}/article/${article.slug}` },
   keywords: (article.keywords || []).join(", "),
 });
 
@@ -122,7 +126,7 @@ export const generateInstituteSchema = (institute: any) => ({
     addressRegion: institute.state,
     addressCountry: "IN",
   },
-  url: institute.website,
+  url: institute.website || `${SITE_URL}/institute/${institute.slug}`,
   aggregateRating: institute.rating ? {
     "@type": "AggregateRating",
     ratingValue: String(institute.rating),
@@ -164,8 +168,55 @@ export const generateListingSchema = (title: string, items: any[], type = "colle
     item: {
       "@type": "EducationalOrganization",
       name: item.name,
-      url: `${window.location.origin}/${type}/${item.slug}`,
+      url: `${SITE_URL}/${type}/${item.slug}`,
       address: item.city ? { "@type": "PostalAddress", addressLocality: item.city } : undefined,
     },
+  })),
+});
+
+export const generateComparisonSchema = (courses: any[]) => ({
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  name: "Compare MBA Coaching Courses — Side by Side Comparison",
+  description: "Compare top MBA coaching courses by fees, curriculum, success rates, faculty, and student reviews. Make the best decision for your MBA preparation.",
+  url: `${SITE_URL}/compare`,
+  mainEntity: {
+    "@type": "ItemList",
+    name: "MBA Coaching Courses Comparison",
+    numberOfItems: courses.length,
+    itemListElement: courses.map((c, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      item: {
+        "@type": "Course",
+        name: c.name,
+        provider: { "@type": "Organization", name: c.institutes?.name || "" },
+        offers: c.fees ? { "@type": "Offer", price: String(c.fees), priceCurrency: "INR" } : undefined,
+      },
+    })),
+  },
+});
+
+export const generateFAQSchema = (faqs: { q: string; a: string }[]) => ({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map(faq => ({
+    "@type": "Question",
+    name: faq.q,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: faq.a,
+    },
+  })),
+});
+
+export const generateBreadcrumbSchema = (items: { name: string; url: string }[]) => ({
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: items.map((item, i) => ({
+    "@type": "ListItem",
+    position: i + 1,
+    name: item.name,
+    item: `${SITE_URL}${item.url}`,
   })),
 });
