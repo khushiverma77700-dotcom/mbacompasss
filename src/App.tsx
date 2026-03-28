@@ -27,6 +27,7 @@ import AdminBanners from "./pages/admin/AdminBanners";
 import AdminInquiries from "./pages/admin/AdminInquiries";
 import DashboardPage from "./pages/DashboardPage";
 import CollegeDetailPage from "./pages/CollegeDetailPage";
+import CollegeFilterPage from "./pages/CollegeFilterPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
