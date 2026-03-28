@@ -1,23 +1,47 @@
 import { Link } from "react-router-dom";
-import { Tag, Percent } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 const fallbackOffers = [
-  { label: "70% Off SNAP Courses", discount: "70%", exam: "xat-snap", color: "from-purple-500 to-pink-500" },
-  { label: "60% Off CAT Courses", discount: "60%", exam: "cat", color: "from-red-500 to-orange-500" },
-  { label: "50% Off GMAT Prep", discount: "50%", exam: "gmat", color: "from-blue-500 to-cyan-500" },
-  { label: "40% Off GRE + TOEFL", discount: "40%", exam: "gre-toefl", color: "from-green-500 to-emerald-500" },
+  {
+    title: "CAT 2026 Coaching",
+    subtitle: "Expert mentoring & study plans",
+    cta: "Explore Coaching",
+    link: "/category/cat",
+    gradient: "from-[hsl(270,80%,55%)] to-[hsl(320,75%,55%)]",
+  },
+  {
+    title: "Flat 10% Off All Courses",
+    subtitle: "Enroll before April 30th",
+    cta: "Claim Offer",
+    link: "/category/cat",
+    gradient: "from-[hsl(15,90%,55%)] to-[hsl(30,95%,50%)]",
+  },
+  {
+    title: "Free CAT Mock Tests",
+    subtitle: "Full-length with analytics",
+    cta: "Take Mock Test",
+    link: "/category/cat",
+    gradient: "from-[hsl(200,90%,50%)] to-[hsl(210,85%,60%)]",
+  },
+  {
+    title: "Top MBA Colleges 2026",
+    subtitle: "City & category-wise listings",
+    cta: "Browse Colleges",
+    link: "/colleges",
+    gradient: "from-[hsl(160,75%,45%)] to-[hsl(140,70%,50%)]",
+  },
 ];
 
-const colors = [
-  "from-purple-500 to-pink-500",
-  "from-red-500 to-orange-500",
-  "from-blue-500 to-cyan-500",
-  "from-green-500 to-emerald-500",
-  "from-amber-500 to-yellow-500",
-  "from-indigo-500 to-violet-500",
+const gradients = [
+  "from-[hsl(270,80%,55%)] to-[hsl(320,75%,55%)]",
+  "from-[hsl(15,90%,55%)] to-[hsl(30,95%,50%)]",
+  "from-[hsl(200,90%,50%)] to-[hsl(210,85%,60%)]",
+  "from-[hsl(160,75%,45%)] to-[hsl(140,70%,50%)]",
+  "from-[hsl(45,90%,50%)] to-[hsl(35,95%,45%)]",
+  "from-[hsl(240,70%,55%)] to-[hsl(260,80%,60%)]",
 ];
 
 const OfferBanners = () => {
@@ -33,62 +57,47 @@ const OfferBanners = () => {
     },
   });
 
-  // Use banners from backend if available, otherwise fallback
-  const dynamicOffers = (banners && banners.length > 0)
-    ? banners.map((b, i) => ({
-        label: b.title,
-        discount: b.subtitle || "",
-        link: b.link_url || `/category/cat`,
-        color: colors[i % colors.length],
-        cta: b.cta_text || "View Offers",
-      }))
-    : null;
+  const offers =
+    banners && banners.length > 0
+      ? banners.map((b, i) => ({
+          title: b.title,
+          subtitle: b.subtitle || "",
+          cta: b.cta_text || "Learn More",
+          link: b.link_url || "/",
+          gradient: gradients[i % gradients.length],
+        }))
+      : fallbackOffers;
 
   return (
-    <section className="py-6 bg-background">
+    <section className="py-8 bg-background">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {dynamicOffers ? dynamicOffers.map((offer, i) => (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {offers.map((offer, i) => (
             <motion.div
               key={i}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.1 }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.08, duration: 0.35 }}
             >
               <Link
                 to={offer.link}
-                className={`block rounded-xl bg-gradient-to-br ${offer.color} p-4 text-white hover:shadow-lg hover:scale-105 transition-all duration-300`}
+                className={`group relative block rounded-2xl bg-gradient-to-br ${offer.gradient} p-5 md:p-6 text-white overflow-hidden transition-transform duration-300 hover:scale-[1.03] hover:shadow-xl min-h-[160px] flex flex-col justify-between`}
               >
-                {offer.discount && (
-                  <div className="flex items-center gap-2 mb-1">
-                    <Percent className="w-5 h-5" />
-                    <span className="text-2xl font-bold font-heading">{offer.discount}</span>
-                  </div>
-                )}
-                <p className="text-sm font-medium opacity-90">{offer.label}</p>
-                <div className="flex items-center gap-1 mt-2 text-xs opacity-75">
-                  <Tag className="w-3 h-3" /> {offer.cta}
+                {/* Decorative circle */}
+                <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10" />
+
+                <div className="relative z-10">
+                  <h3 className="font-heading font-bold text-base md:text-lg leading-snug mb-1.5">
+                    {offer.title}
+                  </h3>
+                  <p className="text-xs md:text-sm opacity-85 leading-relaxed">
+                    {offer.subtitle}
+                  </p>
                 </div>
-              </Link>
-            </motion.div>
-          )) : fallbackOffers.map((offer, i) => (
-            <motion.div
-              key={offer.exam}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.1 }}
-            >
-              <Link
-                to={`/category/${offer.exam}?offer=true`}
-                className={`block rounded-xl bg-gradient-to-br ${offer.color} p-4 text-white hover:shadow-lg hover:scale-105 transition-all duration-300`}
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  <Percent className="w-5 h-5" />
-                  <span className="text-2xl font-bold font-heading">{offer.discount}</span>
-                </div>
-                <p className="text-sm font-medium opacity-90">{offer.label}</p>
-                <div className="flex items-center gap-1 mt-2 text-xs opacity-75">
-                  <Tag className="w-3 h-3" /> Click to view
+
+                <div className="relative z-10 mt-4 flex items-center gap-1.5 text-xs font-semibold opacity-90 group-hover:opacity-100 transition-opacity">
+                  <span>{offer.cta}</span>
+                  <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
                 </div>
               </Link>
             </motion.div>
