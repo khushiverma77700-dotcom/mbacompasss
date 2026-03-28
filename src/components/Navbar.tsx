@@ -1,15 +1,14 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Search, Menu, X, GraduationCap } from "lucide-react";
+import { Search, Menu, X, GraduationCap, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 const navLinks = [
   { label: "Home", path: "/" },
-  { label: "MBA", path: "/category/mba" },
-  { label: "Medical", path: "/category/medical" },
-  { label: "Engineering", path: "/category/engineering" },
-  { label: "Government", path: "/category/government" },
+  { label: "CAT Coaching", path: "/category/cat" },
+  { label: "GMAT Prep", path: "/category/gmat" },
+  { label: "XAT & SNAP", path: "/category/xat-snap" },
   { label: "Compare", path: "/compare" },
   { label: "Blog", path: "/blog" },
 ];
@@ -26,7 +25,7 @@ const Navbar = () => {
             <GraduationCap className="w-5 h-5 text-primary-foreground" />
           </div>
           <span className="font-heading font-bold text-xl text-foreground">
-            Coaching<span className="text-gradient">Hai</span>
+            MBA<span className="text-gradient">Hub</span>
           </span>
         </Link>
 
@@ -50,16 +49,17 @@ const Navbar = () => {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search coaching..."
+              placeholder="Search MBA coaching..."
               className="pl-9 w-48 h-9 text-sm bg-muted border-none"
             />
           </div>
-          <Button size="sm">Get Counselling</Button>
+          <Button size="sm">Free Counselling</Button>
         </div>
 
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
           className="lg:hidden p-2 text-foreground"
+          aria-label="Toggle mobile menu"
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </button>
@@ -83,7 +83,7 @@ const Navbar = () => {
               </Link>
             ))}
           </nav>
-          <Button className="w-full mt-3" size="sm">Get Counselling</Button>
+          <Button className="w-full mt-3" size="sm">Free Counselling</Button>
         </div>
       )}
     </header>

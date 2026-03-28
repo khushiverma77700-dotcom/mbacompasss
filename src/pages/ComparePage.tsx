@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Plus, Star, Clock, MapPin } from "lucide-react";
+import { X, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -37,14 +37,14 @@ const ComparePage = () => {
       <div className="hero-gradient py-10">
         <div className="container mx-auto px-4 text-center">
           <h1 className="font-heading text-2xl md:text-4xl font-bold text-primary-foreground mb-2">
-            Compare Courses
+            Compare MBA Courses
           </h1>
-          <p className="text-primary-foreground/70">Select up to 3 courses to compare side by side</p>
+          <p className="text-primary-foreground/70">Select up to 3 MBA courses to compare side by side</p>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           {[0, 1, 2].map((i) => (
             <Card key={i} className="border-dashed">
               <CardContent className="pt-6">
@@ -65,22 +65,20 @@ const ComparePage = () => {
                     </div>
                   </div>
                 ) : (
-                  <div>
-                    <Select onValueChange={(v) => handleSelect(i, v)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a course" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {allCourses
-                          .filter((x) => !selections.some((s) => s?.course.id === x.course.id))
-                          .map((x) => (
-                            <SelectItem key={x.course.id} value={x.course.id}>
-                              {x.institute.name} — {x.course.name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <Select onValueChange={(v) => handleSelect(i, v)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an MBA course" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allCourses
+                        .filter((x) => !selections.some((s) => s?.course.id === x.course.id))
+                        .map((x) => (
+                          <SelectItem key={x.course.id} value={x.course.id}>
+                            {x.institute.name} — {x.course.name}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
                 )}
               </CardContent>
             </Card>
@@ -94,9 +92,9 @@ const ComparePage = () => {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left py-3 px-4 font-heading font-semibold text-foreground">Feature</th>
+                      <th className="text-left py-3 px-3 font-heading font-semibold text-foreground min-w-[120px]">Feature</th>
                       {active.map((s) => (
-                        <th key={s.course.id} className="text-left py-3 px-4 font-heading font-semibold text-foreground">
+                        <th key={s.course.id} className="text-left py-3 px-3 font-heading font-semibold text-foreground min-w-[150px]">
                           {s.institute.name}
                         </th>
                       ))}
@@ -108,16 +106,19 @@ const ComparePage = () => {
                       { label: "Fees", render: (s: typeof active[0]) => <span className="font-semibold text-primary">{s.course.fees}</span> },
                       { label: "Duration", render: (s: typeof active[0]) => s.course.duration },
                       { label: "Mode", render: (s: typeof active[0]) => s.course.mode },
-                      { label: "Institute Rating", render: (s: typeof active[0]) => <span className="flex items-center gap-1"><Star className="w-3.5 h-3.5 fill-cat-mba text-cat-mba" /> {s.institute.rating}</span> },
+                      { label: "Batch Size", render: (s: typeof active[0]) => s.course.batchSize },
+                      { label: "Start Date", render: (s: typeof active[0]) => s.course.startDate },
+                      { label: "Institute Rating", render: (s: typeof active[0]) => <span className="flex items-center gap-1"><Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> {s.institute.rating}</span> },
                       { label: "Reviews", render: (s: typeof active[0]) => `${s.institute.reviewCount} reviews` },
                       { label: "Location", render: (s: typeof active[0]) => s.institute.location },
                       { label: "Success Rate", render: (s: typeof active[0]) => s.institute.successRate },
+                      { label: "Students", render: (s: typeof active[0]) => s.institute.students },
                       { label: "Established", render: (s: typeof active[0]) => String(s.institute.established) },
                     ].map((row) => (
                       <tr key={row.label} className="border-b border-border">
-                        <td className="py-3 px-4 text-muted-foreground font-medium">{row.label}</td>
+                        <td className="py-3 px-3 text-muted-foreground font-medium">{row.label}</td>
                         {active.map((s) => (
-                          <td key={s.course.id} className="py-3 px-4 text-foreground">{row.render(s)}</td>
+                          <td key={s.course.id} className="py-3 px-3 text-foreground">{row.render(s)}</td>
                         ))}
                       </tr>
                     ))}
@@ -130,7 +131,7 @@ const ComparePage = () => {
 
         {active.length < 2 && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">Select at least 2 courses above to see a comparison</p>
+            <p className="text-muted-foreground">Select at least 2 MBA courses above to see a comparison</p>
           </div>
         )}
       </div>

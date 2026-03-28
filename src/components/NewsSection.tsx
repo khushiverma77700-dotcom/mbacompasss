@@ -7,14 +7,14 @@ import { newsItems } from "@/data/mockData";
 
 const NewsSection = () => {
   return (
-    <section className="py-16 bg-background">
+    <section className="py-14 bg-muted/50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between mb-10">
           <div>
             <h2 className="font-heading text-2xl md:text-3xl font-bold text-foreground mb-1">
-              Latest <span className="text-gradient">News & Tips</span>
+              MBA <span className="text-gradient">News & Tips</span>
             </h2>
-            <p className="text-muted-foreground">Stay updated with exam news</p>
+            <p className="text-muted-foreground">Stay updated with MBA exam news and preparation strategies</p>
           </div>
           <Link to="/blog">
             <Button variant="outline" size="sm" className="gap-1">
@@ -33,7 +33,7 @@ const NewsSection = () => {
               transition={{ delay: i * 0.1 }}
               className="bg-card rounded-xl overflow-hidden card-shadow hover:card-shadow-hover transition-all duration-300 border border-border group"
             >
-              <div className="h-40 hero-gradient flex items-center justify-center">
+              <div className="h-36 hero-gradient flex items-center justify-center">
                 <span className="font-heading font-bold text-primary-foreground text-sm opacity-60">
                   {item.category}
                 </span>
