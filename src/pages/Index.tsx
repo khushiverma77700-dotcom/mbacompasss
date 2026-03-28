@@ -26,7 +26,7 @@ const Index = () => {
       <HeroSection />
       <ExamCategoriesBar />
       <StatsCounterSection />
-      <BannerSlider />
+      
       <OfferBanners />
       <CoachingOfWeekSection />
       <HowItWorksSection />
