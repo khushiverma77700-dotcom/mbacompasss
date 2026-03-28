@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, GraduationCap, LogIn, LogOut, Shield } from "lucide-react";
+import { Menu, X, GraduationCap, LogIn, LogOut, Shield, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SmartSearch from "@/components/SmartSearch";
 import { useAuth } from "@/contexts/AuthContext";
@@ -52,6 +52,9 @@ const Navbar = () => {
           <SmartSearch className="w-56" />
           {user ? (
             <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/dashboard"><LayoutDashboard className="w-4 h-4 mr-1" /> Dashboard</Link>
+              </Button>
               {isAdmin && (
                 <Button variant="outline" size="sm" asChild>
                   <Link to="/admin"><Shield className="w-4 h-4 mr-1" /> Admin</Link>
