@@ -164,14 +164,24 @@ const InstitutePage = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}
-      <div className="hero-gradient py-10 md:py-14">
-        <div className="container mx-auto px-4">
+      <div className="hero-gradient py-10 md:py-14 relative overflow-hidden">
+        {institute.banner_url && (
+          <img src={institute.banner_url} alt={`${institute.name} banner`} className="absolute inset-0 w-full h-full object-cover opacity-20" />
+        )}
+        <div className="container mx-auto px-4 relative z-10">
           <Link to={`/category/${categorySlug}`} className="inline-flex items-center gap-1 text-primary-foreground/70 hover:text-primary-foreground mb-4 text-sm">
             <ArrowLeft className="w-4 h-4" /> Back to listings
           </Link>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <Badge className="mb-3 bg-primary-foreground/20 text-primary-foreground border-none">{categoryName.toUpperCase()} COACHING</Badge>
-            <h1 className="font-heading text-2xl md:text-4xl font-bold text-primary-foreground mb-2">{institute.name}</h1>
+            <div className="flex items-start gap-4 mb-3">
+              {institute.logo_url ? (
+                <img src={institute.logo_url} alt={`${institute.name} logo`} className="w-14 h-14 rounded-xl object-contain bg-white p-1 flex-shrink-0" />
+              ) : null}
+              <div>
+                <Badge className="mb-2 bg-primary-foreground/20 text-primary-foreground border-none">{categoryName.toUpperCase()} COACHING</Badge>
+                <h1 className="font-heading text-2xl md:text-4xl font-bold text-primary-foreground mb-2">{institute.name}</h1>
+              </div>
+            </div>
             <div className="flex flex-wrap items-center gap-3 md:gap-4 text-primary-foreground/80 text-sm">
               <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {institute.city}, {institute.state}</span>
               <span className="flex items-center gap-1"><Star className="w-4 h-4 fill-current" /> {institute.rating} ({institute.total_reviews} reviews)</span>
