@@ -47,11 +47,17 @@ const FeaturedInstitutes = () => {
                 to={`/institute/${inst.slug}`}
                 className="group block bg-card rounded-xl overflow-hidden card-shadow hover:card-shadow-hover transition-all duration-300 hover:-translate-y-1 border border-border"
               >
-                <div className="h-32 hero-gradient relative flex items-center justify-center">
-                  <span className="font-heading font-bold text-primary-foreground text-3xl opacity-30">{inst.name.charAt(0)}</span>
-                  <Badge className="absolute top-3 left-3 bg-primary-foreground/20 text-primary-foreground border-none text-xs">Featured</Badge>
+                <div className="h-32 hero-gradient relative flex items-center justify-center overflow-hidden">
+                  {inst.banner_url ? (
+                    <img src={inst.banner_url} alt={inst.name} className="absolute inset-0 w-full h-full object-cover" />
+                  ) : inst.logo_url ? (
+                    <img src={inst.logo_url} alt={inst.name} className="h-16 w-auto object-contain" />
+                  ) : (
+                    <span className="font-heading font-bold text-primary-foreground text-3xl opacity-30">{inst.name.charAt(0)}</span>
+                  )}
+                  <Badge className="absolute top-3 left-3 bg-primary-foreground/20 text-primary-foreground border-none text-xs z-10">Featured</Badge>
                   {inst.discount && (
-                    <Badge className="absolute top-3 right-3 bg-green-500 text-primary-foreground border-none text-xs">{inst.discount.split(" ")[0]} OFF</Badge>
+                    <Badge className="absolute top-3 right-3 bg-green-500 text-primary-foreground border-none text-xs z-10">{inst.discount.split(" ")[0]} OFF</Badge>
                   )}
                 </div>
                 <div className="p-4">

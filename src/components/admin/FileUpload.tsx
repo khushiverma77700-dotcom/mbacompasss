@@ -14,9 +14,10 @@ interface FileUploadProps {
   accept?: string;
   label?: string;
   showUrlInput?: boolean;
+  sizeHint?: string;
 }
 
-const FileUpload = ({ bucket, folder = "", value, onChange, accept = "*", label = "Upload File", showUrlInput = true }: FileUploadProps) => {
+const FileUpload = ({ bucket, folder = "", value, onChange, accept = "*", label = "Upload File", showUrlInput = true, sizeHint }: FileUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -51,6 +52,7 @@ const FileUpload = ({ bucket, folder = "", value, onChange, accept = "*", label 
   return (
     <div className="space-y-2">
       <Label className="text-xs font-semibold text-muted-foreground block">{label}</Label>
+      {sizeHint && <p className="text-[10px] text-muted-foreground/70 -mt-1">Recommended: {sizeHint}</p>}
       <div className="flex gap-2 items-center">
         <input ref={fileRef} type="file" accept={accept} onChange={handleUpload} className="hidden" />
         <Button

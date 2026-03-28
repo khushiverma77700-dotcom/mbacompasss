@@ -152,8 +152,8 @@ const AdminInstitutes = () => {
               </TabsContent>
 
               <TabsContent value="media" className="space-y-3">
-                <FileUpload bucket="uploads" folder="institutes/logos" value={form.logo_url} onChange={(url) => setForm({ ...form, logo_url: url })} accept="image/*" label="Institute Logo" />
-                <FileUpload bucket="uploads" folder="institutes/banners" value={form.banner_url} onChange={(url) => setForm({ ...form, banner_url: url })} accept="image/*" label="Banner Image" />
+                <FileUpload bucket="uploads" folder="institutes/logos" value={form.logo_url} onChange={(url) => setForm({ ...form, logo_url: url })} accept="image/*" label="Institute Logo" sizeHint="200×200 px (square, PNG preferred)" />
+                <FileUpload bucket="uploads" folder="institutes/banners" value={form.banner_url} onChange={(url) => setForm({ ...form, banner_url: url })} accept="image/*" label="Banner Image" sizeHint="1200×400 px (3:1 ratio, JPG/PNG)" />
                 <div className="grid grid-cols-2 gap-3">
                   <Input placeholder="Discount (e.g. 10% off)" value={form.discount} onChange={(e) => setForm({ ...form, discount: e.target.value })} />
                   <Input placeholder="Offer text" value={form.offer} onChange={(e) => setForm({ ...form, offer: e.target.value })} />
