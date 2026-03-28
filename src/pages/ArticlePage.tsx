@@ -88,6 +88,9 @@ const ArticlePage = () => {
   };
 
   const readTime = article.content ? `${Math.max(1, Math.ceil(article.content.length / 1200))} min` : "3 min";
+  const articleKeywords = (article as any).keywords || [];
+
+  const jsonLd = generateArticleSchema(article);
 
   return (
     <div className="min-h-screen bg-background">
