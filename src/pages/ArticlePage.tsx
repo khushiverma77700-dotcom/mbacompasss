@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import SEOHead, { generateArticleSchema } from "@/components/SEOHead";
 
 const ArticlePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -42,9 +43,9 @@ const ArticlePage = () => {
 
   useEffect(() => {
     if (article) {
-      document.title = `${article.title} | MBAHub Blog`;
+      document.title = `${(article as any).meta_title || article.title} | MBAHub Blog`;
       const metaDesc = document.querySelector('meta[name="description"]');
-      if (metaDesc) metaDesc.setAttribute("content", article.excerpt || article.title);
+      if (metaDesc) metaDesc.setAttribute("content", (article as any).meta_description || article.excerpt || article.title);
     }
   }, [article]);
 
@@ -87,9 +88,19 @@ const ArticlePage = () => {
   };
 
   const readTime = article.content ? `${Math.max(1, Math.ceil(article.content.length / 1200))} min` : "3 min";
+  const articleKeywords = (article as any).keywords || [];
+
+  const jsonLd = generateArticleSchema(article);
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={`${(article as any).meta_title || article.title} | MBAHub Blog`}
+        description={(article as any).meta_description || article.excerpt || ""}
+        keywords={articleKeywords}
+        canonical={`${window.location.origin}/article/${article.slug}`}
+        jsonLd={jsonLd}
+      />
       {/* Hero */}
       <div className="hero-gradient py-10">
         <div className="container mx-auto px-4">

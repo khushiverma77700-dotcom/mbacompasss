@@ -17,40 +17,67 @@ export type Database = {
       articles: {
         Row: {
           author: string | null
+          banner_url: string | null
           category: string | null
           content: string | null
           created_at: string
           excerpt: string | null
+          featured: boolean | null
+          h1_tag: string | null
           id: string
           image_url: string | null
+          intro: string | null
+          keywords: string[] | null
+          meta_description: string | null
+          meta_title: string | null
+          priority: number | null
           published: boolean | null
           slug: string
+          status: string | null
           title: string
           updated_at: string
         }
         Insert: {
           author?: string | null
+          banner_url?: string | null
           category?: string | null
           content?: string | null
           created_at?: string
           excerpt?: string | null
+          featured?: boolean | null
+          h1_tag?: string | null
           id?: string
           image_url?: string | null
+          intro?: string | null
+          keywords?: string[] | null
+          meta_description?: string | null
+          meta_title?: string | null
+          priority?: number | null
           published?: boolean | null
           slug: string
+          status?: string | null
           title: string
           updated_at?: string
         }
         Update: {
           author?: string | null
+          banner_url?: string | null
           category?: string | null
           content?: string | null
           created_at?: string
           excerpt?: string | null
+          featured?: boolean | null
+          h1_tag?: string | null
           id?: string
           image_url?: string | null
+          intro?: string | null
+          keywords?: string[] | null
+          meta_description?: string | null
+          meta_title?: string | null
+          priority?: number | null
           published?: boolean | null
           slug?: string
+          status?: string | null
           title?: string
           updated_at?: string
         }
@@ -141,7 +168,10 @@ export type Database = {
           fees: string | null
           highlights: Json | null
           id: string
+          keywords: string[] | null
           logo_url: string | null
+          meta_description: string | null
+          meta_title: string | null
           name: string
           placement_avg: string | null
           placement_highest: string | null
@@ -170,7 +200,10 @@ export type Database = {
           fees?: string | null
           highlights?: Json | null
           id?: string
+          keywords?: string[] | null
           logo_url?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
           name: string
           placement_avg?: string | null
           placement_highest?: string | null
@@ -199,7 +232,10 @@ export type Database = {
           fees?: string | null
           highlights?: Json | null
           id?: string
+          keywords?: string[] | null
           logo_url?: string | null
+          meta_description?: string | null
+          meta_title?: string | null
           name?: string
           placement_avg?: string | null
           placement_highest?: string | null
@@ -277,6 +313,9 @@ export type Database = {
           full_name: string | null
           id: string
           important_dates: Json | null
+          keywords: string[] | null
+          meta_description: string | null
+          meta_title: string | null
           name: string
           pattern: Json | null
           registration_deadline: string | null
@@ -294,6 +333,9 @@ export type Database = {
           full_name?: string | null
           id?: string
           important_dates?: Json | null
+          keywords?: string[] | null
+          meta_description?: string | null
+          meta_title?: string | null
           name: string
           pattern?: Json | null
           registration_deadline?: string | null
@@ -311,6 +353,9 @@ export type Database = {
           full_name?: string | null
           id?: string
           important_dates?: Json | null
+          keywords?: string[] | null
+          meta_description?: string | null
+          meta_title?: string | null
           name?: string
           pattern?: Json | null
           registration_deadline?: string | null
@@ -420,9 +465,12 @@ export type Database = {
           featured: boolean | null
           features: string[] | null
           id: string
+          keywords: string[] | null
           latitude: number | null
           logo_url: string | null
           longitude: number | null
+          meta_description: string | null
+          meta_title: string | null
           mode: string | null
           name: string
           offer: string | null
@@ -449,9 +497,12 @@ export type Database = {
           featured?: boolean | null
           features?: string[] | null
           id?: string
+          keywords?: string[] | null
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
+          meta_description?: string | null
+          meta_title?: string | null
           mode?: string | null
           name: string
           offer?: string | null
@@ -478,9 +529,12 @@ export type Database = {
           featured?: boolean | null
           features?: string[] | null
           id?: string
+          keywords?: string[] | null
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
+          meta_description?: string | null
+          meta_title?: string | null
           mode?: string | null
           name?: string
           offer?: string | null

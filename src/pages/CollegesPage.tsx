@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useColleges } from "@/hooks/useInstitutes";
 import { Skeleton } from "@/components/ui/skeleton";
+import SEOHead, { generateListingSchema } from "@/components/SEOHead";
 
 const tabs = [
   { label: "All", type: "all" },
@@ -56,12 +57,33 @@ const CollegesPage = () => {
     );
   }
 
+  const jsonLd = generateListingSchema("Top MBA Colleges in India 2025", filtered, "college");
+  const regions = [
+    { slug: "delhi-ncr", label: "Delhi NCR" }, { slug: "mumbai", label: "Mumbai" },
+    { slug: "bangalore", label: "Bangalore" }, { slug: "pune", label: "Pune" },
+    { slug: "hyderabad", label: "Hyderabad" }, { slug: "kolkata", label: "Kolkata" },
+    { slug: "maharashtra", label: "Maharashtra" }, { slug: "karnataka", label: "Karnataka" },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Top MBA Colleges in India 2025 — Rankings, Fees, Placements | MBAHub"
+        description="Explore top MBA colleges in India with rankings, fees, placements, and admission details. Compare IIMs, top management institutes, PGDM colleges across India."
+        keywords={["top MBA colleges India", "best B-schools India", "MBA college rankings", "IIM fees placements"]}
+        jsonLd={jsonLd}
+      />
       <div className="hero-gradient py-10 md:py-14">
         <div className="container mx-auto px-4 text-center">
           <h1 className="font-heading text-2xl md:text-4xl font-bold text-primary-foreground mb-2">Top MBA Colleges in India</h1>
-          <p className="text-primary-foreground/70">IIMs, PGDM colleges, top management institutes — city-wise and state-wise</p>
+          <p className="text-primary-foreground/70 mb-4">IIMs, PGDM colleges, top management institutes — city-wise and state-wise</p>
+          <div className="flex flex-wrap justify-center gap-2">
+            {regions.map(r => (
+              <Link key={r.slug} to={`/colleges/${r.slug}`}>
+                <Badge className="bg-primary-foreground/15 text-primary-foreground border-none hover:bg-primary-foreground/25 cursor-pointer">{r.label}</Badge>
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
       <div className="container mx-auto px-4 py-8">

@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
+import SEOHead, { generateCollegeSchema } from "@/components/SEOHead";
 
 const ratingAspects = [
   { key: "academics", label: "Academics", score: 4.5 },
@@ -105,6 +106,7 @@ const CollegeDetailPage = () => {
   const suggestedColleges = (allColleges || []).filter(c => c.slug !== college.slug).slice(0, 6);
 
   const overallRating = (ratingAspects.reduce((s, a) => s + a.score, 0) / ratingAspects.length).toFixed(1);
+  const collegeJsonLd = generateCollegeSchema(college);
 
   const qaItems = [
     { q: `What is the fee structure at ${college.name}?`, a: `The total program fees at ${college.name} is ${college.fees || "available on request"}. This typically covers tuition, hostel, and other charges.` },
@@ -153,6 +155,13 @@ const CollegeDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={`${college.name} — Fees, Placements, Admission, Ranking | MBAHub`}
+        description={(college as any).meta_description || `${college.name}, ${college.city} — Fees: ${college.fees}, Avg Package: ${college.placement_avg}. Ranking #${college.ranking}.`}
+        keywords={(college as any).keywords || [college.name, college.city || "", "MBA", "placements"]}
+        canonical={`${window.location.origin}/college/${college.slug}`}
+        jsonLd={collegeJsonLd}
+      />
       {/* Hero Banner */}
       <div className="hero-gradient py-10 md:py-14">
         <div className="container mx-auto px-4">
