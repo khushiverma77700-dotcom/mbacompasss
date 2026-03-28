@@ -106,6 +106,7 @@ const CollegeDetailPage = () => {
   const suggestedColleges = (allColleges || []).filter(c => c.slug !== college.slug).slice(0, 6);
 
   const overallRating = (ratingAspects.reduce((s, a) => s + a.score, 0) / ratingAspects.length).toFixed(1);
+  const collegeJsonLd = generateCollegeSchema(college);
 
   const qaItems = [
     { q: `What is the fee structure at ${college.name}?`, a: `The total program fees at ${college.name} is ${college.fees || "available on request"}. This typically covers tuition, hostel, and other charges.` },
