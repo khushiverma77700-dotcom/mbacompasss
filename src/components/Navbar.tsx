@@ -67,7 +67,7 @@ const Navbar = () => {
                   <Link to="/admin"><Shield className="w-4 h-4 mr-1" /> Admin</Link>
                 </Button>
               )}
-              <Button variant="ghost" size="sm" onClick={() => signOut()}>
+              <Button variant="ghost" size="sm" onClick={async () => { await signOut(); navigate("/"); }}>
                 <LogOut className="w-4 h-4 mr-1" /> Sign Out
               </Button>
             </div>
@@ -115,7 +115,7 @@ const Navbar = () => {
                   <Link to="/admin" onClick={() => setMobileOpen(false)}><Shield className="w-4 h-4 mr-1" /> Admin Panel</Link>
                 </Button>
               )}
-              <Button variant="ghost" className="w-full" size="sm" onClick={() => { signOut(); setMobileOpen(false); }}>
+              <Button variant="ghost" className="w-full" size="sm" onClick={async () => { await signOut(); setMobileOpen(false); navigate("/"); }}>
                 <LogOut className="w-4 h-4 mr-1" /> Sign Out
               </Button>
             </div>
