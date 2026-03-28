@@ -10,6 +10,9 @@ import CategoryPage from "./pages/CategoryPage.tsx";
 import InstitutePage from "./pages/InstitutePage.tsx";
 import ComparePage from "./pages/ComparePage.tsx";
 import BlogPage from "./pages/BlogPage.tsx";
+import ArticlePage from "./pages/ArticlePage.tsx";
+import CollegesPage from "./pages/CollegesPage.tsx";
+import ExamDetailPage from "./pages/ExamDetailPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -27,6 +30,9 @@ const App = () => (
           <Route path="/institute/:slug" element={<InstitutePage />} />
           <Route path="/compare" element={<ComparePage />} />
           <Route path="/blog" element={<BlogPage />} />
+          <Route path="/article/:id" element={<ArticlePage />} />
+          <Route path="/colleges" element={<CollegesPage />} />
+          <Route path="/exam/:slug" element={<ExamDetailPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />
