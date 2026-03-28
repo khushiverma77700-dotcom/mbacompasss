@@ -1,19 +1,29 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Calendar } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { newsItems } from "@/data/mockData";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const BlogPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const blogCategories = ["all", ...new Set(newsItems.map((n) => n.category))];
 
-  useEffect(() => {
-    document.title = "MBA Blog - Exam Tips, News & Career Advice | MBAHub";
-  }, []);
+  const { data: articles, isLoading } = useQuery({
+    queryKey: ["blog-articles"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("articles")
+        .select("*")
+        .eq("published", true)
+        .order("created_at", { ascending: false });
+      return data || [];
+    },
+  });
 
-  const filtered = selectedCategory === "all" ? newsItems : newsItems.filter((n) => n.category === selectedCategory);
+  const blogCategories = ["all", ...new Set((articles || []).map(n => n.category).filter(Boolean))];
+  const filtered = selectedCategory === "all" ? (articles || []) : (articles || []).filter(n => n.category === selectedCategory);
 
   return (
     <div className="min-h-screen bg-background">
@@ -31,30 +41,44 @@ const BlogPage = () => {
             </button>
           ))}
         </div>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filtered.map((item, i) => (
-            <motion.article key={item.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-              <Link to={`/article/${item.id}`} className="group block bg-card rounded-xl overflow-hidden card-shadow hover:card-shadow-hover transition-all duration-300 border border-border h-full">
-                <div className="h-36 hero-gradient flex items-center justify-center">
-                  <span className="font-heading font-bold text-primary-foreground text-sm opacity-60">{item.category}</span>
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Badge variant="secondary" className="text-xs">{item.category}</Badge>
-                    <span className="text-xs text-muted-foreground flex items-center gap-1"><Calendar className="w-3 h-3" /> {item.date}</span>
-                    <span className="text-xs text-muted-foreground">{item.readTime}</span>
+
+        {isLoading ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-72 rounded-xl" />)}
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filtered.map((item, i) => (
+              <motion.article key={item.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                <Link to={`/article/${item.slug}`} className="group block bg-card rounded-xl overflow-hidden card-shadow hover:card-shadow-hover transition-all duration-300 border border-border h-full">
+                  {item.image_url ? (
+                    <div className="h-36 overflow-hidden">
+                      <img src={item.image_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    </div>
+                  ) : (
+                    <div className="h-36 hero-gradient flex items-center justify-center">
+                      <span className="font-heading font-bold text-primary-foreground text-sm opacity-60">{item.category}</span>
+                    </div>
+                  )}
+                  <div className="p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Badge variant="secondary" className="text-xs">{item.category}</Badge>
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Calendar className="w-3 h-3" /> {new Date(item.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <h3 className="font-heading font-semibold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">{item.title}</h3>
+                    {item.excerpt && <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{item.excerpt}</p>}
+                    <div className="flex items-center justify-between">
+                      {item.author && <span className="text-xs text-muted-foreground">By {item.author}</span>}
+                      <span className="inline-flex items-center gap-1 text-sm text-primary font-medium">Read More <ArrowRight className="w-3.5 h-3.5" /></span>
+                    </div>
                   </div>
-                  <h3 className="font-heading font-semibold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">{item.title}</h3>
-                  <p className="text-sm text-muted-foreground line-clamp-3 mb-3">{item.excerpt}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">By {item.author}</span>
-                    <span className="inline-flex items-center gap-1 text-sm text-primary font-medium">Read More <ArrowRight className="w-3.5 h-3.5" /></span>
-                  </div>
-                </div>
-              </Link>
-            </motion.article>
-          ))}
-        </div>
+                </Link>
+              </motion.article>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
