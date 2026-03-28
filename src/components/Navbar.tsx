@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, GraduationCap, LogIn, LogOut, Shield, LayoutDashboard } from "lucide-react";
+import { Menu, X, LogIn, LogOut, Shield, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import SmartSearch from "@/components/SmartSearch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import mbahubLogo from "@/assets/mbahub-logo.png";
 
 const fallbackLinks = [
   { label: "Home", path: "/" },
@@ -44,9 +45,7 @@ const Navbar = () => {
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         <Link to="/" className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-lg hero-gradient flex items-center justify-center">
-            <GraduationCap className="w-5 h-5 text-primary-foreground" />
-          </div>
+          <img src={mbahubLogo} alt="MBAHub Logo" className="w-9 h-9 rounded-lg object-contain" />
           <div className="flex flex-col leading-tight">
             <span className="font-heading font-bold text-xl text-foreground">
               {brandName.includes("Hub") ? (
