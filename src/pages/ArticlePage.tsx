@@ -94,6 +94,13 @@ const ArticlePage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={`${(article as any).meta_title || article.title} | MBAHub Blog`}
+        description={(article as any).meta_description || article.excerpt || ""}
+        keywords={articleKeywords}
+        canonical={`${window.location.origin}/article/${article.slug}`}
+        jsonLd={jsonLd}
+      />
       {/* Hero */}
       <div className="hero-gradient py-10">
         <div className="container mx-auto px-4">
