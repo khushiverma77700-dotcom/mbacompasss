@@ -19,6 +19,7 @@ const InstitutePage = () => {
   const [discountClaimed, setDiscountClaimed] = useState(false);
   const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
   const [expandedFaculty, setExpandedFaculty] = useState<string | null>(null);
+  const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [enquiryForm, setEnquiryForm] = useState({ name: "", phone: "", email: "", course: "", message: "" });
   const [enquiryLoading, setEnquiryLoading] = useState(false);
   const { toast } = useToast();
@@ -34,10 +35,10 @@ const InstitutePage = () => {
     );
   }
 
-  // SEO title
-  document.title = `${institute.name} - MBA Coaching in ${institute.city} | MBAHub`;
+  // SEO: College name as primary H1, optimized meta
+  document.title = `${institute.name} — Best MBA Coaching in ${institute.city} | Reviews, Fees, Courses | MBAHub`;
   const metaDesc = document.querySelector('meta[name="description"]');
-  if (metaDesc) metaDesc.setAttribute("content", `${institute.name} offers ${institute.courses.length} MBA coaching courses in ${institute.city}. Rating: ${institute.rating}/5. Success rate: ${institute.successRate}. Fees starting from ${institute.fees}.`);
+  if (metaDesc) metaDesc.setAttribute("content", `${institute.name} in ${institute.city} offers ${institute.courses.length} MBA coaching courses. Rating: ${institute.rating}/5. ${institute.successRate} success rate. Fees from ${institute.fees}. Compare, read reviews & enroll.`);
 
   const handleClaimDiscount = () => {
     setDiscountClaimed(true);
