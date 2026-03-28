@@ -12,6 +12,8 @@ const stats = [
   { icon: TrendingUp, value: "92%", label: "Avg. Success Rate" },
 ];
 
+const popularSearches = ["CAT Coaching", "GMAT Prep", "XAT Coaching", "Online MBA Coaching", "Best MBA coaching in Delhi", "MBA coaching online"];
+
 const HeroSection = () => {
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
@@ -49,7 +51,7 @@ const HeroSection = () => {
             Compare top coaching institutes for CAT, GMAT, XAT, SNAP & more. Read real reviews, compare fees, and make informed decisions.
           </p>
 
-          <form onSubmit={handleSearch} className="max-w-xl mx-auto mb-12">
+          <form onSubmit={handleSearch} className="max-w-xl mx-auto mb-8">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
@@ -58,10 +60,7 @@ const HeroSection = () => {
                 placeholder="Search by coaching name, city, or exam..."
                 className="h-14 pl-12 pr-32 rounded-xl bg-card text-foreground text-base border-none shadow-lg"
               />
-              <Button
-                type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-6 rounded-lg"
-              >
+              <Button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 h-10 px-6 rounded-lg">
                 Search
               </Button>
             </div>
@@ -69,7 +68,7 @@ const HeroSection = () => {
 
           <div className="flex flex-wrap justify-center gap-2 mb-10 text-sm">
             <span className="text-primary-foreground/60">Popular:</span>
-            {["CAT Coaching", "GMAT Prep", "XAT Coaching", "Online MBA Coaching"].map((term) => (
+            {popularSearches.map((term) => (
               <button
                 key={term}
                 onClick={() => { setQuery(term); }}

@@ -1,11 +1,15 @@
 import { useParams, Link } from "react-router-dom";
 import { useState } from "react";
-import { Star, MapPin, Clock, Users, Award, BookOpen, ArrowLeft, Download, Tag, ChevronLeft, ChevronRight, TrendingUp, GraduationCap, CheckCircle } from "lucide-react";
+import { Star, MapPin, Clock, Users, Award, BookOpen, ArrowLeft, Download, Tag, ChevronLeft, ChevronRight, TrendingUp, GraduationCap, CheckCircle, ChevronDown, ChevronUp, Phone, Mail, Globe, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { institutes } from "@/data/mockData";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 const InstitutePage = () => {
@@ -13,6 +17,10 @@ const InstitutePage = () => {
   const institute = institutes.find((i) => i.slug === slug);
   const [testimonialIndex, setTestimonialIndex] = useState(0);
   const [discountClaimed, setDiscountClaimed] = useState(false);
+  const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
+  const [expandedFaculty, setExpandedFaculty] = useState<string | null>(null);
+  const [enquiryForm, setEnquiryForm] = useState({ name: "", phone: "", email: "", course: "", message: "" });
+  const [enquiryLoading, setEnquiryLoading] = useState(false);
   const { toast } = useToast();
 
   if (!institute) {
@@ -26,19 +34,66 @@ const InstitutePage = () => {
     );
   }
 
+  // SEO title
+  document.title = `${institute.name} - MBA Coaching in ${institute.city} | MBAHub`;
+  const metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc) metaDesc.setAttribute("content", `${institute.name} offers ${institute.courses.length} MBA coaching courses in ${institute.city}. Rating: ${institute.rating}/5. Success rate: ${institute.successRate}. Fees starting from ${institute.fees}.`);
+
   const handleClaimDiscount = () => {
     setDiscountClaimed(true);
-    toast({
-      title: "Discount Claimed!",
-      description: "You've unlocked 10% off. Use code MBA10 during enrollment.",
-    });
+    toast({ title: "Discount Claimed!", description: "You've unlocked 10% off. Use code MBA10 during enrollment." });
   };
 
   const handleDownloadPDF = () => {
-    toast({
-      title: "PDF Download Started",
-      description: `Course details for ${institute.name} will be downloaded shortly.`,
+    // Generate a text-based PDF content
+    const content = [
+      `${institute.name} - Course Details`,
+      `Location: ${institute.location}`,
+      `Rating: ${institute.rating}/5 (${institute.reviewCount} reviews)`,
+      `Success Rate: ${institute.successRate}`,
+      ``,
+      `COURSES:`,
+      ...institute.courses.flatMap((c) => [
+        ``,
+        `${c.name}`,
+        `Duration: ${c.duration} | Mode: ${c.mode} | Fees: ${c.fees}`,
+        `Batch Size: ${c.batchSize} | Start: ${c.startDate}`,
+        `Curriculum:`,
+        ...c.curriculum.map((item) => `  - ${item}`),
+      ]),
+      ``,
+      `FACULTY:`,
+      ...institute.faculty.map((f) => `${f.name} - ${f.subject} (${f.experience})`),
+    ].join("\n");
+
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${institute.slug}-course-details.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Download Started", description: `Course details for ${institute.name} downloaded.` });
+  };
+
+  const handleEnquiry = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEnquiryLoading(true);
+    const { error } = await supabase.from("inquiries").insert({
+      institute_id: null, // mock data doesn't have DB UUIDs
+      name: enquiryForm.name,
+      email: enquiryForm.email,
+      phone: enquiryForm.phone,
+      message: `Course: ${enquiryForm.course}. ${enquiryForm.message}`,
+      type: "demo",
     });
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Enquiry Submitted!", description: "We'll connect you with the institute soon." });
+      setEnquiryForm({ name: "", phone: "", email: "", course: "", message: "" });
+    }
+    setEnquiryLoading(false);
   };
 
   const nextTestimonial = () => setTestimonialIndex((prev) => (prev + 1) % institute.testimonials.length);
@@ -46,8 +101,8 @@ const InstitutePage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="hero-gradient py-10 md:py-12">
+      {/* Header with Banner */}
+      <div className="hero-gradient py-10 md:py-14">
         <div className="container mx-auto px-4">
           <Link to={`/category/${institute.category}`} className="inline-flex items-center gap-1 text-primary-foreground/70 hover:text-primary-foreground mb-4 text-sm">
             <ArrowLeft className="w-4 h-4" /> Back to listings
@@ -63,6 +118,21 @@ const InstitutePage = () => {
               <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {institute.location}</span>
               <span className="flex items-center gap-1"><Star className="w-4 h-4 fill-current" /> {institute.rating} ({institute.reviewCount} reviews)</span>
               <span>Est. {institute.established}</span>
+              <Badge className="bg-primary-foreground/15 text-primary-foreground border-none text-xs">{institute.mode}</Badge>
+            </div>
+            {/* Quick Stats Bar */}
+            <div className="flex flex-wrap gap-4 mt-4">
+              {[
+                { label: "Students", value: institute.students },
+                { label: "Success Rate", value: institute.successRate },
+                { label: "Courses", value: String(institute.courses.length) },
+                { label: "Faculty", value: String(institute.faculty.length) },
+              ].map((s) => (
+                <div key={s.label} className="bg-primary-foreground/10 backdrop-blur-sm rounded-lg px-4 py-2">
+                  <div className="text-xs text-primary-foreground/70">{s.label}</div>
+                  <div className="font-heading font-bold text-primary-foreground">{s.value}</div>
+                </div>
+              ))}
             </div>
           </motion.div>
         </div>
@@ -74,17 +144,14 @@ const InstitutePage = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* About */}
             <Card>
-              <CardHeader>
-                <CardTitle className="font-heading">About {institute.name}</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle className="font-heading">About {institute.name}</CardTitle></CardHeader>
               <CardContent>
                 <p className="text-muted-foreground leading-relaxed mb-4">{institute.description}</p>
                 {institute.highlights.length > 0 && (
                   <div className="grid sm:grid-cols-2 gap-2">
                     {institute.highlights.map((h, i) => (
                       <div key={i} className="flex items-center gap-2 text-sm text-foreground">
-                        <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
-                        {h}
+                        <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />{h}
                       </div>
                     ))}
                   </div>
@@ -92,16 +159,16 @@ const InstitutePage = () => {
               </CardContent>
             </Card>
 
-            {/* Courses with Comparison Table */}
+            {/* Courses - Clickable with Dropdown */}
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle className="font-heading">Courses Offered</CardTitle>
+                <CardTitle className="font-heading">Courses Offered ({institute.courses.length})</CardTitle>
                 <Button variant="outline" size="sm" className="gap-1" onClick={handleDownloadPDF}>
                   <Download className="w-4 h-4" /> Download PDF
                 </Button>
               </CardHeader>
               <CardContent>
-                {/* Course comparison table */}
+                {/* Quick comparison table */}
                 <div className="overflow-x-auto mb-6">
                   <table className="w-full text-sm border-collapse">
                     <thead>
@@ -109,14 +176,18 @@ const InstitutePage = () => {
                         <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Course</th>
                         <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Duration</th>
                         <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Mode</th>
-                        <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Batch Size</th>
+                        <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Batch</th>
                         <th className="text-right py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Fees</th>
                       </tr>
                     </thead>
                     <tbody>
                       {institute.courses.map((course) => (
-                        <tr key={course.id} className="border-b border-border hover:bg-muted/30 transition-colors">
-                          <td className="py-3 px-3 font-medium text-foreground">{course.name}</td>
+                        <tr
+                          key={course.id}
+                          className="border-b border-border hover:bg-muted/30 transition-colors cursor-pointer"
+                          onClick={() => setExpandedCourse(expandedCourse === course.id ? null : course.id)}
+                        >
+                          <td className="py-3 px-3 font-medium text-primary">{course.name}</td>
                           <td className="py-3 px-3 text-muted-foreground">{course.duration}</td>
                           <td className="py-3 px-3"><Badge variant="secondary" className="text-xs">{course.mode}</Badge></td>
                           <td className="py-3 px-3 text-muted-foreground">{course.batchSize}</td>
@@ -127,57 +198,131 @@ const InstitutePage = () => {
                   </table>
                 </div>
 
-                {/* Detailed course cards */}
-                <div className="space-y-4">
-                  {institute.courses.map((course) => (
-                    <div key={course.id} className="p-4 rounded-lg bg-muted/50 border border-border">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3">
-                        <div>
-                          <h4 className="font-heading font-semibold text-foreground">{course.name}</h4>
-                          <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
-                            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {course.duration}</span>
-                            <Badge variant="secondary" className="text-xs">{course.mode}</Badge>
-                            <span className="text-xs">Starts: {course.startDate}</span>
+                {/* Expandable Course Cards */}
+                <div className="space-y-3">
+                  {institute.courses.map((course) => {
+                    const isExpanded = expandedCourse === course.id;
+                    return (
+                      <div key={course.id} className="rounded-lg border border-border overflow-hidden">
+                        <button
+                          onClick={() => setExpandedCourse(isExpanded ? null : course.id)}
+                          className="w-full flex items-center justify-between p-4 bg-muted/30 hover:bg-muted/50 transition-colors text-left"
+                        >
+                          <div className="flex-1">
+                            <h4 className="font-heading font-semibold text-foreground">{course.name}</h4>
+                            <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
+                              <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {course.duration}</span>
+                              <Badge variant="secondary" className="text-xs">{course.mode}</Badge>
+                              <span className="font-heading font-bold text-primary">{course.fees}</span>
+                            </div>
                           </div>
-                        </div>
-                        <div className="mt-2 sm:mt-0 text-right">
-                          <div className="font-heading font-bold text-primary text-lg">{course.fees}</div>
-                          <Button size="sm" variant="outline" className="mt-1">Enquire Now</Button>
-                        </div>
+                          {isExpanded ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
+                        </button>
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.3 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="p-4 bg-card space-y-4">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                  <div className="bg-muted/50 rounded-lg p-3">
+                                    <div className="text-xs text-muted-foreground">Duration</div>
+                                    <div className="font-semibold text-foreground text-sm">{course.duration}</div>
+                                  </div>
+                                  <div className="bg-muted/50 rounded-lg p-3">
+                                    <div className="text-xs text-muted-foreground">Mode</div>
+                                    <div className="font-semibold text-foreground text-sm">{course.mode}</div>
+                                  </div>
+                                  <div className="bg-muted/50 rounded-lg p-3">
+                                    <div className="text-xs text-muted-foreground">Batch Size</div>
+                                    <div className="font-semibold text-foreground text-sm">{course.batchSize}</div>
+                                  </div>
+                                  <div className="bg-muted/50 rounded-lg p-3">
+                                    <div className="text-xs text-muted-foreground">Starts</div>
+                                    <div className="font-semibold text-foreground text-sm">{course.startDate}</div>
+                                  </div>
+                                </div>
+                                <div>
+                                  <h5 className="font-heading font-semibold text-foreground text-sm mb-2">Curriculum</h5>
+                                  <div className="space-y-2">
+                                    {course.curriculum.map((item, idx) => (
+                                      <div key={idx} className="flex items-start gap-2 text-sm">
+                                        <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                                        <span className="text-muted-foreground">{item}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button size="sm" className="gap-1">Enquire Now</Button>
+                                  <Button size="sm" variant="outline" className="gap-1" onClick={handleDownloadPDF}>
+                                    <Download className="w-3.5 h-3.5" /> Download Details
+                                  </Button>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
-                      {course.curriculum.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {course.curriculum.map((item, idx) => (
-                            <Badge key={idx} variant="secondary" className="text-xs font-normal">{item}</Badge>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Faculty */}
+            {/* Faculty - Expanded with Bio & Specializations */}
             <Card>
-              <CardHeader>
-                <CardTitle className="font-heading">Faculty Profiles</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle className="font-heading">Faculty Profiles ({institute.faculty.length})</CardTitle></CardHeader>
               <CardContent>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {institute.faculty.map((f, i) => (
-                    <div key={i} className="flex items-start gap-4 p-4 rounded-lg bg-muted/50 border border-border">
-                      <div className="w-14 h-14 rounded-full hero-gradient flex items-center justify-center text-primary-foreground font-bold text-lg flex-shrink-0">
-                        {f.name.charAt(0)}
+                <div className="space-y-4">
+                  {institute.faculty.map((f, i) => {
+                    const isExpanded = expandedFaculty === f.name;
+                    return (
+                      <div key={i} className="rounded-xl border border-border overflow-hidden">
+                        <button
+                          onClick={() => setExpandedFaculty(isExpanded ? null : f.name)}
+                          className="w-full flex items-center gap-4 p-4 bg-muted/30 hover:bg-muted/50 transition-colors text-left"
+                        >
+                          <div className="w-14 h-14 rounded-full hero-gradient flex items-center justify-center text-primary-foreground font-bold text-lg flex-shrink-0">
+                            {f.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-foreground">{f.name}</h4>
+                            <p className="text-sm text-primary font-medium">{f.subject}</p>
+                            <p className="text-xs text-muted-foreground">{f.experience} experience | {f.qualification}</p>
+                          </div>
+                          {isExpanded ? <ChevronUp className="w-5 h-5 text-muted-foreground flex-shrink-0" /> : <ChevronDown className="w-5 h-5 text-muted-foreground flex-shrink-0" />}
+                        </button>
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.3 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="p-4 bg-card space-y-3">
+                                <p className="text-sm text-muted-foreground leading-relaxed">{f.bio}</p>
+                                <div>
+                                  <h5 className="text-xs font-semibold text-foreground mb-2">Specializations</h5>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {f.specializations.map((s, j) => (
+                                      <Badge key={j} variant="secondary" className="text-xs">{s}</Badge>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
-                      <div>
-                        <h4 className="font-semibold text-foreground">{f.name}</h4>
-                        <p className="text-sm text-primary font-medium">{f.subject}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{f.qualification}</p>
-                        <p className="text-xs text-muted-foreground">{f.experience} experience</p>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
@@ -185,9 +330,7 @@ const InstitutePage = () => {
             {/* Results Section */}
             {institute.results.length > 0 && (
               <Card>
-                <CardHeader>
-                  <CardTitle className="font-heading">Results & Achievements</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle className="font-heading">Results & Achievements</CardTitle></CardHeader>
                 <CardContent>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
@@ -213,8 +356,6 @@ const InstitutePage = () => {
                       </tbody>
                     </table>
                   </div>
-
-                  {/* Visual bars */}
                   <div className="mt-6 space-y-3">
                     <h4 className="text-sm font-semibold text-foreground">Selection Rate Trend</h4>
                     {institute.results.map((r) => {
@@ -223,13 +364,7 @@ const InstitutePage = () => {
                         <div key={r.year} className="flex items-center gap-3">
                           <span className="text-sm text-muted-foreground w-10">{r.year}</span>
                           <div className="flex-1 bg-muted rounded-full h-4 overflow-hidden">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              whileInView={{ width: `${rate}%` }}
-                              viewport={{ once: true }}
-                              transition={{ duration: 0.8, delay: 0.2 }}
-                              className="h-full hero-gradient rounded-full"
-                            />
+                            <motion.div initial={{ width: 0 }} whileInView={{ width: `${rate}%` }} viewport={{ once: true }} transition={{ duration: 0.8, delay: 0.2 }} className="h-full hero-gradient rounded-full" />
                           </div>
                           <span className="text-sm font-semibold text-foreground w-10">{rate}%</span>
                         </div>
@@ -240,12 +375,10 @@ const InstitutePage = () => {
               </Card>
             )}
 
-            {/* Testimonials Slider */}
+            {/* Testimonials - Enhanced */}
             {institute.testimonials.length > 0 && (
               <Card>
-                <CardHeader>
-                  <CardTitle className="font-heading">Student Testimonials</CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle className="font-heading">Student Testimonials ({institute.testimonials.length})</CardTitle></CardHeader>
                 <CardContent>
                   <div className="relative">
                     <AnimatePresence mode="wait">
@@ -265,27 +398,32 @@ const InstitutePage = () => {
                         <p className="text-foreground leading-relaxed mb-4 italic">
                           "{institute.testimonials[testimonialIndex].text}"
                         </p>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-semibold text-foreground">{institute.testimonials[testimonialIndex].name}</p>
-                            <p className="text-sm text-primary">{institute.testimonials[testimonialIndex].exam} - {institute.testimonials[testimonialIndex].score}</p>
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full hero-gradient flex items-center justify-center text-primary-foreground font-bold text-sm">
+                              {institute.testimonials[testimonialIndex].name.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-foreground">{institute.testimonials[testimonialIndex].name}</p>
+                              <p className="text-sm text-primary">{institute.testimonials[testimonialIndex].exam} — {institute.testimonials[testimonialIndex].score}</p>
+                            </div>
                           </div>
-                          <Badge variant="secondary">{institute.testimonials[testimonialIndex].year}</Badge>
+                          <div className="text-right">
+                            <Badge variant="secondary" className="mb-1">{institute.testimonials[testimonialIndex].year}</Badge>
+                            {institute.testimonials[testimonialIndex].collegePlaced && (
+                              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                                <GraduationCap className="w-3 h-3" /> {institute.testimonials[testimonialIndex].collegePlaced}
+                              </p>
+                            )}
+                          </div>
                         </div>
                       </motion.div>
                     </AnimatePresence>
-
                     {institute.testimonials.length > 1 && (
                       <div className="flex items-center justify-center gap-3 mt-4">
-                        <Button variant="outline" size="sm" onClick={prevTestimonial} className="w-8 h-8 p-0">
-                          <ChevronLeft className="w-4 h-4" />
-                        </Button>
-                        <span className="text-sm text-muted-foreground">
-                          {testimonialIndex + 1} / {institute.testimonials.length}
-                        </span>
-                        <Button variant="outline" size="sm" onClick={nextTestimonial} className="w-8 h-8 p-0">
-                          <ChevronRight className="w-4 h-4" />
-                        </Button>
+                        <Button variant="outline" size="sm" onClick={prevTestimonial} className="w-8 h-8 p-0"><ChevronLeft className="w-4 h-4" /></Button>
+                        <span className="text-sm text-muted-foreground">{testimonialIndex + 1} / {institute.testimonials.length}</span>
+                        <Button variant="outline" size="sm" onClick={nextTestimonial} className="w-8 h-8 p-0"><ChevronRight className="w-4 h-4" /></Button>
                       </div>
                     )}
                   </div>
@@ -330,11 +468,10 @@ const InstitutePage = () => {
               <CardContent className="pt-6 text-center">
                 <Tag className="w-8 h-8 text-primary mx-auto mb-3" />
                 <h4 className="font-heading font-semibold text-foreground mb-2">Special Offer</h4>
-                <p className="text-sm text-muted-foreground mb-4">{institute.discount}</p>
+                <p className="text-sm text-muted-foreground mb-1">{institute.discount}</p>
+                {institute.offer && <p className="text-xs text-primary mb-4">{institute.offer}</p>}
                 {!discountClaimed ? (
-                  <Button className="w-full" onClick={handleClaimDiscount}>
-                    Get 10% Discount
-                  </Button>
+                  <Button className="w-full" onClick={handleClaimDiscount}>Get 10% Discount</Button>
                 ) : (
                   <div className="bg-primary/10 rounded-lg p-3">
                     <p className="text-sm font-semibold text-primary">Discount Code: MBA10</p>
@@ -344,21 +481,24 @@ const InstitutePage = () => {
               </CardContent>
             </Card>
 
-            {/* Quick Enquiry */}
+            {/* Quick Enquiry - Connected to DB */}
             <Card>
               <CardContent className="pt-6">
                 <h4 className="font-heading font-semibold text-foreground mb-3">Quick Enquiry</h4>
-                <form className="space-y-3">
-                  <input className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm" placeholder="Your Name" />
-                  <input className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm" placeholder="Phone Number" />
-                  <input className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm" placeholder="Email" />
-                  <select className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm text-muted-foreground">
-                    <option value="">Select Course</option>
-                    {institute.courses.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                  <Button className="w-full" type="button">Submit Enquiry</Button>
+                <form onSubmit={handleEnquiry} className="space-y-3">
+                  <Input placeholder="Your Name *" value={enquiryForm.name} onChange={(e) => setEnquiryForm({ ...enquiryForm, name: e.target.value })} required />
+                  <Input placeholder="Phone Number *" value={enquiryForm.phone} onChange={(e) => setEnquiryForm({ ...enquiryForm, phone: e.target.value })} required />
+                  <Input type="email" placeholder="Email *" value={enquiryForm.email} onChange={(e) => setEnquiryForm({ ...enquiryForm, email: e.target.value })} required />
+                  <Select value={enquiryForm.course} onValueChange={(v) => setEnquiryForm({ ...enquiryForm, course: v })}>
+                    <SelectTrigger><SelectValue placeholder="Select Course" /></SelectTrigger>
+                    <SelectContent>
+                      {institute.courses.map((c) => (
+                        <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Textarea placeholder="Your message (optional)" value={enquiryForm.message} onChange={(e) => setEnquiryForm({ ...enquiryForm, message: e.target.value })} rows={3} />
+                  <Button className="w-full" type="submit" disabled={enquiryLoading}>{enquiryLoading ? "Submitting..." : "Submit Enquiry"}</Button>
                 </form>
               </CardContent>
             </Card>
@@ -369,9 +509,7 @@ const InstitutePage = () => {
                 <Award className="w-8 h-8 text-primary mx-auto mb-3" />
                 <h4 className="font-heading font-semibold text-foreground mb-2">Compare Courses</h4>
                 <p className="text-sm text-muted-foreground mb-4">Compare this institute with others side by side</p>
-                <Link to="/compare">
-                  <Button variant="outline" className="w-full">Go to Compare</Button>
-                </Link>
+                <Link to="/compare"><Button variant="outline" className="w-full">Go to Compare</Button></Link>
               </CardContent>
             </Card>
           </div>
