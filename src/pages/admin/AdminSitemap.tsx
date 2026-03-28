@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { RefreshCw, Globe, ExternalLink, Copy, CheckCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
-const SITE_URL = "https://coach-compass-finder.lovable.app";
+const SITE_URL = "https://bestmbacoaching.com";
 
 const AdminSitemap = () => {
   const [sitemapXml, setSitemapXml] = useState("");
