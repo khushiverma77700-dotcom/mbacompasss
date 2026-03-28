@@ -110,7 +110,7 @@ const CollegesPage = () => {
                 <div className="flex flex-wrap gap-1 mt-2">
                   {(college.exams_accepted || []).map((exam: string) => <Badge key={exam} variant="secondary" className="text-xs font-normal">{exam}</Badge>)}
                 </div>
-              </div>
+              </Link>
             </motion.div>
           ))}
         </div>
