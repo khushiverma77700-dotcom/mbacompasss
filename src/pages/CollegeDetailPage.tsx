@@ -163,16 +163,23 @@ const CollegeDetailPage = () => {
         jsonLd={collegeJsonLd}
       />
       {/* Hero Banner */}
-      <div className="hero-gradient py-10 md:py-14">
-        <div className="container mx-auto px-4">
+      <div className="hero-gradient py-10 md:py-14 relative overflow-hidden">
+        {college.banner_url && (
+          <img src={college.banner_url} alt={`${college.name} banner`} className="absolute inset-0 w-full h-full object-cover opacity-20" />
+        )}
+        <div className="container mx-auto px-4 relative z-10">
           <Link to="/colleges" className="inline-flex items-center gap-1 text-primary-foreground/70 hover:text-primary-foreground mb-4 text-sm">
             <ArrowLeft className="w-4 h-4" /> Back to Colleges
           </Link>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="flex items-start gap-4 mb-4">
-              <div className="w-16 h-16 rounded-xl bg-primary-foreground/20 flex items-center justify-center text-primary-foreground font-bold text-2xl flex-shrink-0">
-                {college.ranking ? `#${college.ranking}` : college.name.charAt(0)}
-              </div>
+              {college.logo_url ? (
+                <img src={college.logo_url} alt={`${college.name} logo`} className="w-16 h-16 rounded-xl object-contain bg-white p-1 flex-shrink-0" />
+              ) : (
+                <div className="w-16 h-16 rounded-xl bg-primary-foreground/20 flex items-center justify-center text-primary-foreground font-bold text-2xl flex-shrink-0">
+                  {college.ranking ? `#${college.ranking}` : college.name.charAt(0)}
+                </div>
+              )}
               <div>
                 <h1 className="font-heading text-2xl md:text-4xl font-bold text-primary-foreground mb-1">{college.name}</h1>
                 <div className="flex flex-wrap items-center gap-3 text-primary-foreground/80 text-sm">
