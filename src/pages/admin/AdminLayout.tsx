@@ -20,6 +20,7 @@ const adminNav = [
   { label: "Coaching of Week", path: "/admin/coaching-of-week", icon: Trophy },
   { label: "College Sections", path: "/admin/college-sections", icon: Star },
   { label: "Institute Results", path: "/admin/institute-results", icon: BarChart3 },
+  { label: "Sitemap", path: "/admin/sitemap", icon: MapPin },
 ];
 
 const AdminLayout = () => {
