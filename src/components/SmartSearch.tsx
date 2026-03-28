@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, GraduationCap, BookOpen, MapPin, Tag } from "lucide-react";
+import { Search, GraduationCap, BookOpen, MapPin, Tag, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { institutes, categories, cities, mbaColleges, examDetails } from "@/data/mockData";
+import { supabase } from "@/integrations/supabase/client";
 
 type Suggestion = {
   type: "institute" | "exam" | "city" | "category" | "college";
@@ -11,45 +11,12 @@ type Suggestion = {
   link: string;
 };
 
-const allSuggestions: Suggestion[] = [
-  ...institutes.map((i) => ({
-    type: "institute" as const,
-    label: i.name,
-    sub: `${i.city} · ${i.rating}★ · ${i.fees}`,
-    link: `/institute/${i.slug}`,
-  })),
-  ...examDetails.map((e) => ({
-    type: "exam" as const,
-    label: `${e.name} — ${e.fullName}`,
-    sub: e.conductedBy,
-    link: `/exam/${e.slug}`,
-  })),
-  ...categories.map((c) => ({
-    type: "category" as const,
-    label: c.name,
-    sub: c.description,
-    link: `/category/${c.slug}`,
-  })),
-  ...cities.map((c) => ({
-    type: "city" as const,
-    label: `MBA Coaching in ${c}`,
-    sub: `${institutes.filter((i) => i.city === c).length} institutes`,
-    link: `/category/cat?q=${c}`,
-  })),
-  ...mbaColleges.slice(0, 10).map((c) => ({
-    type: "college" as const,
-    label: c.name,
-    sub: `${c.city} · Rank #${c.ranking} · ${c.fees}`,
-    link: `/colleges`,
-  })),
-];
-
 const iconMap = {
   institute: GraduationCap,
   exam: BookOpen,
   city: MapPin,
   category: Tag,
-  college: GraduationCap,
+  college: Building2,
 };
 
 const SmartSearch = ({ className = "", onClose }: { className?: string; onClose?: () => void }) => {
@@ -62,13 +29,42 @@ const SmartSearch = ({ className = "", onClose }: { className?: string; onClose?
 
   useEffect(() => {
     if (query.length < 2) { setResults([]); setOpen(false); return; }
+
     const q = query.toLowerCase();
-    const matched = allSuggestions
-      .filter((s) => s.label.toLowerCase().includes(q) || s.sub.toLowerCase().includes(q))
-      .slice(0, 8);
-    setResults(matched);
-    setOpen(matched.length > 0);
-    setSelectedIdx(-1);
+    const controller = new AbortController();
+
+    const fetchResults = async () => {
+      const suggestions: Suggestion[] = [];
+
+      const [instRes, examRes, catRes, collegeRes] = await Promise.all([
+        supabase.from("institutes").select("name, slug, city, rating").ilike("name", `%${q}%`).limit(5),
+        supabase.from("exams").select("name, slug, full_name, conducting_body").ilike("name", `%${q}%`).limit(5),
+        supabase.from("categories").select("name, slug, description").ilike("name", `%${q}%`).limit(4),
+        supabase.from("colleges").select("name, slug, city, ranking, fees").ilike("name", `%${q}%`).limit(5),
+      ]);
+
+      instRes.data?.forEach((i) =>
+        suggestions.push({ type: "institute", label: i.name, sub: `${i.city || ""} · ${i.rating || 0}★`, link: `/institute/${i.slug}` })
+      );
+      examRes.data?.forEach((e) =>
+        suggestions.push({ type: "exam", label: `${e.name}${e.full_name ? ` — ${e.full_name}` : ""}`, sub: e.conducting_body || "", link: `/exam/${e.slug}` })
+      );
+      catRes.data?.forEach((c) =>
+        suggestions.push({ type: "category", label: c.name, sub: c.description || "", link: `/category/${c.slug}` })
+      );
+      collegeRes.data?.forEach((c) =>
+        suggestions.push({ type: "college", label: c.name, sub: `${c.city || ""} · Rank #${c.ranking || "—"} · ${c.fees || ""}`, link: `/college/${c.slug}` })
+      );
+
+      if (!controller.signal.aborted) {
+        setResults(suggestions.slice(0, 10));
+        setOpen(suggestions.length > 0);
+        setSelectedIdx(-1);
+      }
+    };
+
+    const timer = setTimeout(fetchResults, 250);
+    return () => { clearTimeout(timer); controller.abort(); };
   }, [query]);
 
   useEffect(() => {
@@ -97,7 +93,7 @@ const SmartSearch = ({ className = "", onClose }: { className?: string; onClose?
     <div ref={ref} className={`relative ${className}`}>
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
       <Input
-        placeholder="Search coaching, exams, cities..."
+        placeholder="Search coaching, exams, colleges..."
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={handleKeyDown}

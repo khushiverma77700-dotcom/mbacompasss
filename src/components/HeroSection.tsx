@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import heroBg from "@/assets/hero-bg.jpg";
 
 const iconMap: Record<string, any> = { BookOpen, Users, Award, GraduationCap, TrendingUp, Shield, BarChart3, Star, Headphones, Target };
 
@@ -38,6 +39,14 @@ const HeroSection = () => {
   return (
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 hero-gradient" />
+      <img
+        src={heroBg}
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover opacity-10 mix-blend-overlay"
+        width={1920}
+        height={1080}
+        aria-hidden="true"
+      />
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiLz48L3N2Zz4=')] opacity-50" />
 
       <div className="relative container mx-auto px-4 py-16 md:py-24">
