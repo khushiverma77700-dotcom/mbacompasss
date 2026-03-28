@@ -155,6 +155,13 @@ const CollegeDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={`${college.name} — Fees, Placements, Admission, Ranking | MBAHub`}
+        description={(college as any).meta_description || `${college.name}, ${college.city} — Fees: ${college.fees}, Avg Package: ${college.placement_avg}. Ranking #${college.ranking}.`}
+        keywords={(college as any).keywords || [college.name, college.city || "", "MBA", "placements"]}
+        canonical={`${window.location.origin}/college/${college.slug}`}
+        jsonLd={collegeJsonLd}
+      />
       {/* Hero Banner */}
       <div className="hero-gradient py-10 md:py-14">
         <div className="container mx-auto px-4">
