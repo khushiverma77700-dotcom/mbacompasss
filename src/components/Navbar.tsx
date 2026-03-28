@@ -47,11 +47,14 @@ const Navbar = () => {
           <div className="w-9 h-9 rounded-lg hero-gradient flex items-center justify-center">
             <GraduationCap className="w-5 h-5 text-primary-foreground" />
           </div>
-          <span className="font-heading font-bold text-xl text-foreground">
-            {brandName.includes("Hub") ? (
-              <>{brandName.replace("Hub", "")}<span className="text-gradient">Hub</span></>
-            ) : brandName}
-          </span>
+          <div className="flex flex-col leading-tight">
+            <span className="font-heading font-bold text-xl text-foreground">
+              {brandName.includes("Hub") ? (
+                <>{brandName.replace("Hub", "")}<span className="text-gradient">Hub</span></>
+              ) : brandName}
+            </span>
+            <span className="text-[9px] font-medium text-muted-foreground -mt-0.5 tracking-wide">by B School Buzz</span>
+          </div>
         </Link>
 
         <nav className="hidden lg:flex items-center gap-1">

@@ -22,7 +22,10 @@ const Footer = () => {
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
                 <GraduationCap className="w-4 h-4 text-primary-foreground" />
               </div>
-              <span className="font-heading font-bold text-lg text-primary-foreground">MBAHub</span>
+              <div className="flex flex-col leading-tight">
+                <span className="font-heading font-bold text-lg text-primary-foreground">MBAHub</span>
+                <span className="text-[8px] font-medium text-primary-foreground/50 -mt-0.5 tracking-wide">by B School Buzz</span>
+              </div>
             </Link>
             <p className="text-sm text-primary-foreground/60">{brandDesc}</p>
           </div>
