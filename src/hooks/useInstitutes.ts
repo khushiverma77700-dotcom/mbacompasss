@@ -82,3 +82,19 @@ export const useColleges = () => {
     },
   });
 };
+
+export const useCollegeBySlug = (slug?: string) => {
+  return useQuery({
+    queryKey: ["college", slug],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("colleges")
+        .select("*")
+        .eq("slug", slug!)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!slug,
+  });
+};

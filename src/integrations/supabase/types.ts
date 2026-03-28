@@ -127,48 +127,90 @@ export type Database = {
       }
       colleges: {
         Row: {
+          accreditations: string[] | null
+          admission_process: string | null
+          banner_url: string | null
+          campus_size: string | null
           city: string | null
           courses: string[] | null
           created_at: string
+          cutoff_info: Json | null
+          description: string | null
+          established: number | null
           exams_accepted: string[] | null
           fees: string | null
+          highlights: Json | null
           id: string
+          logo_url: string | null
           name: string
           placement_avg: string | null
+          placement_highest: string | null
+          placement_median: string | null
           ranking: number | null
           slug: string
           state: string | null
+          top_recruiters: string[] | null
+          total_students: number | null
           type: string | null
+          updated_at: string
           website: string | null
         }
         Insert: {
+          accreditations?: string[] | null
+          admission_process?: string | null
+          banner_url?: string | null
+          campus_size?: string | null
           city?: string | null
           courses?: string[] | null
           created_at?: string
+          cutoff_info?: Json | null
+          description?: string | null
+          established?: number | null
           exams_accepted?: string[] | null
           fees?: string | null
+          highlights?: Json | null
           id?: string
+          logo_url?: string | null
           name: string
           placement_avg?: string | null
+          placement_highest?: string | null
+          placement_median?: string | null
           ranking?: number | null
           slug: string
           state?: string | null
+          top_recruiters?: string[] | null
+          total_students?: number | null
           type?: string | null
+          updated_at?: string
           website?: string | null
         }
         Update: {
+          accreditations?: string[] | null
+          admission_process?: string | null
+          banner_url?: string | null
+          campus_size?: string | null
           city?: string | null
           courses?: string[] | null
           created_at?: string
+          cutoff_info?: Json | null
+          description?: string | null
+          established?: number | null
           exams_accepted?: string[] | null
           fees?: string | null
+          highlights?: Json | null
           id?: string
+          logo_url?: string | null
           name?: string
           placement_avg?: string | null
+          placement_highest?: string | null
+          placement_median?: string | null
           ranking?: number | null
           slug?: string
           state?: string | null
+          top_recruiters?: string[] | null
+          total_students?: number | null
           type?: string | null
+          updated_at?: string
           website?: string | null
         }
         Relationships: []

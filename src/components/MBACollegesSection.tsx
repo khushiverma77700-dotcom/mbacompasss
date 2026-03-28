@@ -85,7 +85,7 @@ const MBACollegesSection = () => {
               transition={{ delay: i * 0.06 }}
             >
               <Link
-                to={`/colleges#${college.slug}`}
+                to={`/college/${college.slug}`}
                 className="group block bg-card rounded-xl p-5 card-shadow hover:card-shadow-hover transition-all duration-300 hover:-translate-y-1 border border-border"
               >
                 <div className="flex items-start gap-3 mb-3">

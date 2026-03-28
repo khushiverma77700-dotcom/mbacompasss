@@ -26,6 +26,7 @@ import AdminArticles from "./pages/admin/AdminArticles";
 import AdminBanners from "./pages/admin/AdminBanners";
 import AdminInquiries from "./pages/admin/AdminInquiries";
 import DashboardPage from "./pages/DashboardPage";
+import CollegeDetailPage from "./pages/CollegeDetailPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -62,6 +63,7 @@ const App = () => (
             <Route path="/blog" element={<PublicLayout><BlogPage /></PublicLayout>} />
             <Route path="/article/:id" element={<PublicLayout><ArticlePage /></PublicLayout>} />
             <Route path="/colleges" element={<PublicLayout><CollegesPage /></PublicLayout>} />
+            <Route path="/college/:slug" element={<PublicLayout><CollegeDetailPage /></PublicLayout>} />
             <Route path="/exam/:slug" element={<PublicLayout><ExamDetailPage /></PublicLayout>} />
             <Route path="/auth" element={<PublicLayout><AuthPage /></PublicLayout>} />
             <Route path="/dashboard" element={<PublicLayout><DashboardPage /></PublicLayout>} />
