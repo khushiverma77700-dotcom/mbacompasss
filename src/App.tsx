@@ -27,6 +27,14 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+const PublicLayout = ({ children }: { children: React.ReactNode }) => (
+  <>
+    <Navbar />
+    {children}
+    <Footer />
+  </>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -35,7 +43,6 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Admin routes - no navbar/footer */}
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
               <Route path="institutes" element={<AdminInstitutes />} />
@@ -43,28 +50,18 @@ const App = () => (
               <Route path="banners" element={<AdminBanners />} />
               <Route path="inquiries" element={<AdminInquiries />} />
             </Route>
-
-            {/* Public routes with navbar/footer */}
-            <Route path="*" element={
-              <>
-                <Navbar />
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/category/:slug" element={<CategoryPage />} />
-                  <Route path="/institute/:slug" element={<InstitutePage />} />
-                  <Route path="/compare" element={<ComparePage />} />
-                  <Route path="/blog" element={<BlogPage />} />
-                  <Route path="/article/:id" element={<ArticlePage />} />
-                  <Route path="/colleges" element={<CollegesPage />} />
-                  <Route path="/exam/:slug" element={<ExamDetailPage />} />
-                  <Route path="/auth" element={<AuthPage />} />
-                  <Route path="/about" element={<AboutPage />} />
-                  <Route path="/contact" element={<ContactPage />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-                <Footer />
-              </>
-            } />
+            <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
+            <Route path="/category/:slug" element={<PublicLayout><CategoryPage /></PublicLayout>} />
+            <Route path="/institute/:slug" element={<PublicLayout><InstitutePage /></PublicLayout>} />
+            <Route path="/compare" element={<PublicLayout><ComparePage /></PublicLayout>} />
+            <Route path="/blog" element={<PublicLayout><BlogPage /></PublicLayout>} />
+            <Route path="/article/:id" element={<PublicLayout><ArticlePage /></PublicLayout>} />
+            <Route path="/colleges" element={<PublicLayout><CollegesPage /></PublicLayout>} />
+            <Route path="/exam/:slug" element={<PublicLayout><ExamDetailPage /></PublicLayout>} />
+            <Route path="/auth" element={<PublicLayout><AuthPage /></PublicLayout>} />
+            <Route path="/about" element={<PublicLayout><AboutPage /></PublicLayout>} />
+            <Route path="/contact" element={<PublicLayout><ContactPage /></PublicLayout>} />
+            <Route path="*" element={<PublicLayout><NotFound /></PublicLayout>} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>
