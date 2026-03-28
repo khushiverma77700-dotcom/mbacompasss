@@ -23,22 +23,22 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAdmin, signOut } = useAuth();
+  const { data: header } = useSiteSettings("header");
 
   const handleSignOut = async () => {
     if (isSigningOut) return;
 
+    setShowSignOutDialog(false);
+    setMobileOpen(false);
+    setIsSigningOut(true);
+
     try {
-      setIsSigningOut(true);
       await signOut();
-      setMobileOpen(false);
-      setShowSignOutDialog(false);
       navigate("/auth", { replace: true });
-      window.location.assign("/auth");
     } finally {
-      setIsSigningOut(false);
+      window.location.href = "/auth";
     }
   };
-  const { data: header } = useSiteSettings("header");
 
   const navLinks = header?.nav_links || fallbackLinks;
   const brandName = header?.brand_name || "MBAHub";
