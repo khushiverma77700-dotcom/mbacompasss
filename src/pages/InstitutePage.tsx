@@ -81,6 +81,8 @@ const InstitutePage = () => {
 
   document.title = `${institute.name} — Best MBA Coaching in ${institute.city} | MBAHub`;
 
+  const seoSchema = generateInstituteSchema(institute);
+
   // Filter courses based on selected target
   const filteredCourses = selectedTarget
     ? courses.filter((c: any) => {
