@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ScrollToTop from "@/components/ScrollToTop";
+import BackButton from "@/components/BackButton";
 import Index from "./pages/Index";
 import CategoryPage from "./pages/CategoryPage";
 import InstitutePage from "./pages/InstitutePage";
@@ -30,6 +32,7 @@ const queryClient = new QueryClient();
 const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   <>
     <Navbar />
+    <BackButton />
     {children}
     <Footer />
   </>
@@ -41,6 +44,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ScrollToTop />
         <AuthProvider>
           <Routes>
             <Route path="/admin" element={<AdminLayout />}>

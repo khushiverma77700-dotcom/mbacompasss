@@ -19,6 +19,7 @@ const InstitutePage = () => {
   const [discountClaimed, setDiscountClaimed] = useState(false);
   const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
   const [expandedFaculty, setExpandedFaculty] = useState<string | null>(null);
+  const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [enquiryForm, setEnquiryForm] = useState({ name: "", phone: "", email: "", course: "", message: "" });
   const [enquiryLoading, setEnquiryLoading] = useState(false);
   const { toast } = useToast();
@@ -34,10 +35,10 @@ const InstitutePage = () => {
     );
   }
 
-  // SEO title
-  document.title = `${institute.name} - MBA Coaching in ${institute.city} | MBAHub`;
+  // SEO: College name as primary H1, optimized meta
+  document.title = `${institute.name} — Best MBA Coaching in ${institute.city} | Reviews, Fees, Courses | MBAHub`;
   const metaDesc = document.querySelector('meta[name="description"]');
-  if (metaDesc) metaDesc.setAttribute("content", `${institute.name} offers ${institute.courses.length} MBA coaching courses in ${institute.city}. Rating: ${institute.rating}/5. Success rate: ${institute.successRate}. Fees starting from ${institute.fees}.`);
+  if (metaDesc) metaDesc.setAttribute("content", `${institute.name} in ${institute.city} offers ${institute.courses.length} MBA coaching courses. Rating: ${institute.rating}/5. ${institute.successRate} success rate. Fees from ${institute.fees}. Compare, read reviews & enroll.`);
 
   const handleClaimDiscount = () => {
     setDiscountClaimed(true);
@@ -139,6 +140,42 @@ const InstitutePage = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Course Selection Prompt */}
+        {!selectedTarget && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+            <Card className="border-primary/30 bg-secondary/30">
+              <CardContent className="pt-6">
+                <h3 className="font-heading font-semibold text-foreground text-lg mb-3">🎯 What are you targeting?</h3>
+                <p className="text-sm text-muted-foreground mb-4">Select your target to see relevant courses and comparisons</p>
+                <div className="flex flex-wrap gap-2">
+                  {["CAT 2025", "CAT 2026", "XAT 2026", "GMAT", "GRE", "Mock Tests", "GD/PI Preparation"].map((t) => (
+                    <Button
+                      key={t}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedTarget(t);
+                        // Auto-expand relevant courses
+                        const relevantCourse = institute.courses.find((c) => c.name.toLowerCase().includes(t.split(" ")[0].toLowerCase()));
+                        if (relevantCourse) setExpandedCourse(relevantCourse.id);
+                      }}
+                      className="hover:bg-primary hover:text-primary-foreground"
+                    >
+                      {t}
+                    </Button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+        {selectedTarget && (
+          <div className="mb-6 flex items-center gap-2">
+            <Badge className="bg-primary text-primary-foreground text-sm">Targeting: {selectedTarget}</Badge>
+            <Button variant="ghost" size="sm" onClick={() => setSelectedTarget(null)} className="text-xs text-muted-foreground">Change</Button>
+          </div>
+        )}
+
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
@@ -327,18 +364,40 @@ const InstitutePage = () => {
               </CardContent>
             </Card>
 
-            {/* Results Section */}
+            {/* Results Section - Enhanced */}
             {institute.results.length > 0 && (
               <Card>
                 <CardHeader><CardTitle className="font-heading">Results & Achievements</CardTitle></CardHeader>
                 <CardContent>
-                  <div className="overflow-x-auto">
+                  {/* Summary Stats */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                    {(() => {
+                      const latest = institute.results[0];
+                      const rate = Math.round((latest.selections / latest.totalStudents) * 100);
+                      return [
+                        { label: "Selection Rate", value: `${rate}%`, sub: `${latest.year}` },
+                        { label: "99+ Percentilers", value: String(latest.topPercentile), sub: "Top Scorers" },
+                        { label: "IIM Calls", value: String(latest.iimCalls), sub: "Interview Calls" },
+                        { label: "Total Selections", value: latest.selections.toLocaleString(), sub: `out of ${latest.totalStudents.toLocaleString()}` },
+                      ].map((s, i) => (
+                        <div key={i} className="bg-secondary/50 rounded-lg p-3 text-center">
+                          <div className="font-heading text-xl font-bold text-primary">{s.value}</div>
+                          <div className="text-xs font-medium text-foreground">{s.label}</div>
+                          <div className="text-[10px] text-muted-foreground">{s.sub}</div>
+                        </div>
+                      ));
+                    })()}
+                  </div>
+
+                  {/* Detailed Results Table */}
+                  <div className="overflow-x-auto mb-6">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="bg-muted/50">
                           <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Year</th>
                           <th className="text-right py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Students</th>
                           <th className="text-right py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Selections</th>
+                          <th className="text-right py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Rate</th>
                           <th className="text-right py-3 px-3 font-heading font-semibold text-foreground border-b border-border">99+ %ile</th>
                           <th className="text-right py-3 px-3 font-heading font-semibold text-foreground border-b border-border">IIM Calls</th>
                         </tr>
@@ -349,6 +408,7 @@ const InstitutePage = () => {
                             <td className="py-3 px-3 font-medium text-foreground">{r.year}</td>
                             <td className="py-3 px-3 text-right text-muted-foreground">{r.totalStudents.toLocaleString()}</td>
                             <td className="py-3 px-3 text-right text-muted-foreground">{r.selections.toLocaleString()}</td>
+                            <td className="py-3 px-3 text-right font-semibold text-primary">{Math.round((r.selections / r.totalStudents) * 100)}%</td>
                             <td className="py-3 px-3 text-right font-semibold text-primary">{r.topPercentile}</td>
                             <td className="py-3 px-3 text-right font-semibold text-primary">{r.iimCalls}</td>
                           </tr>
@@ -356,8 +416,10 @@ const InstitutePage = () => {
                       </tbody>
                     </table>
                   </div>
-                  <div className="mt-6 space-y-3">
-                    <h4 className="text-sm font-semibold text-foreground">Selection Rate Trend</h4>
+
+                  {/* Progress Bars */}
+                  <div className="space-y-3">
+                    <h4 className="text-sm font-semibold text-foreground">Year-over-Year Growth</h4>
                     {institute.results.map((r) => {
                       const rate = Math.round((r.selections / r.totalStudents) * 100);
                       return (
@@ -371,6 +433,20 @@ const InstitutePage = () => {
                       );
                     })}
                   </div>
+
+                  {/* Top Placements */}
+                  {institute.testimonials.some(t => t.collegePlaced) && (
+                    <div className="mt-6">
+                      <h4 className="text-sm font-semibold text-foreground mb-3">Top Placements & Alumni</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {[...new Set(institute.testimonials.filter(t => t.collegePlaced).map(t => t.collegePlaced))].map((college) => (
+                          <Badge key={college} variant="outline" className="text-xs">
+                            <GraduationCap className="w-3 h-3 mr-1" /> {college}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
