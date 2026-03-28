@@ -1,10 +1,11 @@
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X } from "lucide-react";
+import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle } from "lucide-react";
 import { useState } from "react";
 
 const adminNav = [
   { label: "Dashboard", path: "/admin", icon: LayoutDashboard },
+  { label: "Site Settings", path: "/admin/site-settings", icon: Settings },
   { label: "Institutes", path: "/admin/institutes", icon: Building2 },
   { label: "Courses", path: "/admin/courses", icon: BookOpen },
   { label: "Colleges", path: "/admin/colleges", icon: GraduationCap },
@@ -12,6 +13,7 @@ const adminNav = [
   { label: "Categories", path: "/admin/categories", icon: Tag },
   { label: "Banners", path: "/admin/banners", icon: Image },
   { label: "Articles", path: "/admin/articles", icon: Newspaper },
+  { label: "Testimonials", path: "/admin/testimonials", icon: MessageCircle },
   { label: "Inquiries", path: "/admin/inquiries", icon: MessageSquare },
   { label: "Subscribers", path: "/admin/subscribers", icon: Mail },
 ];
@@ -57,15 +59,12 @@ const AdminLayout = () => {
 
   return (
     <div className="min-h-screen flex bg-muted/30">
-      {/* Mobile menu button */}
       <button className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-card border border-border rounded-lg shadow-sm" onClick={() => setSidebarOpen(true)}>
         <Menu className="w-5 h-5" />
       </button>
 
-      {/* Mobile sidebar overlay */}
       {sidebarOpen && <div className="fixed inset-0 bg-foreground/20 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      {/* Sidebar */}
       <aside className={`${sidebarOpen ? "fixed inset-y-0 left-0 z-50" : "hidden"} lg:block w-64 bg-card border-r border-border p-4 flex flex-col`}>
         <SidebarContent />
       </aside>

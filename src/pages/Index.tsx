@@ -8,6 +8,7 @@ import MBACollegesSection from "@/components/MBACollegesSection";
 import WhyChooseUs from "@/components/WhyChooseUs";
 import NewsSection from "@/components/NewsSection";
 import OfferBanners from "@/components/OfferBanners";
+import TestimonialsSection from "@/components/TestimonialsSection";
 
 const Index = () => {
   return (
@@ -20,6 +21,7 @@ const Index = () => {
       <CategoryCards />
       <FeaturedInstitutes />
       <MBACollegesSection />
+      <TestimonialsSection />
       <WhyChooseUs />
       <NewsSection />
     </>

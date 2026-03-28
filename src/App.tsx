@@ -30,6 +30,8 @@ import AdminColleges from "./pages/admin/AdminColleges";
 import AdminSubscribers from "./pages/admin/AdminSubscribers";
 import AdminExams from "./pages/admin/AdminExams";
 import AdminCategories from "./pages/admin/AdminCategories";
+import AdminSiteSettings from "./pages/admin/AdminSiteSettings";
+import AdminTestimonials from "./pages/admin/AdminTestimonials";
 import DashboardPage from "./pages/DashboardPage";
 import CollegeDetailPage from "./pages/CollegeDetailPage";
 import CollegeFilterPage from "./pages/CollegeFilterPage";
@@ -66,6 +68,8 @@ const App = () => (
               <Route path="subscribers" element={<AdminSubscribers />} />
               <Route path="exams" element={<AdminExams />} />
               <Route path="categories" element={<AdminCategories />} />
+              <Route path="site-settings" element={<AdminSiteSettings />} />
+              <Route path="testimonials" element={<AdminTestimonials />} />
             </Route>
             <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
             <Route path="/category/:slug" element={<PublicLayout><CategoryPage /></PublicLayout>} />
