@@ -1,5 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
+import SEOHead, { generateInstituteSchema } from "@/components/SEOHead";
 import { Star, MapPin, Clock, Users, Award, BookOpen, ArrowLeft, Download, Tag, TrendingUp, GraduationCap, CheckCircle, ChevronDown, ChevronUp, Heart, Lock, Play, Quote, Columns2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
