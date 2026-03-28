@@ -9,6 +9,10 @@ import WhyChooseUs from "@/components/WhyChooseUs";
 import NewsSection from "@/components/NewsSection";
 import OfferBanners from "@/components/OfferBanners";
 import TestimonialsSection from "@/components/TestimonialsSection";
+import CoachingOfWeekSection from "@/components/CoachingOfWeekSection";
+import CollegeTestimonialsSection from "@/components/CollegeTestimonialsSection";
+import TopCitiesSection from "@/components/TopCitiesSection";
+import PopularExamsSection from "@/components/PopularExamsSection";
 
 const Index = () => {
   return (
@@ -18,9 +22,13 @@ const Index = () => {
       <ExamCategoriesBar />
       <BannerSlider />
       <OfferBanners />
+      <CoachingOfWeekSection />
       <CategoryCards />
       <FeaturedInstitutes />
       <MBACollegesSection />
+      <TopCitiesSection />
+      <PopularExamsSection />
+      <CollegeTestimonialsSection />
       <TestimonialsSection />
       <WhyChooseUs />
       <NewsSection />

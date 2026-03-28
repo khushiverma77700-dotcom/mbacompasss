@@ -1,0 +1,177 @@
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { Plus, Pencil, Trash2 } from "lucide-react";
+import RichTextEditor from "@/components/admin/RichTextEditor";
+import FileUpload from "@/components/admin/FileUpload";
+
+const emptyForm = {
+  institute_id: "",
+  headline: "",
+  description: "",
+  offer_text: "",
+  offer_details: "",
+  results_summary: "",
+  banner_url: "",
+  active: true,
+};
+
+const AdminCoachingOfWeek = () => {
+  const [items, setItems] = useState<any[]>([]);
+  const [institutes, setInstitutes] = useState<{ id: string; name: string }[]>([]);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState(emptyForm);
+  const [editId, setEditId] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const fetchItems = async () => {
+    const { data } = await supabase.from("coaching_of_week").select("*, institutes(name)").order("created_at", { ascending: false });
+    if (data) setItems(data);
+  };
+
+  const fetchInstitutes = async () => {
+    const { data } = await supabase.from("institutes").select("id, name").order("name");
+    if (data) setInstitutes(data);
+  };
+
+  useEffect(() => { fetchItems(); fetchInstitutes(); }, []);
+
+  const handleSave = async () => {
+    if (!form.institute_id) { toast({ title: "Select an institute", variant: "destructive" }); return; }
+    const payload = {
+      institute_id: form.institute_id,
+      headline: form.headline || null,
+      description: form.description || null,
+      offer_text: form.offer_text || null,
+      offer_details: form.offer_details || null,
+      results_summary: form.results_summary || null,
+      banner_url: form.banner_url || null,
+      active: form.active,
+    };
+
+    if (editId) {
+      const { error } = await supabase.from("coaching_of_week").update(payload).eq("id", editId);
+      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      toast({ title: "Updated" });
+    } else {
+      const { error } = await supabase.from("coaching_of_week").insert(payload);
+      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      toast({ title: "Created" });
+    }
+    setDialogOpen(false); setForm(emptyForm); setEditId(null); fetchItems();
+  };
+
+  const handleEdit = async (id: string) => {
+    const { data } = await supabase.from("coaching_of_week").select("*").eq("id", id).single();
+    if (data) {
+      setForm({
+        institute_id: data.institute_id,
+        headline: data.headline ?? "",
+        description: data.description ?? "",
+        offer_text: data.offer_text ?? "",
+        offer_details: data.offer_details ?? "",
+        results_summary: data.results_summary ?? "",
+        banner_url: data.banner_url ?? "",
+        active: data.active ?? true,
+      });
+      setEditId(id); setDialogOpen(true);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Delete?")) return;
+    await supabase.from("coaching_of_week").delete().eq("id", id);
+    fetchItems(); toast({ title: "Deleted" });
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="font-heading text-2xl font-bold text-foreground">Coaching of the Week</h1>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={() => { setForm(emptyForm); setEditId(null); }}>
+              <Plus className="w-4 h-4 mr-2" /> Add Entry
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editId ? "Edit" : "Add"} Coaching of the Week</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Select Institute *</Label>
+                <select className="w-full border border-border rounded-md p-2 text-sm bg-background" value={form.institute_id} onChange={(e) => setForm({ ...form, institute_id: e.target.value })}>
+                  <option value="">Choose institute...</option>
+                  {institutes.map((inst) => <option key={inst.id} value={inst.id}>{inst.name}</option>)}
+                </select>
+              </div>
+              <Input placeholder="Headline" value={form.headline} onChange={(e) => setForm({ ...form, headline: e.target.value })} />
+              <div>
+                <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Description</Label>
+                <RichTextEditor content={form.description} onChange={(html) => setForm({ ...form, description: html })} placeholder="Why this institute is featured..." />
+              </div>
+              <Input placeholder="Offer text (e.g. Flat 30% OFF)" value={form.offer_text} onChange={(e) => setForm({ ...form, offer_text: e.target.value })} />
+              <div>
+                <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Offer Details</Label>
+                <RichTextEditor content={form.offer_details} onChange={(html) => setForm({ ...form, offer_details: html })} placeholder="Detailed offer info..." />
+              </div>
+              <div>
+                <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Results Summary</Label>
+                <RichTextEditor content={form.results_summary} onChange={(html) => setForm({ ...form, results_summary: html })} placeholder="Key results and achievements..." />
+              </div>
+              <FileUpload bucket="uploads" folder="coaching-of-week" value={form.banner_url} onChange={(url) => setForm({ ...form, banner_url: url })} accept="image/*" label="Banner Image" />
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
+                Active
+              </label>
+              <Button onClick={handleSave} className="w-full">{editId ? "Update" : "Create"}</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Institute</TableHead>
+                <TableHead>Headline</TableHead>
+                <TableHead>Offer</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {items.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell className="font-medium">{(item as any).institutes?.name || "—"}</TableCell>
+                  <TableCell>{item.headline}</TableCell>
+                  <TableCell>{item.offer_text}</TableCell>
+                  <TableCell><Badge variant={item.active ? "default" : "secondary"}>{item.active ? "Active" : "Inactive"}</Badge></TableCell>
+                  <TableCell className="text-right space-x-1">
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(item.id)}><Pencil className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {items.length === 0 && (
+                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No entries yet</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default AdminCoachingOfWeek;
