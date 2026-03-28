@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
@@ -12,6 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Star } from "lucide-react";
+import RichTextEditor from "@/components/admin/RichTextEditor";
+import FileUpload from "@/components/admin/FileUpload";
 
 const emptyForm = {
   type: "text" as string,
@@ -55,35 +56,25 @@ const AdminTestimonials = () => {
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     }
     toast({ title: editId ? "Testimonial updated" : "Testimonial created" });
-    setDialogOpen(false);
-    setForm(emptyForm);
-    setEditId(null);
-    fetchData();
+    setDialogOpen(false); setForm(emptyForm); setEditId(null); fetchData();
   };
 
   const handleEdit = (t: any) => {
     setForm({
-      type: t.type || "text",
-      name: t.name,
-      designation: t.designation || "",
-      institute: t.institute || "",
-      content: t.content || "",
-      image_url: t.image_url || "",
-      video_url: t.video_url || "",
-      rating: t.rating || 5,
-      featured: t.featured || false,
-      sort_order: t.sort_order || 0,
+      type: t.type || "text", name: t.name,
+      designation: t.designation || "", institute: t.institute || "",
+      content: t.content || "", image_url: t.image_url || "",
+      video_url: t.video_url || "", rating: t.rating || 5,
+      featured: t.featured || false, sort_order: t.sort_order || 0,
       active: t.active ?? true,
     });
-    setEditId(t.id);
-    setDialogOpen(true);
+    setEditId(t.id); setDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this testimonial?")) return;
     await supabase.from("testimonials").delete().eq("id", id);
-    fetchData();
-    toast({ title: "Testimonial deleted" });
+    fetchData(); toast({ title: "Testimonial deleted" });
   };
 
   const typeBadge = (type: string) => {
@@ -133,14 +124,18 @@ const AdminTestimonials = () => {
               {form.type === "text" && (
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Testimonial Content</Label>
-                  <Textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={4} placeholder="Their experience..." />
+                  <RichTextEditor content={form.content} onChange={(html) => setForm({ ...form, content: html })} placeholder="Their experience..." />
                 </div>
               )}
               {(form.type === "image" || form.type === "text") && (
-                <div>
-                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Image URL {form.type === "image" ? "*" : "(optional avatar)"}</Label>
-                  <Input value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://..." />
-                </div>
+                <FileUpload
+                  bucket="uploads"
+                  folder="testimonials"
+                  value={form.image_url}
+                  onChange={(url) => setForm({ ...form, image_url: url })}
+                  accept="image/*"
+                  label={form.type === "image" ? "Screenshot Image *" : "Avatar Image (optional)"}
+                />
               )}
               {form.type === "video" && (
                 <div>

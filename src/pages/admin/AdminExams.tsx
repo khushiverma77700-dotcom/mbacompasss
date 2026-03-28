@@ -2,15 +2,17 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X } from "lucide-react";
+import RichTextEditor from "@/components/admin/RichTextEditor";
+import FileUpload from "@/components/admin/FileUpload";
 
 const emptyForm = {
   name: "", slug: "", full_name: "", description: "", conducting_body: "",
@@ -58,10 +60,7 @@ const AdminExams = () => {
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     }
     toast({ title: editId ? "Exam updated" : "Exam created" });
-    setDialogOpen(false);
-    setForm(emptyForm);
-    setEditId(null);
-    fetchExams();
+    setDialogOpen(false); setForm(emptyForm); setEditId(null); fetchExams();
   };
 
   const handleEdit = (exam: any) => {
@@ -73,15 +72,13 @@ const AdminExams = () => {
       syllabus: exam.syllabus ?? [], keywords: exam.keywords ?? [],
       meta_title: exam.meta_title ?? "", meta_description: exam.meta_description ?? "",
     });
-    setEditId(exam.id);
-    setDialogOpen(true);
+    setEditId(exam.id); setDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this exam?")) return;
     await supabase.from("exams").delete().eq("id", id);
-    fetchExams();
-    toast({ title: "Exam deleted" });
+    fetchExams(); toast({ title: "Exam deleted" });
   };
 
   const addTag = (list: string[], setInput: (s: string) => void, input: string, field: string) => {
@@ -129,13 +126,16 @@ const AdminExams = () => {
                 </div>
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Description</Label>
-                  <Textarea placeholder="Exam description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={4} />
+                  <RichTextEditor content={form.description} onChange={(html) => setForm({ ...form, description: html })} placeholder="Exam description..." />
                 </div>
                 <Input placeholder="Conducting Body" value={form.conducting_body} onChange={(e) => setForm({ ...form, conducting_body: e.target.value })} />
               </TabsContent>
 
               <TabsContent value="details" className="space-y-3">
-                <Textarea placeholder="Eligibility Criteria" value={form.eligibility} onChange={(e) => setForm({ ...form, eligibility: e.target.value })} rows={3} />
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Eligibility Criteria</Label>
+                  <RichTextEditor content={form.eligibility} onChange={(html) => setForm({ ...form, eligibility: html })} placeholder="Eligibility criteria..." />
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <Input placeholder="Exam Date" value={form.exam_date} onChange={(e) => setForm({ ...form, exam_date: e.target.value })} />
                   <Input placeholder="Registration Deadline" value={form.registration_deadline} onChange={(e) => setForm({ ...form, registration_deadline: e.target.value })} />
@@ -167,7 +167,7 @@ const AdminExams = () => {
                 </div>
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Description</Label>
-                  <Textarea value={form.meta_description} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} rows={3} maxLength={170} />
+                  <Input value={form.meta_description} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} maxLength={170} />
                   <span className="text-xs text-muted-foreground">{form.meta_description.length}/160</span>
                 </div>
                 <div>

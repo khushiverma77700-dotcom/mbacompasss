@@ -2,13 +2,18 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import RichTextEditor from "@/components/admin/RichTextEditor";
+import FileUpload from "@/components/admin/FileUpload";
 
 type Institute = {
   id: string;
@@ -35,6 +40,10 @@ const emptyForm = {
   featured: false,
   discount: "",
   offer: "",
+  meta_title: "",
+  meta_description: "",
+  logo_url: "",
+  banner_url: "",
 };
 
 const AdminInstitutes = () => {
@@ -64,41 +73,31 @@ const AdminInstitutes = () => {
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       toast({ title: "Institute added" });
     }
-    setDialogOpen(false);
-    setForm(emptyForm);
-    setEditId(null);
-    fetchInstitutes();
+    setDialogOpen(false); setForm(emptyForm); setEditId(null); fetchInstitutes();
   };
 
   const handleEdit = async (id: string) => {
     const { data } = await supabase.from("institutes").select("*").eq("id", id).single();
     if (data) {
       setForm({
-        name: data.name,
-        slug: data.slug,
-        description: data.description ?? "",
-        city: data.city ?? "",
-        state: data.state ?? "",
-        address: data.address ?? "",
-        phone: data.phone ?? "",
-        whatsapp: data.whatsapp ?? "",
-        email: data.email ?? "",
-        website: data.website ?? "",
-        mode: data.mode ?? "Offline",
-        featured: data.featured ?? false,
-        discount: data.discount ?? "",
-        offer: data.offer ?? "",
+        name: data.name, slug: data.slug,
+        description: data.description ?? "", city: data.city ?? "",
+        state: data.state ?? "", address: data.address ?? "",
+        phone: data.phone ?? "", whatsapp: data.whatsapp ?? "",
+        email: data.email ?? "", website: data.website ?? "",
+        mode: data.mode ?? "Offline", featured: data.featured ?? false,
+        discount: data.discount ?? "", offer: data.offer ?? "",
+        meta_title: data.meta_title ?? "", meta_description: data.meta_description ?? "",
+        logo_url: data.logo_url ?? "", banner_url: data.banner_url ?? "",
       });
-      setEditId(id);
-      setDialogOpen(true);
+      setEditId(id); setDialogOpen(true);
     }
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this institute?")) return;
     await supabase.from("institutes").delete().eq("id", id);
-    fetchInstitutes();
-    toast({ title: "Institute deleted" });
+    fetchInstitutes(); toast({ title: "Institute deleted" });
   };
 
   return (
@@ -111,45 +110,74 @@ const AdminInstitutes = () => {
               <Plus className="w-4 h-4 mr-2" /> Add Institute
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editId ? "Edit" : "Add"} Institute</DialogTitle>
             </DialogHeader>
-            <div className="space-y-3">
-              <Input placeholder="Name *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-              <Input placeholder="Slug (auto-generated)" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
-              <Textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-              <div className="grid grid-cols-2 gap-3">
-                <Input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-                <Input placeholder="State" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
-              </div>
-              <Input placeholder="Address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
-              <div className="grid grid-cols-2 gap-3">
-                <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-                <Input placeholder="WhatsApp" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <Input placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                <Input placeholder="Website" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
-              </div>
-              <Select value={form.mode} onValueChange={(v) => setForm({ ...form, mode: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Online">Online</SelectItem>
-                  <SelectItem value="Offline">Offline</SelectItem>
-                  <SelectItem value="Hybrid">Hybrid</SelectItem>
-                </SelectContent>
-              </Select>
-              <div className="grid grid-cols-2 gap-3">
-                <Input placeholder="Discount (e.g. 10% off)" value={form.discount} onChange={(e) => setForm({ ...form, discount: e.target.value })} />
-                <Input placeholder="Offer text" value={form.offer} onChange={(e) => setForm({ ...form, offer: e.target.value })} />
-              </div>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} />
-                Featured Institute
-              </label>
-              <Button onClick={handleSave} className="w-full">{editId ? "Update" : "Create"} Institute</Button>
-            </div>
+            <Tabs defaultValue="basic" className="space-y-4">
+              <TabsList className="grid grid-cols-3 w-full">
+                <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                <TabsTrigger value="media">Media & Offers</TabsTrigger>
+                <TabsTrigger value="seo">SEO</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="basic" className="space-y-3">
+                <Input placeholder="Name *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                <Input placeholder="Slug (auto-generated)" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Description</Label>
+                  <RichTextEditor content={form.description} onChange={(html) => setForm({ ...form, description: html })} placeholder="Institute description..." />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+                  <Input placeholder="State" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
+                </div>
+                <Input placeholder="Address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+                <div className="grid grid-cols-2 gap-3">
+                  <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                  <Input placeholder="WhatsApp" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Input placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                  <Input placeholder="Website" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
+                </div>
+                <Select value={form.mode} onValueChange={(v) => setForm({ ...form, mode: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Online">Online</SelectItem>
+                    <SelectItem value="Offline">Offline</SelectItem>
+                    <SelectItem value="Hybrid">Hybrid</SelectItem>
+                  </SelectContent>
+                </Select>
+              </TabsContent>
+
+              <TabsContent value="media" className="space-y-3">
+                <FileUpload bucket="uploads" folder="institutes/logos" value={form.logo_url} onChange={(url) => setForm({ ...form, logo_url: url })} accept="image/*" label="Institute Logo" />
+                <FileUpload bucket="uploads" folder="institutes/banners" value={form.banner_url} onChange={(url) => setForm({ ...form, banner_url: url })} accept="image/*" label="Banner Image" />
+                <div className="grid grid-cols-2 gap-3">
+                  <Input placeholder="Discount (e.g. 10% off)" value={form.discount} onChange={(e) => setForm({ ...form, discount: e.target.value })} />
+                  <Input placeholder="Offer text" value={form.offer} onChange={(e) => setForm({ ...form, offer: e.target.value })} />
+                </div>
+                <label className="flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} />
+                  Featured Institute
+                </label>
+              </TabsContent>
+
+              <TabsContent value="seo" className="space-y-3">
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Title</Label>
+                  <Input value={form.meta_title} onChange={(e) => setForm({ ...form, meta_title: e.target.value })} maxLength={70} />
+                  <span className="text-xs text-muted-foreground">{form.meta_title.length}/60</span>
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Description</Label>
+                  <Input value={form.meta_description} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} maxLength={170} />
+                  <span className="text-xs text-muted-foreground">{form.meta_description.length}/160</span>
+                </div>
+              </TabsContent>
+            </Tabs>
+            <Button onClick={handleSave} className="w-full mt-4">{editId ? "Update" : "Create"} Institute</Button>
           </DialogContent>
         </Dialog>
       </div>
