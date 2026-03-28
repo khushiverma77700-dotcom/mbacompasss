@@ -1,0 +1,72 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Mail, Phone, MapPin } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+
+const ContactPage = () => {
+  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await supabase.from("inquiries").insert({ ...form, type: "general" });
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Message sent!", description: "We'll get back to you soon." });
+      setForm({ name: "", email: "", phone: "", message: "" });
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-12 max-w-4xl">
+      <h1 className="font-heading text-3xl font-bold text-foreground mb-8">Contact Us</h1>
+      <div className="grid md:grid-cols-2 gap-8">
+        <Card>
+          <CardHeader><CardTitle>Send us a message</CardTitle></CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <Input placeholder="Your Name *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+              <Input type="email" placeholder="Email *" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+              <Input placeholder="Phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+              <Textarea placeholder="Your Message *" value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} required rows={5} />
+              <Button type="submit" className="w-full" disabled={loading}>{loading ? "Sending..." : "Send Message"}</Button>
+            </form>
+          </CardContent>
+        </Card>
+        <div className="space-y-6">
+          <div className="flex items-start gap-4">
+            <Mail className="w-5 h-5 text-primary mt-1" />
+            <div>
+              <h3 className="font-heading font-semibold text-foreground">Email</h3>
+              <p className="text-muted-foreground">info@mbahub.in</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-4">
+            <Phone className="w-5 h-5 text-primary mt-1" />
+            <div>
+              <h3 className="font-heading font-semibold text-foreground">Phone</h3>
+              <p className="text-muted-foreground">+91 98765 43210</p>
+            </div>
+          </div>
+          <div className="flex items-start gap-4">
+            <MapPin className="w-5 h-5 text-primary mt-1" />
+            <div>
+              <h3 className="font-heading font-semibold text-foreground">Address</h3>
+              <p className="text-muted-foreground">Connaught Place, New Delhi, India 110001</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ContactPage;

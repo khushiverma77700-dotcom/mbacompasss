@@ -3,19 +3,37 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import Index from "./pages/Index.tsx";
-import CategoryPage from "./pages/CategoryPage.tsx";
-import InstitutePage from "./pages/InstitutePage.tsx";
-import ComparePage from "./pages/ComparePage.tsx";
-import BlogPage from "./pages/BlogPage.tsx";
-import ArticlePage from "./pages/ArticlePage.tsx";
-import CollegesPage from "./pages/CollegesPage.tsx";
-import ExamDetailPage from "./pages/ExamDetailPage.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import Index from "./pages/Index";
+import CategoryPage from "./pages/CategoryPage";
+import InstitutePage from "./pages/InstitutePage";
+import ComparePage from "./pages/ComparePage";
+import BlogPage from "./pages/BlogPage";
+import ArticlePage from "./pages/ArticlePage";
+import CollegesPage from "./pages/CollegesPage";
+import ExamDetailPage from "./pages/ExamDetailPage";
+import AuthPage from "./pages/AuthPage";
+import AboutPage from "./pages/AboutPage";
+import ContactPage from "./pages/ContactPage";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminInstitutes from "./pages/admin/AdminInstitutes";
+import AdminArticles from "./pages/admin/AdminArticles";
+import AdminBanners from "./pages/admin/AdminBanners";
+import AdminInquiries from "./pages/admin/AdminInquiries";
+import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+const PublicLayout = ({ children }: { children: React.ReactNode }) => (
+  <>
+    <Navbar />
+    {children}
+    <Footer />
+  </>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -23,19 +41,29 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/category/:slug" element={<CategoryPage />} />
-          <Route path="/institute/:slug" element={<InstitutePage />} />
-          <Route path="/compare" element={<ComparePage />} />
-          <Route path="/blog" element={<BlogPage />} />
-          <Route path="/article/:id" element={<ArticlePage />} />
-          <Route path="/colleges" element={<CollegesPage />} />
-          <Route path="/exam/:slug" element={<ExamDetailPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-        <Footer />
+        <AuthProvider>
+          <Routes>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="institutes" element={<AdminInstitutes />} />
+              <Route path="articles" element={<AdminArticles />} />
+              <Route path="banners" element={<AdminBanners />} />
+              <Route path="inquiries" element={<AdminInquiries />} />
+            </Route>
+            <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
+            <Route path="/category/:slug" element={<PublicLayout><CategoryPage /></PublicLayout>} />
+            <Route path="/institute/:slug" element={<PublicLayout><InstitutePage /></PublicLayout>} />
+            <Route path="/compare" element={<PublicLayout><ComparePage /></PublicLayout>} />
+            <Route path="/blog" element={<PublicLayout><BlogPage /></PublicLayout>} />
+            <Route path="/article/:id" element={<PublicLayout><ArticlePage /></PublicLayout>} />
+            <Route path="/colleges" element={<PublicLayout><CollegesPage /></PublicLayout>} />
+            <Route path="/exam/:slug" element={<PublicLayout><ExamDetailPage /></PublicLayout>} />
+            <Route path="/auth" element={<PublicLayout><AuthPage /></PublicLayout>} />
+            <Route path="/about" element={<PublicLayout><AboutPage /></PublicLayout>} />
+            <Route path="/contact" element={<PublicLayout><ContactPage /></PublicLayout>} />
+            <Route path="*" element={<PublicLayout><NotFound /></PublicLayout>} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

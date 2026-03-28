@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { Search, Menu, X, GraduationCap, ChevronDown } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Search, Menu, X, GraduationCap, LogIn, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navLinks = [
   { label: "Home", path: "/" },
@@ -16,7 +17,18 @@ const navLinks = [
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isAdmin, signOut } = useAuth();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/category/cat?q=${encodeURIComponent(searchQuery)}`);
+      setSearchQuery("");
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
@@ -47,14 +59,31 @@ const Navbar = () => {
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
-          <div className="relative">
+          <form onSubmit={handleSearch} className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search MBA coaching..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 w-48 h-9 text-sm bg-muted border-none"
             />
-          </div>
-          <Button size="sm">Free Counselling</Button>
+          </form>
+          {user ? (
+            <div className="flex items-center gap-2">
+              {isAdmin && (
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/admin"><Shield className="w-4 h-4 mr-1" /> Admin</Link>
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={() => signOut()}>
+                <LogOut className="w-4 h-4 mr-1" /> Sign Out
+              </Button>
+            </div>
+          ) : (
+            <Button size="sm" asChild>
+              <Link to="/auth"><LogIn className="w-4 h-4 mr-1" /> Sign In</Link>
+            </Button>
+          )}
         </div>
 
         <button
@@ -84,7 +113,22 @@ const Navbar = () => {
               </Link>
             ))}
           </nav>
-          <Button className="w-full mt-3" size="sm">Free Counselling</Button>
+          {user ? (
+            <div className="mt-3 space-y-2">
+              {isAdmin && (
+                <Button variant="outline" className="w-full" size="sm" asChild>
+                  <Link to="/admin" onClick={() => setMobileOpen(false)}><Shield className="w-4 h-4 mr-1" /> Admin Panel</Link>
+                </Button>
+              )}
+              <Button variant="ghost" className="w-full" size="sm" onClick={() => { signOut(); setMobileOpen(false); }}>
+                <LogOut className="w-4 h-4 mr-1" /> Sign Out
+              </Button>
+            </div>
+          ) : (
+            <Button className="w-full mt-3" size="sm" asChild>
+              <Link to="/auth" onClick={() => setMobileOpen(false)}>Sign In</Link>
+            </Button>
+          )}
         </div>
       )}
     </header>
