@@ -73,9 +73,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     const { error } = await supabase.auth.signOut({ scope: 'local' });
     if (error) throw error;
+
     setUser(null);
     setSession(null);
     setIsAdmin(false);
+    localStorage.removeItem("supabase.auth.token");
   };
 
   return (

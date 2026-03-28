@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, GraduationCap, LogIn, LogOut, Shield, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import SmartSearch from "@/components/SmartSearch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
@@ -19,15 +19,24 @@ const fallbackLinks = [
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showSignOutDialog, setShowSignOutDialog] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAdmin, signOut } = useAuth();
 
   const handleSignOut = async () => {
-    await signOut();
-    setMobileOpen(false);
-    setShowSignOutDialog(false);
-    navigate("/");
+    if (isSigningOut) return;
+
+    try {
+      setIsSigningOut(true);
+      await signOut();
+      setMobileOpen(false);
+      setShowSignOutDialog(false);
+      navigate("/auth", { replace: true });
+      window.location.assign("/auth");
+    } finally {
+      setIsSigningOut(false);
+    }
   };
   const { data: header } = useSiteSettings("header");
 
@@ -143,8 +152,10 @@ const Navbar = () => {
             <AlertDialogDescription>Are you sure you want to sign out of your account?</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleSignOut}>Sign Out</AlertDialogAction>
+            <AlertDialogCancel disabled={isSigningOut}>Cancel</AlertDialogCancel>
+            <Button onClick={handleSignOut} disabled={isSigningOut}>
+              {isSigningOut ? "Signing Out..." : "Sign Out"}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
