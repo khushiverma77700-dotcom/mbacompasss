@@ -8,33 +8,418 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, X, GripVertical } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
 
 const SECTION_TYPES = [
-  { value: "why_join", label: "Why Join" },
-  { value: "placements", label: "Placements" },
-  { value: "gallery", label: "Gallery" },
-  { value: "qa", label: "Q&A" },
+  { value: "courses_fees", label: "Courses & Fee Structure" },
+  { value: "admission", label: "Admission Process" },
+  { value: "placements", label: "Placement Statistics" },
+  { value: "cutoff", label: "Cutoff Details" },
+  { value: "rankings", label: "Rankings & Accreditations" },
+  { value: "reviews", label: "Student Reviews" },
+  { value: "gallery", label: "Campus Gallery" },
   { value: "scholarships", label: "Scholarships" },
-  { value: "hostel", label: "Hostel & Campus" },
-  { value: "faculty", label: "Faculty" },
-  { value: "admissions", label: "Admissions" },
-  { value: "cutoff", label: "Cut-off" },
-  { value: "rankings", label: "Rankings" },
-  { value: "reviews", label: "Reviews" },
-  { value: "news", label: "News" },
+  { value: "faculty", label: "Faculty Profiles" },
+  { value: "hostel", label: "Hostel & Campus Life" },
+  { value: "qa", label: "Frequently Asked Questions" },
+  { value: "quick_info", label: "Quick Info / Sidebar" },
+  { value: "why_join", label: "Why Join (Ratings)" },
+  { value: "news", label: "Latest News & Articles" },
 ];
 
 const emptyForm = {
   college_id: "",
-  section_type: "why_join",
+  section_type: "courses_fees",
   title: "",
   content: "",
-  data: "{}",
+  data: {} as any,
   sort_order: 0,
+};
+
+// ── Reusable list editor ──
+const ListEditor = ({ items, onChange, fields, addLabel }: {
+  items: any[];
+  onChange: (items: any[]) => void;
+  fields: { key: string; label: string; type?: string; placeholder?: string }[];
+  addLabel: string;
+}) => {
+  const addItem = () => {
+    const newItem: any = {};
+    fields.forEach(f => { newItem[f.key] = ""; });
+    onChange([...items, newItem]);
+  };
+  const updateItem = (idx: number, key: string, val: string) => {
+    const updated = [...items];
+    updated[idx] = { ...updated[idx], [key]: val };
+    onChange(updated);
+  };
+  const removeItem = (idx: number) => onChange(items.filter((_, i) => i !== idx));
+
+  return (
+    <div className="space-y-3">
+      {items.map((item, idx) => (
+        <div key={idx} className="border border-border rounded-lg p-3 space-y-2 relative bg-muted/20">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1"><GripVertical className="w-3 h-3" /> Item {idx + 1}</span>
+            <Button variant="ghost" size="sm" onClick={() => removeItem(idx)} className="h-6 w-6 p-0"><X className="w-3.5 h-3.5 text-destructive" /></Button>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {fields.map(f => (
+              <div key={f.key} className={f.type === "textarea" ? "col-span-2" : ""}>
+                <Label className="text-[10px] text-muted-foreground">{f.label}</Label>
+                {f.type === "textarea" ? (
+                  <Textarea value={item[f.key] || ""} onChange={(e) => updateItem(idx, f.key, e.target.value)} placeholder={f.placeholder} className="text-sm h-16" />
+                ) : (
+                  <Input value={item[f.key] || ""} onChange={(e) => updateItem(idx, f.key, e.target.value)} placeholder={f.placeholder} className="text-sm h-8" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+      <Button variant="outline" size="sm" onClick={addItem} className="w-full"><Plus className="w-3 h-3 mr-1" /> {addLabel}</Button>
+    </div>
+  );
+};
+
+// ── Section-specific form renderers ──
+const SectionFormRenderer = ({ type, data, onChange, content, onContentChange }: {
+  type: string; data: any; onChange: (d: any) => void; content: string; onContentChange: (c: string) => void;
+}) => {
+  switch (type) {
+    case "courses_fees":
+      return (
+        <div className="space-y-3">
+          <Label className="text-xs font-semibold text-muted-foreground">Courses List</Label>
+          <ListEditor
+            items={data.courses || []}
+            onChange={(items) => onChange({ ...data, courses: items })}
+            fields={[
+              { key: "name", label: "Course Name", placeholder: "MBA / PGDM" },
+              { key: "duration", label: "Duration", placeholder: "2 Years" },
+              { key: "eligibility", label: "Eligibility", placeholder: "Graduation + CAT" },
+              { key: "fees", label: "Total Fees", placeholder: "₹20 Lakh" },
+              { key: "specializations", label: "Specializations", placeholder: "Finance, Marketing, HR" },
+            ]}
+            addLabel="Add Course"
+          />
+        </div>
+      );
+
+    case "admission":
+      return (
+        <div className="space-y-3">
+          <div>
+            <Label className="text-xs font-semibold text-muted-foreground">Admission Overview</Label>
+            <RichTextEditor content={content} onChange={onContentChange} placeholder="Describe the admission process..." />
+          </div>
+          <Label className="text-xs font-semibold text-muted-foreground">Admission Steps</Label>
+          <ListEditor
+            items={data.steps || []}
+            onChange={(items) => onChange({ ...data, steps: items })}
+            fields={[
+              { key: "title", label: "Step Title", placeholder: "Entrance Exam" },
+              { key: "description", label: "Description", placeholder: "Score well in CAT/XAT...", type: "textarea" },
+            ]}
+            addLabel="Add Step"
+          />
+          <Label className="text-xs font-semibold text-muted-foreground">Eligibility Criteria</Label>
+          <ListEditor
+            items={data.eligibility || []}
+            onChange={(items) => onChange({ ...data, eligibility: items })}
+            fields={[
+              { key: "text", label: "Criteria", placeholder: "Bachelor's degree with 50% marks" },
+            ]}
+            addLabel="Add Criteria"
+          />
+        </div>
+      );
+
+    case "placements":
+      return (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <div><Label className="text-[10px] text-muted-foreground">Average Package</Label><Input value={data.avg_package || ""} onChange={(e) => onChange({ ...data, avg_package: e.target.value })} placeholder="₹25 LPA" className="h-8 text-sm" /></div>
+            <div><Label className="text-[10px] text-muted-foreground">Highest Package</Label><Input value={data.highest_package || ""} onChange={(e) => onChange({ ...data, highest_package: e.target.value })} placeholder="₹80 LPA" className="h-8 text-sm" /></div>
+            <div><Label className="text-[10px] text-muted-foreground">Median Package</Label><Input value={data.median_package || ""} onChange={(e) => onChange({ ...data, median_package: e.target.value })} placeholder="₹22 LPA" className="h-8 text-sm" /></div>
+            <div><Label className="text-[10px] text-muted-foreground">Placement Rate</Label><Input value={data.placement_rate || ""} onChange={(e) => onChange({ ...data, placement_rate: e.target.value })} placeholder="98%" className="h-8 text-sm" /></div>
+          </div>
+          <Label className="text-xs font-semibold text-muted-foreground">Sector-wise Placements</Label>
+          <ListEditor
+            items={data.sectors || []}
+            onChange={(items) => onChange({ ...data, sectors: items })}
+            fields={[
+              { key: "sector", label: "Sector", placeholder: "Consulting" },
+              { key: "percentage", label: "Percentage", placeholder: "35" },
+            ]}
+            addLabel="Add Sector"
+          />
+          <Label className="text-xs font-semibold text-muted-foreground">Top Recruiters</Label>
+          <ListEditor
+            items={data.recruiters || []}
+            onChange={(items) => onChange({ ...data, recruiters: items })}
+            fields={[{ key: "name", label: "Company Name", placeholder: "McKinsey" }]}
+            addLabel="Add Recruiter"
+          />
+          <div>
+            <Label className="text-xs font-semibold text-muted-foreground">Additional Details</Label>
+            <RichTextEditor content={content} onChange={onContentChange} placeholder="Extra placement info..." />
+          </div>
+        </div>
+      );
+
+    case "cutoff":
+      return (
+        <div className="space-y-3">
+          <Label className="text-xs font-semibold text-muted-foreground">Cutoff by Category</Label>
+          <ListEditor
+            items={data.cutoffs || []}
+            onChange={(items) => onChange({ ...data, cutoffs: items })}
+            fields={[
+              { key: "category", label: "Category", placeholder: "General / OBC / SC / ST" },
+              { key: "percentile", label: "Cutoff Percentile", placeholder: "95" },
+              { key: "exam", label: "Exam", placeholder: "CAT" },
+              { key: "year", label: "Year", placeholder: "2025" },
+            ]}
+            addLabel="Add Cutoff Entry"
+          />
+          <div>
+            <Label className="text-xs font-semibold text-muted-foreground">Additional Notes</Label>
+            <RichTextEditor content={content} onChange={onContentChange} placeholder="Additional cutoff information..." />
+          </div>
+        </div>
+      );
+
+    case "rankings":
+      return (
+        <div className="space-y-3">
+          <Label className="text-xs font-semibold text-muted-foreground">Rankings by Body</Label>
+          <ListEditor
+            items={data.rankings || []}
+            onChange={(items) => onChange({ ...data, rankings: items })}
+            fields={[
+              { key: "body", label: "Ranking Body", placeholder: "NIRF" },
+              { key: "rank", label: "Rank", placeholder: "#5" },
+              { key: "year", label: "Year", placeholder: "2025" },
+            ]}
+            addLabel="Add Ranking"
+          />
+          <Label className="text-xs font-semibold text-muted-foreground">Accreditations</Label>
+          <ListEditor
+            items={data.accreditations || []}
+            onChange={(items) => onChange({ ...data, accreditations: items })}
+            fields={[{ key: "name", label: "Accreditation", placeholder: "AACSB / EQUIS / AMBA" }]}
+            addLabel="Add Accreditation"
+          />
+        </div>
+      );
+
+    case "reviews":
+      return (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <div><Label className="text-[10px] text-muted-foreground">Overall Rating</Label><Input value={data.overall_rating || ""} onChange={(e) => onChange({ ...data, overall_rating: e.target.value })} placeholder="4.3" className="h-8 text-sm" /></div>
+          </div>
+          <Label className="text-xs font-semibold text-muted-foreground">Rating Aspects</Label>
+          <ListEditor
+            items={data.aspects || []}
+            onChange={(items) => onChange({ ...data, aspects: items })}
+            fields={[
+              { key: "label", label: "Aspect", placeholder: "Academics" },
+              { key: "score", label: "Score (out of 5)", placeholder: "4.5" },
+            ]}
+            addLabel="Add Aspect"
+          />
+          <Label className="text-xs font-semibold text-muted-foreground">Student Reviews</Label>
+          <ListEditor
+            items={data.reviews || []}
+            onChange={(items) => onChange({ ...data, reviews: items })}
+            fields={[
+              { key: "name", label: "Student Name", placeholder: "Rahul S." },
+              { key: "year", label: "Batch", placeholder: "Batch 2024" },
+              { key: "rating", label: "Rating (1-5)", placeholder: "5" },
+              { key: "positives", label: "Positives", placeholder: "Great faculty, infrastructure...", type: "textarea" },
+              { key: "negatives", label: "Negatives", placeholder: "High fees, workload...", type: "textarea" },
+            ]}
+            addLabel="Add Review"
+          />
+        </div>
+      );
+
+    case "gallery":
+      return (
+        <div className="space-y-3">
+          <Label className="text-xs font-semibold text-muted-foreground">Gallery Images</Label>
+          {(data.images || []).map((img: any, idx: number) => (
+            <div key={idx} className="flex items-center gap-2 border border-border rounded-lg p-2">
+              <FileUpload
+                bucket="uploads"
+                folder="colleges/gallery"
+                value={img.url || ""}
+                onChange={(url) => {
+                  const updated = [...(data.images || [])];
+                  updated[idx] = { ...updated[idx], url };
+                  onChange({ ...data, images: updated });
+                }}
+                accept="image/*"
+                label={`Image ${idx + 1}`}
+                sizeHint="800×600 px (4:3 ratio, JPG)"
+              />
+              <div className="flex-1">
+                <Input value={img.caption || ""} onChange={(e) => {
+                  const updated = [...(data.images || [])];
+                  updated[idx] = { ...updated[idx], caption: e.target.value };
+                  onChange({ ...data, images: updated });
+                }} placeholder="Caption (optional)" className="h-8 text-sm" />
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => onChange({ ...data, images: (data.images || []).filter((_: any, i: number) => i !== idx) })}><X className="w-3.5 h-3.5 text-destructive" /></Button>
+            </div>
+          ))}
+          <Button variant="outline" size="sm" onClick={() => onChange({ ...data, images: [...(data.images || []), { url: "", caption: "" }] })} className="w-full"><Plus className="w-3 h-3 mr-1" /> Add Image</Button>
+        </div>
+      );
+
+    case "scholarships":
+      return (
+        <div className="space-y-3">
+          <Label className="text-xs font-semibold text-muted-foreground">Scholarships</Label>
+          <ListEditor
+            items={data.scholarships || []}
+            onChange={(items) => onChange({ ...data, scholarships: items })}
+            fields={[
+              { key: "name", label: "Scholarship Name", placeholder: "Merit Scholarship" },
+              { key: "criteria", label: "Criteria", placeholder: "Top 10% CAT percentile" },
+              { key: "amount", label: "Amount", placeholder: "Up to 50% tuition waiver" },
+              { key: "description", label: "Description", placeholder: "Details about the scholarship...", type: "textarea" },
+            ]}
+            addLabel="Add Scholarship"
+          />
+        </div>
+      );
+
+    case "faculty":
+      return (
+        <div className="space-y-3">
+          <Label className="text-xs font-semibold text-muted-foreground">Faculty Members</Label>
+          <ListEditor
+            items={data.faculty || []}
+            onChange={(items) => onChange({ ...data, faculty: items })}
+            fields={[
+              { key: "name", label: "Full Name", placeholder: "Prof. Rajesh Kumar" },
+              { key: "department", label: "Department", placeholder: "Finance & Accounting" },
+              { key: "qualification", label: "Qualification", placeholder: "PhD IIM Ahmedabad" },
+              { key: "experience", label: "Experience", placeholder: "20+ years" },
+              { key: "photo_url", label: "Photo URL (optional)", placeholder: "https://..." },
+            ]}
+            addLabel="Add Faculty"
+          />
+        </div>
+      );
+
+    case "hostel":
+      return (
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <div><Label className="text-[10px] text-muted-foreground">Campus Size</Label><Input value={data.campus_size || ""} onChange={(e) => onChange({ ...data, campus_size: e.target.value })} placeholder="300 acres" className="h-8 text-sm" /></div>
+            <div><Label className="text-[10px] text-muted-foreground">Total Students</Label><Input value={data.total_students || ""} onChange={(e) => onChange({ ...data, total_students: e.target.value })} placeholder="1500+" className="h-8 text-sm" /></div>
+            <div><Label className="text-[10px] text-muted-foreground">Hostel Rooms</Label><Input value={data.hostel_rooms || ""} onChange={(e) => onChange({ ...data, hostel_rooms: e.target.value })} placeholder="Single & Double" className="h-8 text-sm" /></div>
+            <div><Label className="text-[10px] text-muted-foreground">Library</Label><Input value={data.library || ""} onChange={(e) => onChange({ ...data, library: e.target.value })} placeholder="24/7, 50K+ books" className="h-8 text-sm" /></div>
+          </div>
+          <Label className="text-xs font-semibold text-muted-foreground">Campus Facilities</Label>
+          <ListEditor
+            items={data.facilities || []}
+            onChange={(items) => onChange({ ...data, facilities: items })}
+            fields={[{ key: "name", label: "Facility", placeholder: "Wi-Fi Campus" }]}
+            addLabel="Add Facility"
+          />
+          <div>
+            <Label className="text-xs font-semibold text-muted-foreground">Additional Details</Label>
+            <RichTextEditor content={content} onChange={onContentChange} placeholder="More about campus life..." />
+          </div>
+        </div>
+      );
+
+    case "qa":
+      return (
+        <div className="space-y-3">
+          <Label className="text-xs font-semibold text-muted-foreground">FAQ Items</Label>
+          <ListEditor
+            items={data.questions || []}
+            onChange={(items) => onChange({ ...data, questions: items })}
+            fields={[
+              { key: "question", label: "Question", placeholder: "What is the fee structure?" },
+              { key: "answer", label: "Answer", placeholder: "The total program fees...", type: "textarea" },
+            ]}
+            addLabel="Add FAQ"
+          />
+        </div>
+      );
+
+    case "why_join":
+      return (
+        <div className="space-y-3">
+          <div>
+            <Label className="text-xs font-semibold text-muted-foreground">Why Join Description</Label>
+            <RichTextEditor content={content} onChange={onContentChange} placeholder="Reasons to join this college..." />
+          </div>
+          <Label className="text-xs font-semibold text-muted-foreground">Rating Aspects</Label>
+          <ListEditor
+            items={data.ratings || []}
+            onChange={(items) => onChange({ ...data, ratings: items })}
+            fields={[
+              { key: "label", label: "Aspect", placeholder: "Academics" },
+              { key: "score", label: "Score (out of 5)", placeholder: "4.5" },
+            ]}
+            addLabel="Add Rating Aspect"
+          />
+        </div>
+      );
+
+    case "quick_info":
+      return (
+        <div className="space-y-3">
+          <Label className="text-xs font-semibold text-muted-foreground">Sidebar Info Items</Label>
+          <ListEditor
+            items={data.items || []}
+            onChange={(items) => onChange({ ...data, items: items })}
+            fields={[
+              { key: "label", label: "Label", placeholder: "Location" },
+              { key: "value", label: "Value", placeholder: "Mumbai, Maharashtra" },
+            ]}
+            addLabel="Add Info Item"
+          />
+        </div>
+      );
+
+    case "news":
+      return (
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">News articles are automatically pulled from the Articles section. You can optionally add custom links here.</p>
+          <ListEditor
+            items={data.links || []}
+            onChange={(items) => onChange({ ...data, links: items })}
+            fields={[
+              { key: "title", label: "Title", placeholder: "CAT 2025 Results Out" },
+              { key: "url", label: "URL", placeholder: "/article/cat-2025-results" },
+              { key: "date", label: "Date", placeholder: "2025-12-15" },
+            ]}
+            addLabel="Add News Link"
+          />
+        </div>
+      );
+
+    default:
+      return (
+        <div>
+          <Label className="text-xs font-semibold text-muted-foreground">Content</Label>
+          <RichTextEditor content={content} onChange={onContentChange} placeholder="Section content..." />
+        </div>
+      );
+  }
 };
 
 const AdminCollegeSections = () => {
@@ -63,15 +448,13 @@ const AdminCollegeSections = () => {
 
   const handleSave = async () => {
     if (!form.college_id) { toast({ title: "Select a college", variant: "destructive" }); return; }
-    let parsedData = {};
-    try { parsedData = JSON.parse(form.data); } catch { parsedData = {}; }
 
     const payload = {
       college_id: form.college_id,
       section_type: form.section_type,
       title: form.title || null,
       content: form.content || null,
-      data: parsedData,
+      data: form.data || {},
       sort_order: form.sort_order,
     };
 
@@ -95,7 +478,7 @@ const AdminCollegeSections = () => {
         section_type: data.section_type,
         title: data.title ?? "",
         content: data.content ?? "",
-        data: JSON.stringify(data.data ?? {}, null, 2),
+        data: data.data ?? {},
         sort_order: data.sort_order ?? 0,
       });
       setEditId(id); setDialogOpen(true);
@@ -108,52 +491,88 @@ const AdminCollegeSections = () => {
     fetchSections(); toast({ title: "Section deleted" });
   };
 
+  // Quick-add all sections for a college
+  const handleQuickAdd = async () => {
+    if (!selectedCollege) { toast({ title: "Select a college first", variant: "destructive" }); return; }
+    const existingTypes = sections.filter(s => s.college_id === selectedCollege).map(s => s.section_type);
+    const missing = SECTION_TYPES.filter(t => !existingTypes.includes(t.value));
+    if (missing.length === 0) { toast({ title: "All sections already exist" }); return; }
+
+    const inserts = missing.map((t, i) => ({
+      college_id: selectedCollege,
+      section_type: t.value,
+      title: t.label,
+      sort_order: (existingTypes.length + i) * 10,
+      data: {},
+    }));
+
+    const { error } = await supabase.from("college_sections").insert(inserts);
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    toast({ title: `Added ${missing.length} sections` });
+    fetchSections();
+  };
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="font-heading text-2xl font-bold text-foreground">College Sections</h1>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => { setForm(emptyForm); setEditId(null); }}>
-              <Plus className="w-4 h-4 mr-2" /> Add Section
+        <div className="flex gap-2">
+          {selectedCollege && (
+            <Button variant="outline" onClick={handleQuickAdd}>
+              <Plus className="w-4 h-4 mr-1" /> Quick Add All Missing
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editId ? "Edit" : "Add"} College Section</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-3">
-              <div>
-                <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">College *</Label>
-                <select className="w-full border border-border rounded-md p-2 text-sm bg-background" value={form.college_id} onChange={(e) => setForm({ ...form, college_id: e.target.value })}>
-                  <option value="">Choose college...</option>
-                  {colleges.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
+          )}
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => { setForm({ ...emptyForm, college_id: selectedCollege }); setEditId(null); }}>
+                <Plus className="w-4 h-4 mr-2" /> Add Section
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{editId ? "Edit" : "Add"} College Section</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">College *</Label>
+                    <select className="w-full border border-border rounded-md p-2 text-sm bg-background" value={form.college_id} onChange={(e) => setForm({ ...form, college_id: e.target.value })}>
+                      <option value="">Choose college...</option>
+                      {colleges.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Section Type</Label>
+                    <Select value={form.section_type} onValueChange={(v) => setForm({ ...form, section_type: v, data: {} })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {SECTION_TYPES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <Input placeholder="Section Title (optional override)" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+
+                <div className="border border-border rounded-lg p-4 bg-muted/10">
+                  <h3 className="text-sm font-semibold text-foreground mb-3">
+                    {SECTION_TYPES.find(t => t.value === form.section_type)?.label} — Content Editor
+                  </h3>
+                  <SectionFormRenderer
+                    type={form.section_type}
+                    data={form.data}
+                    onChange={(d) => setForm({ ...form, data: d })}
+                    content={form.content}
+                    onContentChange={(c) => setForm({ ...form, content: c })}
+                  />
+                </div>
+
+                <Input type="number" placeholder="Sort order" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} />
+                <Button onClick={handleSave} className="w-full">{editId ? "Update" : "Create"} Section</Button>
               </div>
-              <div>
-                <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Section Type</Label>
-                <Select value={form.section_type} onValueChange={(v) => setForm({ ...form, section_type: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {SECTION_TYPES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Input placeholder="Section Title (optional override)" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
-              <div>
-                <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Content</Label>
-                <RichTextEditor content={form.content} onChange={(html) => setForm({ ...form, content: html })} placeholder="Section content with rich formatting..." />
-              </div>
-              <div>
-                <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Extra Data (JSON)</Label>
-                <textarea className="w-full border border-border rounded-md p-2 text-sm bg-background font-mono h-24" value={form.data} onChange={(e) => setForm({ ...form, data: e.target.value })} placeholder='{"images": [], "items": []}' />
-                <span className="text-xs text-muted-foreground">For gallery images, Q&A items, scholarship details etc.</span>
-              </div>
-              <Input type="number" placeholder="Sort order" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} />
-              <Button onClick={handleSave} className="w-full">{editId ? "Update" : "Create"} Section</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <div className="mb-4">
@@ -190,7 +609,7 @@ const AdminCollegeSections = () => {
                 </TableRow>
               ))}
               {sections.length === 0 && (
-                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No sections yet</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No sections yet. Select a college and click "Quick Add All Missing" to scaffold all sections.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
