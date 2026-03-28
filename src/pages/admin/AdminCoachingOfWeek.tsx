@@ -127,7 +127,7 @@ const AdminCoachingOfWeek = () => {
                 <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Results Summary</Label>
                 <RichTextEditor content={form.results_summary} onChange={(html) => setForm({ ...form, results_summary: html })} placeholder="Key results and achievements..." />
               </div>
-              <FileUpload bucket="uploads" folder="coaching-of-week" value={form.banner_url} onChange={(url) => setForm({ ...form, banner_url: url })} accept="image/*" label="Banner Image" />
+              <FileUpload bucket="uploads" folder="coaching-of-week" value={form.banner_url} onChange={(url) => setForm({ ...form, banner_url: url })} accept="image/*" label="Banner Image" sizeHint="1200×500 px (landscape, JPG/PNG)" />
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
                 Active

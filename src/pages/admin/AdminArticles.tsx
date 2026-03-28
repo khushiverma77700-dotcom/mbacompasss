@@ -250,8 +250,8 @@ const AdminArticles = () => {
                   <Switch checked={form.featured} onCheckedChange={(v) => setForm({ ...form, featured: v })} />
                   <Label>Featured on Homepage</Label>
                 </div>
-                <FileUpload bucket="uploads" folder="articles/banners" value={form.banner_url} onChange={(url) => setForm({ ...form, banner_url: url })} accept="image/*" label="Banner Image" />
-                <FileUpload bucket="uploads" folder="articles/images" value={form.image_url} onChange={(url) => setForm({ ...form, image_url: url })} accept="image/*" label="Featured Image" />
+                <FileUpload bucket="uploads" folder="articles/banners" value={form.banner_url} onChange={(url) => setForm({ ...form, banner_url: url })} accept="image/*" label="Banner Image" sizeHint="1200×400 px (3:1 ratio, JPG/PNG)" />
+                <FileUpload bucket="uploads" folder="articles/images" value={form.image_url} onChange={(url) => setForm({ ...form, image_url: url })} accept="image/*" label="Featured Image" sizeHint="800×450 px (16:9 ratio, JPG/PNG)" />
               </TabsContent>
             </Tabs>
 

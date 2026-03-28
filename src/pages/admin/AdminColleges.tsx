@@ -176,8 +176,8 @@ const AdminColleges = () => {
                   <Input type="number" placeholder="Ranking" value={form.ranking || ""} onChange={(e) => setForm({ ...form, ranking: parseInt(e.target.value) || 0 })} />
                   <Input placeholder="Fees (e.g. ₹20L)" value={form.fees} onChange={(e) => setForm({ ...form, fees: e.target.value })} />
                 </div>
-                <FileUpload bucket="uploads" folder="colleges/logos" value={form.logo_url} onChange={(url) => setForm({ ...form, logo_url: url })} accept="image/*" label="College Logo" />
-                <FileUpload bucket="uploads" folder="colleges/banners" value={form.banner_url} onChange={(url) => setForm({ ...form, banner_url: url })} accept="image/*" label="Banner Image" />
+                <FileUpload bucket="uploads" folder="colleges/logos" value={form.logo_url} onChange={(url) => setForm({ ...form, logo_url: url })} accept="image/*" label="College Logo" sizeHint="200×200 px (square, PNG preferred)" />
+                <FileUpload bucket="uploads" folder="colleges/banners" value={form.banner_url} onChange={(url) => setForm({ ...form, banner_url: url })} accept="image/*" label="Banner Image" sizeHint="1200×400 px (3:1 ratio, JPG/PNG)" />
                 <Input placeholder="Website URL" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
               </TabsContent>
 
