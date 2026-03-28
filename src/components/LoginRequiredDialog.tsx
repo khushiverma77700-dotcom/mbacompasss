@@ -51,7 +51,7 @@ const LoginRequiredDialog = ({ open, onOpenChange, message }: LoginRequiredDialo
     setGoogleLoading(true);
     try {
       const { error } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: window.location.href,
       });
       if (error) throw error;
     } catch (error: any) {
@@ -73,7 +73,6 @@ const LoginRequiredDialog = ({ open, onOpenChange, message }: LoginRequiredDialo
           </DialogDescription>
         </DialogHeader>
 
-        {/* Google Sign In */}
         <Button
           variant="outline"
           className="w-full font-medium"

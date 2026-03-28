@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Mail, Lock, User, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,10 @@ const AuthPage = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const { signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+
+  const redirectTo = (location.state as any)?.from || "/";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +34,7 @@ const AuthPage = () => {
       if (isLogin) {
         await signIn(email, password);
         toast({ title: "Welcome back!", description: "You've been signed in successfully." });
-        navigate("/");
+        navigate(redirectTo, { replace: true });
       } else {
         await signUp(email, password, displayName);
         toast({ title: "Account created!", description: "Please check your email to verify your account." });
@@ -47,7 +50,7 @@ const AuthPage = () => {
     setGoogleLoading(true);
     try {
       const { error } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: window.location.href,
       });
       if (error) throw error;
     } catch (error: any) {
@@ -72,7 +75,6 @@ const AuthPage = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Google Sign In */}
           <Button
             variant="outline"
             className="w-full font-medium"
