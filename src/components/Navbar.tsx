@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, GraduationCap, LogIn, LogOut, Shield, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SmartSearch from "@/components/SmartSearch";
@@ -18,6 +18,7 @@ const fallbackLinks = [
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, isAdmin, signOut } = useAuth();
   const { data: header } = useSiteSettings("header");
 
