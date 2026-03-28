@@ -167,6 +167,14 @@ const InstitutePage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title={`${institute.name} — Best MBA Coaching in ${institute.city} | MBAHub`}
+        description={institute.meta_description || `${institute.name} offers top MBA coaching in ${institute.city}. ${institute.success_rate}% success rate, ${courses.length} courses.`}
+        keywords={institute.keywords as string[] || []}
+        canonical={`${window.location.origin}/institute/${institute.slug}`}
+        jsonLd={seoSchema}
+        ogImage={institute.banner_url || institute.logo_url || undefined}
+      />
       {/* Hero */}
       <div className="hero-gradient py-10 md:py-14 relative overflow-hidden">
         {institute.banner_url && (
