@@ -19,6 +19,7 @@ const emptyForm = {
   name: "",
   designation: "",
   institute: "",
+  institute_id: "",
   content: "",
   image_url: "",
   video_url: "",
@@ -30,6 +31,7 @@ const emptyForm = {
 
 const AdminTestimonials = () => {
   const [testimonials, setTestimonials] = useState<any[]>([]);
+  const [institutes, setInstitutes] = useState<{ id: string; name: string }[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
@@ -40,7 +42,12 @@ const AdminTestimonials = () => {
     if (data) setTestimonials(data);
   };
 
-  useEffect(() => { fetchData(); }, []);
+  const fetchInstitutes = async () => {
+    const { data } = await supabase.from("institutes").select("id, name").order("name");
+    if (data) setInstitutes(data);
+  };
+
+  useEffect(() => { fetchData(); fetchInstitutes(); }, []);
 
   const handleSave = async () => {
     if (!form.name) {
@@ -63,6 +70,7 @@ const AdminTestimonials = () => {
     setForm({
       type: t.type || "text", name: t.name,
       designation: t.designation || "", institute: t.institute || "",
+      institute_id: t.institute_id || "",
       content: t.content || "", image_url: t.image_url || "",
       video_url: t.video_url || "", rating: t.rating || 5,
       featured: t.featured || false, sort_order: t.sort_order || 0,
@@ -117,9 +125,16 @@ const AdminTestimonials = () => {
                   <Input value={form.designation} onChange={(e) => setForm({ ...form, designation: e.target.value })} placeholder="CAT 99.5%ile" />
                 </div>
                 <div>
-                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Institute</Label>
+                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Institute (text)</Label>
                   <Input value={form.institute} onChange={(e) => setForm({ ...form, institute: e.target.value })} placeholder="IIM Ahmedabad" />
                 </div>
+              </div>
+              <div>
+                <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Link to Coaching Institute (optional)</Label>
+                <select className="w-full border border-border rounded-md p-2 text-sm bg-background" value={form.institute_id} onChange={(e) => setForm({ ...form, institute_id: e.target.value })}>
+                  <option value="">No linked institute</option>
+                  {institutes.map((inst) => <option key={inst.id} value={inst.id}>{inst.name}</option>)}
+                </select>
               </div>
               {form.type === "text" && (
                 <div>

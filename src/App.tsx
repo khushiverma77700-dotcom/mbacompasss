@@ -32,6 +32,10 @@ import AdminExams from "./pages/admin/AdminExams";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminSiteSettings from "./pages/admin/AdminSiteSettings";
 import AdminTestimonials from "./pages/admin/AdminTestimonials";
+import AdminCoupons from "./pages/admin/AdminCoupons";
+import AdminCoachingOfWeek from "./pages/admin/AdminCoachingOfWeek";
+import AdminCollegeSections from "./pages/admin/AdminCollegeSections";
+import AdminInstituteResults from "./pages/admin/AdminInstituteResults";
 import DashboardPage from "./pages/DashboardPage";
 import CollegeDetailPage from "./pages/CollegeDetailPage";
 import CollegeFilterPage from "./pages/CollegeFilterPage";
@@ -70,6 +74,10 @@ const App = () => (
               <Route path="categories" element={<AdminCategories />} />
               <Route path="site-settings" element={<AdminSiteSettings />} />
               <Route path="testimonials" element={<AdminTestimonials />} />
+              <Route path="coupons" element={<AdminCoupons />} />
+              <Route path="coaching-of-week" element={<AdminCoachingOfWeek />} />
+              <Route path="college-sections" element={<AdminCollegeSections />} />
+              <Route path="institute-results" element={<AdminInstituteResults />} />
             </Route>
             <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
             <Route path="/category/:slug" element={<PublicLayout><CategoryPage /></PublicLayout>} />
