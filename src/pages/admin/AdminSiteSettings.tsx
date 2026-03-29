@@ -31,10 +31,14 @@ const AdminSiteSettings = () => {
   useEffect(() => { fetchSettings(); }, []);
 
   const saveKey = async (key: string) => {
-    const { error } = await supabase
-      .from("site_settings")
-      .update({ value: settings[key], updated_at: new Date().toISOString() })
-      .eq("key", key);
+    // Upsert: try update first, if no rows affected, insert
+    const { data: existing } = await supabase.from("site_settings").select("id").eq("key", key).maybeSingle();
+    let error;
+    if (existing) {
+      ({ error } = await supabase.from("site_settings").update({ value: settings[key], updated_at: new Date().toISOString() }).eq("key", key));
+    } else {
+      ({ error } = await supabase.from("site_settings").insert({ key, value: settings[key] }));
+    }
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
