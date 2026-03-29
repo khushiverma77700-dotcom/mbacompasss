@@ -15,6 +15,10 @@ import HowItWorksSection from "@/components/HowItWorksSection";
 import TopExamComparisonSection from "@/components/TopExamComparisonSection";
 import FAQSection from "@/components/FAQSection";
 import CTASection from "@/components/CTASection";
+import TopRankedCollegesSection from "@/components/TopRankedCollegesSection";
+import ExamDeadlinesTicker from "@/components/ExamDeadlinesTicker";
+import SuccessStoriesSection from "@/components/SuccessStoriesSection";
+import LearningResourcesSection from "@/components/LearningResourcesSection";
 import SEOHead, { generateWebsiteSchema, generateOrganizationSchema } from "@/components/SEOHead";
 
 const Index = () => {
@@ -30,16 +34,19 @@ const Index = () => {
       />
       <HeroSection />
       <StatsCounterSection />
-      
       <OfferBanners />
       <CoachingOfWeekSection />
+      <ExamDeadlinesTicker />
       <HowItWorksSection />
       <CategoryCards />
       <FeaturedInstitutes />
+      <TopRankedCollegesSection />
       <MBACollegesSection />
+      <LearningResourcesSection />
       <TopCitiesSection />
       <PopularExamsSection />
       <TopExamComparisonSection />
+      <SuccessStoriesSection />
       <CollegeTestimonialsSection />
       <TestimonialsSection />
       <WhyChooseUs />
