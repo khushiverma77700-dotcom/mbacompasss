@@ -44,6 +44,7 @@ import AdminInstituteResults from "./pages/admin/AdminInstituteResults";
 import AdminSitemap from "./pages/admin/AdminSitemap";
 import AdminClearCache from "./pages/admin/AdminClearCache";
 import AdminLeads from "./pages/admin/AdminLeads";
+import AdminCityPages from "./pages/admin/AdminCityPages";
 import DashboardPage from "./pages/DashboardPage";
 import CollegeDetailPage from "./pages/CollegeDetailPage";
 import CollegeFilterPage from "./pages/CollegeFilterPage";
@@ -145,6 +146,7 @@ const App = () => (
               <Route path="sitemap" element={<AdminSitemap />} />
               <Route path="clear-cache" element={<AdminClearCache />} />
               <Route path="leads" element={<AdminLeads />} />
+              <Route path="city-pages" element={<AdminCityPages />} />
             </Route>
             <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
             <Route path="/category/:slug" element={<PublicLayout><CategoryPage /></PublicLayout>} />
