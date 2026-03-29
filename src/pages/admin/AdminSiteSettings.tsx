@@ -84,6 +84,8 @@ const AdminSiteSettings = () => {
           <TabsTrigger value="hero">Hero Section</TabsTrigger>
           <TabsTrigger value="stats">Stats</TabsTrigger>
           <TabsTrigger value="why">Why Choose Us</TabsTrigger>
+          <TabsTrigger value="howit">How It Works</TabsTrigger>
+          <TabsTrigger value="faqs">FAQs</TabsTrigger>
           <TabsTrigger value="contact">Contact Page</TabsTrigger>
           <TabsTrigger value="about">About Page</TabsTrigger>
         </TabsList>
