@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import BackButton from "@/components/BackButton";
+import { consumePostAuthRedirect } from "@/lib/authRedirect";
 import Index from "./pages/Index";
 import CategoryPage from "./pages/CategoryPage";
 import InstitutePage from "./pages/InstitutePage";
@@ -53,6 +54,25 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   </>
 );
 
+const OAuthRedirectHandler = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  React.useEffect(() => {
+    if (loading || !user) return;
+
+    const pendingPath = consumePostAuthRedirect();
+    const currentPath = `${location.pathname}${location.search}${location.hash}`;
+
+    if (pendingPath && pendingPath !== currentPath) {
+      navigate(pendingPath, { replace: true });
+    }
+  }, [loading, user, location.pathname, location.search, location.hash, navigate]);
+
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -61,6 +81,7 @@ const App = () => (
       <BrowserRouter>
         <ScrollToTop />
         <AuthProvider>
+          <OAuthRedirectHandler />
           <Routes>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />

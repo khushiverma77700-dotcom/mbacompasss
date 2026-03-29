@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { lovable } from "@/integrations/lovable/index";
+import { getAuthRedirectUri, normalizeRedirectPath, storePostAuthRedirect } from "@/lib/authRedirect";
 import mbahubLogo from "@/assets/mbahub-logo.png";
 
 const AuthPage = () => {
@@ -49,8 +50,9 @@ const AuthPage = () => {
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     try {
+      storePostAuthRedirect(normalizeRedirectPath(redirectTo));
       const { error } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin + redirectTo,
+        redirect_uri: getAuthRedirectUri(),
       });
       if (error) throw error;
     } catch (error: any) {
