@@ -7,11 +7,24 @@ interface SEOHeadProps {
   description?: string;
   keywords?: string[];
   canonical?: string;
-  jsonLd?: Record<string, any>;
+  jsonLd?: Record<string, any> | Record<string, any>[];
   ogImage?: string;
+  ogType?: string;
+  twitterCard?: "summary" | "summary_large_image";
+  noIndex?: boolean;
 }
 
-const SEOHead = ({ title, description, keywords, canonical, jsonLd, ogImage }: SEOHeadProps) => {
+const SEOHead = ({
+  title,
+  description,
+  keywords,
+  canonical,
+  jsonLd,
+  ogImage,
+  ogType = "website",
+  twitterCard = "summary_large_image",
+  noIndex,
+}: SEOHeadProps) => {
   useEffect(() => {
     if (title) document.title = title;
 
@@ -27,20 +40,25 @@ const SEOHead = ({ title, description, keywords, canonical, jsonLd, ogImage }: S
 
     if (description) setMeta("description", description);
     if (keywords?.length) setMeta("keywords", keywords.join(", "));
-    if (title) {
-      setMeta("og:title", title, "property");
-      setMeta("twitter:title", title);
-    }
-    if (description) {
-      setMeta("og:description", description, "property");
-      setMeta("twitter:description", description);
-    }
-    if (ogImage) {
-      setMeta("og:image", ogImage, "property");
-      setMeta("twitter:image", ogImage);
-    }
+
+    // Open Graph
+    if (title) setMeta("og:title", title, "property");
+    if (description) setMeta("og:description", description, "property");
+    if (ogImage) setMeta("og:image", ogImage, "property");
     setMeta("og:site_name", "Best MBA Coaching", "property");
-    setMeta("og:type", "website", "property");
+    setMeta("og:type", ogType, "property");
+    if (canonical) setMeta("og:url", canonical, "property");
+
+    // Twitter Card
+    setMeta("twitter:card", twitterCard);
+    if (title) setMeta("twitter:title", title);
+    if (description) setMeta("twitter:description", description);
+    if (ogImage) setMeta("twitter:image", ogImage);
+
+    // Robots
+    if (noIndex) {
+      setMeta("robots", "noindex, nofollow");
+    }
 
     // Canonical
     if (canonical) {
@@ -53,29 +71,62 @@ const SEOHead = ({ title, description, keywords, canonical, jsonLd, ogImage }: S
       link.setAttribute("href", canonical);
     }
 
-    // JSON-LD
+    // JSON-LD — support single or array of schemas
+    const existingScripts = document.querySelectorAll('script[data-seo-jsonld]');
+    existingScripts.forEach((s) => s.remove());
+
     if (jsonLd) {
-      const existingScript = document.querySelector('script[data-seo-jsonld]');
-      if (existingScript) existingScript.remove();
-      const script = document.createElement("script");
-      script.type = "application/ld+json";
-      script.setAttribute("data-seo-jsonld", "true");
-      script.textContent = JSON.stringify(jsonLd);
-      document.head.appendChild(script);
+      const schemas = Array.isArray(jsonLd) ? jsonLd : [jsonLd];
+      schemas.forEach((schema, i) => {
+        const script = document.createElement("script");
+        script.type = "application/ld+json";
+        script.setAttribute("data-seo-jsonld", String(i));
+        script.textContent = JSON.stringify(schema);
+        document.head.appendChild(script);
+      });
     }
 
     return () => {
-      const script = document.querySelector('script[data-seo-jsonld]');
-      if (script) script.remove();
+      const scripts = document.querySelectorAll('script[data-seo-jsonld]');
+      scripts.forEach((s) => s.remove());
     };
-  }, [title, description, keywords, canonical, jsonLd, ogImage]);
+  }, [title, description, keywords, canonical, jsonLd, ogImage, ogType, twitterCard, noIndex]);
 
   return null;
 };
 
 export default SEOHead;
 
-// JSON-LD generators
+// ==========================================
+// JSON-LD Schema Generators
+// ==========================================
+
+export const generateWebsiteSchema = () => ({
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Best MBA Coaching",
+  url: SITE_URL,
+  potentialAction: {
+    "@type": "SearchAction",
+    target: `${SITE_URL}/?q={search_term_string}`,
+    "query-input": "required name=search_term_string",
+  },
+});
+
+export const generateOrganizationSchema = () => ({
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Best MBA Coaching",
+  url: SITE_URL,
+  logo: `${SITE_URL}/logo.png`,
+  sameAs: [],
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "customer service",
+    availableLanguage: ["English", "Hindi"],
+  },
+});
+
 export const generateArticleSchema = (article: any) => ({
   "@context": "https://schema.org",
   "@type": "Article",
@@ -89,6 +140,7 @@ export const generateArticleSchema = (article: any) => ({
     "@type": "Organization",
     name: "Best MBA Coaching",
     url: SITE_URL,
+    logo: { "@type": "ImageObject", url: `${SITE_URL}/logo.png` },
   },
   mainEntityOfPage: { "@type": "WebPage", "@id": `${SITE_URL}/article/${article.slug}` },
   keywords: (article.keywords || []).join(", "),
@@ -105,14 +157,16 @@ export const generateCollegeSchema = (college: any) => ({
     addressRegion: college.state,
     addressCountry: "IN",
   },
-  url: college.website,
+  url: college.website || `${SITE_URL}/college/${college.slug}`,
   foundingDate: college.established ? String(college.established) : undefined,
-  aggregateRating: college.ranking ? {
-    "@type": "AggregateRating",
-    ratingValue: "4.5",
-    bestRating: "5",
-    ratingCount: college.total_students || 100,
-  } : undefined,
+  aggregateRating: college.ranking
+    ? {
+        "@type": "AggregateRating",
+        ratingValue: "4.5",
+        bestRating: "5",
+        ratingCount: college.total_students || 100,
+      }
+    : undefined,
 });
 
 export const generateInstituteSchema = (institute: any) => ({
@@ -127,12 +181,15 @@ export const generateInstituteSchema = (institute: any) => ({
     addressCountry: "IN",
   },
   url: institute.website || `${SITE_URL}/institute/${institute.slug}`,
-  aggregateRating: institute.rating ? {
-    "@type": "AggregateRating",
-    ratingValue: String(institute.rating),
-    bestRating: "5",
-    ratingCount: String(institute.total_reviews || 10),
-  } : undefined,
+  telephone: institute.phone,
+  aggregateRating: institute.rating
+    ? {
+        "@type": "AggregateRating",
+        ratingValue: String(institute.rating),
+        bestRating: "5",
+        ratingCount: String(institute.total_reviews || 10),
+      }
+    : undefined,
   hasOfferCatalog: {
     "@type": "OfferCatalog",
     name: "Courses",
@@ -178,7 +235,7 @@ export const generateComparisonSchema = (courses: any[]) => ({
   "@context": "https://schema.org",
   "@type": "WebPage",
   name: "Compare MBA Coaching Courses — Side by Side Comparison",
-  description: "Compare top MBA coaching courses by fees, curriculum, success rates, faculty, and student reviews. Make the best decision for your MBA preparation.",
+  description: "Compare top MBA coaching courses by fees, curriculum, success rates, faculty, and student reviews.",
   url: `${SITE_URL}/compare`,
   mainEntity: {
     "@type": "ItemList",
@@ -200,7 +257,7 @@ export const generateComparisonSchema = (courses: any[]) => ({
 export const generateFAQSchema = (faqs: { q: string; a: string }[]) => ({
   "@context": "https://schema.org",
   "@type": "FAQPage",
-  mainEntity: faqs.map(faq => ({
+  mainEntity: faqs.map((faq) => ({
     "@type": "Question",
     name: faq.q,
     acceptedAnswer: {
