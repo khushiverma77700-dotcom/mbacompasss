@@ -19,6 +19,9 @@ import TopRankedCollegesSection from "@/components/TopRankedCollegesSection";
 import ExamDeadlinesTicker from "@/components/ExamDeadlinesTicker";
 import SuccessStoriesSection from "@/components/SuccessStoriesSection";
 import LearningResourcesSection from "@/components/LearningResourcesSection";
+import TopCollegeSpotlight from "@/components/TopCollegeSpotlight";
+import LatestArticlesSection from "@/components/LatestArticlesSection";
+import BrowseByCitySection from "@/components/BrowseByCitySection";
 import SEOHead, { generateWebsiteSchema, generateOrganizationSchema } from "@/components/SEOHead";
 
 const Index = () => {
@@ -40,12 +43,15 @@ const Index = () => {
       <HowItWorksSection />
       <CategoryCards />
       <FeaturedInstitutes />
+      <TopCollegeSpotlight />
       <TopRankedCollegesSection />
       <MBACollegesSection />
+      <BrowseByCitySection />
       <LearningResourcesSection />
       <TopCitiesSection />
       <PopularExamsSection />
       <TopExamComparisonSection />
+      <LatestArticlesSection />
       <SuccessStoriesSection />
       <CollegeTestimonialsSection />
       <TestimonialsSection />
