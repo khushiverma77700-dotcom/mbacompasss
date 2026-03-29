@@ -798,10 +798,15 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          onboarding_completed: boolean | null
           phone: string | null
+          signup_page_name: string | null
+          signup_page_url: string | null
           target_exam: string | null
+          target_exams: string[] | null
           updated_at: string
           user_id: string
+          work_experience: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -809,10 +814,15 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          onboarding_completed?: boolean | null
           phone?: string | null
+          signup_page_name?: string | null
+          signup_page_url?: string | null
           target_exam?: string | null
+          target_exams?: string[] | null
           updated_at?: string
           user_id: string
+          work_experience?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -820,10 +830,15 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          onboarding_completed?: boolean | null
           phone?: string | null
+          signup_page_name?: string | null
+          signup_page_url?: string | null
           target_exam?: string | null
+          target_exams?: string[] | null
           updated_at?: string
           user_id?: string
+          work_experience?: string | null
         }
         Relationships: []
       }
