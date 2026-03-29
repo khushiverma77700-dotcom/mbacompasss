@@ -71,6 +71,8 @@ const AdminSiteSettings = () => {
   const hero = settings.hero || {};
   const whyChoose = settings.why_choose_us || {};
   const stats = settings.stats || {};
+  const faqs = settings.faqs || {};
+  const howItWorks = settings.how_it_works || {};
 
   return (
     <div>
