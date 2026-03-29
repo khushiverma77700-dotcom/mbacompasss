@@ -75,7 +75,7 @@ const PopularExamsSection = () => {
           {exams.map((exam, i) => {
             const examDate = parseExamDate(exam.exam_date);
             const daysLeft = examDate ? differenceInDays(examDate, today) : null;
-            const patterns = (exam.pattern as ExamPattern[] | null) || [];
+            const patterns = (exam.pattern as unknown as ExamPattern[] | null) || [];
             const totalQuestions = patterns.reduce((s, p) => s + (p.questions || 0), 0);
             const totalMarks = patterns.reduce((s, p) => s + (p.marks || 0), 0);
 
