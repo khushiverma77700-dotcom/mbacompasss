@@ -222,7 +222,7 @@ const AdminCityPages = () => {
               </div>
               <div>
                 <Label>Hero Image</Label>
-                <FileUpload value={form.hero_image_url} onChange={url => setForm(f => ({ ...f, hero_image_url: url }))} folder="city-pages" />
+                <FileUpload bucket="uploads" value={form.hero_image_url} onChange={url => setForm(f => ({ ...f, hero_image_url: url }))} folder="city-pages" />
               </div>
             </TabsContent>
 
@@ -261,8 +261,8 @@ const AdminCityPages = () => {
               <SEOChecklist data={{
                 title: form.name,
                 content: (form.intro_content || "") + (form.detailed_content || ""),
-                metaTitle: form.meta_title,
-                metaDescription: form.meta_description,
+                meta_title: form.meta_title,
+                meta_description: form.meta_description,
                 keywords: form.keywords,
                 slug: form.slug,
               }} />
