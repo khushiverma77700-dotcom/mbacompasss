@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -10,7 +10,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import BackButton from "@/components/BackButton";
+import OnboardingDialog from "@/components/OnboardingDialog";
 import { consumePostAuthRedirect } from "@/lib/authRedirect";
+import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import CategoryPage from "./pages/CategoryPage";
 import InstitutePage from "./pages/InstitutePage";
@@ -41,6 +43,7 @@ import AdminCollegeSections from "./pages/admin/AdminCollegeSections";
 import AdminInstituteResults from "./pages/admin/AdminInstituteResults";
 import AdminSitemap from "./pages/admin/AdminSitemap";
 import AdminClearCache from "./pages/admin/AdminClearCache";
+import AdminLeads from "./pages/admin/AdminLeads";
 import DashboardPage from "./pages/DashboardPage";
 import CollegeDetailPage from "./pages/CollegeDetailPage";
 import CollegeFilterPage from "./pages/CollegeFilterPage";
@@ -56,6 +59,41 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => (
     <Footer />
   </>
 );
+
+const OnboardingGate = () => {
+  const { user, loading } = useAuth();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [checked, setChecked] = useState(false);
+
+  React.useEffect(() => {
+    if (loading || !user || checked) return;
+
+    const checkOnboarding = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("onboarding_completed")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (data && !(data as any).onboarding_completed) {
+        setShowOnboarding(true);
+      }
+      setChecked(true);
+    };
+
+    checkOnboarding();
+  }, [loading, user, checked]);
+
+  if (!showOnboarding || !user) return null;
+
+  return (
+    <OnboardingDialog
+      open={showOnboarding}
+      onComplete={() => setShowOnboarding(false)}
+      userId={user.id}
+    />
+  );
+};
 
 const OAuthRedirectHandler = () => {
   const { user, loading } = useAuth();
@@ -85,6 +123,7 @@ const App = () => (
         <ScrollToTop />
         <AuthProvider>
           <OAuthRedirectHandler />
+          <OnboardingGate />
           <Routes>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
@@ -105,6 +144,7 @@ const App = () => (
               <Route path="institute-results" element={<AdminInstituteResults />} />
               <Route path="sitemap" element={<AdminSitemap />} />
               <Route path="clear-cache" element={<AdminClearCache />} />
+              <Route path="leads" element={<AdminLeads />} />
             </Route>
             <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
             <Route path="/category/:slug" element={<PublicLayout><CategoryPage /></PublicLayout>} />
