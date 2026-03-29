@@ -283,6 +283,95 @@ const AdminSiteSettings = () => {
           </Card>
         </TabsContent>
 
+        {/* HOW IT WORKS */}
+        <TabsContent value="howit">
+          <Card>
+            <CardHeader><CardTitle>How It Works Section</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Heading</Label>
+                  <Input value={howItWorks.heading || ""} onChange={(e) => update("how_it_works", "heading", e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Subheading</Label>
+                  <Input value={howItWorks.subheading || ""} onChange={(e) => update("how_it_works", "subheading", e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs font-semibold text-muted-foreground mb-2 block">Steps (icon options: Search, ListFilter, PhoneCall, CheckCircle)</Label>
+                {(howItWorks.steps || []).map((step: any, idx: number) => (
+                  <div key={idx} className="grid grid-cols-4 gap-2 mb-2 p-3 border border-border rounded-lg">
+                    <Input placeholder="Icon" value={step.icon || ""} onChange={(e) => {
+                      const arr = [...(howItWorks.steps || [])];
+                      arr[idx] = { ...arr[idx], icon: e.target.value };
+                      update("how_it_works", "steps", arr);
+                    }} />
+                    <Input placeholder="Title" value={step.title || ""} onChange={(e) => {
+                      const arr = [...(howItWorks.steps || [])];
+                      arr[idx] = { ...arr[idx], title: e.target.value };
+                      update("how_it_works", "steps", arr);
+                    }} />
+                    <Textarea placeholder="Description" value={step.description || ""} onChange={(e) => {
+                      const arr = [...(howItWorks.steps || [])];
+                      arr[idx] = { ...arr[idx], description: e.target.value };
+                      update("how_it_works", "steps", arr);
+                    }} rows={1} />
+                    <Button variant="ghost" size="sm" onClick={() => {
+                      update("how_it_works", "steps", (howItWorks.steps || []).filter((_: any, i: number) => i !== idx));
+                    }}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                  </div>
+                ))}
+                <Button variant="outline" size="sm" onClick={() => update("how_it_works", "steps", [...(howItWorks.steps || []), { icon: "Search", title: "", description: "" }])}><Plus className="w-4 h-4 mr-1" /> Add Step</Button>
+              </div>
+              <Button onClick={() => saveKey("how_it_works")}><Save className="w-4 h-4 mr-2" /> Save</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* FAQs */}
+        <TabsContent value="faqs">
+          <Card>
+            <CardHeader><CardTitle>Homepage FAQs</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Heading</Label>
+                  <Input value={faqs.heading || ""} onChange={(e) => update("faqs", "heading", e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Subheading</Label>
+                  <Input value={faqs.subheading || ""} onChange={(e) => update("faqs", "subheading", e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs font-semibold text-muted-foreground mb-2 block">FAQ Items</Label>
+                {(faqs.items || []).map((faq: any, idx: number) => (
+                  <div key={idx} className="p-3 border border-border rounded-lg mb-2 space-y-2">
+                    <div className="flex gap-2">
+                      <Input placeholder="Question" value={faq.q || ""} onChange={(e) => {
+                        const arr = [...(faqs.items || [])];
+                        arr[idx] = { ...arr[idx], q: e.target.value };
+                        update("faqs", "items", arr);
+                      }} className="flex-1" />
+                      <Button variant="ghost" size="sm" onClick={() => {
+                        update("faqs", "items", (faqs.items || []).filter((_: any, i: number) => i !== idx));
+                      }}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                    </div>
+                    <Textarea placeholder="Answer" value={faq.a || ""} onChange={(e) => {
+                      const arr = [...(faqs.items || [])];
+                      arr[idx] = { ...arr[idx], a: e.target.value };
+                      update("faqs", "items", arr);
+                    }} rows={2} />
+                  </div>
+                ))}
+                <Button variant="outline" size="sm" onClick={() => update("faqs", "items", [...(faqs.items || []), { q: "", a: "" }])}><Plus className="w-4 h-4 mr-1" /> Add FAQ</Button>
+              </div>
+              <Button onClick={() => saveKey("faqs")}><Save className="w-4 h-4 mr-2" /> Save FAQs</Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* CONTACT PAGE */}
         <TabsContent value="contact">
           <Card>
