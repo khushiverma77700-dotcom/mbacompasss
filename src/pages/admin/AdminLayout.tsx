@@ -1,6 +1,6 @@
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin } from "lucide-react";
+import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 const adminNav = [
@@ -21,6 +21,7 @@ const adminNav = [
   { label: "College Sections", path: "/admin/college-sections", icon: Star },
   { label: "Institute Results", path: "/admin/institute-results", icon: BarChart3 },
   { label: "Sitemap", path: "/admin/sitemap", icon: MapPin },
+  { label: "Clear Caches", path: "/admin/clear-cache", icon: Trash2 },
 ];
 
 const AdminLayout = () => {
