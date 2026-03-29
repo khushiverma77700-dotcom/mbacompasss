@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useColleges } from "@/hooks/useInstitutes";
+import { useCityPages } from "@/hooks/useCityPages";
 import { Skeleton } from "@/components/ui/skeleton";
 import SEOHead, { generateListingSchema } from "@/components/SEOHead";
 
@@ -19,6 +20,7 @@ const tabs = [
 
 const CollegesPage = () => {
   const { data: colleges = [], isLoading } = useColleges();
+  const { data: cityPages } = useCityPages();
   const [activeTab, setActiveTab] = useState("all");
   const [search, setSearch] = useState("");
   const [selectedCity, setSelectedCity] = useState("all");
@@ -58,12 +60,7 @@ const CollegesPage = () => {
   }
 
   const jsonLd = generateListingSchema("Top MBA Colleges in India 2025", filtered, "college");
-  const regions = [
-    { slug: "delhi-ncr", label: "Delhi NCR" }, { slug: "mumbai", label: "Mumbai" },
-    { slug: "bangalore", label: "Bangalore" }, { slug: "pune", label: "Pune" },
-    { slug: "hyderabad", label: "Hyderabad" }, { slug: "kolkata", label: "Kolkata" },
-    { slug: "maharashtra", label: "Maharashtra" }, { slug: "karnataka", label: "Karnataka" },
-  ];
+  const regions = (cityPages || []).slice(0, 10);
 
   return (
     <div className="min-h-screen bg-background">
@@ -81,7 +78,7 @@ const CollegesPage = () => {
           <div className="flex flex-wrap justify-center gap-2">
             {regions.map(r => (
               <Link key={r.slug} to={`/colleges/${r.slug}`}>
-                <Badge className="bg-primary-foreground/15 text-primary-foreground border-none hover:bg-primary-foreground/25 cursor-pointer">{r.label}</Badge>
+                <Badge className="bg-primary-foreground/15 text-primary-foreground border-none hover:bg-primary-foreground/25 cursor-pointer">{r.name}</Badge>
               </Link>
             ))}
           </div>
