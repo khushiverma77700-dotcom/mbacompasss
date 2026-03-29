@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
+import SEOChecklist from "@/components/admin/SEOChecklist";
 
 const emptyForm = {
   name: "", slug: "", full_name: "", description: "", conducting_body: "",
@@ -160,6 +161,12 @@ const AdminExams = () => {
               </TabsContent>
 
               <TabsContent value="seo" className="space-y-3">
+                <SEOChecklist data={{
+                  title: form.name, slug: form.slug, meta_title: form.meta_title,
+                  meta_description: form.meta_description, keywords: form.keywords,
+                  description: form.description,
+                  schemaType: "exam",
+                }} showPublishWarning />
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Title</Label>
                   <Input value={form.meta_title} onChange={(e) => setForm({ ...form, meta_title: e.target.value })} maxLength={70} />
