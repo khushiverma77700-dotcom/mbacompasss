@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Lock, Mail, User, Phone } from "lucide-react";
 import { lovable } from "@/integrations/lovable/index";
 import { Separator } from "@/components/ui/separator";
+import { getAuthRedirectUri, getCurrentRelativeUrl, storePostAuthRedirect } from "@/lib/authRedirect";
 
 interface LoginRequiredDialogProps {
   open: boolean;
@@ -50,8 +51,9 @@ const LoginRequiredDialog = ({ open, onOpenChange, message }: LoginRequiredDialo
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     try {
+      storePostAuthRedirect(getCurrentRelativeUrl());
       const { error } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin + window.location.pathname,
+        redirect_uri: getAuthRedirectUri(),
       });
       if (error) throw error;
     } catch (error: any) {
