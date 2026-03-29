@@ -28,6 +28,10 @@ const AdminSitemap = () => {
       urls.push({ loc: "/about", priority: "0.5", changefreq: "monthly" });
       urls.push({ loc: "/contact", priority: "0.5", changefreq: "monthly" });
 
+      // Regional college pages
+      const regions = ["delhi-ncr", "mumbai", "bangalore", "pune", "kolkata", "chennai", "hyderabad", "ahmedabad", "lucknow", "jaipur", "chandigarh", "indore"];
+      regions.forEach((r) => urls.push({ loc: `/colleges/${r}`, priority: "0.8", changefreq: "weekly" }));
+
       // Dynamic: Institutes
       const { data: institutes } = await supabase.from("institutes").select("slug, updated_at");
       institutes?.forEach((i) => urls.push({ loc: `/institute/${i.slug}`, priority: "0.8", changefreq: "weekly" }));
