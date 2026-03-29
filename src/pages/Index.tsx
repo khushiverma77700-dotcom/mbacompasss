@@ -29,9 +29,7 @@ const Index = () => {
         keywords={["best MBA coaching", "MBA coaching institutes India", "CAT coaching", "GMAT preparation", "XAT coaching", "MBA entrance exam coaching", "IIM preparation coaching", "best CAT coaching", "MBA coaching fees comparison", "top MBA coaching centres"]}
         canonical="https://bestmbacoaching.com"
       />
-      <AnnouncementBanner />
       <HeroSection />
-      <ExamCategoriesBar />
       <StatsCounterSection />
       
       <OfferBanners />
