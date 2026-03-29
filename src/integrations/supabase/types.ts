@@ -152,6 +152,66 @@ export type Database = {
         }
         Relationships: []
       }
+      city_pages: {
+        Row: {
+          active: boolean | null
+          city_aliases: string[] | null
+          created_at: string
+          detailed_content: string | null
+          faq_content: string | null
+          hero_image_url: string | null
+          id: string
+          intro_content: string | null
+          keywords: string[] | null
+          meta_description: string | null
+          meta_title: string | null
+          name: string
+          slug: string
+          sort_order: number | null
+          state: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          city_aliases?: string[] | null
+          created_at?: string
+          detailed_content?: string | null
+          faq_content?: string | null
+          hero_image_url?: string | null
+          id?: string
+          intro_content?: string | null
+          keywords?: string[] | null
+          meta_description?: string | null
+          meta_title?: string | null
+          name: string
+          slug: string
+          sort_order?: number | null
+          state?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          city_aliases?: string[] | null
+          created_at?: string
+          detailed_content?: string | null
+          faq_content?: string | null
+          hero_image_url?: string | null
+          id?: string
+          intro_content?: string | null
+          keywords?: string[] | null
+          meta_description?: string | null
+          meta_title?: string | null
+          name?: string
+          slug?: string
+          sort_order?: number | null
+          state?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coaching_of_week: {
         Row: {
           active: boolean | null
