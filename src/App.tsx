@@ -40,6 +40,7 @@ import AdminCoachingOfWeek from "./pages/admin/AdminCoachingOfWeek";
 import AdminCollegeSections from "./pages/admin/AdminCollegeSections";
 import AdminInstituteResults from "./pages/admin/AdminInstituteResults";
 import AdminSitemap from "./pages/admin/AdminSitemap";
+import AdminClearCache from "./pages/admin/AdminClearCache";
 import DashboardPage from "./pages/DashboardPage";
 import CollegeDetailPage from "./pages/CollegeDetailPage";
 import CollegeFilterPage from "./pages/CollegeFilterPage";
@@ -103,6 +104,7 @@ const App = () => (
               <Route path="college-sections" element={<AdminCollegeSections />} />
               <Route path="institute-results" element={<AdminInstituteResults />} />
               <Route path="sitemap" element={<AdminSitemap />} />
+              <Route path="clear-cache" element={<AdminClearCache />} />
             </Route>
             <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
             <Route path="/category/:slug" element={<PublicLayout><CategoryPage /></PublicLayout>} />
