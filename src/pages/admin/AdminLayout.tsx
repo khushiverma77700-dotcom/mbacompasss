@@ -1,6 +1,6 @@
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2 } from "lucide-react";
+import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp } from "lucide-react";
 import { useState } from "react";
 
 const adminNav = [
@@ -18,6 +18,8 @@ const adminNav = [
   { label: "Subscribers", path: "/admin/subscribers", icon: Mail },
   { label: "Coupons", path: "/admin/coupons", icon: Ticket },
   { label: "Coaching of Week", path: "/admin/coaching-of-week", icon: Trophy },
+  { label: "Coaching Results", path: "/admin/coaching-results", icon: TrendingUp },
+  { label: "Comparisons", path: "/admin/comparisons", icon: GitCompare },
   { label: "College Sections", path: "/admin/college-sections", icon: Star },
   { label: "Institute Results", path: "/admin/institute-results", icon: BarChart3 },
   { label: "Sitemap", path: "/admin/sitemap", icon: MapPin },
