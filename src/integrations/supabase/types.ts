@@ -227,6 +227,7 @@ export type Database = {
           offer_text: string | null
           results_summary: string | null
           selected_courses: string | null
+          website_url: string | null
         }
         Insert: {
           active?: boolean | null
@@ -242,6 +243,7 @@ export type Database = {
           offer_text?: string | null
           results_summary?: string | null
           selected_courses?: string | null
+          website_url?: string | null
         }
         Update: {
           active?: boolean | null
@@ -257,6 +259,7 @@ export type Database = {
           offer_text?: string | null
           results_summary?: string | null
           selected_courses?: string | null
+          website_url?: string | null
         }
         Relationships: [
           {
@@ -264,6 +267,47 @@ export type Database = {
             columns: ["institute_id"]
             isOneToOne: false
             referencedRelation: "institutes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coaching_results: {
+        Row: {
+          avg_score_improvement: number | null
+          coaching_of_week_id: string
+          conversions: number | null
+          created_at: string
+          id: string
+          students_placed: number | null
+          total_calls: number | null
+          year: number
+        }
+        Insert: {
+          avg_score_improvement?: number | null
+          coaching_of_week_id: string
+          conversions?: number | null
+          created_at?: string
+          id?: string
+          students_placed?: number | null
+          total_calls?: number | null
+          year: number
+        }
+        Update: {
+          avg_score_improvement?: number | null
+          coaching_of_week_id?: string
+          conversions?: number | null
+          created_at?: string
+          id?: string
+          students_placed?: number | null
+          total_calls?: number | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coaching_results_coaching_of_week_id_fkey"
+            columns: ["coaching_of_week_id"]
+            isOneToOne: false
+            referencedRelation: "coaching_of_week"
             referencedColumns: ["id"]
           },
         ]
@@ -408,6 +452,39 @@ export type Database = {
           type?: string | null
           updated_at?: string
           website?: string | null
+        }
+        Relationships: []
+      }
+      comparisons: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          description: string | null
+          id: string
+          link: string | null
+          sort_order: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          link?: string | null
+          sort_order?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          link?: string | null
+          sort_order?: number | null
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
