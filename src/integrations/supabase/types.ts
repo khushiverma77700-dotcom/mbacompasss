@@ -216,6 +216,8 @@ export type Database = {
         Row: {
           active: boolean | null
           banner_url: string | null
+          coupon_code: string | null
+          coupon_discount: string | null
           created_at: string
           description: string | null
           headline: string | null
@@ -224,10 +226,13 @@ export type Database = {
           offer_details: string | null
           offer_text: string | null
           results_summary: string | null
+          selected_courses: string | null
         }
         Insert: {
           active?: boolean | null
           banner_url?: string | null
+          coupon_code?: string | null
+          coupon_discount?: string | null
           created_at?: string
           description?: string | null
           headline?: string | null
@@ -236,10 +241,13 @@ export type Database = {
           offer_details?: string | null
           offer_text?: string | null
           results_summary?: string | null
+          selected_courses?: string | null
         }
         Update: {
           active?: boolean | null
           banner_url?: string | null
+          coupon_code?: string | null
+          coupon_discount?: string | null
           created_at?: string
           description?: string | null
           headline?: string | null
@@ -248,6 +256,7 @@ export type Database = {
           offer_details?: string | null
           offer_text?: string | null
           results_summary?: string | null
+          selected_courses?: string | null
         }
         Relationships: [
           {

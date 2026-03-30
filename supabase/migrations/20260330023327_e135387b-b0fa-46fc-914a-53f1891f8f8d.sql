@@ -1,0 +1,1 @@
+ALTER TABLE public.coaching_of_week ADD COLUMN IF NOT EXISTS coupon_code text; ALTER TABLE public.coaching_of_week ADD COLUMN IF NOT EXISTS coupon_discount text; ALTER TABLE public.coaching_of_week ADD COLUMN IF NOT EXISTS selected_courses text;
