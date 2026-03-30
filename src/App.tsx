@@ -46,6 +46,8 @@ import AdminClearCache from "./pages/admin/AdminClearCache";
 import AdminLeads from "./pages/admin/AdminLeads";
 import AdminCityPages from "./pages/admin/AdminCityPages";
 import AdminAllLinks from "./pages/admin/AdminAllLinks";
+import AdminComparisons from "./pages/admin/AdminComparisons";
+import AdminCoachingResults from "./pages/admin/AdminCoachingResults";
 import DashboardPage from "./pages/DashboardPage";
 import CollegeDetailPage from "./pages/CollegeDetailPage";
 import CollegeFilterPage from "./pages/CollegeFilterPage";
@@ -149,6 +151,8 @@ const App = () => (
               <Route path="leads" element={<AdminLeads />} />
               <Route path="city-pages" element={<AdminCityPages />} />
               <Route path="all-links" element={<AdminAllLinks />} />
+              <Route path="comparisons" element={<AdminComparisons />} />
+              <Route path="coaching-results" element={<AdminCoachingResults />} />
             </Route>
             <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
             <Route path="/category/:slug" element={<PublicLayout><CategoryPage /></PublicLayout>} />
