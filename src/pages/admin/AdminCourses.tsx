@@ -193,6 +193,15 @@ const AdminCourses = () => {
                   accept=".pdf,.doc,.docx"
                   label="Syllabus Document (PDF/DOC)"
                 />
+                <FileUpload
+                  bucket="uploads"
+                  folder="courses/brochures"
+                  value={(form as any).brochure_url}
+                  onChange={(url) => setForm({ ...form, brochure_url: url })}
+                  accept=".pdf,.doc,.docx,.jpg,.png"
+                  label="Course Brochure (PDF/Image)"
+                  sizeHint="Upload the course brochure for students to download"
+                />
                 <div className="bg-secondary/50 rounded-lg p-4 border border-border">
                   <h4 className="font-heading font-semibold text-foreground text-sm mb-2">Course Summary</h4>
                   <div className="grid grid-cols-2 gap-3 text-sm">
@@ -202,6 +211,7 @@ const AdminCourses = () => {
                     <div><span className="text-muted-foreground">Curriculum:</span> <span className="font-medium text-foreground">{form.curriculum.length} topics</span></div>
                     <div><span className="text-muted-foreground">Batch:</span> <span className="font-medium text-foreground">{form.batch_info || "—"}</span></div>
                     <div><span className="text-muted-foreground">Syllabus:</span> <span className="font-medium text-foreground">{form.syllabus_url ? "Uploaded ✓" : "Not uploaded"}</span></div>
+                    <div><span className="text-muted-foreground">Brochure:</span> <span className="font-medium text-foreground">{(form as any).brochure_url ? "Uploaded ✓" : "Not uploaded"}</span></div>
                   </div>
                 </div>
               </TabsContent>
