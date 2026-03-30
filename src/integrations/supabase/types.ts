@@ -576,6 +576,7 @@ export type Database = {
       courses: {
         Row: {
           batch_info: string | null
+          brochure_url: string | null
           created_at: string
           curriculum: string[] | null
           description: string | null
@@ -589,6 +590,7 @@ export type Database = {
         }
         Insert: {
           batch_info?: string | null
+          brochure_url?: string | null
           created_at?: string
           curriculum?: string[] | null
           description?: string | null
@@ -602,6 +604,7 @@ export type Database = {
         }
         Update: {
           batch_info?: string | null
+          brochure_url?: string | null
           created_at?: string
           curriculum?: string[] | null
           description?: string | null
