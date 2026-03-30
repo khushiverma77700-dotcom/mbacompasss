@@ -131,12 +131,12 @@ const StepProgress = ({ activeStep, websiteUrl }: { activeStep: number; websiteU
 
 /* ── Animated Bar ── */
 const AnimatedBar = ({ value, maxVal, color, delay }: { value: number; maxVal: number; color: string; delay: number }) => {
-  const pct = Math.max((value / maxVal) * 100, 5);
+  const pct = Math.max((value / maxVal) * 100, 8);
   return (
-    <motion.div className={`rounded-t-md ${color}`}
+    <motion.div className={`w-full rounded-t-md ${color}`}
       initial={{ height: 0 }} whileInView={{ height: `${pct}%` }}
       viewport={{ once: true }} transition={{ delay, duration: 0.7, ease: "easeOut" }}
-      style={{ minHeight: "4px" }} />
+      style={{ minHeight: "6px" }} />
   );
 };
 
@@ -388,45 +388,33 @@ const CoachingOfWeekSection = () => {
                   )}
 
                   <div className="flex flex-col lg:flex-row">
-                    {/* Left: Banner – improved image handling */}
+                    {/* Left: Institute Info Panel – static gradient, no cropped images */}
                     <div className="lg:w-[380px] xl:w-[420px] flex-shrink-0 relative">
-                      {cotw.banner_url ? (
-                        <div className="relative h-64 sm:h-80 lg:h-full min-h-[320px] overflow-hidden">
-                          <img src={cotw.banner_url} alt={inst?.name}
-                            className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
-                            loading="lazy" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
-                          <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
-                            <div className="flex items-center gap-3 mb-3">
-                              {inst?.logo_url && (
-                                <img src={inst.logo_url} alt=""
-                                  className="w-14 h-14 rounded-2xl object-contain bg-white p-1.5 shadow-xl flex-shrink-0"
-                                  loading="lazy" />
-                              )}
-                              <div>
-                                <h3 className="text-xl font-bold text-white leading-tight">{inst?.name}</h3>
-                                <div className="flex items-center gap-1 text-white/70 text-sm mt-0.5"><MapPin className="w-3.5 h-3.5" /> {inst?.city}</div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3 flex-wrap">
-                              {inst?.rating && (
-                                <div className="flex items-center gap-1 bg-white/15 backdrop-blur-sm rounded-lg px-3 py-1.5">
-                                  <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                                  <span className="text-white font-bold text-sm">{inst.rating}</span>
-                                  <span className="text-white/60 text-xs">({inst.total_reviews || 0})</span>
-                                </div>
-                              )}
-                              <Badge className="bg-white/15 text-white border-none backdrop-blur-sm">{inst?.mode || "Offline"}</Badge>
-                            </div>
-                          </div>
+                      <div className="h-64 sm:h-80 lg:h-full min-h-[320px] hero-gradient flex flex-col items-center justify-center p-6 relative overflow-hidden">
+                        <div className="absolute inset-0 opacity-10">
+                          {[...Array(6)].map((_, i) => (
+                            <motion.div key={i} className="absolute w-20 h-20 border border-white/20 rounded-2xl"
+                              style={{ left: `${15 + i * 15}%`, top: `${10 + (i % 3) * 30}%`, rotate: `${i * 15}deg` }}
+                              animate={{ rotate: [i * 15, i * 15 + 360] }}
+                              transition={{ duration: 20 + i * 5, repeat: Infinity, ease: "linear" }} />
+                          ))}
                         </div>
-                      ) : (
-                        <div className="h-64 sm:h-80 lg:h-full min-h-[320px] hero-gradient flex flex-col items-center justify-center p-6">
-                          {inst?.logo_url && <img src={inst.logo_url} alt="" className="w-20 h-20 rounded-2xl object-contain bg-white/10 p-2 mb-4 backdrop-blur-sm" loading="lazy" />}
-                          <h3 className="text-2xl font-bold text-primary-foreground text-center">{inst?.name}</h3>
-                          <p className="text-primary-foreground/70 mt-1 text-sm flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{inst?.city}</p>
+                        {inst?.logo_url && (
+                          <img src={inst.logo_url} alt="" className="w-24 h-24 rounded-2xl object-contain bg-white/10 p-2 mb-4 backdrop-blur-sm relative z-10" loading="lazy" />
+                        )}
+                        <h3 className="text-2xl font-bold text-primary-foreground text-center relative z-10">{inst?.name}</h3>
+                        <p className="text-primary-foreground/70 mt-1 text-sm flex items-center gap-1 relative z-10"><MapPin className="w-3.5 h-3.5" />{inst?.city}</p>
+                        <div className="flex items-center gap-3 flex-wrap mt-4 relative z-10">
+                          {inst?.rating && (
+                            <div className="flex items-center gap-1 bg-white/15 backdrop-blur-sm rounded-lg px-3 py-1.5">
+                              <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                              <span className="text-white font-bold text-sm">{inst.rating}</span>
+                              <span className="text-white/60 text-xs">({inst.total_reviews || 0})</span>
+                            </div>
+                          )}
+                          <Badge className="bg-white/15 text-white border-none backdrop-blur-sm">{inst?.mode || "Offline"}</Badge>
                         </div>
-                      )}
+                      </div>
                     </div>
 
                     {/* Right: Content */}
