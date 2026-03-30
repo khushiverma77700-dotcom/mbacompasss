@@ -9,7 +9,11 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 
-const emptyForm = { coaching_of_week_id: "", year: new Date().getFullYear(), total_calls: 0, conversions: 0, students_placed: 0, avg_score_improvement: 0 };
+const emptyForm = {
+  coaching_of_week_id: "", year: new Date().getFullYear(),
+  total_calls: 0, conversions: 0, students_placed: 0, avg_score_improvement: 0,
+  iim_a_selections: 0, iim_b_selections: 0, cat_99_plus: 0, xat_99_plus: 0,
+};
 
 const AdminCoachingResults = () => {
   const [items, setItems] = useState<any[]>([]);
@@ -34,11 +38,10 @@ const AdminCoachingResults = () => {
     if (!form.coaching_of_week_id) { toast({ title: "Select a coaching entry", variant: "destructive" }); return; }
     const payload = {
       coaching_of_week_id: form.coaching_of_week_id,
-      year: form.year,
-      total_calls: form.total_calls,
-      conversions: form.conversions,
-      students_placed: form.students_placed,
-      avg_score_improvement: form.avg_score_improvement,
+      year: form.year, total_calls: form.total_calls, conversions: form.conversions,
+      students_placed: form.students_placed, avg_score_improvement: form.avg_score_improvement,
+      iim_a_selections: form.iim_a_selections, iim_b_selections: form.iim_b_selections,
+      cat_99_plus: form.cat_99_plus, xat_99_plus: form.xat_99_plus,
     };
     if (editId) {
       const { error } = await supabase.from("coaching_results").update(payload).eq("id", editId);
@@ -55,11 +58,11 @@ const AdminCoachingResults = () => {
   const handleEdit = (item: any) => {
     setForm({
       coaching_of_week_id: item.coaching_of_week_id,
-      year: item.year,
-      total_calls: item.total_calls || 0,
-      conversions: item.conversions || 0,
-      students_placed: item.students_placed || 0,
+      year: item.year, total_calls: item.total_calls || 0,
+      conversions: item.conversions || 0, students_placed: item.students_placed || 0,
       avg_score_improvement: item.avg_score_improvement || 0,
+      iim_a_selections: item.iim_a_selections || 0, iim_b_selections: item.iim_b_selections || 0,
+      cat_99_plus: item.cat_99_plus || 0, xat_99_plus: item.xat_99_plus || 0,
     });
     setEditId(item.id); setDialogOpen(true);
   };
@@ -83,7 +86,7 @@ const AdminCoachingResults = () => {
           <DialogTrigger asChild>
             <Button onClick={() => { setForm(emptyForm); setEditId(null); }}><Plus className="w-4 h-4 mr-2" /> Add Result</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>{editId ? "Edit" : "Add"} Yearly Result</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <div><Label className="text-xs font-semibold text-muted-foreground mb-1 block">Coaching Entry *</Label>
@@ -98,6 +101,10 @@ const AdminCoachingResults = () => {
                 <div><Label className="text-xs">Total Calls</Label><Input type="number" value={form.total_calls} onChange={(e) => setForm({ ...form, total_calls: parseInt(e.target.value) || 0 })} /></div>
                 <div><Label className="text-xs">Conversions (%)</Label><Input type="number" value={form.conversions} onChange={(e) => setForm({ ...form, conversions: parseInt(e.target.value) || 0 })} /></div>
                 <div><Label className="text-xs">Students Placed</Label><Input type="number" value={form.students_placed} onChange={(e) => setForm({ ...form, students_placed: parseInt(e.target.value) || 0 })} /></div>
+                <div><Label className="text-xs">IIM-A Selections</Label><Input type="number" value={form.iim_a_selections} onChange={(e) => setForm({ ...form, iim_a_selections: parseInt(e.target.value) || 0 })} /></div>
+                <div><Label className="text-xs">IIM-B Selections</Label><Input type="number" value={form.iim_b_selections} onChange={(e) => setForm({ ...form, iim_b_selections: parseInt(e.target.value) || 0 })} /></div>
+                <div><Label className="text-xs">CAT 99+%ile</Label><Input type="number" value={form.cat_99_plus} onChange={(e) => setForm({ ...form, cat_99_plus: parseInt(e.target.value) || 0 })} /></div>
+                <div><Label className="text-xs">XAT 99+%ile</Label><Input type="number" value={form.xat_99_plus} onChange={(e) => setForm({ ...form, xat_99_plus: parseInt(e.target.value) || 0 })} /></div>
               </div>
               <div><Label className="text-xs">Avg Score Improvement</Label><Input type="number" value={form.avg_score_improvement} onChange={(e) => setForm({ ...form, avg_score_improvement: parseFloat(e.target.value) || 0 })} /></div>
               <Button onClick={handleSave} className="w-full">{editId ? "Update" : "Create"}</Button>
@@ -108,23 +115,26 @@ const AdminCoachingResults = () => {
       <Card><CardContent className="p-0">
         <Table>
           <TableHeader><TableRow>
-            <TableHead>Coaching</TableHead><TableHead>Year</TableHead><TableHead>Calls</TableHead><TableHead>Conv %</TableHead><TableHead>Placed</TableHead><TableHead className="text-right">Actions</TableHead>
+            <TableHead>Coaching</TableHead><TableHead>Year</TableHead><TableHead>Calls</TableHead><TableHead>Conv%</TableHead><TableHead>Placed</TableHead><TableHead>IIM-A</TableHead><TableHead>IIM-B</TableHead><TableHead>CAT 99+</TableHead><TableHead className="text-right">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {items.map((item) => (
               <TableRow key={item.id}>
-                <TableCell className="font-medium">{getLabel(item)}</TableCell>
+                <TableCell className="font-medium max-w-[150px] truncate">{getLabel(item)}</TableCell>
                 <TableCell>{item.year}</TableCell>
                 <TableCell>{item.total_calls}</TableCell>
                 <TableCell>{item.conversions}%</TableCell>
                 <TableCell>{item.students_placed}</TableCell>
+                <TableCell>{item.iim_a_selections || 0}</TableCell>
+                <TableCell>{item.iim_b_selections || 0}</TableCell>
+                <TableCell>{item.cat_99_plus || 0}</TableCell>
                 <TableCell className="text-right space-x-1">
                   <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}><Pencil className="w-4 h-4" /></Button>
                   <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                 </TableCell>
               </TableRow>
             ))}
-            {items.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No results yet</TableCell></TableRow>}
+            {items.length === 0 && <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No results yet</TableCell></TableRow>}
           </TableBody>
         </Table>
       </CardContent></Card>

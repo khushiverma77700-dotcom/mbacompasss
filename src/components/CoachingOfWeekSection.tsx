@@ -3,15 +3,14 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import {
-  Star, Award, TrendingUp, ArrowRight, Gift, Copy, CheckCircle, BookOpen,
-  FileText, Users, Target, Trophy, Zap, GraduationCap, Medal, Flame,
+  Star, TrendingUp, Gift, CheckCircle, BookOpen,
+  Users, Target, GraduationCap, Flame,
   MapPin, Sparkles, PartyPopper, X, Scissors, Tag, ExternalLink, Clipboard,
-  ClipboardCheck, Globe, BadgeCheck
+  ClipboardCheck, Globe, BadgeCheck, Trophy, Zap, Award, BarChart3
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -32,17 +31,14 @@ const CelebrationOverlay = ({
       {show && (
         <motion.div className="fixed inset-0 z-[100] flex items-center justify-center p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-          <motion.div
-            className="relative bg-card rounded-3xl p-8 md:p-10 max-w-md w-full text-center shadow-2xl border border-border overflow-hidden"
+          <motion.div className="relative bg-card rounded-3xl p-8 md:p-10 max-w-md w-full text-center shadow-2xl border border-border overflow-hidden"
             initial={{ scale: 0.5, y: 60, opacity: 0 }} animate={{ scale: 1, y: 0, opacity: 1 }} exit={{ scale: 0.8, y: 40, opacity: 0 }}
-            transition={{ type: "spring", damping: 15, stiffness: 200 }}
-          >
+            transition={{ type: "spring", damping: 15, stiffness: 200 }}>
             {[...Array(20)].map((_, i) => (
               <motion.div key={i} className="absolute w-2 h-2 rounded-full"
                 style={{ background: ["hsl(var(--primary))", "#fbbf24", "#ef4444", "#22c55e", "#8b5cf6", "#f97316"][i % 6], left: `${10 + Math.random() * 80}%`, top: "-10px" }}
                 animate={{ y: [0, 400 + Math.random() * 200], x: [0, (Math.random() - 0.5) * 150], rotate: [0, 360 * (Math.random() > 0.5 ? 1 : -1)], opacity: [1, 0] }}
-                transition={{ duration: 1.5 + Math.random(), delay: Math.random() * 0.5, ease: "easeOut" }}
-              />
+                transition={{ duration: 1.5 + Math.random(), delay: Math.random() * 0.5, ease: "easeOut" }} />
             ))}
             <button onClick={onClose} className="absolute top-4 right-4 text-muted-foreground hover:text-foreground z-10"><X className="w-5 h-5" /></button>
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1, rotate: [0, -10, 10, 0] }} transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
@@ -73,7 +69,7 @@ const CelebrationOverlay = ({
 const StepProgress = ({ activeStep, websiteUrl }: { activeStep: number; websiteUrl?: string }) => {
   const steps = [
     { icon: Clipboard, label: "Copy Code", color: "from-primary to-primary/80" },
-    { icon: Globe, label: "Visit Website", color: "from-blue-500 to-blue-600", link: websiteUrl },
+    { icon: Globe, label: "Visit Website", color: "from-blue-500 to-blue-600" },
     { icon: ClipboardCheck, label: "Paste Code", color: "from-amber-500 to-amber-600" },
     { icon: BadgeCheck, label: "Claim Offer", color: "from-green-500 to-green-600" },
   ];
@@ -84,39 +80,46 @@ const StepProgress = ({ activeStep, websiteUrl }: { activeStep: number; websiteU
         const isActive = i === activeStep;
         const isDone = i < activeStep;
         const StepIcon = step.icon;
+        const isWebsiteStep = i === 1 && websiteUrl;
+
+        const stepContent = (
+          <motion.div className="flex flex-col items-center gap-1.5 relative"
+            animate={isActive ? { scale: [1, 1.08, 1] } : {}}
+            transition={isActive ? { duration: 1.5, repeat: Infinity } : {}}>
+            <div className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all duration-500 ${
+              isDone ? "bg-green-500 text-white shadow-md shadow-green-500/30" :
+              isActive ? `bg-gradient-to-br ${step.color} text-white shadow-lg shadow-primary/30 ring-4 ring-primary/20` :
+              "bg-muted text-muted-foreground"
+            }`}>
+              {isDone ? <CheckCircle className="w-4 h-4" /> : <StepIcon className="w-4 h-4" />}
+            </div>
+            <span className={`text-[10px] font-bold text-center leading-tight ${
+              isActive ? "text-primary" : isDone ? "text-green-600" : "text-muted-foreground"
+            } ${isWebsiteStep ? "underline decoration-dotted" : ""}`}>
+              {step.label}
+            </span>
+            {isActive && (
+              <motion.div className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-primary"
+                animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
+                transition={{ duration: 1, repeat: Infinity }} />
+            )}
+          </motion.div>
+        );
 
         return (
           <div key={i} className="flex items-center flex-1 last:flex-grow-0">
-            <motion.div
-              className="flex flex-col items-center gap-1.5 relative"
-              animate={isActive ? { scale: [1, 1.08, 1] } : {}}
-              transition={isActive ? { duration: 1.5, repeat: Infinity } : {}}
-            >
-              <div className={`w-9 h-9 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-all duration-500 ${
-                isDone ? "bg-green-500 text-white shadow-md shadow-green-500/30" :
-                isActive ? `bg-gradient-to-br ${step.color} text-white shadow-lg shadow-primary/30 ring-4 ring-primary/20` :
-                "bg-muted text-muted-foreground"
-              }`}>
-                {isDone ? <CheckCircle className="w-4 h-4" /> : <StepIcon className="w-4 h-4" />}
-              </div>
-              <span className={`text-[10px] font-bold text-center leading-tight ${isActive ? "text-primary" : isDone ? "text-green-600" : "text-muted-foreground"}`}>
-                {step.label}
-              </span>
-              {isActive && (
-                <motion.div className="absolute -bottom-1 w-1.5 h-1.5 rounded-full bg-primary"
-                  animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
-                  transition={{ duration: 1, repeat: Infinity }}
-                />
-              )}
-            </motion.div>
+            {isWebsiteStep ? (
+              <a href={websiteUrl} target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:opacity-80 transition-opacity">
+                {stepContent}
+              </a>
+            ) : stepContent}
             {i < steps.length - 1 && (
               <div className="flex-1 h-0.5 mx-1 rounded-full overflow-hidden bg-muted">
                 <motion.div
                   className={`h-full rounded-full ${isDone ? "bg-green-500" : isActive ? "bg-primary" : "bg-transparent"}`}
                   initial={{ width: "0%" }}
                   animate={{ width: isDone ? "100%" : isActive ? "50%" : "0%" }}
-                  transition={{ duration: 0.8, ease: "easeInOut" }}
-                />
+                  transition={{ duration: 0.8, ease: "easeInOut" }} />
               </div>
             )}
           </div>
@@ -126,59 +129,151 @@ const StepProgress = ({ activeStep, websiteUrl }: { activeStep: number; websiteU
   );
 };
 
-/* ── Mini Results Chart ── */
-const MiniResultsChart = ({ results }: { results: any[] }) => {
+/* ── Animated Bar ── */
+const AnimatedBar = ({ value, maxVal, color, delay }: { value: number; maxVal: number; color: string; delay: number }) => {
+  const pct = Math.max((value / maxVal) * 100, 5);
+  return (
+    <motion.div className={`rounded-t-md ${color}`}
+      initial={{ height: 0 }} whileInView={{ height: `${pct}%` }}
+      viewport={{ once: true }} transition={{ delay, duration: 0.7, ease: "easeOut" }}
+      style={{ minHeight: "4px" }} />
+  );
+};
+
+/* ── Professional Results Dashboard ── */
+const ResultsDashboard = ({ results }: { results: any[] }) => {
   if (!results || results.length === 0) return null;
-  const maxVal = Math.max(...results.map(r => r.students_placed || 0), 1);
+  const sorted = [...results].sort((a, b) => a.year - b.year).slice(-5);
+  const latest = [...results].sort((a, b) => b.year - a.year)[0];
+  const prev = [...results].sort((a, b) => b.year - a.year)[1];
+  const maxPlaced = Math.max(...sorted.map(r => r.students_placed || 0), 1);
+  const maxPercentile = Math.max(...sorted.map(r => (r.cat_99_plus || 0) + (r.xat_99_plus || 0)), 1);
+  const growth = prev?.students_placed ? Math.round(((latest.students_placed - prev.students_placed) / prev.students_placed) * 100) : 0;
+
+  const highlightStats = [
+    { label: "Total Calls", value: latest.total_calls || 0, icon: Users, accent: "text-primary", bg: "bg-primary/10" },
+    { label: "Conversions", value: `${latest.conversions || 0}%`, icon: TrendingUp, accent: "text-green-600", bg: "bg-green-500/10" },
+    { label: "IIM-A Selections", value: latest.iim_a_selections || 0, icon: Award, accent: "text-amber-600", bg: "bg-amber-500/10" },
+    { label: "IIM-B Selections", value: latest.iim_b_selections || 0, icon: GraduationCap, accent: "text-blue-600", bg: "bg-blue-500/10" },
+    { label: "CAT 99+%ile", value: latest.cat_99_plus || 0, icon: Target, accent: "text-purple-600", bg: "bg-purple-500/10" },
+    { label: "XAT 99+%ile", value: latest.xat_99_plus || 0, icon: BarChart3, accent: "text-rose-600", bg: "bg-rose-500/10" },
+    { label: "Students Placed", value: latest.students_placed || 0, icon: Trophy, accent: "text-emerald-600", bg: "bg-emerald-500/10" },
+    { label: "YoY Growth", value: `${growth > 0 ? "+" : ""}${growth}%`, icon: TrendingUp, accent: growth >= 0 ? "text-green-600" : "text-destructive", bg: growth >= 0 ? "bg-green-500/10" : "bg-destructive/10" },
+  ];
 
   return (
-    <div className="bg-gradient-to-br from-primary/5 to-accent/5 border border-border rounded-2xl p-4">
-      <h4 className="font-bold text-sm text-foreground mb-3 flex items-center gap-1.5">
-        <TrendingUp className="w-4 h-4 text-primary" /> Year-on-Year Results
-      </h4>
-      <div className="flex items-end gap-2 h-24">
-        {results.sort((a, b) => a.year - b.year).slice(-5).map((r, i) => {
-          const height = Math.max(((r.students_placed || 0) / maxVal) * 100, 8);
-          return (
-            <motion.div key={r.id || i} className="flex-1 flex flex-col items-center gap-1"
-              initial={{ height: 0, opacity: 0 }} whileInView={{ height: "auto", opacity: 1 }}
-              viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-              <span className="text-[10px] font-bold text-primary">{r.students_placed || 0}</span>
-              <motion.div
-                className="w-full bg-gradient-to-t from-primary to-primary/60 rounded-t-lg"
-                initial={{ height: 0 }}
-                whileInView={{ height: `${height}%` }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.15, duration: 0.6, ease: "easeOut" }}
-                style={{ minHeight: "6px" }}
-              />
-              <span className="text-[9px] text-muted-foreground font-semibold">{r.year}</span>
-            </motion.div>
-          );
-        })}
+    <div className="bg-gradient-to-br from-muted/40 via-background to-muted/30 border border-border rounded-2xl overflow-hidden">
+      {/* Header */}
+      <div className="px-5 py-4 border-b border-border bg-muted/30">
+        <h4 className="font-heading font-bold text-foreground flex items-center gap-2">
+          <BarChart3 className="w-5 h-5 text-primary" /> Results & Performance — {latest.year}
+        </h4>
       </div>
-      <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-        {results.length > 0 && (() => {
-          const latest = results.sort((a, b) => b.year - a.year)[0];
-          const prev = results.sort((a, b) => b.year - a.year)[1];
-          const growth = prev && prev.students_placed ? Math.round(((latest.students_placed - prev.students_placed) / prev.students_placed) * 100) : 0;
-          return (
-            <>
-              <div className="bg-card rounded-lg p-2 border border-border">
-                <div className="text-xs font-extrabold text-foreground">{latest.conversions || 0}%</div>
-                <div className="text-[9px] text-muted-foreground">Conversion</div>
-              </div>
-              <div className="bg-card rounded-lg p-2 border border-border">
-                <div className="text-xs font-extrabold text-foreground">{latest.total_calls || 0}</div>
-                <div className="text-[9px] text-muted-foreground">Total Calls</div>
-              </div>
-              <div className="bg-card rounded-lg p-2 border border-border">
-                <div className={`text-xs font-extrabold ${growth >= 0 ? "text-green-600" : "text-destructive"}`}>{growth > 0 ? "+" : ""}{growth}%</div>
-                <div className="text-[9px] text-muted-foreground">YoY Growth</div>
-              </div>
-            </>
-          );
-        })()}
+
+      {/* Stats Grid */}
+      <div className="p-5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+          {highlightStats.map((s, i) => (
+            <motion.div key={i} className={`${s.bg} rounded-xl p-3 text-center`}
+              initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }} transition={{ delay: i * 0.05 }}>
+              <s.icon className={`w-4 h-4 ${s.accent} mx-auto mb-1.5`} />
+              <div className={`text-base md:text-lg font-extrabold ${s.accent}`}>{s.value}</div>
+              <div className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider leading-tight">{s.label}</div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Charts Row */}
+        <div className="grid md:grid-cols-2 gap-5">
+          {/* Students Placed Bar Chart */}
+          <div className="bg-card border border-border rounded-xl p-4">
+            <h5 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Students Placed (Year-on-Year)</h5>
+            <div className="flex items-end gap-3 h-32">
+              {sorted.map((r, i) => (
+                <div key={r.id || i} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+                  <motion.span className="text-[10px] font-bold text-primary"
+                    initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }} transition={{ delay: i * 0.1 + 0.5 }}>
+                    {r.students_placed || 0}
+                  </motion.span>
+                  <div className="w-full flex-1 flex items-end">
+                    <AnimatedBar value={r.students_placed || 0} maxVal={maxPlaced} color="bg-gradient-to-t from-primary to-primary/50" delay={i * 0.12} />
+                  </div>
+                  <span className="text-[10px] text-muted-foreground font-semibold">{r.year}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 99+ Percentile Stacked Bar Chart */}
+          <div className="bg-card border border-border rounded-xl p-4">
+            <h5 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">99+ Percentile Achievers</h5>
+            <div className="flex items-end gap-3 h-32">
+              {sorted.map((r, i) => {
+                const catVal = r.cat_99_plus || 0;
+                const xatVal = r.xat_99_plus || 0;
+                const total = catVal + xatVal;
+                return (
+                  <div key={r.id || i} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+                    <motion.span className="text-[10px] font-bold text-foreground"
+                      initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+                      viewport={{ once: true }} transition={{ delay: i * 0.1 + 0.5 }}>
+                      {total}
+                    </motion.span>
+                    <div className="w-full flex-1 flex flex-col items-stretch justify-end gap-0.5">
+                      <AnimatedBar value={xatVal} maxVal={maxPercentile} color="bg-gradient-to-t from-amber-500 to-amber-400" delay={i * 0.12 + 0.1} />
+                      <AnimatedBar value={catVal} maxVal={maxPercentile} color="bg-gradient-to-t from-purple-600 to-purple-400" delay={i * 0.12} />
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-semibold">{r.year}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex items-center justify-center gap-4 mt-3">
+              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-purple-500" /><span className="text-[10px] text-muted-foreground font-medium">CAT</span></div>
+              <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-amber-500" /><span className="text-[10px] text-muted-foreground font-medium">XAT</span></div>
+            </div>
+          </div>
+        </div>
+
+        {/* IIM Selections Trend */}
+        <div className="mt-5 bg-card border border-border rounded-xl p-4">
+          <h5 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">IIM Selections Trend</h5>
+          <div className="space-y-3">
+            {sorted.map((r, i) => {
+              const iimA = r.iim_a_selections || 0;
+              const iimB = r.iim_b_selections || 0;
+              const maxIIM = Math.max(...sorted.map(s => (s.iim_a_selections || 0) + (s.iim_b_selections || 0)), 1);
+              const totalIIM = iimA + iimB;
+              const pct = (totalIIM / maxIIM) * 100;
+              return (
+                <motion.div key={r.id || i} className="flex items-center gap-3"
+                  initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
+                  <span className="text-xs font-bold text-muted-foreground w-10">{r.year}</span>
+                  <div className="flex-1 h-6 bg-muted rounded-full overflow-hidden flex">
+                    <motion.div className="h-full bg-gradient-to-r from-amber-500 to-amber-400 flex items-center justify-center"
+                      initial={{ width: 0 }} whileInView={{ width: `${(iimA / Math.max(totalIIM, 1)) * pct}%` }}
+                      viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.6 }}>
+                      {iimA > 3 && <span className="text-[9px] font-bold text-white px-1">A: {iimA}</span>}
+                    </motion.div>
+                    <motion.div className="h-full bg-gradient-to-r from-blue-500 to-blue-400 flex items-center justify-center"
+                      initial={{ width: 0 }} whileInView={{ width: `${(iimB / Math.max(totalIIM, 1)) * pct}%` }}
+                      viewport={{ once: true }} transition={{ delay: i * 0.1 + 0.1, duration: 0.6 }}>
+                      {iimB > 3 && <span className="text-[9px] font-bold text-white px-1">B: {iimB}</span>}
+                    </motion.div>
+                  </div>
+                  <span className="text-xs font-extrabold text-foreground w-8 text-right">{totalIIM}</span>
+                </motion.div>
+              );
+            })}
+          </div>
+          <div className="flex items-center justify-center gap-4 mt-3">
+            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-amber-500" /><span className="text-[10px] text-muted-foreground font-medium">IIM Ahmedabad</span></div>
+            <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-sm bg-blue-500" /><span className="text-[10px] text-muted-foreground font-medium">IIM Bangalore</span></div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -216,7 +311,6 @@ const CoachingOfWeekSection = () => {
     },
   });
 
-  // Animate step progress continuously
   useEffect(() => {
     if (!cotwItems || cotwItems.length === 0) return;
     const interval = setInterval(() => {
@@ -244,7 +338,6 @@ const CoachingOfWeekSection = () => {
     const code = (cotw as any).coupon_code || cotw.offer_text || "MBAHUB70";
     const discount = (cotw as any).coupon_discount || cotw.offer_text || "Special Discount";
     const courses = (cotw as any).selected_courses || "All Courses";
-
     navigator.clipboard.writeText(code);
     setClaimedIds(prev => new Set(prev).add(cotw.id));
     setCelebration({ show: true, discount, coachingName: inst?.name || "Selected Coaching", courses, couponCode: code });
@@ -283,25 +376,33 @@ const CoachingOfWeekSection = () => {
                   viewport={{ once: true, margin: "-50px" }} transition={{ delay: idx * 0.1, duration: 0.6 }}
                   className="bg-card rounded-3xl border border-border shadow-xl overflow-hidden group hover:shadow-2xl transition-shadow duration-500">
 
-                  {/* Offer ribbon – clean, no red border */}
+                  {/* Clean offer ribbon – NO top blue coupon border */}
                   {cotw.offer_text && (
-                    <div className="bg-gradient-to-r from-primary via-primary/90 to-primary/80 text-primary-foreground px-6 py-2.5 flex items-center justify-center gap-2 text-sm font-bold">
+                    <div className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 text-white px-6 py-2.5 flex items-center justify-center gap-2 text-sm font-bold">
                       <Sparkles className="w-4 h-4" />
                       <span>{cotw.offer_text}</span>
-                      {(cotw as any).coupon_discount && <Badge className="bg-white/20 text-white border-none ml-2 text-xs">{(cotw as any).coupon_discount}</Badge>}
+                      {(cotw as any).coupon_discount && (
+                        <span className="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full font-bold ml-1">{(cotw as any).coupon_discount}</span>
+                      )}
                     </div>
                   )}
 
                   <div className="flex flex-col lg:flex-row">
-                    {/* Left: Banner */}
-                    <div className="lg:w-[340px] xl:w-[400px] flex-shrink-0 relative">
+                    {/* Left: Banner – improved image handling */}
+                    <div className="lg:w-[380px] xl:w-[420px] flex-shrink-0 relative">
                       {cotw.banner_url ? (
-                        <div className="relative h-60 sm:h-72 lg:h-full min-h-[300px]">
-                          <img src={cotw.banner_url} alt={inst?.name} className="w-full h-full object-cover" loading="lazy" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                        <div className="relative h-64 sm:h-80 lg:h-full min-h-[320px] overflow-hidden">
+                          <img src={cotw.banner_url} alt={inst?.name}
+                            className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                            loading="lazy" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
                           <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
                             <div className="flex items-center gap-3 mb-3">
-                              {inst?.logo_url && <img src={inst.logo_url} alt="" className="w-14 h-14 rounded-2xl object-contain bg-white p-1.5 shadow-xl" loading="lazy" />}
+                              {inst?.logo_url && (
+                                <img src={inst.logo_url} alt=""
+                                  className="w-14 h-14 rounded-2xl object-contain bg-white p-1.5 shadow-xl flex-shrink-0"
+                                  loading="lazy" />
+                              )}
                               <div>
                                 <h3 className="text-xl font-bold text-white leading-tight">{inst?.name}</h3>
                                 <div className="flex items-center gap-1 text-white/70 text-sm mt-0.5"><MapPin className="w-3.5 h-3.5" /> {inst?.city}</div>
@@ -320,7 +421,7 @@ const CoachingOfWeekSection = () => {
                           </div>
                         </div>
                       ) : (
-                        <div className="h-60 sm:h-72 lg:h-full min-h-[300px] hero-gradient flex flex-col items-center justify-center p-6">
+                        <div className="h-64 sm:h-80 lg:h-full min-h-[320px] hero-gradient flex flex-col items-center justify-center p-6">
                           {inst?.logo_url && <img src={inst.logo_url} alt="" className="w-20 h-20 rounded-2xl object-contain bg-white/10 p-2 mb-4 backdrop-blur-sm" loading="lazy" />}
                           <h3 className="text-2xl font-bold text-primary-foreground text-center">{inst?.name}</h3>
                           <p className="text-primary-foreground/70 mt-1 text-sm flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{inst?.city}</p>
@@ -363,18 +464,24 @@ const CoachingOfWeekSection = () => {
                         </div>
                       )}
 
-                      {/* Results Chart */}
+                      {/* Results Dashboard – Professional Charts */}
                       {itemResults.length > 0 && (
                         <div className="mb-5">
-                          <MiniResultsChart results={itemResults} />
+                          <ResultsDashboard results={itemResults} />
                         </div>
                       )}
 
-                      {/* 4-Step Animated Progress */}
+                      {/* 4-Step Animated Progress – with clickable Visit Website */}
                       {hasCoupon && (
                         <div className="mb-5 bg-gradient-to-r from-muted/50 to-muted/30 border border-border rounded-2xl p-4">
-                          <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">How to Claim</h4>
+                          <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">How to Claim Your Offer</h4>
                           <StepProgress activeStep={activeSteps[cotw.id] ?? 0} websiteUrl={websiteUrl} />
+                          {websiteUrl && (
+                            <a href={websiteUrl} target="_blank" rel="noopener noreferrer"
+                              className="mt-3 flex items-center justify-center gap-2 text-xs text-primary font-bold hover:underline transition-all">
+                              <ExternalLink className="w-3.5 h-3.5" /> Visit {inst?.name} Website →
+                            </a>
+                          )}
                         </div>
                       )}
 
@@ -382,14 +489,14 @@ const CoachingOfWeekSection = () => {
                       {hasCoupon && (
                         <div className="mb-5">
                           {user ? (
-                            <motion.div className="relative bg-gradient-to-r from-primary/5 to-accent/5 border border-primary/15 rounded-2xl p-4 md:p-5 overflow-hidden"
+                            <motion.div className="relative bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 border border-emerald-200 dark:border-emerald-800/30 rounded-2xl p-4 md:p-5 overflow-hidden"
                               whileHover={{ scale: 1.005 }}>
-                              <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-background border border-primary/15" />
-                              <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-background border border-primary/15" />
+                              <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-background border border-emerald-200 dark:border-emerald-800/30" />
+                              <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-background border border-emerald-200 dark:border-emerald-800/30" />
                               <div className="flex items-center justify-between gap-3 flex-wrap">
                                 <div className="flex items-center gap-3">
-                                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                    <Scissors className="w-6 h-6 text-primary" />
+                                  <div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                                    <Scissors className="w-6 h-6 text-emerald-600" />
                                   </div>
                                   <div>
                                     <div className="text-lg md:text-xl font-extrabold text-foreground">{(cotw as any).coupon_discount || "Special Discount"}</div>
@@ -443,8 +550,10 @@ const CoachingOfWeekSection = () => {
                             </Link>
                           )}
                           {websiteUrl && (
-                            <a href={websiteUrl} target="_blank" rel="noopener noreferrer">
-                              <Button variant="outline" className="w-full font-bold" size="sm"><ExternalLink className="w-4 h-4 mr-2" /> Visit Website</Button>
+                            <a href={websiteUrl} target="_blank" rel="noopener noreferrer" className="block">
+                              <Button variant="outline" className="w-full font-bold gap-2" size="default">
+                                <ExternalLink className="w-4 h-4" /> Visit Website
+                              </Button>
                             </a>
                           )}
                         </div>
