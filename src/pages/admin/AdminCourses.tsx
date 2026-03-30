@@ -16,7 +16,7 @@ import FileUpload from "@/components/admin/FileUpload";
 
 const emptyForm = {
   name: "", description: "", institute_id: "", duration: "", fees: 0,
-  batch_info: "", syllabus_url: "", curriculum: [] as string[],
+  batch_info: "", syllabus_url: "", curriculum: [] as string[], brochure_url: "",
 };
 
 const AdminCourses = () => {
@@ -58,6 +58,7 @@ const AdminCourses = () => {
       institute_id: form.institute_id, duration: form.duration || null,
       fees: form.fees || null, batch_info: form.batch_info || null,
       syllabus_url: form.syllabus_url || null,
+      brochure_url: (form as any).brochure_url || null,
       curriculum: form.curriculum.length > 0 ? form.curriculum : null,
     };
 
@@ -78,6 +79,7 @@ const AdminCourses = () => {
       institute_id: course.institute_id, duration: course.duration ?? "",
       fees: course.fees ?? 0, batch_info: course.batch_info ?? "",
       syllabus_url: course.syllabus_url ?? "", curriculum: course.curriculum ?? [],
+      brochure_url: (course as any).brochure_url ?? "",
     });
     setEditId(course.id); setDialogOpen(true);
   };
