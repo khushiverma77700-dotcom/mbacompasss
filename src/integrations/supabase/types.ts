@@ -274,32 +274,44 @@ export type Database = {
       coaching_results: {
         Row: {
           avg_score_improvement: number | null
+          cat_99_plus: number | null
           coaching_of_week_id: string
           conversions: number | null
           created_at: string
           id: string
+          iim_a_selections: number | null
+          iim_b_selections: number | null
           students_placed: number | null
           total_calls: number | null
+          xat_99_plus: number | null
           year: number
         }
         Insert: {
           avg_score_improvement?: number | null
+          cat_99_plus?: number | null
           coaching_of_week_id: string
           conversions?: number | null
           created_at?: string
           id?: string
+          iim_a_selections?: number | null
+          iim_b_selections?: number | null
           students_placed?: number | null
           total_calls?: number | null
+          xat_99_plus?: number | null
           year: number
         }
         Update: {
           avg_score_improvement?: number | null
+          cat_99_plus?: number | null
           coaching_of_week_id?: string
           conversions?: number | null
           created_at?: string
           id?: string
+          iim_a_selections?: number | null
+          iim_b_selections?: number | null
           students_placed?: number | null
           total_calls?: number | null
+          xat_99_plus?: number | null
           year?: number
         }
         Relationships: [
