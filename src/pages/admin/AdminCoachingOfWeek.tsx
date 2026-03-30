@@ -23,6 +23,7 @@ const emptyForm = {
   coupon_code: "",
   coupon_discount: "",
   selected_courses: "",
+  website_url: "",
   active: true,
 };
 
@@ -59,6 +60,7 @@ const AdminCoachingOfWeek = () => {
       coupon_code: form.coupon_code || null,
       coupon_discount: form.coupon_discount || null,
       selected_courses: form.selected_courses || null,
+      website_url: (form as any).website_url || null,
       active: form.active,
     };
 
@@ -88,6 +90,7 @@ const AdminCoachingOfWeek = () => {
         coupon_code: (data as any).coupon_code ?? "",
         coupon_discount: (data as any).coupon_discount ?? "",
         selected_courses: (data as any).selected_courses ?? "",
+        website_url: (data as any).website_url ?? "",
         active: data.active ?? true,
       });
       setEditId(id); setDialogOpen(true);
@@ -137,6 +140,7 @@ const AdminCoachingOfWeek = () => {
                 <Input placeholder="Coupon Code (e.g. MBAHUB70)" value={form.coupon_code} onChange={(e) => setForm({ ...form, coupon_code: e.target.value.toUpperCase() })} />
                 <Input placeholder="Discount Text (e.g. 60% OFF)" value={form.coupon_discount} onChange={(e) => setForm({ ...form, coupon_discount: e.target.value })} />
                 <Input placeholder="Selected Courses (e.g. CAT Complete, GMAT Prep)" value={form.selected_courses} onChange={(e) => setForm({ ...form, selected_courses: e.target.value })} />
+                <Input placeholder="Website URL (e.g. https://institute.com)" value={(form as any).website_url} onChange={(e) => setForm({ ...form, website_url: e.target.value })} />
               </div>
 
               <Input placeholder="Offer text banner (e.g. Flat 30% OFF)" value={form.offer_text} onChange={(e) => setForm({ ...form, offer_text: e.target.value })} />
