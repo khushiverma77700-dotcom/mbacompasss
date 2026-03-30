@@ -384,11 +384,18 @@ const InstitutePage = () => {
                                     </div>
                                   </div>
                                 )}
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 flex-wrap">
                                   <Button size="sm">Enquire Now</Button>
                                   <Button size="sm" variant="outline" className="gap-1" onClick={handleGetBestOffer}>
                                     <Tag className="w-3.5 h-3.5" /> Get Best Offer
                                   </Button>
+                                  {(course as any).brochure_url && (
+                                    <a href={(course as any).brochure_url} target="_blank" rel="noopener noreferrer">
+                                      <Button size="sm" variant="outline" className="gap-1">
+                                        <Download className="w-3.5 h-3.5" /> Download Brochure
+                                      </Button>
+                                    </a>
+                                  )}
                                 </div>
                               </div>
                             </motion.div>

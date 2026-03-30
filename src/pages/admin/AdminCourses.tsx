@@ -16,7 +16,7 @@ import FileUpload from "@/components/admin/FileUpload";
 
 const emptyForm = {
   name: "", description: "", institute_id: "", duration: "", fees: 0,
-  batch_info: "", syllabus_url: "", curriculum: [] as string[],
+  batch_info: "", syllabus_url: "", curriculum: [] as string[], brochure_url: "",
 };
 
 const AdminCourses = () => {
@@ -58,6 +58,7 @@ const AdminCourses = () => {
       institute_id: form.institute_id, duration: form.duration || null,
       fees: form.fees || null, batch_info: form.batch_info || null,
       syllabus_url: form.syllabus_url || null,
+      brochure_url: (form as any).brochure_url || null,
       curriculum: form.curriculum.length > 0 ? form.curriculum : null,
     };
 
@@ -78,6 +79,7 @@ const AdminCourses = () => {
       institute_id: course.institute_id, duration: course.duration ?? "",
       fees: course.fees ?? 0, batch_info: course.batch_info ?? "",
       syllabus_url: course.syllabus_url ?? "", curriculum: course.curriculum ?? [],
+      brochure_url: (course as any).brochure_url ?? "",
     });
     setEditId(course.id); setDialogOpen(true);
   };
@@ -191,6 +193,15 @@ const AdminCourses = () => {
                   accept=".pdf,.doc,.docx"
                   label="Syllabus Document (PDF/DOC)"
                 />
+                <FileUpload
+                  bucket="uploads"
+                  folder="courses/brochures"
+                  value={(form as any).brochure_url}
+                  onChange={(url) => setForm({ ...form, brochure_url: url })}
+                  accept=".pdf,.doc,.docx,.jpg,.png"
+                  label="Course Brochure (PDF/Image)"
+                  sizeHint="Upload the course brochure for students to download"
+                />
                 <div className="bg-secondary/50 rounded-lg p-4 border border-border">
                   <h4 className="font-heading font-semibold text-foreground text-sm mb-2">Course Summary</h4>
                   <div className="grid grid-cols-2 gap-3 text-sm">
@@ -200,6 +211,7 @@ const AdminCourses = () => {
                     <div><span className="text-muted-foreground">Curriculum:</span> <span className="font-medium text-foreground">{form.curriculum.length} topics</span></div>
                     <div><span className="text-muted-foreground">Batch:</span> <span className="font-medium text-foreground">{form.batch_info || "—"}</span></div>
                     <div><span className="text-muted-foreground">Syllabus:</span> <span className="font-medium text-foreground">{form.syllabus_url ? "Uploaded ✓" : "Not uploaded"}</span></div>
+                    <div><span className="text-muted-foreground">Brochure:</span> <span className="font-medium text-foreground">{(form as any).brochure_url ? "Uploaded ✓" : "Not uploaded"}</span></div>
                   </div>
                 </div>
               </TabsContent>
