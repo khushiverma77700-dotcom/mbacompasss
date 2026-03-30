@@ -131,12 +131,12 @@ const StepProgress = ({ activeStep, websiteUrl }: { activeStep: number; websiteU
 
 /* ── Animated Bar ── */
 const AnimatedBar = ({ value, maxVal, color, delay }: { value: number; maxVal: number; color: string; delay: number }) => {
-  const pct = Math.max((value / maxVal) * 100, 5);
+  const pct = Math.max((value / maxVal) * 100, 8);
   return (
-    <motion.div className={`rounded-t-md ${color}`}
+    <motion.div className={`w-full rounded-t-md ${color}`}
       initial={{ height: 0 }} whileInView={{ height: `${pct}%` }}
       viewport={{ once: true }} transition={{ delay, duration: 0.7, ease: "easeOut" }}
-      style={{ minHeight: "4px" }} />
+      style={{ minHeight: "6px" }} />
   );
 };
 
@@ -388,14 +388,20 @@ const CoachingOfWeekSection = () => {
                   )}
 
                   <div className="flex flex-col lg:flex-row">
-                    {/* Left: Banner – improved image handling */}
+                    {/* Left: Institute Info Panel */}
                     <div className="lg:w-[380px] xl:w-[420px] flex-shrink-0 relative">
-                      {cotw.banner_url ? (
-                        <div className="relative h-64 sm:h-80 lg:h-full min-h-[320px] overflow-hidden">
-                          <img src={cotw.banner_url} alt={inst?.name}
-                            className="w-full h-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
-                            loading="lazy" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
+                      {(() => {
+                        // Always use gradient panel with logo for clean display
+                        return (
+                        <div className="h-64 sm:h-80 lg:h-full min-h-[320px] hero-gradient flex flex-col items-center justify-center p-6 relative overflow-hidden">
+                          <div className="absolute inset-0 opacity-10">
+                            {[...Array(6)].map((_, i) => (
+                              <motion.div key={i} className="absolute w-20 h-20 border border-white/20 rounded-2xl"
+                                style={{ left: `${15 + i * 15}%`, top: `${10 + (i % 3) * 30}%`, rotate: `${i * 15}deg` }}
+                                animate={{ rotate: [i * 15, i * 15 + 360] }}
+                                transition={{ duration: 20 + i * 5, repeat: Infinity, ease: "linear" }} />
+                            ))}
+                          </div>
                           <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
                             <div className="flex items-center gap-3 mb-3">
                               {inst?.logo_url && (
