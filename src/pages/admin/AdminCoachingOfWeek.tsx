@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Tag } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
 
@@ -20,6 +20,9 @@ const emptyForm = {
   offer_details: "",
   results_summary: "",
   banner_url: "",
+  coupon_code: "",
+  coupon_discount: "",
+  selected_courses: "",
   active: true,
 };
 
@@ -53,6 +56,9 @@ const AdminCoachingOfWeek = () => {
       offer_details: form.offer_details || null,
       results_summary: form.results_summary || null,
       banner_url: form.banner_url || null,
+      coupon_code: form.coupon_code || null,
+      coupon_discount: form.coupon_discount || null,
+      selected_courses: form.selected_courses || null,
       active: form.active,
     };
 
@@ -79,6 +85,9 @@ const AdminCoachingOfWeek = () => {
         offer_details: data.offer_details ?? "",
         results_summary: data.results_summary ?? "",
         banner_url: data.banner_url ?? "",
+        coupon_code: (data as any).coupon_code ?? "",
+        coupon_discount: (data as any).coupon_discount ?? "",
+        selected_courses: (data as any).selected_courses ?? "",
         active: data.active ?? true,
       });
       setEditId(id); setDialogOpen(true);
@@ -118,7 +127,19 @@ const AdminCoachingOfWeek = () => {
                 <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Description</Label>
                 <RichTextEditor content={form.description} onChange={(html) => setForm({ ...form, description: html })} placeholder="Why this institute is featured..." />
               </div>
-              <Input placeholder="Offer text (e.g. Flat 30% OFF)" value={form.offer_text} onChange={(e) => setForm({ ...form, offer_text: e.target.value })} />
+
+              {/* Coupon Section */}
+              <div className="border border-primary/20 bg-primary/5 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <Tag className="w-4 h-4 text-primary" />
+                  <Label className="text-sm font-bold text-foreground">Coupon Code Settings</Label>
+                </div>
+                <Input placeholder="Coupon Code (e.g. MBAHUB70)" value={form.coupon_code} onChange={(e) => setForm({ ...form, coupon_code: e.target.value.toUpperCase() })} />
+                <Input placeholder="Discount Text (e.g. 60% OFF)" value={form.coupon_discount} onChange={(e) => setForm({ ...form, coupon_discount: e.target.value })} />
+                <Input placeholder="Selected Courses (e.g. CAT Complete, GMAT Prep)" value={form.selected_courses} onChange={(e) => setForm({ ...form, selected_courses: e.target.value })} />
+              </div>
+
+              <Input placeholder="Offer text banner (e.g. Flat 30% OFF)" value={form.offer_text} onChange={(e) => setForm({ ...form, offer_text: e.target.value })} />
               <div>
                 <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Offer Details</Label>
                 <RichTextEditor content={form.offer_details} onChange={(html) => setForm({ ...form, offer_details: html })} placeholder="Detailed offer info..." />
@@ -145,6 +166,7 @@ const AdminCoachingOfWeek = () => {
               <TableRow>
                 <TableHead>Institute</TableHead>
                 <TableHead>Headline</TableHead>
+                <TableHead>Coupon</TableHead>
                 <TableHead>Offer</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -155,7 +177,12 @@ const AdminCoachingOfWeek = () => {
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">{(item as any).institutes?.name || "—"}</TableCell>
                   <TableCell>{item.headline}</TableCell>
-                  <TableCell>{item.offer_text}</TableCell>
+                  <TableCell>
+                    {(item as any).coupon_code ? (
+                      <Badge variant="outline" className="font-mono">{(item as any).coupon_code}</Badge>
+                    ) : "—"}
+                  </TableCell>
+                  <TableCell>{item.offer_text || "—"}</TableCell>
                   <TableCell><Badge variant={item.active ? "default" : "secondary"}>{item.active ? "Active" : "Inactive"}</Badge></TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(item.id)}><Pencil className="w-4 h-4" /></Button>
@@ -164,7 +191,7 @@ const AdminCoachingOfWeek = () => {
                 </TableRow>
               ))}
               {items.length === 0 && (
-                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No entries yet</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No entries yet</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
