@@ -77,8 +77,8 @@
     font-family: var(--font-heading);
   }
 
-  /* Global responsive images – no cropping */
-  img {
+  /* Global responsive images – ensure they scale properly */
+  img:not([class*="object-"]) {
     max-width: 100%;
     height: auto;
   }
