@@ -5,7 +5,7 @@ import { Link } from "react-router-dom";
 import {
   Star, TrendingUp, Gift, CheckCircle, BookOpen,
   Users, Target, GraduationCap, Flame,
-  MapPin, Sparkles, PartyPopper, X, Scissors, Tag, ExternalLink,
+  MapPin, PartyPopper, X, Scissors, Tag, ExternalLink,
   Globe, BadgeCheck, Trophy, Zap, Award, BarChart3
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -83,16 +83,17 @@ const ResultsDashboard = ({ results }: { results: any[] }) => {
   const prev = [...results].sort((a, b) => b.year - a.year)[1];
   const maxPlaced = Math.max(...sorted.map(r => r.students_placed || 0), 1);
   const maxPercentile = Math.max(...sorted.map(r => (r.cat_99_plus || 0) + (r.xat_99_plus || 0)), 1);
+  const maxCalls = Math.max(...sorted.map(r => r.total_calls || 0), 1);
   const growth = prev?.students_placed ? Math.round(((latest.students_placed - prev.students_placed) / prev.students_placed) * 100) : 0;
 
   const stats = [
     { label: "Calls", value: latest.total_calls || 0, icon: Users, accent: "text-primary", bg: "bg-primary/10" },
-    { label: "Conversions", value: `${latest.conversions || 0}%`, icon: TrendingUp, accent: "text-green-600", bg: "bg-green-500/10" },
+    { label: "Converts", value: latest.students_placed || 0, icon: TrendingUp, accent: "text-secondary-foreground", bg: "bg-secondary" },
     { label: "IIM-A", value: latest.iim_a_selections || 0, icon: Award, accent: "text-amber-600", bg: "bg-amber-500/10" },
     { label: "IIM-B", value: latest.iim_b_selections || 0, icon: GraduationCap, accent: "text-blue-600", bg: "bg-blue-500/10" },
     { label: "CAT 99+", value: latest.cat_99_plus || 0, icon: Target, accent: "text-purple-600", bg: "bg-purple-500/10" },
     { label: "XAT 99+", value: latest.xat_99_plus || 0, icon: BarChart3, accent: "text-rose-600", bg: "bg-rose-500/10" },
-    { label: "Placed", value: latest.students_placed || 0, icon: Trophy, accent: "text-emerald-600", bg: "bg-emerald-500/10" },
+    { label: "Conv %", value: `${latest.conversions || 0}%`, icon: Trophy, accent: "text-accent-foreground", bg: "bg-accent" },
     { label: "Growth", value: `${growth > 0 ? "+" : ""}${growth}%`, icon: TrendingUp, accent: growth >= 0 ? "text-green-600" : "text-destructive", bg: growth >= 0 ? "bg-green-500/10" : "bg-destructive/10" },
   ];
 
@@ -157,41 +158,52 @@ const ResultsDashboard = ({ results }: { results: any[] }) => {
           </div>
         </div>
 
-        {/* IIM Trend - compact */}
+        {/* Calls vs Converts Trend */}
         <div className="mt-3 bg-card border border-border rounded-lg p-3">
-          <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">IIM Selections</h5>
-          <div className="space-y-1.5">
+          <h5 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Converts</h5>
+          <div className="space-y-2">
             {sorted.map((r, i) => {
-              const iimA = r.iim_a_selections || 0;
-              const iimB = r.iim_b_selections || 0;
-              const maxIIM = Math.max(...sorted.map(s => (s.iim_a_selections || 0) + (s.iim_b_selections || 0)), 1);
-              const totalIIM = iimA + iimB;
-              const pct = (totalIIM / maxIIM) * 100;
+              const calls = r.total_calls || 0;
+              const converts = r.students_placed || 0;
+              const callsPct = (calls / maxCalls) * 100;
+              const convertsPct = (converts / maxCalls) * 100;
+
               return (
-                <motion.div key={r.id || i} className="flex items-center gap-2"
+                <motion.div key={r.id || i} className="rounded-md bg-muted/30 p-1.5"
                   initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
-                  <span className="text-[10px] font-bold text-muted-foreground w-7">{String(r.year).slice(-2)}</span>
-                  <div className="flex-1 h-4 bg-muted rounded-full overflow-hidden flex">
-                    <motion.div className="h-full bg-amber-500 flex items-center justify-center"
-                      initial={{ width: 0 }} whileInView={{ width: `${(iimA / Math.max(totalIIM, 1)) * pct}%` }}
-                      viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.5 }}>
-                      {iimA > 3 && <span className="text-[7px] font-bold text-white px-0.5">{iimA}</span>}
-                    </motion.div>
-                    <motion.div className="h-full bg-blue-500 flex items-center justify-center"
-                      initial={{ width: 0 }} whileInView={{ width: `${(iimB / Math.max(totalIIM, 1)) * pct}%` }}
-                      viewport={{ once: true }} transition={{ delay: i * 0.08 + 0.05, duration: 0.5 }}>
-                      {iimB > 3 && <span className="text-[7px] font-bold text-white px-0.5">{iimB}</span>}
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-bold text-muted-foreground w-7">{String(r.year).slice(-2)}</span>
+                    <span className="text-[9px] font-bold text-primary">Calls {calls}</span>
+                    <span className="text-[9px] font-bold text-secondary-foreground">Converts {converts}</span>
+                  </div>
+                  <div className="pl-7 space-y-1">
+                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full bg-primary"
+                        initial={{ width: 0 }}
+                        whileInView={{ width: `${callsPct}%` }}
+                        viewport={{ once: true }}
+                        transition={{ delay: i * 0.08, duration: 0.5 }}
+                      />
+                    </div>
+                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                      <motion.div
+                        className="h-full bg-secondary"
+                        initial={{ width: 0 }}
+                        whileInView={{ width: `${convertsPct}%` }}
+                        viewport={{ once: true }}
+                        transition={{ delay: i * 0.08 + 0.05, duration: 0.5 }}
+                      />
                     </motion.div>
                   </div>
-                  <span className="text-[10px] font-extrabold text-foreground w-6 text-right">{totalIIM}</span>
                 </motion.div>
               );
             })}
           </div>
           <div className="flex items-center justify-center gap-3 mt-2">
-            <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-sm bg-amber-500" /><span className="text-[8px] text-muted-foreground">IIM-A</span></div>
-            <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-sm bg-blue-500" /><span className="text-[8px] text-muted-foreground">IIM-B</span></div>
+            <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-sm bg-primary" /><span className="text-[8px] text-muted-foreground">Calls</span></div>
+            <div className="flex items-center gap-1"><div className="w-2 h-2 rounded-sm bg-secondary" /><span className="text-[8px] text-muted-foreground">Converts</span></div>
           </div>
         </div>
       </div>
@@ -249,9 +261,9 @@ const CoachingOfWeekSection = () => {
 
   return (
     <>
-      <section className="py-10 md:py-14 relative overflow-hidden bg-gradient-to-b from-background to-muted/15">
+      <section className="py-8 md:py-10 relative overflow-hidden bg-gradient-to-b from-background to-muted/15">
         <div className="container mx-auto px-4 relative z-10">
-          <motion.div className="text-center mb-8 md:mb-10" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+          <motion.div className="text-center mb-6 md:mb-8" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-primary/10 text-primary rounded-full text-xs font-bold mb-3 border border-primary/20">
               <Flame className="w-3.5 h-3.5" /> Coaching of the Week
             </span>
@@ -263,7 +275,7 @@ const CoachingOfWeekSection = () => {
             </p>
           </motion.div>
 
-          <div className="space-y-6 md:space-y-8">
+          <div className="space-y-5 md:space-y-6">
             {cotwItems.map((cotw: any, idx: number) => {
               const inst = cotw.institutes;
               const isClaimed = claimedIds.has(cotw.id);
@@ -271,45 +283,26 @@ const CoachingOfWeekSection = () => {
               const hasCoupon = !!couponCode;
               const websiteUrl = (cotw as any).website_url || inst?.website || "";
               const itemResults = (coachingResults || []).filter((r: any) => r.coaching_of_week_id === cotw.id);
-              const imageUrl = cotw.banner_url || inst?.banner_url || inst?.logo_url;
+              const imageUrl = cotw.banner_url || inst?.banner_url;
 
               return (
                 <motion.div key={cotw.id} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: "-50px" }} transition={{ delay: idx * 0.1, duration: 0.5 }}
                   className="bg-card rounded-2xl border border-border shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
 
-                  <div className="flex flex-col md:flex-row">
-                    {/* Left: Image + Institute Info */}
-                    <div className="md:w-[280px] lg:w-[320px] flex-shrink-0 relative bg-muted">
+                  <div className="flex flex-col">
+                    {/* Top: Horizontal banner image */}
+                    <div className="relative w-full bg-muted border-b border-border">
                       {imageUrl ? (
                         <img
                           src={imageUrl}
                           alt={inst?.name || "Institute"}
-                          className="w-full h-48 md:h-full object-cover object-center"
+                          className="w-full h-36 sm:h-40 md:h-44 object-contain object-center"
                           loading="lazy"
                         />
                       ) : (
-                        <div className="w-full h-48 md:h-full min-h-[200px] hero-gradient flex items-center justify-center">
+                        <div className="w-full h-36 sm:h-40 md:h-44 hero-gradient flex items-center justify-center">
                           <GraduationCap className="w-12 h-12 text-primary-foreground/50" />
-                        </div>
-                      )}
-                      {/* Overlay info */}
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4">
-                        <h3 className="text-lg font-bold text-white leading-tight">{inst?.name}</h3>
-                        <div className="flex items-center gap-2 mt-1 flex-wrap">
-                          <span className="text-white/80 text-xs flex items-center gap-1"><MapPin className="w-3 h-3" />{inst?.city}</span>
-                          {inst?.rating && (
-                            <span className="flex items-center gap-0.5 bg-white/20 rounded px-1.5 py-0.5 text-xs text-white backdrop-blur-sm">
-                              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />{inst.rating}
-                            </span>
-                          )}
-                          <Badge className="bg-white/20 text-white border-none text-[10px] py-0">{inst?.mode || "Offline"}</Badge>
-                        </div>
-                      </div>
-                      {/* Offer badge */}
-                      {cotw.offer_text && (
-                        <div className="absolute top-3 left-3 bg-gradient-to-r from-emerald-600 to-teal-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
-                          <Sparkles className="w-3 h-3" /> {cotw.offer_text}
                         </div>
                       )}
                     </div>
@@ -318,6 +311,15 @@ const CoachingOfWeekSection = () => {
                     <div className="flex-1 p-4 md:p-5 flex flex-col">
                       <div className="mb-3">
                         <h3 className="text-lg font-extrabold text-foreground mb-1 leading-tight">{cotw.headline || inst?.name}</h3>
+                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                          <span className="text-muted-foreground text-xs flex items-center gap-1"><MapPin className="w-3 h-3" />{inst?.city}</span>
+                          {inst?.rating && (
+                            <span className="flex items-center gap-0.5 bg-card rounded px-1.5 py-0.5 text-xs text-foreground border border-border">
+                              <Star className="w-3 h-3 fill-primary text-primary" />{inst.rating}
+                            </span>
+                          )}
+                          <Badge variant="secondary" className="text-[10px] py-0">{inst?.mode || "Offline"}</Badge>
+                        </div>
                         {cotw.description && <div className="text-xs text-muted-foreground leading-relaxed line-clamp-2" dangerouslySetInnerHTML={{ __html: cotw.description }} />}
                       </div>
 
