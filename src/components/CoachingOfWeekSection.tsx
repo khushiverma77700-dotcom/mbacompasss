@@ -195,7 +195,7 @@ const ResultsDashboard = ({ results }: { results: any[] }) => {
                         viewport={{ once: true }}
                         transition={{ delay: i * 0.08 + 0.05, duration: 0.5 }}
                       />
-                    </motion.div>
+                    </div>
                   </div>
                 </motion.div>
               );
