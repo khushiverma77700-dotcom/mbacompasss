@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Eye, Search, X } from "lucide-react";
 import SEOChecklist from "@/components/admin/SEOChecklist";
+import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
 
