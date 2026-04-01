@@ -48,6 +48,7 @@ import AdminCityPages from "./pages/admin/AdminCityPages";
 import AdminAllLinks from "./pages/admin/AdminAllLinks";
 import AdminComparisons from "./pages/admin/AdminComparisons";
 import AdminCoachingResults from "./pages/admin/AdminCoachingResults";
+import AdminSEODashboard from "./pages/admin/AdminSEODashboard";
 import DashboardPage from "./pages/DashboardPage";
 import CollegeDetailPage from "./pages/CollegeDetailPage";
 import CollegeFilterPage from "./pages/CollegeFilterPage";
