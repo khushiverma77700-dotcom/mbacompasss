@@ -14,6 +14,7 @@ import { Plus, Pencil, Trash2, X } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
 import SEOChecklist from "@/components/admin/SEOChecklist";
+import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 
 const emptyForm = {
   name: "", slug: "", full_name: "", description: "", conducting_body: "",
