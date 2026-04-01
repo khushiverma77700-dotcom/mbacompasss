@@ -171,7 +171,19 @@ const AdminInstitutes = () => {
           </DialogTrigger>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{editId ? "Edit" : "Add"} Institute</DialogTitle>
+              <div className="flex items-center justify-between">
+                <DialogTitle>{editId ? "Edit" : "Add"} Institute</DialogTitle>
+                <AISEOButton
+                  contentType="institute"
+                  data={{ name: form.name, description: form.description, city: form.city, state: form.state, slug: form.slug, features: form.features }}
+                  onApply={(s) => setForm((f: any) => ({
+                    ...f,
+                    ...(s.meta_title && { meta_title: s.meta_title }),
+                    ...(s.meta_description && { meta_description: s.meta_description }),
+                    ...(s.keywords && { keywords: s.keywords }),
+                  }))}
+                />
+              </div>
             </DialogHeader>
             <Tabs defaultValue="basic" className="space-y-4">
               <TabsList className="grid grid-cols-5 w-full">

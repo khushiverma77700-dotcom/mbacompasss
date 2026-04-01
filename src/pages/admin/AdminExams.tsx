@@ -100,7 +100,21 @@ const AdminExams = () => {
             <Button onClick={() => { setForm(emptyForm); setEditId(null); }}><Plus className="w-4 h-4 mr-2" /> Add Exam</Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>{editId ? "Edit" : "Add"} Exam</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <div className="flex items-center justify-between">
+                <DialogTitle>{editId ? "Edit" : "Add"} Exam</DialogTitle>
+                <AISEOButton
+                  contentType="exam"
+                  data={{ name: form.name, full_name: form.full_name, description: form.description, conducting_body: form.conducting_body, slug: form.slug }}
+                  onApply={(s) => setForm(f => ({
+                    ...f,
+                    ...(s.meta_title && { meta_title: s.meta_title }),
+                    ...(s.meta_description && { meta_description: s.meta_description }),
+                    ...(s.keywords && { keywords: s.keywords }),
+                  }))}
+                />
+              </div>
+            </DialogHeader>
             <Tabs defaultValue="basic" className="space-y-4">
               <TabsList className="grid grid-cols-3 w-full">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>

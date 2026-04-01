@@ -166,7 +166,19 @@ const AdminCityPages = () => {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editId ? "Edit" : "Add"} City/State Page</DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle>{editId ? "Edit" : "Add"} City/State Page</DialogTitle>
+              <AISEOButton
+                contentType="cityPage"
+                data={{ name: form.name, type: form.type, state: form.state, intro_content: form.intro_content, slug: form.slug }}
+                onApply={(s) => setForm((f: any) => ({
+                  ...f,
+                  ...(s.meta_title && { meta_title: s.meta_title }),
+                  ...(s.meta_description && { meta_description: s.meta_description }),
+                  ...(s.keywords && { keywords: s.keywords }),
+                }))}
+              />
+            </div>
           </DialogHeader>
           <Tabs defaultValue="basic" className="mt-4">
             <TabsList className="grid grid-cols-4 w-full">
