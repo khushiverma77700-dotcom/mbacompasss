@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Eye, Search, X } from "lucide-react";
 import SEOChecklist from "@/components/admin/SEOChecklist";
+import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
 
@@ -143,7 +144,22 @@ const AdminArticles = () => {
             <Button onClick={() => { setForm(emptyForm); setEditId(null); }}><Plus className="w-4 h-4 mr-2" /> New Article</Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle className="font-heading">{editId ? "Edit" : "Create"} Article</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <div className="flex items-center justify-between">
+                <DialogTitle className="font-heading">{editId ? "Edit" : "Create"} Article</DialogTitle>
+                <AISEOButton
+                  contentType="article"
+                  data={{ title: form.title, content: form.content, excerpt: form.excerpt, category: form.category, slug: form.slug }}
+                  onApply={(s) => setForm(f => ({
+                    ...f,
+                    ...(s.meta_title && { meta_title: s.meta_title }),
+                    ...(s.meta_description && { meta_description: s.meta_description }),
+                    ...(s.h1_tag && { h1_tag: s.h1_tag }),
+                    ...(s.keywords && { keywords: s.keywords }),
+                  }))}
+                />
+              </div>
+            </DialogHeader>
             <Tabs defaultValue="content" className="space-y-4">
               <TabsList className="grid grid-cols-3 w-full">
                 <TabsTrigger value="content">Content</TabsTrigger>

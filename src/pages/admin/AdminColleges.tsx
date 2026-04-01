@@ -14,6 +14,7 @@ import { Plus, Pencil, Trash2, X } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
 import SEOChecklist from "@/components/admin/SEOChecklist";
+import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 
 const emptyForm = {
   name: "", slug: "", description: "", city: "", state: "", type: "Private",
@@ -141,7 +142,21 @@ const AdminColleges = () => {
             <Button onClick={() => { setForm(emptyForm); setEditId(null); }}><Plus className="w-4 h-4 mr-2" /> Add College</Button>
           </DialogTrigger>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>{editId ? "Edit" : "Add"} College</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <div className="flex items-center justify-between">
+                <DialogTitle>{editId ? "Edit" : "Add"} College</DialogTitle>
+                <AISEOButton
+                  contentType="college"
+                  data={{ name: form.name, description: form.description, city: form.city, state: form.state, slug: form.slug, courses: form.courses, fees: form.fees }}
+                  onApply={(s) => setForm(f => ({
+                    ...f,
+                    ...(s.meta_title && { meta_title: s.meta_title }),
+                    ...(s.meta_description && { meta_description: s.meta_description }),
+                    ...(s.keywords && { keywords: s.keywords }),
+                  }))}
+                />
+              </div>
+            </DialogHeader>
             <Tabs defaultValue="basic" className="space-y-4">
               <TabsList className="grid grid-cols-4 w-full">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>

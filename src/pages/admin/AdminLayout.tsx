@@ -1,6 +1,6 @@
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp } from "lucide-react";
+import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 const adminNav = [
@@ -27,6 +27,7 @@ const adminNav = [
   { label: "City/State Pages", path: "/admin/city-pages", icon: Globe },
   { label: "All Site Links", path: "/admin/all-links", icon: Link2 },
   { label: "Clear Caches", path: "/admin/clear-cache", icon: Trash2 },
+  { label: "AI SEO Dashboard", path: "/admin/seo-dashboard", icon: Sparkles },
 ];
 
 const AdminLayout = () => {
