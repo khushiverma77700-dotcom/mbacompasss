@@ -27,6 +27,7 @@ const adminNav = [
   { label: "City/State Pages", path: "/admin/city-pages", icon: Globe },
   { label: "All Site Links", path: "/admin/all-links", icon: Link2 },
   { label: "Clear Caches", path: "/admin/clear-cache", icon: Trash2 },
+  { label: "AI SEO Dashboard", path: "/admin/seo-dashboard", icon: Sparkles },
 ];
 
 const AdminLayout = () => {

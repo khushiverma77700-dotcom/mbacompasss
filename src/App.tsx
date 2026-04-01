@@ -154,6 +154,7 @@ const App = () => (
               <Route path="all-links" element={<AdminAllLinks />} />
               <Route path="comparisons" element={<AdminComparisons />} />
               <Route path="coaching-results" element={<AdminCoachingResults />} />
+              <Route path="seo-dashboard" element={<AdminSEODashboard />} />
             </Route>
             <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
             <Route path="/category/:slug" element={<PublicLayout><CategoryPage /></PublicLayout>} />
