@@ -16,6 +16,7 @@ import { Plus, Pencil, Trash2, Eye, Globe, MapPin } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import SEOChecklist from "@/components/admin/SEOChecklist";
 import FileUpload from "@/components/admin/FileUpload";
+import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 
 interface CityPage {
   id: string;
