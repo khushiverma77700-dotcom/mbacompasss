@@ -5,8 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { Sparkles, Loader2, Check, Copy, Lightbulb, Link, Code, Tag, Search } from "lucide-react";
+import {
+  Sparkles, Loader2, Check, Copy, Lightbulb, Link, Code, Tag, Search,
+  AlertTriangle, XCircle, CheckCircle, Globe, Smartphone, Shield, Gauge,
+  Share2, BarChart3,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface SEOSuggestions {
@@ -18,11 +23,50 @@ interface SEOSuggestions {
     longTail: string[];
     faq: string[];
     trending: string[];
+    lsi: string[];
   };
   onPageTips: string[];
+  technicalSEO: {
+    canonicalUrl: string;
+    urlSlugSuggestion: string;
+    imageAltTags: string[];
+    contentLengthAnalysis: {
+      currentWordCount: number;
+      recommendedMinimum: number;
+      verdict: string;
+    };
+    headerStructure: string[];
+    pagespeedTips: string[];
+    mobileTips: string[];
+    securityChecks: string[];
+  };
+  socialMeta: {
+    ogTitle: string;
+    ogDescription: string;
+    twitterTitle: string;
+    twitterDescription: string;
+  };
   schemaMarkup: Record<string, any>;
-  internalLinks: string[];
+  internalLinks: {
+    suggested: string[];
+    anchorTexts: string[];
+  };
   contentSuggestions: string[];
+  competitorInsights: string[];
+  seoScore: {
+    overall: number;
+    breakdown: {
+      metaTags: number;
+      keywords: number;
+      technicalSEO: number;
+      schema: number;
+      contentStructure: number;
+      socialMeta: number;
+    };
+    criticalIssues: string[];
+    warnings: string[];
+    passed: string[];
+  };
 }
 
 interface AISEOButtonProps {
@@ -76,7 +120,7 @@ export const AISEOButton = ({ contentType, data, onApply }: AISEOButtonProps) =>
       ];
     }
     onApply(applied);
-    toast({ title: "SEO Applied", description: "Selected suggestions have been applied to the form." });
+    toast({ title: "SEO Applied", description: "Selected SEO fields updated. Core content unchanged." });
     setOpen(false);
   };
 
@@ -84,6 +128,12 @@ export const AISEOButton = ({ contentType, data, onApply }: AISEOButtonProps) =>
     navigator.clipboard.writeText(text);
     toast({ title: "Copied!" });
   };
+
+  const scoreColor = (score: number) =>
+    score >= 80 ? "text-green-600" : score >= 50 ? "text-amber-600" : "text-red-600";
+
+  const scoreBarColor = (score: number) =>
+    score >= 80 ? "bg-green-500" : score >= 50 ? "bg-amber-500" : "bg-red-500";
 
   return (
     <>
@@ -99,33 +149,66 @@ export const AISEOButton = ({ contentType, data, onApply }: AISEOButtonProps) =>
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-3xl max-h-[85vh]">
+        <DialogContent className="max-w-4xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
-              AI SEO Suggestions
+              Comprehensive AI SEO Analysis
+              {suggestions && (
+                <Badge className={`ml-2 ${scoreBarColor(suggestions.seoScore.overall)} text-white`}>
+                  Score: {suggestions.seoScore.overall}/100
+                </Badge>
+              )}
             </DialogTitle>
           </DialogHeader>
 
           {loading && (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Analyzing content & researching keywords...</p>
+              <p className="text-sm text-muted-foreground">Deep SEO research in progress — analyzing keywords, schema, technical SEO...</p>
             </div>
           )}
 
           {suggestions && (
-            <ScrollArea className="max-h-[65vh]">
+            <ScrollArea className="max-h-[75vh]">
+              {/* SEO Score Overview */}
+              <div className="grid grid-cols-6 gap-2 mb-4">
+                {Object.entries(suggestions.seoScore.breakdown).map(([key, val]) => (
+                  <div key={key} className="text-center p-2 rounded-lg bg-muted/50">
+                    <p className={`text-lg font-bold ${scoreColor(val)}`}>{val}</p>
+                    <p className="text-[10px] text-muted-foreground capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Critical Issues Banner */}
+              {suggestions.seoScore.criticalIssues.length > 0 && (
+                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 mb-4">
+                  <h4 className="text-sm font-semibold text-destructive flex items-center gap-1 mb-1">
+                    <XCircle className="h-4 w-4" /> {suggestions.seoScore.criticalIssues.length} Critical Issues
+                  </h4>
+                  {suggestions.seoScore.criticalIssues.map((issue, i) => (
+                    <p key={i} className="text-xs text-destructive/80 ml-5">• {issue}</p>
+                  ))}
+                </div>
+              )}
+
               <Tabs defaultValue="meta" className="w-full">
-                <TabsList className="w-full grid grid-cols-5">
+                <TabsList className="w-full grid grid-cols-7">
                   <TabsTrigger value="meta" className="text-xs">Meta</TabsTrigger>
                   <TabsTrigger value="keywords" className="text-xs">Keywords</TabsTrigger>
-                  <TabsTrigger value="tips" className="text-xs">Tips</TabsTrigger>
+                  <TabsTrigger value="technical" className="text-xs">Technical</TabsTrigger>
+                  <TabsTrigger value="social" className="text-xs">Social</TabsTrigger>
                   <TabsTrigger value="schema" className="text-xs">Schema</TabsTrigger>
                   <TabsTrigger value="links" className="text-xs">Links</TabsTrigger>
+                  <TabsTrigger value="audit" className="text-xs">Audit</TabsTrigger>
                 </TabsList>
 
+                {/* META TAB */}
                 <TabsContent value="meta" className="space-y-4 mt-4">
+                  <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
+                    ℹ️ Only meta titles, descriptions, and headers are modified. Your core content remains untouched.
+                  </p>
                   <SuggestionField
                     label="Meta Title"
                     value={suggestions.meta_title}
@@ -151,6 +234,7 @@ export const AISEOButton = ({ contentType, data, onApply }: AISEOButtonProps) =>
                   />
                 </TabsContent>
 
+                {/* KEYWORDS TAB */}
                 <TabsContent value="keywords" className="space-y-4 mt-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Checkbox
@@ -159,15 +243,113 @@ export const AISEOButton = ({ contentType, data, onApply }: AISEOButtonProps) =>
                     />
                     <span className="text-sm font-medium">Apply all keywords to form</span>
                   </div>
-
                   <KeywordGroup title="Primary Keywords" icon={<Tag className="h-4 w-4" />} keywords={suggestions.keywords.primary} color="bg-primary/10 text-primary" />
                   <KeywordGroup title="Long-tail Keywords" icon={<Search className="h-4 w-4" />} keywords={suggestions.keywords.longTail} color="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" />
                   <KeywordGroup title="FAQ Keywords" icon={<Lightbulb className="h-4 w-4" />} keywords={suggestions.keywords.faq} color="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200" />
                   <KeywordGroup title="Trending Keywords" icon={<Sparkles className="h-4 w-4" />} keywords={suggestions.keywords.trending} color="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" />
+                  <KeywordGroup title="LSI Keywords" icon={<BarChart3 className="h-4 w-4" />} keywords={suggestions.keywords.lsi || []} color="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200" />
                 </TabsContent>
 
-                <TabsContent value="tips" className="space-y-3 mt-4">
-                  <h4 className="font-semibold flex items-center gap-2"><Lightbulb className="h-4 w-4 text-amber-500" /> On-Page SEO Tips</h4>
+                {/* TECHNICAL SEO TAB */}
+                <TabsContent value="technical" className="space-y-4 mt-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <TechCard icon={<Globe className="h-4 w-4" />} title="Canonical URL" value={suggestions.technicalSEO.canonicalUrl} />
+                    <TechCard icon={<Link className="h-4 w-4" />} title="URL Slug Suggestion" value={suggestions.technicalSEO.urlSlugSuggestion} />
+                  </div>
+
+                  {/* Content Length */}
+                  <div className="border rounded-lg p-3">
+                    <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                      <Gauge className="h-4 w-4" /> Content Length Analysis
+                    </h4>
+                    <div className="flex items-center gap-4 text-sm">
+                      <span>Current: <strong>{suggestions.technicalSEO.contentLengthAnalysis.currentWordCount}</strong> words</span>
+                      <span>Recommended: <strong>{suggestions.technicalSEO.contentLengthAnalysis.recommendedMinimum}+</strong></span>
+                      <Badge variant={suggestions.technicalSEO.contentLengthAnalysis.verdict === "excellent" ? "default" : "destructive"} className="text-xs">
+                        {suggestions.technicalSEO.contentLengthAnalysis.verdict}
+                      </Badge>
+                    </div>
+                    <Progress
+                      value={Math.min(100, (suggestions.technicalSEO.contentLengthAnalysis.currentWordCount / suggestions.technicalSEO.contentLengthAnalysis.recommendedMinimum) * 100)}
+                      className="mt-2 h-2"
+                    />
+                  </div>
+
+                  {/* Header Structure */}
+                  <div className="border rounded-lg p-3">
+                    <h4 className="text-sm font-semibold mb-2">Recommended Header Structure</h4>
+                    {suggestions.technicalSEO.headerStructure.map((h, i) => (
+                      <p key={i} className={`text-xs py-0.5 ${h.startsWith("H1") ? "font-bold" : h.startsWith("H2") ? "ml-3 font-medium" : "ml-6"}`}>{h}</p>
+                    ))}
+                  </div>
+
+                  {/* Speed */}
+                  <TechList icon={<Gauge className="h-4 w-4 text-orange-500" />} title="Page Speed Tips" items={suggestions.technicalSEO.pagespeedTips} />
+                  <TechList icon={<Smartphone className="h-4 w-4 text-blue-500" />} title="Mobile Optimization" items={suggestions.technicalSEO.mobileTips} />
+                  <TechList icon={<Shield className="h-4 w-4 text-green-500" />} title="Security Checks" items={suggestions.technicalSEO.securityChecks} />
+
+                  {/* Image Alt Tags */}
+                  {suggestions.technicalSEO.imageAltTags.length > 0 && (
+                    <div className="border rounded-lg p-3">
+                      <h4 className="text-sm font-semibold mb-2">Image Alt Tag Suggestions</h4>
+                      {suggestions.technicalSEO.imageAltTags.map((alt, i) => (
+                        <p key={i} className="text-xs py-0.5 text-muted-foreground">• {alt}</p>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* SOCIAL META TAB */}
+                <TabsContent value="social" className="space-y-4 mt-4">
+                  <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded flex items-center gap-1">
+                    <Share2 className="h-3 w-3" /> Social meta tags optimize how your page appears when shared on Facebook, Twitter, LinkedIn etc.
+                  </p>
+                  <MetaPreview label="Open Graph (Facebook/LinkedIn)" title={suggestions.socialMeta.ogTitle} description={suggestions.socialMeta.ogDescription} onCopy={copyToClipboard} />
+                  <MetaPreview label="Twitter Card" title={suggestions.socialMeta.twitterTitle} description={suggestions.socialMeta.twitterDescription} onCopy={copyToClipboard} />
+                </TabsContent>
+
+                {/* SCHEMA TAB */}
+                <TabsContent value="schema" className="mt-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold flex items-center gap-2"><Code className="h-4 w-4" /> JSON-LD Schema (Production-Ready)</h4>
+                    <Button size="sm" variant="ghost" onClick={() => copyToClipboard(JSON.stringify(suggestions.schemaMarkup, null, 2))}>
+                      <Copy className="h-3 w-3 mr-1" /> Copy
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    This schema is automatically generated for your {contentType} page. Copy and implement in your page's SEOHead component.
+                  </p>
+                  <pre className="bg-muted p-3 rounded-lg text-xs overflow-auto max-h-80 font-mono">
+                    {JSON.stringify(suggestions.schemaMarkup, null, 2)}
+                  </pre>
+                </TabsContent>
+
+                {/* LINKS TAB */}
+                <TabsContent value="links" className="mt-4 space-y-3">
+                  <h4 className="font-semibold flex items-center gap-2"><Link className="h-4 w-4" /> Internal Linking Strategy</h4>
+                  {suggestions.internalLinks.suggested.map((link, i) => (
+                    <div key={i} className="flex items-center gap-3 p-2 rounded bg-muted/50 text-sm">
+                      <Link className="h-3 w-3 text-primary shrink-0" />
+                      <code className="text-xs flex-1">{link}</code>
+                      {suggestions.internalLinks.anchorTexts[i] && (
+                        <Badge variant="outline" className="text-[10px]">Anchor: {suggestions.internalLinks.anchorTexts[i]}</Badge>
+                      )}
+                    </div>
+                  ))}
+
+                  <h4 className="font-semibold mt-6 flex items-center gap-2"><BarChart3 className="h-4 w-4" /> Competitor Insights</h4>
+                  {suggestions.competitorInsights.map((insight, i) => (
+                    <div key={i} className="flex gap-2 p-3 rounded-lg bg-muted/50 text-sm">
+                      <Lightbulb className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+                      <span>{insight}</span>
+                    </div>
+                  ))}
+                </TabsContent>
+
+                {/* AUDIT TAB */}
+                <TabsContent value="audit" className="mt-4 space-y-4">
+                  {/* On-Page Tips */}
+                  <h4 className="font-semibold flex items-center gap-2"><Lightbulb className="h-4 w-4 text-amber-500" /> On-Page SEO Improvements</h4>
                   {suggestions.onPageTips.map((tip, i) => (
                     <div key={i} className="flex gap-2 p-3 rounded-lg bg-muted/50 text-sm">
                       <Check className="h-4 w-4 text-green-500 mt-0.5 shrink-0" />
@@ -175,35 +357,38 @@ export const AISEOButton = ({ contentType, data, onApply }: AISEOButtonProps) =>
                     </div>
                   ))}
 
-                  <h4 className="font-semibold mt-4">Content Suggestions</h4>
+                  <h4 className="font-semibold mt-4">Content Structure Suggestions</h4>
+                  <p className="text-xs text-muted-foreground">These suggestions improve content structure without changing your existing text.</p>
                   {suggestions.contentSuggestions.map((s, i) => (
                     <div key={i} className="flex gap-2 p-3 rounded-lg bg-muted/50 text-sm">
                       <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                       <span>{s}</span>
                     </div>
                   ))}
-                </TabsContent>
 
-                <TabsContent value="schema" className="mt-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold flex items-center gap-2"><Code className="h-4 w-4" /> JSON-LD Schema</h4>
-                    <Button size="sm" variant="ghost" onClick={() => copyToClipboard(JSON.stringify(suggestions.schemaMarkup, null, 2))}>
-                      <Copy className="h-3 w-3 mr-1" /> Copy
-                    </Button>
-                  </div>
-                  <pre className="bg-muted p-3 rounded-lg text-xs overflow-auto max-h-80">
-                    {JSON.stringify(suggestions.schemaMarkup, null, 2)}
-                  </pre>
-                </TabsContent>
-
-                <TabsContent value="links" className="mt-4 space-y-3">
-                  <h4 className="font-semibold flex items-center gap-2"><Link className="h-4 w-4" /> Internal Linking Suggestions</h4>
-                  {suggestions.internalLinks.map((link, i) => (
-                    <div key={i} className="flex items-center gap-2 p-2 rounded bg-muted/50 text-sm">
-                      <Link className="h-3 w-3 text-primary shrink-0" />
-                      <code className="text-xs">{link}</code>
+                  {/* Warnings */}
+                  {suggestions.seoScore.warnings.length > 0 && (
+                    <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                      <h4 className="text-sm font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1 mb-1">
+                        <AlertTriangle className="h-4 w-4" /> Warnings ({suggestions.seoScore.warnings.length})
+                      </h4>
+                      {suggestions.seoScore.warnings.map((w, i) => (
+                        <p key={i} className="text-xs text-amber-600 dark:text-amber-300 ml-5">• {w}</p>
+                      ))}
                     </div>
-                  ))}
+                  )}
+
+                  {/* Passed */}
+                  {suggestions.seoScore.passed.length > 0 && (
+                    <div className="bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                      <h4 className="text-sm font-semibold text-green-700 dark:text-green-400 flex items-center gap-1 mb-1">
+                        <CheckCircle className="h-4 w-4" /> Passed ({suggestions.seoScore.passed.length})
+                      </h4>
+                      {suggestions.seoScore.passed.map((p, i) => (
+                        <p key={i} className="text-xs text-green-600 dark:text-green-300 ml-5">✓ {p}</p>
+                      ))}
+                    </div>
+                  )}
                 </TabsContent>
               </Tabs>
 
@@ -213,7 +398,7 @@ export const AISEOButton = ({ contentType, data, onApply }: AISEOButtonProps) =>
                   Re-analyze
                 </Button>
                 <Button onClick={handleApply} className="gap-2">
-                  <Check className="h-4 w-4" /> Apply Selected
+                  <Check className="h-4 w-4" /> Apply SEO Fields Only
                 </Button>
               </div>
             </ScrollArea>
@@ -255,13 +440,54 @@ function SuggestionField({ label, value, charLimit, checked, onCheckedChange, on
 function KeywordGroup({ title, icon, keywords, color }: {
   title: string; icon: React.ReactNode; keywords: string[]; color: string;
 }) {
+  if (!keywords || keywords.length === 0) return null;
   return (
     <div className="space-y-2">
-      <h4 className="text-sm font-semibold flex items-center gap-2">{icon} {title}</h4>
+      <h4 className="text-sm font-semibold flex items-center gap-2">{icon} {title} <Badge variant="outline" className="text-[10px]">{keywords.length}</Badge></h4>
       <div className="flex flex-wrap gap-1.5">
         {keywords.map((kw, i) => (
           <Badge key={i} variant="secondary" className={`text-xs ${color}`}>{kw}</Badge>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function TechCard({ icon, title, value }: { icon: React.ReactNode; title: string; value: string }) {
+  return (
+    <div className="border rounded-lg p-3">
+      <h4 className="text-xs font-semibold flex items-center gap-1 text-muted-foreground mb-1">{icon} {title}</h4>
+      <code className="text-xs break-all">{value || "—"}</code>
+    </div>
+  );
+}
+
+function TechList({ icon, title, items }: { icon: React.ReactNode; title: string; items: string[] }) {
+  if (!items || items.length === 0) return null;
+  return (
+    <div className="border rounded-lg p-3">
+      <h4 className="text-sm font-semibold flex items-center gap-2 mb-2">{icon} {title}</h4>
+      {items.map((item, i) => (
+        <p key={i} className="text-xs text-muted-foreground py-0.5">• {item}</p>
+      ))}
+    </div>
+  );
+}
+
+function MetaPreview({ label, title, description, onCopy }: {
+  label: string; title: string; description: string; onCopy: (v: string) => void;
+}) {
+  return (
+    <div className="border rounded-lg p-3 space-y-2">
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-semibold">{label}</h4>
+        <Button size="sm" variant="ghost" onClick={() => onCopy(`${title}\n${description}`)}>
+          <Copy className="h-3 w-3 mr-1" /> Copy
+        </Button>
+      </div>
+      <div className="bg-muted/50 rounded p-3 space-y-1">
+        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">{title}</p>
+        <p className="text-xs text-muted-foreground">{description}</p>
       </div>
     </div>
   );
