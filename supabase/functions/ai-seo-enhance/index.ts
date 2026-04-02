@@ -20,57 +20,121 @@ serve(async (req) => {
       });
     }
 
-    const systemPrompt = `You are an expert SEO consultant specializing in the Indian education sector — MBA coaching, colleges, entrance exams (CAT, GMAT, XAT, SNAP, GRE). 
+    const systemPrompt = `You are an elite SEO consultant specializing in the Indian education sector — MBA coaching, colleges, entrance exams (CAT, GMAT, XAT, SNAP, GRE, NMAT, CMAT, IIFT, TISSNET).
 
-Your job is to analyze the given content and generate comprehensive SEO suggestions.
+Your job is to perform DEEP, DATA-BACKED SEO research and generate comprehensive, actionable SEO optimizations.
 
-ALWAYS return a valid JSON object with this exact structure:
+CRITICAL RULES:
+1. DO NOT modify or suggest changes to the page's core content or descriptions. Only optimize meta tags, headers, technical SEO, and schema markup.
+2. Every suggestion must be specific, actionable, and data-backed — no generic advice.
+3. Research trending keywords that Indian MBA aspirants actually search for TODAY.
+4. Consider seasonal trends (CAT registration Aug-Sep, results Jan, admission Mar-Jun).
+5. Generate detailed, page-type-specific JSON-LD schema markup.
+
+ALWAYS return a valid JSON object with this EXACT structure:
 {
-  "meta_title": "SEO-optimized title under 60 chars with primary keyword",
-  "meta_description": "Compelling description under 155 chars with CTA",
-  "h1_tag": "Unique H1 tag with primary keyword",
+  "meta_title": "SEO-optimized title under 60 chars, primary keyword near start",
+  "meta_description": "Compelling description 150-155 chars with CTA and primary keyword",
+  "h1_tag": "Unique H1 with primary keyword, different from meta_title",
   "keywords": {
-    "primary": ["top 3-5 high-volume short-tail keywords"],
-    "longTail": ["5-8 long-tail keywords students actually search"],
-    "faq": ["5-7 question-format keywords like 'What is the best...'"],
-    "trending": ["3-5 currently trending keywords in this niche"]
+    "primary": ["top 5 high-volume short-tail keywords with est. monthly search volume"],
+    "longTail": ["8-10 long-tail keywords students actually search"],
+    "faq": ["7-10 question-format keywords like 'What is the best...'"],
+    "trending": ["5 currently trending keywords in this niche"],
+    "lsi": ["5-8 LSI (latent semantic indexing) related terms"]
   },
   "onPageTips": [
-    "Specific actionable tip 1",
-    "Specific actionable tip 2",
-    "Specific actionable tip 3"
+    "Specific actionable on-page optimization tip with exact implementation detail"
   ],
-  "schemaMarkup": {}, 
-  "internalLinks": ["suggested internal link paths like /colleges, /exam/cat"],
+  "technicalSEO": {
+    "canonicalUrl": "suggested canonical URL path",
+    "urlSlugSuggestion": "optimized-url-slug if current is suboptimal",
+    "imageAltTags": ["suggested alt text for key images on this page"],
+    "contentLengthAnalysis": {
+      "currentWordCount": 0,
+      "recommendedMinimum": 1500,
+      "verdict": "needs more content / adequate / excellent"
+    },
+    "headerStructure": ["H1: suggested", "H2: suggested sub-sections", "H3: suggested sub-sub-sections"],
+    "pagespeedTips": ["specific speed optimization tips for this page type"],
+    "mobileTips": ["mobile UX optimization suggestions"],
+    "securityChecks": ["HTTPS status note", "mixed content warnings if any"]
+  },
+  "socialMeta": {
+    "ogTitle": "Open Graph title (may differ from meta_title for social engagement)",
+    "ogDescription": "Open Graph description optimized for social sharing",
+    "twitterTitle": "Twitter card title",
+    "twitterDescription": "Twitter card description"
+  },
+  "schemaMarkup": {},
+  "internalLinks": {
+    "suggested": ["internal link paths with anchor text suggestions"],
+    "anchorTexts": ["optimized anchor text for each suggested link"]
+  },
   "contentSuggestions": [
-    "Add a comparison table for...",
-    "Include FAQ section about..."
-  ]
+    "Content structure improvement that does NOT change existing text"
+  ],
+  "competitorInsights": [
+    "What top-ranking pages for similar keywords are doing differently"
+  ],
+  "seoScore": {
+    "overall": 0,
+    "breakdown": {
+      "metaTags": 0,
+      "keywords": 0,
+      "technicalSEO": 0,
+      "schema": 0,
+      "contentStructure": 0,
+      "socialMeta": 0
+    },
+    "criticalIssues": ["list of critical SEO issues found"],
+    "warnings": ["list of SEO warnings"],
+    "passed": ["list of SEO checks that passed"]
+  }
 }
 
-For schemaMarkup, generate the appropriate JSON-LD schema based on content type:
-- article → Article schema
-- institute → EducationalOrganization with courses
-- college → EducationalOrganization with placements
-- exam → Event schema
-- cityPage → WebPage with local business markup
+For schemaMarkup, generate DETAILED, COMPLETE JSON-LD based on content type:
+- article → Article + BreadcrumbList + FAQPage (if FAQs present) + Organization
+- institute → EducationalOrganization with courses, reviews, address, geo, contactPoint + BreadcrumbList + AggregateRating
+- college → EducationalOrganization with courses, placements, rankings, admissionProcess + BreadcrumbList + AggregateRating + FAQPage
+- exam → Course + Event with dates, eligibility, registration + BreadcrumbList + FAQPage + HowTo (for preparation)
+- cityPage → WebPage + ItemList + LocalBusiness + BreadcrumbList + FAQPage
 
-Focus on keywords that Indian MBA aspirants actually search for. Consider seasonal trends (CAT registration in Aug-Sep, results in Jan, admission season Mar-Jun).`;
+Include @context, @type, and ALL relevant properties for each schema type. Be exhaustive.
+
+The seoScore should be calculated based on the CURRENT state of the page data provided, not after your suggestions. Score each category 0-100.`;
 
     const userPrompt = `Content Type: ${contentType}
 
 Content Data:
 ${JSON.stringify(data, null, 2)}
 
-Analyze this content and provide comprehensive SEO suggestions. Focus on:
-1. What students would search to find this page
-2. Trending keywords in the ${contentType} space right now
-3. Long-tail keywords with buying/action intent
-4. FAQ-style keywords
-5. Optimal meta tags
-6. Schema markup for this specific content
-7. On-page SEO improvements
-8. Internal linking opportunities`;
+Perform DEEP SEO analysis of this ${contentType} page. Research and provide:
+
+1. KEYWORD RESEARCH: Find the exact keywords Indian MBA aspirants search for to find this specific page. Include search volume estimates where possible. Find LSI keywords.
+
+2. META OPTIMIZATION: Craft meta title (under 60 chars, keyword-first), meta description (150-155 chars with CTA), and unique H1 tag. Do NOT change the page's actual content.
+
+3. TECHNICAL SEO AUDIT:
+   - Analyze URL/slug for SEO-friendliness
+   - Suggest canonical URL
+   - Analyze content length adequacy (minimum 1500 words for ranking)
+   - Suggest optimal header hierarchy (H1-H3)
+   - Image alt tag suggestions
+   - Page speed optimization tips specific to this page
+   - Mobile responsiveness considerations
+
+4. SOCIAL META: Generate Open Graph and Twitter Card meta suggestions optimized for social sharing engagement.
+
+5. SCHEMA MARKUP: Generate COMPLETE, DETAILED JSON-LD schema with every relevant property filled. This should be production-ready code.
+
+6. INTERNAL LINKING: Suggest 5-8 internal links with exact anchor text optimized for link equity distribution.
+
+7. COMPETITOR ANALYSIS: What are the top 3 things competing pages do better for similar keywords?
+
+8. SEO SCORE: Rate the CURRENT page's SEO health (0-100) across all categories before your improvements. List critical issues, warnings, and passed checks.
+
+Be thorough. Every suggestion must be specific to THIS exact page, not generic advice.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -88,7 +152,7 @@ Analyze this content and provide comprehensive SEO suggestions. Focus on:
           type: "function",
           function: {
             name: "seo_suggestions",
-            description: "Return SEO suggestions for the content",
+            description: "Return comprehensive SEO analysis and suggestions",
             parameters: {
               type: "object",
               properties: {
@@ -102,15 +166,72 @@ Analyze this content and provide comprehensive SEO suggestions. Focus on:
                     longTail: { type: "array", items: { type: "string" } },
                     faq: { type: "array", items: { type: "string" } },
                     trending: { type: "array", items: { type: "string" } },
+                    lsi: { type: "array", items: { type: "string" } },
                   },
-                  required: ["primary", "longTail", "faq", "trending"],
+                  required: ["primary", "longTail", "faq", "trending", "lsi"],
                 },
                 onPageTips: { type: "array", items: { type: "string" } },
+                technicalSEO: {
+                  type: "object",
+                  properties: {
+                    canonicalUrl: { type: "string" },
+                    urlSlugSuggestion: { type: "string" },
+                    imageAltTags: { type: "array", items: { type: "string" } },
+                    contentLengthAnalysis: {
+                      type: "object",
+                      properties: {
+                        currentWordCount: { type: "number" },
+                        recommendedMinimum: { type: "number" },
+                        verdict: { type: "string" },
+                      },
+                    },
+                    headerStructure: { type: "array", items: { type: "string" } },
+                    pagespeedTips: { type: "array", items: { type: "string" } },
+                    mobileTips: { type: "array", items: { type: "string" } },
+                    securityChecks: { type: "array", items: { type: "string" } },
+                  },
+                },
+                socialMeta: {
+                  type: "object",
+                  properties: {
+                    ogTitle: { type: "string" },
+                    ogDescription: { type: "string" },
+                    twitterTitle: { type: "string" },
+                    twitterDescription: { type: "string" },
+                  },
+                },
                 schemaMarkup: { type: "object" },
-                internalLinks: { type: "array", items: { type: "string" } },
+                internalLinks: {
+                  type: "object",
+                  properties: {
+                    suggested: { type: "array", items: { type: "string" } },
+                    anchorTexts: { type: "array", items: { type: "string" } },
+                  },
+                },
                 contentSuggestions: { type: "array", items: { type: "string" } },
+                competitorInsights: { type: "array", items: { type: "string" } },
+                seoScore: {
+                  type: "object",
+                  properties: {
+                    overall: { type: "number" },
+                    breakdown: {
+                      type: "object",
+                      properties: {
+                        metaTags: { type: "number" },
+                        keywords: { type: "number" },
+                        technicalSEO: { type: "number" },
+                        schema: { type: "number" },
+                        contentStructure: { type: "number" },
+                        socialMeta: { type: "number" },
+                      },
+                    },
+                    criticalIssues: { type: "array", items: { type: "string" } },
+                    warnings: { type: "array", items: { type: "string" } },
+                    passed: { type: "array", items: { type: "string" } },
+                  },
+                },
               },
-              required: ["meta_title", "meta_description", "h1_tag", "keywords", "onPageTips", "schemaMarkup", "internalLinks", "contentSuggestions"],
+              required: ["meta_title", "meta_description", "h1_tag", "keywords", "onPageTips", "technicalSEO", "socialMeta", "schemaMarkup", "internalLinks", "contentSuggestions", "competitorInsights", "seoScore"],
             },
           },
         }],
@@ -143,7 +264,6 @@ Analyze this content and provide comprehensive SEO suggestions. Focus on:
         ? JSON.parse(toolCall.function.arguments) 
         : toolCall.function.arguments;
     } else {
-      // Fallback: try parsing content directly
       const content = aiData.choices?.[0]?.message?.content || "";
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
