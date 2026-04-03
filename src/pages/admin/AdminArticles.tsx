@@ -149,6 +149,7 @@ const AdminArticles = () => {
                 <DialogTitle className="font-heading">{editId ? "Edit" : "Create"} Article</DialogTitle>
                 <AISEOButton
                   contentType="article"
+                  recordId={editId || undefined}
                   data={{ title: form.title, content: form.content, excerpt: form.excerpt, category: form.category, slug: form.slug }}
                   onApply={(s) => setForm(f => ({
                     ...f,

@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+import { buildStoredSeoSnapshot, mergeKeywordBuckets, saveSeoSnapshot, type SEOContentType } from "@/lib/seoAutomation";
 import {
   Sparkles, Loader2, Check, Copy, Lightbulb, Link, Code, Tag, Search,
   AlertTriangle, XCircle, CheckCircle, Globe, Smartphone, Shield, Gauge,
@@ -20,6 +21,7 @@ interface SEOSuggestions {
   h1_tag: string;
   keywords: {
     primary: string[];
+    shortTail: string[];
     longTail: string[];
     faq: string[];
     trending: string[];
@@ -39,6 +41,11 @@ interface SEOSuggestions {
     pagespeedTips: string[];
     mobileTips: string[];
     securityChecks: string[];
+    crawlabilityTips: string[];
+    backlinkIdeas: string[];
+    engagementTips: string[];
+    freshnessTips: string[];
+    keywordPlacementTips: string[];
   };
   socialMeta: {
     ogTitle: string;
@@ -70,8 +77,9 @@ interface SEOSuggestions {
 }
 
 interface AISEOButtonProps {
-  contentType: "article" | "institute" | "college" | "exam" | "cityPage";
+  contentType: SEOContentType;
   data: Record<string, any>;
+  recordId?: string;
   onApply: (suggestions: Partial<{
     meta_title: string;
     meta_description: string;
@@ -106,22 +114,34 @@ export const AISEOButton = ({ contentType, data, onApply }: AISEOButtonProps) =>
     }
   };
 
-  const handleApply = () => {
+  const handleApply = async () => {
     if (!suggestions) return;
     const applied: any = {};
     if (selected.meta_title) applied.meta_title = suggestions.meta_title;
     if (selected.meta_description) applied.meta_description = suggestions.meta_description;
     if (selected.h1_tag) applied.h1_tag = suggestions.h1_tag;
     if (selected.keywords) {
-      applied.keywords = [
-        ...suggestions.keywords.primary,
-        ...suggestions.keywords.longTail,
-        ...suggestions.keywords.trending,
-      ];
+      applied.keywords = mergeKeywordBuckets(suggestions.keywords);
     }
-    onApply(applied);
-    toast({ title: "SEO Applied", description: "Selected SEO fields updated. Core content unchanged." });
-    setOpen(false);
+
+    try {
+      if (recordId) {
+        await saveSeoSnapshot(
+          buildStoredSeoSnapshot(contentType, { ...data, id: recordId }, suggestions),
+        );
+      }
+
+      onApply(applied);
+      toast({
+        title: "SEO Applied",
+        description: recordId
+          ? "SEO fields updated and schema/technical SEO saved for automatic page rendering."
+          : "Selected SEO fields updated. Save this record to keep future SEO automation in sync.",
+      });
+      setOpen(false);
+    } catch (e: any) {
+      toast({ title: "SEO Save Error", description: e.message || "Failed to save SEO snapshot", variant: "destructive" });
+    }
   };
 
   const copyToClipboard = (text: string) => {
@@ -244,6 +264,7 @@ export const AISEOButton = ({ contentType, data, onApply }: AISEOButtonProps) =>
                     <span className="text-sm font-medium">Apply all keywords to form</span>
                   </div>
                   <KeywordGroup title="Primary Keywords" icon={<Tag className="h-4 w-4" />} keywords={suggestions.keywords.primary} color="bg-primary/10 text-primary" />
+                  <KeywordGroup title="Short-tail Keywords" icon={<Tag className="h-4 w-4" />} keywords={suggestions.keywords.shortTail || []} color="bg-secondary text-secondary-foreground" />
                   <KeywordGroup title="Long-tail Keywords" icon={<Search className="h-4 w-4" />} keywords={suggestions.keywords.longTail} color="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" />
                   <KeywordGroup title="FAQ Keywords" icon={<Lightbulb className="h-4 w-4" />} keywords={suggestions.keywords.faq} color="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200" />
                   <KeywordGroup title="Trending Keywords" icon={<Sparkles className="h-4 w-4" />} keywords={suggestions.keywords.trending} color="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" />
@@ -287,6 +308,11 @@ export const AISEOButton = ({ contentType, data, onApply }: AISEOButtonProps) =>
                   <TechList icon={<Gauge className="h-4 w-4 text-orange-500" />} title="Page Speed Tips" items={suggestions.technicalSEO.pagespeedTips} />
                   <TechList icon={<Smartphone className="h-4 w-4 text-blue-500" />} title="Mobile Optimization" items={suggestions.technicalSEO.mobileTips} />
                   <TechList icon={<Shield className="h-4 w-4 text-green-500" />} title="Security Checks" items={suggestions.technicalSEO.securityChecks} />
+                  <TechList icon={<Globe className="h-4 w-4 text-primary" />} title="Crawlability, Sitemap & Robots" items={suggestions.technicalSEO.crawlabilityTips} />
+                  <TechList icon={<Link className="h-4 w-4 text-primary" />} title="Backlink Opportunities" items={suggestions.technicalSEO.backlinkIdeas} />
+                  <TechList icon={<BarChart3 className="h-4 w-4 text-primary" />} title="Engagement & CTR Improvements" items={suggestions.technicalSEO.engagementTips} />
+                  <TechList icon={<Sparkles className="h-4 w-4 text-primary" />} title="Freshness & Update Plan" items={suggestions.technicalSEO.freshnessTips} />
+                  <TechList icon={<Tag className="h-4 w-4 text-primary" />} title="Short-tail & Long-tail Placement" items={suggestions.technicalSEO.keywordPlacementTips} />
 
                   {/* Image Alt Tags */}
                   {suggestions.technicalSEO.imageAltTags.length > 0 && (
@@ -317,7 +343,7 @@ export const AISEOButton = ({ contentType, data, onApply }: AISEOButtonProps) =>
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground mb-2">
-                    This schema is automatically generated for your {contentType} page. Copy and implement in your page's SEOHead component.
+                    This schema is automatically generated for your {contentType} page and is auto-saved for live page rendering when this item already exists.
                   </p>
                   <pre className="bg-muted p-3 rounded-lg text-xs overflow-auto max-h-80 font-mono">
                     {JSON.stringify(suggestions.schemaMarkup, null, 2)}

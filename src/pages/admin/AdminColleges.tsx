@@ -147,6 +147,7 @@ const AdminColleges = () => {
                 <DialogTitle>{editId ? "Edit" : "Add"} College</DialogTitle>
                 <AISEOButton
                   contentType="college"
+                  recordId={editId || undefined}
                   data={{ name: form.name, description: form.description, city: form.city, state: form.state, slug: form.slug, courses: form.courses, fees: form.fees }}
                   onApply={(s) => setForm(f => ({
                     ...f,

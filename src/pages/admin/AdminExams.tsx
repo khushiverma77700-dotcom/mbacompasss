@@ -105,6 +105,7 @@ const AdminExams = () => {
                 <DialogTitle>{editId ? "Edit" : "Add"} Exam</DialogTitle>
                 <AISEOButton
                   contentType="exam"
+                  recordId={editId || undefined}
                   data={{ name: form.name, full_name: form.full_name, description: form.description, conducting_body: form.conducting_body, slug: form.slug }}
                   onApply={(s) => setForm(f => ({
                     ...f,
