@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useInstituteBySlug } from "@/hooks/useInstitutes";
+import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 
@@ -79,9 +80,17 @@ const InstitutePage = () => {
   const categorySlug = (institute.categories as any)?.slug || "cat";
   const categoryName = (institute.categories as any)?.name || "MBA";
 
-  document.title = `${institute.name} — Best MBA Coaching in ${institute.city} | MBAHub`;
-
   const seoSchema = generateInstituteSchema(institute);
+  const { seo: resolvedSeo } = useResolvedSeo("institute", institute.id, {
+    title: `${institute.name} — Best MBA Coaching in ${institute.city} | MBAHub`,
+    description:
+      institute.meta_description ||
+      `${institute.name} offers top MBA coaching in ${institute.city}. ${institute.success_rate}% success rate, ${(institute.courses || []).length} courses.`,
+    keywords: (institute.keywords as string[]) || [],
+    canonical: `${window.location.origin}/institute/${institute.slug}`,
+    jsonLd: seoSchema,
+    ogImage: institute.banner_url || institute.logo_url || undefined,
+  });
 
   // Filter courses based on selected target
   const filteredCourses = selectedTarget
@@ -167,14 +176,7 @@ const InstitutePage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead
-        title={`${institute.name} — Best MBA Coaching in ${institute.city} | MBAHub`}
-        description={institute.meta_description || `${institute.name} offers top MBA coaching in ${institute.city}. ${institute.success_rate}% success rate, ${courses.length} courses.`}
-        keywords={institute.keywords as string[] || []}
-        canonical={`${window.location.origin}/institute/${institute.slug}`}
-        jsonLd={seoSchema}
-        ogImage={institute.banner_url || institute.logo_url || undefined}
-      />
+      <SEOHead {...resolvedSeo} />
       {/* Hero */}
       <div className="hero-gradient py-10 md:py-14 relative overflow-hidden">
         {institute.banner_url && (

@@ -18,7 +18,7 @@ export const useInstitutes = (categorySlug?: string) => {
       }
       const { data, error } = await query.order("rating", { ascending: false });
       if (error) throw error;
-      return data || [];
+      return (data || []).filter((item) => item.name?.trim() && item.slug?.trim());
     },
   });
 };
@@ -56,7 +56,7 @@ export const useFeaturedInstitutes = () => {
         .order("rating", { ascending: false })
         .limit(6);
       if (error) throw error;
-      return data || [];
+      return (data || []).filter((item) => item.name?.trim() && item.slug?.trim());
     },
   });
 };

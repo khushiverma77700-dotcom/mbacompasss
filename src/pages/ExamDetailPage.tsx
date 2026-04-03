@@ -1,19 +1,118 @@
-import { useEffect } from "react";
+import { useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Calendar, CheckCircle, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import SEOHead, { generateExamSchema } from "@/components/SEOHead";
+import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import { examDetails, institutes } from "@/data/mockData";
+
+const stripHtml = (value?: string | null) => (value || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+
+const htmlToList = (value?: string | null) =>
+  stripHtml(value)
+    .split(/(?:\n|•|-)/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 
 const ExamDetailPage = () => {
   const { slug } = useParams<{ slug: string }>();
-  const exam = examDetails.find((e) => e.slug === slug);
+  const fallbackExam = useMemo(() => examDetails.find((entry) => entry.slug === slug), [slug]);
 
-  useEffect(() => {
-    if (exam) document.title = `${exam.name} Exam ${new Date().getFullYear()} - Pattern, Syllabus, Dates | MBAHub`;
-  }, [exam]);
+  const { data: dbExam, isLoading } = useQuery({
+    queryKey: ["exam-page", slug],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("exams").select("*").eq("slug", slug!).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!slug,
+  });
+
+  const exam = dbExam
+    ? {
+        id: dbExam.id,
+        slug: dbExam.slug,
+        name: dbExam.name,
+        fullName: dbExam.full_name || dbExam.name,
+        description: stripHtml(dbExam.description) || fallbackExam?.description || "",
+        rawDescription: dbExam.description || fallbackExam?.description || "",
+        conductedBy: dbExam.conducting_body || fallbackExam?.conductedBy || "TBA",
+        frequency: dbExam.frequency || fallbackExam?.frequency || "Annual",
+        mode: fallbackExam?.mode || "Computer Based Test",
+        duration: fallbackExam?.duration || "TBA",
+        sections: fallbackExam?.sections || [],
+        eligibility: htmlToList(dbExam.eligibility).length ? htmlToList(dbExam.eligibility) : fallbackExam?.eligibility || [],
+        previousYearCutoffs: fallbackExam?.previousYearCutoffs || [],
+        importantDates: [
+          ...(dbExam.registration_deadline ? [{ event: "Registration Deadline", date: dbExam.registration_deadline }] : []),
+          ...(dbExam.exam_date ? [{ event: "Exam Date", date: dbExam.exam_date }] : []),
+          ...((fallbackExam?.importantDates || []).filter(
+            (item) => !["Registration Deadline", "Exam Date"].includes(item.event),
+          )),
+        ],
+        topColleges: fallbackExam?.topColleges || [],
+        syllabus: dbExam.syllabus || [],
+      }
+    : fallbackExam
+      ? {
+          ...fallbackExam,
+          rawDescription: fallbackExam.description,
+          syllabus: [],
+        }
+      : null;
+
+  const baseJsonLd = dbExam
+    ? generateExamSchema(dbExam)
+    : exam
+      ? generateExamSchema({
+          name: exam.name,
+          full_name: exam.fullName,
+          description: exam.description,
+          conducting_body: exam.conductedBy,
+          exam_date: undefined,
+        })
+      : undefined;
+
+  const { seo: resolvedSeo } = useResolvedSeo("exam", dbExam?.id, {
+    title: exam
+      ? `${dbExam?.meta_title || exam.fullName || exam.name} Exam ${new Date().getFullYear()} - Pattern, Syllabus, Dates | MBAHub`
+      : undefined,
+    description: dbExam?.meta_description || exam?.description || undefined,
+    keywords: (dbExam?.keywords || []) as string[],
+    canonical: exam?.slug ? `${window.location.origin}/exam/${exam.slug}` : undefined,
+    jsonLd: baseJsonLd,
+  });
+
+  if (isLoading && !fallbackExam) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="hero-gradient py-10 md:py-14">
+          <div className="container mx-auto px-4">
+            <Skeleton className="h-8 w-52 mb-3 bg-white/20" />
+            <Skeleton className="h-10 w-80 bg-white/20" />
+          </div>
+        </div>
+        <div className="container mx-auto px-4 py-8 grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            {[...Array(3)].map((_, index) => (
+              <Skeleton key={index} className="h-48 rounded-xl" />
+            ))}
+          </div>
+          <div className="space-y-4">
+            {[...Array(2)].map((_, index) => (
+              <Skeleton key={index} className="h-40 rounded-xl" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!exam) return (
     <div className="min-h-screen flex items-center justify-center bg-background">
@@ -25,6 +124,7 @@ const ExamDetailPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead {...resolvedSeo} />
       <div className="hero-gradient py-10 md:py-14">
         <div className="container mx-auto px-4">
           <Link to="/" className="inline-flex items-center gap-1 text-primary-foreground/70 hover:text-primary-foreground mb-4 text-sm"><ArrowLeft className="w-4 h-4" /> Home</Link>
@@ -38,22 +138,41 @@ const ExamDetailPage = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <Card><CardHeader><CardTitle className="font-heading">About {exam.name}</CardTitle></CardHeader><CardContent><p className="text-muted-foreground leading-relaxed">{exam.description}</p></CardContent></Card>
+            <Card>
+              <CardHeader><CardTitle className="font-heading">About {exam.name}</CardTitle></CardHeader>
+              <CardContent>
+                {exam.rawDescription?.includes("<") ? (
+                  <div className="prose prose-sm max-w-none text-muted-foreground dark:prose-invert" dangerouslySetInnerHTML={{ __html: exam.rawDescription }} />
+                ) : (
+                  <p className="text-muted-foreground leading-relaxed">{exam.description}</p>
+                )}
+              </CardContent>
+            </Card>
             <Card>
               <CardHeader><CardTitle className="font-heading">Exam Pattern</CardTitle></CardHeader>
               <CardContent>
                 <div className="grid grid-cols-3 gap-3 mb-4">
                   <div className="bg-muted/50 rounded-lg p-3 text-center"><div className="text-xs text-muted-foreground">Mode</div><div className="font-semibold text-foreground text-sm">{exam.mode}</div></div>
                   <div className="bg-muted/50 rounded-lg p-3 text-center"><div className="text-xs text-muted-foreground">Duration</div><div className="font-semibold text-foreground text-sm">{exam.duration}</div></div>
-                  <div className="bg-muted/50 rounded-lg p-3 text-center"><div className="text-xs text-muted-foreground">Total Marks</div><div className="font-semibold text-foreground text-sm">{exam.sections.reduce((s, sec) => s + sec.marks, 0)}</div></div>
+                  <div className="bg-muted/50 rounded-lg p-3 text-center"><div className="text-xs text-muted-foreground">Total Marks</div><div className="font-semibold text-foreground text-sm">{exam.sections.length > 0 ? exam.sections.reduce((s, sec) => s + sec.marks, 0) : "TBA"}</div></div>
                 </div>
-                <table className="w-full text-sm">
-                  <thead><tr className="bg-muted/50"><th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Section</th><th className="text-right py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Questions</th><th className="text-right py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Marks</th></tr></thead>
-                  <tbody>{exam.sections.map((sec) => <tr key={sec.name} className="border-b border-border"><td className="py-3 px-3 text-foreground">{sec.name}</td><td className="py-3 px-3 text-right text-muted-foreground">{sec.questions}</td><td className="py-3 px-3 text-right font-semibold text-primary">{sec.marks}</td></tr>)}</tbody>
-                </table>
+                {exam.sections.length > 0 ? (
+                  <table className="w-full text-sm">
+                    <thead><tr className="bg-muted/50"><th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Section</th><th className="text-right py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Questions</th><th className="text-right py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Marks</th></tr></thead>
+                    <tbody>{exam.sections.map((sec) => <tr key={sec.name} className="border-b border-border"><td className="py-3 px-3 text-foreground">{sec.name}</td><td className="py-3 px-3 text-right text-muted-foreground">{sec.questions}</td><td className="py-3 px-3 text-right font-semibold text-primary">{sec.marks}</td></tr>)}</tbody>
+                  </table>
+                ) : exam.syllabus.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {exam.syllabus.map((topic: string) => (
+                      <Badge key={topic} variant="secondary" className="text-xs">{topic}</Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Detailed section-wise pattern will be updated soon.</p>
+                )}
               </CardContent>
             </Card>
-            <Card><CardHeader><CardTitle className="font-heading">Eligibility</CardTitle></CardHeader><CardContent><div className="space-y-2">{exam.eligibility.map((e, i) => <div key={i} className="flex items-start gap-2 text-sm"><CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-muted-foreground">{e}</span></div>)}</div></CardContent></Card>
+            <Card><CardHeader><CardTitle className="font-heading">Eligibility</CardTitle></CardHeader><CardContent><div className="space-y-2">{exam.eligibility.length > 0 ? exam.eligibility.map((e, i) => <div key={i} className="flex items-start gap-2 text-sm"><CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><span className="text-muted-foreground">{e}</span></div>) : <p className="text-sm text-muted-foreground">Eligibility details will be updated soon.</p>}</div></CardContent></Card>
             {exam.previousYearCutoffs.length > 0 && (
               <Card>
                 <CardHeader><CardTitle className="font-heading">Previous Year Cutoffs</CardTitle></CardHeader>

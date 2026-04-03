@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useColleges } from "@/hooks/useInstitutes";
 import { useCityPageBySlug, useCityPages } from "@/hooks/useCityPages";
 import SEOHead, { generateListingSchema } from "@/components/SEOHead";
+import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 
 const CollegeFilterPage = () => {
   const { region } = useParams<{ region: string }>();
@@ -55,6 +56,14 @@ const CollegeFilterPage = () => {
   const metaDesc = cityPage?.meta_description || `Explore top MBA colleges in ${displayName} with fees, placements, and rankings.`;
   const keywords = cityPage?.keywords || [];
   const jsonLd = generateListingSchema(metaTitle, filteredColleges, "college");
+  const { seo: resolvedSeo } = useResolvedSeo("cityPage", cityPage?.id, {
+    title: metaTitle,
+    description: metaDesc,
+    keywords,
+    canonical: region ? `${window.location.origin}/colleges/${region}` : undefined,
+    jsonLd,
+    ogImage: cityPage?.hero_image_url || undefined,
+  });
 
   if (isLoading) {
     return (
@@ -67,7 +76,7 @@ const CollegeFilterPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead title={metaTitle} description={metaDesc} keywords={keywords} canonical={`${window.location.origin}/colleges/${region}`} jsonLd={jsonLd} />
+      <SEOHead {...resolvedSeo} />
 
       {/* Hero */}
       <div

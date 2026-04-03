@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 
-const SITE_URL = "https://bestmbacoaching.com";
+const DEFAULT_SITE_URL = "https://bestmbacoaching.com";
+const SITE_URL = typeof window !== "undefined" ? window.location.origin : DEFAULT_SITE_URL;
 
 interface SEOHeadProps {
   title?: string;
@@ -36,45 +37,55 @@ const SEOHead = ({
   useEffect(() => {
     if (title) document.title = title;
 
-    const setMeta = (name: string, content: string, attr = "name") => {
-      let el = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement;
+    const syncMeta = (name: string, content?: string, attr = "name") => {
+      const selector = `meta[${attr}="${name}"]`;
+      let el = document.querySelector(selector) as HTMLMetaElement | null;
+
+      if (!content) {
+        el?.remove();
+        return;
+      }
+
       if (!el) {
         el = document.createElement("meta");
         el.setAttribute(attr, name);
         document.head.appendChild(el);
       }
+
       el.setAttribute("content", content);
     };
 
-    if (description) setMeta("description", description);
-    if (keywords?.length) setMeta("keywords", keywords.join(", "));
+    syncMeta("description", description);
+    syncMeta("keywords", keywords?.length ? keywords.join(", ") : undefined);
 
     // Open Graph
-    if (ogTitle || title) setMeta("og:title", ogTitle || title || "", "property");
-    if (ogDescription || description) setMeta("og:description", ogDescription || description || "", "property");
-    if (ogImage) setMeta("og:image", ogImage, "property");
-    setMeta("og:site_name", "Best MBA Coaching", "property");
-    setMeta("og:type", ogType, "property");
-    if (canonical) setMeta("og:url", canonical, "property");
+    syncMeta("og:title", ogTitle || title, "property");
+    syncMeta("og:description", ogDescription || description, "property");
+    syncMeta("og:image", ogImage, "property");
+    syncMeta("og:site_name", "Best MBA Coaching", "property");
+    syncMeta("og:type", ogType, "property");
+    syncMeta("og:url", canonical, "property");
 
     // Twitter Card
-    setMeta("twitter:card", twitterCard);
-    if (twitterTitle || ogTitle || title) setMeta("twitter:title", twitterTitle || ogTitle || title || "");
-    if (twitterDescription || ogDescription || description) setMeta("twitter:description", twitterDescription || ogDescription || description || "");
-    if (ogImage) setMeta("twitter:image", ogImage);
+    syncMeta("twitter:card", twitterCard);
+    syncMeta("twitter:title", twitterTitle || ogTitle || title);
+    syncMeta("twitter:description", twitterDescription || ogDescription || description);
+    syncMeta("twitter:image", ogImage);
 
     // Robots
-    setMeta("robots", noIndex ? "noindex, nofollow" : "index, follow");
+    syncMeta("robots", noIndex ? "noindex, nofollow" : "index, follow");
 
     // Canonical
+    let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
     if (canonical) {
-      let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
       if (!link) {
         link = document.createElement("link");
         link.setAttribute("rel", "canonical");
         document.head.appendChild(link);
       }
       link.setAttribute("href", canonical);
+    } else {
+      link?.remove();
     }
 
     // JSON-LD — support single or array of schemas
