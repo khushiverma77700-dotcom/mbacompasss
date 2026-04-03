@@ -236,7 +236,7 @@ const AdminColleges = () => {
                   meta_description: form.meta_description, keywords: form.keywords,
                   description: form.description, banner_url: form.banner_url,
                   schemaType: "college",
-                }} showPublishWarning />
+                }} contentType="college" recordId={editId || undefined} showPublishWarning />
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Title</Label>
                   <Input value={form.meta_title} onChange={(e) => setForm({ ...form, meta_title: e.target.value })} maxLength={70} />

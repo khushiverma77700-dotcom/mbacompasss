@@ -207,7 +207,7 @@ const AdminArticles = () => {
               </TabsContent>
 
               <TabsContent value="seo" className="space-y-4">
-                <SEOChecklist data={form} />
+                <SEOChecklist data={form} contentType="article" recordId={editId || undefined} />
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">H1 Tag</Label>
                   <Input placeholder="Primary H1 heading" value={form.h1_tag} onChange={(e) => setForm({ ...form, h1_tag: e.target.value })} />

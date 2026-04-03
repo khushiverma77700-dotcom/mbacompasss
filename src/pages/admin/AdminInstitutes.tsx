@@ -345,7 +345,8 @@ const AdminInstitutes = () => {
                   title: form.name, slug: form.slug, meta_title: form.meta_title,
                   meta_description: form.meta_description, keywords: form.keywords,
                   content: form.description, image_url: form.logo_url, banner_url: form.banner_url,
-                }} />
+                  schemaType: "institute",
+                }} contentType="institute" recordId={editId || undefined} />
               </TabsContent>
 
               <TabsContent value="schema" className="space-y-3">
