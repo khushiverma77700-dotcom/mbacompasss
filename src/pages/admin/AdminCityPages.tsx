@@ -279,7 +279,7 @@ const AdminCityPages = () => {
                 meta_description: form.meta_description,
                 keywords: form.keywords,
                 slug: form.slug,
-              }} />
+              }} contentType="cityPage" recordId={editId || undefined} />
             </TabsContent>
 
             <TabsContent value="preview" className="mt-4">
