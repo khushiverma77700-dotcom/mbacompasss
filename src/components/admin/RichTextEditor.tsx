@@ -62,7 +62,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
       lastExternalContent.current = content;
       const currentHTML = editor.getHTML();
       if (content !== currentHTML) {
-        editor.commands.setContent(content || "", false);
+        editor.commands.setContent(content || "");
       }
     }
   }, [content, editor]);
