@@ -138,7 +138,7 @@ const AdminArticles = () => {
   return (
     <div>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-        <h1 className="font-heading text-2xl font-bold text-foreground">Manage Articles</h1>
+        <h1 className="font-heading text-2xl font-bold text-foreground">Manage Blog Articles</h1>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => { setForm(emptyForm); setEditId(null); }}><Plus className="w-4 h-4 mr-2" /> New Article</Button>
@@ -146,7 +146,7 @@ const AdminArticles = () => {
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <div className="flex items-center justify-between">
-                <DialogTitle className="font-heading">{editId ? "Edit" : "Create"} Article</DialogTitle>
+                <DialogTitle className="font-heading">{editId ? "Edit" : "Create"} Blog Article</DialogTitle>
                 <AISEOButton
                   contentType="article"
                   recordId={editId || undefined}
@@ -262,6 +262,7 @@ const AdminArticles = () => {
                       {statusOptions.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground mt-1">Set status to Live to show the post on the Blog page and open it publicly.</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <Switch checked={form.featured} onCheckedChange={(v) => setForm({ ...form, featured: v })} />

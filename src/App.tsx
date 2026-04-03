@@ -161,7 +161,7 @@ const App = () => (
             <Route path="/institute/:slug" element={<PublicLayout><InstitutePage /></PublicLayout>} />
             <Route path="/compare" element={<PublicLayout><ComparePage /></PublicLayout>} />
             <Route path="/blog" element={<PublicLayout><BlogPage /></PublicLayout>} />
-            <Route path="/article/:id" element={<PublicLayout><ArticlePage /></PublicLayout>} />
+            <Route path="/article/:slug" element={<PublicLayout><ArticlePage /></PublicLayout>} />
             <Route path="/colleges" element={<PublicLayout><CollegesPage /></PublicLayout>} />
             <Route path="/college/:slug" element={<PublicLayout><CollegeDetailPage /></PublicLayout>} />
             <Route path="/colleges/:region" element={<PublicLayout><CollegeFilterPage /></PublicLayout>} />
