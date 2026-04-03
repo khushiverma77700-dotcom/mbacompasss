@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import SEOHead, { generateArticleSchema } from "@/components/SEOHead";
+import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 
 const ArticlePage = () => {
   const { id } = useParams<{ id: string }>();
@@ -103,16 +104,18 @@ const ArticlePage = () => {
   const sameCategory = (suggestedArticles || []).filter((a: any) => a.category === article.category);
   const otherArticles = (suggestedArticles || []).filter((a: any) => a.category !== article.category);
   const sidebar = [...sameCategory, ...otherArticles].slice(0, 5);
+  const { seo: resolvedSeo } = useResolvedSeo("article", article.id, {
+    title: `${(article as any).meta_title || article.title} | BestMBACoaching Blog`,
+    description: (article as any).meta_description || article.excerpt || undefined,
+    keywords: articleKeywords,
+    canonical: `${window.location.origin}/article/${article.slug}`,
+    jsonLd,
+    ogImage: article.image_url || article.banner_url || undefined,
+  });
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead
-        title={`${(article as any).meta_title || article.title} | BestMBACoaching Blog`}
-        description={(article as any).meta_description || article.excerpt || ""}
-        keywords={articleKeywords}
-        canonical={`${window.location.origin}/article/${article.slug}`}
-        jsonLd={jsonLd}
-      />
+      <SEOHead {...resolvedSeo} />
 
       {/* Hero */}
       <div className="hero-gradient py-12 md:py-16 relative overflow-hidden">

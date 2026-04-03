@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import SEOHead, { generateCollegeSchema } from "@/components/SEOHead";
+import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 
 // ── Fallback data used when no DB sections exist ──
@@ -242,16 +243,20 @@ const CollegeDetailPage = () => {
 
   // Why join rating aspects from DB or fallback
   const whyJoinRatings = whyJoinData.ratings?.length > 0 ? whyJoinData.ratings : ratingAspects;
+  const { seo: resolvedSeo } = useResolvedSeo("college", college.id, {
+    title: `${college.name} — Fees, Placements, Admission, Ranking | MBAHub`,
+    description:
+      (college as any).meta_description ||
+      `${college.name}, ${college.city} — Fees: ${college.fees}, Avg Package: ${college.placement_avg}.`,
+    keywords: ((college as any).keywords || [college.name, college.city || "", "MBA"]).filter(Boolean),
+    canonical: `${window.location.origin}/college/${college.slug}`,
+    jsonLd: collegeJsonLd,
+    ogImage: college.banner_url || college.logo_url || undefined,
+  });
 
   return (
     <div className="min-h-screen bg-background">
-      <SEOHead
-        title={`${college.name} — Fees, Placements, Admission, Ranking | MBAHub`}
-        description={(college as any).meta_description || `${college.name}, ${college.city} — Fees: ${college.fees}, Avg Package: ${college.placement_avg}.`}
-        keywords={(college as any).keywords || [college.name, college.city || "", "MBA"]}
-        canonical={`${window.location.origin}/college/${college.slug}`}
-        jsonLd={collegeJsonLd}
-      />
+      <SEOHead {...resolvedSeo} />
       <LoginRequiredDialog open={showLoginDialog} onOpenChange={setShowLoginDialog} message="Sign in to access detailed college information." />
 
       {/* Hero Banner */}

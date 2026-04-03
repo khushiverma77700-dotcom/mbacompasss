@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export const SITE_URL = "https://bestmbacoaching.com";
+const DEFAULT_SITE_URL = "https://bestmbacoaching.com";
+export const SITE_URL = typeof window !== "undefined" ? window.location.origin : DEFAULT_SITE_URL;
 export const SEO_SNAPSHOT_KEY_PREFIX = "seo_page__";
 
 export type SEOContentType = "article" | "institute" | "college" | "exam" | "cityPage";
