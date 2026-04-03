@@ -135,7 +135,7 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
         await saveSeoSnapshot(snapshot);
 
         // Also update the actual record's table with meta fields
-        const table = contentTypeConfig[contentType].table;
+        const table = contentTypeConfig[contentType].table as "articles" | "institutes" | "colleges" | "exams" | "city_pages";
         const updatePayload: Record<string, any> = {};
         if (selected.meta_title) updatePayload.meta_title = suggestions.meta_title;
         if (selected.meta_description) updatePayload.meta_description = suggestions.meta_description;
