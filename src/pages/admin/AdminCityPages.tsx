@@ -170,6 +170,7 @@ const AdminCityPages = () => {
               <DialogTitle>{editId ? "Edit" : "Add"} City/State Page</DialogTitle>
               <AISEOButton
                 contentType="cityPage"
+                recordId={editId || undefined}
                 data={{ name: form.name, type: form.type, state: form.state, intro_content: form.intro_content, slug: form.slug }}
                 onApply={(s) => setForm((f: any) => ({
                   ...f,

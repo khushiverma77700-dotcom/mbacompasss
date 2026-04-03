@@ -9,7 +9,11 @@ interface SEOHeadProps {
   canonical?: string;
   jsonLd?: Record<string, any> | Record<string, any>[];
   ogImage?: string;
+  ogTitle?: string;
+  ogDescription?: string;
   ogType?: string;
+  twitterTitle?: string;
+  twitterDescription?: string;
   twitterCard?: "summary" | "summary_large_image";
   noIndex?: boolean;
 }
@@ -21,7 +25,11 @@ const SEOHead = ({
   canonical,
   jsonLd,
   ogImage,
+  ogTitle,
+  ogDescription,
   ogType = "website",
+  twitterTitle,
+  twitterDescription,
   twitterCard = "summary_large_image",
   noIndex,
 }: SEOHeadProps) => {
@@ -42,8 +50,8 @@ const SEOHead = ({
     if (keywords?.length) setMeta("keywords", keywords.join(", "));
 
     // Open Graph
-    if (title) setMeta("og:title", title, "property");
-    if (description) setMeta("og:description", description, "property");
+    if (ogTitle || title) setMeta("og:title", ogTitle || title || "", "property");
+    if (ogDescription || description) setMeta("og:description", ogDescription || description || "", "property");
     if (ogImage) setMeta("og:image", ogImage, "property");
     setMeta("og:site_name", "Best MBA Coaching", "property");
     setMeta("og:type", ogType, "property");
@@ -51,14 +59,12 @@ const SEOHead = ({
 
     // Twitter Card
     setMeta("twitter:card", twitterCard);
-    if (title) setMeta("twitter:title", title);
-    if (description) setMeta("twitter:description", description);
+    if (twitterTitle || ogTitle || title) setMeta("twitter:title", twitterTitle || ogTitle || title || "");
+    if (twitterDescription || ogDescription || description) setMeta("twitter:description", twitterDescription || ogDescription || description || "");
     if (ogImage) setMeta("twitter:image", ogImage);
 
     // Robots
-    if (noIndex) {
-      setMeta("robots", "noindex, nofollow");
-    }
+    setMeta("robots", noIndex ? "noindex, nofollow" : "index, follow");
 
     // Canonical
     if (canonical) {
@@ -90,7 +96,7 @@ const SEOHead = ({
       const scripts = document.querySelectorAll('script[data-seo-jsonld]');
       scripts.forEach((s) => s.remove());
     };
-  }, [title, description, keywords, canonical, jsonLd, ogImage, ogType, twitterCard, noIndex]);
+  }, [title, description, keywords, canonical, jsonLd, ogImage, ogTitle, ogDescription, ogType, twitterTitle, twitterDescription, twitterCard, noIndex]);
 
   return null;
 };
