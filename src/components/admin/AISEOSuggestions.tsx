@@ -88,7 +88,7 @@ interface AISEOButtonProps {
   }>) => void;
 }
 
-export const AISEOButton = ({ contentType, data, onApply }: AISEOButtonProps) => {
+export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButtonProps) => {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [suggestions, setSuggestions] = useState<SEOSuggestions | null>(null);
