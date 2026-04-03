@@ -11,7 +11,7 @@ export const useSiteSettings = (key: string) => {
         .eq("key", key)
         .maybeSingle();
       if (error) throw error;
-      return data?.value as Record<string, any> | null;
+      return (data?.value as Record<string, any>) ?? null;
     },
     staleTime: 5 * 60 * 1000,
   });
@@ -27,7 +27,7 @@ export const useAllSiteSettings = () => {
       if (error) throw error;
       const map: Record<string, any> = {};
       data?.forEach((row: any) => { map[row.key] = row.value; });
-      return map;
+      return map ?? {};
     },
     staleTime: 5 * 60 * 1000,
   });

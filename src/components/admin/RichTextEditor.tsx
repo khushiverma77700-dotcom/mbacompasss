@@ -18,6 +18,7 @@ import {
   Table2, Highlighter, Undo, Redo, Quote, Code, Minus,
 } from "lucide-react";
 import { useCallback, useEffect } from "react";
+import { useRef } from "react";
 
 interface RichTextEditorProps {
   content: string;
@@ -27,6 +28,8 @@ interface RichTextEditorProps {
 }
 
 const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", className }: RichTextEditorProps) => {
+  const lastExternalContent = useRef(content);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -47,13 +50,22 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
+    editorProps: {
+      attributes: {
+        class: "outline-none",
+      },
+    },
   });
 
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content || "");
+    if (editor && content !== lastExternalContent.current) {
+      lastExternalContent.current = content;
+      const currentHTML = editor.getHTML();
+      if (content !== currentHTML) {
+        editor.commands.setContent(content || "", false);
+      }
     }
-  }, [content]);
+  }, [content, editor]);
 
   const setLink = useCallback(() => {
     if (!editor) return;
