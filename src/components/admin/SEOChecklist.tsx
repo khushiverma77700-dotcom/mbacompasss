@@ -1,6 +1,7 @@
-import { AlertCircle, CheckCircle, XCircle, AlertTriangle, Code, FileText, Image, Link2, Globe, Type, Hash, List } from "lucide-react";
+import { AlertCircle, CheckCircle, XCircle, AlertTriangle, Code, FileText, Image, Link2, Globe, Type, Hash, List, Share2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useSeoSnapshot, type SEOContentType } from "@/lib/seoAutomation";
 
 interface SEOChecklistProps {
   data: {
@@ -16,11 +17,13 @@ interface SEOChecklistProps {
     image_url?: string;
     banner_url?: string;
     description?: string;
-    // For JSON-LD validation
     schemaType?: "article" | "college" | "institute" | "exam" | "category";
     jsonLd?: Record<string, any>;
   };
-  /** If true, shows a blocking warning banner when critical items fail */
+  /** Content type for checking saved SEO snapshots */
+  contentType?: SEOContentType;
+  /** Record ID for checking saved SEO snapshots */
+  recordId?: string;
   showPublishWarning?: boolean;
   onPublishBlock?: (blocked: boolean) => void;
 }
@@ -36,26 +39,29 @@ interface CheckItem {
 const stripHtml = (html: string) => html.replace(/<[^>]*>/g, "").trim();
 const countWords = (text: string) => stripHtml(text).split(/\s+/).filter(Boolean).length;
 
-const hasH2H3 = (content: string) => {
-  return /<h[23][^>]*>/i.test(content);
-};
+const hasH2H3 = (content: string) => /<h[23][^>]*>/i.test(content);
 
 const hasImagesWithoutAlt = (content: string) => {
   const imgs = content.match(/<img[^>]*>/gi) || [];
   return imgs.some((img) => !img.includes("alt=") || /alt=["']\s*["']/i.test(img));
 };
 
-const hasImages = (content: string) => {
-  return /<img[^>]*>/i.test(content);
-};
+const hasImages = (content: string) => /<img[^>]*>/i.test(content);
 
-const isSlugSeoFriendly = (slug: string) => {
-  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) && slug.length <= 75;
-};
+const isSlugSeoFriendly = (slug: string) => /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) && slug.length <= 75;
 
-const SEOChecklist = ({ data, showPublishWarning, onPublishBlock }: SEOChecklistProps) => {
+const SEOChecklist = ({ data, contentType, recordId, showPublishWarning, onPublishBlock }: SEOChecklistProps) => {
   const content = data.content || data.description || "";
   const wordCount = countWords(content);
+
+  // Check for saved SEO snapshot to give accurate schema/social scores
+  const { data: snapshot } = useSeoSnapshot(contentType, recordId);
+  const hasSnapshot = Boolean(snapshot);
+  const hasSchema = Boolean(data.jsonLd || data.schemaType || snapshot?.schemaMarkup);
+  const hasSocialMeta = Boolean(
+    snapshot?.socialMeta?.ogTitle ||
+    snapshot?.socialMeta?.twitterTitle
+  );
 
   const checks: CheckItem[] = [
     // === Content Structure ===
@@ -95,9 +101,7 @@ const SEOChecklist = ({ data, showPublishWarning, onPublishBlock }: SEOChecklist
       icon: Globe,
       status: data.meta_title
         ? data.meta_title.length <= 60
-          ? data.meta_title.length >= 30
-            ? "pass"
-            : "warn"
+          ? data.meta_title.length >= 30 ? "pass" : "warn"
           : "warn"
         : "fail",
       tip: data.meta_title
@@ -110,9 +114,7 @@ const SEOChecklist = ({ data, showPublishWarning, onPublishBlock }: SEOChecklist
       icon: Globe,
       status: data.meta_description
         ? data.meta_description.length <= 155
-          ? data.meta_description.length >= 70
-            ? "pass"
-            : "warn"
+          ? data.meta_description.length >= 70 ? "pass" : "warn"
           : "warn"
         : "fail",
       tip: data.meta_description
@@ -134,15 +136,9 @@ const SEOChecklist = ({ data, showPublishWarning, onPublishBlock }: SEOChecklist
       label: "SEO-Friendly URL",
       category: "Technical",
       icon: Link2,
-      status: data.slug
-        ? isSlugSeoFriendly(data.slug)
-          ? "pass"
-          : "warn"
-        : "fail",
+      status: data.slug ? (isSlugSeoFriendly(data.slug) ? "pass" : "warn") : "fail",
       tip: data.slug
-        ? isSlugSeoFriendly(data.slug)
-          ? `/${data.slug} ✓`
-          : `/${data.slug} — Use lowercase, hyphens only, max 75 chars`
+        ? isSlugSeoFriendly(data.slug) ? `/${data.slug} ✓` : `/${data.slug} — Use lowercase, hyphens only, max 75 chars`
         : "Generate a clean URL slug",
     },
 
@@ -173,10 +169,25 @@ const SEOChecklist = ({ data, showPublishWarning, onPublishBlock }: SEOChecklist
       label: "JSON-LD Schema",
       category: "Structured Data",
       icon: Code,
-      status: data.jsonLd || data.schemaType ? "pass" : "warn",
-      tip: data.jsonLd || data.schemaType
-        ? `✓ ${data.schemaType || "Custom"} schema configured`
-        : "JSON-LD structured data will be auto-generated on the page",
+      status: hasSchema ? "pass" : "fail",
+      tip: hasSchema
+        ? hasSnapshot
+          ? `✓ AI-generated schema saved (${Array.isArray(snapshot?.schemaMarkup) ? snapshot.schemaMarkup.length : 1} schema types)`
+          : `✓ ${data.schemaType || "Custom"} schema configured`
+        : "No schema markup — run AI SEO to generate production-ready JSON-LD",
+    },
+
+    // === Social Meta ===
+    {
+      label: "Social Meta (OG/Twitter)",
+      category: "Structured Data",
+      icon: Share2,
+      status: hasSocialMeta ? "pass" : data.meta_title ? "warn" : "fail",
+      tip: hasSocialMeta
+        ? "✓ Open Graph & Twitter Card meta saved via AI SEO"
+        : data.meta_title
+          ? "Meta title exists but dedicated social meta not set — run AI SEO to generate"
+          : "No social meta — run AI SEO to generate Open Graph & Twitter Cards",
     },
   ];
 
@@ -191,7 +202,6 @@ const SEOChecklist = ({ data, showPublishWarning, onPublishBlock }: SEOChecklist
 
   const isBlocked = criticalFails.length > 0;
 
-  // Notify parent
   if (onPublishBlock) {
     onPublishBlock(isBlocked);
   }
@@ -213,13 +223,15 @@ const SEOChecklist = ({ data, showPublishWarning, onPublishBlock }: SEOChecklist
         <div className="flex items-center justify-between mb-2">
           <h4 className="font-heading font-semibold text-foreground text-sm flex items-center gap-2">
             SEO Score
+            {hasSnapshot && (
+              <Badge variant="outline" className="text-[9px] text-green-600 border-green-300">AI Enhanced</Badge>
+            )}
           </h4>
           <Badge className={`${scoreColor} border-none font-bold text-base px-3 py-0.5`}>
             {score}%
           </Badge>
         </div>
 
-        {/* Progress bar */}
         <div className="w-full h-2 bg-muted rounded-full overflow-hidden mb-2">
           <div className={`h-full ${scoreBarColor} rounded-full transition-all duration-500`} style={{ width: `${score}%` }} />
         </div>
@@ -247,7 +259,7 @@ const SEOChecklist = ({ data, showPublishWarning, onPublishBlock }: SEOChecklist
       )}
 
       {/* Categorized Checks */}
-      <Accordion type="multiple" defaultValue={["Content Structure", "Meta Data"]} className="border-none">
+      <Accordion type="multiple" defaultValue={["Content Structure", "Meta Data", "Structured Data"]} className="border-none">
         {categories.map((cat) => {
           const catChecks = checks.filter((c) => c.category === cat);
           if (catChecks.length === 0) return null;
@@ -284,15 +296,16 @@ const SEOChecklist = ({ data, showPublishWarning, onPublishBlock }: SEOChecklist
       </Accordion>
 
       {/* JSON-LD Preview */}
-      {data.jsonLd && (
+      {(data.jsonLd || snapshot?.schemaMarkup) && (
         <div className="px-4 pb-4">
           <details className="group">
             <summary className="text-xs font-semibold text-muted-foreground cursor-pointer flex items-center gap-1.5 py-2">
               <Code className="w-3.5 h-3.5" />
               JSON-LD Preview
+              {snapshot?.schemaMarkup && <Badge variant="outline" className="text-[9px] ml-1">From AI SEO</Badge>}
             </summary>
             <pre className="mt-1 text-[10px] bg-muted/50 rounded-lg p-3 overflow-auto max-h-[200px] font-mono text-muted-foreground">
-              {JSON.stringify(data.jsonLd, null, 2)}
+              {JSON.stringify(snapshot?.schemaMarkup || data.jsonLd, null, 2)}
             </pre>
           </details>
         </div>
