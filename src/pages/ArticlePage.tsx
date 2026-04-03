@@ -22,7 +22,6 @@ const ArticlePage = () => {
         .from("articles")
         .select("*")
         .eq("slug", id!)
-        .eq("published", true)
         .maybeSingle();
       if (error) throw error;
       return data;
@@ -76,8 +75,8 @@ const ArticlePage = () => {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <BookOpen className="w-16 h-16 text-muted-foreground/20 mx-auto mb-4" />
-          <h1 className="font-heading text-2xl font-bold text-foreground mb-2">Article not found</h1>
-          <p className="text-muted-foreground mb-4">This article may have been removed or doesn't exist.</p>
+          <h1 className="font-heading text-2xl font-bold text-foreground mb-2">Article Not Found</h1>
+          <p className="text-muted-foreground mb-4">This article may not be published yet, or the URL may be incorrect.</p>
           <Link to="/blog"><Button>Back to Blog</Button></Link>
         </div>
       </div>
