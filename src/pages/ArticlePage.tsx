@@ -12,37 +12,54 @@ import SEOHead, { generateArticleSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 
 const ArticlePage = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const { toast } = useToast();
 
   const { data: article, isLoading } = useQuery({
-    queryKey: ["article", id],
+    queryKey: ["article", slug],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("articles")
         .select("*")
-        .eq("slug", id!)
+        .eq("slug", slug!)
         .maybeSingle();
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!slug,
   });
 
   const { data: suggestedArticles } = useQuery({
-    queryKey: ["suggested-articles", article?.category, id],
+    queryKey: ["suggested-articles", article?.category, slug],
     queryFn: async () => {
       const { data } = await supabase
         .from("articles")
         .select("*")
         .eq("published", true)
-        .neq("slug", id!)
+        .neq("slug", slug!)
         .order("created_at", { ascending: false })
         .limit(6);
       return data || [];
     },
     enabled: !!article,
   });
+
+  const articleKeywords = ((article as any)?.keywords || []) as string[];
+  const jsonLd = article ? generateArticleSchema(article) : undefined;
+  const { seo: resolvedSeo } = useResolvedSeo(
+    "article",
+    article?.id,
+    article
+      ? {
+          title: `${(article as any).meta_title || article.title} | BestMBACoaching Blog`,
+          description: (article as any).meta_description || article.excerpt || undefined,
+          keywords: articleKeywords,
+          canonical: `${window.location.origin}/article/${article.slug}`,
+          jsonLd,
+          ogImage: article.image_url || article.banner_url || undefined,
+        }
+      : {},
+  );
 
   useEffect(() => {
     if (article) {
@@ -97,20 +114,10 @@ const ArticlePage = () => {
   };
 
   const readTime = article.content ? `${Math.max(1, Math.ceil(article.content.replace(/<[^>]*>/g, "").split(/\s+/).length / 200))} min` : "3 min";
-  const articleKeywords = (article as any).keywords || [];
-  const jsonLd = generateArticleSchema(article);
   const formatDate = (d: string) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
   const sameCategory = (suggestedArticles || []).filter((a: any) => a.category === article.category);
   const otherArticles = (suggestedArticles || []).filter((a: any) => a.category !== article.category);
   const sidebar = [...sameCategory, ...otherArticles].slice(0, 5);
-  const { seo: resolvedSeo } = useResolvedSeo("article", article.id, {
-    title: `${(article as any).meta_title || article.title} | BestMBACoaching Blog`,
-    description: (article as any).meta_description || article.excerpt || undefined,
-    keywords: articleKeywords,
-    canonical: `${window.location.origin}/article/${article.slug}`,
-    jsonLd,
-    ogImage: article.image_url || article.banner_url || undefined,
-  });
 
   return (
     <div className="min-h-screen bg-background">
