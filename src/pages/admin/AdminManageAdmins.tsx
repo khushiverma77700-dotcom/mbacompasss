@@ -116,7 +116,6 @@ const AdminManageAdmins = () => {
     setSaving(true);
     try {
       if (editId) {
-        // Update existing
         const { error } = await supabase
           .from("admin_permissions")
           .update({ display_name: formName.trim(), email: formEmail.trim(), allowed_sections: formSections })
@@ -124,31 +123,11 @@ const AdminManageAdmins = () => {
         if (error) throw error;
         toast({ title: "Updated", description: `Permissions updated for ${formName}.` });
       } else {
-        // Creating a new admin:
-        // 1. Look up user by email in profiles or auth
-        // We'll store it with a placeholder user_id from email lookup
-        // First check if this email already has a user account
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("user_id")
-          .eq("id", formEmail.trim())
-          .maybeSingle();
-
-        // Since we can't query auth.users directly, we store with the email
-        // The user_id will be matched when the user logs in
-        // For now, we'll generate a deterministic UUID from email or use a lookup approach
-
-        // Try to find the user via their profile email
-        // Since profiles don't have email, we need another approach
-        // We'll store a placeholder and match on login
-        // Actually, let's use the RPC or just create the record
-        // The admin who creates this should know the user exists
-
         // Check if email already has admin_permissions
         const { data: existing } = await supabase
           .from("admin_permissions")
           .select("id")
-          .eq("email", formEmail.trim())
+          .eq("email", formEmail.trim().toLowerCase())
           .maybeSingle();
 
         if (existing) {
@@ -157,32 +136,32 @@ const AdminManageAdmins = () => {
           return;
         }
 
-        // First, ensure the user has admin role in user_roles
-        // We need to find the user_id. Since we can't query auth.users,
-        // we'll insert with a generated ID and the system will match on login
-        // OR we ask the admin to ensure the user has signed up first
+        // Use the DB function to look up user, assign admin role, and get user_id
+        const { data: userId, error: rpcError } = await supabase
+          .rpc("assign_admin_by_email", { _email: formEmail.trim().toLowerCase() });
 
-        // For robustness: store with email as identifier, user_id will be set to a placeholder
-        // We'll create an edge function or handle this differently
-        // Simple approach: use gen_random_uuid() as placeholder, admin must ensure user exists
-        
-        const { data: insertData, error } = await supabase
+        if (rpcError) {
+          if (rpcError.message?.includes("No user account found")) {
+            toast({ title: "User Not Found", description: "No account exists with this email. The user must sign up first.", variant: "destructive" });
+            setSaving(false);
+            return;
+          }
+          throw rpcError;
+        }
+
+        // Insert admin_permissions with the real user_id
+        const { error } = await supabase
           .from("admin_permissions")
           .insert({
-            user_id: crypto.randomUUID(), // placeholder until matched
+            user_id: userId,
             display_name: formName.trim(),
             email: formEmail.trim().toLowerCase(),
             allowed_sections: formSections,
-          })
-          .select("id")
-          .single();
+          });
 
         if (error) throw error;
 
-        // Also add admin role to user_roles if we can find the user
-        // This will be handled by the auth context matching
-
-        toast({ title: "Admin Created", description: `${formName} has been given admin access. Make sure they have an account and admin role.` });
+        toast({ title: "Admin Created", description: `${formName} now has admin access with ${formSections.length} sections.` });
       }
 
       setDialogOpen(false);

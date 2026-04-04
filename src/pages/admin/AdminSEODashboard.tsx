@@ -255,12 +255,27 @@ const AdminSEODashboard = () => {
       } catch {}
       setPreviousKeys(knownKeys);
 
+      // Static pages (non-admin, non-dynamic pages)
+      const staticPages = [
+        { id: "page-home", name: "Home", slug: "/", path: "/" },
+        { id: "page-about", name: "About", slug: "/about", path: "/about" },
+        { id: "page-contact", name: "Contact", slug: "/contact", path: "/contact" },
+        { id: "page-compare", name: "Compare", slug: "/compare", path: "/compare" },
+        { id: "page-blog", name: "Blog", slug: "/blog", path: "/blog" },
+        { id: "page-colleges", name: "Colleges", slug: "/colleges", path: "/colleges" },
+        { id: "page-profile-analyzer", name: "Profile Analyzer", slug: "/profile-analyzer", path: "/profile-analyzer" },
+        { id: "page-dashboard", name: "Dashboard", slug: "/dashboard", path: "/dashboard" },
+        { id: "page-auth", name: "Auth / Sign In", slug: "/auth", path: "/auth" },
+      ];
+
       const [snapshots, ...results] = await Promise.all([
         fetchAllSeoSnapshots(),
         ...contentTypes.map((ct) =>
           supabase.from(contentTypeConfig[ct].table as any).select("*").order("created_at", { ascending: false }).limit(1000)
         ),
       ]);
+
+      // Build rows from DB content
       const nextRows = results.flatMap((result, index) => {
         const ct = contentTypes[index];
         return ((result.data as Record<string, any>[] | null) || []).map((item) => {
@@ -268,6 +283,22 @@ const AdminSEODashboard = () => {
           return { key: `${ct}:${item.id}`, id: item.id, contentType: ct, name: getName(item), slug: item.slug, city: item.city || null, state: item.state || null, item, snapshot, audit: getSEOAudit(ct, item, snapshot) } satisfies DashboardRow;
         });
       });
+
+      // Add static pages as a special content type
+      const staticRows: DashboardRow[] = staticPages.map(sp => ({
+        key: `static:${sp.id}`,
+        id: sp.id,
+        contentType: "article" as SEOContentType, // display as generic
+        name: sp.name,
+        slug: sp.slug,
+        city: null,
+        state: null,
+        item: { id: sp.id, title: sp.name, slug: sp.slug, meta_title: sp.name, meta_description: null, keywords: [] },
+        snapshot: snapshots[`static:${sp.id}`] || null,
+        audit: { score: 0, issues: ["Static page — manage SEO in code"], hasMeta: true, hasSchema: false, hasKeywords: false },
+      }));
+
+      nextRows.push(...staticRows);
       setRows(nextRows);
 
       // Detect new pages (only if we have previously saved keys)
