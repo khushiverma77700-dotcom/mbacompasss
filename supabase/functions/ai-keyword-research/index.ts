@@ -5,30 +5,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
-  try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-
-    const { mode, query, niche, competitors, existingKeywords } = await req.json();
-
-    if (!mode) {
-      return new Response(JSON.stringify({ error: "mode is required (keyword_research | blog_titles | competitor_analysis)" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    let systemPrompt = "";
-    let userPrompt = "";
-
-    if (mode === "keyword_research") {
-      systemPrompt = `You are an elite SEO keyword research specialist for the Indian education sector (MBA coaching, colleges, entrance exams like CAT, GMAT, XAT, SNAP, GRE, NMAT, CMAT, IIFT).
-
-Return keyword research data with estimated metrics. Be realistic with estimates based on your knowledge of search patterns in India.`;
-
-      userPrompt = `Research keywords for: "${query || niche || "MBA coaching India"}"
+function buildKeywordResearchPayload(query: string, existingKeywords: string[]) {
+  const systemPrompt = `You are an elite SEO keyword research specialist for the Indian education sector (MBA coaching, colleges, entrance exams like CAT, GMAT, XAT, SNAP, GRE, NMAT, CMAT, IIFT). Return keyword research data with estimated metrics. Be realistic with estimates based on your knowledge of search patterns in India.`;
+  const userPrompt = `Research keywords for: "${query}"
 
 ${existingKeywords?.length ? `Already targeting: ${existingKeywords.join(", ")}` : ""}
 
@@ -46,10 +25,46 @@ Also provide:
 - Seasonal keyword opportunities
 - Featured snippet opportunities`;
 
-    } else if (mode === "blog_titles") {
-      systemPrompt = `You are an expert content strategist for Indian MBA education sector. You research blog topics that rank well and drive traffic. For each blog title you MUST also generate an SEO-optimized meta title (under 60 chars), a compelling meta description (120-155 chars), and a clean URL slug.`;
+  const tool = {
+    type: "function",
+    function: {
+      name: "keyword_data",
+      description: "Return keyword research data",
+      parameters: {
+        type: "object",
+        properties: {
+          keywords: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                keyword: { type: "string" },
+                searchVolume: { type: "number" },
+                competition: { type: "string", enum: ["low", "medium", "high"] },
+                difficulty: { type: "number" },
+                cpc: { type: "number" },
+                intent: { type: "string", enum: ["informational", "commercial", "transactional", "navigational"] },
+                trending: { type: "string", enum: ["up", "stable", "down"] },
+                category: { type: "string" },
+              },
+              required: ["keyword", "searchVolume", "competition", "difficulty", "intent", "trending"],
+            },
+          },
+          contentGaps: { type: "array", items: { type: "string" } },
+          seasonalOpportunities: { type: "array", items: { type: "string" } },
+          snippetOpportunities: { type: "array", items: { type: "string" } },
+          summary: { type: "string" },
+        },
+        required: ["keywords", "contentGaps", "seasonalOpportunities", "snippetOpportunities", "summary"],
+      },
+    },
+  };
+  return { systemPrompt, userPrompt, tool, toolName: "keyword_data" };
+}
 
-      userPrompt = `Generate 20 high-potential blog title ideas for: "${query || niche || "MBA coaching"}"
+function buildBlogTitlesPayload(query: string) {
+  const systemPrompt = `You are an expert content strategist for Indian MBA education sector. You research blog topics that rank well and drive traffic. For each blog title you MUST also generate an SEO-optimized meta title (under 60 chars), a compelling meta description (120-155 chars), and a clean URL slug.`;
+  const userPrompt = `Generate 20 high-potential blog title ideas for: "${query}"
 
 For each title provide:
 - title (optimized for CTR and SEO)
@@ -69,188 +84,233 @@ Also suggest:
 - 5 trending/timely topics for this month
 - Content calendar suggestion for next 4 weeks`;
 
-    } else if (mode === "competitor_analysis") {
-      systemPrompt = `You are a competitive intelligence expert for Indian education/MBA coaching websites. Analyze competitors and provide actionable insights.`;
+  const tool = {
+    type: "function",
+    function: {
+      name: "blog_title_data",
+      description: "Return blog title research data",
+      parameters: {
+        type: "object",
+        properties: {
+          titles: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                title: { type: "string" },
+                metaTitle: { type: "string" },
+                metaDescription: { type: "string" },
+                slug: { type: "string" },
+                targetKeyword: { type: "string" },
+                searchVolume: { type: "number" },
+                competition: { type: "string", enum: ["low", "medium", "high"] },
+                contentType: { type: "string" },
+                wordCount: { type: "number" },
+                priority: { type: "string", enum: ["high", "medium", "low"] },
+                trendingScore: { type: "number" },
+              },
+              required: ["title", "metaTitle", "metaDescription", "slug", "targetKeyword", "searchVolume", "competition", "contentType", "priority", "trendingScore"],
+            },
+          },
+          evergreenTopics: { type: "array", items: { type: "string" } },
+          trendingTopics: { type: "array", items: { type: "string" } },
+          contentCalendar: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: { week: { type: "number" }, topic: { type: "string" }, keyword: { type: "string" }, reason: { type: "string" } },
+            },
+          },
+          summary: { type: "string" },
+        },
+        required: ["titles", "evergreenTopics", "trendingTopics", "contentCalendar", "summary"],
+      },
+    },
+  };
+  return { systemPrompt, userPrompt, tool, toolName: "blog_title_data" };
+}
 
-      const competitorList = competitors?.length ? competitors.join(", ") : "shiksha.com, collegedunia.com, careers360.com, mbarendezvous.com, pagalguy.com, mbauniverse.com";
-
-      userPrompt = `Analyze these competitors in the MBA coaching/education space: ${competitorList}
+function buildCompetitorPayload(competitors: string[]) {
+  const competitorList = competitors.length ? competitors.join(", ") : "shiksha.com, collegedunia.com, careers360.com, mbarendezvous.com, pagalguy.com, mbauniverse.com";
+  const systemPrompt = `You are a world-class competitive intelligence expert for Indian education/MBA coaching websites. Provide extremely detailed, actionable analysis with specific recommendations.`;
+  const userPrompt = `Perform an exhaustive competitive analysis of these competitors in the MBA coaching/education space: ${competitorList}
 
 Our website: bestmbacoaching.com
 Our niche: MBA coaching institute discovery, comparison, and reviews
 
-For each competitor provide:
-- Domain authority estimate
-- Key strengths (what they do better than us)
-- Content strategy analysis
+For each competitor provide detailed profile:
+- Domain authority estimate (0-100)
+- Estimated monthly organic traffic
+- Number of indexed pages estimate
+- Key strengths (what they do better than us) — at least 4 points
+- Key weaknesses we can exploit — at least 3 points
+- Content strategy analysis (detailed)
 - Top-performing content types
-- Keywords they rank for that we don't
+- Keywords they rank for that we don't — at least 8 keywords
 - Backlink strategy insights
 - Social media presence assessment
+- Top pages driving traffic — at least 3 URLs/topics
+- SERP features they own (featured snippets, people also ask, knowledge panels)
+- UX/Technical advantages
 
-Overall provide:
-- Top 20 keyword gaps (keywords competitors rank for but we don't)
-- Content opportunities we're missing
-- Technical SEO advantages competitors have
-- Quick wins we can implement immediately
-- Long-term strategy recommendations
-- Our competitive position assessment (1-10)`;
+SWOT Analysis for our website vs competitors:
+- Strengths (what we do well)
+- Weaknesses (where we fall short)
+- Opportunities (untapped areas)
+- Threats (competitive risks)
+
+Provide detailed keyword gaps (at least 20):
+- keyword, search volume, difficulty, which competitor ranks, ranking position estimate, our opportunity level, recommended action (create new content / optimize existing / build backlinks)
+
+Content opportunities we're missing (at least 8 detailed items)
+
+Quick wins we can implement this week (at least 8 specific actions)
+
+Long-term strategy recommendations (at least 6 detailed points)
+
+Backlink opportunities:
+- Types of sites linking to competitors but not us
+- Specific outreach strategies
+- Resource page opportunities
+- Guest posting targets
+
+Page-wise recommendations (for different page types on our site):
+- Homepage improvements
+- Institute listing pages
+- College pages
+- Exam pages
+- Blog/article pages
+- City landing pages
+Each with specific, actionable items
+
+Our competitive position assessment (1-10) with detailed justification`;
+
+  const tool = {
+    type: "function",
+    function: {
+      name: "competitor_data",
+      description: "Return detailed competitor analysis data",
+      parameters: {
+        type: "object",
+        properties: {
+          competitors: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                domain: { type: "string" },
+                domainAuthority: { type: "number" },
+                estimatedTraffic: { type: "string" },
+                indexedPages: { type: "string" },
+                strengths: { type: "array", items: { type: "string" } },
+                weaknesses: { type: "array", items: { type: "string" } },
+                contentStrategy: { type: "string" },
+                topContentTypes: { type: "array", items: { type: "string" } },
+                uniqueKeywords: { type: "array", items: { type: "string" } },
+                backlinkStrategy: { type: "string" },
+                socialPresence: { type: "string" },
+                topPages: { type: "array", items: { type: "string" } },
+                serpFeatures: { type: "array", items: { type: "string" } },
+                technicalAdvantages: { type: "array", items: { type: "string" } },
+              },
+              required: ["domain", "domainAuthority", "strengths", "weaknesses", "contentStrategy", "uniqueKeywords"],
+            },
+          },
+          swotAnalysis: {
+            type: "object",
+            properties: {
+              strengths: { type: "array", items: { type: "string" } },
+              weaknesses: { type: "array", items: { type: "string" } },
+              opportunities: { type: "array", items: { type: "string" } },
+              threats: { type: "array", items: { type: "string" } },
+            },
+            required: ["strengths", "weaknesses", "opportunities", "threats"],
+          },
+          keywordGaps: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                keyword: { type: "string" },
+                searchVolume: { type: "number" },
+                difficulty: { type: "number" },
+                competitorRanking: { type: "string" },
+                rankingPosition: { type: "string" },
+                opportunity: { type: "string" },
+                recommendedAction: { type: "string" },
+              },
+              required: ["keyword", "searchVolume", "difficulty", "opportunity", "recommendedAction"],
+            },
+          },
+          contentOpportunities: { type: "array", items: { type: "string" } },
+          quickWins: { type: "array", items: { type: "string" } },
+          longTermStrategy: { type: "array", items: { type: "string" } },
+          backlinkOpportunities: {
+            type: "object",
+            properties: {
+              siteTypes: { type: "array", items: { type: "string" } },
+              outreachStrategies: { type: "array", items: { type: "string" } },
+              resourcePages: { type: "array", items: { type: "string" } },
+              guestPostTargets: { type: "array", items: { type: "string" } },
+            },
+          },
+          pageRecommendations: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                pageType: { type: "string" },
+                recommendations: { type: "array", items: { type: "string" } },
+                priority: { type: "string", enum: ["high", "medium", "low"] },
+              },
+              required: ["pageType", "recommendations", "priority"],
+            },
+          },
+          competitivePosition: { type: "number" },
+          positionJustification: { type: "string" },
+          summary: { type: "string" },
+        },
+        required: ["competitors", "swotAnalysis", "keywordGaps", "contentOpportunities", "quickWins", "longTermStrategy", "backlinkOpportunities", "pageRecommendations", "competitivePosition", "summary"],
+      },
+    },
+  };
+  return { systemPrompt, userPrompt, tool, toolName: "competitor_data" };
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  try {
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    const { mode, query, niche, competitors, existingKeywords } = await req.json();
+    if (!mode) {
+      return new Response(JSON.stringify({ error: "mode is required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const toolName = mode === "keyword_research" ? "keyword_data" : mode === "blog_titles" ? "blog_title_data" : "competitor_data";
-
-    const tools: any[] = [];
-
+    let payload: { systemPrompt: string; userPrompt: string; tool: any; toolName: string };
     if (mode === "keyword_research") {
-      tools.push({
-        type: "function",
-        function: {
-          name: toolName,
-          description: "Return keyword research data",
-          parameters: {
-            type: "object",
-            properties: {
-              keywords: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    keyword: { type: "string" },
-                    searchVolume: { type: "number" },
-                    competition: { type: "string", enum: ["low", "medium", "high"] },
-                    difficulty: { type: "number" },
-                    cpc: { type: "number" },
-                    intent: { type: "string", enum: ["informational", "commercial", "transactional", "navigational"] },
-                    trending: { type: "string", enum: ["up", "stable", "down"] },
-                    category: { type: "string" },
-                  },
-                  required: ["keyword", "searchVolume", "competition", "difficulty", "intent", "trending"],
-                },
-              },
-              contentGaps: { type: "array", items: { type: "string" } },
-              seasonalOpportunities: { type: "array", items: { type: "string" } },
-              snippetOpportunities: { type: "array", items: { type: "string" } },
-              summary: { type: "string" },
-            },
-            required: ["keywords", "contentGaps", "seasonalOpportunities", "snippetOpportunities", "summary"],
-          },
-        },
-      });
+      payload = buildKeywordResearchPayload(query || niche || "MBA coaching India", existingKeywords || []);
     } else if (mode === "blog_titles") {
-      tools.push({
-        type: "function",
-        function: {
-          name: toolName,
-          description: "Return blog title research data",
-          parameters: {
-            type: "object",
-            properties: {
-              titles: {
-                type: "array",
-                items: {
-                  type: "object",
-                    properties: {
-                      title: { type: "string" },
-                      metaTitle: { type: "string", description: "SEO meta title under 60 chars" },
-                      metaDescription: { type: "string", description: "Meta description 120-155 chars" },
-                      slug: { type: "string", description: "Clean URL slug" },
-                      targetKeyword: { type: "string" },
-                      searchVolume: { type: "number" },
-                      competition: { type: "string", enum: ["low", "medium", "high"] },
-                      contentType: { type: "string" },
-                      wordCount: { type: "number" },
-                      priority: { type: "string", enum: ["high", "medium", "low"] },
-                      trendingScore: { type: "number" },
-                    },
-                    required: ["title", "metaTitle", "metaDescription", "slug", "targetKeyword", "searchVolume", "competition", "contentType", "priority", "trendingScore"],
-                },
-              },
-              evergreenTopics: { type: "array", items: { type: "string" } },
-              trendingTopics: { type: "array", items: { type: "string" } },
-              contentCalendar: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    week: { type: "number" },
-                    topic: { type: "string" },
-                    keyword: { type: "string" },
-                    reason: { type: "string" },
-                  },
-                },
-              },
-              summary: { type: "string" },
-            },
-            required: ["titles", "evergreenTopics", "trendingTopics", "contentCalendar", "summary"],
-          },
-        },
-      });
+      payload = buildBlogTitlesPayload(query || niche || "MBA coaching");
     } else {
-      tools.push({
-        type: "function",
-        function: {
-          name: toolName,
-          description: "Return competitor analysis data",
-          parameters: {
-            type: "object",
-            properties: {
-              competitors: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    domain: { type: "string" },
-                    domainAuthority: { type: "number" },
-                    strengths: { type: "array", items: { type: "string" } },
-                    contentStrategy: { type: "string" },
-                    topContentTypes: { type: "array", items: { type: "string" } },
-                    uniqueKeywords: { type: "array", items: { type: "string" } },
-                    backlinkStrategy: { type: "string" },
-                    socialPresence: { type: "string" },
-                  },
-                  required: ["domain", "domainAuthority", "strengths", "contentStrategy", "uniqueKeywords"],
-                },
-              },
-              keywordGaps: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    keyword: { type: "string" },
-                    searchVolume: { type: "number" },
-                    competitorRanking: { type: "string" },
-                    difficulty: { type: "number" },
-                    opportunity: { type: "string" },
-                  },
-                  required: ["keyword", "searchVolume", "difficulty", "opportunity"],
-                },
-              },
-              contentOpportunities: { type: "array", items: { type: "string" } },
-              quickWins: { type: "array", items: { type: "string" } },
-              longTermStrategy: { type: "array", items: { type: "string" } },
-              competitivePosition: { type: "number" },
-              summary: { type: "string" },
-            },
-            required: ["competitors", "keywordGaps", "contentOpportunities", "quickWins", "longTermStrategy", "competitivePosition", "summary"],
-          },
-        },
-      });
+      payload = buildCompetitorPayload(competitors || []);
     }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+          { role: "system", content: payload.systemPrompt },
+          { role: "user", content: payload.userPrompt },
         ],
-        tools,
-        tool_choice: { type: "function", function: { name: toolName } },
+        tools: [payload.tool],
+        tool_choice: { type: "function", function: { name: payload.toolName } },
       }),
     });
 
@@ -272,20 +332,14 @@ Overall provide:
 
     const aiData = await response.json();
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-
     let result;
     if (toolCall?.function?.arguments) {
-      result = typeof toolCall.function.arguments === "string"
-        ? JSON.parse(toolCall.function.arguments)
-        : toolCall.function.arguments;
+      result = typeof toolCall.function.arguments === "string" ? JSON.parse(toolCall.function.arguments) : toolCall.function.arguments;
     } else {
       const content = aiData.choices?.[0]?.message?.content || "";
       const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        result = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error("Could not parse AI response");
-      }
+      if (jsonMatch) result = JSON.parse(jsonMatch[0]);
+      else throw new Error("Could not parse AI response");
     }
 
     return new Response(JSON.stringify({ success: true, data: result, mode, generatedAt: new Date().toISOString() }), {
