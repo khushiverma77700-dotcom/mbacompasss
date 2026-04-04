@@ -672,6 +672,14 @@ const AdminSEODashboard = () => {
         </div>
 
         {/* ═══ NEW LINKS DETECTED BANNER ═══ */}
+        {!loading && newRows.length === 0 && !newLinksDismissed && previousKeys.size > 0 && (
+          <Card className="border-muted bg-muted/30">
+            <CardContent className="py-3 flex items-center gap-2 text-sm text-muted-foreground">
+              <CheckCircle className="h-4 w-4 text-green-500" />
+              No new pages detected since last visit. Total tracked: {rows.length} pages across {contentTypes.length} content types.
+            </CardContent>
+          </Card>
+        )}
         {newRows.length > 0 && !newLinksDismissed && (
           <Card className="border-green-500/50 bg-green-500/5 animate-in fade-in slide-in-from-top-2">
             <CardHeader className="pb-3">
@@ -713,7 +721,6 @@ const AdminSEODashboard = () => {
             </CardContent>
           </Card>
         )}
-
         {/* ═══ OVERVIEW ═══ */}
         {activeTab === "overview" && (
           <div className="space-y-4">

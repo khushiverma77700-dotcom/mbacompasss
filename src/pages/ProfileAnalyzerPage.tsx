@@ -686,7 +686,8 @@ const ProfileAnalyzerPage = () => {
   };
 
   const scoreColor = (s: number) => s >= 8 ? "text-green-600" : s >= 6 ? "text-amber-600" : "text-red-600";
-  const probColor = (p: number) => p >= 60 ? "bg-green-500" : p >= 30 ? "bg-amber-500" : "bg-red-500";
+  const normalizeProb = (p: number) => (p > 0 && p <= 1) ? Math.round(p * 100) : Math.round(p);
+  const probColor = (p: number) => { const n = normalizeProb(p); return n >= 60 ? "bg-green-500" : n >= 30 ? "bg-amber-500" : "bg-red-500"; };
   const diffColor = (d: string) => {
     if (d === "Easy") return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
     if (d === "Medium") return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
