@@ -1626,7 +1626,7 @@ const ProfileAnalyzerPage = () => {
                             <p className="text-xs text-muted-foreground">{c.cutoff_info}</p>
                             {c.tip && <p className="text-xs text-primary mt-1 flex items-center gap-1"><Lightbulb className="w-3 h-3" /> {c.tip}</p>}
                             <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
-                              <div className={`h-full rounded-full ${probColor(c.probability)}`} style={{ width: `${c.probability}%` }} />
+                              <div className={`h-full rounded-full ${probColor(c.probability)}`} style={{ width: `${normalizeProb(c.probability)}%` }} />
                             </div>
                           </div>
                         ))}
