@@ -161,6 +161,8 @@ const getSEOAudit = (contentType: SEOContentType, item: Record<string, any>, sna
 };
 
 // ── Main Component ──
+const SEO_KNOWN_KEYS_STORAGE = "seo_dashboard_known_keys";
+
 const AdminSEODashboard = () => {
   const [rows, setRows] = useState<DashboardRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -174,6 +176,9 @@ const AdminSEODashboard = () => {
   const [search, setSearch] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("overview");
+  const [previousKeys, setPreviousKeys] = useState<Set<string>>(new Set());
+  const [newRows, setNewRows] = useState<DashboardRow[]>([]);
+  const [newLinksDismissed, setNewLinksDismissed] = useState(false);
   const { toast } = useToast();
 
   // Keyword Research State
