@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Target, Globe, BookOpen, Languages, BarChart3, Users } from "lucide-react";
+import { Target, Globe, BookOpen, Languages, BarChart3, Users, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,13 +9,13 @@ const iconMap: Record<string, React.ElementType> = {
   Target, Globe, BookOpen, Languages, BarChart3, Users,
 };
 
-const colorCycle = [
-  "bg-primary/10 text-primary",
-  "bg-emerald-500/10 text-emerald-600",
-  "bg-amber-500/10 text-amber-600",
-  "bg-violet-500/10 text-violet-600",
-  "bg-rose-500/10 text-rose-600",
-  "bg-cyan-500/10 text-cyan-600",
+const gradients = [
+  "from-blue-500 to-blue-600",
+  "from-emerald-500 to-emerald-600",
+  "from-amber-500 to-amber-600",
+  "from-violet-500 to-violet-600",
+  "from-rose-500 to-rose-600",
+  "from-cyan-500 to-cyan-600",
 ];
 
 const CategoryCards = () => {
@@ -29,10 +29,10 @@ const CategoryCards = () => {
 
   if (isLoading) {
     return (
-      <section className="py-14 bg-background">
+      <section className="py-16 bg-background">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 max-w-5xl mx-auto">
-            {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-32 rounded-xl" />)}
+            {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-36 rounded-2xl" />)}
           </div>
         </div>
       </section>
@@ -42,22 +42,22 @@ const CategoryCards = () => {
   if (!categories?.length) return null;
 
   return (
-    <section className="py-14 bg-background">
+    <section className="py-16 md:py-20 bg-background">
       <div className="container mx-auto px-4">
-        <motion.div className="text-center mb-10" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-3">
+        <motion.div className="text-center mb-12" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold mb-4">
             <Target className="w-3.5 h-3.5" /> Exam Categories
           </span>
-          <h2 className="font-heading text-2xl md:text-3xl font-bold text-foreground mb-2">
+          <h2 className="font-heading text-2xl md:text-4xl font-bold text-foreground mb-3">
             Explore MBA <span className="text-gradient">Exam Categories</span>
           </h2>
-          <p className="text-muted-foreground">Choose your target MBA entrance exam and find the best coaching</p>
+          <p className="text-muted-foreground max-w-xl mx-auto">Choose your target MBA entrance exam and find the best coaching institute for your preparation</p>
         </motion.div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 max-w-5xl mx-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 max-w-6xl mx-auto">
           {categories.map((cat: any, i: number) => {
             const Icon = iconMap[cat.icon] || BookOpen;
-            const color = colorCycle[i % colorCycle.length];
+            const gradient = gradients[i % gradients.length];
             return (
               <motion.div
                 key={cat.id}
@@ -68,13 +68,21 @@ const CategoryCards = () => {
               >
                 <Link
                   to={`/category/${cat.slug}`}
-                  className="group block bg-card rounded-xl p-5 text-center card-shadow hover:card-shadow-hover transition-all duration-300 hover:-translate-y-1 border border-border"
+                  className="group block bg-card rounded-2xl p-5 md:p-6 text-center border border-border shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2 relative overflow-hidden"
                 >
-                  <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform`}>
-                    <Icon className="w-6 h-6" />
+                  {/* Hover gradient overlay */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl`} />
+                  
+                  <div className="relative z-10">
+                    <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center mx-auto mb-4 shadow-md group-hover:bg-white/20 group-hover:shadow-lg transition-all`}>
+                      <Icon className="w-7 h-7 text-white" />
+                    </div>
+                    <h3 className="font-heading font-bold text-foreground text-sm md:text-base mb-1 group-hover:text-white transition-colors">{cat.name}</h3>
+                    {cat.description && <p className="text-xs text-muted-foreground line-clamp-1 group-hover:text-white/70 transition-colors">{cat.description}</p>}
+                    <div className="mt-3 flex items-center justify-center gap-1 text-xs font-semibold text-primary group-hover:text-white transition-colors">
+                      Explore <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                    </div>
                   </div>
-                  <h3 className="font-heading font-semibold text-foreground text-sm mb-1">{cat.name}</h3>
-                  {cat.description && <p className="text-xs text-muted-foreground line-clamp-1">{cat.description}</p>}
                 </Link>
               </motion.div>
             );

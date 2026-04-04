@@ -1,27 +1,20 @@
 import HeroSection from "@/components/HeroSection";
 import CategoryCards from "@/components/CategoryCards";
 import FeaturedInstitutes from "@/components/FeaturedInstitutes";
-import MBACollegesSection from "@/components/MBACollegesSection";
 import WhyChooseUs from "@/components/WhyChooseUs";
-import NewsSection from "@/components/NewsSection";
 import OfferBanners from "@/components/OfferBanners";
-import TestimonialsSection from "@/components/TestimonialsSection";
 import CoachingOfWeekSection from "@/components/CoachingOfWeekSection";
-import CollegeTestimonialsSection from "@/components/CollegeTestimonialsSection";
-import TopCitiesSection from "@/components/TopCitiesSection";
 import PopularExamsSection from "@/components/PopularExamsSection";
 import StatsCounterSection from "@/components/StatsCounterSection";
 import HowItWorksSection from "@/components/HowItWorksSection";
-import TopExamComparisonSection from "@/components/TopExamComparisonSection";
 import FAQSection from "@/components/FAQSection";
 import CTASection from "@/components/CTASection";
 import TopRankedCollegesSection from "@/components/TopRankedCollegesSection";
 import ExamDeadlinesTicker from "@/components/ExamDeadlinesTicker";
 import SuccessStoriesSection from "@/components/SuccessStoriesSection";
 import LearningResourcesSection from "@/components/LearningResourcesSection";
-import TopCollegeSpotlight from "@/components/TopCollegeSpotlight";
-import LatestArticlesSection from "@/components/LatestArticlesSection";
 import BrowseByCitySection from "@/components/BrowseByCitySection";
+import LatestArticlesSection from "@/components/LatestArticlesSection";
 import SEOHead, { generateWebsiteSchema, generateOrganizationSchema, generateFAQSchema, generateBreadcrumbSchema } from "@/components/SEOHead";
 
 const homepageFAQs = [
@@ -67,29 +60,56 @@ const Index = () => {
         twitterDescription="India's most trusted MBA coaching comparison. Compare fees, reviews, success rates of 500+ institutes."
         jsonLd={jsonLdSchemas}
       />
+      
+      {/* 1. Hero — first impression */}
       <HeroSection />
+      
+      {/* 2. Trust signals — immediate social proof */}
       <StatsCounterSection />
-      <OfferBanners />
-      <CoachingOfWeekSection />
-      <ExamDeadlinesTicker />
-      <HowItWorksSection />
+      
+      {/* 3. Quick category navigation */}
       <CategoryCards />
+      
+      {/* 4. Featured coaching with offers */}
+      <CoachingOfWeekSection />
+      
+      {/* 5. Trending offers */}
+      <OfferBanners />
+      
+      {/* 6. Top coaching institutes */}
       <FeaturedInstitutes />
-      <TopCollegeSpotlight />
+      
+      {/* 7. Top ranked colleges */}
       <TopRankedCollegesSection />
-      <MBACollegesSection />
+      
+      {/* 8. Browse by city */}
       <BrowseByCitySection />
-      <LearningResourcesSection />
-      <TopCitiesSection />
+      
+      {/* 9. Exam deadlines — urgency */}
+      <ExamDeadlinesTicker />
+      
+      {/* 10. Popular exams deep-dive */}
       <PopularExamsSection />
-      <TopExamComparisonSection />
+      
+      {/* 11. How it works */}
+      <HowItWorksSection />
+      
+      {/* 12. Learning resources */}
+      <LearningResourcesSection />
+      
+      {/* 13. Latest articles */}
       <LatestArticlesSection />
+      
+      {/* 14. Success stories */}
       <SuccessStoriesSection />
-      <CollegeTestimonialsSection />
-      <TestimonialsSection />
+      
+      {/* 15. Why choose us */}
       <WhyChooseUs />
+      
+      {/* 16. FAQ with schema */}
       <FAQSection />
-      <NewsSection />
+      
+      {/* 17. Final CTA */}
       <CTASection />
     </>
   );
