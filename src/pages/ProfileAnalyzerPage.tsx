@@ -1498,8 +1498,8 @@ const ProfileAnalyzerPage = () => {
                           <TableCell className="font-semibold text-primary">{c.student_cat_target}%ile</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1.5">
-                              <div className={`h-2 rounded-full ${probColor(c.your_admission_probability)}`} style={{ width: `${Math.max(c.your_admission_probability * 0.6, 6)}px` }} />
-                              <span className="font-bold">{c.your_admission_probability}%</span>
+                              <div className={`h-2 rounded-full ${probColor(c.your_admission_probability)}`} style={{ width: `${Math.max(normalizeProb(c.your_admission_probability) * 0.6, 6)}px` }} />
+                              <span className="font-bold">{normalizeProb(c.your_admission_probability)}%</span>
                             </div>
                           </TableCell>
                           <TableCell><Badge className={`text-xs ${diffColor(c.difficulty)}`}>{c.difficulty}</Badge></TableCell>
