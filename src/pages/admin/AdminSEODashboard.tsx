@@ -688,7 +688,7 @@ const AdminSEODashboard = () => {
                   }}>
                     <Copy className="h-3 w-3 mr-1" /> Copy
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setNewLinksDismissed(true)}>
+                  <Button size="sm" variant="ghost" onClick={acknowledgeNewLinks}>
                     <XCircle className="h-4 w-4" />
                   </Button>
                 </div>
