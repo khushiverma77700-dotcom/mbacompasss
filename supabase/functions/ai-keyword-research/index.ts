@@ -47,12 +47,15 @@ Also provide:
 - Featured snippet opportunities`;
 
     } else if (mode === "blog_titles") {
-      systemPrompt = `You are an expert content strategist for Indian MBA education sector. You research blog topics that rank well and drive traffic.`;
+      systemPrompt = `You are an expert content strategist for Indian MBA education sector. You research blog topics that rank well and drive traffic. For each blog title you MUST also generate an SEO-optimized meta title (under 60 chars), a compelling meta description (120-155 chars), and a clean URL slug.`;
 
       userPrompt = `Generate 20 high-potential blog title ideas for: "${query || niche || "MBA coaching"}"
 
 For each title provide:
 - title (optimized for CTR and SEO)
+- metaTitle (SEO meta title, under 60 characters, with primary keyword)
+- metaDescription (compelling meta description, 120-155 characters, include CTA)
+- slug (clean URL slug, lowercase, hyphens, no stop words)
 - target keyword
 - estimated monthly search volume for the target keyword
 - competition level
