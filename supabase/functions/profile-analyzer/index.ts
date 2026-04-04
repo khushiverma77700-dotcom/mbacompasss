@@ -88,7 +88,13 @@ STUDENT PROFILE:
 - Target States for MBA: ${body.target_states?.join(", ") || "Pan India"}
 - Calculated Profile Score: ${profileScore}/10
 
-Provide a comprehensive, highly detailed analysis. Include specific percentile targets, cutoff scores, and difficulty ratings. For the detailed_college_table, include 15-25 colleges with precise data points. Be very specific and actionable.`;
+Provide a comprehensive, highly detailed analysis. Include specific percentile targets, cutoff scores, and difficulty ratings. For the detailed_college_table, include 15-25 colleges with precise data points. Be very specific and actionable.
+
+IMPORTANT: For peer_comparison, simulate realistic data showing where this student stands among MBA aspirants. Generate a bell curve distribution with 10 score ranges (1-2, 2-3, ... 9-10) with realistic student counts summing to the total. Mark the bucket that contains this student's score.
+
+For exam_strategy, provide specific recommendations for each target exam the student selected.
+
+For score_breakdown, provide 5 dimension scores: academics, work_experience, diversity, profile_consistency (how consistent are their scores across 10th/12th/grad), and leadership_potential. Also provide percentile_among_aspirants (0-100).`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -99,7 +105,7 @@ Provide a comprehensive, highly detailed analysis. Include specific percentile t
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "You are an expert Indian MBA admissions counselor. Provide specific, data-driven insights with real college names, actual cutoffs, and precise percentile targets." },
+          { role: "system", content: "You are an expert Indian MBA admissions counselor. Provide specific, data-driven insights with real college names, actual cutoffs, and precise percentile targets. Be extremely detailed and personalised." },
           { role: "user", content: prompt },
         ],
         tools: [
@@ -107,7 +113,7 @@ Provide a comprehensive, highly detailed analysis. Include specific percentile t
             type: "function",
             function: {
               name: "generate_profile_analysis",
-              description: "Generate a comprehensive MBA profile analysis with detailed college comparison table",
+              description: "Generate a comprehensive MBA profile analysis with detailed college comparison table, peer comparison, exam strategy, and 5-dimension scoring",
               parameters: {
                 type: "object",
                 properties: {
@@ -188,26 +194,26 @@ Provide a comprehensive, highly detailed analysis. Include specific percentile t
                     items: {
                       type: "object",
                       properties: {
-                        college_name: { type: "string", description: "Full name of the college e.g. IIM Ahmedabad" },
+                        college_name: { type: "string" },
                         city: { type: "string" },
                         state: { type: "string" },
-                        nirf_ranking: { type: "number", description: "NIRF MBA ranking if available, 0 if not" },
-                        avg_fees_lakhs: { type: "number", description: "Total MBA fees in lakhs" },
-                        avg_package_lakhs: { type: "number", description: "Average placement package in LPA" },
-                        median_package_lakhs: { type: "number", description: "Median placement package in LPA" },
-                        highest_package_lakhs: { type: "number", description: "Highest placement package in LPA" },
-                        required_cat_percentile: { type: "number", description: "Minimum CAT percentile required for this student's category" },
-                        student_cat_target: { type: "number", description: "Recommended target CAT percentile for safe admission" },
-                        acceptance_rate_percent: { type: "number", description: "Approximate acceptance rate" },
-                        your_admission_probability: { type: "number", description: "This student's specific admission probability 0-100" },
-                        difficulty: { type: "string", enum: ["Easy", "Medium", "Hard", "Very Hard"], description: "How difficult it is for THIS specific student to get in" },
-                        key_selection_criteria: { type: "string", description: "Main selection factors e.g. CAT score + WAT-PI + Academics" },
-                        recommendation: { type: "string", description: "Specific advice for this student for this college" },
+                        nirf_ranking: { type: "number" },
+                        avg_fees_lakhs: { type: "number" },
+                        avg_package_lakhs: { type: "number" },
+                        median_package_lakhs: { type: "number" },
+                        highest_package_lakhs: { type: "number" },
+                        required_cat_percentile: { type: "number" },
+                        student_cat_target: { type: "number" },
+                        acceptance_rate_percent: { type: "number" },
+                        your_admission_probability: { type: "number" },
+                        difficulty: { type: "string", enum: ["Easy", "Medium", "Hard", "Very Hard"] },
+                        key_selection_criteria: { type: "string" },
+                        recommendation: { type: "string" },
                         tier: { type: "string", enum: ["Dream", "Target", "Safe"] },
                       },
                       required: ["college_name", "city", "state", "avg_fees_lakhs", "avg_package_lakhs", "required_cat_percentile", "student_cat_target", "your_admission_probability", "difficulty", "key_selection_criteria", "recommendation", "tier"],
                     },
-                    description: "Detailed table of 15-25 MBA colleges with stats, percentile targets, difficulty ratings. Must include top IIMs, newer IIMs, non-IIM Tier 1, and Tier 2 colleges.",
+                    description: "Detailed table of 15-25 MBA colleges.",
                   },
                   recommendations: {
                     type: "array",
@@ -244,16 +250,56 @@ Provide a comprehensive, highly detailed analysis. Include specific percentile t
                       academics_score: { type: "number", description: "Score out of 10 for academics" },
                       work_experience_score: { type: "number", description: "Score out of 10 for work experience" },
                       diversity_score: { type: "number", description: "Score out of 10 for profile diversity/uniqueness" },
+                      profile_consistency_score: { type: "number", description: "Score out of 10 for consistency across 10th/12th/graduation scores" },
+                      leadership_potential_score: { type: "number", description: "Score out of 10 for leadership potential based on experience and profile" },
                       overall_competitiveness: { type: "string", enum: ["Very Strong", "Strong", "Moderate", "Needs Improvement", "Weak"] },
+                      percentile_among_aspirants: { type: "number", description: "Percentile rank among all MBA aspirants 0-100" },
                     },
-                    required: ["academics_score", "work_experience_score", "diversity_score", "overall_competitiveness"],
+                    required: ["academics_score", "work_experience_score", "diversity_score", "profile_consistency_score", "leadership_potential_score", "overall_competitiveness", "percentile_among_aspirants"],
+                  },
+                  exam_strategy: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        exam_name: { type: "string" },
+                        recommended_score: { type: "string", description: "Target score or percentile for this exam" },
+                        preparation_months: { type: "number" },
+                        difficulty_for_student: { type: "string", enum: ["Easy", "Medium", "Hard", "Very Hard"] },
+                        roi_rating: { type: "string", enum: ["Very High", "High", "Medium", "Low"] },
+                      },
+                      required: ["exam_name", "recommended_score", "preparation_months", "difficulty_for_student", "roi_rating"],
+                    },
+                    description: "Strategy for each target exam the student selected",
+                  },
+                  peer_comparison: {
+                    type: "object",
+                    properties: {
+                      total_students_analysed: { type: "number", description: "Total students in the comparison pool, use 25000+" },
+                      average_score: { type: "number", description: "Average profile score of all students" },
+                      your_rank_percentile: { type: "number", description: "This student's percentile rank 0-100" },
+                      score_distribution: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            range: { type: "string", description: "Score range e.g. '1-2', '2-3', '3-4', '4-5', '5-6', '6-7', '7-8', '8-9', '9-10'" },
+                            count: { type: "number", description: "Number of students in this range" },
+                            is_yours: { type: "boolean", description: "True if this student's score falls in this range" },
+                          },
+                          required: ["range", "count", "is_yours"],
+                        },
+                        description: "Bell curve distribution with 9 buckets. Counts should form a realistic bell curve shape.",
+                      },
+                    },
+                    required: ["total_students_analysed", "average_score", "your_rank_percentile", "score_distribution"],
                   },
                   ai_summary: {
                     type: "string",
-                    description: "A 4-5 sentence personalized summary. Be specific, encouraging, and reference actual college names. Address the student by name if provided.",
+                    description: "A 5-6 sentence personalized summary. Be specific, encouraging, reference actual college names. Address the student by name.",
                   },
                 },
-                required: ["strengths", "weaknesses", "college_predictions", "detailed_college_table", "recommendations", "study_plan", "score_breakdown", "ai_summary"],
+                required: ["strengths", "weaknesses", "college_predictions", "detailed_college_table", "recommendations", "study_plan", "score_breakdown", "exam_strategy", "peer_comparison", "ai_summary"],
               },
             },
           },
@@ -327,7 +373,11 @@ Provide a comprehensive, highly detailed analysis. Include specific percentile t
         strengths: analysis.strengths,
         weaknesses: analysis.weaknesses,
         college_predictions: analysis.college_predictions,
-        probability_scores: analysis.score_breakdown || {},
+        probability_scores: {
+          ...analysis.score_breakdown,
+          exam_strategy: analysis.exam_strategy,
+          peer_comparison: analysis.peer_comparison,
+        },
         recommendations: analysis.recommendations,
         study_plan: analysis.study_plan,
         ai_summary: analysis.ai_summary,

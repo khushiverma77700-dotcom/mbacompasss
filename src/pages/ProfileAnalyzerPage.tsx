@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import {
   Brain, GraduationCap, Briefcase, Target, ChevronRight, ChevronLeft, Lock, Phone, Mail,
   TrendingUp, Shield, Zap, BookOpen, Calendar, Star, AlertTriangle, CheckCircle2, ArrowRight,
   Sparkles, BarChart3, Lightbulb, User, FileText, Download, Save, MapPin, ClipboardList,
-  Award, Users, Clock, ArrowUpRight, ChevronDown, Info, Search, Layers, Activity, Eye
+  Award, Users, Clock, ArrowUpRight, ChevronDown, Info, Search, Layers, Activity, Eye,
+  Percent, Hash, Globe, Building2, Flame, CircleDot, Medal, PieChart, LineChart, Gauge
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +24,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import SEOHead, { generateBreadcrumbSchema, generateWebsiteSchema } from "@/components/SEOHead";
 
 const STORAGE_KEY = "profile_analyzer_v2_draft";
-
 const EXAM_OPTIONS = ["CAT", "XAT", "NMAT", "SNAP", "CMAT", "MAT", "GMAT", "IIFT", "TISSNET", "ATMA"];
 const STREAM_OPTIONS = ["Engineering", "Commerce", "Science", "Arts", "Medical", "Law", "Other"];
 const SPECIALIZATIONS = ["Finance", "Marketing", "Operations", "HR", "IT & Analytics", "Strategy", "General Management", "Entrepreneurship"];
@@ -96,9 +96,19 @@ interface AnalysisResult {
     academics_score: number;
     work_experience_score: number;
     diversity_score: number;
+    profile_consistency_score: number;
+    leadership_potential_score: number;
     overall_competitiveness: string;
+    percentile_among_aspirants: number;
   };
   ai_summary: string;
+  exam_strategy: Array<{ exam_name: string; recommended_score: string; preparation_months: number; difficulty_for_student: string; roi_rating: string }>;
+  peer_comparison: {
+    total_students_analysed: number;
+    average_score: number;
+    your_rank_percentile: number;
+    score_distribution: Array<{ range: string; count: number; is_yours: boolean }>;
+  };
 }
 
 interface FormData {
@@ -126,42 +136,353 @@ const initialForm: FormData = {
   target_exams: [], target_colleges: [], preferred_specialization: "", target_states: [],
 };
 
-/* ──────────── HOW IT WORKS ANIMATION ──────────── */
-const HowItWorksSection = () => {
-  const steps = [
-    { icon: ClipboardList, title: "Fill Your Profile", desc: "Enter academic scores, work experience, and target exams in a simple multi-step form." },
-    { icon: Brain, title: "AI Analyses 10,000+ Data Points", desc: "Our engine cross-references your profile against historical admission data and current cutoffs." },
-    { icon: BarChart3, title: "Get Detailed Report", desc: "Receive college-wise admission probability, difficulty ratings, target percentiles, and a personalised roadmap." },
-    { icon: Sparkles, title: "Actionable Roadmap", desc: "Follow your AI-generated study plan, improvement tips, and mentorship recommendations." },
+/* ──────────── 3D FLOATING ELEMENTS ──────────── */
+const Float3DCard = ({ children, className = "", delay = 0, duration = 6 }: { children: React.ReactNode; className?: string; delay?: number; duration?: number }) => (
+  <motion.div
+    animate={{ y: [0, -18, 0], rotateX: [0, 8, 0], rotateY: [0, -6, 0] }}
+    transition={{ repeat: Infinity, duration, ease: "easeInOut", delay }}
+    style={{ perspective: "800px", transformStyle: "preserve-3d" }}
+    className={className}
+  >
+    {children}
+  </motion.div>
+);
+
+const GlowOrb = ({ className = "" }: { className?: string }) => (
+  <motion.div
+    animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
+    transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+    className={`absolute rounded-full blur-3xl ${className}`}
+  />
+);
+
+/* ──────────── ANIMATED SAMPLE REPORT PREVIEW ──────────── */
+const SampleReportPreview = () => {
+  const sampleColleges = [
+    { name: "IIM Ahmedabad", prob: 18, diff: "Very Hard", tier: "Dream", pkg: "32.5 LPA" },
+    { name: "IIM Bangalore", prob: 22, diff: "Very Hard", tier: "Dream", pkg: "31.0 LPA" },
+    { name: "IIM Lucknow", prob: 45, diff: "Hard", tier: "Target", pkg: "26.0 LPA" },
+    { name: "IIM Kozhikode", prob: 52, diff: "Hard", tier: "Target", pkg: "25.5 LPA" },
+    { name: "IIM Indore", prob: 58, diff: "Medium", tier: "Target", pkg: "24.8 LPA" },
+    { name: "XLRI Jamshedpur", prob: 65, diff: "Medium", tier: "Safe", pkg: "26.5 LPA" },
+    { name: "MDI Gurgaon", prob: 72, diff: "Easy", tier: "Safe", pkg: "22.0 LPA" },
   ];
+
   return (
-    <section className="py-16 px-4 max-w-6xl mx-auto">
-      <motion.h2 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-3xl md:text-4xl font-bold text-center mb-4">
-        How It Works
-      </motion.h2>
-      <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">Our AI-powered engine delivers personalised MBA admission insights in under 60 seconds.</p>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
-        {/* Connector line (desktop) */}
-        <div className="hidden md:block absolute top-16 left-[12.5%] right-[12.5%] h-0.5 bg-border z-0" />
-        {steps.map((s, i) => (
-          <motion.div
-            key={s.title}
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.15 }}
-            className="relative z-10 flex flex-col items-center text-center"
-          >
-            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 border border-primary/20">
-              <s.icon className="w-7 h-7 text-primary" />
+    <motion.div
+      initial={{ opacity: 0, y: 40, rotateX: 15 }}
+      whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.8, delay: 0.2 }}
+      style={{ perspective: "1200px", transformStyle: "preserve-3d" }}
+      className="relative max-w-5xl mx-auto"
+    >
+      {/* Glow */}
+      <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 rounded-3xl blur-2xl opacity-60" />
+
+      <div className="relative bg-card border-2 border-border/60 rounded-2xl shadow-2xl overflow-hidden">
+        {/* Header bar */}
+        <div className="bg-gradient-to-r from-primary to-primary/80 px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Brain className="w-6 h-6 text-primary-foreground" />
+            <span className="text-primary-foreground font-bold">Sample AI Report Preview</span>
+          </div>
+          <Badge className="bg-primary-foreground/20 text-primary-foreground border-0">Live Preview</Badge>
+        </div>
+
+        <div className="p-6 space-y-6">
+          {/* Score row */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {[
+              { label: "Profile Score", value: "7.8/10", color: "text-amber-500" },
+              { label: "Academics", value: "8.2/10", color: "text-green-500" },
+              { label: "Experience", value: "6.5/10", color: "text-amber-500" },
+              { label: "Diversity", value: "7.0/10", color: "text-blue-500" },
+              { label: "Peer Rank", value: "Top 32%", color: "text-primary" },
+            ].map((s, i) => (
+              <motion.div
+                key={s.label}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 + i * 0.1 }}
+                className="text-center p-3 rounded-xl bg-muted/50 border border-border/50"
+              >
+                <p className="text-xs text-muted-foreground mb-1">{s.label}</p>
+                <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Mini college table */}
+          <div className="overflow-hidden rounded-xl border border-border/50">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-muted/50 text-muted-foreground">
+                  <th className="text-left p-2.5 font-medium">College</th>
+                  <th className="text-center p-2.5 font-medium">Avg Pkg</th>
+                  <th className="text-center p-2.5 font-medium">Your Chance</th>
+                  <th className="text-center p-2.5 font-medium">Difficulty</th>
+                  <th className="text-center p-2.5 font-medium">Tier</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sampleColleges.map((c, i) => (
+                  <motion.tr
+                    key={c.name}
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.5 + i * 0.08 }}
+                    className="border-t border-border/30"
+                  >
+                    <td className="p-2.5 font-semibold">{c.name}</td>
+                    <td className="p-2.5 text-center">{c.pkg}</td>
+                    <td className="p-2.5 text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            whileInView={{ width: `${c.prob}%` }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.7 + i * 0.08, duration: 0.6 }}
+                            className={`h-full rounded-full ${c.prob >= 60 ? "bg-green-500" : c.prob >= 30 ? "bg-amber-500" : "bg-red-500"}`}
+                          />
+                        </div>
+                        <span className="font-bold">{c.prob}%</span>
+                      </div>
+                    </td>
+                    <td className="p-2.5 text-center">
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        c.diff === "Easy" ? "bg-green-100 text-green-700" :
+                        c.diff === "Medium" ? "bg-amber-100 text-amber-700" :
+                        c.diff === "Hard" ? "bg-orange-100 text-orange-700" :
+                        "bg-red-100 text-red-700"
+                      }`}>{c.diff}</span>
+                    </td>
+                    <td className="p-2.5 text-center">
+                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                        c.tier === "Dream" ? "bg-purple-100 text-purple-700" :
+                        c.tier === "Target" ? "bg-blue-100 text-blue-700" :
+                        "bg-green-100 text-green-700"
+                      }`}>{c.tier}</span>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Blur overlay with CTA */}
+          <div className="relative">
+            <div className="blur-sm pointer-events-none opacity-50 space-y-3">
+              <div className="h-20 bg-muted rounded-xl" />
+              <div className="h-16 bg-muted rounded-xl" />
             </div>
-            <Badge variant="outline" className="mb-2 text-xs">{`Step ${i + 1}`}</Badge>
-            <h3 className="font-bold mb-1">{s.title}</h3>
-            <p className="text-sm text-muted-foreground">{s.desc}</p>
-          </motion.div>
-        ))}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Badge variant="outline" className="text-sm px-4 py-2 bg-card/90 backdrop-blur-sm">
+                <Lock className="w-3.5 h-3.5 mr-2" /> Full report generated after analysis
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+/* ──────────── ANIMATED HOW IT WORKS ──────────── */
+const HowItWorksAnimated = () => {
+  const steps = [
+    { icon: ClipboardList, title: "Fill Your Profile", desc: "Enter academic scores, work experience, and target exams in a simple multi-step form.", color: "from-blue-500 to-blue-600", lightBg: "bg-blue-50 dark:bg-blue-950/30", textColor: "text-blue-600" },
+    { icon: Brain, title: "AI Analyses 10,000+ Data Points", desc: "Our engine cross-references your profile against historical admission data, cutoffs, and placement records.", color: "from-violet-500 to-violet-600", lightBg: "bg-violet-50 dark:bg-violet-950/30", textColor: "text-violet-600" },
+    { icon: BarChart3, title: "Get Detailed Report", desc: "Receive college-wise admission probability, difficulty ratings, peer comparison, and numeric scores across 5 dimensions.", color: "from-amber-500 to-amber-600", lightBg: "bg-amber-50 dark:bg-amber-950/30", textColor: "text-amber-600" },
+    { icon: Sparkles, title: "Actionable Roadmap", desc: "Follow your AI-generated study plan, exam strategy, improvement tips, and mentorship recommendations.", color: "from-emerald-500 to-emerald-600", lightBg: "bg-emerald-50 dark:bg-emerald-950/30", textColor: "text-emerald-600" },
+  ];
+
+  return (
+    <section className="py-20 px-4 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-b from-muted/30 via-transparent to-muted/30" />
+      <div className="max-w-6xl mx-auto relative z-10">
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-16">
+          <Badge variant="secondary" className="mb-4 text-sm px-4 py-1.5"><Activity className="w-3.5 h-3.5 mr-1.5" /> Simple 4-Step Process</Badge>
+          <h2 className="text-3xl md:text-5xl font-bold mb-4">How It Works</h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">Our AI-powered engine delivers personalised MBA admission insights in under 60 seconds.</p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative">
+          {/* Animated connector line */}
+          <div className="hidden md:block absolute top-20 left-[12.5%] right-[12.5%] h-0.5 overflow-hidden">
+            <motion.div
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1.5, ease: "easeOut" }}
+              className="w-full h-full bg-gradient-to-r from-blue-400 via-violet-400 via-amber-400 to-emerald-400 origin-left"
+            />
+          </div>
+
+          {steps.map((s, i) => (
+            <motion.div
+              key={s.title}
+              initial={{ opacity: 0, y: 40, scale: 0.9 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.2, type: "spring", stiffness: 100 }}
+              className="relative z-10"
+            >
+              <div className="bg-card rounded-2xl border border-border p-6 shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-3 group h-full text-center">
+                <div className="relative mx-auto mb-5">
+                  <motion.div
+                    whileHover={{ scale: 1.15, rotate: 5 }}
+                    className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br ${s.color} flex items-center justify-center shadow-lg relative z-10`}
+                  >
+                    <s.icon className="w-8 h-8 text-white" />
+                  </motion.div>
+                  <span className={`absolute -top-2 -right-2 w-8 h-8 rounded-full bg-card border-2 border-border ${s.textColor} text-xs font-extrabold flex items-center justify-center shadow-md z-20`}>
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  {/* Pulse ring */}
+                  <motion.div
+                    animate={{ scale: [1, 1.5], opacity: [0.4, 0] }}
+                    transition={{ repeat: Infinity, duration: 2, delay: i * 0.3 }}
+                    className={`absolute inset-0 mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br ${s.color} opacity-20`}
+                  />
+                </div>
+                <h3 className="font-bold text-base md:text-lg mb-2">{s.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
+  );
+};
+
+/* ──────────── BELL CURVE / PEER COMPARISON ──────────── */
+const PeerComparisonScale = ({ peerData, userScore }: { peerData: AnalysisResult["peer_comparison"]; userScore: number }) => {
+  if (!peerData) return null;
+
+  const maxCount = Math.max(...peerData.score_distribution.map(d => d.count));
+
+  return (
+    <Card className="border-2 border-primary/20">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><Users className="w-5 h-5 text-primary" /> Where You Stand Among {peerData.total_students_analysed?.toLocaleString()}+ Students</CardTitle>
+        <CardDescription>Score distribution of all students who have used our Profile Analyser</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Rank badge */}
+        <div className="flex flex-wrap items-center justify-center gap-6">
+          <div className="text-center p-4 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+            <p className="text-sm text-muted-foreground mb-1">Your Percentile Rank</p>
+            <p className="text-4xl font-bold text-primary">Top {100 - (peerData.your_rank_percentile || 50)}%</p>
+          </div>
+          <div className="text-center p-4 rounded-2xl bg-muted/50 border border-border">
+            <p className="text-sm text-muted-foreground mb-1">Average Score</p>
+            <p className="text-3xl font-bold text-muted-foreground">{peerData.average_score}/10</p>
+          </div>
+          <div className="text-center p-4 rounded-2xl bg-muted/50 border border-border">
+            <p className="text-sm text-muted-foreground mb-1">Your Score</p>
+            <p className={`text-3xl font-bold ${userScore >= 8 ? "text-green-600" : userScore >= 6 ? "text-amber-600" : "text-red-600"}`}>{userScore}/10</p>
+          </div>
+        </div>
+
+        {/* Distribution chart */}
+        <div className="space-y-2">
+          <p className="text-sm font-medium text-muted-foreground">Score Distribution (Bell Curve)</p>
+          <div className="flex items-end gap-1 h-40 p-4 bg-muted/30 rounded-xl border border-border/50">
+            {peerData.score_distribution?.map((bucket, i) => {
+              const height = maxCount > 0 ? (bucket.count / maxCount) * 100 : 0;
+              return (
+                <div key={i} className="flex-1 flex flex-col items-center justify-end gap-1 h-full">
+                  <motion.div
+                    initial={{ height: 0 }}
+                    whileInView={{ height: `${height}%` }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.05, duration: 0.5 }}
+                    className={`w-full rounded-t-md transition-colors ${
+                      bucket.is_yours
+                        ? "bg-primary shadow-lg ring-2 ring-primary/30"
+                        : "bg-muted-foreground/20 hover:bg-muted-foreground/30"
+                    }`}
+                  />
+                  <span className={`text-[9px] ${bucket.is_yours ? "text-primary font-bold" : "text-muted-foreground"}`}>{bucket.range}</span>
+                  {bucket.is_yours && (
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-1">
+                      <span className="text-[8px] bg-primary text-primary-foreground px-1 rounded">YOU</span>
+                    </motion.div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex justify-between text-xs text-muted-foreground px-4">
+            <span>Low Scores</span>
+            <span>High Scores</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+/* ──────────── SCORE RADAR (MULTI-DIMENSION) ──────────── */
+const ScoreRadar = ({ breakdown }: { breakdown: AnalysisResult["score_breakdown"] }) => {
+  if (!breakdown) return null;
+  const dimensions = [
+    { label: "Academics", value: breakdown.academics_score, icon: GraduationCap, color: "from-blue-500 to-blue-600" },
+    { label: "Work Experience", value: breakdown.work_experience_score, icon: Briefcase, color: "from-violet-500 to-violet-600" },
+    { label: "Profile Diversity", value: breakdown.diversity_score, icon: Layers, color: "from-amber-500 to-amber-600" },
+    { label: "Consistency", value: breakdown.profile_consistency_score || 0, icon: Target, color: "from-emerald-500 to-emerald-600" },
+    { label: "Leadership", value: breakdown.leadership_potential_score || 0, icon: Flame, color: "from-rose-500 to-rose-600" },
+  ];
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><PieChart className="w-5 h-5 text-primary" /> 5-Dimension Score Breakdown</CardTitle>
+        <CardDescription>Your profile evaluated across key MBA admission dimensions</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {dimensions.map((d, i) => (
+            <motion.div
+              key={d.label}
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="flex items-center gap-4"
+            >
+              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${d.color} flex items-center justify-center shrink-0`}>
+                <d.icon className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm font-medium">{d.label}</span>
+                  <span className={`text-sm font-bold ${d.value >= 8 ? "text-green-600" : d.value >= 6 ? "text-amber-600" : "text-red-600"}`}>{d.value}/10</span>
+                </div>
+                <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    whileInView={{ width: `${d.value * 10}%` }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.3 + i * 0.1, duration: 0.8 }}
+                    className={`h-full rounded-full bg-gradient-to-r ${d.color}`}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+        <div className="mt-6 p-4 rounded-xl bg-muted/50 border border-border/50 text-center">
+          <p className="text-sm text-muted-foreground mb-1">Overall Competitiveness</p>
+          <Badge className="text-base px-4 py-1">{breakdown.overall_competitiveness}</Badge>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
@@ -240,18 +561,13 @@ const ProfileAnalyzerPage = () => {
     try {
       const { data, error } = await supabase.functions.invoke("profile-analyzer", {
         body: {
-          name: form.name,
-          email: form.email,
-          tenth_score: +form.tenth_score,
-          twelfth_score: +form.twelfth_score,
-          graduation_score: +form.graduation_score,
-          graduation_stream: form.graduation_stream,
+          name: form.name, email: form.email,
+          tenth_score: +form.tenth_score, twelfth_score: +form.twelfth_score,
+          graduation_score: +form.graduation_score, graduation_stream: form.graduation_stream,
           is_pursuing_graduation: form.is_pursuing_graduation,
           work_experience_months: +form.work_experience_months || 0,
-          category: form.category,
-          gender: form.gender || undefined,
-          target_exams: form.target_exams,
-          target_colleges: form.target_colleges,
+          category: form.category, gender: form.gender || undefined,
+          target_exams: form.target_exams, target_colleges: form.target_colleges,
           preferred_specialization: form.preferred_specialization || undefined,
           target_states: form.target_states,
         },
@@ -314,7 +630,7 @@ const ProfileAnalyzerPage = () => {
     return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
   };
 
-  const sortedColleges = React.useMemo(() => {
+  const sortedColleges = useMemo(() => {
     if (!result?.detailed_college_table) return [];
     let arr = [...result.detailed_college_table];
     if (collegeFilter !== "all") arr = arr.filter(c => c.tier === collegeFilter);
@@ -335,132 +651,254 @@ const ProfileAnalyzerPage = () => {
     generateWebsiteSchema(),
     generateBreadcrumbSchema([
       { name: "Home", url: "/" },
-      { name: "Profile Analyser", url: "/profile-analyzer" },
+      { name: "AI Profile Analyser", url: "/profile-analyzer" },
     ]),
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "AI-Powered MBA Profile Analyser by B School Buzz",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Web",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },
+      "description": "Free AI-powered tool to check your IIM admission chances. Get personalised college comparison, difficulty ratings, and preparation roadmap.",
+    },
   ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <SEOHead
         title="AI-Powered MBA Profile Analyser by B School Buzz | Check IIM Chances Free"
-        description="Analyse your MBA profile with AI. Get personalised IIM admission probability, college-wise comparison table with difficulty ratings, CAT percentile targets, and a detailed preparation roadmap. Free tool by B School Buzz."
-        keywords={["MBA profile analyser", "IIM chances calculator", "CAT score predictor", "MBA admission probability", "B School Buzz profile analyser", "AI MBA tool", "IIM admission predictor", "MBA college comparison"]}
+        description="Analyse your MBA profile with AI. Get personalised IIM admission probability, 5-dimension score breakdown, peer comparison among 25,000+ students, college-wise comparison table with difficulty ratings, and detailed preparation roadmap. 100% Free tool by B School Buzz."
+        keywords={["MBA profile analyser", "IIM chances calculator", "CAT score predictor", "MBA admission probability", "B School Buzz profile analyser", "AI MBA tool", "IIM admission predictor", "MBA college comparison", "CAT preparation", "MBA peer comparison"]}
         canonical="https://bestmbacoaching.com/profile-analyzer"
         ogType="website"
         ogTitle="AI-Powered MBA Profile Analyser by B School Buzz"
-        ogDescription="Get personalised college predictions, admission probability, and AI-powered preparation roadmap for IIM, XLRI, FMS and 50+ top MBA colleges."
+        ogDescription="Get personalised college predictions, 5-dimension scoring, peer ranking among 25,000+ students, and AI-powered preparation roadmap for IIM, XLRI, FMS and 50+ top MBA colleges."
         jsonLd={jsonLd}
       />
 
       <AnimatePresence mode="wait">
-        {/* ────── LANDING ────── */}
+        {/* ════════════════ LANDING ════════════════ */}
         {step === 0 && (
           <motion.div key="landing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -20 }}>
-            {/* Hero */}
-            <section className="min-h-[75vh] flex items-center justify-center px-4 relative overflow-hidden">
-              {/* Floating animated elements */}
-              <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                <motion.div animate={{ y: [0, -20, 0], rotate: [0, 5, 0] }} transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-                  className="absolute top-[15%] left-[8%] w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                  <GraduationCap className="w-8 h-8 text-primary/40" />
-                </motion.div>
-                <motion.div animate={{ y: [0, 15, 0], rotate: [0, -5, 0] }} transition={{ repeat: Infinity, duration: 7, ease: "easeInOut", delay: 1 }}
-                  className="absolute top-[25%] right-[10%] w-14 h-14 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                  <BarChart3 className="w-7 h-7 text-primary/40" />
-                </motion.div>
-                <motion.div animate={{ y: [0, -15, 0] }} transition={{ repeat: Infinity, duration: 5, ease: "easeInOut", delay: 2 }}
-                  className="absolute bottom-[20%] left-[15%] w-12 h-12 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
-                  <Target className="w-6 h-6 text-primary/40" />
-                </motion.div>
-                <motion.div animate={{ y: [0, 20, 0], x: [0, 10, 0] }} transition={{ repeat: Infinity, duration: 8, ease: "easeInOut", delay: 0.5 }}
-                  className="absolute bottom-[30%] right-[12%] w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
-                  <Brain className="w-5 h-5 text-primary/40" />
-                </motion.div>
-              </div>
 
-              <div className="max-w-4xl mx-auto text-center space-y-8 relative z-10">
-                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}
-                  className="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-2xl">
-                  <Brain className="w-10 h-10 text-primary-foreground" />
+            {/* ──── HERO with 3D Elements ──── */}
+            <section className="min-h-[90vh] flex items-center justify-center px-4 relative overflow-hidden">
+              {/* Background glow orbs */}
+              <GlowOrb className="w-72 h-72 bg-primary/20 top-[-5%] left-[-5%]" />
+              <GlowOrb className="w-96 h-96 bg-primary/10 bottom-[-10%] right-[-8%]" />
+              <GlowOrb className="w-48 h-48 bg-primary/15 top-[40%] right-[20%]" />
+
+              {/* Animated dot grid */}
+              <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
+
+              {/* 3D floating elements */}
+              <Float3DCard className="absolute top-[12%] left-[6%] hidden lg:block" delay={0} duration={6}>
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-600/10 border border-blue-300/30 flex items-center justify-center backdrop-blur-sm shadow-xl">
+                  <GraduationCap className="w-10 h-10 text-blue-500/60" />
+                </div>
+              </Float3DCard>
+              <Float3DCard className="absolute top-[20%] right-[8%] hidden lg:block" delay={1} duration={7}>
+                <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-violet-500/20 to-violet-600/10 border border-violet-300/30 flex items-center justify-center backdrop-blur-sm shadow-xl">
+                  <BarChart3 className="w-12 h-12 text-violet-500/60" />
+                </div>
+              </Float3DCard>
+              <Float3DCard className="absolute bottom-[18%] left-[10%] hidden lg:block" delay={2} duration={5}>
+                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-300/30 flex items-center justify-center backdrop-blur-sm shadow-xl">
+                  <Target className="w-8 h-8 text-amber-500/60" />
+                </div>
+              </Float3DCard>
+              <Float3DCard className="absolute bottom-[25%] right-[12%] hidden lg:block" delay={0.5} duration={8}>
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-300/30 flex items-center justify-center backdrop-blur-sm shadow-xl">
+                  <Brain className="w-7 h-7 text-emerald-500/60" />
+                </div>
+              </Float3DCard>
+
+              {/* Animated light streaks */}
+              <motion.div
+                animate={{ x: ["-100%", "200%"] }}
+                transition={{ repeat: Infinity, duration: 8, ease: "linear" }}
+                className="absolute top-[30%] left-0 w-1/3 h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent"
+              />
+              <motion.div
+                animate={{ x: ["200%", "-100%"] }}
+                transition={{ repeat: Infinity, duration: 10, ease: "linear", delay: 3 }}
+                className="absolute top-[60%] left-0 w-1/4 h-[1px] bg-gradient-to-r from-transparent via-primary/20 to-transparent"
+              />
+
+              <div className="max-w-5xl mx-auto text-center space-y-8 relative z-10">
+                {/* Animated logo icon */}
+                <motion.div
+                  initial={{ scale: 0, rotate: -180 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", stiffness: 100, delay: 0.1 }}
+                >
+                  <div className="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-primary/60 flex items-center justify-center shadow-2xl relative">
+                    <Brain className="w-12 h-12 text-primary-foreground" />
+                    <motion.div
+                      animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
+                      transition={{ repeat: Infinity, duration: 2 }}
+                      className="absolute inset-0 rounded-3xl bg-primary/20"
+                    />
+                  </div>
                 </motion.div>
-                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.25 }}>
-                  <Badge variant="secondary" className="text-sm px-4 py-1.5 mb-4">
+
+                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
+                  <Badge variant="secondary" className="text-sm px-5 py-2 mb-4 shadow-sm">
                     <Sparkles className="w-3.5 h-3.5 mr-1.5" /> AI-Powered Tool by B School Buzz
                   </Badge>
                 </motion.div>
-                <motion.h1 initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }}
-                  className="text-4xl md:text-6xl font-bold tracking-tight leading-tight">
-                  AI-Powered MBA{" "}
-                  <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">Profile Analyser</span>
+
+                <motion.h1
+                  initial={{ y: 40, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.3, type: "spring", stiffness: 80 }}
+                  className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight leading-[1.1]"
+                >
+                  <span className="block">AI-Powered MBA</span>
+                  <span className="block bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+                    Profile Analyser
+                  </span>
                 </motion.h1>
-                <motion.p initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }}
-                  className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-                  Check your admission chances for IIMs and 50+ top MBA colleges in India. Get a detailed college comparison table with CAT percentile targets, difficulty ratings, and a personalised preparation roadmap.
+
+                <motion.p
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.45 }}
+                  className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed"
+                >
+                  Check your admission chances for IIMs and 50+ top MBA colleges. Get a <strong>5-dimension score breakdown</strong>,{" "}
+                  <strong>peer comparison</strong> among 25,000+ students, and a personalised preparation roadmap — all in 60 seconds.
                 </motion.p>
-                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5 }}
-                  className="flex flex-wrap justify-center gap-3 text-sm text-muted-foreground">
+
+                {/* Feature pills */}
+                <motion.div
+                  initial={{ y: 20, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.55 }}
+                  className="flex flex-wrap justify-center gap-3"
+                >
                   {[
                     { icon: Activity, label: "10,000+ Data Points" },
                     { icon: Brain, label: "AI-Powered Analysis" },
-                    { icon: FileText, label: "Detailed College Table" },
-                    { icon: Shield, label: "100% Free & Secure" },
-                  ].map(t => (
-                    <div key={t.label} className="flex items-center gap-2 bg-card border border-border/50 rounded-full px-4 py-2">
+                    { icon: Users, label: "Peer Comparison" },
+                    { icon: PieChart, label: "5-Dimension Scoring" },
+                    { icon: Shield, label: "100% Free" },
+                  ].map((t, i) => (
+                    <motion.div
+                      key={t.label}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.6 + i * 0.08 }}
+                      className="flex items-center gap-2 bg-card/80 backdrop-blur-sm border border-border/50 rounded-full px-4 py-2 text-sm text-muted-foreground shadow-sm hover:shadow-md transition-shadow"
+                    >
                       <t.icon className="w-4 h-4 text-primary" /> {t.label}
-                    </div>
+                    </motion.div>
                   ))}
                 </motion.div>
-                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.6 }}>
-                  <Button size="lg" onClick={() => setStep(1)} className="text-lg px-10 py-6 rounded-2xl shadow-xl hover:shadow-2xl transition-all group">
-                    Start Free Analysis <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+
+                {/* CTA */}
+                <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.7 }}>
+                  <Button size="lg" onClick={() => setStep(1)} className="text-lg px-12 py-7 rounded-2xl shadow-2xl hover:shadow-3xl transition-all group relative overflow-hidden">
+                    <span className="relative z-10 flex items-center gap-2">
+                      Start Free Analysis <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </span>
+                    <motion.div
+                      animate={{ x: ["-100%", "200%"] }}
+                      transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-primary-foreground/10 to-transparent"
+                    />
                   </Button>
+                  <p className="text-xs text-muted-foreground mt-3">No payment • No signup • Instant results</p>
                 </motion.div>
 
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
-                  className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-8">
+                {/* Stats row */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.9 }}
+                  className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6"
+                >
                   {[
-                    { icon: GraduationCap, label: "50+ Colleges", sub: "Detailed Comparison" },
-                    { icon: Brain, label: "AI Analysis", sub: "Personalised Insights" },
-                    { icon: TrendingUp, label: "Accuracy", sub: "85%+ Match Rate" },
-                    { icon: Users, label: "25,000+", sub: "Students Analysed" },
-                  ].map(item => (
-                    <div key={item.label} className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-card border border-border/50 hover:shadow-md transition-shadow">
+                    { icon: GraduationCap, value: "50+", label: "Colleges Compared", sub: "IIMs, XLRI, FMS & more" },
+                    { icon: Brain, value: "AI", label: "Powered Analysis", sub: "Gemini Intelligence" },
+                    { icon: TrendingUp, value: "85%+", label: "Match Accuracy", sub: "Data-driven predictions" },
+                    { icon: Users, value: "25,000+", label: "Students Analysed", sub: "Growing community" },
+                  ].map((item, i) => (
+                    <motion.div
+                      key={item.label}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 1 + i * 0.1 }}
+                      whileHover={{ y: -4, scale: 1.02 }}
+                      className="flex flex-col items-center gap-2 p-5 rounded-2xl bg-card/60 backdrop-blur-sm border border-border/50 shadow-sm hover:shadow-lg transition-all"
+                    >
                       <item.icon className="w-8 h-8 text-primary" />
-                      <span className="font-bold text-sm">{item.label}</span>
-                      <span className="text-xs text-muted-foreground">{item.sub}</span>
-                    </div>
+                      <span className="text-2xl font-bold">{item.value}</span>
+                      <span className="text-xs font-medium">{item.label}</span>
+                      <span className="text-[10px] text-muted-foreground">{item.sub}</span>
+                    </motion.div>
                   ))}
                 </motion.div>
               </div>
+
+              {/* Bottom wave */}
+              <div className="absolute bottom-0 left-0 right-0">
+                <svg viewBox="0 0 1440 100" fill="none" className="w-full h-16 md:h-24">
+                  <path d="M0,60 C360,90 720,20 1080,50 C1260,65 1380,80 1440,70 L1440,100 L0,100 Z" className="fill-muted/30" />
+                </svg>
+              </div>
             </section>
 
-            {/* How It Works */}
-            <HowItWorksSection />
+            {/* ──── How It Works (Animated) ──── */}
+            <HowItWorksAnimated />
 
-            {/* What You Get */}
-            <section className="py-16 px-4 bg-muted/30">
+            {/* ──── Sample Report Preview ──── */}
+            <section className="py-20 px-4">
               <div className="max-w-6xl mx-auto">
-                <h2 className="text-3xl font-bold text-center mb-4">What Your Report Includes</h2>
-                <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-                  A comprehensive, data-driven analysis tailored to your unique profile.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
+                  <Badge variant="secondary" className="mb-4 text-sm px-4 py-1.5"><Eye className="w-3.5 h-3.5 mr-1.5" /> Live Preview</Badge>
+                  <h2 className="text-3xl md:text-5xl font-bold mb-4">See What Your Report Looks Like</h2>
+                  <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Here is a sample AI-generated report. Your report will be personalised based on your unique profile data.</p>
+                </motion.div>
+                <SampleReportPreview />
+              </div>
+            </section>
+
+            {/* ──── What You Get (Enhanced) ──── */}
+            <section className="py-20 px-4 bg-muted/30 relative overflow-hidden">
+              <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
+              <div className="max-w-6xl mx-auto relative z-10">
+                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-14">
+                  <h2 className="text-3xl md:text-4xl font-bold mb-4">What Your Report Includes</h2>
+                  <p className="text-muted-foreground max-w-2xl mx-auto text-lg">A comprehensive, data-driven analysis tailored to your unique profile — more detailed than any other MBA tool available.</p>
+                </motion.div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[
-                    { icon: BarChart3, title: "College Comparison Table", desc: "15-25 colleges with fees, packages, required percentile, difficulty rating, and your admission probability." },
-                    { icon: Target, title: "Admission Probability", desc: "AI-calculated chances for each college categorised as Dream, Target, and Safe with specific cutoff data." },
-                    { icon: TrendingUp, title: "Profile Score & SWOT", desc: "Numeric scores for academics, work experience, and diversity. Detailed strengths and weaknesses analysis." },
-                    { icon: Lightbulb, title: "AI Recommendations", desc: "6-8 actionable steps prioritised by impact with specific timelines to improve your profile." },
-                    { icon: Calendar, title: "Study Plan", desc: "Phase-wise preparation schedule with daily hour targets, focus areas, and milestone scores." },
-                    { icon: Save, title: "Save & Track", desc: "Save your report to your dashboard. Track progress over time and re-analyse as your profile improves." },
+                    { icon: BarChart3, title: "Detailed College Table", desc: "15-25 colleges with fees, packages, required percentile, difficulty rating, and your admission probability — all personalised.", color: "from-blue-500 to-blue-600" },
+                    { icon: PieChart, title: "5-Dimension Scoring", desc: "Numeric scores for Academics, Experience, Diversity, Consistency, and Leadership Potential. See exactly where you excel.", color: "from-violet-500 to-violet-600" },
+                    { icon: Users, title: "Peer Comparison Scale", desc: "See where you stand among 25,000+ students on a bell curve. Know your percentile rank instantly.", color: "from-emerald-500 to-emerald-600" },
+                    { icon: Target, title: "College Shortlist (D/T/S)", desc: "Colleges categorised as Dream, Target, and Safe with probability bars, cutoff data, and specific tips.", color: "from-amber-500 to-amber-600" },
+                    { icon: Flame, title: "Exam Strategy", desc: "Exam-wise recommendations with target scores, preparation time, difficulty rating, and ROI for each MBA entrance exam.", color: "from-rose-500 to-rose-600" },
+                    { icon: Lightbulb, title: "AI Recommendations", desc: "6-8 actionable steps prioritised by impact with timelines. Personalised improvement roadmap for your specific profile.", color: "from-indigo-500 to-indigo-600" },
+                    { icon: Calendar, title: "Phase-wise Study Plan", desc: "Month-by-month preparation schedule with daily hours, focus areas, milestone scores, and target percentiles.", color: "from-cyan-500 to-cyan-600" },
+                    { icon: CheckCircle2, title: "SWOT Analysis", desc: "Detailed strengths and weaknesses with severity ratings and specific actionable fixes for each weakness.", color: "from-teal-500 to-teal-600" },
+                    { icon: Save, title: "Save & Track", desc: "Save your report to your dashboard. Track progress over time and re-analyse as your profile improves.", color: "from-orange-500 to-orange-600" },
                   ].map((item, i) => (
-                    <motion.div key={item.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-                      <Card className="h-full hover:shadow-lg transition-shadow border-border/50">
+                    <motion.div
+                      key={item.title}
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.08 }}
+                    >
+                      <Card className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-border/50 group">
                         <CardContent className="pt-6">
-                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                            <item.icon className="w-6 h-6 text-primary" />
+                          <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
+                            <item.icon className="w-6 h-6 text-white" />
                           </div>
-                          <h3 className="font-bold mb-2">{item.title}</h3>
-                          <p className="text-sm text-muted-foreground">{item.desc}</p>
+                          <h3 className="font-bold mb-2 text-base">{item.title}</h3>
+                          <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
                         </CardContent>
                       </Card>
                     </motion.div>
@@ -469,23 +907,53 @@ const ProfileAnalyzerPage = () => {
               </div>
             </section>
 
-            {/* Final CTA */}
-            <section className="py-16 px-4">
-              <div className="max-w-2xl mx-auto text-center">
-                <h2 className="text-3xl font-bold mb-4">Ready to Know Your MBA Chances?</h2>
-                <p className="text-muted-foreground mb-8">Takes less than 2 minutes. No payment required.</p>
-                <Button size="lg" onClick={() => setStep(1)} className="text-lg px-10 py-6 rounded-2xl">
-                  Start Free Analysis <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
+            {/* ──── Testimonials / Social Proof ──── */}
+            <section className="py-20 px-4">
+              <div className="max-w-4xl mx-auto text-center">
+                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+                  <h2 className="text-3xl md:text-4xl font-bold mb-6">Trusted by MBA Aspirants Across India</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                    {[
+                      { quote: "The college comparison table with difficulty ratings helped me focus my preparation on the right colleges.", author: "Priya S., CAT 98.2%ile" },
+                      { quote: "I love the peer comparison feature. Knowing where I stand among 25,000+ students was eye-opening.", author: "Rahul M., IIM Lucknow" },
+                      { quote: "The 5-dimension scoring showed me my leadership gap. I worked on it and it made a real difference in my PI.", author: "Ananya K., XLRI" },
+                    ].map((t, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: i * 0.15 }}
+                        className="p-6 rounded-2xl bg-card border border-border/50 text-left"
+                      >
+                        <div className="flex gap-0.5 mb-3">{[1,2,3,4,5].map(s => <Star key={s} className="w-4 h-4 fill-amber-400 text-amber-400" />)}</div>
+                        <p className="text-sm text-muted-foreground mb-3 italic">"{t.quote}"</p>
+                        <p className="text-xs font-semibold">{t.author}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
               </div>
+            </section>
+
+            {/* ──── Final CTA ──── */}
+            <section className="py-20 px-4 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5" />
+              <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-3xl mx-auto text-center relative z-10">
+                <Brain className="w-16 h-16 mx-auto text-primary mb-6" />
+                <h2 className="text-3xl md:text-5xl font-bold mb-4">Ready to Know Your MBA Chances?</h2>
+                <p className="text-muted-foreground text-lg mb-8">Takes less than 2 minutes. No payment. No signup. Instant AI-powered results.</p>
+                <Button size="lg" onClick={() => setStep(1)} className="text-lg px-12 py-7 rounded-2xl shadow-2xl group">
+                  Start Free Analysis <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </motion.div>
             </section>
           </motion.div>
         )}
 
-        {/* ────── FORM STEPS 1-4 ────── */}
+        {/* ════════════════ FORM STEPS 1-4 ════════════════ */}
         {step >= 1 && step <= 4 && (
           <motion.div key={`step-${step}`} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} className="max-w-2xl mx-auto px-4 py-12">
-            {/* Progress */}
             <div className="mb-8">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-sm font-medium text-muted-foreground">Step {step} of 4</span>
@@ -653,7 +1121,6 @@ const ProfileAnalyzerPage = () => {
                   </>
                 )}
 
-                {/* Navigation */}
                 <div className="flex justify-between pt-4">
                   <Button variant="outline" onClick={() => setStep(step - 1)} disabled={step === 1}>
                     <ChevronLeft className="w-4 h-4 mr-1" /> Back
@@ -671,28 +1138,32 @@ const ProfileAnalyzerPage = () => {
           </motion.div>
         )}
 
-        {/* ────── LOADING ────── */}
+        {/* ════════════════ LOADING ════════════════ */}
         {step === 5 && (
           <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="min-h-[80vh] flex items-center justify-center px-4">
             <div className="max-w-md mx-auto text-center space-y-8">
-              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                className="w-20 h-20 mx-auto rounded-full border-4 border-primary/20 border-t-primary" />
+              <div className="relative w-24 h-24 mx-auto">
+                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                  className="w-24 h-24 rounded-full border-4 border-primary/20 border-t-primary" />
+                <Brain className="w-10 h-10 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+              </div>
               <h2 className="text-2xl font-bold">Analysing Your Profile</h2>
               <p className="text-muted-foreground">Cross-referencing 10,000+ data points with AI to generate personalised insights...</p>
               <Progress value={loadingProgress} className="h-3" />
               <div className="space-y-2 text-sm text-muted-foreground">
                 {loadingProgress > 10 && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Academic profile evaluated</motion.p>}
-                {loadingProgress > 30 && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Work experience scored</motion.p>}
-                {loadingProgress > 50 && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Matching against 50+ colleges</motion.p>}
-                {loadingProgress > 70 && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Generating difficulty ratings</motion.p>}
-                {loadingProgress > 85 && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Building your personalised roadmap</motion.p>}
+                {loadingProgress > 25 && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Work experience scored</motion.p>}
+                {loadingProgress > 40 && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Computing 5-dimension scores</motion.p>}
+                {loadingProgress > 55 && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Matching against 50+ colleges</motion.p>}
+                {loadingProgress > 70 && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Running peer comparison analysis</motion.p>}
+                {loadingProgress > 85 && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Building personalised roadmap</motion.p>}
               </div>
             </div>
           </motion.div>
         )}
 
-        {/* ────── PARTIAL RESULT ────── */}
+        {/* ════════════════ PARTIAL RESULT (LOCKED) ════════════════ */}
         {step === 6 && result && (
           <motion.div key="partial" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="max-w-4xl mx-auto px-4 py-10 space-y-8">
@@ -744,53 +1215,57 @@ const ProfileAnalyzerPage = () => {
               </CardContent>
             </Card>
 
-            {/* LOCKED */}
+            {/* LOCKED OVERLAY */}
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/80 to-background z-10 flex flex-col items-center justify-center gap-4 pt-20">
-                <Lock className="w-12 h-12 text-muted-foreground" />
+                <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 2 }}>
+                  <Lock className="w-14 h-14 text-primary/60" />
+                </motion.div>
                 <h3 className="text-2xl font-bold">Unlock Your Full Report</h3>
-                <p className="text-muted-foreground text-center max-w-md">Get the detailed college comparison table, admission probabilities, AI roadmap, and personalised study plan.</p>
-                <Button size="lg" onClick={() => setShowLeadModal(true)} className="rounded-2xl px-8">
+                <p className="text-muted-foreground text-center max-w-md">Get the detailed college comparison table, peer comparison, exam strategy, AI roadmap, and personalised study plan.</p>
+                <Button size="lg" onClick={() => setShowLeadModal(true)} className="rounded-2xl px-8 shadow-xl">
                   <Lock className="w-4 h-4 mr-2" /> Unlock Full Report
                 </Button>
               </div>
               <div className="blur-sm pointer-events-none space-y-6">
                 <Card><CardHeader><CardTitle>College Comparison Table</CardTitle></CardHeader><CardContent><div className="h-64 bg-muted rounded-lg" /></CardContent></Card>
-                <Card><CardHeader><CardTitle>AI Recommendations</CardTitle></CardHeader><CardContent><div className="space-y-2">{[1,2,3].map(i=><div key={i} className="h-16 bg-muted rounded-lg" />)}</div></CardContent></Card>
+                <Card><CardHeader><CardTitle>Peer Comparison</CardTitle></CardHeader><CardContent><div className="h-32 bg-muted rounded-lg" /></CardContent></Card>
+                <Card><CardHeader><CardTitle>Exam Strategy</CardTitle></CardHeader><CardContent><div className="space-y-2">{[1,2,3].map(i=><div key={i} className="h-16 bg-muted rounded-lg" />)}</div></CardContent></Card>
               </div>
             </div>
           </motion.div>
         )}
 
-        {/* ────── FULL DASHBOARD ────── */}
+        {/* ════════════════ FULL DASHBOARD (UNLOCKED) ════════════════ */}
         {step === 7 && result && unlocked && (
           <motion.div key="full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} ref={reportRef}
             className="max-w-7xl mx-auto px-4 py-10 space-y-8">
             {/* Header */}
-            <div className="text-center space-y-3">
+            <div className="text-center space-y-4">
               <Badge className="text-sm"><CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Full Report Unlocked</Badge>
-              <h2 className="text-3xl font-bold">Your MBA Roadmap</h2>
+              <h2 className="text-3xl md:text-4xl font-bold">Your Complete MBA Roadmap</h2>
               <p className="text-muted-foreground max-w-3xl mx-auto">{result.ai_summary}</p>
-              <div className="flex flex-wrap justify-center gap-4 mt-4">
-                <div className="inline-flex items-center gap-2 bg-card border rounded-xl p-4">
-                  <span className="text-sm text-muted-foreground">Profile Score:</span>
-                  <span className={`text-3xl font-bold ${scoreColor(result.profile_score)}`}>{result.profile_score}/10</span>
-                </div>
-                {result.score_breakdown && (
-                  <>
-                    {[
-                      { label: "Academics", val: result.score_breakdown.academics_score },
-                      { label: "Experience", val: result.score_breakdown.work_experience_score },
-                      { label: "Diversity", val: result.score_breakdown.diversity_score },
-                    ].map(s => (
-                      <div key={s.label} className="inline-flex items-center gap-2 bg-card border rounded-xl p-4">
-                        <span className="text-sm text-muted-foreground">{s.label}:</span>
-                        <span className={`text-2xl font-bold ${scoreColor(s.val)}`}>{s.val}/10</span>
-                      </div>
-                    ))}
-                  </>
+
+              {/* Main score + breakdown */}
+              <div className="flex flex-wrap justify-center gap-4 mt-6">
+                <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="inline-flex items-center gap-3 bg-card border-2 border-primary/20 rounded-2xl p-5 shadow-lg">
+                  <div className="text-center">
+                    <p className="text-xs text-muted-foreground mb-0.5">Overall Score</p>
+                    <p className={`text-5xl font-bold ${scoreColor(result.profile_score)}`}>{result.profile_score}</p>
+                    <p className="text-xs text-muted-foreground">/10</p>
+                  </div>
+                </motion.div>
+                {result.peer_comparison && (
+                  <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ delay: 0.1 }} className="inline-flex items-center gap-3 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-2xl p-5">
+                    <div className="text-center">
+                      <p className="text-xs text-muted-foreground mb-0.5">Peer Rank</p>
+                      <p className="text-3xl font-bold text-primary">Top {100 - (result.peer_comparison.your_rank_percentile || 50)}%</p>
+                      <p className="text-xs text-muted-foreground">of {result.peer_comparison.total_students_analysed?.toLocaleString()}+ students</p>
+                    </div>
+                  </motion.div>
                 )}
               </div>
+
               <div className="flex justify-center gap-3 pt-2">
                 <Button variant="outline" onClick={handleSaveReport} disabled={savingReport} className="rounded-xl">
                   <Save className="w-4 h-4 mr-2" /> {savingReport ? "Saving..." : "Save to Dashboard"}
@@ -798,29 +1273,29 @@ const ProfileAnalyzerPage = () => {
               </div>
             </div>
 
+            {/* 5-Dimension Score Radar */}
+            <ScoreRadar breakdown={result.score_breakdown} />
+
+            {/* Peer Comparison Bell Curve */}
+            <PeerComparisonScale peerData={result.peer_comparison} userScore={result.profile_score} />
+
             {/* ─── DETAILED COLLEGE TABLE ─── */}
             <Card className="border-2 border-primary/20">
               <CardHeader>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <FileText className="w-5 h-5 text-primary" /> Detailed College Comparison Table
-                    </CardTitle>
-                    <CardDescription className="mt-1">
-                      {result.detailed_college_table?.length || 0} colleges analysed with your specific admission data
-                    </CardDescription>
+                    <CardTitle className="flex items-center gap-2"><FileText className="w-5 h-5 text-primary" /> Detailed College Comparison Table</CardTitle>
+                    <CardDescription className="mt-1">{result.detailed_college_table?.length || 0} colleges analysed with your specific admission data</CardDescription>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Select value={collegeFilter} onValueChange={setCollegeFilter}>
-                      <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Tiers</SelectItem>
-                        <SelectItem value="Dream">Dream</SelectItem>
-                        <SelectItem value="Target">Target</SelectItem>
-                        <SelectItem value="Safe">Safe</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <Select value={collegeFilter} onValueChange={setCollegeFilter}>
+                    <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Tiers</SelectItem>
+                      <SelectItem value="Dream">Dream</SelectItem>
+                      <SelectItem value="Target">Target</SelectItem>
+                      <SelectItem value="Safe">Safe</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardHeader>
               <CardContent>
@@ -830,20 +1305,12 @@ const ProfileAnalyzerPage = () => {
                       <TableRow className="text-xs">
                         <TableHead className="min-w-[180px]">College</TableHead>
                         <TableHead>City</TableHead>
-                        <TableHead className="cursor-pointer hover:text-primary" onClick={() => handleSort("avg_fees_lakhs")}>
-                          Fees (L) {collegeSortKey === "avg_fees_lakhs" && (collegeSortAsc ? "↑" : "↓")}
-                        </TableHead>
-                        <TableHead className="cursor-pointer hover:text-primary" onClick={() => handleSort("avg_package_lakhs")}>
-                          Avg Pkg (LPA) {collegeSortKey === "avg_package_lakhs" && (collegeSortAsc ? "↑" : "↓")}
-                        </TableHead>
+                        <TableHead className="cursor-pointer hover:text-primary" onClick={() => handleSort("avg_fees_lakhs")}>Fees (L) {collegeSortKey === "avg_fees_lakhs" && (collegeSortAsc ? "↑" : "↓")}</TableHead>
+                        <TableHead className="cursor-pointer hover:text-primary" onClick={() => handleSort("avg_package_lakhs")}>Avg Pkg (LPA) {collegeSortKey === "avg_package_lakhs" && (collegeSortAsc ? "↑" : "↓")}</TableHead>
                         <TableHead>Highest Pkg</TableHead>
-                        <TableHead className="cursor-pointer hover:text-primary" onClick={() => handleSort("required_cat_percentile")}>
-                          Required %ile {collegeSortKey === "required_cat_percentile" && (collegeSortAsc ? "↑" : "↓")}
-                        </TableHead>
+                        <TableHead className="cursor-pointer hover:text-primary" onClick={() => handleSort("required_cat_percentile")}>Required %ile {collegeSortKey === "required_cat_percentile" && (collegeSortAsc ? "↑" : "↓")}</TableHead>
                         <TableHead>Your Target %ile</TableHead>
-                        <TableHead className="cursor-pointer hover:text-primary" onClick={() => handleSort("your_admission_probability")}>
-                          Your Chance {collegeSortKey === "your_admission_probability" && (collegeSortAsc ? "↑" : "↓")}
-                        </TableHead>
+                        <TableHead className="cursor-pointer hover:text-primary" onClick={() => handleSort("your_admission_probability")}>Your Chance {collegeSortKey === "your_admission_probability" && (collegeSortAsc ? "↑" : "↓")}</TableHead>
                         <TableHead>Difficulty</TableHead>
                         <TableHead>Tier</TableHead>
                         <TableHead className="min-w-[200px]">Selection Criteria</TableHead>
@@ -862,7 +1329,7 @@ const ProfileAnalyzerPage = () => {
                           <TableCell className="font-semibold text-primary">{c.student_cat_target}%ile</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1.5">
-                              <div className={`w-8 h-2 rounded-full ${probColor(c.your_admission_probability)}`} style={{ width: `${Math.max(c.your_admission_probability * 0.8, 8)}px` }} />
+                              <div className={`h-2 rounded-full ${probColor(c.your_admission_probability)}`} style={{ width: `${Math.max(c.your_admission_probability * 0.6, 6)}px` }} />
                               <span className="font-bold">{c.your_admission_probability}%</span>
                             </div>
                           </TableCell>
@@ -911,6 +1378,34 @@ const ProfileAnalyzerPage = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Exam Strategy */}
+            {result.exam_strategy && result.exam_strategy.length > 0 && (
+              <Card>
+                <CardHeader><CardTitle className="flex items-center gap-2"><Flame className="w-5 h-5 text-primary" /> Exam-wise Strategy</CardTitle></CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {result.exam_strategy.map((ex, i) => (
+                      <div key={i} className="p-4 rounded-xl border border-border bg-card hover:shadow-md transition-shadow">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="font-bold text-lg">{ex.exam_name}</h4>
+                          <Badge className={`text-xs ${
+                            ex.difficulty_for_student === "Easy" ? "bg-green-100 text-green-700" :
+                            ex.difficulty_for_student === "Medium" ? "bg-amber-100 text-amber-700" :
+                            "bg-red-100 text-red-700"
+                          }`}>{ex.difficulty_for_student}</Badge>
+                        </div>
+                        <div className="space-y-2 text-sm">
+                          <div className="flex justify-between"><span className="text-muted-foreground">Target Score</span><span className="font-semibold">{ex.recommended_score}</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">Prep Time</span><span className="font-semibold">{ex.preparation_months} months</span></div>
+                          <div className="flex justify-between"><span className="text-muted-foreground">ROI Rating</span><span className="font-semibold">{ex.roi_rating}</span></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Strengths & Weaknesses */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1004,7 +1499,7 @@ const ProfileAnalyzerPage = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2"><Lock className="w-5 h-5 text-primary" /> Unlock Your Full Report</DialogTitle>
-            <DialogDescription>Enter your mobile number to access the detailed college table, admission probabilities, and personalised roadmap.</DialogDescription>
+            <DialogDescription>Enter your mobile number to access the detailed college table, peer comparison, exam strategy, and personalised roadmap.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="space-y-1.5">
