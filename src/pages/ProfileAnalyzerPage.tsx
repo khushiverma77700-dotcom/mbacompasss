@@ -774,7 +774,7 @@ const ProfileAnalyzerPage = () => {
               </Float3DCard>
               <Float3DCard className="absolute bottom-[25%] right-[12%] hidden lg:block" delay={0.5} duration={8}>
                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-300/30 flex items-center justify-center backdrop-blur-sm shadow-xl">
-                  <Brain className="w-7 h-7 text-emerald-500/60" />
+                  <img src={bschoolLogo} alt="B School Buzz" className="w-8 h-8 rounded-lg" />
                 </div>
               </Float3DCard>
 
