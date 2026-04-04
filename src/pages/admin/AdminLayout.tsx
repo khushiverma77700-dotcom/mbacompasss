@@ -28,6 +28,7 @@ const adminNav = [
   { label: "All Site Links", path: "/admin/all-links", icon: Link2 },
   { label: "Clear Caches", path: "/admin/clear-cache", icon: Trash2 },
   { label: "AI SEO Dashboard", path: "/admin/seo-dashboard", icon: Sparkles },
+  { label: "Profile Analyzer", path: "/admin/profile-analyzer", icon: BarChart3 },
 ];
 
 const AdminLayout = () => {

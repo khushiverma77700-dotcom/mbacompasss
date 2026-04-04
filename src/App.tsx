@@ -52,6 +52,8 @@ import AdminSEODashboard from "./pages/admin/AdminSEODashboard";
 import DashboardPage from "./pages/DashboardPage";
 import CollegeDetailPage from "./pages/CollegeDetailPage";
 import CollegeFilterPage from "./pages/CollegeFilterPage";
+import ProfileAnalyzerPage from "./pages/ProfileAnalyzerPage";
+import AdminProfileAnalyzer from "./pages/admin/AdminProfileAnalyzer";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -155,6 +157,7 @@ const App = () => (
               <Route path="comparisons" element={<AdminComparisons />} />
               <Route path="coaching-results" element={<AdminCoachingResults />} />
               <Route path="seo-dashboard" element={<AdminSEODashboard />} />
+              <Route path="profile-analyzer" element={<AdminProfileAnalyzer />} />
             </Route>
             <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
             <Route path="/category/:slug" element={<PublicLayout><CategoryPage /></PublicLayout>} />
@@ -168,6 +171,7 @@ const App = () => (
             <Route path="/exam/:slug" element={<PublicLayout><ExamDetailPage /></PublicLayout>} />
             <Route path="/auth" element={<PublicLayout><AuthPage /></PublicLayout>} />
             <Route path="/dashboard" element={<PublicLayout><DashboardPage /></PublicLayout>} />
+            <Route path="/profile-analyzer" element={<PublicLayout><ProfileAnalyzerPage /></PublicLayout>} />
             <Route path="/about" element={<PublicLayout><AboutPage /></PublicLayout>} />
             <Route path="/contact" element={<PublicLayout><ContactPage /></PublicLayout>} />
             <Route path="*" element={<PublicLayout><NotFound /></PublicLayout>} />

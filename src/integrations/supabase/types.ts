@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      analysis_results: {
+        Row: {
+          ai_summary: string | null
+          college_predictions: Json | null
+          created_at: string
+          id: string
+          probability_scores: Json | null
+          profile_analysis_id: string
+          recommendations: Json | null
+          strengths: Json | null
+          study_plan: Json | null
+          weaknesses: Json | null
+        }
+        Insert: {
+          ai_summary?: string | null
+          college_predictions?: Json | null
+          created_at?: string
+          id?: string
+          probability_scores?: Json | null
+          profile_analysis_id: string
+          recommendations?: Json | null
+          strengths?: Json | null
+          study_plan?: Json | null
+          weaknesses?: Json | null
+        }
+        Update: {
+          ai_summary?: string | null
+          college_predictions?: Json | null
+          created_at?: string
+          id?: string
+          probability_scores?: Json | null
+          profile_analysis_id?: string
+          recommendations?: Json | null
+          strengths?: Json | null
+          study_plan?: Json | null
+          weaknesses?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analysis_results_profile_analysis_id_fkey"
+            columns: ["profile_analysis_id"]
+            isOneToOne: false
+            referencedRelation: "profile_analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       articles: {
         Row: {
           author: string | null
@@ -949,6 +996,69 @@ export type Database = {
           created_at?: string
           email?: string
           id?: string
+        }
+        Relationships: []
+      }
+      profile_analyses: {
+        Row: {
+          category: string
+          created_at: string
+          email: string | null
+          gender: string | null
+          graduation_score: number
+          graduation_stream: string
+          id: string
+          phone: string | null
+          preferred_specialization: string | null
+          profile_score: number | null
+          report_unlocked: boolean | null
+          target_colleges: string[] | null
+          target_exam: string
+          tenth_score: number
+          twelfth_score: number
+          updated_at: string
+          user_id: string | null
+          work_experience_months: number
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          email?: string | null
+          gender?: string | null
+          graduation_score: number
+          graduation_stream: string
+          id?: string
+          phone?: string | null
+          preferred_specialization?: string | null
+          profile_score?: number | null
+          report_unlocked?: boolean | null
+          target_colleges?: string[] | null
+          target_exam: string
+          tenth_score: number
+          twelfth_score: number
+          updated_at?: string
+          user_id?: string | null
+          work_experience_months?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          email?: string | null
+          gender?: string | null
+          graduation_score?: number
+          graduation_stream?: string
+          id?: string
+          phone?: string | null
+          preferred_specialization?: string | null
+          profile_score?: number | null
+          report_unlocked?: boolean | null
+          target_colleges?: string[] | null
+          target_exam?: string
+          tenth_score?: number
+          twelfth_score?: number
+          updated_at?: string
+          user_id?: string | null
+          work_experience_months?: number
         }
         Relationships: []
       }
