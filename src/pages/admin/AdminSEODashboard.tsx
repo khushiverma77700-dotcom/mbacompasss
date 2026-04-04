@@ -681,7 +681,7 @@ const AdminSEODashboard = () => {
                     <Badge className={`text-[10px] ${r.audit.status === "good" ? "bg-green-100 text-green-700" : r.audit.status === "warning" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
                       {r.audit.score}%
                     </Badge>
-                    <AISEOButton contentType={r.contentType} item={r.item} onComplete={fetchDashboardData} />
+                    <AISEOButton contentType={r.contentType} data={r.item} recordId={r.id} onApply={fetchDashboardData} />
                   </div>
                 ))}
               </div>
