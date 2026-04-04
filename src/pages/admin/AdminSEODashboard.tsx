@@ -239,7 +239,16 @@ const AdminSEODashboard = () => {
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
+    setNewLinksDismissed(false);
     try {
+      // Load previously known keys from localStorage
+      let knownKeys = new Set<string>();
+      try {
+        const stored = localStorage.getItem(SEO_KNOWN_KEYS_STORAGE);
+        if (stored) knownKeys = new Set(JSON.parse(stored) as string[]);
+      } catch {}
+      setPreviousKeys(knownKeys);
+
       const [snapshots, ...results] = await Promise.all([
         fetchAllSeoSnapshots(),
         ...contentTypes.map((ct) =>
@@ -254,6 +263,21 @@ const AdminSEODashboard = () => {
         });
       });
       setRows(nextRows);
+
+      // Detect new pages
+      const currentKeys = nextRows.map(r => r.key);
+      if (knownKeys.size > 0) {
+        const detected = nextRows.filter(r => !knownKeys.has(r.key));
+        setNewRows(detected);
+        if (detected.length > 0) {
+          toast({ title: `${detected.length} New Page${detected.length > 1 ? "s" : ""} Detected!`, description: "New content found since last refresh." });
+        }
+      } else {
+        setNewRows([]);
+      }
+
+      // Save current keys
+      localStorage.setItem(SEO_KNOWN_KEYS_STORAGE, JSON.stringify(currentKeys));
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     } finally { setLoading(false); }
