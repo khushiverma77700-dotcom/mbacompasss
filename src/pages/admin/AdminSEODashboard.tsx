@@ -276,11 +276,11 @@ const AdminSEODashboard = () => {
       ]);
 
       // Build rows from DB content
-      const nextRows = results.flatMap((result, index) => {
+      const nextRows: DashboardRow[] = results.flatMap((result, index) => {
         const ct = contentTypes[index];
         return ((result.data as Record<string, any>[] | null) || []).map((item) => {
           const snapshot = snapshots[`${ct}:${item.id}`] || null;
-          return { key: `${ct}:${item.id}`, id: item.id, contentType: ct, name: getName(item), slug: item.slug, city: item.city || null, state: item.state || null, item, snapshot, audit: getSEOAudit(ct, item, snapshot) } satisfies DashboardRow;
+          return { key: `${ct}:${item.id}`, id: item.id, contentType: ct, name: getName(item), slug: item.slug, city: item.city || null, state: item.state || null, item, snapshot, audit: getSEOAudit(ct, item, snapshot) };
         });
       });
 
