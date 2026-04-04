@@ -714,7 +714,7 @@ const AdminSEODashboard = () => {
           <Card className="border-muted bg-muted/30">
             <CardContent className="py-3 flex items-center gap-2 text-sm text-muted-foreground">
               <CheckCircle className="h-4 w-4 text-green-500" />
-              No new pages detected since last visit. Total tracked: {rows.length} pages across {contentTypes.length} content types.
+              No new pages detected since last visit. Total tracked: {rows.length} pages ({contentTypes.length} content types + static pages).
             </CardContent>
           </Card>
         )}
