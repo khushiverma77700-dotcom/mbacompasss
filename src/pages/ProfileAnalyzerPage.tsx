@@ -357,7 +357,7 @@ const SampleReportPreview = () => {
 const HowItWorksAnimated = () => {
   const steps = [
     { icon: ClipboardList, title: "Fill Your Profile", desc: "Enter academic scores, work experience, and target exams in a simple multi-step form.", color: "from-blue-500 to-blue-600", lightBg: "bg-blue-50 dark:bg-blue-950/30", textColor: "text-blue-600" },
-    { icon: Brain, title: "AI Analyses 10,000+ Data Points", desc: "Our engine cross-references your profile against historical admission data, cutoffs, and placement records.", color: "from-violet-500 to-violet-600", lightBg: "bg-violet-50 dark:bg-violet-950/30", textColor: "text-violet-600" },
+    { icon: Sparkles, title: "AI Analyses 10,000+ Data Points", desc: "Our engine cross-references your profile against historical admission data, cutoffs, and placement records.", color: "from-violet-500 to-violet-600", lightBg: "bg-violet-50 dark:bg-violet-950/30", textColor: "text-violet-600" },
     { icon: BarChart3, title: "Get Detailed Report", desc: "Receive college-wise admission probability, difficulty ratings, peer comparison, and numeric scores across 5 dimensions.", color: "from-amber-500 to-amber-600", lightBg: "bg-amber-50 dark:bg-amber-950/30", textColor: "text-amber-600" },
     { icon: Sparkles, title: "Actionable Roadmap", desc: "Follow your AI-generated study plan, exam strategy, improvement tips, and mentorship recommendations.", color: "from-emerald-500 to-emerald-600", lightBg: "bg-emerald-50 dark:bg-emerald-950/30", textColor: "text-emerald-600" },
   ];
