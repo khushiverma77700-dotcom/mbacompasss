@@ -844,7 +844,7 @@ const ProfileAnalyzerPage = () => {
                 >
                   {[
                     { icon: Activity, label: "10,000+ Data Points" },
-                    { icon: Brain, label: "AI-Powered Analysis" },
+                    { icon: Sparkles, label: "AI-Powered Analysis" },
                     { icon: Users, label: "Peer Comparison" },
                     { icon: PieChart, label: "5-Dimension Scoring" },
                     { icon: Shield, label: "100% Free" },
