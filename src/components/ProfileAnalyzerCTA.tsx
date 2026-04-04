@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { Brain, BarChart3, Users, ArrowRight, Target, GraduationCap, Sparkles, TrendingUp } from "lucide-react";
+import { BarChart3, Users, ArrowRight, Target, GraduationCap, Sparkles, TrendingUp } from "lucide-react";
+import bschoolLogo from "@/assets/bschoolbuzz-logo.png";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
