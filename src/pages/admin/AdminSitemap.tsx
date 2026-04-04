@@ -21,36 +21,40 @@ const AdminSitemap = () => {
       const urls: { loc: string; priority: string; changefreq: string }[] = [];
 
       // Static pages
-      urls.push({ loc: "/", priority: "1.0", changefreq: "daily" });
-      urls.push({ loc: "/colleges", priority: "0.9", changefreq: "daily" });
-      urls.push({ loc: "/blog", priority: "0.8", changefreq: "daily" });
-      urls.push({ loc: "/compare", priority: "0.7", changefreq: "weekly" });
-      urls.push({ loc: "/about", priority: "0.5", changefreq: "monthly" });
-      urls.push({ loc: "/contact", priority: "0.5", changefreq: "monthly" });
+      const staticPages = [
+        { loc: "/", priority: "1.0", changefreq: "daily" },
+        { loc: "/colleges", priority: "0.9", changefreq: "daily" },
+        { loc: "/blog", priority: "0.8", changefreq: "daily" },
+        { loc: "/compare", priority: "0.7", changefreq: "weekly" },
+        { loc: "/profile-analyzer", priority: "0.8", changefreq: "weekly" },
+        { loc: "/about", priority: "0.5", changefreq: "monthly" },
+        { loc: "/contact", priority: "0.5", changefreq: "monthly" },
+      ];
+      urls.push(...staticPages);
 
-      // Regional college pages
-      const regions = ["delhi-ncr", "mumbai", "bangalore", "pune", "kolkata", "chennai", "hyderabad", "ahmedabad", "lucknow", "jaipur", "chandigarh", "indore"];
-      regions.forEach((r) => urls.push({ loc: `/colleges/${r}`, priority: "0.8", changefreq: "weekly" }));
+      // Fetch all dynamic content from DB in parallel
+      const [
+        { data: institutes },
+        { data: colleges },
+        { data: exams },
+        { data: categories },
+        { data: articles },
+        { data: cityPages },
+      ] = await Promise.all([
+        supabase.from("institutes").select("slug"),
+        supabase.from("colleges").select("slug"),
+        supabase.from("exams").select("slug"),
+        supabase.from("categories").select("slug"),
+        supabase.from("articles").select("slug").eq("published", true),
+        supabase.from("city_pages").select("slug").eq("active", true),
+      ]);
 
-      // Dynamic: Institutes
-      const { data: institutes } = await supabase.from("institutes").select("slug, updated_at");
       institutes?.forEach((i) => urls.push({ loc: `/institute/${i.slug}`, priority: "0.8", changefreq: "weekly" }));
-
-      // Dynamic: Colleges
-      const { data: colleges } = await supabase.from("colleges").select("slug, updated_at");
       colleges?.forEach((c) => urls.push({ loc: `/college/${c.slug}`, priority: "0.8", changefreq: "weekly" }));
-
-      // Dynamic: Exams
-      const { data: exams } = await supabase.from("exams").select("slug");
       exams?.forEach((e) => urls.push({ loc: `/exam/${e.slug}`, priority: "0.7", changefreq: "weekly" }));
-
-      // Dynamic: Categories
-      const { data: categories } = await supabase.from("categories").select("slug");
       categories?.forEach((c) => urls.push({ loc: `/category/${c.slug}`, priority: "0.7", changefreq: "weekly" }));
-
-      // Dynamic: Articles
-      const { data: articles } = await supabase.from("articles").select("slug").eq("published", true);
       articles?.forEach((a) => urls.push({ loc: `/article/${a.slug}`, priority: "0.6", changefreq: "weekly" }));
+      cityPages?.forEach((cp) => urls.push({ loc: `/colleges/${cp.slug}`, priority: "0.8", changefreq: "weekly" }));
 
       const now = new Date().toISOString().split("T")[0];
       const xml = `<?xml version="1.0" encoding="UTF-8"?>
