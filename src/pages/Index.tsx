@@ -98,10 +98,13 @@ const Index = () => {
       {/* 12. Learning resources */}
       <LearningResourcesSection />
       
-      {/* 13. Latest articles */}
+      {/* 13. AI Profile Analyser CTA */}
+      <ProfileAnalyzerCTA />
+      
+      {/* 14. Latest articles */}
       <LatestArticlesSection />
       
-      {/* 14. Success stories */}
+      {/* 15. Success stories */}
       <SuccessStoriesSection />
       
       {/* 15. Why choose us */}
