@@ -15,6 +15,7 @@ import SuccessStoriesSection from "@/components/SuccessStoriesSection";
 import LearningResourcesSection from "@/components/LearningResourcesSection";
 import BrowseByCitySection from "@/components/BrowseByCitySection";
 import LatestArticlesSection from "@/components/LatestArticlesSection";
+import ProfileAnalyzerCTA from "@/components/ProfileAnalyzerCTA";
 import SEOHead, { generateWebsiteSchema, generateOrganizationSchema, generateFAQSchema, generateBreadcrumbSchema } from "@/components/SEOHead";
 
 const homepageFAQs = [
