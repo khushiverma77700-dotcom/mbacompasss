@@ -570,9 +570,45 @@ const ProfileAnalyzerPage = () => {
   const [collegeFilter, setCollegeFilter] = useState<string>("all");
   const [compareA, setCompareA] = useState<string>("");
   const [compareB, setCompareB] = useState<string>("");
+  const [cooldownDate, setCooldownDate] = useState<Date | null>(null);
+  const [existingReport, setExistingReport] = useState<any>(null);
+  const [checkingCooldown, setCheckingCooldown] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const reportRef = useRef<HTMLDivElement>(null);
+
+  // Check cooldown on mount & when user changes
+  useEffect(() => {
+    const checkCooldown = async () => {
+      if (!user) { setCooldownDate(null); setExistingReport(null); return; }
+      setCheckingCooldown(true);
+      try {
+        const { data } = await supabase
+          .from("profile_analyses")
+          .select("id, created_at, profile_score, target_exam, report_unlocked")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (data) {
+          const lastDate = new Date(data.created_at);
+          const nextAllowed = new Date(lastDate.getTime() + 60 * 24 * 60 * 60 * 1000);
+          setExistingReport(data);
+          if (nextAllowed > new Date()) {
+            setCooldownDate(nextAllowed);
+          } else {
+            setCooldownDate(null);
+          }
+        } else {
+          setCooldownDate(null);
+          setExistingReport(null);
+        }
+      } catch { /* ignore */ }
+      setCheckingCooldown(false);
+    };
+    checkCooldown();
+  }, [user]);
 
   useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(form)); }, [form]);
 
