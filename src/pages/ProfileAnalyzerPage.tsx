@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import {
-  Brain, GraduationCap, Briefcase, Target, ChevronRight, ChevronLeft, Lock, Phone, Mail,
+  GraduationCap, Briefcase, Target, ChevronRight, ChevronLeft, Lock, Phone, Mail,
   TrendingUp, Shield, Zap, BookOpen, Calendar, Star, AlertTriangle, CheckCircle2, ArrowRight,
   Sparkles, BarChart3, Lightbulb, User, FileText, Download, Save, MapPin, ClipboardList,
   Award, Users, Clock, ArrowUpRight, ChevronDown, Info, Search, Layers, Activity, Eye,
   Percent, Hash, Globe, Building2, Flame, CircleDot, Medal, PieChart, LineChart, Gauge
 } from "lucide-react";
+import bschoolLogo from "@/assets/bschoolbuzz-logo.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
