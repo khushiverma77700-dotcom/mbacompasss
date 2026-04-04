@@ -255,19 +255,57 @@ const AdminSEODashboard = () => {
       } catch {}
       setPreviousKeys(knownKeys);
 
+      // Static pages (non-admin, non-dynamic pages)
+      const staticPages = [
+        { id: "page-home", name: "Home", slug: "/", path: "/" },
+        { id: "page-about", name: "About", slug: "/about", path: "/about" },
+        { id: "page-contact", name: "Contact", slug: "/contact", path: "/contact" },
+        { id: "page-compare", name: "Compare", slug: "/compare", path: "/compare" },
+        { id: "page-blog", name: "Blog", slug: "/blog", path: "/blog" },
+        { id: "page-colleges", name: "Colleges", slug: "/colleges", path: "/colleges" },
+        { id: "page-profile-analyzer", name: "Profile Analyzer", slug: "/profile-analyzer", path: "/profile-analyzer" },
+        { id: "page-dashboard", name: "Dashboard", slug: "/dashboard", path: "/dashboard" },
+        { id: "page-auth", name: "Auth / Sign In", slug: "/auth", path: "/auth" },
+      ];
+
       const [snapshots, ...results] = await Promise.all([
         fetchAllSeoSnapshots(),
         ...contentTypes.map((ct) =>
           supabase.from(contentTypeConfig[ct].table as any).select("*").order("created_at", { ascending: false }).limit(1000)
         ),
       ]);
-      const nextRows = results.flatMap((result, index) => {
+
+      // Build rows from DB content
+      const nextRows: DashboardRow[] = results.flatMap((result, index) => {
         const ct = contentTypes[index];
         return ((result.data as Record<string, any>[] | null) || []).map((item) => {
           const snapshot = snapshots[`${ct}:${item.id}`] || null;
-          return { key: `${ct}:${item.id}`, id: item.id, contentType: ct, name: getName(item), slug: item.slug, city: item.city || null, state: item.state || null, item, snapshot, audit: getSEOAudit(ct, item, snapshot) } satisfies DashboardRow;
+          return { key: `${ct}:${item.id}`, id: item.id, contentType: ct, name: getName(item), slug: item.slug, city: item.city || null, state: item.state || null, item, snapshot, audit: getSEOAudit(ct, item, snapshot) };
         });
       });
+
+      // Add static pages as a special content type
+      const staticRows: DashboardRow[] = staticPages.map(sp => ({
+        key: `static:${sp.id}`,
+        id: sp.id,
+        contentType: "article" as SEOContentType,
+        name: sp.name,
+        slug: sp.slug,
+        city: null,
+        state: null,
+        item: { id: sp.id, title: sp.name, slug: sp.slug, meta_title: sp.name, meta_description: null, keywords: [] },
+        snapshot: snapshots[`static:${sp.id}`] || null,
+        audit: {
+          score: 50, status: "warning" as ScoreStatus, issues: ["Static page — manage SEO in code"],
+          hasMetaTitle: true, hasMetaDesc: false, hasKeywords: false, hasH1: true,
+          hasContent: true, hasSchema: false, hasSlug: true, hasCanonical: false,
+          hasSocial: false, hasTechnical: false, aiOptimized: false,
+          metaTitleLen: sp.name.length, metaDescLen: 0, keywordCount: 0,
+          shortTailCount: 0, longTailCount: 0, wordCount: 0,
+        },
+      }));
+
+      nextRows.push(...staticRows);
       setRows(nextRows);
 
       // Detect new pages (only if we have previously saved keys)
@@ -676,7 +714,7 @@ const AdminSEODashboard = () => {
           <Card className="border-muted bg-muted/30">
             <CardContent className="py-3 flex items-center gap-2 text-sm text-muted-foreground">
               <CheckCircle className="h-4 w-4 text-green-500" />
-              No new pages detected since last visit. Total tracked: {rows.length} pages across {contentTypes.length} content types.
+              No new pages detected since last visit. Total tracked: {rows.length} pages ({contentTypes.length} content types + static pages).
             </CardContent>
           </Card>
         )}
