@@ -288,14 +288,21 @@ const AdminSEODashboard = () => {
       const staticRows: DashboardRow[] = staticPages.map(sp => ({
         key: `static:${sp.id}`,
         id: sp.id,
-        contentType: "article" as SEOContentType, // display as generic
+        contentType: "article" as SEOContentType,
         name: sp.name,
         slug: sp.slug,
         city: null,
         state: null,
         item: { id: sp.id, title: sp.name, slug: sp.slug, meta_title: sp.name, meta_description: null, keywords: [] },
         snapshot: snapshots[`static:${sp.id}`] || null,
-        audit: { score: 0, issues: ["Static page — manage SEO in code"], hasMeta: true, hasSchema: false, hasKeywords: false },
+        audit: {
+          score: 50, status: "warning" as ScoreStatus, issues: ["Static page — manage SEO in code"],
+          hasMetaTitle: true, hasMetaDesc: false, hasKeywords: false, hasH1: true,
+          hasContent: true, hasSchema: false, hasSlug: true, hasCanonical: false,
+          hasSocial: false, hasTechnical: false, aiOptimized: false,
+          metaTitleLen: sp.name.length, metaDescLen: 0, keywordCount: 0,
+          shortTailCount: 0, longTailCount: 0, wordCount: 0,
+        },
       }));
 
       nextRows.push(...staticRows);
