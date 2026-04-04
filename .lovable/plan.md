@@ -1,45 +1,44 @@
+## Feature 1: Profile Analyzer 60-Day Cooldown
 
-# MBA Profile Analyzer Tool - Implementation Plan
+**How it works:**
+- When a logged-in user submits a profile analysis, the system records their `user_id` + `created_at`
+- Before allowing a new analysis, check if the user has an analysis within the last 60 days
+- If yes → block re-analysis, show "You can re-analyze after [date]" with a countdown
+- Users can **view their existing report anytime** from their dashboard
+- If not logged in, no cooldown (they'd need to log in to save/view reports anyway)
 
-## Adapted to Current Stack
-The brief mentions Next.js/Django but this project uses **React + Vite + Supabase (Lovable Cloud)**. All features will be built using the existing stack with Lovable AI for the analysis engine.
+**DB Changes:** None needed — `profile_analyses` already has `user_id` and `created_at`
 
-## Phase 1: Database Setup
-Create 2 new tables:
-- **profile_analyses** - stores student profile inputs (academic scores, work exp, category, target exam, aspirations)
-- **analysis_results** - stores AI-generated results (profile score, strengths, weaknesses, college predictions, probability scores, recommendations, study plan)
+**Code Changes:**
+- Add cooldown check in `ProfileAnalyzerPage.tsx` before form submission
+- Show existing report with a "next analysis available" date
 
-## Phase 2: AI Edge Function
-- **`profile-analyzer`** edge function using Lovable AI (Gemini)
-- Scoring engine: calculates profile score using weighted formula
-- AI generates personalized insights, college predictions, strengths/weaknesses, improvement roadmap
-- Returns structured JSON via tool calling
+---
 
-## Phase 3: Frontend - Profile Analyzer Page (`/profile-analyzer`)
-- **Step 1**: Academic Details (10th, 12th, Graduation %, Stream)
-- **Step 2**: Profile Details (Work Experience, Category, Gender, Target Exam)
-- **Step 3**: Aspirations (Target Colleges multi-select, Preferred Specialization)
-- Progress bar, auto-save to localStorage, inline validation, smooth transitions
-- Loading screen with animated progress simulation
-- **Partial Result**: Shows score + strengths/weaknesses, blurs college predictions
-- **Lead Capture Modal**: Phone + Email to unlock full report
-- **Full Dashboard**: College shortlist (Safe/Target/Dream), admission probability charts, AI recommendations, study plan, CTAs
+## Feature 2: Admin Management Panel with Granular Permissions
 
-## Phase 4: Admin Section
-- New admin page: **Profile Analyzer Leads** (`/admin/profile-analyzer`)
-- View all submissions with scores, contact info, exam targets
-- Filter by score range, exam type, date
-- CSV export
-- Analytics cards (total analyses, avg score, conversion rate, top exam targets)
+**How it works:**
+- New admin page: "Manage Admins" accessible only to super admins
+- Form: Name, Email, and checkboxes for each admin section (26 sections)
+- "Select All" toggle
+- When a new admin is created → their account gets `admin` role + their allowed sections are saved
+- In `AdminLayout`, filter the sidebar nav to only show sections the admin has access to
+- Locked sections show a "No Access" state if navigated to directly
 
-## Phase 5: Integration
-- Add nav link to Profile Analyzer on main site
-- Add route in App.tsx
-- Add admin nav item in AdminLayout
+**DB Changes (migration):**
+- New table `admin_permissions`:
+  - `id` (uuid, PK)
+  - `user_id` (uuid, NOT NULL, unique)
+  - `display_name` (text)
+  - `email` (text)
+  - `allowed_sections` (text[] — stores section paths like "/admin/institutes")
+  - `created_at`, `updated_at`
+  - RLS: only admins can read/write
 
-## What's NOT included (would need separate phases):
-- OTP verification (requires Twilio connector)
-- WhatsApp API integration
-- CRM integration (HubSpot/Zoho)
-- Meta Pixel / Hotjar
-- ML model for Phase 2 predictions
+**Code Changes:**
+- New page: `AdminManageAdmins.tsx` — list admins, add/edit permissions
+- Update `AuthContext` to load `allowed_sections` for admin users
+- Update `AdminLayout` to filter nav items based on permissions
+- Add route in `App.tsx`
+
+**Security:** The first admin (super admin) who has no `admin_permissions` row gets full access by default. Only admins with existing full access can manage other admins.
