@@ -64,7 +64,7 @@ const ProfileAnalyzerCTA = () => {
 
             <div className="flex flex-wrap gap-3">
               {[
-                { icon: Brain, text: "AI Analysis" },
+                { icon: Sparkles, text: "AI Analysis" },
                 { icon: BarChart3, text: "50+ Colleges" },
                 { icon: Users, text: "Peer Ranking" },
                 { icon: Target, text: "Personalised" },
