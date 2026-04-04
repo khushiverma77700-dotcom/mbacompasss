@@ -7,18 +7,21 @@ const corsHeaders = {
 };
 
 interface ProfileInput {
+  name: string;
+  email: string;
   tenth_score: number;
   twelfth_score: number;
   graduation_score: number;
   graduation_stream: string;
+  is_pursuing_graduation: boolean;
   work_experience_months: number;
   category: string;
   gender?: string;
-  target_exam: string;
+  target_exams: string[];
   target_colleges: string[];
   preferred_specialization?: string;
+  target_states: string[];
   phone?: string;
-  email?: string;
 }
 
 function calculateProfileScore(p: ProfileInput): number {
@@ -34,34 +37,18 @@ function calculateProfileScore(p: ProfileInput): number {
   else workScore = 0.15;
 
   const categoryWeight: Record<string, number> = {
-    General: 0.5,
-    OBC: 0.6,
-    "OBC-NCL": 0.65,
-    SC: 0.75,
-    ST: 0.8,
-    EWS: 0.6,
-    PwD: 0.8,
+    General: 0.5, OBC: 0.6, "OBC-NCL": 0.65, SC: 0.75, ST: 0.8, EWS: 0.6, PwD: 0.8,
   };
   const catScore = categoryWeight[p.category] || 0.5;
 
   const streamBonus: Record<string, number> = {
-    Engineering: 0.75,
-    Commerce: 0.65,
-    Science: 0.65,
-    Arts: 0.5,
-    Medical: 0.6,
-    Law: 0.55,
-    Other: 0.5,
+    Engineering: 0.75, Commerce: 0.65, Science: 0.65, Arts: 0.5, Medical: 0.6, Law: 0.55, Other: 0.5,
   };
   const extraScore = streamBonus[p.graduation_stream] || 0.5;
 
   const score =
-    tenthNorm * 0.15 +
-    twelfthNorm * 0.15 +
-    gradNorm * 0.2 +
-    workScore * 0.2 +
-    catScore * 0.1 +
-    extraScore * 0.2;
+    tenthNorm * 0.15 + twelfthNorm * 0.15 + gradNorm * 0.2 +
+    workScore * 0.2 + catScore * 0.1 + extraScore * 0.2;
 
   return Math.round(score * 100) / 10;
 }
@@ -77,30 +64,31 @@ serve(async (req) => {
 
     const body: ProfileInput = await req.json();
 
-    if (!body.tenth_score || !body.twelfth_score || !body.graduation_score || !body.graduation_stream || !body.target_exam) {
+    if (!body.tenth_score || !body.twelfth_score || !body.graduation_score || !body.graduation_stream || !body.target_exams?.length) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const profileScore = calculateProfileScore(body);
 
-    const prompt = `You are an expert MBA admissions counselor for Indian MBA programs. Analyze this student profile and provide detailed, personalized insights.
+    const prompt = `You are an expert MBA admissions counselor for Indian MBA programs. Analyze this student profile and provide extremely detailed, data-driven insights.
 
 STUDENT PROFILE:
+- Name: ${body.name || "Student"}
 - 10th Score: ${body.tenth_score}%
 - 12th Score: ${body.twelfth_score}%
-- Graduation Score: ${body.graduation_score}% in ${body.graduation_stream}
-- Work Experience: ${body.work_experience_months} months
+- Graduation Score: ${body.graduation_score}% in ${body.graduation_stream} ${body.is_pursuing_graduation ? "(Currently Pursuing)" : ""}
+- Work Experience: ${body.work_experience_months} months ${body.work_experience_months === 0 ? "(Fresher)" : ""}
 - Category: ${body.category}
 - Gender: ${body.gender || "Not specified"}
-- Target Exam: ${body.target_exam}
+- Target Exams: ${body.target_exams?.join(", ")}
 - Target Colleges: ${body.target_colleges?.join(", ") || "Not specified"}
 - Preferred Specialization: ${body.preferred_specialization || "Not specified"}
+- Target States for MBA: ${body.target_states?.join(", ") || "Pan India"}
 - Calculated Profile Score: ${profileScore}/10
 
-Based on this profile, provide a comprehensive analysis. Be specific, actionable, and personalized. Avoid generic advice. Reference actual college names, cutoffs, and strategies relevant to this student's exact profile.`;
+Provide a comprehensive, highly detailed analysis. Include specific percentile targets, cutoff scores, and difficulty ratings. For the detailed_college_table, include 15-25 colleges with precise data points. Be very specific and actionable.`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -111,7 +99,7 @@ Based on this profile, provide a comprehensive analysis. Be specific, actionable
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "You are an expert Indian MBA admissions counselor. Provide specific, data-driven insights." },
+          { role: "system", content: "You are an expert Indian MBA admissions counselor. Provide specific, data-driven insights with real college names, actual cutoffs, and precise percentile targets." },
           { role: "user", content: prompt },
         ],
         tools: [
@@ -119,7 +107,7 @@ Based on this profile, provide a comprehensive analysis. Be specific, actionable
             type: "function",
             function: {
               name: "generate_profile_analysis",
-              description: "Generate a comprehensive MBA profile analysis",
+              description: "Generate a comprehensive MBA profile analysis with detailed college comparison table",
               parameters: {
                 type: "object",
                 properties: {
@@ -134,7 +122,7 @@ Based on this profile, provide a comprehensive analysis. Be specific, actionable
                       },
                       required: ["title", "description", "impact"],
                     },
-                    description: "3-5 specific strengths of this profile",
+                    description: "4-6 specific strengths",
                   },
                   weaknesses: {
                     type: "array",
@@ -148,7 +136,7 @@ Based on this profile, provide a comprehensive analysis. Be specific, actionable
                       },
                       required: ["title", "description", "severity", "fix"],
                     },
-                    description: "3-5 specific weaknesses with actionable fixes",
+                    description: "4-6 specific weaknesses with actionable fixes",
                   },
                   college_predictions: {
                     type: "object",
@@ -195,6 +183,32 @@ Based on this profile, provide a comprehensive analysis. Be specific, actionable
                     },
                     required: ["dream", "target", "safe"],
                   },
+                  detailed_college_table: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        college_name: { type: "string", description: "Full name of the college e.g. IIM Ahmedabad" },
+                        city: { type: "string" },
+                        state: { type: "string" },
+                        nirf_ranking: { type: "number", description: "NIRF MBA ranking if available, 0 if not" },
+                        avg_fees_lakhs: { type: "number", description: "Total MBA fees in lakhs" },
+                        avg_package_lakhs: { type: "number", description: "Average placement package in LPA" },
+                        median_package_lakhs: { type: "number", description: "Median placement package in LPA" },
+                        highest_package_lakhs: { type: "number", description: "Highest placement package in LPA" },
+                        required_cat_percentile: { type: "number", description: "Minimum CAT percentile required for this student's category" },
+                        student_cat_target: { type: "number", description: "Recommended target CAT percentile for safe admission" },
+                        acceptance_rate_percent: { type: "number", description: "Approximate acceptance rate" },
+                        your_admission_probability: { type: "number", description: "This student's specific admission probability 0-100" },
+                        difficulty: { type: "string", enum: ["Easy", "Medium", "Hard", "Very Hard"], description: "How difficult it is for THIS specific student to get in" },
+                        key_selection_criteria: { type: "string", description: "Main selection factors e.g. CAT score + WAT-PI + Academics" },
+                        recommendation: { type: "string", description: "Specific advice for this student for this college" },
+                        tier: { type: "string", enum: ["Dream", "Target", "Safe"] },
+                      },
+                      required: ["college_name", "city", "state", "avg_fees_lakhs", "avg_package_lakhs", "required_cat_percentile", "student_cat_target", "your_admission_probability", "difficulty", "key_selection_criteria", "recommendation", "tier"],
+                    },
+                    description: "Detailed table of 15-25 MBA colleges with stats, percentile targets, difficulty ratings. Must include top IIMs, newer IIMs, non-IIM Tier 1, and Tier 2 colleges.",
+                  },
                   recommendations: {
                     type: "array",
                     items: {
@@ -207,7 +221,7 @@ Based on this profile, provide a comprehensive analysis. Be specific, actionable
                       },
                       required: ["title", "description", "priority"],
                     },
-                    description: "5-7 specific actionable recommendations",
+                    description: "6-8 specific actionable recommendations",
                   },
                   study_plan: {
                     type: "array",
@@ -222,14 +236,24 @@ Based on this profile, provide a comprehensive analysis. Be specific, actionable
                       },
                       required: ["phase", "duration", "focus_areas"],
                     },
-                    description: "3-4 phase study plan",
+                    description: "4-5 phase study plan",
+                  },
+                  score_breakdown: {
+                    type: "object",
+                    properties: {
+                      academics_score: { type: "number", description: "Score out of 10 for academics" },
+                      work_experience_score: { type: "number", description: "Score out of 10 for work experience" },
+                      diversity_score: { type: "number", description: "Score out of 10 for profile diversity/uniqueness" },
+                      overall_competitiveness: { type: "string", enum: ["Very Strong", "Strong", "Moderate", "Needs Improvement", "Weak"] },
+                    },
+                    required: ["academics_score", "work_experience_score", "diversity_score", "overall_competitiveness"],
                   },
                   ai_summary: {
                     type: "string",
-                    description: "A 3-4 sentence personalized summary of the profile analysis. Be specific and encouraging.",
+                    description: "A 4-5 sentence personalized summary. Be specific, encouraging, and reference actual college names. Address the student by name if provided.",
                   },
                 },
-                required: ["strengths", "weaknesses", "college_predictions", "recommendations", "study_plan", "ai_summary"],
+                required: ["strengths", "weaknesses", "college_predictions", "detailed_college_table", "recommendations", "study_plan", "score_breakdown", "ai_summary"],
               },
             },
           },
@@ -241,17 +265,14 @@ Based on this profile, provide a comprehensive analysis. Be specific, actionable
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
       console.error("AI Gateway error:", aiResponse.status, errorText);
-
       if (aiResponse.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limited. Please try again in a moment." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (aiResponse.status === 402) {
         return new Response(JSON.stringify({ error: "AI credits exhausted." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       throw new Error(`AI error: ${aiResponse.status}`);
@@ -269,7 +290,6 @@ Based on this profile, provide a comprehensive analysis. Be specific, actionable
       throw new Error("AI did not return structured analysis");
     }
 
-    // Save to database
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -284,7 +304,7 @@ Based on this profile, provide a comprehensive analysis. Be specific, actionable
         work_experience_months: body.work_experience_months,
         category: body.category,
         gender: body.gender,
-        target_exam: body.target_exam,
+        target_exam: body.target_exams?.[0] || "CAT",
         target_colleges: body.target_colleges || [],
         preferred_specialization: body.preferred_specialization,
         phone: body.phone,
@@ -307,7 +327,7 @@ Based on this profile, provide a comprehensive analysis. Be specific, actionable
         strengths: analysis.strengths,
         weaknesses: analysis.weaknesses,
         college_predictions: analysis.college_predictions,
-        probability_scores: {},
+        probability_scores: analysis.score_breakdown || {},
         recommendations: analysis.recommendations,
         study_plan: analysis.study_plan,
         ai_summary: analysis.ai_summary,
