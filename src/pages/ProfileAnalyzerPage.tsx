@@ -201,7 +201,7 @@ const SampleReportPreview = () => {
         {/* Header bar */}
         <div className="bg-gradient-to-r from-primary to-primary/80 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Brain className="w-6 h-6 text-primary-foreground" />
+            <img src={bschoolLogo} alt="B School Buzz" className="w-6 h-6 rounded" />
             <span className="text-primary-foreground font-bold">Sample AI Report — Detailed Preview</span>
           </div>
           <Badge className="bg-primary-foreground/20 text-primary-foreground border-0">Live Preview</Badge>
