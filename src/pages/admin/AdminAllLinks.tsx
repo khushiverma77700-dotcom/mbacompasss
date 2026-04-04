@@ -50,6 +50,7 @@ const AdminAllLinks = () => {
         { url: "/contact", label: "Contact", type: "Static" },
         { url: "/auth", label: "Auth / Login", type: "Static" },
         { url: "/dashboard", label: "Dashboard", type: "Static" },
+        { url: "/profile-analyzer", label: "AI Profile Analyser", type: "Static" },
       ];
       allLinks.push(...staticPages);
 

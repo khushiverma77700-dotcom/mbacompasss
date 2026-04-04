@@ -44,6 +44,7 @@ const Footer = () => {
               {quickLinks.map((link: any, i: number) => (
                 <li key={i}><Link to={link.path} className="hover:text-primary-foreground transition-colors">{link.label}</Link></li>
               ))}
+              <li><Link to="/profile-analyzer" className="hover:text-primary-foreground transition-colors">AI Profile Analyser</Link></li>
             </ul>
           </div>
 
