@@ -1409,7 +1409,96 @@ const ProfileAnalyzerPage = () => {
               </CardContent>
             </Card>
 
-            {/* College Predictions Cards */}
+            {/* ─── COLLEGE COMPARISON TOOL ─── */}
+            <Card className="border-2 border-border">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Layers className="w-5 h-5 text-primary" /> Compare Two Colleges Side-by-Side</CardTitle>
+                <CardDescription>Select two colleges from your analysis to see a detailed head-to-head comparison.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium mb-1.5 block">College A</Label>
+                    <Select value={compareA} onValueChange={setCompareA}>
+                      <SelectTrigger><SelectValue placeholder="Select first college" /></SelectTrigger>
+                      <SelectContent>
+                        {result.detailed_college_table?.map(c => (
+                          <SelectItem key={c.college_name} value={c.college_name} disabled={c.college_name === compareB}>{c.college_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium mb-1.5 block">College B</Label>
+                    <Select value={compareB} onValueChange={setCompareB}>
+                      <SelectTrigger><SelectValue placeholder="Select second college" /></SelectTrigger>
+                      <SelectContent>
+                        {result.detailed_college_table?.map(c => (
+                          <SelectItem key={c.college_name} value={c.college_name} disabled={c.college_name === compareA}>{c.college_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {compareA && compareB && (() => {
+                  const a = result.detailed_college_table?.find(c => c.college_name === compareA);
+                  const b = result.detailed_college_table?.find(c => c.college_name === compareB);
+                  if (!a || !b) return null;
+
+                  const metrics: { label: string; keyA: string | number; keyB: string | number; better: "higher" | "lower" | "none"; unit?: string }[] = [
+                    { label: "NIRF Ranking", keyA: a.nirf_ranking ? `#${a.nirf_ranking}` : "N/A", keyB: b.nirf_ranking ? `#${b.nirf_ranking}` : "N/A", better: "none" },
+                    { label: "Location", keyA: `${a.city}, ${a.state}`, keyB: `${b.city}, ${b.state}`, better: "none" },
+                    { label: "Fees", keyA: a.avg_fees_lakhs, keyB: b.avg_fees_lakhs, better: "lower", unit: "L" },
+                    { label: "Avg Package", keyA: a.avg_package_lakhs, keyB: b.avg_package_lakhs, better: "higher", unit: " LPA" },
+                    { label: "Highest Package", keyA: a.highest_package_lakhs || 0, keyB: b.highest_package_lakhs || 0, better: "higher", unit: " LPA" },
+                    { label: "Median Package", keyA: a.median_package_lakhs || 0, keyB: b.median_package_lakhs || 0, better: "higher", unit: " LPA" },
+                    { label: "Required CAT %ile", keyA: a.required_cat_percentile, keyB: b.required_cat_percentile, better: "lower", unit: "%ile" },
+                    { label: "Your Target %ile", keyA: a.student_cat_target, keyB: b.student_cat_target, better: "none", unit: "%ile" },
+                    { label: "Your Admission Chance", keyA: a.your_admission_probability, keyB: b.your_admission_probability, better: "higher", unit: "%" },
+                    { label: "Difficulty", keyA: a.difficulty, keyB: b.difficulty, better: "none" },
+                    { label: "Tier", keyA: a.tier, keyB: b.tier, better: "none" },
+                  ];
+
+                  const getBetterClass = (metric: typeof metrics[0], side: "a" | "b") => {
+                    if (metric.better === "none" || typeof metric.keyA === "string" || typeof metric.keyB === "string") return "";
+                    const numA = Number(metric.keyA);
+                    const numB = Number(metric.keyB);
+                    if (numA === numB) return "";
+                    if (metric.better === "higher") return (side === "a" ? numA > numB : numB > numA) ? "text-green-600 font-bold" : "";
+                    return (side === "a" ? numA < numB : numB < numA) ? "text-green-600 font-bold" : "";
+                  };
+
+                  return (
+                    <div className="rounded-xl border border-border overflow-hidden">
+                      <div className="grid grid-cols-3 bg-muted/50 text-sm font-semibold">
+                        <div className="p-3 text-center border-r border-border">{a.college_name}</div>
+                        <div className="p-3 text-center border-r border-border text-muted-foreground">Metric</div>
+                        <div className="p-3 text-center">{b.college_name}</div>
+                      </div>
+                      {metrics.map((m, i) => (
+                        <div key={m.label} className={`grid grid-cols-3 text-sm ${i % 2 === 0 ? "bg-card" : "bg-muted/20"} border-t border-border/50`}>
+                          <div className={`p-3 text-center ${getBetterClass(m, "a")}`}>
+                            {typeof m.keyA === "number" ? `${m.keyA}${m.unit || ""}` : m.keyA}
+                          </div>
+                          <div className="p-3 text-center text-muted-foreground font-medium border-x border-border/50">{m.label}</div>
+                          <div className={`p-3 text-center ${getBetterClass(m, "b")}`}>
+                            {typeof m.keyB === "number" ? `${m.keyB}${m.unit || ""}` : m.keyB}
+                          </div>
+                        </div>
+                      ))}
+                      {/* Recommendations row */}
+                      <div className="grid grid-cols-3 border-t border-border bg-primary/5">
+                        <div className="p-3 text-xs text-muted-foreground">{a.recommendation}</div>
+                        <div className="p-3 text-center text-xs font-semibold text-primary border-x border-border/50">AI Recommendation</div>
+                        <div className="p-3 text-xs text-muted-foreground">{b.recommendation}</div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader><CardTitle className="flex items-center gap-2"><Target className="w-5 h-5 text-primary" /> College Shortlist</CardTitle></CardHeader>
               <CardContent>
