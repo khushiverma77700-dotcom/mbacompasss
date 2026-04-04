@@ -171,6 +171,7 @@ const App = () => (
             <Route path="/exam/:slug" element={<PublicLayout><ExamDetailPage /></PublicLayout>} />
             <Route path="/auth" element={<PublicLayout><AuthPage /></PublicLayout>} />
             <Route path="/dashboard" element={<PublicLayout><DashboardPage /></PublicLayout>} />
+            <Route path="/profile-analyzer" element={<PublicLayout><ProfileAnalyzerPage /></PublicLayout>} />
             <Route path="/about" element={<PublicLayout><AboutPage /></PublicLayout>} />
             <Route path="/contact" element={<PublicLayout><ContactPage /></PublicLayout>} />
             <Route path="*" element={<PublicLayout><NotFound /></PublicLayout>} />
