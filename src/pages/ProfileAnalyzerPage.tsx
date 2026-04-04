@@ -797,8 +797,8 @@ const ProfileAnalyzerPage = () => {
                   animate={{ scale: 1, rotate: 0 }}
                   transition={{ type: "spring", stiffness: 100, delay: 0.1 }}
                 >
-                  <div className="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-primary/60 flex items-center justify-center shadow-2xl relative">
-                    <Brain className="w-12 h-12 text-primary-foreground" />
+                  <div className="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-primary/60 flex items-center justify-center shadow-2xl relative overflow-hidden">
+                    <img src={bschoolLogo} alt="B School Buzz" className="w-14 h-14 rounded-xl" />
                     <motion.div
                       animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
                       transition={{ repeat: Infinity, duration: 2 }}
