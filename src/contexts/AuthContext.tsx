@@ -7,6 +7,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
+  allowedSections: string[] | null; // null = full access (super admin)
   signUp: (email: string, password: string, displayName: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -19,6 +20,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [allowedSections, setAllowedSections] = useState<string[] | null>(null);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -44,6 +46,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const loadAdminStatus = async () => {
       if (!user) {
         setIsAdmin(false);
+        setAllowedSections(null);
         return;
       }
 
@@ -54,8 +57,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .eq("role", "admin")
         .maybeSingle();
 
-      if (!cancelled) {
-        setIsAdmin(!!data);
+      if (cancelled) return;
+
+      const adminStatus = !!data;
+      setIsAdmin(adminStatus);
+
+      if (adminStatus) {
+        // Load granular permissions
+        const { data: permData } = await supabase
+          .from("admin_permissions")
+          .select("allowed_sections")
+          .eq("email", user.email?.toLowerCase() || "")
+          .maybeSingle();
+
+        if (!cancelled) {
+          // No permissions record = super admin (full access)
+          setAllowedSections(permData?.allowed_sections as string[] | null ?? null);
+        }
+      } else {
+        setAllowedSections(null);
       }
     };
 
@@ -84,6 +104,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setSession(null);
     setIsAdmin(false);
+    setAllowedSections(null);
 
     try {
       await supabase.auth.signOut({ scope: "local" });
@@ -93,7 +114,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, isAdmin, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, session, loading, isAdmin, allowedSections, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
