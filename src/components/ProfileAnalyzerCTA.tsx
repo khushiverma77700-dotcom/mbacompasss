@@ -106,7 +106,7 @@ const ProfileAnalyzerCTA = () => {
             <div className="relative bg-card border-2 border-border/60 rounded-2xl shadow-2xl overflow-hidden">
               {/* Report header */}
               <div className="bg-gradient-to-r from-primary to-primary/80 px-5 py-3 flex items-center gap-2">
-                <Brain className="w-5 h-5 text-primary-foreground" />
+                <img src={bschoolLogo} alt="B School Buzz" className="w-5 h-5 rounded" />
                 <span className="text-primary-foreground font-bold text-sm">Sample AI Report</span>
                 <Badge className="bg-primary-foreground/20 text-primary-foreground border-0 ml-auto text-xs">Live</Badge>
               </div>

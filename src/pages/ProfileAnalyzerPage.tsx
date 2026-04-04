@@ -1206,22 +1206,126 @@ const ProfileAnalyzerPage = () => {
         {step === 5 && (
           <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="min-h-[80vh] flex items-center justify-center px-4">
-            <div className="max-w-md mx-auto text-center space-y-8">
-              <div className="relative w-24 h-24 mx-auto">
-                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                  className="w-24 h-24 rounded-full border-4 border-primary/20 border-t-primary" />
-                <Brain className="w-10 h-10 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+            <div className="max-w-lg mx-auto text-center space-y-8">
+              {/* Main animated logo with orbital rings */}
+              <div className="relative w-40 h-40 mx-auto">
+                {/* Outer pulsing ring */}
+                <motion.div
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0, 0.3] }}
+                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                  className="absolute inset-0 rounded-full bg-primary/10"
+                />
+                {/* Rotating orbit 1 */}
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+                  className="absolute inset-2 rounded-full border-2 border-dashed border-primary/20"
+                >
+                  <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-primary shadow-lg shadow-primary/50" />
+                </motion.div>
+                {/* Rotating orbit 2 (reverse) */}
+                <motion.div
+                  animate={{ rotate: -360 }}
+                  transition={{ repeat: Infinity, duration: 6, ease: "linear" }}
+                  className="absolute inset-6 rounded-full border-2 border-dashed border-primary/15"
+                >
+                  <div className="absolute -bottom-1 right-0 w-2.5 h-2.5 rounded-full bg-primary/70 shadow-lg shadow-primary/30" />
+                </motion.div>
+                {/* Rotating orbit 3 */}
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+                  className="absolute inset-10 rounded-full border border-primary/10"
+                >
+                  <div className="absolute top-0 right-2 w-2 h-2 rounded-full bg-primary/50" />
+                </motion.div>
+                {/* Center logo */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <motion.div
+                    animate={{ scale: [1, 1.08, 1] }}
+                    transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                  >
+                    <img src={bschoolLogo} alt="B School Buzz" className="w-16 h-16 rounded-2xl shadow-2xl" />
+                  </motion.div>
+                </div>
+                {/* Floating particles */}
+                {[...Array(6)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    animate={{
+                      y: [0, -20, 0],
+                      x: [0, (i % 2 === 0 ? 10 : -10), 0],
+                      opacity: [0, 1, 0],
+                    }}
+                    transition={{ repeat: Infinity, duration: 2 + i * 0.3, delay: i * 0.4, ease: "easeInOut" }}
+                    className="absolute w-1.5 h-1.5 rounded-full bg-primary/40"
+                    style={{
+                      top: `${20 + Math.sin(i * 60 * Math.PI / 180) * 40}%`,
+                      left: `${50 + Math.cos(i * 60 * Math.PI / 180) * 45}%`,
+                    }}
+                  />
+                ))}
               </div>
-              <h2 className="text-2xl font-bold">Analysing Your Profile</h2>
-              <p className="text-muted-foreground">Cross-referencing 10,000+ data points with AI to generate personalised insights...</p>
-              <Progress value={loadingProgress} className="h-3" />
-              <div className="space-y-2 text-sm text-muted-foreground">
-                {loadingProgress > 10 && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Academic profile evaluated</motion.p>}
-                {loadingProgress > 25 && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Work experience scored</motion.p>}
-                {loadingProgress > 40 && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Computing 5-dimension scores</motion.p>}
-                {loadingProgress > 55 && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Matching against 50+ colleges</motion.p>}
-                {loadingProgress > 70 && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Running peer comparison analysis</motion.p>}
-                {loadingProgress > 85 && <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4 text-green-500" /> Building personalised roadmap</motion.p>}
+
+              <div className="space-y-3">
+                <h2 className="text-2xl font-bold">AI is Analysing Your Profile</h2>
+                <p className="text-muted-foreground">Cross-referencing 10,000+ data points to generate personalised insights...</p>
+              </div>
+
+              {/* Animated progress with glowing effect */}
+              <div className="relative">
+                <Progress value={loadingProgress} className="h-3" />
+                <motion.div
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ repeat: Infinity, duration: 1.5 }}
+                  className="absolute top-0 h-3 rounded-full bg-primary/20 blur-sm"
+                  style={{ width: `${loadingProgress}%` }}
+                />
+                <p className="text-right text-xs text-muted-foreground mt-1 font-mono">{Math.round(loadingProgress)}%</p>
+              </div>
+
+              {/* Step-by-step processing stages */}
+              <div className="space-y-3 text-sm">
+                {[
+                  { threshold: 10, icon: GraduationCap, label: "Evaluating academic profile...", done: "Academic profile evaluated" },
+                  { threshold: 25, icon: Briefcase, label: "Scoring work experience...", done: "Work experience scored" },
+                  { threshold: 40, icon: PieChart, label: "Computing 5-dimension scores...", done: "5-dimension scores computed" },
+                  { threshold: 55, icon: Building2, label: "Matching against 50+ colleges...", done: "College matching complete" },
+                  { threshold: 70, icon: Users, label: "Running peer comparison...", done: "Peer comparison ready" },
+                  { threshold: 85, icon: Sparkles, label: "Building personalised roadmap...", done: "Roadmap generated" },
+                ].map((stage, i) => {
+                  const isActive = loadingProgress > stage.threshold - 10 && loadingProgress <= stage.threshold + 10;
+                  const isDone = loadingProgress > stage.threshold;
+                  if (loadingProgress < stage.threshold - 10) return null;
+                  return (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className={`flex items-center gap-3 px-4 py-2.5 rounded-lg border transition-all ${
+                        isDone ? "bg-green-500/5 border-green-500/20" : "bg-primary/5 border-primary/20"
+                      }`}
+                    >
+                      {isDone ? (
+                        <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                      ) : (
+                        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
+                          <stage.icon className="w-4 h-4 text-primary shrink-0" />
+                        </motion.div>
+                      )}
+                      <span className={isDone ? "text-green-600" : "text-foreground"}>
+                        {isDone ? stage.done : stage.label}
+                      </span>
+                      {isActive && (
+                        <motion.span
+                          animate={{ opacity: [1, 0.3, 1] }}
+                          transition={{ repeat: Infinity, duration: 0.8 }}
+                          className="ml-auto text-xs text-primary font-medium"
+                        >Processing...</motion.span>
+                      )}
+                    </motion.div>
+                  );
+                })}
               </div>
             </div>
           </motion.div>
