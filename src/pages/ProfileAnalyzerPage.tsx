@@ -1561,7 +1561,7 @@ const ProfileAnalyzerPage = () => {
                     { label: "Median Package", keyA: a.median_package_lakhs || 0, keyB: b.median_package_lakhs || 0, better: "higher", unit: " LPA" },
                     { label: "Required CAT %ile", keyA: a.required_cat_percentile, keyB: b.required_cat_percentile, better: "lower", unit: "%ile" },
                     { label: "Your Target %ile", keyA: a.student_cat_target, keyB: b.student_cat_target, better: "none", unit: "%ile" },
-                    { label: "Your Admission Chance", keyA: a.your_admission_probability, keyB: b.your_admission_probability, better: "higher", unit: "%" },
+                    { label: "Your Admission Chance", keyA: normalizeProb(a.your_admission_probability), keyB: normalizeProb(b.your_admission_probability), better: "higher", unit: "%" },
                     { label: "Difficulty", keyA: a.difficulty, keyB: b.difficulty, better: "none" },
                     { label: "Tier", keyA: a.tier, keyB: b.tier, better: "none" },
                   ];
