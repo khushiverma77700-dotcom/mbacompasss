@@ -686,7 +686,8 @@ const ProfileAnalyzerPage = () => {
   };
 
   const scoreColor = (s: number) => s >= 8 ? "text-green-600" : s >= 6 ? "text-amber-600" : "text-red-600";
-  const probColor = (p: number) => p >= 60 ? "bg-green-500" : p >= 30 ? "bg-amber-500" : "bg-red-500";
+  const normalizeProb = (p: number) => (p > 0 && p <= 1) ? Math.round(p * 100) : Math.round(p);
+  const probColor = (p: number) => { const n = normalizeProb(p); return n >= 60 ? "bg-green-500" : n >= 30 ? "bg-amber-500" : "bg-red-500"; };
   const diffColor = (d: string) => {
     if (d === "Easy") return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400";
     if (d === "Medium") return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
@@ -1497,8 +1498,8 @@ const ProfileAnalyzerPage = () => {
                           <TableCell className="font-semibold text-primary">{c.student_cat_target}%ile</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-1.5">
-                              <div className={`h-2 rounded-full ${probColor(c.your_admission_probability)}`} style={{ width: `${Math.max(c.your_admission_probability * 0.6, 6)}px` }} />
-                              <span className="font-bold">{c.your_admission_probability}%</span>
+                              <div className={`h-2 rounded-full ${probColor(c.your_admission_probability)}`} style={{ width: `${Math.max(normalizeProb(c.your_admission_probability) * 0.6, 6)}px` }} />
+                              <span className="font-bold">{normalizeProb(c.your_admission_probability)}%</span>
                             </div>
                           </TableCell>
                           <TableCell><Badge className={`text-xs ${diffColor(c.difficulty)}`}>{c.difficulty}</Badge></TableCell>
@@ -1560,7 +1561,7 @@ const ProfileAnalyzerPage = () => {
                     { label: "Median Package", keyA: a.median_package_lakhs || 0, keyB: b.median_package_lakhs || 0, better: "higher", unit: " LPA" },
                     { label: "Required CAT %ile", keyA: a.required_cat_percentile, keyB: b.required_cat_percentile, better: "lower", unit: "%ile" },
                     { label: "Your Target %ile", keyA: a.student_cat_target, keyB: b.student_cat_target, better: "none", unit: "%ile" },
-                    { label: "Your Admission Chance", keyA: a.your_admission_probability, keyB: b.your_admission_probability, better: "higher", unit: "%" },
+                    { label: "Your Admission Chance", keyA: normalizeProb(a.your_admission_probability), keyB: normalizeProb(b.your_admission_probability), better: "higher", unit: "%" },
                     { label: "Difficulty", keyA: a.difficulty, keyB: b.difficulty, better: "none" },
                     { label: "Tier", keyA: a.tier, keyB: b.tier, better: "none" },
                   ];
@@ -1620,12 +1621,12 @@ const ProfileAnalyzerPage = () => {
                           <div key={i} className="bg-card rounded-lg p-3 border border-border/50">
                             <div className="flex justify-between items-center mb-1">
                               <span className="font-semibold text-sm">{c.name}</span>
-                              <span className={`text-xs font-bold px-2 py-0.5 rounded-full text-white ${probColor(c.probability)}`}>{c.probability}%</span>
+                              <span className={`text-xs font-bold px-2 py-0.5 rounded-full text-white ${probColor(c.probability)}`}>{normalizeProb(c.probability)}%</span>
                             </div>
                             <p className="text-xs text-muted-foreground">{c.cutoff_info}</p>
                             {c.tip && <p className="text-xs text-primary mt-1 flex items-center gap-1"><Lightbulb className="w-3 h-3" /> {c.tip}</p>}
                             <div className="mt-2 h-1.5 bg-muted rounded-full overflow-hidden">
-                              <div className={`h-full rounded-full ${probColor(c.probability)}`} style={{ width: `${c.probability}%` }} />
+                              <div className={`h-full rounded-full ${probColor(c.probability)}`} style={{ width: `${normalizeProb(c.probability)}%` }} />
                             </div>
                           </div>
                         ))}
