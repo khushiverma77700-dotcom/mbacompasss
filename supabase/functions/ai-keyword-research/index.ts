@@ -47,12 +47,15 @@ Also provide:
 - Featured snippet opportunities`;
 
     } else if (mode === "blog_titles") {
-      systemPrompt = `You are an expert content strategist for Indian MBA education sector. You research blog topics that rank well and drive traffic.`;
+      systemPrompt = `You are an expert content strategist for Indian MBA education sector. You research blog topics that rank well and drive traffic. For each blog title you MUST also generate an SEO-optimized meta title (under 60 chars), a compelling meta description (120-155 chars), and a clean URL slug.`;
 
       userPrompt = `Generate 20 high-potential blog title ideas for: "${query || niche || "MBA coaching"}"
 
 For each title provide:
 - title (optimized for CTR and SEO)
+- metaTitle (SEO meta title, under 60 characters, with primary keyword)
+- metaDescription (compelling meta description, 120-155 characters, include CTA)
+- slug (clean URL slug, lowercase, hyphens, no stop words)
 - target keyword
 - estimated monthly search volume for the target keyword
 - competition level
@@ -146,17 +149,20 @@ Overall provide:
                 type: "array",
                 items: {
                   type: "object",
-                  properties: {
-                    title: { type: "string" },
-                    targetKeyword: { type: "string" },
-                    searchVolume: { type: "number" },
-                    competition: { type: "string", enum: ["low", "medium", "high"] },
-                    contentType: { type: "string" },
-                    wordCount: { type: "number" },
-                    priority: { type: "string", enum: ["high", "medium", "low"] },
-                    trendingScore: { type: "number" },
-                  },
-                  required: ["title", "targetKeyword", "searchVolume", "competition", "contentType", "priority", "trendingScore"],
+                    properties: {
+                      title: { type: "string" },
+                      metaTitle: { type: "string", description: "SEO meta title under 60 chars" },
+                      metaDescription: { type: "string", description: "Meta description 120-155 chars" },
+                      slug: { type: "string", description: "Clean URL slug" },
+                      targetKeyword: { type: "string" },
+                      searchVolume: { type: "number" },
+                      competition: { type: "string", enum: ["low", "medium", "high"] },
+                      contentType: { type: "string" },
+                      wordCount: { type: "number" },
+                      priority: { type: "string", enum: ["high", "medium", "low"] },
+                      trendingScore: { type: "number" },
+                    },
+                    required: ["title", "metaTitle", "metaDescription", "slug", "targetKeyword", "searchVolume", "competition", "contentType", "priority", "trendingScore"],
                 },
               },
               evergreenTopics: { type: "array", items: { type: "string" } },
