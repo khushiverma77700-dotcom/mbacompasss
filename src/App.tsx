@@ -54,6 +54,7 @@ import CollegeDetailPage from "./pages/CollegeDetailPage";
 import CollegeFilterPage from "./pages/CollegeFilterPage";
 import ProfileAnalyzerPage from "./pages/ProfileAnalyzerPage";
 import AdminProfileAnalyzer from "./pages/admin/AdminProfileAnalyzer";
+import AdminManageAdmins from "./pages/admin/AdminManageAdmins";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
