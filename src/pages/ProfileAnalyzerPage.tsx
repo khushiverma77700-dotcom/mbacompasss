@@ -567,6 +567,8 @@ const ProfileAnalyzerPage = () => {
   const [collegeSortKey, setCollegeSortKey] = useState<string>("your_admission_probability");
   const [collegeSortAsc, setCollegeSortAsc] = useState(false);
   const [collegeFilter, setCollegeFilter] = useState<string>("all");
+  const [compareA, setCompareA] = useState<string>("");
+  const [compareB, setCompareB] = useState<string>("");
   const { toast } = useToast();
   const { user } = useAuth();
   const reportRef = useRef<HTMLDivElement>(null);
