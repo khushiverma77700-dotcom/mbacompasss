@@ -241,11 +241,17 @@ const AdminSEODashboard = () => {
     setLoading(true);
     setNewLinksDismissed(false);
     try {
-      // Load previously known keys from localStorage
+      // Load previously known keys from DB (site_settings) for cross-browser persistence
       let knownKeys = new Set<string>();
       try {
-        const stored = localStorage.getItem(SEO_KNOWN_KEYS_STORAGE);
-        if (stored) knownKeys = new Set(JSON.parse(stored) as string[]);
+        const { data: knownData } = await supabase
+          .from("site_settings")
+          .select("value")
+          .eq("key", "seo_dashboard_known_keys")
+          .maybeSingle();
+        if (knownData?.value && Array.isArray(knownData.value)) {
+          knownKeys = new Set(knownData.value as string[]);
+        }
       } catch {}
       setPreviousKeys(knownKeys);
 
@@ -264,8 +270,7 @@ const AdminSEODashboard = () => {
       });
       setRows(nextRows);
 
-      // Detect new pages
-      const currentKeys = nextRows.map(r => r.key);
+      // Detect new pages (only if we have previously saved keys)
       if (knownKeys.size > 0) {
         const detected = nextRows.filter(r => !knownKeys.has(r.key));
         setNewRows(detected);
@@ -273,15 +278,35 @@ const AdminSEODashboard = () => {
           toast({ title: `${detected.length} New Page${detected.length > 1 ? "s" : ""} Detected!`, description: "New content found since last refresh." });
         }
       } else {
+        // First visit — save all current keys as baseline (no "new" banner)
         setNewRows([]);
+        const currentKeys = nextRows.map(r => r.key);
+        await saveKnownKeys(currentKeys);
       }
-
-      // Save current keys
-      localStorage.setItem(SEO_KNOWN_KEYS_STORAGE, JSON.stringify(currentKeys));
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     } finally { setLoading(false); }
   }, [toast]);
+
+  const saveKnownKeys = async (keys: string[]) => {
+    const { data: existing } = await supabase
+      .from("site_settings")
+      .select("id")
+      .eq("key", "seo_dashboard_known_keys")
+      .maybeSingle();
+    if (existing?.id) {
+      await supabase.from("site_settings").update({ value: keys as unknown as Record<string, any> }).eq("id", existing.id);
+    } else {
+      await supabase.from("site_settings").insert({ key: "seo_dashboard_known_keys", value: keys as unknown as Record<string, any> });
+    }
+  };
+
+  const acknowledgeNewLinks = async () => {
+    setNewLinksDismissed(true);
+    // Save all current keys as known so next refresh starts fresh
+    const currentKeys = rows.map(r => r.key);
+    await saveKnownKeys(currentKeys);
+  };
 
   useEffect(() => { fetchDashboardData(); loadSavedBlogIdeas(); }, [fetchDashboardData, loadSavedBlogIdeas]);
 
@@ -663,7 +688,7 @@ const AdminSEODashboard = () => {
                   }}>
                     <Copy className="h-3 w-3 mr-1" /> Copy
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => setNewLinksDismissed(true)}>
+                  <Button size="sm" variant="ghost" onClick={acknowledgeNewLinks}>
                     <XCircle className="h-4 w-4" />
                   </Button>
                 </div>
