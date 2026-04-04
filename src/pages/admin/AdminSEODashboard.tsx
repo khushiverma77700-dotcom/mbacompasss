@@ -161,6 +161,8 @@ const getSEOAudit = (contentType: SEOContentType, item: Record<string, any>, sna
 };
 
 // ── Main Component ──
+const SEO_KNOWN_KEYS_STORAGE = "seo_dashboard_known_keys";
+
 const AdminSEODashboard = () => {
   const [rows, setRows] = useState<DashboardRow[]>([]);
   const [loading, setLoading] = useState(false);
@@ -174,6 +176,9 @@ const AdminSEODashboard = () => {
   const [search, setSearch] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("overview");
+  const [previousKeys, setPreviousKeys] = useState<Set<string>>(new Set());
+  const [newRows, setNewRows] = useState<DashboardRow[]>([]);
+  const [newLinksDismissed, setNewLinksDismissed] = useState(false);
   const { toast } = useToast();
 
   // Keyword Research State
@@ -234,7 +239,16 @@ const AdminSEODashboard = () => {
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
+    setNewLinksDismissed(false);
     try {
+      // Load previously known keys from localStorage
+      let knownKeys = new Set<string>();
+      try {
+        const stored = localStorage.getItem(SEO_KNOWN_KEYS_STORAGE);
+        if (stored) knownKeys = new Set(JSON.parse(stored) as string[]);
+      } catch {}
+      setPreviousKeys(knownKeys);
+
       const [snapshots, ...results] = await Promise.all([
         fetchAllSeoSnapshots(),
         ...contentTypes.map((ct) =>
@@ -249,6 +263,21 @@ const AdminSEODashboard = () => {
         });
       });
       setRows(nextRows);
+
+      // Detect new pages
+      const currentKeys = nextRows.map(r => r.key);
+      if (knownKeys.size > 0) {
+        const detected = nextRows.filter(r => !knownKeys.has(r.key));
+        setNewRows(detected);
+        if (detected.length > 0) {
+          toast({ title: `${detected.length} New Page${detected.length > 1 ? "s" : ""} Detected!`, description: "New content found since last refresh." });
+        }
+      } else {
+        setNewRows([]);
+      }
+
+      // Save current keys
+      localStorage.setItem(SEO_KNOWN_KEYS_STORAGE, JSON.stringify(currentKeys));
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
     } finally { setLoading(false); }
@@ -616,6 +645,49 @@ const AdminSEODashboard = () => {
             </TabsList>
           </Tabs>
         </div>
+
+        {/* ═══ NEW LINKS DETECTED BANNER ═══ */}
+        {newRows.length > 0 && !newLinksDismissed && (
+          <Card className="border-green-500/50 bg-green-500/5 animate-in fade-in slide-in-from-top-2">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-green-600" />
+                  {newRows.length} New Page{newRows.length > 1 ? "s" : ""} Detected
+                </CardTitle>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => {
+                    const text = newRows.map(r => `${r.name} (${contentTypeConfig[r.contentType].label}) — Score: ${r.audit.score}%`).join("\n");
+                    navigator.clipboard.writeText(text);
+                    toast({ title: "Copied new pages list!" });
+                  }}>
+                    <Copy className="h-3 w-3 mr-1" /> Copy
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => setNewLinksDismissed(true)}>
+                    <XCircle className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <CardDescription>These pages were added since your last dashboard visit. Run AI SEO to optimize them.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                {newRows.map((r) => (
+                  <div key={r.key} className="flex items-center gap-3 text-sm py-1.5 px-3 rounded-md bg-green-500/5 border border-green-500/20">
+                    <Badge variant="outline" className="text-green-600 border-green-500/50 text-[10px] px-1.5 py-0">NEW</Badge>
+                    <Badge variant="secondary" className="text-[10px]">{contentTypeConfig[r.contentType].label}</Badge>
+                    <span className="font-medium text-foreground truncate flex-1">{r.name}</span>
+                    <span className="text-muted-foreground text-xs">{r.slug ? `/${r.slug}` : ""}</span>
+                    <Badge className={`text-[10px] ${r.audit.status === "good" ? "bg-green-100 text-green-700" : r.audit.status === "warning" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
+                      {r.audit.score}%
+                    </Badge>
+                    <AISEOButton contentType={r.contentType} data={r.item} recordId={r.id} onApply={fetchDashboardData} />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* ═══ OVERVIEW ═══ */}
         {activeTab === "overview" && (
