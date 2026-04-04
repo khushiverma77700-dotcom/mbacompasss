@@ -4,91 +4,36 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 const resources = [
-  {
-    icon: FileText,
-    title: "Free Study Material",
-    description: "Comprehensive PDFs covering Quant, VARC, DILR and more — curated by top educators.",
-    count: "200+",
-    countLabel: "Resources",
-    color: "text-primary",
-    bg: "bg-primary/10",
-    link: "/blog",
-  },
-  {
-    icon: TestTube,
-    title: "Mock Tests & Quizzes",
-    description: "Practice with full-length mocks and topic-wise quizzes modelled on actual exam patterns.",
-    count: "150+",
-    countLabel: "Mock Tests",
-    color: "text-orange-500",
-    bg: "bg-orange-500/10",
-    link: "/blog",
-  },
-  {
-    icon: Video,
-    title: "Video Lectures",
-    description: "Expert-led video lessons on key concepts, shortcuts, and problem-solving strategies.",
-    count: "500+",
-    countLabel: "Videos",
-    color: "text-emerald-500",
-    bg: "bg-emerald-500/10",
-    link: "/blog",
-  },
-  {
-    icon: BookOpen,
-    title: "Previous Year Papers",
-    description: "Solved papers for CAT, XAT, SNAP, NMAT and more with detailed explanations and analysis.",
-    count: "50+",
-    countLabel: "Papers",
-    color: "text-violet-500",
-    bg: "bg-violet-500/10",
-    link: "/blog",
-  },
-  {
-    icon: Download,
-    title: "Exam Syllabus & Guides",
-    description: "Detailed syllabus breakdowns, exam patterns, and preparation roadmaps for every major MBA entrance.",
-    count: "20+",
-    countLabel: "Guides",
-    color: "text-rose-500",
-    bg: "bg-rose-500/10",
-    link: "/blog",
-  },
-  {
-    icon: Lightbulb,
-    title: "Strategy & Tips",
-    description: "Expert tips on time management, test-taking strategies, and last-minute preparation advice.",
-    count: "100+",
-    countLabel: "Articles",
-    color: "text-amber-500",
-    bg: "bg-amber-500/10",
-    link: "/blog",
-  },
+  { icon: FileText, title: "Free Study Material", description: "Comprehensive PDFs covering Quant, VARC, DILR and more.", count: "200+", countLabel: "Resources", gradient: "from-blue-500 to-blue-600" },
+  { icon: TestTube, title: "Mock Tests & Quizzes", description: "Full-length mocks and topic-wise quizzes on actual exam patterns.", count: "150+", countLabel: "Mock Tests", gradient: "from-orange-500 to-orange-600" },
+  { icon: Video, title: "Video Lectures", description: "Expert-led video lessons on concepts, shortcuts, and strategies.", count: "500+", countLabel: "Videos", gradient: "from-emerald-500 to-emerald-600" },
+  { icon: BookOpen, title: "Previous Year Papers", description: "Solved papers for CAT, XAT, SNAP, NMAT with detailed analysis.", count: "50+", countLabel: "Papers", gradient: "from-violet-500 to-violet-600" },
+  { icon: Download, title: "Exam Guides", description: "Detailed syllabus breakdowns, patterns, and preparation roadmaps.", count: "20+", countLabel: "Guides", gradient: "from-rose-500 to-rose-600" },
+  { icon: Lightbulb, title: "Strategy & Tips", description: "Expert tips on time management and test-taking strategies.", count: "100+", countLabel: "Articles", gradient: "from-amber-500 to-amber-600" },
 ];
 
 const LearningResourcesSection = () => {
   return (
-    <section className="py-16 bg-card">
+    <section className="py-16 md:py-20 bg-card">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-10"
+          className="text-center mb-12"
         >
-          <div className="inline-flex items-center gap-2 bg-primary/10 rounded-full px-4 py-1.5 mb-4">
-            <BookOpen className="w-4 h-4 text-primary" />
-            <span className="text-sm font-semibold text-primary">Free Resources</span>
-          </div>
-          <h2 className="font-heading text-2xl md:text-3xl font-bold text-foreground mb-3">
-            Learning Resources & Study Material
+          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold mb-4">
+            <BookOpen className="w-3.5 h-3.5" /> Free Resources
+          </span>
+          <h2 className="font-heading text-2xl md:text-4xl font-bold text-foreground mb-3">
+            Learning <span className="text-gradient">Resources</span> & Study Material
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Access free study material, mock tests, video lectures, and preparation guides to ace your MBA entrance exams.
+            Access free study material, mock tests, video lectures, and guides to ace your MBA entrance exams
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
           {resources.map((res, i) => {
             const Icon = res.icon;
             return (
@@ -100,23 +45,23 @@ const LearningResourcesSection = () => {
                 transition={{ delay: i * 0.08 }}
               >
                 <Link
-                  to={res.link}
-                  className="block bg-background rounded-xl border border-border p-6 hover:shadow-md transition-all group h-full"
+                  to="/blog"
+                  className="group block bg-background rounded-2xl border border-border p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full"
                 >
                   <div className="flex items-start gap-4">
-                    <div className={`flex-shrink-0 w-11 h-11 rounded-lg ${res.bg} flex items-center justify-center`}>
-                      <Icon className={`w-5 h-5 ${res.color}`} />
+                    <div className={`flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br ${res.gradient} flex items-center justify-center shadow-md group-hover:scale-110 transition-transform`}>
+                      <Icon className="w-6 h-6 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-heading font-semibold text-foreground group-hover:text-primary transition-colors mb-1">
+                      <h3 className="font-heading font-bold text-foreground group-hover:text-primary transition-colors mb-1 text-base">
                         {res.title}
                       </h3>
                       <p className="text-sm text-muted-foreground leading-relaxed mb-3">
                         {res.description}
                       </p>
                       <div className="flex items-center gap-2">
-                        <span className={`text-lg font-bold ${res.color}`}>{res.count}</span>
-                        <span className="text-xs text-muted-foreground">{res.countLabel}</span>
+                        <span className="text-xl font-extrabold text-foreground">{res.count}</span>
+                        <span className="text-xs text-muted-foreground font-medium">{res.countLabel}</span>
                       </div>
                     </div>
                   </div>
@@ -126,9 +71,9 @@ const LearningResourcesSection = () => {
           })}
         </div>
 
-        <div className="text-center mt-8">
+        <div className="text-center mt-10">
           <Link to="/blog">
-            <Button variant="outline" size="lg" className="gap-2">
+            <Button variant="outline" size="lg" className="gap-2 rounded-full">
               Browse All Resources <ChevronRight className="w-4 h-4" />
             </Button>
           </Link>
