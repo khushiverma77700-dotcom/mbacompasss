@@ -570,9 +570,45 @@ const ProfileAnalyzerPage = () => {
   const [collegeFilter, setCollegeFilter] = useState<string>("all");
   const [compareA, setCompareA] = useState<string>("");
   const [compareB, setCompareB] = useState<string>("");
+  const [cooldownDate, setCooldownDate] = useState<Date | null>(null);
+  const [existingReport, setExistingReport] = useState<any>(null);
+  const [checkingCooldown, setCheckingCooldown] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
   const reportRef = useRef<HTMLDivElement>(null);
+
+  // Check cooldown on mount & when user changes
+  useEffect(() => {
+    const checkCooldown = async () => {
+      if (!user) { setCooldownDate(null); setExistingReport(null); return; }
+      setCheckingCooldown(true);
+      try {
+        const { data } = await supabase
+          .from("profile_analyses")
+          .select("id, created_at, profile_score, target_exam, report_unlocked")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (data) {
+          const lastDate = new Date(data.created_at);
+          const nextAllowed = new Date(lastDate.getTime() + 60 * 24 * 60 * 60 * 1000);
+          setExistingReport(data);
+          if (nextAllowed > new Date()) {
+            setCooldownDate(nextAllowed);
+          } else {
+            setCooldownDate(null);
+          }
+        } else {
+          setCooldownDate(null);
+          setExistingReport(null);
+        }
+      } catch { /* ignore */ }
+      setCheckingCooldown(false);
+    };
+    checkCooldown();
+  }, [user]);
 
   useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(form)); }, [form]);
 
@@ -616,6 +652,15 @@ const ProfileAnalyzerPage = () => {
 
   const handleSubmit = async () => {
     if (!validateStep(step)) return;
+    // Enforce 60-day cooldown for logged-in users
+    if (user && cooldownDate && cooldownDate > new Date()) {
+      toast({
+        title: "Cooldown Active",
+        description: `You can re-analyze after ${cooldownDate.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}. View your existing report on the dashboard.`,
+        variant: "destructive",
+      });
+      return;
+    }
     setStep(5);
     setLoadingProgress(0);
     const interval = setInterval(() => {
@@ -862,11 +907,36 @@ const ProfileAnalyzerPage = () => {
                   ))}
                 </motion.div>
 
+                {/* Cooldown Banner */}
+                {user && cooldownDate && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.65 }}>
+                    <Card className="max-w-lg mx-auto border-amber-500/30 bg-amber-500/5">
+                      <CardContent className="py-4 text-center space-y-2">
+                        <p className="text-sm font-semibold text-amber-700 dark:text-amber-400 flex items-center justify-center gap-2">
+                          <Clock className="w-4 h-4" /> Cooldown Active
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          You can re-analyze your profile after <strong>{cooldownDate.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</strong>.
+                          Your last report is available on your dashboard anytime.
+                        </p>
+                        <Button size="sm" variant="outline" onClick={() => window.location.href = "/dashboard"}>
+                          <Eye className="w-3.5 h-3.5 mr-1.5" /> View My Report
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )}
+
                 {/* CTA */}
                 <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.7 }}>
-                  <Button size="lg" onClick={() => setStep(1)} className="text-lg px-12 py-7 rounded-2xl shadow-2xl hover:shadow-3xl transition-all group relative overflow-hidden">
+                  <Button
+                    size="lg"
+                    onClick={() => setStep(1)}
+                    disabled={!!(user && cooldownDate)}
+                    className="text-lg px-12 py-7 rounded-2xl shadow-2xl hover:shadow-3xl transition-all group relative overflow-hidden"
+                  >
                     <span className="relative z-10 flex items-center gap-2">
-                      Start Free Analysis <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      {user && cooldownDate ? "Analysis Cooldown Active" : "Start Free Analysis"} <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </span>
                     <motion.div
                       animate={{ x: ["-100%", "200%"] }}
@@ -874,7 +944,9 @@ const ProfileAnalyzerPage = () => {
                       className="absolute inset-0 bg-gradient-to-r from-transparent via-primary-foreground/10 to-transparent"
                     />
                   </Button>
-                  <p className="text-xs text-muted-foreground mt-3">No payment • No signup • Instant results</p>
+                  <p className="text-xs text-muted-foreground mt-3">
+                    {user && cooldownDate ? "You can re-check after 60 days from last analysis" : "No payment • No signup • Instant results"}
+                  </p>
                 </motion.div>
 
                 {/* Stats row */}

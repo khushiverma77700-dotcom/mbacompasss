@@ -1,6 +1,6 @@
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp, Sparkles } from "lucide-react";
+import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp, Sparkles, ShieldCheck, Lock } from "lucide-react";
 import { useState } from "react";
 
 const adminNav = [
@@ -29,10 +29,11 @@ const adminNav = [
   { label: "Clear Caches", path: "/admin/clear-cache", icon: Trash2 },
   { label: "AI SEO Dashboard", path: "/admin/seo-dashboard", icon: Sparkles },
   { label: "Profile Analyzer", path: "/admin/profile-analyzer", icon: BarChart3 },
+  { label: "Manage Admins", path: "/admin/manage-admins", icon: ShieldCheck },
 ];
 
 const AdminLayout = () => {
-  const { user, isAdmin, loading } = useAuth();
+  const { user, isAdmin, allowedSections, loading } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -41,6 +42,16 @@ const AdminLayout = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
+  // null = super admin (full access), array = restricted
+  const isSuperAdmin = allowedSections === null;
+  const hasAccess = (path: string) => isSuperAdmin || (allowedSections?.includes(path) ?? false);
+
+  // Filter nav items based on permissions
+  const visibleNav = adminNav.filter(item => hasAccess(item.path));
+
+  // Check if current route is accessible
+  const currentRouteAllowed = hasAccess(location.pathname) || location.pathname === "/admin";
+
   const SidebarContent = () => (
     <>
       <div className="flex items-center justify-between mb-6">
@@ -48,7 +59,7 @@ const AdminLayout = () => {
         <button className="lg:hidden" onClick={() => setSidebarOpen(false)}><X className="w-5 h-5" /></button>
       </div>
       <nav className="space-y-1">
-        {adminNav.map((item) => (
+        {visibleNav.map((item) => (
           <Link
             key={item.path}
             to={item.path}
@@ -64,6 +75,13 @@ const AdminLayout = () => {
           </Link>
         ))}
       </nav>
+      {!isSuperAdmin && (
+        <div className="mt-4 px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+          <p className="text-xs text-amber-600 flex items-center gap-1.5">
+            <Lock className="w-3 h-3" /> Limited access — {visibleNav.length}/{adminNav.length} sections
+          </p>
+        </div>
+      )}
       <div className="mt-auto pt-6 border-t border-border mt-6">
         <Link to="/" className="text-xs text-muted-foreground hover:text-foreground transition-colors">← Back to Website</Link>
       </div>
@@ -82,7 +100,15 @@ const AdminLayout = () => {
         <SidebarContent />
       </aside>
       <main className="flex-1 p-6 overflow-auto lg:ml-0">
-        <Outlet />
+        {currentRouteAllowed ? (
+          <Outlet />
+        ) : (
+          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+            <Lock className="w-12 h-12 text-muted-foreground mb-4" />
+            <h2 className="text-xl font-bold text-foreground mb-2">Access Restricted</h2>
+            <p className="text-muted-foreground">You don't have permission to access this section. Contact a super admin to request access.</p>
+          </div>
+        )}
       </main>
     </div>
   );
