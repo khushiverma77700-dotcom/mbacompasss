@@ -199,6 +199,7 @@ const App = () => (
               <Route path="profile-analyzer" element={<Suspense fallback={<PageLoader />}><AdminProfileAnalyzer /></Suspense>} />
               <Route path="manage-admins" element={<Suspense fallback={<PageLoader />}><AdminManageAdmins /></Suspense>} />
               <Route path="static-seo" element={<Suspense fallback={<PageLoader />}><AdminStaticPageSEO /></Suspense>} />
+              <Route path="all-leads-unified" element={<Suspense fallback={<PageLoader />}><AdminAllLeads /></Suspense>} />
             </Route>
             <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
             <Route path="/category/:slug" element={<PublicLayout><CategoryPage /></PublicLayout>} />
