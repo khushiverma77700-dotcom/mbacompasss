@@ -20,6 +20,7 @@ import {
   ExternalLink, Activity, LayoutGrid, Network, Crosshair, Swords, Brain, Lightbulb, Star,
 } from "lucide-react";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
+import { PageSpeedMonitor } from "@/components/admin/PageSpeedMonitor";
 import { useToast } from "@/hooks/use-toast";
 import {
   buildStoredSeoSnapshot, contentTypeConfig, fetchAllSeoSnapshots, mergeKeywordBuckets,
