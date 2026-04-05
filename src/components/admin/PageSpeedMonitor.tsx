@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,23 +9,16 @@ import {
   Activity, AlertTriangle, CheckCircle, Code, Database, Eye, FileText,
   Gauge, Globe, Layers, Lightbulb, Loader2, MonitorSmartphone, RefreshCw,
   Settings, Shield, Sparkles, Target, Zap, XCircle, ChevronDown, Wrench,
-  ImageIcon, Link2, FileCode, Minimize2, LayoutGrid, TrendingUp, BarChart3,
+  ImageIcon, Link2, Minimize2, LayoutGrid, TrendingUp, BarChart3,
+  Clock, CalendarDays, PieChart, HardDrive, FileImage, ArrowDownToLine,
 } from "lucide-react";
 
+// ─── Types ────────────────────────────────────────
+
 interface PageSpeedPage {
-  url: string;
-  name: string;
-  slug: string;
-  contentType: string;
-  device: string;
-  score: number;
-  status: "good" | "warning" | "poor";
-  fcp: number;
-  lcp: number;
-  tbt: number;
-  cls: number;
-  si: number;
-  tti: number;
+  url: string; name: string; slug: string; contentType: string; device: string;
+  score: number; status: "good" | "warning" | "poor";
+  fcp: number; lcp: number; tbt: number; cls: number; si: number; tti: number;
   issues: string[];
   opportunities?: { title: string; description: string; savings: string }[];
   diagnostics?: { title: string; description: string }[];
@@ -33,29 +26,38 @@ interface PageSpeedPage {
 }
 
 interface PageSpeedPayload {
-  pages: PageSpeedPage[];
-  avgScore: number;
-  device: string;
+  pages: PageSpeedPage[]; avgScore: number; device: string;
   summary: { good: number; warning: number; poor: number };
-  lastChecked: string;
-  pagesAnalyzed: number;
+  lastChecked: string; pagesAnalyzed: number;
 }
 
 interface OptimizationFix {
-  table: string;
-  id: string;
-  name: string;
-  field: string;
-  fixType: string;
-  description: string;
+  table: string; id: string; name: string; field: string; fixType: string; description: string;
+}
+
+interface ImageAuditItem {
+  name: string; path: string; size: number; sizeFormatted: string;
+  format: string; isOptimized: boolean; issues: string[]; publicUrl: string;
 }
 
 interface OptimizationResult {
-  totalScanned: number;
-  totalFixed: number;
-  fixes: OptimizationFix[];
-  categories: Record<string, number>;
+  totalScanned: number; totalFixed: number;
+  fixes: OptimizationFix[]; categories: Record<string, number>;
+  imageAudit?: {
+    totalImages: number; totalSizeBytes: number; totalSizeFormatted: string;
+    optimizedCount: number; unoptimizedCount: number;
+    largeImages: ImageAuditItem[]; nonWebpImages: ImageAuditItem[]; allImages: ImageAuditItem[];
+  };
   timestamp: string;
+}
+
+interface ApiUsage {
+  totalCalls: number; totalPages: number;
+  dailyLimit: number; monthlyQuota: number;
+  todayCalls: number; todayPages: number;
+  monthCalls: number; monthPages: number;
+  lastRun: string;
+  history: { date: string; pages: number; device: string; avgScore: number }[];
 }
 
 interface Props {
@@ -76,9 +78,11 @@ const SITE_URL = "https://coach-compass-finder.lovable.app";
 const FIX_TYPE_CONFIG: Record<string, { icon: React.ReactNode; label: string; color: string }> = {
   "lazy-loading": { icon: <ImageIcon className="h-4 w-4" />, label: "Lazy Loading", color: "bg-blue-100 text-blue-700 border-blue-200" },
   "async-decoding": { icon: <Zap className="h-4 w-4" />, label: "Async Decode", color: "bg-purple-100 text-purple-700 border-purple-200" },
-  "image-dimensions": { icon: <LayoutGrid className="h-4 w-4" />, label: "Image Dimensions", color: "bg-cyan-100 text-cyan-700 border-cyan-200" },
+  "image-dimensions": { icon: <LayoutGrid className="h-4 w-4" />, label: "Image Dims", color: "bg-cyan-100 text-cyan-700 border-cyan-200" },
   "link-security": { icon: <Link2 className="h-4 w-4" />, label: "Link Security", color: "bg-green-100 text-green-700 border-green-200" },
   "html-minification": { icon: <Minimize2 className="h-4 w-4" />, label: "HTML Cleanup", color: "bg-amber-100 text-amber-700 border-amber-200" },
+  "non-webp-images": { icon: <FileImage className="h-4 w-4" />, label: "Non-WebP", color: "bg-orange-100 text-orange-700 border-orange-200" },
+  "large-images": { icon: <HardDrive className="h-4 w-4" />, label: "Large Files", color: "bg-red-100 text-red-700 border-red-200" },
 };
 
 export function PageSpeedMonitor({
@@ -86,33 +90,24 @@ export function PageSpeedMonitor({
   pageSpeedDevice, setPageSpeedDevice, pageSpeedOptimizing, setPageSpeedOptimizing, toast,
 }: Props) {
   const [expandedPage, setExpandedPage] = useState<string | null>(null);
-  const [progress, setProgress] = useState(0);
   const [currentlyAnalyzing, setCurrentlyAnalyzing] = useState("");
-
-  // Optimizer state
   const [scanResult, setScanResult] = useState<OptimizationResult | null>(null);
   const [scanning, setScanning] = useState(false);
   const [fixing, setFixing] = useState(false);
   const [fixResult, setFixResult] = useState<OptimizationResult | null>(null);
-  const [optimizerTab, setOptimizerTab] = useState<"analysis" | "optimizer">("analysis");
+  const [optimizerTab, setOptimizerTab] = useState<"analysis" | "optimizer" | "images" | "usage">("analysis");
+  const [apiUsage, setApiUsage] = useState<ApiUsage | null>(null);
 
   useEffect(() => {
-    if (!pageSpeedData) {
-      loadCachedResults(pageSpeedDevice);
-    }
+    if (!pageSpeedData) loadCachedResults(pageSpeedDevice);
     loadCachedOptimizer();
+    loadApiUsage();
   }, []);
 
   const loadCachedResults = async (device: string) => {
     try {
-      const { data } = await supabase
-        .from("site_settings")
-        .select("value")
-        .eq("key", `page_speed_${device}`)
-        .maybeSingle();
-      if (data?.value) {
-        setPageSpeedData(data.value as unknown as PageSpeedPayload);
-      }
+      const { data } = await supabase.from("site_settings").select("value").eq("key", `page_speed_${device}`).maybeSingle();
+      if (data?.value) setPageSpeedData(data.value as unknown as PageSpeedPayload);
     } catch {}
   };
 
@@ -127,6 +122,13 @@ export function PageSpeedMonitor({
     } catch {}
   };
 
+  const loadApiUsage = async () => {
+    try {
+      const { data } = await supabase.from("site_settings").select("value").eq("key", "psi_api_usage").maybeSingle();
+      if (data?.value) setApiUsage(data.value as unknown as ApiUsage);
+    } catch {}
+  };
+
   const handleDeviceChange = (device: "mobile" | "desktop" | "tablet") => {
     setPageSpeedDevice(device);
     setPageSpeedData(null);
@@ -135,9 +137,7 @@ export function PageSpeedMonitor({
 
   const runRealAnalysis = async () => {
     setPageSpeedLoading(true);
-    setProgress(0);
     setCurrentlyAnalyzing("");
-
     try {
       const staticPages = [
         { name: "Home", slug: "/", url: "/", contentType: "static" },
@@ -146,51 +146,39 @@ export function PageSpeedMonitor({
         { name: "Blog", slug: "/blog", url: "/blog", contentType: "static" },
         { name: "Colleges", slug: "/colleges", url: "/colleges", contentType: "static" },
       ];
-
       const dynamicPages = rows
         .filter(r => r.slug && !r.key.startsWith("static:"))
         .slice(0, 10)
         .map(r => ({
-          name: r.name,
-          slug: r.slug,
+          name: r.name, slug: r.slug,
           url: r.slug.startsWith("/") ? r.slug : `/${r.contentType === "article" ? "article" : r.contentType === "college" ? "college" : r.contentType === "institute" ? "institute" : r.contentType === "exam" ? "exam" : "colleges"}/${r.slug}`,
           contentType: r.contentType,
         }));
-
       const allUrls = [...staticPages, ...dynamicPages];
       setCurrentlyAnalyzing(`Analyzing ${allUrls.length} pages on ${pageSpeedDevice}...`);
 
       const { data, error } = await supabase.functions.invoke("page-speed-check", {
-        body: {
-          urls: allUrls,
-          device: pageSpeedDevice === "tablet" ? "mobile" : pageSpeedDevice,
-          siteUrl: SITE_URL,
-        },
+        body: { urls: allUrls, device: pageSpeedDevice === "tablet" ? "mobile" : pageSpeedDevice, siteUrl: SITE_URL },
       });
-
       if (error) throw error;
       setPageSpeedData(data);
-      setProgress(100);
-      toast({ title: "✅ Real Analysis Complete", description: `Analyzed ${data.pagesAnalyzed} pages via Google PageSpeed Insights (${pageSpeedDevice})` });
+      loadApiUsage(); // Refresh usage after analysis
+      toast({ title: "✅ Analysis Complete", description: `Analyzed ${data.pagesAnalyzed} pages (${pageSpeedDevice})` });
     } catch (e: any) {
-      console.error("Page speed analysis error:", e);
-      toast({ title: "Analysis Failed", description: e.message || "Could not reach PageSpeed API", variant: "destructive" });
+      toast({ title: "Analysis Failed", description: e.message, variant: "destructive" });
     } finally {
       setPageSpeedLoading(false);
       setCurrentlyAnalyzing("");
     }
   };
 
-  // ─── Optimizer Functions ─────────────────────────
   const runScan = async () => {
     setScanning(true);
     try {
-      const { data, error } = await supabase.functions.invoke("speed-optimizer", {
-        body: { mode: "scan" },
-      });
+      const { data, error } = await supabase.functions.invoke("speed-optimizer", { body: { mode: "scan", includeImages: true } });
       if (error) throw error;
       setScanResult(data as OptimizationResult);
-      toast({ title: "🔍 Scan Complete", description: `Found ${data.fixes.length} optimization opportunities across ${data.totalScanned} records` });
+      toast({ title: "🔍 Scan Complete", description: `Found ${data.fixes.length} content issues + audited ${data.imageAudit?.totalImages || 0} images` });
     } catch (e: any) {
       toast({ title: "Scan Failed", description: e.message, variant: "destructive" });
     } finally {
@@ -201,13 +189,11 @@ export function PageSpeedMonitor({
   const runFix = async () => {
     setFixing(true);
     try {
-      const { data, error } = await supabase.functions.invoke("speed-optimizer", {
-        body: { mode: "fix" },
-      });
+      const { data, error } = await supabase.functions.invoke("speed-optimizer", { body: { mode: "fix", includeImages: true } });
       if (error) throw error;
       setFixResult(data as OptimizationResult);
-      setScanResult(null); // Clear scan since fixes are applied
-      toast({ title: "✅ All Optimizations Applied!", description: `Fixed ${data.totalFixed} issues across your database content` });
+      setScanResult(null);
+      toast({ title: "✅ Optimizations Applied!", description: `Fixed ${data.totalFixed} issues` });
     } catch (e: any) {
       toast({ title: "Fix Failed", description: e.message, variant: "destructive" });
     } finally {
@@ -229,6 +215,15 @@ export function PageSpeedMonitor({
   };
 
   const activeResult = scanResult || fixResult;
+  const imageAudit = activeResult?.imageAudit;
+
+  // API usage calculations
+  const dailyUsed = apiUsage?.todayCalls || 0;
+  const dailyLimit = apiUsage?.dailyLimit || 25000;
+  const monthUsed = apiUsage?.monthCalls || 0;
+  const monthLimit = apiUsage?.monthlyQuota || 25000;
+  const dailyPct = Math.min(100, (dailyUsed / dailyLimit) * 100);
+  const monthPct = Math.min(100, (monthUsed / monthLimit) * 100);
 
   return (
     <div className="space-y-6">
@@ -242,52 +237,50 @@ export function PageSpeedMonitor({
                 <Badge variant="outline" className="text-[10px] ml-2 border-primary/30">Google Lighthouse</Badge>
               </h2>
               <p className="text-sm text-muted-foreground mt-1">
-                Real-time Core Web Vitals analysis + One-Click Auto-Optimization
+                Real-time CWV analysis • One-Click Optimizer • Image Audit • API Usage Tracking
               </p>
-            </div>
-            <div className="flex gap-2 items-center flex-wrap">
-              {/* Tab toggle */}
-              <div className="flex rounded-lg border border-border overflow-hidden">
-                <button
-                  onClick={() => setOptimizerTab("analysis")}
-                  className={`px-3 py-2 text-xs font-medium transition-colors ${
-                    optimizerTab === "analysis" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"
-                  }`}
-                >
-                  📊 Analysis
-                </button>
-                <button
-                  onClick={() => setOptimizerTab("optimizer")}
-                  className={`px-3 py-2 text-xs font-medium transition-colors ${
-                    optimizerTab === "optimizer" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"
-                  }`}
-                >
-                  🔧 Auto-Optimizer
-                </button>
+              {/* Cron status */}
+              <div className="flex items-center gap-2 mt-2">
+                <Badge className="bg-green-100 text-green-700 text-[10px] gap-1">
+                  <Clock className="h-3 w-3" /> Daily 6:00 AM — Mobile Analysis
+                </Badge>
+                <Badge className="bg-blue-100 text-blue-700 text-[10px] gap-1">
+                  <Clock className="h-3 w-3" /> 6:10 AM — Desktop Analysis
+                </Badge>
+                <Badge className="bg-purple-100 text-purple-700 text-[10px] gap-1">
+                  <Clock className="h-3 w-3" /> 6:20 AM — Auto-Optimize
+                </Badge>
               </div>
+            </div>
+            <div className="flex gap-1.5 items-center flex-wrap">
+              {(["analysis", "optimizer", "images", "usage"] as const).map(tab => (
+                <button
+                  key={tab}
+                  onClick={() => setOptimizerTab(tab)}
+                  className={`px-3 py-2 text-xs font-medium rounded-lg transition-colors ${
+                    optimizerTab === tab ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  }`}
+                >
+                  {tab === "analysis" ? "📊 Analysis" : tab === "optimizer" ? "🔧 Optimizer" : tab === "images" ? "🖼️ Images" : "📈 API Usage"}
+                </button>
+              ))}
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* ═══════════════════ ANALYSIS TAB ═══════════════════ */}
+      {/* ═══════════ ANALYSIS TAB ═══════════ */}
       {optimizerTab === "analysis" && (
         <>
-          {/* Device Selector + Run */}
           <Card>
             <CardContent className="pt-4">
               <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
                 <div className="flex rounded-lg border border-border overflow-hidden">
                   {(["mobile", "tablet", "desktop"] as const).map(device => (
-                    <button
-                      key={device}
-                      onClick={() => handleDeviceChange(device)}
+                    <button key={device} onClick={() => handleDeviceChange(device)}
                       className={`px-4 py-2.5 text-xs font-medium transition-colors ${
-                        pageSpeedDevice === device
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-background text-muted-foreground hover:bg-muted"
-                      }`}
-                    >
+                        pageSpeedDevice === device ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-muted"
+                      }`}>
                       {device === "mobile" ? "📱 Mobile" : device === "tablet" ? "📟 Tablet" : "💻 Desktop"}
                     </button>
                   ))}
@@ -297,28 +290,19 @@ export function PageSpeedMonitor({
                   {pageSpeedLoading ? "Analyzing..." : "Run Lighthouse Analysis"}
                 </Button>
               </div>
-
               {pageSpeedLoading && (
-                <div className="mt-4 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                    <span className="text-sm text-muted-foreground">{currentlyAnalyzing}</span>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground">
-                    ⏱️ This may take 1-3 minutes — each page is analyzed by Google's Lighthouse engine
-                  </p>
+                <div className="mt-4 flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  <span className="text-sm text-muted-foreground">{currentlyAnalyzing}</span>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Benchmark Targets */}
+          {/* Benchmarks */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Target className="h-4 w-4 text-primary" />
-                Performance Benchmarks ({pageSpeedDevice === "mobile" ? "📱 Mobile" : pageSpeedDevice === "tablet" ? "📟 Tablet" : "💻 Desktop"})
-              </CardTitle>
+              <CardTitle className="text-sm flex items-center gap-2"><Target className="h-4 w-4 text-primary" /> Benchmarks ({pageSpeedDevice})</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -343,35 +327,26 @@ export function PageSpeedMonitor({
 
           {pageSpeedData ? (
             <>
-              {/* Summary Cards */}
+              {/* Summary */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <Card className={`border-l-4 ${pageSpeedData.avgScore >= 90 ? "border-l-green-500" : pageSpeedData.avgScore >= 50 ? "border-l-amber-500" : "border-l-red-500"}`}>
                   <CardContent className="pt-4 text-center">
-                    <p className={`text-3xl font-bold ${pageSpeedData.avgScore >= 90 ? "text-green-600" : pageSpeedData.avgScore >= 50 ? "text-amber-600" : "text-red-600"}`}>
-                      {pageSpeedData.avgScore}
-                    </p>
-                    <span className="text-[10px] text-muted-foreground">/100</span>
+                    <p className={`text-3xl font-bold ${pageSpeedData.avgScore >= 90 ? "text-green-600" : pageSpeedData.avgScore >= 50 ? "text-amber-600" : "text-red-600"}`}>{pageSpeedData.avgScore}</p>
                     <p className="text-xs text-muted-foreground mt-1">Avg Score</p>
                   </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-green-500">
-                  <CardContent className="pt-4 text-center">
-                    <p className="text-3xl font-bold text-green-600">{pageSpeedData.summary.good}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Fast (90+)</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-l-4 border-l-amber-500">
-                  <CardContent className="pt-4 text-center">
-                    <p className="text-3xl font-bold text-amber-600">{pageSpeedData.summary.warning}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Needs Work (50-89)</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-l-4 border-l-red-500">
-                  <CardContent className="pt-4 text-center">
-                    <p className="text-3xl font-bold text-red-600">{pageSpeedData.summary.poor}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Slow (&lt;50)</p>
-                  </CardContent>
-                </Card>
+                {[
+                  { val: pageSpeedData.summary.good, label: "Fast (90+)", color: "border-l-green-500", textColor: "text-green-600" },
+                  { val: pageSpeedData.summary.warning, label: "Needs Work", color: "border-l-amber-500", textColor: "text-amber-600" },
+                  { val: pageSpeedData.summary.poor, label: "Slow (<50)", color: "border-l-red-500", textColor: "text-red-600" },
+                ].map(s => (
+                  <Card key={s.label} className={`border-l-4 ${s.color}`}>
+                    <CardContent className="pt-4 text-center">
+                      <p className={`text-3xl font-bold ${s.textColor}`}>{s.val}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{s.label}</p>
+                    </CardContent>
+                  </Card>
+                ))}
                 <Card>
                   <CardContent className="pt-4 text-center">
                     <p className="text-xs text-muted-foreground">Last Checked</p>
@@ -381,26 +356,16 @@ export function PageSpeedMonitor({
                 </Card>
               </div>
 
-              {/* Page Results Table */}
+              {/* Results Table */}
               <Card>
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <Activity className="h-4 w-4" /> Page-by-Page Results ({pageSpeedData.pages.length} pages)
-                      </CardTitle>
-                      <CardDescription>Real Lighthouse scores — click a row to expand details and fix</CardDescription>
-                    </div>
-                    {/* Bulk optimize button */}
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Activity className="h-4 w-4" /> Results ({pageSpeedData.pages.length} pages)
+                    </CardTitle>
                     {pageSpeedData.pages.some(p => p.score < 90) && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50"
-                        onClick={() => { setOptimizerTab("optimizer"); runScan(); }}
-                      >
-                        <Wrench className="h-4 w-4" />
-                        Auto-Fix All Issues
+                      <Button size="sm" variant="outline" className="gap-2 border-amber-300 text-amber-700" onClick={() => { setOptimizerTab("optimizer"); runScan(); }}>
+                        <Wrench className="h-4 w-4" /> Auto-Fix All
                       </Button>
                     )}
                   </div>
@@ -420,162 +385,117 @@ export function PageSpeedMonitor({
                             <TableHead className="text-center w-[70px]">SI</TableHead>
                             <TableHead className="text-center w-[70px]">TTI</TableHead>
                             <TableHead className="w-[180px]">Issues</TableHead>
-                            <TableHead className="text-center w-[60px]">Details</TableHead>
+                            <TableHead className="text-center w-[50px]" />
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {[...pageSpeedData.pages]
-                            .sort((a, b) => a.score - b.score)
-                            .map((page, idx) => (
-                              <>
-                                <TableRow
-                                  key={`row-${idx}`}
-                                  className={`cursor-pointer hover:bg-muted/50 ${page.status === "poor" ? "bg-red-50/30" : ""}`}
-                                  onClick={() => setExpandedPage(expandedPage === page.slug ? null : page.slug)}
-                                >
-                                  <TableCell className="sticky left-0 bg-background z-10">
-                                    <div>
-                                      <p className="text-sm font-medium truncate max-w-[170px]">{page.name}</p>
-                                      <p className="text-[10px] text-muted-foreground truncate max-w-[170px]">{page.slug}</p>
+                          {[...pageSpeedData.pages].sort((a, b) => a.score - b.score).map((page, idx) => (
+                            <>
+                              <TableRow key={`r-${idx}`} className={`cursor-pointer hover:bg-muted/50 ${page.status === "poor" ? "bg-red-50/30" : ""}`}
+                                onClick={() => setExpandedPage(expandedPage === page.slug ? null : page.slug)}>
+                                <TableCell className="sticky left-0 bg-background z-10">
+                                  <p className="text-sm font-medium truncate max-w-[170px]">{page.name}</p>
+                                  <p className="text-[10px] text-muted-foreground truncate max-w-[170px]">{page.slug}</p>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  <Badge className={`text-xs font-bold ${page.score >= 90 ? "bg-green-100 text-green-700" : page.score >= 50 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"} hover:bg-inherit`}>{page.score}</Badge>
+                                </TableCell>
+                                {([
+                                  { v: page.fcp, u: "s", ...thresholds.fcp },
+                                  { v: page.lcp, u: "s", ...thresholds.lcp },
+                                  { v: page.tbt, u: "ms", ...thresholds.tbt },
+                                  { v: page.cls, u: "", ...thresholds.cls },
+                                  { v: page.si, u: "s", ...thresholds.si },
+                                  { v: page.tti, u: "s", ...thresholds.tti },
+                                ] as const).map((m, mi) => (
+                                  <TableCell key={mi} className={`text-center text-xs font-mono font-medium ${metricColor(m.v, m.good, m.ok)}`}>{m.v}{m.u}</TableCell>
+                                ))}
+                                <TableCell>
+                                  <div className="space-y-0.5 max-w-[180px]">
+                                    {page.issues.slice(0, 2).map((issue, i) => (
+                                      <p key={i} className={`text-[10px] leading-tight ${issue.includes("✓") ? "text-green-600" : "text-red-600"}`}>
+                                        {issue.includes("✓") ? "✅" : "⚠️"} {issue}
+                                      </p>
+                                    ))}
+                                    {page.issues.length > 2 && <p className="text-[10px] text-muted-foreground">+{page.issues.length - 2} more</p>}
+                                  </div>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                  <ChevronDown className={`h-4 w-4 mx-auto transition-transform ${expandedPage === page.slug ? "rotate-180" : ""}`} />
+                                </TableCell>
+                              </TableRow>
+
+                              {expandedPage === page.slug && (
+                                <TableRow key={`d-${idx}`}>
+                                  <TableCell colSpan={10} className="bg-muted/20 p-0">
+                                    <div className="p-4 space-y-4">
+                                      <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+                                        {[
+                                          { label: "FCP", val: `${page.fcp}s`, ...thresholds.fcp },
+                                          { label: "LCP", val: `${page.lcp}s`, ...thresholds.lcp },
+                                          { label: "TBT", val: `${page.tbt}ms`, good: thresholds.tbt.good, ok: thresholds.tbt.ok },
+                                          { label: "CLS", val: `${page.cls}`, ...thresholds.cls },
+                                          { label: "SI", val: `${page.si}s`, ...thresholds.si },
+                                          { label: "TTI", val: `${page.tti}s`, ...thresholds.tti },
+                                        ].map(m => {
+                                          const n = parseFloat(m.val);
+                                          return (
+                                            <div key={m.label} className={`p-3 rounded-lg text-center border ${n <= m.good ? "bg-green-50 border-green-200" : n <= m.ok ? "bg-amber-50 border-amber-200" : "bg-red-50 border-red-200"}`}>
+                                              <p className="text-[10px] font-bold text-muted-foreground">{m.label}</p>
+                                              <p className={`text-lg font-bold ${n <= m.good ? "text-green-700" : n <= m.ok ? "text-amber-700" : "text-red-700"}`}>{m.val}</p>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                      {page.score < 90 && (
+                                        <div className="flex items-center gap-3 p-3 rounded-lg border border-primary/20 bg-primary/5">
+                                          <Wrench className="h-5 w-5 text-primary shrink-0" />
+                                          <div className="flex-1">
+                                            <p className="text-sm font-semibold">Auto-Fix Available</p>
+                                            <p className="text-xs text-muted-foreground">Optimize content: lazy loading, async decode, link security, HTML cleanup</p>
+                                          </div>
+                                          <Button size="sm" onClick={(e) => { e.stopPropagation(); setOptimizerTab("optimizer"); runScan(); }} className="gap-1.5 shrink-0">
+                                            <Sparkles className="h-3.5 w-3.5" /> Fix Now
+                                          </Button>
+                                        </div>
+                                      )}
+                                      {page.opportunities && page.opportunities.length > 0 && (
+                                        <div>
+                                          <h4 className="text-sm font-bold flex items-center gap-2 mb-2"><Lightbulb className="h-4 w-4 text-amber-500" /> Opportunities ({page.opportunities.length})</h4>
+                                          <div className="space-y-1.5">
+                                            {page.opportunities.map((opp, i) => (
+                                              <div key={i} className="flex items-start gap-3 p-2.5 rounded border-l-4 border-l-amber-400 bg-amber-50/50">
+                                                <Zap className="h-3.5 w-3.5 text-amber-600 mt-0.5 shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                  <p className="text-sm font-medium">{opp.title}</p>
+                                                  {opp.description && <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{opp.description}</p>}
+                                                </div>
+                                                {opp.savings && <Badge variant="outline" className="text-[10px] shrink-0 border-amber-300 text-amber-700">{opp.savings}</Badge>}
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                      {page.diagnostics && page.diagnostics.length > 0 && (
+                                        <div>
+                                          <h4 className="text-sm font-bold flex items-center gap-2 mb-2"><Settings className="h-4 w-4 text-blue-500" /> Diagnostics</h4>
+                                          <div className="grid md:grid-cols-2 gap-1.5">
+                                            {page.diagnostics.map((d, i) => (
+                                              <div key={i} className="flex items-center gap-2 p-2 rounded bg-blue-50/50 border-l-4 border-l-blue-400">
+                                                <AlertTriangle className="h-3 w-3 text-blue-500 shrink-0" />
+                                                <span className="text-xs">{d.title}</span>
+                                                {d.description && <span className="text-[10px] text-muted-foreground ml-auto shrink-0">{d.description}</span>}
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
-                                  </TableCell>
-                                  <TableCell className="text-center">
-                                    <Badge className={`text-xs font-bold ${
-                                      page.score >= 90 ? "bg-green-100 text-green-700 hover:bg-green-100" :
-                                      page.score >= 50 ? "bg-amber-100 text-amber-700 hover:bg-amber-100" :
-                                      "bg-red-100 text-red-700 hover:bg-red-100"
-                                    }`}>{page.score}</Badge>
-                                  </TableCell>
-                                  <TableCell className={`text-center text-xs font-mono font-medium ${metricColor(page.fcp, thresholds.fcp.good, thresholds.fcp.ok)}`}>{page.fcp}s</TableCell>
-                                  <TableCell className={`text-center text-xs font-mono font-medium ${metricColor(page.lcp, thresholds.lcp.good, thresholds.lcp.ok)}`}>{page.lcp}s</TableCell>
-                                  <TableCell className={`text-center text-xs font-mono font-medium ${metricColor(page.tbt, thresholds.tbt.good, thresholds.tbt.ok)}`}>{page.tbt}ms</TableCell>
-                                  <TableCell className={`text-center text-xs font-mono font-medium ${metricColor(page.cls, thresholds.cls.good, thresholds.cls.ok)}`}>{page.cls}</TableCell>
-                                  <TableCell className={`text-center text-xs font-mono font-medium ${metricColor(page.si, thresholds.si.good, thresholds.si.ok)}`}>{page.si}s</TableCell>
-                                  <TableCell className={`text-center text-xs font-mono font-medium ${metricColor(page.tti, thresholds.tti.good, thresholds.tti.ok)}`}>{page.tti}s</TableCell>
-                                  <TableCell>
-                                    <div className="space-y-0.5 max-w-[180px]">
-                                      {page.issues.slice(0, 3).map((issue, i) => (
-                                        <p key={i} className={`text-[10px] leading-tight ${issue.includes("✓") ? "text-green-600" : "text-red-600"}`}>
-                                          {issue.includes("✓") ? "✅" : "⚠️"} {issue}
-                                        </p>
-                                      ))}
-                                      {page.issues.length > 3 && <p className="text-[10px] text-muted-foreground">+{page.issues.length - 3} more</p>}
-                                    </div>
-                                  </TableCell>
-                                  <TableCell className="text-center">
-                                    <ChevronDown className={`h-4 w-4 mx-auto transition-transform ${expandedPage === page.slug ? "rotate-180" : ""}`} />
                                   </TableCell>
                                 </TableRow>
-
-                                {expandedPage === page.slug && (
-                                  <TableRow key={`detail-${idx}`}>
-                                    <TableCell colSpan={10} className="bg-muted/20 p-0">
-                                      <div className="p-4 space-y-4">
-                                        {/* CWV Visual */}
-                                        <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-                                          {[
-                                            { label: "FCP", val: `${page.fcp}s`, ...thresholds.fcp },
-                                            { label: "LCP", val: `${page.lcp}s`, good: thresholds.lcp.good, ok: thresholds.lcp.ok },
-                                            { label: "TBT", val: `${page.tbt}ms`, good: thresholds.tbt.good, ok: thresholds.tbt.ok },
-                                            { label: "CLS", val: `${page.cls}`, good: thresholds.cls.good, ok: thresholds.cls.ok },
-                                            { label: "SI", val: `${page.si}s`, good: thresholds.si.good, ok: thresholds.si.ok },
-                                            { label: "TTI", val: `${page.tti}s`, good: thresholds.tti.good, ok: thresholds.tti.ok },
-                                          ].map(m => {
-                                            const numVal = parseFloat(m.val);
-                                            return (
-                                              <div key={m.label} className={`p-3 rounded-lg text-center border ${
-                                                numVal <= m.good ? "bg-green-50 border-green-200" :
-                                                numVal <= m.ok ? "bg-amber-50 border-amber-200" :
-                                                "bg-red-50 border-red-200"
-                                              }`}>
-                                                <p className="text-[10px] font-bold text-muted-foreground">{m.label}</p>
-                                                <p className={`text-lg font-bold ${
-                                                  numVal <= m.good ? "text-green-700" : numVal <= m.ok ? "text-amber-700" : "text-red-700"
-                                                }`}>{m.val}</p>
-                                                <p className="text-[9px] text-muted-foreground">
-                                                  Target: ≤{m.good}{m.label === "TBT" ? "ms" : m.label === "CLS" ? "" : "s"}
-                                                </p>
-                                              </div>
-                                            );
-                                          })}
-                                        </div>
-
-                                        {/* Quick Fix for this page */}
-                                        {page.score < 90 && (
-                                          <div className="flex items-center gap-3 p-3 rounded-lg border border-primary/20 bg-primary/5">
-                                            <Wrench className="h-5 w-5 text-primary shrink-0" />
-                                            <div className="flex-1">
-                                              <p className="text-sm font-semibold">Auto-Fix Available</p>
-                                              <p className="text-xs text-muted-foreground">
-                                                Optimize database content for this page: add lazy loading, async decoding, fix external links, and minify HTML
-                                              </p>
-                                            </div>
-                                            <Button
-                                              size="sm"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setOptimizerTab("optimizer");
-                                                runScan();
-                                              }}
-                                              className="gap-1.5 shrink-0"
-                                            >
-                                              <Sparkles className="h-3.5 w-3.5" />
-                                              Fix Now
-                                            </Button>
-                                          </div>
-                                        )}
-
-                                        {/* Opportunities */}
-                                        {page.opportunities && page.opportunities.length > 0 && (
-                                          <div>
-                                            <h4 className="text-sm font-bold flex items-center gap-2 mb-2">
-                                              <Lightbulb className="h-4 w-4 text-amber-500" /> Opportunities ({page.opportunities.length})
-                                            </h4>
-                                            <div className="space-y-1.5">
-                                              {page.opportunities.map((opp, i) => (
-                                                <div key={i} className="flex items-start gap-3 p-2.5 rounded border-l-4 border-l-amber-400 bg-amber-50/50">
-                                                  <Zap className="h-3.5 w-3.5 text-amber-600 mt-0.5 shrink-0" />
-                                                  <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium">{opp.title}</p>
-                                                    {opp.description && <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">{opp.description}</p>}
-                                                  </div>
-                                                  {opp.savings && (
-                                                    <Badge variant="outline" className="text-[10px] shrink-0 border-amber-300 text-amber-700">{opp.savings}</Badge>
-                                                  )}
-                                                </div>
-                                              ))}
-                                            </div>
-                                          </div>
-                                        )}
-
-                                        {/* Diagnostics */}
-                                        {page.diagnostics && page.diagnostics.length > 0 && (
-                                          <div>
-                                            <h4 className="text-sm font-bold flex items-center gap-2 mb-2">
-                                              <Settings className="h-4 w-4 text-blue-500" /> Diagnostics ({page.diagnostics.length})
-                                            </h4>
-                                            <div className="grid md:grid-cols-2 gap-1.5">
-                                              {page.diagnostics.map((diag, i) => (
-                                                <div key={i} className="flex items-center gap-2 p-2 rounded bg-blue-50/50 border-l-4 border-l-blue-400">
-                                                  <AlertTriangle className="h-3 w-3 text-blue-500 shrink-0" />
-                                                  <span className="text-xs">{diag.title}</span>
-                                                  {diag.description && <span className="text-[10px] text-muted-foreground ml-auto shrink-0">{diag.description}</span>}
-                                                </div>
-                                              ))}
-                                            </div>
-                                          </div>
-                                        )}
-
-                                        <p className="text-[10px] text-muted-foreground">
-                                          Analyzed URL: <a href={page.url} target="_blank" rel="noopener" className="underline">{page.url}</a>
-                                          {" • "}Checked: {new Date(page.checkedAt).toLocaleString()}
-                                        </p>
-                                      </div>
-                                    </TableCell>
-                                  </TableRow>
-                                )}
-                              </>
-                            ))}
+                              )}
+                            </>
+                          ))}
                         </TableBody>
                       </Table>
                     </div>
@@ -583,148 +503,86 @@ export function PageSpeedMonitor({
                 </CardContent>
               </Card>
 
-              {/* Global Opportunities Summary */}
+              {/* Global Opps */}
               {(() => {
                 const allOpps = pageSpeedData.pages.flatMap(p => p.opportunities || []);
-                const oppCounts = allOpps.reduce<Record<string, number>>((acc, o) => {
-                  acc[o.title] = (acc[o.title] || 0) + 1;
-                  return acc;
-                }, {});
+                const oppCounts = allOpps.reduce<Record<string, number>>((acc, o) => { acc[o.title] = (acc[o.title] || 0) + 1; return acc; }, {});
                 const topOpps = Object.entries(oppCounts).sort((a, b) => b[1] - a[1]).slice(0, 8);
                 return topOpps.length > 0 ? (
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm flex items-center gap-2">
-                        <Lightbulb className="h-4 w-4 text-amber-500" /> Most Common Optimization Opportunities
-                      </CardTitle>
+                      <CardTitle className="text-sm flex items-center gap-2"><Lightbulb className="h-4 w-4 text-amber-500" /> Top Optimization Opportunities</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
                       {topOpps.map(([title, count]) => (
                         <div key={title} className="flex items-center gap-3 p-2.5 rounded border-l-4 border-l-amber-400 bg-amber-50/30">
                           <Zap className="h-4 w-4 text-amber-600 shrink-0" />
                           <span className="text-sm flex-1">{title}</span>
-                          <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 text-[10px]">{count} page{count > 1 ? "s" : ""}</Badge>
+                          <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100 text-[10px]">{count} pages</Badge>
                         </div>
                       ))}
                     </CardContent>
                   </Card>
                 ) : null;
               })()}
-
-              {/* Recommendations */}
-              <div className="grid lg:grid-cols-2 gap-4">
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2"><Zap className="h-4 w-4 text-amber-500" /> Quick Wins</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {pageSpeedData.pages.some(p => p.lcp > thresholds.lcp.good) && (
-                      <RecRow icon={<Eye className="h-4 w-4" />} text={`${pageSpeedData.pages.filter(p => p.lcp > thresholds.lcp.good).length} pages have slow LCP — optimize hero images and fonts`} severity="high" />
-                    )}
-                    {pageSpeedData.pages.some(p => p.cls > thresholds.cls.good) && (
-                      <RecRow icon={<Layers className="h-4 w-4" />} text={`${pageSpeedData.pages.filter(p => p.cls > thresholds.cls.good).length} pages have CLS issues — add width/height to images`} severity="high" />
-                    )}
-                    {pageSpeedData.pages.some(p => p.tbt > thresholds.tbt.good) && (
-                      <RecRow icon={<Code className="h-4 w-4" />} text={`${pageSpeedData.pages.filter(p => p.tbt > thresholds.tbt.good).length} pages have high TBT — reduce JavaScript execution`} severity="high" />
-                    )}
-                    {pageSpeedData.avgScore >= 90 && (
-                      <RecRow icon={<CheckCircle className="h-4 w-4" />} text="All pages performing well! Monitor weekly." severity="low" />
-                    )}
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2"><Settings className="h-4 w-4 text-blue-500" /> Technical Recommendations</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <RecRow icon={<Globe className="h-4 w-4" />} text="Use CDN for static assets (images, fonts, CSS)" severity="medium" />
-                    <RecRow icon={<Eye className="h-4 w-4" />} text="Convert images to WebP/AVIF for 30-50% size reduction" severity="medium" />
-                    <RecRow icon={<Database className="h-4 w-4" />} text="Set Cache-Control: max-age=31536000 for static files" severity="low" />
-                    <RecRow icon={<MonitorSmartphone className="h-4 w-4" />} text="Consider SSR/pre-rendering for critical pages" severity="low" />
-                  </CardContent>
-                </Card>
-              </div>
             </>
           ) : (
             <Card className="border-dashed">
               <CardContent className="py-16 text-center">
                 <Gauge className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No Speed Data Yet</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Click "Run Lighthouse Analysis" to check page speed using Google's PageSpeed Insights API.
-                </p>
-                <Button onClick={runRealAnalysis} disabled={pageSpeedLoading}>
-                  <Gauge className="h-4 w-4 mr-2" /> Run First Analysis
-                </Button>
+                <p className="text-sm text-muted-foreground mb-4">Click "Run Lighthouse Analysis" to start.</p>
+                <Button onClick={runRealAnalysis} disabled={pageSpeedLoading}><Gauge className="h-4 w-4 mr-2" /> Run First Analysis</Button>
               </CardContent>
             </Card>
           )}
         </>
       )}
 
-      {/* ═══════════════════ OPTIMIZER TAB ═══════════════════ */}
+      {/* ═══════════ OPTIMIZER TAB ═══════════ */}
       {optimizerTab === "optimizer" && (
         <>
-          {/* Optimizer Header */}
           <Card className="border-primary/20 bg-gradient-to-br from-green-50/50 to-blue-50/50 dark:from-green-950/20 dark:to-blue-950/20">
             <CardContent className="pt-6">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                  <h3 className="text-lg font-bold flex items-center gap-2">
-                    <Wrench className="h-5 w-5 text-primary" />
-                    One-Click Speed Optimizer
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Scans your database content and auto-fixes performance issues in images, links, and HTML
-                  </p>
+                  <h3 className="text-lg font-bold flex items-center gap-2"><Wrench className="h-5 w-5 text-primary" /> One-Click Speed Optimizer</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Auto-fix performance issues in database content + audit storage images</p>
                 </div>
                 <div className="flex gap-2 flex-wrap">
                   <Button size="sm" variant="outline" onClick={runScan} disabled={scanning || fixing} className="gap-2">
                     {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
                     {scanning ? "Scanning..." : "Scan for Issues"}
                   </Button>
-                  <Button
-                    size="sm"
-                    onClick={runFix}
-                    disabled={fixing || scanning || (!scanResult || scanResult.fixes.length === 0)}
-                    className="gap-2 bg-green-600 hover:bg-green-700"
-                  >
+                  <Button size="sm" onClick={runFix} disabled={fixing || scanning || (!scanResult || scanResult.fixes.length === 0)} className="gap-2 bg-green-600 hover:bg-green-700">
                     {fixing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                    {fixing ? "Applying Fixes..." : `Fix All Issues${scanResult ? ` (${scanResult.fixes.length})` : ""}`}
+                    {fixing ? "Applying..." : `Fix All${scanResult ? ` (${scanResult.fixes.length})` : ""}`}
                   </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* What gets optimized */}
-          <div className="grid md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
             {Object.entries(FIX_TYPE_CONFIG).map(([key, config]) => {
               const count = activeResult?.categories[key] || 0;
               return (
                 <Card key={key} className={`text-center ${count > 0 ? "border-primary/30" : ""}`}>
                   <CardContent className="pt-4 pb-3">
-                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full ${config.color} mb-2`}>
-                      {config.icon}
-                    </div>
-                    <p className="text-xs font-semibold">{config.label}</p>
-                    <p className={`text-2xl font-bold mt-1 ${count > 0 ? "text-primary" : "text-muted-foreground"}`}>
-                      {count}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">issues</p>
+                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full ${config.color} mb-2`}>{config.icon}</div>
+                    <p className="text-[11px] font-semibold">{config.label}</p>
+                    <p className={`text-2xl font-bold mt-1 ${count > 0 ? "text-primary" : "text-muted-foreground"}`}>{count}</p>
                   </CardContent>
                 </Card>
               );
             })}
           </div>
 
-          {/* Last Fix Result */}
           {fixResult && (
             <Card className="border-green-200 bg-green-50/30">
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm flex items-center gap-2 text-green-700">
-                  <CheckCircle className="h-4 w-4" />
-                  Last Optimization Applied — {fixResult.totalFixed} fixes
+                  <CheckCircle className="h-4 w-4" /> Last Fix — {fixResult.totalFixed} applied
                 </CardTitle>
                 <CardDescription>{new Date(fixResult.timestamp).toLocaleString()}</CardDescription>
               </CardHeader>
@@ -735,41 +593,26 @@ export function PageSpeedMonitor({
                       <CheckCircle className="h-3.5 w-3.5 text-green-600 mt-0.5 shrink-0" />
                       <div className="min-w-0">
                         <span className="font-medium">{fix.name}</span>
-                        <span className="text-muted-foreground"> ({fix.table}.{fix.field})</span>
+                        <span className="text-muted-foreground"> ({fix.table})</span>
                         <p className="text-[10px] text-muted-foreground mt-0.5">{fix.description}</p>
                       </div>
                     </div>
                   ))}
-                  {fixResult.fixes.length > 20 && (
-                    <p className="text-xs text-muted-foreground col-span-2 text-center pt-2">
-                      +{fixResult.fixes.length - 20} more fixes applied
-                    </p>
-                  )}
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Scan Results */}
           {scanResult && scanResult.fixes.length > 0 && (
             <Card>
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <AlertTriangle className="h-4 w-4 text-amber-500" />
-                      Found {scanResult.fixes.length} Issues in {scanResult.totalScanned} Records
-                    </CardTitle>
-                    <CardDescription>Click "Fix All Issues" to auto-apply all optimizations</CardDescription>
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={runFix}
-                    disabled={fixing}
-                    className="gap-2 bg-green-600 hover:bg-green-700"
-                  >
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-amber-500" /> {scanResult.fixes.length} Issues Found
+                  </CardTitle>
+                  <Button size="sm" onClick={runFix} disabled={fixing} className="gap-2 bg-green-600 hover:bg-green-700">
                     {fixing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                    Fix All ({scanResult.fixes.length})
+                    Fix All
                   </Button>
                 </div>
               </CardHeader>
@@ -793,22 +636,13 @@ export function PageSpeedMonitor({
                             <TableCell className="font-medium text-sm max-w-[200px] truncate">{fix.name}</TableCell>
                             <TableCell><Badge variant="outline" className="text-[10px]">{fix.table}</Badge></TableCell>
                             <TableCell className="text-xs text-muted-foreground">{fix.field}</TableCell>
-                            <TableCell>
-                              <Badge className={`text-[10px] ${cfg.color} border`}>
-                                {cfg.label}
-                              </Badge>
-                            </TableCell>
+                            <TableCell><Badge className={`text-[10px] ${cfg.color} border`}>{cfg.label}</Badge></TableCell>
                             <TableCell className="text-xs text-muted-foreground max-w-[250px] truncate">{fix.description}</TableCell>
                           </TableRow>
                         );
                       })}
                     </TableBody>
                   </Table>
-                  {scanResult.fixes.length > 50 && (
-                    <p className="text-xs text-center text-muted-foreground py-3">
-                      Showing 50 of {scanResult.fixes.length} issues
-                    </p>
-                  )}
                 </div>
               </CardContent>
             </Card>
@@ -819,10 +653,7 @@ export function PageSpeedMonitor({
               <CardContent className="py-12 text-center">
                 <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-green-700">All Content Optimized! ✨</h3>
-                <p className="text-sm text-muted-foreground mt-2">
-                  No performance issues found in your database content. All images have lazy loading,
-                  async decoding, dimensions, and all external links are secured.
-                </p>
+                <p className="text-sm text-muted-foreground mt-2">No performance issues found in database content.</p>
               </CardContent>
             </Card>
           )}
@@ -832,52 +663,355 @@ export function PageSpeedMonitor({
               <CardContent className="py-16 text-center">
                 <Wrench className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">Auto-Optimizer Ready</h3>
-                <p className="text-sm text-muted-foreground mb-1">This tool scans all your database content and fixes:</p>
                 <div className="flex flex-wrap gap-2 justify-center mt-3 mb-4">
                   {Object.entries(FIX_TYPE_CONFIG).map(([key, cfg]) => (
-                    <Badge key={key} variant="outline" className="gap-1.5">
-                      {cfg.icon} {cfg.label}
-                    </Badge>
+                    <Badge key={key} variant="outline" className="gap-1.5">{cfg.icon} {cfg.label}</Badge>
                   ))}
                 </div>
-                <p className="text-xs text-muted-foreground mb-4">
-                  Tables scanned: articles, colleges, institutes, city_pages, college_sections
+                <Button onClick={runScan} disabled={scanning} className="gap-2"><Eye className="h-4 w-4" /> Scan Now</Button>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
+
+      {/* ═══════════ IMAGES TAB ═══════════ */}
+      {optimizerTab === "images" && (
+        <>
+          <Card className="border-primary/20 bg-gradient-to-br from-orange-50/50 to-pink-50/50 dark:from-orange-950/20 dark:to-pink-950/20">
+            <CardContent className="pt-6">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-bold flex items-center gap-2"><FileImage className="h-5 w-5 text-orange-500" /> Storage Image Audit</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Audit uploaded images for format, size, and optimization opportunities</p>
+                </div>
+                <Button size="sm" onClick={runScan} disabled={scanning} className="gap-2">
+                  {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />}
+                  {scanning ? "Auditing..." : "Audit Images"}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {imageAudit ? (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <Card className="border-l-4 border-l-blue-500">
+                  <CardContent className="pt-4 text-center">
+                    <p className="text-3xl font-bold text-blue-600">{imageAudit.totalImages}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Total Images</p>
+                  </CardContent>
+                </Card>
+                <Card className="border-l-4 border-l-purple-500">
+                  <CardContent className="pt-4 text-center">
+                    <p className="text-xl font-bold text-purple-600">{imageAudit.totalSizeFormatted}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Total Size</p>
+                  </CardContent>
+                </Card>
+                <Card className="border-l-4 border-l-green-500">
+                  <CardContent className="pt-4 text-center">
+                    <p className="text-3xl font-bold text-green-600">{imageAudit.optimizedCount}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Optimized</p>
+                  </CardContent>
+                </Card>
+                <Card className="border-l-4 border-l-amber-500">
+                  <CardContent className="pt-4 text-center">
+                    <p className="text-3xl font-bold text-amber-600">{imageAudit.nonWebpImages.length}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Non-WebP</p>
+                  </CardContent>
+                </Card>
+                <Card className="border-l-4 border-l-red-500">
+                  <CardContent className="pt-4 text-center">
+                    <p className="text-3xl font-bold text-red-600">{imageAudit.largeImages.length}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Large Files (&gt;200KB)</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Image List */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">All Images ({imageAudit.allImages.length})</CardTitle>
+                  <CardDescription>Sorted by file size — largest first</CardDescription>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>File</TableHead>
+                          <TableHead className="text-center">Format</TableHead>
+                          <TableHead className="text-center">Size</TableHead>
+                          <TableHead className="text-center">Status</TableHead>
+                          <TableHead>Issues</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {imageAudit.allImages.slice(0, 50).map((img, i) => (
+                          <TableRow key={i} className={img.isOptimized ? "" : "bg-amber-50/30"}>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <div className="w-8 h-8 rounded border bg-muted/50 flex items-center justify-center shrink-0 overflow-hidden">
+                                  {img.format !== "svg" ? (
+                                    <img src={img.publicUrl} alt="" className="w-full h-full object-cover" loading="lazy" />
+                                  ) : (
+                                    <FileImage className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium truncate max-w-[200px]">{img.name}</p>
+                                  <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{img.path}</p>
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Badge variant="outline" className={`text-[10px] ${
+                                ["webp", "avif"].includes(img.format) ? "border-green-300 text-green-700" : "border-amber-300 text-amber-700"
+                              }`}>{img.format.toUpperCase()}</Badge>
+                            </TableCell>
+                            <TableCell className={`text-center text-xs font-mono font-medium ${
+                              img.size > 500000 ? "text-red-600" : img.size > 200000 ? "text-amber-600" : "text-green-600"
+                            }`}>{img.sizeFormatted}</TableCell>
+                            <TableCell className="text-center">
+                              {img.isOptimized ? (
+                                <Badge className="bg-green-100 text-green-700 text-[10px]">✓ OK</Badge>
+                              ) : (
+                                <Badge className="bg-amber-100 text-amber-700 text-[10px]">⚠ Fix</Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div className="space-y-0.5">
+                                {img.issues.map((issue, j) => (
+                                  <p key={j} className="text-[10px] text-amber-700">{issue}</p>
+                                ))}
+                                {img.isOptimized && <p className="text-[10px] text-green-600">All good ✓</p>}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Recommendations */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2"><Lightbulb className="h-4 w-4 text-amber-500" /> Image Optimization Guide</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {imageAudit.nonWebpImages.length > 0 && (
+                    <RecRow icon={<FileImage className="h-4 w-4" />} text={`${imageAudit.nonWebpImages.length} images are not in WebP/AVIF format — convert for 30-50% size savings`} severity="high" />
+                  )}
+                  {imageAudit.largeImages.length > 0 && (
+                    <RecRow icon={<ArrowDownToLine className="h-4 w-4" />} text={`${imageAudit.largeImages.length} images exceed 200KB — compress before uploading`} severity="high" />
+                  )}
+                  <RecRow icon={<ImageIcon className="h-4 w-4" />} text="Use squoosh.app or tinypng.com to compress images before upload" severity="medium" />
+                  <RecRow icon={<Globe className="h-4 w-4" />} text="WebP format provides 25-35% better compression than JPEG at equivalent quality" severity="low" />
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <Card className="border-dashed">
+              <CardContent className="py-16 text-center">
+                <FileImage className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Image Audit Yet</h3>
+                <p className="text-sm text-muted-foreground mb-4">Click "Audit Images" to scan your storage bucket for optimization opportunities.</p>
+                <Button onClick={runScan} disabled={scanning}><FileImage className="h-4 w-4 mr-2" /> Audit Now</Button>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
+
+      {/* ═══════════ API USAGE TAB ═══════════ */}
+      {optimizerTab === "usage" && (
+        <>
+          <Card className="border-primary/20 bg-gradient-to-br from-indigo-50/50 to-purple-50/50 dark:from-indigo-950/20 dark:to-purple-950/20">
+            <CardContent className="pt-6">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                  <h3 className="text-lg font-bold flex items-center gap-2"><PieChart className="h-5 w-5 text-indigo-500" /> Google PSI API Usage</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Track your PageSpeed Insights API quota consumption — daily &amp; monthly
+                  </p>
+                </div>
+                <Button size="sm" variant="outline" onClick={loadApiUsage} className="gap-2">
+                  <RefreshCw className="h-4 w-4" /> Refresh
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {apiUsage ? (
+            <>
+              {/* Quota Cards */}
+              <div className="grid md:grid-cols-2 gap-4">
+                {/* Daily */}
+                <Card className="border-l-4 border-l-blue-500">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <CalendarDays className="h-4 w-4 text-blue-500" /> Today's Usage
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-end justify-between">
+                      <div>
+                        <p className="text-4xl font-bold text-blue-600">{dailyUsed}</p>
+                        <p className="text-xs text-muted-foreground">API calls today</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">{apiUsage.todayPages || 0} pages</p>
+                        <p className="text-xs text-muted-foreground">analyzed</p>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-muted-foreground">Usage</span>
+                        <span className="font-medium">{dailyUsed} / {dailyLimit.toLocaleString()}</span>
+                      </div>
+                      <Progress value={dailyPct} className="h-2" />
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {(dailyLimit - dailyUsed).toLocaleString()} calls remaining today
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Monthly */}
+                <Card className="border-l-4 border-l-purple-500">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4 text-purple-500" /> Monthly Usage
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="flex items-end justify-between">
+                      <div>
+                        <p className="text-4xl font-bold text-purple-600">{monthUsed}</p>
+                        <p className="text-xs text-muted-foreground">API calls this month</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">{apiUsage.monthPages || 0} pages</p>
+                        <p className="text-xs text-muted-foreground">analyzed</p>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-xs mb-1">
+                        <span className="text-muted-foreground">Quota</span>
+                        <span className="font-medium">{monthUsed} / {monthLimit.toLocaleString()}</span>
+                      </div>
+                      <Progress value={monthPct} className="h-2" />
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {(monthLimit - monthUsed).toLocaleString()} calls remaining this month
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Lifetime Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card>
+                  <CardContent className="pt-4 text-center">
+                    <p className="text-2xl font-bold text-primary">{apiUsage.totalCalls}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Total API Calls (Lifetime)</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 text-center">
+                    <p className="text-2xl font-bold text-primary">{apiUsage.totalPages}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Total Pages Analyzed</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 text-center">
+                    <p className="text-sm font-medium">{apiUsage.lastRun ? new Date(apiUsage.lastRun).toLocaleString() : "Never"}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Last API Call</p>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-4 text-center">
+                    <p className={`text-2xl font-bold ${dailyPct < 50 ? "text-green-600" : dailyPct < 80 ? "text-amber-600" : "text-red-600"}`}>
+                      {dailyPct < 50 ? "🟢" : dailyPct < 80 ? "🟡" : "🔴"} {(100 - dailyPct).toFixed(0)}%
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">Quota Health</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* History */}
+              {apiUsage.history && apiUsage.history.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2"><Clock className="h-4 w-4" /> Recent Analysis History</CardTitle>
+                    <CardDescription>Last {apiUsage.history.length} analysis runs</CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Date & Time</TableHead>
+                            <TableHead className="text-center">Device</TableHead>
+                            <TableHead className="text-center">Pages</TableHead>
+                            <TableHead className="text-center">Avg Score</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {[...apiUsage.history].reverse().map((entry, i) => (
+                            <TableRow key={i}>
+                              <TableCell className="text-sm">{new Date(entry.date).toLocaleString()}</TableCell>
+                              <TableCell className="text-center">
+                                <Badge variant="outline" className="text-[10px]">
+                                  {entry.device === "mobile" ? "📱" : "💻"} {entry.device}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-center text-sm font-medium">{entry.pages}</TableCell>
+                              <TableCell className="text-center">
+                                <Badge className={`text-xs font-bold ${
+                                  entry.avgScore >= 90 ? "bg-green-100 text-green-700" :
+                                  entry.avgScore >= 50 ? "bg-amber-100 text-amber-700" :
+                                  "bg-red-100 text-red-700"
+                                } hover:bg-inherit`}>{entry.avgScore}</Badge>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Quota Info */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2"><Shield className="h-4 w-4 text-blue-500" /> Google PSI API Quota Info</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <RecRow icon={<Globe className="h-4 w-4" />} text="Free tier: 25,000 queries per day (with API key)" severity="low" />
+                  <RecRow icon={<Clock className="h-4 w-4" />} text="Without API key: ~5 queries/minute, heavily rate-limited" severity="medium" />
+                  <RecRow icon={<TrendingUp className="h-4 w-4" />} text="Daily cron uses ~10-30 calls per run (5 static + dynamic pages × 2 devices)" severity="low" />
+                  <RecRow icon={<CalendarDays className="h-4 w-4" />} text="Monthly estimated: ~600-900 API calls with daily automated checks" severity="low" />
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <Card className="border-dashed">
+              <CardContent className="py-16 text-center">
+                <PieChart className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Usage Data Yet</h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Run a PageSpeed analysis first. Usage tracking starts automatically.
                 </p>
-                <Button onClick={runScan} disabled={scanning} className="gap-2">
-                  <Eye className="h-4 w-4" /> Scan Now
+                <Button onClick={() => { setOptimizerTab("analysis"); }} variant="outline" className="gap-2">
+                  <Gauge className="h-4 w-4" /> Go to Analysis
                 </Button>
               </CardContent>
             </Card>
           )}
-
-          {/* Optimization Guide */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-primary" /> What This Optimizer Does
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {[
-                  { icon: <ImageIcon className="h-5 w-5 text-blue-500" />, title: "Lazy Loading", desc: 'Adds loading="lazy" to all <img> tags so images load only when visible, reducing initial page weight' },
-                  { icon: <Zap className="h-5 w-5 text-purple-500" />, title: "Async Decoding", desc: 'Adds decoding="async" to images so the browser can decode them off the main thread, reducing TBT' },
-                  { icon: <LayoutGrid className="h-5 w-5 text-cyan-500" />, title: "Image Dimensions", desc: "Adds width/height attributes to prevent Cumulative Layout Shift (CLS) when images load" },
-                  { icon: <Link2 className="h-5 w-5 text-green-500" />, title: "Link Security", desc: 'Adds rel="noopener noreferrer" to external links with target="_blank" for security and performance' },
-                  { icon: <Minimize2 className="h-5 w-5 text-amber-500" />, title: "HTML Cleanup", desc: "Removes excessive whitespace and line breaks from stored HTML content to reduce payload size" },
-                  { icon: <TrendingUp className="h-5 w-5 text-primary" />, title: "Score Impact", desc: "These fixes directly improve LCP, CLS, TBT, and overall Lighthouse scores across all devices" },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-3 p-3 rounded-lg border bg-muted/30">
-                    <div className="shrink-0 mt-0.5">{item.icon}</div>
-                    <div>
-                      <p className="text-sm font-semibold">{item.title}</p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </>
       )}
     </div>
@@ -890,11 +1024,7 @@ function RecRow({ icon, text, severity }: { icon: React.ReactNode; text: string;
     <div className={`flex items-center gap-3 p-2.5 rounded border-l-4 ${colors}`}>
       <span className="text-muted-foreground shrink-0">{icon}</span>
       <p className="text-sm flex-1">{text}</p>
-      <Badge className={`text-[10px] ${
-        severity === "high" ? "bg-red-100 text-red-700" :
-        severity === "medium" ? "bg-amber-100 text-amber-700" :
-        "bg-blue-100 text-blue-700"
-      }`}>{severity}</Badge>
+      <Badge className={`text-[10px] ${severity === "high" ? "bg-red-100 text-red-700" : severity === "medium" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>{severity}</Badge>
     </div>
   );
 }
