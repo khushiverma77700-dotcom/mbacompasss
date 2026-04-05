@@ -66,6 +66,7 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => (
     <BackButton />
     {children}
     <Footer />
+    <ProfileAnalyzerPopup />
   </>
 );
 
