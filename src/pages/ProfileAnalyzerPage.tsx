@@ -1123,6 +1123,12 @@ const ProfileAnalyzerPage = () => {
               <CardContent className="space-y-5">
                 {step === 1 && (
                   <>
+                    <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 mb-2">
+                      <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                        <Mail className="w-4 h-4 shrink-0" />
+                        Kindly enter your correct email — we will send your detailed report over your email.
+                      </p>
+                    </div>
                     <div className="space-y-1.5">
                       <Label className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> Full Name <span className="text-destructive">*</span></Label>
                       <Input placeholder="Enter your full name" value={form.name} onChange={e => updateField("name", e.target.value)} className={errors.name ? "border-destructive" : ""} />
