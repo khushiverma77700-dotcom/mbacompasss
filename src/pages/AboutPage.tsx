@@ -120,6 +120,8 @@ const AboutPage = () => (
           </div>
         </CardContent>
       </Card>
+
+      <PageKeywords contentType="static" recordId="about" fallbackKeywords={["about best MBA coaching", "MBA coaching platform", "MBA coaching comparison India"]} />
     </div>
   </div>
 );

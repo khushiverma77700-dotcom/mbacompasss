@@ -96,6 +96,8 @@ const ContactPage = () => {
             </div>
           </div>
         </div>
+
+        <PageKeywords contentType="static" recordId="contact" fallbackKeywords={["contact MBA coaching", "MBA guidance", "CAT coaching help"]} />
       </div>
     </div>
   );
