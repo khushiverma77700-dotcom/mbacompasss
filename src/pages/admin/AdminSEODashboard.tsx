@@ -225,6 +225,24 @@ const AdminSEODashboard = () => {
 
   const [injectLoading, setInjectLoading] = useState(false);
 
+  // Auto-Generate State
+  const [autoGenType, setAutoGenType] = useState<SEOContentType>("article");
+  const [autoGenLoading, setAutoGenLoading] = useState(false);
+  const [autoGenResults, setAutoGenResults] = useState<any[]>([]);
+
+  // Uniqueness Check State
+  const [uniqueLoading, setUniqueLoading] = useState(false);
+  const [uniqueData, setUniqueData] = useState<any>(null);
+
+  // Content Gaps State
+  const [gapsLoading, setGapsLoading] = useState(false);
+  const [gapsData, setGapsData] = useState<any>(null);
+
+  // Daily Competitor Report State
+  const [dailyReport, setDailyReport] = useState<any>(null);
+  const [dailyReportLoading, setDailyReportLoading] = useState(false);
+  const [dailyReportRefreshing, setDailyReportRefreshing] = useState(false);
+
   // Load saved blog ideas
   const loadSavedBlogIdeas = useCallback(async () => {
     const { data } = await supabase.from("site_settings").select("value").eq("key", "saved_blog_ideas").maybeSingle();
