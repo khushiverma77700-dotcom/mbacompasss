@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { Suspense, useState, lazy } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -10,64 +10,79 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ScrollToTop from "@/components/ScrollToTop";
 import BackButton from "@/components/BackButton";
-import OnboardingDialog from "@/components/OnboardingDialog";
 import { consumePostAuthRedirect } from "@/lib/authRedirect";
-import ProfileAnalyzerPopup from "@/components/ProfileAnalyzerPopup";
 import { supabase } from "@/integrations/supabase/client";
-import Index from "./pages/Index";
-import CategoryPage from "./pages/CategoryPage";
-import InstitutePage from "./pages/InstitutePage";
-import ComparePage from "./pages/ComparePage";
-import BlogPage from "./pages/BlogPage";
-import ArticlePage from "./pages/ArticlePage";
-import CollegesPage from "./pages/CollegesPage";
-import ExamDetailPage from "./pages/ExamDetailPage";
-import AuthPage from "./pages/AuthPage";
-import AboutPage from "./pages/AboutPage";
-import ContactPage from "./pages/ContactPage";
-import AdminLayout from "./pages/admin/AdminLayout";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminInstitutes from "./pages/admin/AdminInstitutes";
-import AdminArticles from "./pages/admin/AdminArticles";
-import AdminBanners from "./pages/admin/AdminBanners";
-import AdminInquiries from "./pages/admin/AdminInquiries";
-import AdminCourses from "./pages/admin/AdminCourses";
-import AdminColleges from "./pages/admin/AdminColleges";
-import AdminSubscribers from "./pages/admin/AdminSubscribers";
-import AdminExams from "./pages/admin/AdminExams";
-import AdminCategories from "./pages/admin/AdminCategories";
-import AdminSiteSettings from "./pages/admin/AdminSiteSettings";
-import AdminTestimonials from "./pages/admin/AdminTestimonials";
-import AdminCoupons from "./pages/admin/AdminCoupons";
-import AdminCoachingOfWeek from "./pages/admin/AdminCoachingOfWeek";
-import AdminCollegeSections from "./pages/admin/AdminCollegeSections";
-import AdminInstituteResults from "./pages/admin/AdminInstituteResults";
-import AdminSitemap from "./pages/admin/AdminSitemap";
-import AdminClearCache from "./pages/admin/AdminClearCache";
-import AdminLeads from "./pages/admin/AdminLeads";
-import AdminCityPages from "./pages/admin/AdminCityPages";
-import AdminAllLinks from "./pages/admin/AdminAllLinks";
-import AdminComparisons from "./pages/admin/AdminComparisons";
-import AdminCoachingResults from "./pages/admin/AdminCoachingResults";
-import AdminSEODashboard from "./pages/admin/AdminSEODashboard";
-import DashboardPage from "./pages/DashboardPage";
-import CollegeDetailPage from "./pages/CollegeDetailPage";
-import CollegeFilterPage from "./pages/CollegeFilterPage";
-import ProfileAnalyzerPage from "./pages/ProfileAnalyzerPage";
-import AdminProfileAnalyzer from "./pages/admin/AdminProfileAnalyzer";
-import AdminManageAdmins from "./pages/admin/AdminManageAdmins";
-import AdminStaticPageSEO from "./pages/admin/AdminStaticPageSEO";
-import NotFound from "./pages/NotFound";
+
+// Lazy-loaded public pages
+const Index = lazy(() => import("./pages/Index"));
+const CategoryPage = lazy(() => import("./pages/CategoryPage"));
+const InstitutePage = lazy(() => import("./pages/InstitutePage"));
+const ComparePage = lazy(() => import("./pages/ComparePage"));
+const BlogPage = lazy(() => import("./pages/BlogPage"));
+const ArticlePage = lazy(() => import("./pages/ArticlePage"));
+const CollegesPage = lazy(() => import("./pages/CollegesPage"));
+const ExamDetailPage = lazy(() => import("./pages/ExamDetailPage"));
+const AuthPage = lazy(() => import("./pages/AuthPage"));
+const AboutPage = lazy(() => import("./pages/AboutPage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
+const DashboardPage = lazy(() => import("./pages/DashboardPage"));
+const CollegeDetailPage = lazy(() => import("./pages/CollegeDetailPage"));
+const CollegeFilterPage = lazy(() => import("./pages/CollegeFilterPage"));
+const ProfileAnalyzerPage = lazy(() => import("./pages/ProfileAnalyzerPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Lazy-loaded admin pages
+const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminInstitutes = lazy(() => import("./pages/admin/AdminInstitutes"));
+const AdminArticles = lazy(() => import("./pages/admin/AdminArticles"));
+const AdminBanners = lazy(() => import("./pages/admin/AdminBanners"));
+const AdminInquiries = lazy(() => import("./pages/admin/AdminInquiries"));
+const AdminCourses = lazy(() => import("./pages/admin/AdminCourses"));
+const AdminColleges = lazy(() => import("./pages/admin/AdminColleges"));
+const AdminSubscribers = lazy(() => import("./pages/admin/AdminSubscribers"));
+const AdminExams = lazy(() => import("./pages/admin/AdminExams"));
+const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
+const AdminSiteSettings = lazy(() => import("./pages/admin/AdminSiteSettings"));
+const AdminTestimonials = lazy(() => import("./pages/admin/AdminTestimonials"));
+const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
+const AdminCoachingOfWeek = lazy(() => import("./pages/admin/AdminCoachingOfWeek"));
+const AdminCollegeSections = lazy(() => import("./pages/admin/AdminCollegeSections"));
+const AdminInstituteResults = lazy(() => import("./pages/admin/AdminInstituteResults"));
+const AdminSitemap = lazy(() => import("./pages/admin/AdminSitemap"));
+const AdminClearCache = lazy(() => import("./pages/admin/AdminClearCache"));
+const AdminLeads = lazy(() => import("./pages/admin/AdminLeads"));
+const AdminCityPages = lazy(() => import("./pages/admin/AdminCityPages"));
+const AdminAllLinks = lazy(() => import("./pages/admin/AdminAllLinks"));
+const AdminComparisons = lazy(() => import("./pages/admin/AdminComparisons"));
+const AdminCoachingResults = lazy(() => import("./pages/admin/AdminCoachingResults"));
+const AdminSEODashboard = lazy(() => import("./pages/admin/AdminSEODashboard"));
+const AdminProfileAnalyzer = lazy(() => import("./pages/admin/AdminProfileAnalyzer"));
+const AdminManageAdmins = lazy(() => import("./pages/admin/AdminManageAdmins"));
+const AdminStaticPageSEO = lazy(() => import("./pages/admin/AdminStaticPageSEO"));
+
+// Lazy load heavy popups
+const OnboardingDialog = lazy(() => import("@/components/OnboardingDialog"));
+const ProfileAnalyzerPopup = lazy(() => import("@/components/ProfileAnalyzerPopup"));
 
 const queryClient = new QueryClient();
+
+// Minimal loading fallback
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-[40vh]">
+    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   <>
     <Navbar />
     <BackButton />
-    {children}
+    <Suspense fallback={<PageLoader />}>{children}</Suspense>
     <Footer />
-    <ProfileAnalyzerPopup />
+    <Suspense fallback={null}>
+      <ProfileAnalyzerPopup />
+    </Suspense>
   </>
 );
 
@@ -98,11 +113,13 @@ const OnboardingGate = () => {
   if (!showOnboarding || !user) return null;
 
   return (
-    <OnboardingDialog
-      open={showOnboarding}
-      onComplete={() => setShowOnboarding(false)}
-      userId={user.id}
-    />
+    <Suspense fallback={null}>
+      <OnboardingDialog
+        open={showOnboarding}
+        onComplete={() => setShowOnboarding(false)}
+        userId={user.id}
+      />
+    </Suspense>
   );
 };
 
@@ -136,34 +153,34 @@ const App = () => (
           <OAuthRedirectHandler />
           <OnboardingGate />
           <Routes>
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="institutes" element={<AdminInstitutes />} />
-              <Route path="articles" element={<AdminArticles />} />
-              <Route path="banners" element={<AdminBanners />} />
-              <Route path="inquiries" element={<AdminInquiries />} />
-              <Route path="courses" element={<AdminCourses />} />
-              <Route path="colleges" element={<AdminColleges />} />
-              <Route path="subscribers" element={<AdminSubscribers />} />
-              <Route path="exams" element={<AdminExams />} />
-              <Route path="categories" element={<AdminCategories />} />
-              <Route path="site-settings" element={<AdminSiteSettings />} />
-              <Route path="testimonials" element={<AdminTestimonials />} />
-              <Route path="coupons" element={<AdminCoupons />} />
-              <Route path="coaching-of-week" element={<AdminCoachingOfWeek />} />
-              <Route path="college-sections" element={<AdminCollegeSections />} />
-              <Route path="institute-results" element={<AdminInstituteResults />} />
-              <Route path="sitemap" element={<AdminSitemap />} />
-              <Route path="clear-cache" element={<AdminClearCache />} />
-              <Route path="leads" element={<AdminLeads />} />
-              <Route path="city-pages" element={<AdminCityPages />} />
-              <Route path="all-links" element={<AdminAllLinks />} />
-              <Route path="comparisons" element={<AdminComparisons />} />
-              <Route path="coaching-results" element={<AdminCoachingResults />} />
-              <Route path="seo-dashboard" element={<AdminSEODashboard />} />
-              <Route path="profile-analyzer" element={<AdminProfileAnalyzer />} />
-              <Route path="manage-admins" element={<AdminManageAdmins />} />
-              <Route path="static-seo" element={<AdminStaticPageSEO />} />
+            <Route path="/admin" element={<Suspense fallback={<PageLoader />}><AdminLayout /></Suspense>}>
+              <Route index element={<Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense>} />
+              <Route path="institutes" element={<Suspense fallback={<PageLoader />}><AdminInstitutes /></Suspense>} />
+              <Route path="articles" element={<Suspense fallback={<PageLoader />}><AdminArticles /></Suspense>} />
+              <Route path="banners" element={<Suspense fallback={<PageLoader />}><AdminBanners /></Suspense>} />
+              <Route path="inquiries" element={<Suspense fallback={<PageLoader />}><AdminInquiries /></Suspense>} />
+              <Route path="courses" element={<Suspense fallback={<PageLoader />}><AdminCourses /></Suspense>} />
+              <Route path="colleges" element={<Suspense fallback={<PageLoader />}><AdminColleges /></Suspense>} />
+              <Route path="subscribers" element={<Suspense fallback={<PageLoader />}><AdminSubscribers /></Suspense>} />
+              <Route path="exams" element={<Suspense fallback={<PageLoader />}><AdminExams /></Suspense>} />
+              <Route path="categories" element={<Suspense fallback={<PageLoader />}><AdminCategories /></Suspense>} />
+              <Route path="site-settings" element={<Suspense fallback={<PageLoader />}><AdminSiteSettings /></Suspense>} />
+              <Route path="testimonials" element={<Suspense fallback={<PageLoader />}><AdminTestimonials /></Suspense>} />
+              <Route path="coupons" element={<Suspense fallback={<PageLoader />}><AdminCoupons /></Suspense>} />
+              <Route path="coaching-of-week" element={<Suspense fallback={<PageLoader />}><AdminCoachingOfWeek /></Suspense>} />
+              <Route path="college-sections" element={<Suspense fallback={<PageLoader />}><AdminCollegeSections /></Suspense>} />
+              <Route path="institute-results" element={<Suspense fallback={<PageLoader />}><AdminInstituteResults /></Suspense>} />
+              <Route path="sitemap" element={<Suspense fallback={<PageLoader />}><AdminSitemap /></Suspense>} />
+              <Route path="clear-cache" element={<Suspense fallback={<PageLoader />}><AdminClearCache /></Suspense>} />
+              <Route path="leads" element={<Suspense fallback={<PageLoader />}><AdminLeads /></Suspense>} />
+              <Route path="city-pages" element={<Suspense fallback={<PageLoader />}><AdminCityPages /></Suspense>} />
+              <Route path="all-links" element={<Suspense fallback={<PageLoader />}><AdminAllLinks /></Suspense>} />
+              <Route path="comparisons" element={<Suspense fallback={<PageLoader />}><AdminComparisons /></Suspense>} />
+              <Route path="coaching-results" element={<Suspense fallback={<PageLoader />}><AdminCoachingResults /></Suspense>} />
+              <Route path="seo-dashboard" element={<Suspense fallback={<PageLoader />}><AdminSEODashboard /></Suspense>} />
+              <Route path="profile-analyzer" element={<Suspense fallback={<PageLoader />}><AdminProfileAnalyzer /></Suspense>} />
+              <Route path="manage-admins" element={<Suspense fallback={<PageLoader />}><AdminManageAdmins /></Suspense>} />
+              <Route path="static-seo" element={<Suspense fallback={<PageLoader />}><AdminStaticPageSEO /></Suspense>} />
             </Route>
             <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
             <Route path="/category/:slug" element={<PublicLayout><CategoryPage /></PublicLayout>} />
