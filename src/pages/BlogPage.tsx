@@ -388,6 +388,8 @@ const BlogPage = () => {
             </div>
           </>
         )}
+
+        <PageKeywords contentType="static" recordId="blog" fallbackKeywords={["MBA blog", "CAT preparation tips", "MBA coaching reviews", "MBA career advice"]} />
       </div>
     </div>
   );

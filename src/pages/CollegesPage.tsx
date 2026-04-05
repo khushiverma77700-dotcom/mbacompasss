@@ -316,6 +316,8 @@ const CollegesPage = () => {
             </div>
           </div>
         )}
+
+        <PageKeywords contentType="static" recordId="colleges" fallbackKeywords={["top MBA colleges India", "best B-schools", "IIM fees placements", "MBA college rankings"]} />
       </div>
     </div>
   );
