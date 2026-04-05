@@ -1,4 +1,4 @@
-import React, { Suspense, useState, lazy } from "react";
+import React, { Suspense, useState, lazy, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -12,6 +12,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import BackButton from "@/components/BackButton";
 import { consumePostAuthRedirect } from "@/lib/authRedirect";
 import { supabase } from "@/integrations/supabase/client";
+import { useAllSiteSettings } from "@/hooks/useSiteSettings";
 
 // Lazy-loaded public pages
 const Index = lazy(() => import("./pages/Index"));
@@ -65,14 +66,29 @@ const AdminStaticPageSEO = lazy(() => import("./pages/admin/AdminStaticPageSEO")
 const OnboardingDialog = lazy(() => import("@/components/OnboardingDialog"));
 const ProfileAnalyzerPopup = lazy(() => import("@/components/ProfileAnalyzerPopup"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 15 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
-// Minimal loading fallback
+// Minimal loading fallback — just a small spinner, no full-page blank
 const PageLoader = () => (
   <div className="flex items-center justify-center min-h-[40vh]">
     <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
   </div>
 );
+
+// Prefetch all site settings in one batch on app mount
+const SettingsPrefetcher = () => {
+  useAllSiteSettings();
+  return null;
+};
 
 const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   <>
@@ -147,6 +163,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <SettingsPrefetcher />
       <BrowserRouter>
         <ScrollToTop />
         <AuthProvider>
