@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import SEOHead from "@/components/SEOHead";
 import { Link } from "react-router-dom";
+import PageKeywords from "@/components/PageKeywords";
 
 const ContactPage = () => {
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
