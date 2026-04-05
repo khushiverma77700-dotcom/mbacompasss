@@ -134,6 +134,7 @@ Deno.serve(async (req) => {
         : `${siteUrl || "https://coach-compass-finder.lovable.app"}${page.url}`;
 
       try {
+        // Build PSI URL — try with API key first, fallback without if 403
         let psiUrl = `${PSI_API}?url=${encodeURIComponent(fullUrl)}&strategy=${strategy}&category=PERFORMANCE`;
         if (apiKey) psiUrl += `&key=${apiKey}`;
         console.log(`[${i + 1}/${Math.min(urls.length, 15)}] Analyzing: ${fullUrl} (${strategy})`);
@@ -149,7 +150,18 @@ Deno.serve(async (req) => {
           await new Promise(r => setTimeout(r, (attempt + 1) * 5000));
         }
 
+        // If API key gave 403, retry WITHOUT the key (free tier works without key)
+        if (response && response.status === 403 && apiKey) {
+          console.log(`API key returned 403, retrying without key...`);
+          const errorBody = await response.text();
+          console.log(`Google API error: ${errorBody.slice(0, 300)}`);
+          const fallbackUrl = `${PSI_API}?url=${encodeURIComponent(fullUrl)}&strategy=${strategy}&category=PERFORMANCE`;
+          response = await fetch(fallbackUrl);
+        }
+
         if (!response || !response.ok) {
+          const errText = response ? await response.text() : "timeout";
+          console.error(`PSI error for ${fullUrl}: ${response?.status} — ${errText.slice(0, 200)}`);
           results.push({
             url: fullUrl,
             name: page.name || fullUrl,
