@@ -1,4 +1,5 @@
 import { useParams, Link } from "react-router-dom";
+import PageKeywords from "@/components/PageKeywords";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { MapPin, Star, Users, TrendingUp, Award, BookOpen, ArrowLeft, Globe, GraduationCap, CheckCircle, Building, Calendar, ChevronDown, ChevronUp, Download, ThumbsUp, ThumbsDown, HelpCircle, Home, Image, Medal, Banknote, MessageSquare } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
