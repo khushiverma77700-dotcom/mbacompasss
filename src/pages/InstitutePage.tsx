@@ -594,9 +594,10 @@ const InstitutePage = () => {
                 <Link to="/compare"><Button variant="outline" className="w-full">Go to Compare</Button></Link>
               </CardContent>
             </Card>
-          </div>
         </div>
+        {institute?.id && <PageKeywords contentType="institute" recordId={institute.id} fallbackKeywords={(institute as any).keywords || []} />}
       </div>
+    </div>
     </div>
   );
 };
