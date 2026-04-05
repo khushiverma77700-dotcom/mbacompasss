@@ -820,6 +820,7 @@ const CollegeDetailPage = () => {
           </div>
         </div>
       </div>
+      {college?.id && <PageKeywords contentType="college" recordId={college.id} fallbackKeywords={(college as any).keywords || []} />}
     </div>
   );
 };
