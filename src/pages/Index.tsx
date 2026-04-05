@@ -1,23 +1,32 @@
+import { lazy, Suspense } from "react";
 import HeroSection from "@/components/HeroSection";
-import PageKeywords from "@/components/PageKeywords";
-import CategoryCards from "@/components/CategoryCards";
-import FeaturedInstitutes from "@/components/FeaturedInstitutes";
-import WhyChooseUs from "@/components/WhyChooseUs";
-import OfferBanners from "@/components/OfferBanners";
-import CoachingOfWeekSection from "@/components/CoachingOfWeekSection";
-import PopularExamsSection from "@/components/PopularExamsSection";
 import StatsCounterSection from "@/components/StatsCounterSection";
-import HowItWorksSection from "@/components/HowItWorksSection";
-import FAQSection from "@/components/FAQSection";
-import CTASection from "@/components/CTASection";
-import TopRankedCollegesSection from "@/components/TopRankedCollegesSection";
-import ExamDeadlinesTicker from "@/components/ExamDeadlinesTicker";
-import SuccessStoriesSection from "@/components/SuccessStoriesSection";
-import LearningResourcesSection from "@/components/LearningResourcesSection";
-import BrowseByCitySection from "@/components/BrowseByCitySection";
-import LatestArticlesSection from "@/components/LatestArticlesSection";
-import ProfileAnalyzerCTA from "@/components/ProfileAnalyzerCTA";
+import CategoryCards from "@/components/CategoryCards";
 import SEOHead, { generateWebsiteSchema, generateOrganizationSchema, generateFAQSchema, generateBreadcrumbSchema } from "@/components/SEOHead";
+
+// Lazy load below-the-fold sections
+const CoachingOfWeekSection = lazy(() => import("@/components/CoachingOfWeekSection"));
+const FeaturedInstitutes = lazy(() => import("@/components/FeaturedInstitutes"));
+const OfferBanners = lazy(() => import("@/components/OfferBanners"));
+const TopRankedCollegesSection = lazy(() => import("@/components/TopRankedCollegesSection"));
+const BrowseByCitySection = lazy(() => import("@/components/BrowseByCitySection"));
+const ExamDeadlinesTicker = lazy(() => import("@/components/ExamDeadlinesTicker"));
+const PopularExamsSection = lazy(() => import("@/components/PopularExamsSection"));
+const HowItWorksSection = lazy(() => import("@/components/HowItWorksSection"));
+const LearningResourcesSection = lazy(() => import("@/components/LearningResourcesSection"));
+const ProfileAnalyzerCTA = lazy(() => import("@/components/ProfileAnalyzerCTA"));
+const LatestArticlesSection = lazy(() => import("@/components/LatestArticlesSection"));
+const SuccessStoriesSection = lazy(() => import("@/components/SuccessStoriesSection"));
+const WhyChooseUs = lazy(() => import("@/components/WhyChooseUs"));
+const FAQSection = lazy(() => import("@/components/FAQSection"));
+const CTASection = lazy(() => import("@/components/CTASection"));
+const PageKeywords = lazy(() => import("@/components/PageKeywords"));
+
+const SectionFallback = () => (
+  <div className="w-full py-12 flex items-center justify-center">
+    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 const homepageFAQs = [
   { q: "What is the best MBA coaching in India?", a: "The best MBA coaching depends on your target exam. For CAT, top choices include IMS, TIME, and Career Launcher. Compare fees, success rates, and student reviews on BestMBACoaching.com." },
@@ -63,62 +72,62 @@ const Index = () => {
         jsonLd={jsonLdSchemas}
       />
       
-      {/* 1. Hero — first impression */}
+      {/* Above-the-fold: loaded eagerly */}
       <HeroSection />
-      
-      {/* 2. Trust signals — immediate social proof */}
       <StatsCounterSection />
-      
-      {/* 3. Quick category navigation */}
       <CategoryCards />
       
-      {/* 4. Featured coaching with offers */}
-      <CoachingOfWeekSection />
-      
-      {/* 5. Trending offers */}
-      <OfferBanners />
-      
-      {/* 6. Top coaching institutes */}
-      <FeaturedInstitutes />
-      
-      {/* 7. Top ranked colleges */}
-      <TopRankedCollegesSection />
-      
-      {/* 8. Browse by city */}
-      <BrowseByCitySection />
-      
-      {/* 9. Exam deadlines — urgency */}
-      <ExamDeadlinesTicker />
-      
-      {/* 10. Popular exams deep-dive */}
-      <PopularExamsSection />
-      
-      {/* 11. How it works */}
-      <HowItWorksSection />
-      
-      {/* 12. Learning resources */}
-      <LearningResourcesSection />
-      
-      {/* 13. AI Profile Analyser CTA */}
-      <ProfileAnalyzerCTA />
-      
-      {/* 14. Latest articles */}
-      <LatestArticlesSection />
-      
-      {/* 15. Success stories */}
-      <SuccessStoriesSection />
-      
-      {/* 15. Why choose us */}
-      <WhyChooseUs />
-      
-      {/* 16. FAQ with schema */}
-      <FAQSection />
-      
-      {/* 17. Final CTA */}
-      <CTASection />
+      {/* Below-the-fold: lazy loaded */}
+      <Suspense fallback={<SectionFallback />}>
+        <CoachingOfWeekSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <OfferBanners />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <FeaturedInstitutes />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <TopRankedCollegesSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <BrowseByCitySection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <ExamDeadlinesTicker />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <PopularExamsSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <HowItWorksSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <LearningResourcesSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <ProfileAnalyzerCTA />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <LatestArticlesSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <SuccessStoriesSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <WhyChooseUs />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <FAQSection />
+      </Suspense>
+      <Suspense fallback={<SectionFallback />}>
+        <CTASection />
+      </Suspense>
 
       <div className="container mx-auto px-4 pb-8">
-        <PageKeywords contentType="static" recordId="homepage" fallbackKeywords={["best MBA coaching", "MBA coaching institutes India", "CAT coaching", "MBA entrance exam", "IIM preparation"]} />
+        <Suspense fallback={null}>
+          <PageKeywords contentType="static" recordId="homepage" fallbackKeywords={["best MBA coaching", "MBA coaching institutes India", "CAT coaching", "MBA entrance exam", "IIM preparation"]} />
+        </Suspense>
       </div>
     </>
   );
