@@ -1,0 +1,1 @@
+DELETE FROM institutes WHERE id = 'd7091113-80ed-46dc-8751-621090754eeb';
