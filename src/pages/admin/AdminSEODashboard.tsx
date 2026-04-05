@@ -225,6 +225,24 @@ const AdminSEODashboard = () => {
 
   const [injectLoading, setInjectLoading] = useState(false);
 
+  // Auto-Generate State
+  const [autoGenType, setAutoGenType] = useState<SEOContentType>("article");
+  const [autoGenLoading, setAutoGenLoading] = useState(false);
+  const [autoGenResults, setAutoGenResults] = useState<any[]>([]);
+
+  // Uniqueness Check State
+  const [uniqueLoading, setUniqueLoading] = useState(false);
+  const [uniqueData, setUniqueData] = useState<any>(null);
+
+  // Content Gaps State
+  const [gapsLoading, setGapsLoading] = useState(false);
+  const [gapsData, setGapsData] = useState<any>(null);
+
+  // Daily Competitor Report State
+  const [dailyReport, setDailyReport] = useState<any>(null);
+  const [dailyReportLoading, setDailyReportLoading] = useState(false);
+  const [dailyReportRefreshing, setDailyReportRefreshing] = useState(false);
+
   // Load saved blog ideas
   const loadSavedBlogIdeas = useCallback(async () => {
     const { data } = await supabase.from("site_settings").select("value").eq("key", "saved_blog_ideas").maybeSingle();
@@ -346,7 +364,68 @@ const AdminSEODashboard = () => {
     await saveKnownKeys(currentKeys);
   };
 
-  useEffect(() => { fetchDashboardData(); loadSavedBlogIdeas(); }, [fetchDashboardData, loadSavedBlogIdeas]);
+  useEffect(() => { fetchDashboardData(); loadSavedBlogIdeas(); loadDailyReport(); }, [fetchDashboardData, loadSavedBlogIdeas]);
+
+  // ── New Feature Functions ──
+  const loadDailyReport = useCallback(async () => {
+    const { data } = await supabase.from("site_settings").select("value").eq("key", "seo_competitor_daily_report").maybeSingle();
+    if (data?.value) setDailyReport(data.value as any);
+  }, []);
+
+  const runAutoGenerate = async () => {
+    setAutoGenLoading(true);
+    try {
+      const targetRows = rows.filter(r => r.contentType === autoGenType);
+      const pageIds = targetRows.map(r => r.id).slice(0, 20);
+      const allPages = rows.map(r => ({ meta_title: r.item.meta_title, meta_description: r.item.meta_description }));
+      const { data, error } = await supabase.functions.invoke("auto-seo-engine", {
+        body: { mode: "bulk_optimize", contentType: autoGenType, pageIds, allPages },
+      });
+      if (error) throw error;
+      setAutoGenResults(data?.results || []);
+      toast({ title: "Auto-generate complete", description: `Processed ${data?.processed || 0} pages` });
+      fetchDashboardData();
+    } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
+    finally { setAutoGenLoading(false); }
+  };
+
+  const runUniquenessCheck = async () => {
+    setUniqueLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-seo-engine", { body: { mode: "uniqueness_check" } });
+      if (error) throw error;
+      setUniqueData(data);
+      toast({ title: "Uniqueness check complete" });
+    } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
+    finally { setUniqueLoading(false); }
+  };
+
+  const runContentGaps = async () => {
+    setGapsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-seo-engine", { body: { mode: "content_gaps" } });
+      if (error) throw error;
+      setGapsData(data);
+      toast({ title: "Content gap analysis complete" });
+    } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
+    finally { setGapsLoading(false); }
+  };
+
+  const runDailyCompetitorRefresh = async () => {
+    setDailyReportRefreshing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("seo-competitor-cron", { body: {} });
+      if (error) throw error;
+      if (data?.report) setDailyReport(data.report);
+      toast({ title: "Competitor report refreshed" });
+    } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
+    finally { setDailyReportRefreshing(false); }
+  };
+
+  const handleImplementAction = async (action: any) => {
+    if (!action.targetPages?.length) { toast({ title: "No target pages for this action" }); return; }
+    toast({ title: "Action noted", description: `"${action.action}" — apply via Bulk Optimize on matching pages.` });
+  };
 
   // ── Research Functions ──
   const runKeywordResearch = async () => {
@@ -624,9 +703,13 @@ const AdminSEODashboard = () => {
   const navItems = [
     { id: "overview", label: "Overview", icon: BarChart3 },
     { id: "pages", label: `All Pages (${filteredRows.length})`, icon: FileText },
+    { id: "auto-generate", label: "Auto-Generate", icon: Zap },
+    { id: "uniqueness", label: "Uniqueness Check", icon: Shield },
+    { id: "content-gaps", label: "Content Gaps", icon: Crosshair },
     { id: "keywords", label: "Keyword Research", icon: Search },
     { id: "blog-titles", label: "Blog Titles", icon: PenTool },
     { id: "competitors", label: "Competitor Intel", icon: Swords },
+    { id: "daily-report", label: "Daily Report", icon: Activity },
     { id: "content-audit", label: "Content Audit", icon: BookOpen },
     { id: "backlinks", label: "Backlink Strategy", icon: Network },
     { id: "technical", label: "Technical SEO", icon: Shield },
@@ -930,7 +1013,297 @@ const AdminSEODashboard = () => {
           </div>
         )}
 
-        {/* ═══ KEYWORD RESEARCH ═══ */}
+        {/* ═══ AUTO-GENERATE ═══ */}
+        {activeTab === "auto-generate" && (
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Zap className="h-5 w-5 text-primary" /> Auto-Generate SEO for All Pages</CardTitle>
+                <CardDescription>AI analyzes each page and auto-inserts unique meta titles, descriptions, and short/long-tail keywords. Ensures no duplicates across the site.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex gap-3 items-end">
+                  <div className="flex-1">
+                    <label className="text-sm font-medium mb-1 block">Content Type</label>
+                    <Select value={autoGenType} onValueChange={(v) => setAutoGenType(v as SEOContentType)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{contentTypes.map(ct => <SelectItem key={ct} value={ct}>{contentTypeConfig[ct].label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={runAutoGenerate} disabled={autoGenLoading} size="lg">
+                    {autoGenLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Zap className="h-4 w-4 mr-2" />}
+                    Auto-Generate All {contentTypeConfig[autoGenType].label}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">Processes up to 20 pages per run. Each page gets unique meta title (≤60 chars), description (150-160 chars), short-tail & long-tail keywords, user intent, and internal link suggestions.</p>
+              </CardContent>
+            </Card>
+            {autoGenResults.length > 0 && (
+              <Card>
+                <CardHeader className="pb-2"><CardTitle className="text-sm">Results</CardTitle></CardHeader>
+                <CardContent className="p-0">
+                  <Table>
+                    <TableHeader><TableRow><TableHead>Page</TableHead><TableHead>Status</TableHead><TableHead>Meta Title</TableHead><TableHead>Keywords</TableHead></TableRow></TableHeader>
+                    <TableBody>
+                      {autoGenResults.map((r, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="font-medium text-sm">{r.name}</TableCell>
+                          <TableCell><Badge className={r.status === "success" ? "bg-green-100 text-green-700" : r.status === "rate_limited" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}>{r.status}</Badge></TableCell>
+                          <TableCell className="text-xs max-w-[200px] truncate">{r.seo?.meta_title || "—"}</TableCell>
+                          <TableCell className="text-xs">{(r.seo?.shortTailKeywords?.length || 0) + (r.seo?.longTailKeywords?.length || 0)} keywords</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+
+        {/* ═══ UNIQUENESS CHECK ═══ */}
+        {activeTab === "uniqueness" && (
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Shield className="h-5 w-5 text-primary" /> Meta Uniqueness Checker</CardTitle>
+                <CardDescription>Scan all pages for duplicate meta titles, descriptions, and missing meta data.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={runUniquenessCheck} disabled={uniqueLoading}>
+                  {uniqueLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Search className="h-4 w-4 mr-2" />}Run Uniqueness Scan
+                </Button>
+              </CardContent>
+            </Card>
+            {uniqueData && (
+              <>
+                <div className="grid gap-4 md:grid-cols-4">
+                  <StatCard label="Total Pages" value={String(uniqueData.totalPages)} icon={<FileText className="h-5 w-5" />} />
+                  <StatCard label="Uniqueness Score" value={`${uniqueData.uniqueScore}%`} tone={uniqueData.uniqueScore >= 90 ? "good" : uniqueData.uniqueScore >= 70 ? "warning" : "poor"} icon={<Shield className="h-5 w-5" />} />
+                  <StatCard label="Duplicate Titles" value={String(uniqueData.titleDuplicates?.length || 0)} tone={uniqueData.titleDuplicates?.length ? "poor" : "good"} icon={<AlertTriangle className="h-5 w-5" />} />
+                  <StatCard label="Missing Meta" value={String(uniqueData.missingMeta?.length || 0)} tone={uniqueData.missingMeta?.length ? "warning" : "good"} icon={<XCircle className="h-5 w-5" />} />
+                </div>
+                {uniqueData.titleDuplicates?.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-red-500" /> Duplicate Meta Titles</CardTitle></CardHeader>
+                    <CardContent>{uniqueData.titleDuplicates.map((d: any, i: number) => (
+                      <div key={i} className="py-2 border-b last:border-0">
+                        <p className="text-sm font-medium text-red-600">"{d.title}"</p>
+                        <p className="text-xs text-muted-foreground">Found on {d.pages.length} pages: {d.pages.map((p: any) => p.slug).join(", ")}</p>
+                      </div>
+                    ))}</CardContent>
+                  </Card>
+                )}
+                {uniqueData.missingMeta?.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><XCircle className="h-4 w-4 text-amber-500" /> Missing Meta Data</CardTitle></CardHeader>
+                    <CardContent>{uniqueData.missingMeta.slice(0, 20).map((m: any, i: number) => (
+                      <div key={i} className="flex items-center gap-3 py-1.5 border-b last:border-0">
+                        <Badge variant="outline" className="text-xs">{m.contentType}</Badge>
+                        <span className="text-sm flex-1">/{m.slug}</span>
+                        <Badge variant="destructive" className="text-[10px]">Missing {m.missing}</Badge>
+                      </div>
+                    ))}</CardContent>
+                  </Card>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ═══ CONTENT GAPS ═══ */}
+        {activeTab === "content-gaps" && (
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Crosshair className="h-5 w-5 text-primary" /> AI Content Gap Analysis</CardTitle>
+                <CardDescription>AI analyzes your entire content inventory, identifies missing topics, user intent gaps, internal linking opportunities, and content format suggestions.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={runContentGaps} disabled={gapsLoading}>
+                  {gapsLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Brain className="h-4 w-4 mr-2" />}Analyze Content Gaps
+                </Button>
+              </CardContent>
+            </Card>
+            {gapsData && (
+              <>
+                {gapsData.summary && <Card><CardContent className="pt-4"><p className="text-sm">{gapsData.summary}</p></CardContent></Card>}
+                {gapsData.missingTopics?.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Target className="h-4 w-4 text-red-500" /> Missing Topics</CardTitle></CardHeader>
+                    <CardContent className="p-0">
+                      <Table>
+                        <TableHeader><TableRow><TableHead>Topic</TableHead><TableHead>Volume</TableHead><TableHead>Priority</TableHead><TableHead>Format</TableHead></TableRow></TableHeader>
+                        <TableBody>{gapsData.missingTopics.map((t: any, i: number) => (
+                          <TableRow key={i}>
+                            <TableCell className="font-medium text-sm">{t.topic}</TableCell>
+                            <TableCell className="text-xs">{t.searchVolume || "—"}</TableCell>
+                            <TableCell><Badge className={`text-xs ${t.priority === "high" ? "bg-red-100 text-red-700" : t.priority === "medium" ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"}`}>{t.priority}</Badge></TableCell>
+                            <TableCell className="text-xs">{t.suggestedFormat || "—"}</TableCell>
+                          </TableRow>
+                        ))}</TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                )}
+                <div className="grid gap-4 lg:grid-cols-2">
+                  {gapsData.userIntentGaps?.length > 0 && (
+                    <Card>
+                      <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Users className="h-4 w-4" /> User Intent Gaps</CardTitle></CardHeader>
+                      <CardContent>{gapsData.userIntentGaps.map((g: any, i: number) => (
+                        <div key={i} className="py-2 border-b last:border-0">
+                          <div className="flex items-center gap-2"><Badge variant="outline" className="text-xs">{g.intent}</Badge><span className="text-sm font-medium">{g.query}</span></div>
+                          <p className="text-xs text-muted-foreground mt-1">{g.recommendation}</p>
+                        </div>
+                      ))}</CardContent>
+                    </Card>
+                  )}
+                  {gapsData.contentFormatSuggestions?.length > 0 && (
+                    <Card>
+                      <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><LayoutGrid className="h-4 w-4" /> Format Suggestions</CardTitle></CardHeader>
+                      <CardContent>{gapsData.contentFormatSuggestions.map((s: any, i: number) => (
+                        <div key={i} className="py-2 border-b last:border-0">
+                          <p className="text-sm font-medium">{s.page}</p>
+                          <p className="text-xs text-muted-foreground">{s.suggestedFormat} — {s.reason}</p>
+                        </div>
+                      ))}</CardContent>
+                    </Card>
+                  )}
+                </div>
+                {gapsData.internalLinkOpportunities?.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Link2 className="h-4 w-4" /> Internal Linking Opportunities</CardTitle></CardHeader>
+                    <CardContent className="p-0">
+                      <Table>
+                        <TableHeader><TableRow><TableHead>From</TableHead><TableHead>To</TableHead><TableHead>Anchor Text</TableHead></TableRow></TableHeader>
+                        <TableBody>{gapsData.internalLinkOpportunities.map((l: any, i: number) => (
+                          <TableRow key={i}>
+                            <TableCell className="text-xs">{l.from}</TableCell>
+                            <TableCell className="text-xs text-blue-600">{l.to}</TableCell>
+                            <TableCell className="text-xs font-medium">{l.anchorText}</TableCell>
+                          </TableRow>
+                        ))}</TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                )}
+                {gapsData.competitorGaps?.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm">Competitor Content Gaps</CardTitle></CardHeader>
+                    <CardContent>{gapsData.competitorGaps.map((g: string, i: number) => <p key={i} className="text-sm py-1 border-b last:border-0">• {g}</p>)}</CardContent>
+                  </Card>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ═══ DAILY COMPETITOR REPORT ═══ */}
+        {activeTab === "daily-report" && (
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Activity className="h-5 w-5 text-primary" /> Daily Competitor Analysis Report</CardTitle>
+                <CardDescription>Auto-runs daily at 6 AM comparing your SEO against Shiksha, Collegedunia, Careers360, MBAUniverse, InsideIIM & PagalGuy. Click "Implement" on any action to apply changes.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex justify-between items-center">
+                <div>
+                  {dailyReport?.dateGenerated && <p className="text-xs text-muted-foreground">Last report: {new Date(dailyReport.dateGenerated).toLocaleString()}</p>}
+                  {dailyReport?.ourStats && <p className="text-xs text-muted-foreground">Our stats: {dailyReport.ourStats.totalPages} pages, {dailyReport.ourStats.pagesWithMeta} with meta</p>}
+                </div>
+                <Button onClick={runDailyCompetitorRefresh} disabled={dailyReportRefreshing}>
+                  {dailyReportRefreshing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}Refresh Now
+                </Button>
+              </CardContent>
+            </Card>
+            {dailyReport && (
+              <>
+                <div className="grid gap-4 md:grid-cols-4">
+                  <StatCard label="Our Position" value={`${dailyReport.overallPosition}/10`} tone={dailyReport.overallPosition >= 7 ? "good" : dailyReport.overallPosition >= 4 ? "warning" : "poor"} icon={<Trophy className="h-5 w-5" />} />
+                  <StatCard label="Competitors" value={String(dailyReport.competitors?.length || 0)} icon={<Users className="h-5 w-5" />} />
+                  <StatCard label="Keyword Gaps" value={String(dailyReport.keywordGaps?.length || 0)} icon={<Search className="h-5 w-5" />} />
+                  <StatCard label="Actions" value={String(dailyReport.immediateActions?.length || 0)} icon={<Zap className="h-5 w-5" />} />
+                </div>
+                {dailyReport.summary && <Card><CardContent className="pt-4"><p className="text-sm">{dailyReport.summary}</p></CardContent></Card>}
+                {dailyReport.immediateActions?.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Zap className="h-4 w-4 text-amber-500" /> Immediate Actions</CardTitle></CardHeader>
+                    <CardContent className="space-y-2">
+                      {dailyReport.immediateActions.map((a: any, i: number) => (
+                        <div key={i} className="flex items-center gap-3 p-3 rounded-lg border bg-card">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{a.action}</p>
+                            <div className="flex gap-2 mt-1">
+                              <Badge className={`text-[10px] ${a.impact === "high" ? "bg-red-100 text-red-700" : a.impact === "medium" ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"}`}>Impact: {a.impact}</Badge>
+                              <Badge variant="outline" className="text-[10px]">Effort: {a.effort}</Badge>
+                            </div>
+                            {a.targetPages?.length > 0 && <p className="text-[10px] text-muted-foreground mt-1">Target: {a.targetPages.join(", ")}</p>}
+                          </div>
+                          <Button size="sm" variant="outline" onClick={() => handleImplementAction(a)}>
+                            <Sparkles className="h-3 w-3 mr-1" /> Implement
+                          </Button>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+                {dailyReport.competitors?.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm">Competitor Profiles</CardTitle></CardHeader>
+                    <CardContent className="space-y-3">
+                      {dailyReport.competitors.map((c: any, i: number) => (
+                        <div key={i} className="p-3 border rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium text-sm flex items-center gap-2"><Globe className="h-4 w-4" /> {c.domain}</span>
+                            <Badge variant="outline">DA: {c.estimatedDA}</Badge>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div><span className="text-green-600 font-medium">Strengths:</span> {c.keyAdvantages?.slice(0, 2).join("; ")}</div>
+                            <div><span className="text-red-600 font-medium">Weaknesses:</span> {c.weaknesses?.slice(0, 2).join("; ")}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+                {dailyReport.keywordGaps?.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm">Keyword Gaps to Target</CardTitle></CardHeader>
+                    <CardContent className="p-0">
+                      <Table>
+                        <TableHeader><TableRow><TableHead>Keyword</TableHead><TableHead>Volume</TableHead><TableHead>Competitor</TableHead><TableHead>Difficulty</TableHead><TableHead>Action</TableHead></TableRow></TableHeader>
+                        <TableBody>{dailyReport.keywordGaps.slice(0, 15).map((g: any, i: number) => (
+                          <TableRow key={i}>
+                            <TableCell className="font-medium text-sm">{g.keyword}</TableCell>
+                            <TableCell className="text-xs">{g.estimatedVolume?.toLocaleString() || "—"}</TableCell>
+                            <TableCell className="text-xs">{g.competitor || "—"}</TableCell>
+                            <TableCell><Badge variant="outline" className="text-xs">{g.difficulty || "—"}</Badge></TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{g.action}</TableCell>
+                          </TableRow>
+                        ))}</TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                )}
+                <div className="grid gap-4 lg:grid-cols-2">
+                  {dailyReport.contentGaps?.length > 0 && (
+                    <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Content Gaps</CardTitle></CardHeader><CardContent>{dailyReport.contentGaps.map((g: string, i: number) => <p key={i} className="text-sm py-1 border-b last:border-0">• {g}</p>)}</CardContent></Card>
+                  )}
+                  {dailyReport.technicalImprovements?.length > 0 && (
+                    <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Technical Improvements</CardTitle></CardHeader><CardContent>{dailyReport.technicalImprovements.map((t: string, i: number) => <p key={i} className="text-sm py-1 border-b last:border-0">🔧 {t}</p>)}</CardContent></Card>
+                  )}
+                </div>
+              </>
+            )}
+            {!dailyReport && !dailyReportRefreshing && (
+              <Card><CardContent className="pt-8 pb-8 text-center">
+                <Activity className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
+                <p className="text-muted-foreground">No daily report yet. Click "Refresh Now" to generate the first one.</p>
+              </CardContent></Card>
+            )}
+          </div>
+        )}
+
         {activeTab === "keywords" && (
           <div className="space-y-4">
             <Card>

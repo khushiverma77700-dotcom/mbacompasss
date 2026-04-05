@@ -1,44 +1,32 @@
-## Feature 1: Profile Analyzer 60-Day Cooldown
+## Phase 1: Auto-SEO Engine (Edge Function)
+Create a new `auto-seo-engine` edge function that:
+- Accepts a page/content type and generates short-tail + long-tail keywords based on content
+- Generates unique meta titles (≤60 chars) and descriptions (150-160 chars) ensuring no duplicates
+- Suggests internal linking opportunities
+- Identifies content gaps vs competitors
+- Returns structured data for both dashboard display and auto-insertion
 
-**How it works:**
-- When a logged-in user submits a profile analysis, the system records their `user_id` + `created_at`
-- Before allowing a new analysis, check if the user has an analysis within the last 60 days
-- If yes → block re-analysis, show "You can re-analyze after [date]" with a countdown
-- Users can **view their existing report anytime** from their dashboard
-- If not logged in, no cooldown (they'd need to log in to save/view reports anyway)
+## Phase 2: Frontend Keyword Display Component
+- Create a `PageKeywords` component that renders AI-generated keywords beautifully at the bottom of each public page
+- Pull keywords from site_settings SEO snapshots
+- Display as styled tag clouds organized by short-tail vs long-tail
 
-**DB Changes:** None needed — `profile_analyses` already has `user_id` and `created_at`
+## Phase 3: Dashboard Enhancements
+- Add "Auto-Generate All" button that bulk-processes all pages
+- Uniqueness checker for meta titles/descriptions across all pages
+- Content gap analysis section
+- Internal linking suggestions panel
+- User intent analysis display
+- Content format recommendations (FAQ, video, guide)
 
-**Code Changes:**
-- Add cooldown check in `ProfileAnalyzerPage.tsx` before form submission
-- Show existing report with a "next analysis available" date
+## Phase 4: Daily 6 AM Competitor Auto-Analysis
+- Create `seo-competitor-cron` edge function
+- Set up pg_cron + pg_net for daily 6 AM execution
+- Predefined competitors: Shiksha, Collegedunia, Careers360, MBAUniverse, InsideIIM, PagalGuy
+- Store analysis results in site_settings
+- Dashboard section showing comparison + one-click "Implement" actions
 
----
-
-## Feature 2: Admin Management Panel with Granular Permissions
-
-**How it works:**
-- New admin page: "Manage Admins" accessible only to super admins
-- Form: Name, Email, and checkboxes for each admin section (26 sections)
-- "Select All" toggle
-- When a new admin is created → their account gets `admin` role + their allowed sections are saved
-- In `AdminLayout`, filter the sidebar nav to only show sections the admin has access to
-- Locked sections show a "No Access" state if navigated to directly
-
-**DB Changes (migration):**
-- New table `admin_permissions`:
-  - `id` (uuid, PK)
-  - `user_id` (uuid, NOT NULL, unique)
-  - `display_name` (text)
-  - `email` (text)
-  - `allowed_sections` (text[] — stores section paths like "/admin/institutes")
-  - `created_at`, `updated_at`
-  - RLS: only admins can read/write
-
-**Code Changes:**
-- New page: `AdminManageAdmins.tsx` — list admins, add/edit permissions
-- Update `AuthContext` to load `allowed_sections` for admin users
-- Update `AdminLayout` to filter nav items based on permissions
-- Add route in `App.tsx`
-
-**Security:** The first admin (super admin) who has no `admin_permissions` row gets full access by default. Only admins with existing full access can manage other admins.
+## Phase 5: UX & Performance Audit
+- Page speed analysis integration
+- Mobile usability checks
+- Core Web Vitals monitoring section in dashboard

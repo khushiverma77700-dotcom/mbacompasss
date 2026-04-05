@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import PageKeywords from "@/components/PageKeywords";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Calendar, CheckCircle, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
@@ -204,8 +205,9 @@ const ExamDetailPage = () => {
             <Card><CardHeader><CardTitle className="font-heading text-base">Top Colleges Accepting {exam.name}</CardTitle></CardHeader><CardContent><div className="space-y-2">{exam.topColleges.map((col, i) => <div key={i} className="flex items-center gap-2 text-sm"><span className="w-5 h-5 rounded-full bg-secondary flex items-center justify-center text-xs font-semibold text-secondary-foreground">{i + 1}</span><span className="text-foreground">{col}</span></div>)}</div><Link to="/colleges"><Button variant="outline" size="sm" className="w-full mt-4 gap-1">View All Colleges <ArrowRight className="w-3.5 h-3.5" /></Button></Link></CardContent></Card>
             <Card><CardHeader><CardTitle className="font-heading text-base">Other MBA Exams</CardTitle></CardHeader><CardContent><div className="space-y-2">{examDetails.filter((e) => e.slug !== slug).map((e) => <Link key={e.id} to={`/exam/${e.slug}`} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted transition-colors"><span className="text-sm font-medium text-foreground">{e.name}</span><ArrowRight className="w-3.5 h-3.5 text-muted-foreground" /></Link>)}</div></CardContent></Card>
           </div>
-        </div>
       </div>
+      {dbExam?.id && <PageKeywords contentType="exam" recordId={dbExam.id} fallbackKeywords={dbExam.keywords || []} />}
+    </div>
     </div>
   );
 };
