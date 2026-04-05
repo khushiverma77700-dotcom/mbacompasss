@@ -159,7 +159,7 @@ Deno.serve(async (req) => {
             score: 0,
             status: "poor",
             fcp: 0, lcp: 0, tbt: 0, cls: 0, si: 0, tti: 0,
-            issues: [`API error: ${response.status} — could not analyze this URL`],
+            issues: [`API error: ${response?.status || 'timeout'} — could not analyze this URL`],
             opportunities: [],
             diagnostics: [],
             checkedAt: new Date().toISOString(),
