@@ -364,7 +364,68 @@ const AdminSEODashboard = () => {
     await saveKnownKeys(currentKeys);
   };
 
-  useEffect(() => { fetchDashboardData(); loadSavedBlogIdeas(); }, [fetchDashboardData, loadSavedBlogIdeas]);
+  useEffect(() => { fetchDashboardData(); loadSavedBlogIdeas(); loadDailyReport(); }, [fetchDashboardData, loadSavedBlogIdeas]);
+
+  // ── New Feature Functions ──
+  const loadDailyReport = useCallback(async () => {
+    const { data } = await supabase.from("site_settings").select("value").eq("key", "seo_competitor_daily_report").maybeSingle();
+    if (data?.value) setDailyReport(data.value as any);
+  }, []);
+
+  const runAutoGenerate = async () => {
+    setAutoGenLoading(true);
+    try {
+      const targetRows = rows.filter(r => r.contentType === autoGenType);
+      const pageIds = targetRows.map(r => r.id).slice(0, 20);
+      const allPages = rows.map(r => ({ meta_title: r.item.meta_title, meta_description: r.item.meta_description }));
+      const { data, error } = await supabase.functions.invoke("auto-seo-engine", {
+        body: { mode: "bulk_optimize", contentType: autoGenType, pageIds, allPages },
+      });
+      if (error) throw error;
+      setAutoGenResults(data?.results || []);
+      toast({ title: "Auto-generate complete", description: `Processed ${data?.processed || 0} pages` });
+      fetchDashboardData();
+    } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
+    finally { setAutoGenLoading(false); }
+  };
+
+  const runUniquenessCheck = async () => {
+    setUniqueLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-seo-engine", { body: { mode: "uniqueness_check" } });
+      if (error) throw error;
+      setUniqueData(data);
+      toast({ title: "Uniqueness check complete" });
+    } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
+    finally { setUniqueLoading(false); }
+  };
+
+  const runContentGaps = async () => {
+    setGapsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-seo-engine", { body: { mode: "content_gaps" } });
+      if (error) throw error;
+      setGapsData(data);
+      toast({ title: "Content gap analysis complete" });
+    } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
+    finally { setGapsLoading(false); }
+  };
+
+  const runDailyCompetitorRefresh = async () => {
+    setDailyReportRefreshing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("seo-competitor-cron", { body: {} });
+      if (error) throw error;
+      if (data?.report) setDailyReport(data.report);
+      toast({ title: "Competitor report refreshed" });
+    } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
+    finally { setDailyReportRefreshing(false); }
+  };
+
+  const handleImplementAction = async (action: any) => {
+    if (!action.targetPages?.length) { toast({ title: "No target pages for this action" }); return; }
+    toast({ title: "Action noted", description: `"${action.action}" — apply via Bulk Optimize on matching pages.` });
+  };
 
   // ── Research Functions ──
   const runKeywordResearch = async () => {
