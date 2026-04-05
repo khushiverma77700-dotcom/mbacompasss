@@ -163,6 +163,7 @@ const App = () => (
               <Route path="seo-dashboard" element={<AdminSEODashboard />} />
               <Route path="profile-analyzer" element={<AdminProfileAnalyzer />} />
               <Route path="manage-admins" element={<AdminManageAdmins />} />
+              <Route path="static-seo" element={<AdminStaticPageSEO />} />
             </Route>
             <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
             <Route path="/category/:slug" element={<PublicLayout><CategoryPage /></PublicLayout>} />
