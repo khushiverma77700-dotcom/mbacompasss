@@ -624,9 +624,13 @@ const AdminSEODashboard = () => {
   const navItems = [
     { id: "overview", label: "Overview", icon: BarChart3 },
     { id: "pages", label: `All Pages (${filteredRows.length})`, icon: FileText },
+    { id: "auto-generate", label: "Auto-Generate", icon: Zap },
+    { id: "uniqueness", label: "Uniqueness Check", icon: Shield },
+    { id: "content-gaps", label: "Content Gaps", icon: Crosshair },
     { id: "keywords", label: "Keyword Research", icon: Search },
     { id: "blog-titles", label: "Blog Titles", icon: PenTool },
     { id: "competitors", label: "Competitor Intel", icon: Swords },
+    { id: "daily-report", label: "Daily Report", icon: Activity },
     { id: "content-audit", label: "Content Audit", icon: BookOpen },
     { id: "backlinks", label: "Backlink Strategy", icon: Network },
     { id: "technical", label: "Technical SEO", icon: Shield },
