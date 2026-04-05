@@ -718,6 +718,7 @@ const AdminSEODashboard = () => {
     { id: "daily-report", label: "Daily Report", icon: Activity },
     { id: "content-audit", label: "Content Audit", icon: BookOpen },
     { id: "backlinks", label: "Backlink Strategy", icon: Network },
+    { id: "page-speed", label: "Page Speed", icon: Gauge },
     { id: "technical", label: "Technical SEO", icon: Shield },
   ];
 
