@@ -12,6 +12,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import BackButton from "@/components/BackButton";
 import OnboardingDialog from "@/components/OnboardingDialog";
 import { consumePostAuthRedirect } from "@/lib/authRedirect";
+import ProfileAnalyzerPopup from "@/components/ProfileAnalyzerPopup";
 import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import CategoryPage from "./pages/CategoryPage";
