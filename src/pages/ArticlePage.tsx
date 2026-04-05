@@ -275,6 +275,7 @@ const ArticlePage = () => {
             </div>
           </div>
         )}
+        {article?.id && <PageKeywords contentType="article" recordId={article.id} fallbackKeywords={article.keywords || []} />}
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import PageKeywords from "@/components/PageKeywords";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, Calendar, CheckCircle, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
