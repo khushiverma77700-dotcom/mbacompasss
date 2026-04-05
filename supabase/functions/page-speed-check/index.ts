@@ -242,6 +242,65 @@ Deno.serve(async (req) => {
       await supabase.from("site_settings").insert({ key: storageKey, value: payload as any });
     }
 
+    // ─── Track API Usage ──────────────────────────
+    const now = new Date();
+    const todayKey = `psi_usage_${now.toISOString().slice(0, 10)}`;
+    const monthKey = `psi_usage_month_${now.toISOString().slice(0, 7)}`;
+
+    // Update daily usage
+    const { data: dailyData } = await supabase
+      .from("site_settings").select("id, value").eq("key", todayKey).maybeSingle();
+
+    const dailyUsage = dailyData?.value as any || { calls: 0, pages: 0, date: todayKey };
+    dailyUsage.calls = (dailyUsage.calls || 0) + 1;
+    dailyUsage.pages = (dailyUsage.pages || 0) + results.length;
+    dailyUsage.lastRun = now.toISOString();
+    dailyUsage.device = device;
+
+    if (dailyData?.id) {
+      await supabase.from("site_settings").update({ value: dailyUsage as any }).eq("id", dailyData.id);
+    } else {
+      await supabase.from("site_settings").insert({ key: todayKey, value: dailyUsage as any });
+    }
+
+    // Update monthly usage
+    const { data: monthlyData } = await supabase
+      .from("site_settings").select("id, value").eq("key", monthKey).maybeSingle();
+
+    const monthlyUsage = monthlyData?.value as any || { calls: 0, pages: 0, month: monthKey };
+    monthlyUsage.calls = (monthlyUsage.calls || 0) + 1;
+    monthlyUsage.pages = (monthlyUsage.pages || 0) + results.length;
+    monthlyUsage.lastRun = now.toISOString();
+
+    if (monthlyData?.id) {
+      await supabase.from("site_settings").update({ value: monthlyUsage as any }).eq("id", monthlyData.id);
+    } else {
+      await supabase.from("site_settings").insert({ key: monthKey, value: monthlyUsage as any });
+    }
+
+    // Save cumulative usage summary
+    const { data: cumData } = await supabase
+      .from("site_settings").select("id, value").eq("key", "psi_api_usage").maybeSingle();
+
+    const cumUsage = cumData?.value as any || { totalCalls: 0, totalPages: 0, dailyLimit: 25000, monthlyQuota: 25000, history: [] };
+    cumUsage.totalCalls = (cumUsage.totalCalls || 0) + 1;
+    cumUsage.totalPages = (cumUsage.totalPages || 0) + results.length;
+    cumUsage.lastRun = now.toISOString();
+    cumUsage.todayCalls = dailyUsage.calls;
+    cumUsage.todayPages = dailyUsage.pages;
+    cumUsage.monthCalls = monthlyUsage.calls;
+    cumUsage.monthPages = monthlyUsage.pages;
+    // Keep last 30 entries in history
+    if (!Array.isArray(cumUsage.history)) cumUsage.history = [];
+    cumUsage.history.push({ date: now.toISOString(), pages: results.length, device, avgScore });
+    if (cumUsage.history.length > 30) cumUsage.history = cumUsage.history.slice(-30);
+
+    if (cumData?.id) {
+      await supabase.from("site_settings").update({ value: cumUsage as any }).eq("id", cumData.id);
+    } else {
+      await supabase.from("site_settings").insert({ key: "psi_api_usage", value: cumUsage as any });
+    }
+
     return new Response(JSON.stringify(payload), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
