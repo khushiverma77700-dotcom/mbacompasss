@@ -124,20 +124,32 @@ Deno.serve(async (req) => {
     const strategy = device === "desktop" ? "DESKTOP" : "MOBILE";
 
     const results: PageSpeedResult[] = [];
+    const apiKey = Deno.env.get("GOOGLE_PSI_API_KEY") || "";
 
-    // Process pages sequentially (PSI has rate limits)
-    for (const page of urls.slice(0, 15)) {
+    // Process pages sequentially with delay to avoid rate limits
+    for (let i = 0; i < Math.min(urls.length, 15); i++) {
+      const page = urls[i];
       const fullUrl = page.url.startsWith("http")
         ? page.url
         : `${siteUrl || "https://coach-compass-finder.lovable.app"}${page.url}`;
 
       try {
-        const psiUrl = `${PSI_API}?url=${encodeURIComponent(fullUrl)}&strategy=${strategy}&category=PERFORMANCE`;
-        console.log(`Analyzing: ${fullUrl} (${strategy})`);
+        let psiUrl = `${PSI_API}?url=${encodeURIComponent(fullUrl)}&strategy=${strategy}&category=PERFORMANCE`;
+        if (apiKey) psiUrl += `&key=${apiKey}`;
+        console.log(`[${i + 1}/${Math.min(urls.length, 15)}] Analyzing: ${fullUrl} (${strategy})`);
 
-        const response = await fetch(psiUrl);
-        if (!response.ok) {
-          console.error(`PSI error for ${fullUrl}: ${response.status}`);
+        // Add delay between requests to avoid 429
+        if (i > 0) await new Promise(r => setTimeout(r, 2000));
+
+        let response: Response | null = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          response = await fetch(psiUrl);
+          if (response.status !== 429) break;
+          console.log(`Rate limited, retrying in ${(attempt + 1) * 5}s...`);
+          await new Promise(r => setTimeout(r, (attempt + 1) * 5000));
+        }
+
+        if (!response || !response.ok) {
           results.push({
             url: fullUrl,
             name: page.name || fullUrl,
