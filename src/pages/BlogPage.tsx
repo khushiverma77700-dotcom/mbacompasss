@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/SEOHead";
+import PageKeywords from "@/components/PageKeywords";
 
 const BlogPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
