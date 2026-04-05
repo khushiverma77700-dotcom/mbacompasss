@@ -1,15 +1,17 @@
 import { useParams, Link } from "react-router-dom";
 import { useState, useMemo } from "react";
-import { MapPin, ArrowRight, GraduationCap, TrendingUp, Search, Filter, IndianRupee, Star, Award, Building2, ChevronRight, Briefcase } from "lucide-react";
+import { MapPin, ArrowRight, GraduationCap, TrendingUp, Search, Filter, IndianRupee, Star, Award, Building2, ChevronRight, Briefcase, Users, BookOpen, Calendar, CheckCircle2, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { useColleges } from "@/hooks/useInstitutes";
 import { useCityPageBySlug, useCityPages } from "@/hooks/useCityPages";
 import SEOHead, { generateListingSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
+import PageKeywords from "@/components/PageKeywords";
 
 const CollegeFilterPage = () => {
   const { region } = useParams<{ region: string }>();
@@ -167,63 +169,133 @@ const CollegeFilterPage = () => {
           </div>
         </div>
 
-        {/* College listing */}
+        {/* Enhanced College Cards */}
         {filteredColleges.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-5">
             {filteredColleges.map((college, i) => (
               <motion.div key={college.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.03, 0.3) }}>
-                <Link to={`/college/${college.slug}`} className="group block bg-card rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-border hover:border-primary/20 overflow-hidden">
-                  <div className="flex flex-col sm:flex-row">
-                    <div className="flex items-center gap-4 p-5 sm:w-72 flex-shrink-0">
-                      <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                        <div className="w-12 h-12 rounded-2xl hero-gradient flex items-center justify-center text-primary-foreground font-extrabold text-base shadow-lg">
+                <Link to={`/college/${college.slug}`} className="group block bg-card rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 border border-border hover:border-primary/30 overflow-hidden">
+                  <div className="flex flex-col lg:flex-row">
+                    {/* Left: Rank + College Identity */}
+                    <div className="flex items-start gap-4 p-5 lg:p-6 lg:w-[340px] flex-shrink-0">
+                      <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                        <div className="w-14 h-14 rounded-2xl hero-gradient flex items-center justify-center text-primary-foreground font-extrabold text-lg shadow-lg relative">
                           #{college.ranking || "—"}
+                          <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-amber-400 flex items-center justify-center shadow-md">
+                            <Star className="w-3 h-3 text-amber-900 fill-amber-900" />
+                          </div>
                         </div>
+                        <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">NIRF</span>
                       </div>
-                      <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
                         {college.logo_url ? (
-                          <img src={college.logo_url} alt={college.name} className="w-10 h-10 rounded-xl object-contain bg-white p-0.5 border border-border flex-shrink-0" />
+                          <img src={college.logo_url} alt={college.name} className="w-12 h-12 rounded-xl object-contain bg-white p-1 border border-border flex-shrink-0 shadow-sm" />
                         ) : (
-                          <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
-                            <GraduationCap className="w-4 h-4 text-muted-foreground" />
+                          <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
+                            <GraduationCap className="w-5 h-5 text-muted-foreground" />
                           </div>
                         )}
                         <div className="min-w-0">
-                          <h2 className="font-heading font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1 text-sm">
+                          <h2 className="font-heading font-bold text-foreground group-hover:text-primary transition-colors line-clamp-2 text-[15px] leading-snug">
                             {college.name}
                           </h2>
-                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
-                            <MapPin className="w-3 h-3" /> {college.city}, {college.state}
+                          <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                            <MapPin className="w-3 h-3 text-primary/60" /> {college.city}, {college.state}
+                          </div>
+                          <div className="flex items-center flex-wrap gap-1.5 mt-2">
+                            <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-5 border-primary/20 text-primary">{college.type}</Badge>
+                            {college.established && (
+                              <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                <Calendar className="w-2.5 h-2.5" /> Est. {college.established}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3 p-5 sm:border-l border-t sm:border-t-0 border-border bg-muted/20">
-                      <div className="space-y-1">
-                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 uppercase tracking-wider font-semibold"><IndianRupee className="w-3 h-3" /> Fees</span>
+                    {/* Center: Key Metrics Grid */}
+                    <div className="flex-1 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-0 border-t lg:border-t-0 lg:border-l border-border bg-muted/20 divide-x divide-y lg:divide-y-0 divide-border/50">
+                      <div className="p-4 flex flex-col justify-center">
+                        <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold flex items-center gap-1 mb-1.5">
+                          <IndianRupee className="w-3 h-3" /> Total Fees
+                        </span>
                         <p className="text-sm font-bold text-foreground">{college.fees || "—"}</p>
+                        <span className="text-[9px] text-muted-foreground mt-0.5">Full Program</span>
                       </div>
-                      <div className="space-y-1">
-                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 uppercase tracking-wider font-semibold"><TrendingUp className="w-3 h-3" /> Avg CTC</span>
+                      <div className="p-4 flex flex-col justify-center">
+                        <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold flex items-center gap-1 mb-1.5">
+                          <TrendingUp className="w-3 h-3" /> Avg Package
+                        </span>
                         <p className="text-sm font-bold text-primary">{college.placement_avg || "—"}</p>
+                        <span className="text-[9px] text-muted-foreground mt-0.5">Per Annum</span>
                       </div>
-                      <div className="space-y-1">
-                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 uppercase tracking-wider font-semibold"><Star className="w-3 h-3" /> Highest</span>
+                      <div className="p-4 flex flex-col justify-center">
+                        <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold flex items-center gap-1 mb-1.5">
+                          <Star className="w-3 h-3" /> Highest CTC
+                        </span>
                         <p className="text-sm font-bold text-foreground">{college.placement_highest || "—"}</p>
+                        <span className="text-[9px] text-muted-foreground mt-0.5">Placement Record</span>
                       </div>
-                      <div className="space-y-1">
-                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 uppercase tracking-wider font-semibold"><Briefcase className="w-3 h-3" /> Type</span>
-                        <Badge variant="outline" className="text-[10px] py-0">{college.type}</Badge>
+                      <div className="p-4 flex flex-col justify-center">
+                        <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold flex items-center gap-1 mb-1.5">
+                          <Users className="w-3 h-3" /> Students
+                        </span>
+                        <p className="text-sm font-bold text-foreground">{college.total_students ? `${college.total_students}+` : "—"}</p>
+                        <span className="text-[9px] text-muted-foreground mt-0.5">Batch Size</span>
+                      </div>
+                      <div className="p-4 flex flex-col justify-center col-span-2 md:col-span-1">
+                        <span className="text-[9px] text-muted-foreground uppercase tracking-wider font-bold flex items-center gap-1 mb-1.5">
+                          <BookOpen className="w-3 h-3" /> Exams Accepted
+                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {(college.exams_accepted || []).slice(0, 3).map((exam: string) => (
+                            <Badge key={exam} variant="secondary" className="text-[9px] font-semibold py-0 px-1.5 h-5">{exam}</Badge>
+                          ))}
+                          {(college.exams_accepted || []).length > 3 && (
+                            <Badge variant="secondary" className="text-[9px] font-semibold py-0 px-1.5 h-5">+{(college.exams_accepted || []).length - 3}</Badge>
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-center p-5 sm:border-l border-t sm:border-t-0 border-border sm:w-32 flex-shrink-0">
-                      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary transition-colors">
-                        <ArrowRight className="w-4 h-4 text-primary group-hover:text-primary-foreground transition-colors" />
+                    {/* Right: Accreditations + CTA */}
+                    <div className="flex items-center justify-center p-5 lg:p-6 border-t lg:border-t-0 lg:border-l border-border lg:w-40 flex-shrink-0 bg-gradient-to-br from-primary/5 to-transparent">
+                      <div className="flex flex-col items-center gap-3 text-center">
+                        {college.accreditations && college.accreditations.length > 0 && (
+                          <div className="flex flex-wrap justify-center gap-1 mb-1">
+                            {college.accreditations.slice(0, 3).map((acc: string) => (
+                              <span key={acc} className="text-[8px] font-bold text-primary bg-primary/10 px-1.5 py-0.5 rounded-md uppercase">{acc}</span>
+                            ))}
+                          </div>
+                        )}
+                        <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg">
+                          <ArrowRight className="w-5 h-5 text-primary group-hover:text-primary-foreground transition-colors" />
+                        </div>
+                        <span className="text-[11px] text-primary font-bold group-hover:underline">View Details</span>
                       </div>
                     </div>
                   </div>
+
+                  {/* Bottom: Courses + Top Recruiters (only on hover / always visible on mobile) */}
+                  {(college.courses?.length || college.top_recruiters?.length) && (
+                    <div className="border-t border-border/50 px-5 py-3 bg-muted/30 flex flex-wrap items-center gap-x-6 gap-y-2 text-[11px]">
+                      {college.courses && college.courses.length > 0 && (
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <GraduationCap className="w-3 h-3 text-primary/50" />
+                          <span className="font-semibold">Courses:</span>
+                          <span>{college.courses.slice(0, 3).join(", ")}{college.courses.length > 3 ? ` +${college.courses.length - 3} more` : ""}</span>
+                        </div>
+                      )}
+                      {college.top_recruiters && college.top_recruiters.length > 0 && (
+                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                          <Briefcase className="w-3 h-3 text-primary/50" />
+                          <span className="font-semibold">Recruiters:</span>
+                          <span>{college.top_recruiters.slice(0, 4).join(", ")}{college.top_recruiters.length > 4 ? ` +${college.top_recruiters.length - 4}` : ""}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </Link>
               </motion.div>
             ))}
@@ -268,6 +340,11 @@ const CollegeFilterPage = () => {
               ))}
             </div>
           </div>
+        )}
+
+        {/* Page Keywords */}
+        {cityPage?.id && (
+          <PageKeywords contentType="cityPage" recordId={cityPage.id} fallbackKeywords={keywords} />
         )}
       </div>
     </div>

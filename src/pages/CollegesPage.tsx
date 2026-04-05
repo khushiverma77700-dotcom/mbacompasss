@@ -9,6 +9,7 @@ import { useColleges } from "@/hooks/useInstitutes";
 import { useCityPages } from "@/hooks/useCityPages";
 import { Skeleton } from "@/components/ui/skeleton";
 import SEOHead, { generateListingSchema } from "@/components/SEOHead";
+import PageKeywords from "@/components/PageKeywords";
 
 const tabs = [
   { label: "All Colleges", type: "all", icon: Building2 },
@@ -315,6 +316,8 @@ const CollegesPage = () => {
             </div>
           </div>
         )}
+
+        <PageKeywords contentType="static" recordId="colleges" fallbackKeywords={["top MBA colleges India", "best B-schools", "IIM fees placements", "MBA college rankings"]} />
       </div>
     </div>
   );

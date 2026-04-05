@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import SEOHead from "@/components/SEOHead";
 import { Link } from "react-router-dom";
+import PageKeywords from "@/components/PageKeywords";
 
 const ContactPage = () => {
   const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
@@ -95,6 +96,8 @@ const ContactPage = () => {
             </div>
           </div>
         </div>
+
+        <PageKeywords contentType="static" recordId="contact" fallbackKeywords={["contact MBA coaching", "MBA guidance", "CAT coaching help"]} />
       </div>
     </div>
   );

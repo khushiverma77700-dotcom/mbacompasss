@@ -1,4 +1,5 @@
 import HeroSection from "@/components/HeroSection";
+import PageKeywords from "@/components/PageKeywords";
 import CategoryCards from "@/components/CategoryCards";
 import FeaturedInstitutes from "@/components/FeaturedInstitutes";
 import WhyChooseUs from "@/components/WhyChooseUs";
@@ -115,6 +116,10 @@ const Index = () => {
       
       {/* 17. Final CTA */}
       <CTASection />
+
+      <div className="container mx-auto px-4 pb-8">
+        <PageKeywords contentType="static" recordId="homepage" fallbackKeywords={["best MBA coaching", "MBA coaching institutes India", "CAT coaching", "MBA entrance exam", "IIM preparation"]} />
+      </div>
     </>
   );
 };

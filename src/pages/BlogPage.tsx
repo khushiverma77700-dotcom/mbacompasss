@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead from "@/components/SEOHead";
+import PageKeywords from "@/components/PageKeywords";
 
 const BlogPage = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -387,6 +388,8 @@ const BlogPage = () => {
             </div>
           </>
         )}
+
+        <PageKeywords contentType="static" recordId="blog" fallbackKeywords={["MBA blog", "CAT preparation tips", "MBA coaching reviews", "MBA career advice"]} />
       </div>
     </div>
   );
