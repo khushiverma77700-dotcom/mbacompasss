@@ -1,4 +1,5 @@
 import HeroSection from "@/components/HeroSection";
+import PageKeywords from "@/components/PageKeywords";
 import CategoryCards from "@/components/CategoryCards";
 import FeaturedInstitutes from "@/components/FeaturedInstitutes";
 import WhyChooseUs from "@/components/WhyChooseUs";
