@@ -772,6 +772,17 @@ const ProfileAnalyzerPage = () => {
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },
       "description": "Free AI-powered tool to check your IIM admission chances. Get personalised college comparison, difficulty ratings, and preparation roadmap.",
     },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "Is the MBA Profile Analyser really free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, our AI-powered MBA profile analyser is 100% free with no hidden charges." } },
+        { "@type": "Question", "name": "How accurate is the IIM admission probability calculator?", "acceptedAnswer": { "@type": "Answer", "text": "Our tool is trained on data from 25,000+ MBA aspirants and historical admission trends from all IIMs, XLRI, FMS, and 50+ top B-schools." } },
+        { "@type": "Question", "name": "Which MBA entrance exams does this tool support?", "acceptedAnswer": { "@type": "Answer", "text": "The profile analyser supports CAT, XAT, NMAT, SNAP, CMAT, MAT, GMAT, IIFT, TISSNET, and ATMA." } },
+        { "@type": "Question", "name": "Can I retake the MBA profile analysis?", "acceptedAnswer": { "@type": "Answer", "text": "You can retake the analysis after a 60-day cooldown period." } },
+        { "@type": "Question", "name": "What is the difference between Dream, Target, and Safe colleges?", "acceptedAnswer": { "@type": "Answer", "text": "Dream colleges have below 30% admission probability, Target colleges have 30-60%, and Safe colleges have above 60% probability." } },
+      ],
+    },
   ];
 
   return (
@@ -779,7 +790,7 @@ const ProfileAnalyzerPage = () => {
       <SEOHead
         title="AI-Powered MBA Profile Analyser by B School Buzz | Check IIM Chances Free"
         description="Analyse your MBA profile with AI. Get personalised IIM admission probability, 5-dimension score breakdown, peer comparison among 25,000+ students, college-wise comparison table with difficulty ratings, and detailed preparation roadmap. 100% Free tool by B School Buzz."
-        keywords={["MBA profile analyser", "IIM chances calculator", "CAT score predictor", "MBA admission probability", "B School Buzz profile analyser", "AI MBA tool", "IIM admission predictor", "MBA college comparison", "CAT preparation", "MBA peer comparison"]}
+        keywords={["MBA profile analyser", "IIM chances calculator", "CAT score predictor", "MBA admission probability", "B School Buzz profile analyser", "AI MBA tool", "IIM admission predictor", "MBA college comparison", "CAT preparation", "MBA peer comparison", "free MBA profile evaluation", "check IIM chances", "MBA profile checker", "IIM admission probability calculator", "MBA college predictor India", "CAT percentile predictor", "best MBA coaching", "XAT preparation profile analysis", "NMAT score predictor", "MBA after engineering chances", "MBA for working professionals", "IIM fees and placement comparison", "MBA ROI calculator", "top MBA colleges accepting CAT score", "MBA entrance exam difficulty", "should I do MBA quiz", "MBA admission chances 2025", "IIM call predictor"]}
         canonical="https://bestmbacoaching.com/profile-analyzer"
         ogType="website"
         ogTitle="AI-Powered MBA Profile Analyser by B School Buzz"
@@ -1085,6 +1096,69 @@ const ProfileAnalyzerPage = () => {
                 </Button>
               </motion.div>
             </section>
+
+            {/* ──── SEO-RICH BOTTOM CONTENT ──── */}
+            <section className="py-16 px-4 bg-muted/30">
+              <div className="max-w-5xl mx-auto space-y-12">
+                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+                  <h2 className="text-2xl md:text-3xl font-bold mb-4">What is an MBA Profile Analyser?</h2>
+                  <p className="text-muted-foreground leading-relaxed">
+                    An MBA Profile Analyser is an AI-powered tool that evaluates your academic credentials, work experience, extracurricular achievements, and diversity factors to predict your admission chances at top MBA colleges in India. Our free MBA profile evaluation tool uses advanced machine learning algorithms trained on data from 25,000+ MBA aspirants to provide accurate IIM admission probability, personalised college recommendations, and a detailed preparation roadmap. Whether you're targeting IIM Ahmedabad, IIM Bangalore, IIM Calcutta, XLRI Jamshedpur, FMS Delhi, or any of the 50+ top B-schools in India, our AI-powered MBA profile checker gives you a comprehensive 5-dimension score breakdown covering academics, work experience, diversity, profile consistency, and leadership potential.
+                  </p>
+                </motion.div>
+
+                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+                  <h3 className="text-xl font-bold mb-3">How Does the AI MBA Profile Evaluation Work?</h3>
+                  <p className="text-muted-foreground leading-relaxed mb-4">
+                    Our MBA admission predictor analyses your profile across multiple parameters that top B-schools consider during their selection process. The tool evaluates your 10th and 12th percentage, graduation CGPA, entrance exam scores (CAT, XAT, NMAT, SNAP, GMAT, CMAT, MAT, IIFT), work experience quality, and diversity factors. It then compares your profile against historical admission data from IIMs, XLRI, FMS, MDI, SPJIMR, NMIMS, and other premier MBA institutions to generate personalised admission probability scores.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {[
+                      { title: "CAT Score Predictor & IIM Chances", desc: "Get your predicted CAT percentile range and admission probability at all 20 IIMs based on your academic profile, category, and work experience." },
+                      { title: "MBA College Comparison with Difficulty Ratings", desc: "Compare colleges side-by-side with placement statistics, fees, NIRF rankings, required percentiles, and personalised difficulty ratings." },
+                      { title: "Peer Comparison Among 25,000+ Aspirants", desc: "See where you stand among thousands of MBA aspirants. Know your percentile rank and identify areas for improvement." },
+                      { title: "Personalised MBA Preparation Roadmap", desc: "Get a phase-wise study plan with daily hours, target scores, focus areas, and timeline customised to your profile strengths and weaknesses." },
+                    ].map((item, i) => (
+                      <div key={i} className="p-4 rounded-xl bg-card border border-border/50">
+                        <h4 className="font-semibold text-sm mb-1">{item.title}</h4>
+                        <p className="text-xs text-muted-foreground">{item.desc}</p>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+
+                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+                  <h3 className="text-xl font-bold mb-3">Frequently Asked Questions About MBA Profile Analysis</h3>
+                  <div className="space-y-4">
+                    {[
+                      { q: "Is the MBA Profile Analyser really free?", a: "Yes, our AI-powered MBA profile analyser is 100% free. You get a comprehensive 5-dimension score breakdown, college predictions, and peer comparison without any payment or hidden charges." },
+                      { q: "How accurate is the IIM admission probability calculator?", a: "Our tool is trained on data from 25,000+ MBA aspirants and historical admission trends from all IIMs, XLRI, FMS, and 50+ top B-schools. The prediction accuracy improves continuously as more students use the tool." },
+                      { q: "Which MBA entrance exams does this tool support?", a: "The profile analyser supports CAT, XAT, NMAT, SNAP, CMAT, MAT, GMAT, IIFT, TISSNET, and ATMA — covering all major MBA entrance exams in India." },
+                      { q: "Can I retake the MBA profile analysis?", a: "You can retake the analysis after a 60-day cooldown period. This ensures you have time to work on your profile improvements before re-evaluating." },
+                      { q: "What is the difference between Dream, Target, and Safe colleges?", a: "Dream colleges are where your admission chances are below 30%, Target colleges have 30-60% probability, and Safe colleges have above 60% admission probability based on your profile." },
+                    ].map((faq, i) => (
+                      <div key={i} className="p-4 rounded-xl bg-card border border-border/50">
+                        <h4 className="font-semibold text-sm mb-1">{faq.q}</h4>
+                        <p className="text-xs text-muted-foreground">{faq.a}</p>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+
+                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+                  <h3 className="text-xl font-bold mb-3">Top MBA Colleges Covered in Our Analysis</h3>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    IIM Ahmedabad • IIM Bangalore • IIM Calcutta • IIM Lucknow • IIM Kozhikode • IIM Indore • IIM Shillong • IIM Rohtak • IIM Ranchi • IIM Kashipur • IIM Trichy • IIM Udaipur • IIM Nagpur • IIM Amritsar • IIM Bodh Gaya • IIM Jammu • IIM Sambalpur • IIM Sirmaur • IIM Visakhapatnam • FMS Delhi • XLRI Jamshedpur • IIFT Delhi • MDI Gurgaon • SPJIMR Mumbai • NMIMS Mumbai • SIBM Pune • SCMHRD Pune • IIT Bombay SJMSOM • IIT Delhi DMS • IIT Kharagpur VGSoM • NITIE Mumbai • JBIMS Mumbai • TISS Mumbai • Great Lakes Chennai • IMT Ghaziabad • TAPMI Manipal
+                  </p>
+                </motion.div>
+
+                <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    <strong>Related Searches:</strong> MBA profile checker, IIM admission chances calculator, CAT percentile predictor, MBA college predictor India, free MBA profile evaluation, B School Buzz profile analyser, check my IIM chances, MBA admission probability tool, best MBA coaching for CAT, XAT preparation profile analysis, NMAT score predictor, SNAP exam college predictor, should I do MBA, MBA after engineering chances, MBA for working professionals admission chances, IIM fees and placement comparison, MBA ROI calculator India, top MBA colleges accepting CAT score, MBA colleges in Mumbai Delhi Bangalore, MBA entrance exam difficulty comparison
+                  </p>
+                </motion.div>
+              </div>
+            </section>
           </motion.div>
         )}
 
@@ -1123,6 +1197,12 @@ const ProfileAnalyzerPage = () => {
               <CardContent className="space-y-5">
                 {step === 1 && (
                   <>
+                    <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 mb-2">
+                      <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                        <Mail className="w-4 h-4 shrink-0" />
+                        Kindly enter your correct email — we will send your detailed report over your email.
+                      </p>
+                    </div>
                     <div className="space-y-1.5">
                       <Label className="flex items-center gap-1.5"><User className="w-3.5 h-3.5" /> Full Name <span className="text-destructive">*</span></Label>
                       <Input placeholder="Enter your full name" value={form.name} onChange={e => updateField("name", e.target.value)} className={errors.name ? "border-destructive" : ""} />

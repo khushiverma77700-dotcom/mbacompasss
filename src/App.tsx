@@ -12,6 +12,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import BackButton from "@/components/BackButton";
 import OnboardingDialog from "@/components/OnboardingDialog";
 import { consumePostAuthRedirect } from "@/lib/authRedirect";
+import ProfileAnalyzerPopup from "@/components/ProfileAnalyzerPopup";
 import { supabase } from "@/integrations/supabase/client";
 import Index from "./pages/Index";
 import CategoryPage from "./pages/CategoryPage";
@@ -55,6 +56,7 @@ import CollegeFilterPage from "./pages/CollegeFilterPage";
 import ProfileAnalyzerPage from "./pages/ProfileAnalyzerPage";
 import AdminProfileAnalyzer from "./pages/admin/AdminProfileAnalyzer";
 import AdminManageAdmins from "./pages/admin/AdminManageAdmins";
+import AdminStaticPageSEO from "./pages/admin/AdminStaticPageSEO";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +67,7 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => (
     <BackButton />
     {children}
     <Footer />
+    <ProfileAnalyzerPopup />
   </>
 );
 
@@ -160,6 +163,7 @@ const App = () => (
               <Route path="seo-dashboard" element={<AdminSEODashboard />} />
               <Route path="profile-analyzer" element={<AdminProfileAnalyzer />} />
               <Route path="manage-admins" element={<AdminManageAdmins />} />
+              <Route path="static-seo" element={<AdminStaticPageSEO />} />
             </Route>
             <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
             <Route path="/category/:slug" element={<PublicLayout><CategoryPage /></PublicLayout>} />
