@@ -22,12 +22,6 @@ const FAQSection = lazy(() => import("@/components/FAQSection"));
 const CTASection = lazy(() => import("@/components/CTASection"));
 const PageKeywords = lazy(() => import("@/components/PageKeywords"));
 
-const SectionFallback = () => (
-  <div className="w-full py-12 flex items-center justify-center">
-    <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-  </div>
-);
-
 const homepageFAQs = [
   { q: "What is the best MBA coaching in India?", a: "The best MBA coaching depends on your target exam. For CAT, top choices include IMS, TIME, and Career Launcher. Compare fees, success rates, and student reviews on BestMBACoaching.com." },
   { q: "How much does MBA coaching cost in India?", a: "MBA coaching fees range from ₹15,000 to ₹1,50,000 depending on the institute, course duration, and mode (online/offline). Use our comparison tool to find the best value." },
@@ -77,50 +71,22 @@ const Index = () => {
       <StatsCounterSection />
       <CategoryCards />
       
-      {/* Below-the-fold: lazy loaded */}
-      <Suspense fallback={<SectionFallback />}>
+      {/* Below-the-fold: single Suspense boundary to avoid multiple spinners */}
+      <Suspense fallback={null}>
         <CoachingOfWeekSection />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
         <OfferBanners />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
         <FeaturedInstitutes />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
         <TopRankedCollegesSection />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
         <BrowseByCitySection />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
         <ExamDeadlinesTicker />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
         <PopularExamsSection />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
         <HowItWorksSection />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
         <LearningResourcesSection />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
         <ProfileAnalyzerCTA />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
         <LatestArticlesSection />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
         <SuccessStoriesSection />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
         <WhyChooseUs />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
         <FAQSection />
-      </Suspense>
-      <Suspense fallback={<SectionFallback />}>
         <CTASection />
       </Suspense>
 
