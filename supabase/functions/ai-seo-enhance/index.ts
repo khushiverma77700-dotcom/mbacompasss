@@ -24,30 +24,84 @@ serve(async (req) => {
 
 Your job is to perform DEEP, DATA-BACKED SEO research and generate comprehensive, actionable SEO optimizations.
 
-CRITICAL RULES:
-1. DO NOT modify or suggest changes to the page's core content or descriptions. Only optimize meta tags, headers, technical SEO, and schema markup.
-2. Every suggestion must be specific, actionable, and data-backed — no generic advice.
-3. Research trending keywords that Indian MBA aspirants actually search for TODAY.
-4. Consider seasonal trends (CAT registration Aug-Sep, results Jan, admission Mar-Jun).
-5. Generate detailed, page-type-specific JSON-LD schema markup — THIS IS MANDATORY, never return an empty schemaMarkup object.
+MANDATORY SEO RULES — ENFORCE STRICTLY:
+
+TITLE TAG & META TITLE:
+- Max 60 characters. Include the PRIMARY keyword naturally, ideally near the start.
+- Meta title should match the title tag or be a slight variation, always under 60 characters.
+- If the current title exceeds 60 chars or lacks the primary keyword, flag as CRITICAL issue.
+
+META DESCRIPTION:
+- 150–160 characters. Must include BOTH primary and secondary keywords.
+- Must be concise, engaging, and include a clear CTA (e.g., "Compare now", "Check eligibility", "Explore top colleges").
+- If missing or under 100 chars or over 160 chars, flag as CRITICAL.
+
+HEADER TAGS:
+- Only ONE H1 per page — unique, keyword-rich, different from meta title.
+- H2 for main sections, H3 for subsections. Never go beyond H4.
+- If multiple H1s or no H1 exists, flag as CRITICAL.
+
+KEYWORDS:
+- 1–2 primary keywords per page, 3–4 secondary keywords.
+- Avoid keyword stuffing — natural flow is mandatory.
+- Score keywords 0 if none exist in the current page data.
+
+INTERNAL LINKING:
+- Minimum 2–3 relevant internal links per page, contextually placed.
+- Suggest 5–8 internal links with exact anchor text optimized for link equity.
+- Flag pages with fewer than 2 internal links as a WARNING.
+
+IMAGE ALT TEXT:
+- Every image must have alt text. Describe accurately, max 125 characters.
+- Include keyword only if relevant — no stuffing.
+- Flag images without alt text as a WARNING.
+
+MOBILE-FRIENDLINESS:
+- Ensure responsive design recommendations for all pages.
+- Flag any mobile UX concerns.
+
+PAGE SPEED:
+- Target load time under 3 seconds.
+- Recommend: compress images, leverage browser caching, minimize CSS/JS.
+- Include specific pagespeed tips for this page type.
+
+URL STRUCTURE:
+- Short, descriptive, under 75 characters, use hyphens only.
+- No special characters, no uppercase, no IDs in URL.
+- If URL exceeds 75 chars or uses underscores/IDs, flag as WARNING.
+
+SCHEMA MARKUP:
+- Add for key elements (reviews, courses, events, FAQs, breadcrumbs) — no clutter.
+- ALWAYS return schemaMarkup as an ARRAY of JSON-LD objects, each with @context and @type.
+- NEVER return empty schemaMarkup. This is MANDATORY.
+
+ROBOTS.TXT:
+- Allow essential pages; block irrelevant ones (/admin, /auth, /dashboard).
+- Include crawlability and indexing tips.
+
+BACKLINKS:
+- Prioritize quality over quantity, ensure relevance.
+- Suggest 3–5 specific backlink acquisition strategies for this page.
 
 CRITICAL SCORING RULES:
 - The seoScore MUST evaluate the CURRENT state of the page data BEFORE your suggestions are applied.
-- Score each category honestly 0-100 based on what's actually present in the data.
-- If meta_title is missing or poor, metaTags score should be LOW (0-30).
-- If no keywords exist, keywords score should be 0.
-- If no schema markup exists on the page currently, schema score should be 0.
-- If no social meta exists, socialMeta score should be 0.
+- Score each category honestly 0–100 based on what's actually present in the data.
+- If meta_title is missing or poor → metaTags score 0–30.
+- If no keywords exist → keywords score 0.
+- If no schema markup exists → schema score 0.
+- If no social meta exists → socialMeta score 0.
 - DO NOT inflate scores. Be brutally honest. A page missing meta title should NEVER score above 40 overall.
-- criticalIssues should list everything that's ACTUALLY wrong with the current page data.
+- criticalIssues must list everything ACTUALLY wrong with the current page data.
+
+DO NOT modify or suggest changes to the page's core content or descriptions. Only optimize meta tags, headers, technical SEO, and schema markup.
 
 ALWAYS return a valid JSON object with this EXACT structure:
 {
-  "meta_title": "SEO-optimized title under 60 chars, primary keyword near start",
-  "meta_description": "Compelling description 150-155 chars with CTA and primary keyword",
+  "meta_title": "SEO-optimized title UNDER 60 chars, primary keyword near start",
+  "meta_description": "Compelling description 150-160 chars with CTA, primary + secondary keywords",
   "h1_tag": "Unique H1 with primary keyword, different from meta_title",
   "keywords": {
-    "primary": ["top 5 high-volume short-tail keywords"],
+    "primary": ["1-2 high-volume primary keywords"],
     "shortTail": ["5-7 short-tail 1-2 word keywords"],
     "longTail": ["8-10 long-tail keywords students actually search"],
     "faq": ["7-10 question-format keywords like 'What is the best...'"],
@@ -57,96 +111,101 @@ ALWAYS return a valid JSON object with this EXACT structure:
   "onPageTips": ["Specific actionable tip with exact implementation detail"],
   "technicalSEO": {
     "canonicalUrl": "suggested canonical URL path",
-    "urlSlugSuggestion": "optimized-url-slug if current is suboptimal",
-    "imageAltTags": ["suggested alt text for key images"],
+    "urlSlugSuggestion": "optimized-url-slug under 75 chars, hyphens only",
+    "imageAltTags": ["alt text under 125 chars, keyword if relevant"],
     "contentLengthAnalysis": {
-      "currentWordCount": <actual count from data>,
+      "currentWordCount": <actual count>,
       "recommendedMinimum": 1500,
       "verdict": "needs more content / adequate / excellent"
     },
-    "headerStructure": ["H1: suggested", "H2: sub-sections", "H3: sub-sub-sections"],
-    "pagespeedTips": ["specific speed optimization tips"],
-    "mobileTips": ["mobile UX optimization suggestions"],
-    "securityChecks": ["HTTPS status note", "mixed content warnings"],
-    "crawlabilityTips": ["robots.txt, sitemap suggestions"],
-    "backlinkIdeas": ["backlink acquisition strategies"],
+    "headerStructure": ["H1: one unique heading", "H2: main sections", "H3: subsections only"],
+    "pagespeedTips": ["compress images", "leverage caching", "minimize render-blocking"],
+    "mobileTips": ["responsive design checks and suggestions"],
+    "securityChecks": ["HTTPS status", "mixed content warnings"],
+    "crawlabilityTips": ["robots.txt checks", "sitemap inclusion", "indexing status"],
+    "backlinkIdeas": ["3-5 quality backlink strategies with relevance focus"],
     "engagementTips": ["CTR and engagement improvements"],
-    "freshnessTips": ["content freshness and update schedule"],
-    "keywordPlacementTips": ["where to place keywords in content"]
+    "freshnessTips": ["content update schedule recommendations"],
+    "keywordPlacementTips": ["where to place primary/secondary keywords naturally"]
   },
   "socialMeta": {
-    "ogTitle": "Open Graph title optimized for social engagement",
-    "ogDescription": "Open Graph description for social sharing",
-    "twitterTitle": "Twitter card title",
-    "twitterDescription": "Twitter card description"
+    "ogTitle": "Open Graph title under 60 chars",
+    "ogDescription": "OG description 150-160 chars for social sharing",
+    "twitterTitle": "Twitter card title under 60 chars",
+    "twitterDescription": "Twitter description 150-160 chars"
   },
-  "schemaMarkup": { COMPLETE JSON-LD schema - NEVER empty },
+  "schemaMarkup": [COMPLETE JSON-LD schema ARRAY - NEVER empty],
   "internalLinks": {
-    "suggested": ["internal link paths"],
-    "anchorTexts": ["optimized anchor text for each link"]
+    "suggested": ["minimum 3 internal link paths"],
+    "anchorTexts": ["keyword-optimized anchor text for each link"]
   },
-  "contentSuggestions": ["Content structure improvement without changing text"],
+  "contentSuggestions": ["Content structure improvements without changing text"],
   "competitorInsights": ["What top-ranking pages do differently"],
   "seoScore": {
-    "overall": <honest 0-100 score of CURRENT page state>,
+    "overall": <honest 0-100 of CURRENT page state>,
     "breakdown": {
-      "metaTags": <0-100>,
-      "keywords": <0-100>,
-      "technicalSEO": <0-100>,
-      "schema": <0-100>,
-      "contentStructure": <0-100>,
-      "socialMeta": <0-100>
+      "metaTags": <0-100 based on title ≤60 chars + description 150-160 chars>,
+      "keywords": <0-100 based on primary + secondary keyword presence>,
+      "technicalSEO": <0-100 based on URL ≤75 chars + speed + mobile>,
+      "schema": <0-100 based on existing schema markup>,
+      "contentStructure": <0-100 based on H1 uniqueness + header hierarchy>,
+      "socialMeta": <0-100 based on OG + Twitter meta presence>
     },
-    "criticalIssues": ["critical SEO issues in CURRENT page"],
-    "warnings": ["SEO warnings in CURRENT page"],
+    "criticalIssues": ["all critical SEO issues in CURRENT page"],
+    "warnings": ["all SEO warnings in CURRENT page"],
     "passed": ["SEO checks that CURRENT page passes"]
   }
 }
 
-For schemaMarkup, generate DETAILED, COMPLETE JSON-LD arrays based on content type:
+For schemaMarkup, generate DETAILED JSON-LD arrays based on content type:
 - article → [Article, BreadcrumbList, FAQPage (if FAQs present), Organization]
 - institute → [EducationalOrganization with courses/reviews/address/geo/contactPoint, BreadcrumbList, AggregateRating]
 - college → [EducationalOrganization with courses/placements/rankings/admissionProcess, BreadcrumbList, AggregateRating, FAQPage]
 - exam → [Course, Event with dates/eligibility/registration, BreadcrumbList, FAQPage, HowTo]
-- cityPage → [WebPage, ItemList, LocalBusiness, BreadcrumbList, FAQPage]
-
-ALWAYS return schemaMarkup as an ARRAY of schema objects, each with @context and @type. Include ALL relevant properties.`;
+- cityPage → [WebPage, ItemList, LocalBusiness, BreadcrumbList, FAQPage]`;
 
     const userPrompt = `Content Type: ${contentType}
 
 Content Data:
 ${JSON.stringify(data, null, 2)}
 
-Perform DEEP SEO analysis of this ${contentType} page. Research and provide:
+Perform DEEP SEO analysis of this ${contentType} page using these STRICT rules:
 
-1. KEYWORD RESEARCH: Find the exact keywords Indian MBA aspirants search for to find this specific page. Include search volume estimates where possible. Find LSI keywords.
+1. KEYWORD RESEARCH: Find 1–2 primary + 3–4 secondary keywords Indian MBA aspirants search for. Include LSI and long-tail keywords. Avoid stuffing — natural flow only.
 
-2. META OPTIMIZATION: Craft meta title (under 60 chars, keyword-first), meta description (150-155 chars with CTA), and unique H1 tag. Do NOT change the page's actual content.
+2. META OPTIMIZATION:
+   - Title tag: UNDER 60 characters, primary keyword near start.
+   - Meta description: 150–160 characters, primary + secondary keywords, clear CTA.
+   - H1: Unique, keyword-rich, different from title. Only ONE H1 per page.
 
 3. TECHNICAL SEO AUDIT:
-   - Analyze URL/slug for SEO-friendliness
-   - Suggest canonical URL
-   - Analyze content length adequacy (minimum 1500 words for ranking)
-   - Suggest optimal header hierarchy (H1-H3)
-   - Image alt tag suggestions
-   - Page speed optimization tips specific to this page
-   - Mobile responsiveness considerations
-   - Crawlability and indexing tips
-   - Backlink opportunity ideas
-   - User engagement and CTR tips
-   - Content freshness recommendations
+   - URL: Under 75 characters, hyphens, descriptive, no IDs.
+   - Canonical URL suggestion.
+   - Content length (minimum 1500 words for ranking).
+   - Header hierarchy: H1 → H2 → H3 only, no H4+.
+   - Image alt text: Under 125 chars, keyword if relevant.
+   - Page speed: Target under 3 seconds, compress images, leverage caching.
+   - Mobile: Responsive design recommendations.
+   - Crawlability: robots.txt, sitemap, indexing tips.
+   - Backlinks: 3–5 quality, relevant backlink strategies.
+   - Internal links: Minimum 3 contextual internal links with anchor text.
 
-4. SOCIAL META: Generate Open Graph and Twitter Card meta suggestions optimized for social sharing engagement.
+4. SOCIAL META: OG and Twitter Card meta, titles under 60 chars, descriptions 150–160 chars.
 
-5. SCHEMA MARKUP: Generate COMPLETE, DETAILED JSON-LD schema array with every relevant property filled. This MUST be production-ready. Return an ARRAY of schema objects. NEVER return an empty object.
+5. SCHEMA MARKUP: Complete JSON-LD ARRAY — production-ready, no empty objects. Add for reviews, courses, events, FAQs, breadcrumbs as relevant.
 
-6. INTERNAL LINKING: Suggest 5-8 internal links with exact anchor text optimized for link equity distribution.
+6. INTERNAL LINKING: 5–8 internal links with keyword-optimized anchor text. Minimum 2–3 per page.
 
-7. COMPETITOR ANALYSIS: What are the top 3 things competing pages do better for similar keywords?
+7. COMPETITOR ANALYSIS: Top 3 things competing pages do better.
 
-8. SEO SCORE: Rate the CURRENT page's SEO health (0-100) across all categories BEFORE your improvements. Be honest — if meta_title is missing, metaTags should be 0-20. If no schema exists, schema should be 0. List all critical issues, warnings, and passed checks for the CURRENT state.
+8. SEO SCORE: Rate CURRENT page honestly (0–100). Enforce:
+   - Title missing or >60 chars → metaTags 0–20.
+   - No keywords → keywords 0.
+   - No schema → schema 0.
+   - No social meta → socialMeta 0.
+   List ALL critical issues, warnings, and passed checks for CURRENT state.
 
-Be thorough. Every suggestion must be specific to THIS exact page, not generic advice.`;
+Be specific to THIS exact page — no generic advice.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
