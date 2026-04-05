@@ -96,39 +96,41 @@ const SEOChecklist = ({ data, contentType, recordId, showPublishWarning, onPubli
 
     // === Meta Data ===
     {
-      label: "Meta Title",
+      label: "Meta Title (≤60 chars)",
       category: "Meta Data",
       icon: Globe,
       status: data.meta_title
         ? data.meta_title.length <= 60
           ? data.meta_title.length >= 30 ? "pass" : "warn"
-          : "warn"
+          : "fail"
         : "fail",
       tip: data.meta_title
-        ? `${data.meta_title.length}/60 chars${data.meta_title.length > 60 ? " — Too long!" : data.meta_title.length < 30 ? " — Too short" : " ✓"}`
-        : "Add a meta title (30-60 characters recommended)",
+        ? `${data.meta_title.length}/60 chars${data.meta_title.length > 60 ? " — EXCEEDS 60 char limit!" : data.meta_title.length < 30 ? " — Too short" : " ✓"}`
+        : "Add a meta title (30–60 characters, include primary keyword)",
     },
     {
-      label: "Meta Description",
+      label: "Meta Description (150–160 chars)",
       category: "Meta Data",
       icon: Globe,
       status: data.meta_description
-        ? data.meta_description.length <= 155
-          ? data.meta_description.length >= 70 ? "pass" : "warn"
-          : "warn"
+        ? data.meta_description.length >= 150 && data.meta_description.length <= 160
+          ? "pass"
+          : data.meta_description.length >= 100 && data.meta_description.length <= 170
+            ? "warn"
+            : "fail"
         : "fail",
       tip: data.meta_description
-        ? `${data.meta_description.length}/155 chars${data.meta_description.length > 155 ? " — Too long, may be truncated" : data.meta_description.length < 70 ? " — Too short" : " ✓"}`
-        : "Add a meta description (70-155 characters recommended)",
+        ? `${data.meta_description.length}/160 chars${data.meta_description.length > 160 ? " — Exceeds 160 chars, will be truncated" : data.meta_description.length < 150 ? " — Under 150 chars, add primary + secondary keywords & CTA" : " ✓ Ideal length"}`
+        : "Add meta description (150–160 chars with primary + secondary keywords & CTA)",
     },
     {
-      label: "Keywords",
+      label: "Keywords (1–2 primary + 3–4 secondary)",
       category: "Meta Data",
       icon: Hash,
-      status: (data.keywords || []).length >= 3 ? "pass" : (data.keywords || []).length > 0 ? "warn" : "fail",
+      status: (data.keywords || []).length >= 5 ? "pass" : (data.keywords || []).length >= 3 ? "warn" : "fail",
       tip: (data.keywords || []).length > 0
-        ? `${(data.keywords || []).length} keywords — ${(data.keywords || []).length >= 3 ? "✓" : "Add at least 3"}`
-        : "Add target keywords (3-8 recommended)",
+        ? `${(data.keywords || []).length} keywords — ${(data.keywords || []).length >= 5 ? "✓ Good coverage" : "Add more (5–6 total: 1–2 primary + 3–4 secondary)"}`
+        : "Add target keywords (1–2 primary + 3–4 secondary, avoid stuffing)",
     },
 
     // === URL & Technical ===
