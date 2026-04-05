@@ -958,7 +958,7 @@ const ProfileAnalyzerPage = () => {
                 >
                   {[
                     { icon: GraduationCap, value: "50+", label: "Colleges Compared", sub: "IIMs, XLRI, FMS & more" },
-                    { icon: Sparkles, value: "AI", label: "Powered Analysis", sub: "Gemini Intelligence" },
+                    { icon: Sparkles, value: "AI", label: "Powered Analysis", sub: "Advanced AI Engine" },
                     { icon: TrendingUp, value: "85%+", label: "Match Accuracy", sub: "Data-driven predictions" },
                     { icon: Users, value: "25,000+", label: "Students Analysed", sub: "Growing community" },
                   ].map((item, i) => (
