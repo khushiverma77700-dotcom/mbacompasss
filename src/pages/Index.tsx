@@ -116,6 +116,10 @@ const Index = () => {
       
       {/* 17. Final CTA */}
       <CTASection />
+
+      <div className="container mx-auto px-4 pb-8">
+        <PageKeywords contentType="static" recordId="homepage" fallbackKeywords={["best MBA coaching", "MBA coaching institutes India", "CAT coaching", "MBA entrance exam", "IIM preparation"]} />
+      </div>
     </>
   );
 };
