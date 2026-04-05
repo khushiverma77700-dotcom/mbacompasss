@@ -24,6 +24,7 @@ const adminNav = [
   { label: "Institute Results", path: "/admin/institute-results", icon: BarChart3 },
   { label: "Sitemap", path: "/admin/sitemap", icon: MapPin },
   { label: "Student Leads", path: "/admin/leads", icon: Users },
+  { label: "All Leads (Unified)", path: "/admin/all-leads-unified", icon: BarChart3 },
   { label: "City/State Pages", path: "/admin/city-pages", icon: Globe },
   { label: "All Site Links", path: "/admin/all-links", icon: Link2 },
   { label: "Clear Caches", path: "/admin/clear-cache", icon: Trash2 },
