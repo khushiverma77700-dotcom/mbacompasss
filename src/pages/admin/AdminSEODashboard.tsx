@@ -243,6 +243,12 @@ const AdminSEODashboard = () => {
   const [dailyReportLoading, setDailyReportLoading] = useState(false);
   const [dailyReportRefreshing, setDailyReportRefreshing] = useState(false);
 
+  // Page Speed State
+  const [pageSpeedData, setPageSpeedData] = useState<any>(null);
+  const [pageSpeedLoading, setPageSpeedLoading] = useState(false);
+  const [pageSpeedDevice, setPageSpeedDevice] = useState<"mobile" | "desktop" | "tablet">("mobile");
+  const [pageSpeedOptimizing, setPageSpeedOptimizing] = useState<string | null>(null);
+
   // Load saved blog ideas
   const loadSavedBlogIdeas = useCallback(async () => {
     const { data } = await supabase.from("site_settings").select("value").eq("key", "saved_blog_ideas").maybeSingle();
