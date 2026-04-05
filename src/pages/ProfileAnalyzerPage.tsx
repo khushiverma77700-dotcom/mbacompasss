@@ -772,6 +772,17 @@ const ProfileAnalyzerPage = () => {
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },
       "description": "Free AI-powered tool to check your IIM admission chances. Get personalised college comparison, difficulty ratings, and preparation roadmap.",
     },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        { "@type": "Question", "name": "Is the MBA Profile Analyser really free?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, our AI-powered MBA profile analyser is 100% free with no hidden charges." } },
+        { "@type": "Question", "name": "How accurate is the IIM admission probability calculator?", "acceptedAnswer": { "@type": "Answer", "text": "Our tool is trained on data from 25,000+ MBA aspirants and historical admission trends from all IIMs, XLRI, FMS, and 50+ top B-schools." } },
+        { "@type": "Question", "name": "Which MBA entrance exams does this tool support?", "acceptedAnswer": { "@type": "Answer", "text": "The profile analyser supports CAT, XAT, NMAT, SNAP, CMAT, MAT, GMAT, IIFT, TISSNET, and ATMA." } },
+        { "@type": "Question", "name": "Can I retake the MBA profile analysis?", "acceptedAnswer": { "@type": "Answer", "text": "You can retake the analysis after a 60-day cooldown period." } },
+        { "@type": "Question", "name": "What is the difference between Dream, Target, and Safe colleges?", "acceptedAnswer": { "@type": "Answer", "text": "Dream colleges have below 30% admission probability, Target colleges have 30-60%, and Safe colleges have above 60% probability." } },
+      ],
+    },
   ];
 
   return (
