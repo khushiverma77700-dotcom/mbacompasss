@@ -1,4 +1,5 @@
 import { useParams, Link } from "react-router-dom";
+import PageKeywords from "@/components/PageKeywords";
 import { useEffect } from "react";
 import { ArrowLeft, Calendar, Clock, User, Tag, Share2, ChevronRight, BookOpen, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
