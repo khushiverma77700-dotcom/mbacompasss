@@ -3,15 +3,18 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Sparkles, ArrowRight, BarChart3, Target, Users, Brain, CheckCircle2, Zap } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const POPUP_DISMISSED_KEY = "profile_popup_dismissed";
-const POPUP_DELAY_MS = 30000;
+const POPUP_DELAY_MS = 8000;
 
 const ProfileAnalyzerPopup = () => {
   const [open, setOpen] = useState(false);
   const [activeFeature, setActiveFeature] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (
@@ -22,12 +25,33 @@ const ProfileAnalyzerPopup = () => {
     const dismissed = sessionStorage.getItem(POPUP_DISMISSED_KEY);
     if (dismissed) return;
 
+    // If user is logged in, check if they already have an analysis
+    if (user) {
+      const checkExisting = async () => {
+        const { data } = await supabase
+          .from("profile_analyses")
+          .select("id")
+          .eq("user_id", user.id)
+          .limit(1);
+        if (data && data.length > 0) {
+          // User already analyzed — don't show popup
+          sessionStorage.setItem(POPUP_DISMISSED_KEY, "true");
+          return;
+        }
+        // No existing analysis, show popup after delay
+        const timer = setTimeout(() => setOpen(true), POPUP_DELAY_MS);
+        return () => clearTimeout(timer);
+      };
+      const cleanup = checkExisting();
+      return () => { cleanup?.then(fn => fn?.()); };
+    }
+
     const timer = setTimeout(() => {
       setOpen(true);
     }, POPUP_DELAY_MS);
 
     return () => clearTimeout(timer);
-  }, [location.pathname]);
+  }, [location.pathname, user]);
 
   useEffect(() => {
     if (!open) return;
@@ -83,6 +107,10 @@ const ProfileAnalyzerPopup = () => {
             <p className="text-white/80 text-xs leading-relaxed">
               Get your <span className="font-bold text-white">IIM admission probability</span> & AI roadmap in 2 minutes.
             </p>
+            <div className="mt-2 flex items-center gap-1.5">
+              <Users className="w-3 h-3 text-white/70" />
+              <span className="text-[10px] font-bold text-white/90">25,000+ Users Already Analysed — Check Where You Stand</span>
+            </div>
           </div>
         </div>
 
