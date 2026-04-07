@@ -1,12 +1,37 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, Sparkles, MapPin, IndianRupee, Monitor, Building2, ChevronRight, ChevronDown, Loader2, RotateCcw, GraduationCap, Zap, Clock, Briefcase, BookOpen, Target } from "lucide-react";
+import { Bot, Sparkles, MapPin, IndianRupee, Monitor, Building2, ChevronRight, ChevronDown, RotateCcw, GraduationCap, Zap, Clock, Briefcase, BookOpen, Target, Star, Users, TrendingUp, ExternalLink, Award, Lightbulb, CheckCircle2, Search, Brain, Database, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import ReactMarkdown from "react-markdown";
+import { Progress } from "@/components/ui/progress";
+import { Link } from "react-router-dom";
 
 type Step = "mode" | "budget" | "location_type" | "state" | "city" | "exam" | "experience" | "prep_stage" | "batch_pref" | "loading" | "result";
+
+interface Recommendation {
+  rank: number;
+  institute_name: string;
+  institute_slug: string;
+  match_score: number;
+  why_best_fit: string;
+  key_strengths: string[];
+  recommended_course: string;
+  course_fees: string;
+  course_duration: string;
+  batch_info?: string;
+  logo_url?: string;
+  city?: string;
+  state?: string;
+  rating?: number;
+  students_count?: number;
+}
+
+interface AIResult {
+  summary: string;
+  recommendations: Recommendation[];
+  pro_tips: string[];
+}
 
 const STATES = [
   "Maharashtra", "Delhi", "Karnataka", "Tamil Nadu", "Uttar Pradesh",
@@ -43,6 +68,14 @@ const BUDGETS = [
   { label: "No limit", value: "any" },
 ];
 
+const LOADING_STAGES = [
+  { icon: Search, text: "Scanning our coaching database...", duration: 1500 },
+  { icon: Brain, text: "Analyzing your preferences & profile...", duration: 2000 },
+  { icon: Database, text: "Matching with top-rated institutes...", duration: 2000 },
+  { icon: BarChart3, text: "Calculating match scores...", duration: 1500 },
+  { icon: Sparkles, text: "Crafting personalized recommendations...", duration: 2000 },
+];
+
 const AICoachingFinder = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<Step>("mode");
@@ -55,8 +88,9 @@ const AICoachingFinder = () => {
   const [experience, setExperience] = useState("");
   const [prepStage, setPrepStage] = useState("");
   const [batchPref, setBatchPref] = useState("");
-  const [result, setResult] = useState("");
-  const [isStreaming, setIsStreaming] = useState(false);
+  const [aiResult, setAiResult] = useState<AIResult | null>(null);
+  const [error, setError] = useState("");
+  const [loadingStage, setLoadingStage] = useState(0);
 
   const reset = () => {
     setStep("mode");
@@ -69,8 +103,9 @@ const AICoachingFinder = () => {
     setExperience("");
     setPrepStage("");
     setBatchPref("");
-    setResult("");
-    setIsStreaming(false);
+    setAiResult(null);
+    setError("");
+    setLoadingStage(0);
   };
 
   const handleModeSelect = (val: string) => { setMode(val); setStep("budget"); };
@@ -89,10 +124,26 @@ const AICoachingFinder = () => {
   const handlePrepStageSelect = (val: string) => { setPrepStage(val); setStep("batch_pref"); };
   const handleBatchPrefSelect = (val: string) => { setBatchPref(val); fetchRecommendations(val); };
 
+  // Animated loading stages
+  useEffect(() => {
+    if (step !== "loading") return;
+    setLoadingStage(0);
+    let stage = 0;
+    const timers: NodeJS.Timeout[] = [];
+    let cumulative = 0;
+    LOADING_STAGES.forEach((s, i) => {
+      cumulative += s.duration;
+      if (i < LOADING_STAGES.length - 1) {
+        timers.push(setTimeout(() => { stage = i + 1; setLoadingStage(stage); }, cumulative));
+      }
+    });
+    return () => timers.forEach(clearTimeout);
+  }, [step]);
+
   const fetchRecommendations = async (selectedBatchPref: string) => {
     setStep("loading");
-    setResult("");
-    setIsStreaming(true);
+    setAiResult(null);
+    setError("");
 
     try {
       const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-coaching-finder`;
@@ -116,46 +167,18 @@ const AICoachingFinder = () => {
         }),
       });
 
-      if (!resp.ok || !resp.body) {
+      if (!resp.ok) {
         const errorData = await resp.json().catch(() => ({}));
         throw new Error(errorData.error || "Failed to get recommendations");
       }
 
+      const data: AIResult = await resp.json();
+      setAiResult(data);
       setStep("result");
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let textBuffer = "";
-      let fullText = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        textBuffer += decoder.decode(value, { stream: true });
-        let newlineIndex: number;
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") break;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) { fullText += content; setResult(fullText); }
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
-          }
-        }
-      }
     } catch (err) {
       console.error(err);
-      setResult("Sorry, something went wrong. Please try again.");
+      setError(err instanceof Error ? err.message : "Something went wrong");
       setStep("result");
-    } finally {
-      setIsStreaming(false);
     }
   };
 
@@ -167,6 +190,18 @@ const AICoachingFinder = () => {
     : ["mode", "budget", "location_type", "state", "city", "exam", "experience", "prep_stage", "batch_pref"];
   const currentIdx = allSteps.indexOf(step);
   const totalSteps = allSteps.length;
+
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return "text-green-600 bg-green-50 border-green-200";
+    if (score >= 75) return "text-blue-600 bg-blue-50 border-blue-200";
+    return "text-amber-600 bg-amber-50 border-amber-200";
+  };
+
+  const getRankBadge = (rank: number) => {
+    if (rank === 1) return { label: "🥇 Best Match", className: "bg-gradient-to-r from-yellow-100 to-amber-100 text-amber-800 border-amber-300" };
+    if (rank === 2) return { label: "🥈 Great Fit", className: "bg-gradient-to-r from-gray-100 to-slate-100 text-slate-700 border-slate-300" };
+    return { label: "🥉 Good Option", className: "bg-gradient-to-r from-orange-50 to-amber-50 text-orange-700 border-orange-200" };
+  };
 
   const OptionBtn = ({ icon: Icon, label, desc, onClick }: { icon: any; label: string; desc: string; onClick: () => void }) => (
     <motion.button
@@ -198,9 +233,120 @@ const AICoachingFinder = () => {
     </motion.button>
   );
 
+  const RecommendationCard = ({ rec }: { rec: Recommendation }) => {
+    const rankBadge = getRankBadge(rec.rank);
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: rec.rank * 0.15 }}
+      >
+        <Card className="overflow-hidden border-2 hover:shadow-lg transition-all duration-300 group">
+          {/* Header with rank & score */}
+          <div className="bg-gradient-to-r from-primary/5 via-primary/10 to-secondary/10 p-3 flex items-center justify-between border-b border-border/50">
+            <div className="flex items-center gap-2">
+              <Badge className={`text-[10px] px-2 py-0.5 border ${rankBadge.className}`}>
+                {rankBadge.label}
+              </Badge>
+              <span className="text-xs font-bold text-foreground">#{rec.rank}</span>
+            </div>
+            <div className={`flex items-center gap-1 px-2 py-1 rounded-full border text-xs font-bold ${getScoreColor(rec.match_score)}`}>
+              <Target className="w-3 h-3" />
+              {rec.match_score}% Match
+            </div>
+          </div>
+
+          <CardContent className="p-4">
+            {/* Institute info */}
+            <div className="flex items-start gap-3 mb-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                {rec.logo_url ? (
+                  <img src={rec.logo_url} alt={rec.institute_name} className="w-full h-full object-cover rounded-xl" />
+                ) : (
+                  <GraduationCap className="w-6 h-6 text-primary" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-foreground text-sm leading-tight">{rec.institute_name}</h4>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  {rec.city && (
+                    <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                      <MapPin className="w-2.5 h-2.5" /> {rec.city}{rec.state ? `, ${rec.state}` : ""}
+                    </span>
+                  )}
+                  {rec.rating && (
+                    <span className="flex items-center gap-0.5 text-[10px] text-amber-600">
+                      <Star className="w-2.5 h-2.5 fill-amber-500" /> {rec.rating}
+                    </span>
+                  )}
+                  {rec.students_count ? (
+                    <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                      <Users className="w-2.5 h-2.5" /> {rec.students_count.toLocaleString()}+
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+
+            {/* Why best fit */}
+            <div className="bg-primary/5 rounded-lg p-2.5 mb-3 border border-primary/10">
+              <p className="text-[11px] text-foreground/80 leading-relaxed">
+                <Sparkles className="w-3 h-3 text-primary inline mr-1" />
+                {rec.why_best_fit}
+              </p>
+            </div>
+
+            {/* Key strengths */}
+            <div className="mb-3">
+              <h5 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">Key Strengths</h5>
+              <div className="space-y-1">
+                {rec.key_strengths.map((s, i) => (
+                  <div key={i} className="flex items-start gap-1.5">
+                    <CheckCircle2 className="w-3 h-3 text-green-500 mt-0.5 shrink-0" />
+                    <span className="text-[11px] text-foreground/80">{s}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Course details */}
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <div className="bg-muted/50 rounded-lg p-2">
+                <div className="text-[9px] text-muted-foreground uppercase tracking-wider">Course</div>
+                <div className="text-[11px] font-semibold text-foreground truncate">{rec.recommended_course}</div>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-2">
+                <div className="text-[9px] text-muted-foreground uppercase tracking-wider">Fees</div>
+                <div className="text-[11px] font-semibold text-primary">{rec.course_fees}</div>
+              </div>
+              <div className="bg-muted/50 rounded-lg p-2">
+                <div className="text-[9px] text-muted-foreground uppercase tracking-wider">Duration</div>
+                <div className="text-[11px] font-semibold text-foreground">{rec.course_duration}</div>
+              </div>
+              {rec.batch_info && (
+                <div className="bg-muted/50 rounded-lg p-2">
+                  <div className="text-[9px] text-muted-foreground uppercase tracking-wider">Batch</div>
+                  <div className="text-[11px] font-semibold text-foreground truncate">{rec.batch_info}</div>
+                </div>
+              )}
+            </div>
+
+            {/* CTA */}
+            <Link to={`/institute/${rec.institute_slug}`}>
+              <Button size="sm" className="w-full gap-1.5 text-xs group-hover:shadow-md transition-all">
+                <ExternalLink className="w-3 h-3" />
+                View Full Details & Enroll
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  };
+
   return (
     <div className="border-2 border-primary/20 rounded-xl overflow-hidden bg-gradient-to-r from-primary/5 via-background to-secondary/10">
-      {/* Collapsed header - always visible */}
+      {/* Collapsed header */}
       <button
         onClick={() => { setIsOpen(!isOpen); if (!isOpen && step === "mode") reset(); }}
         className="w-full flex items-center justify-between p-4 hover:bg-primary/5 transition-colors"
@@ -357,49 +503,176 @@ const AICoachingFinder = () => {
                   </motion.div>
                 )}
 
-                {/* Loading */}
+                {/* Loading - Animated stages */}
                 {step === "loading" && (
-                  <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-6">
-                    <div className="relative w-12 h-12 mx-auto mb-3">
-                      <div className="w-12 h-12 rounded-full border-3 border-muted animate-spin border-t-primary" />
-                      <Bot className="w-5 h-5 text-primary absolute inset-0 m-auto" />
+                  <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-8">
+                    {/* Animated brain/bot */}
+                    <div className="relative w-20 h-20 mx-auto mb-5">
+                      {/* Outer ring pulse */}
+                      <motion.div
+                        className="absolute inset-0 rounded-full bg-primary/10"
+                        animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0, 0.5] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                      />
+                      {/* Middle ring */}
+                      <motion.div
+                        className="absolute inset-1 rounded-full bg-primary/15"
+                        animate={{ scale: [1, 1.15, 1], opacity: [0.7, 0.3, 0.7] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
+                      />
+                      {/* Core */}
+                      <div className="absolute inset-3 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg">
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                        >
+                          <Brain className="w-7 h-7 text-primary-foreground" />
+                        </motion.div>
+                      </div>
+                      {/* Orbiting dots */}
+                      {[0, 1, 2].map((i) => (
+                        <motion.div
+                          key={i}
+                          className="absolute w-2 h-2 rounded-full bg-primary"
+                          animate={{
+                            x: [0, Math.cos((i * 2 * Math.PI) / 3) * 32, 0],
+                            y: [0, Math.sin((i * 2 * Math.PI) / 3) * 32, 0],
+                            opacity: [0.3, 1, 0.3],
+                          }}
+                          transition={{ duration: 2, repeat: Infinity, delay: i * 0.5 }}
+                          style={{ left: "calc(50% - 4px)", top: "calc(50% - 4px)" }}
+                        />
+                      ))}
                     </div>
-                    <h4 className="font-semibold text-foreground text-sm mb-1">AI is analyzing your profile...</h4>
-                    <p className="text-[10px] text-muted-foreground">Matching with best coaching from our database</p>
+
+                    {/* Stage text */}
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={loadingStage}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="text-center mb-4"
+                      >
+                        <div className="flex items-center justify-center gap-2 mb-1.5">
+                          {(() => {
+                            const StageIcon = LOADING_STAGES[loadingStage]?.icon || Sparkles;
+                            return <StageIcon className="w-4 h-4 text-primary" />;
+                          })()}
+                          <h4 className="font-semibold text-foreground text-sm">
+                            {LOADING_STAGES[loadingStage]?.text || "Almost there..."}
+                          </h4>
+                        </div>
+                      </motion.div>
+                    </AnimatePresence>
+
+                    {/* Progress bar */}
+                    <div className="max-w-xs mx-auto">
+                      <Progress value={((loadingStage + 1) / LOADING_STAGES.length) * 100} className="h-1.5" />
+                      <div className="flex justify-between mt-1.5">
+                        {LOADING_STAGES.map((_, i) => (
+                          <motion.div
+                            key={i}
+                            className={`w-1.5 h-1.5 rounded-full ${i <= loadingStage ? "bg-primary" : "bg-muted"}`}
+                            animate={i === loadingStage ? { scale: [1, 1.5, 1] } : {}}
+                            transition={{ duration: 0.5, repeat: Infinity }}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   </motion.div>
                 )}
 
                 {/* Result */}
                 {step === "result" && (
-                  <motion.div key="result" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge className="bg-primary/10 text-primary border-0 text-[10px]">
-                        <Sparkles className="w-2.5 h-2.5 mr-0.5" /> AI Recommendations
-                      </Badge>
-                      {isStreaming && <Loader2 className="w-3 h-3 text-primary animate-spin" />}
-                    </div>
+                  <motion.div key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                    {error ? (
+                      <div className="text-center py-6">
+                        <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-3">
+                          <Bot className="w-6 h-6 text-destructive" />
+                        </div>
+                        <p className="text-sm text-destructive font-medium mb-1">{error}</p>
+                        <Button onClick={reset} variant="outline" size="sm" className="mt-2 gap-1">
+                          <RotateCcw className="w-3 h-3" /> Try Again
+                        </Button>
+                      </div>
+                    ) : aiResult ? (
+                      <div>
+                        {/* Header */}
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge className="bg-gradient-to-r from-primary/20 to-primary/10 text-primary border-0 text-[10px] px-2 py-0.5">
+                            <Sparkles className="w-2.5 h-2.5 mr-1" /> AI Recommendations
+                          </Badge>
+                          <Badge variant="outline" className="text-[9px] py-0 px-1.5">{aiResult.recommendations?.length || 0} matches</Badge>
+                        </div>
 
-                    {/* Prefs summary */}
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {mode && mode !== "any" && <Badge variant="outline" className="text-[9px] py-0 px-1.5">{mode}</Badge>}
-                      {budget && budget !== "any" && <Badge variant="outline" className="text-[9px] py-0 px-1.5">≤₹{parseInt(budget).toLocaleString()}</Badge>}
-                      {state && state !== "any" && <Badge variant="outline" className="text-[9px] py-0 px-1.5">{state}</Badge>}
-                      {city && city !== "any" && <Badge variant="outline" className="text-[9px] py-0 px-1.5">{city}</Badge>}
-                      {exam && <Badge variant="outline" className="text-[9px] py-0 px-1.5">{exam}</Badge>}
-                      {experience && experience !== "any" && <Badge variant="outline" className="text-[9px] py-0 px-1.5">{experience}</Badge>}
-                      {prepStage && prepStage !== "any" && <Badge variant="outline" className="text-[9px] py-0 px-1.5">{prepStage}</Badge>}
-                      {batchPref && batchPref !== "any" && <Badge variant="outline" className="text-[9px] py-0 px-1.5">{batchPref}</Badge>}
-                    </div>
+                        {/* Preferences summary */}
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {mode && mode !== "any" && <Badge variant="outline" className="text-[9px] py-0 px-1.5">{mode}</Badge>}
+                          {budget && budget !== "any" && <Badge variant="outline" className="text-[9px] py-0 px-1.5">≤₹{parseInt(budget).toLocaleString()}</Badge>}
+                          {state && state !== "any" && <Badge variant="outline" className="text-[9px] py-0 px-1.5">{state}</Badge>}
+                          {city && city !== "any" && <Badge variant="outline" className="text-[9px] py-0 px-1.5">{city}</Badge>}
+                          {exam && <Badge variant="outline" className="text-[9px] py-0 px-1.5">{exam}</Badge>}
+                          {experience && experience !== "any" && <Badge variant="outline" className="text-[9px] py-0 px-1.5">{experience}</Badge>}
+                        </div>
 
-                    <div className="prose prose-sm max-w-none text-foreground [&_h1]:text-base [&_h1]:font-bold [&_h2]:text-sm [&_h2]:font-semibold [&_h3]:text-xs [&_h3]:font-semibold [&_p]:text-xs [&_p]:text-muted-foreground [&_p]:leading-relaxed [&_li]:text-xs [&_li]:text-muted-foreground [&_strong]:text-foreground [&_ul]:space-y-0.5 max-h-[400px] overflow-y-auto pr-2">
-                      <ReactMarkdown>{result || "Generating recommendations..."}</ReactMarkdown>
-                    </div>
+                        {/* AI Summary */}
+                        {aiResult.summary && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/15 rounded-lg p-3 mb-4"
+                          >
+                            <div className="flex items-start gap-2">
+                              <Bot className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                              <p className="text-xs text-foreground/80 leading-relaxed">{aiResult.summary}</p>
+                            </div>
+                          </motion.div>
+                        )}
 
-                    <div className="mt-3 pt-2 border-t border-border">
-                      <Button onClick={reset} variant="outline" size="sm" className="gap-1 text-[11px] w-full">
-                        <RotateCcw className="w-3 h-3" /> Try Different Preferences
-                      </Button>
-                    </div>
+                        {/* Recommendation cards */}
+                        <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                          {aiResult.recommendations?.map((rec) => (
+                            <RecommendationCard key={rec.rank} rec={rec} />
+                          ))}
+                        </div>
+
+                        {/* Pro tips */}
+                        {aiResult.pro_tips && aiResult.pro_tips.length > 0 && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.5 }}
+                            className="mt-4 bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 rounded-lg p-3"
+                          >
+                            <div className="flex items-center gap-1.5 mb-2">
+                              <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
+                              <h5 className="text-[11px] font-semibold text-amber-800 dark:text-amber-400">Pro Tips</h5>
+                            </div>
+                            <ul className="space-y-1">
+                              {aiResult.pro_tips.map((tip, i) => (
+                                <li key={i} className="flex items-start gap-1.5 text-[10px] text-amber-700 dark:text-amber-300">
+                                  <TrendingUp className="w-2.5 h-2.5 mt-0.5 shrink-0" />
+                                  {tip}
+                                </li>
+                              ))}
+                            </ul>
+                          </motion.div>
+                        )}
+
+                        {/* Compare & reset */}
+                        <div className="mt-4 pt-3 border-t border-border flex gap-2">
+                          <Button onClick={reset} variant="outline" size="sm" className="gap-1 text-[11px] flex-1">
+                            <RotateCcw className="w-3 h-3" /> Try Again
+                          </Button>
+                          <Link to="/compare" className="flex-1">
+                            <Button variant="secondary" size="sm" className="gap-1 text-[11px] w-full">
+                              <Award className="w-3 h-3" /> Compare All
+                            </Button>
+                          </Link>
+                        </div>
+                      </div>
+                    ) : null}
                   </motion.div>
                 )}
               </AnimatePresence>

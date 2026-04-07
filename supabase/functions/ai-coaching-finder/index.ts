@@ -47,6 +47,7 @@ serve(async (req) => {
       mode: inst.mode,
       students_count: inst.students_count,
       features: inst.features,
+      logo_url: inst.logo_url,
       courses: (inst.courses || []).map((c: any) => ({
         name: c.name,
         fees: c.fees,
@@ -71,29 +72,36 @@ serve(async (req) => {
 
     const systemPrompt = `You are an expert MBA coaching advisor for BestMBACoaching.com. Based on the user's detailed profile and available institutes data, recommend the TOP 3 best-fit coaching institutes.
 
-Consider these factors for matching:
-- Work experience level affects which coaching style suits best (freshers need structured guidance, experienced professionals need flexible/weekend options)
-- Preparation stage determines course intensity (beginners need comprehensive courses, advanced need crash courses/test series)
-- Batch timing preference should match available options
-- Budget constraints and value for money
-- Location accessibility
+CRITICAL FORMAT INSTRUCTIONS:
+You MUST output your response in this EXACT JSON format (valid JSON only, no markdown, no code fences):
 
-For each recommendation, provide:
-1. Institute name and why it's specifically suited for THIS student's profile
-2. Best course with fees and duration
-3. Key strengths (2-3 bullet points) relevant to their experience/prep stage
-4. A match score out of 100 based on how well it fits ALL their criteria
+{
+  "summary": "A 2-3 sentence personalized summary addressing the student directly based on their profile.",
+  "recommendations": [
+    {
+      "rank": 1,
+      "institute_name": "Exact institute name from the data",
+      "institute_slug": "exact-slug-from-data",
+      "match_score": 92,
+      "why_best_fit": "2-3 sentences explaining why this is the best fit for THIS specific student profile",
+      "key_strengths": ["strength 1", "strength 2", "strength 3"],
+      "recommended_course": "Course name",
+      "course_fees": "₹XX,XXX",
+      "course_duration": "X months",
+      "batch_info": "Weekend/Weekday info if available"
+    }
+  ],
+  "pro_tips": ["tip 1 for the student", "tip 2"]
+}
 
-Be specific, personalized, and encouraging. Reference the student's experience level and prep stage in your reasoning. Format in clean markdown. Start with a brief personalized summary.
-
-If few or no institutes match, suggest the closest alternatives and explain why.`;
+Use ONLY institutes from the provided data. Use their exact name and slug values. Give match_score out of 100 based on how well the institute fits ALL criteria. If fewer than 3 match well, recommend what's available and explain why.`;
 
     const userMessage = `Student Profile: ${userPrefsText || "No specific preferences"}
 
 Available Institutes Data:
 ${JSON.stringify(topInstitutes, null, 2)}
 
-Please recommend the best coaching institutes for this student based on their complete profile.`;
+Return ONLY valid JSON. No markdown. No explanation outside JSON.`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -102,12 +110,11 @@ Please recommend the best coaching institutes for this student based on their co
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userMessage },
         ],
-        stream: true,
       }),
     });
 
@@ -125,8 +132,59 @@ Please recommend the best coaching institutes for this student based on their co
       throw new Error(`AI gateway error: ${aiResponse.status}`);
     }
 
-    return new Response(aiResponse.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+    const aiData = await aiResponse.json();
+    const rawContent = aiData.choices?.[0]?.message?.content || "";
+    
+    // Parse the JSON from AI response - strip code fences if present
+    let cleaned = rawContent.trim();
+    if (cleaned.startsWith("```")) {
+      cleaned = cleaned.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+    }
+    
+    let parsed;
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch {
+      // Fallback if AI didn't return valid JSON
+      parsed = {
+        summary: "Here are our top coaching recommendations based on your preferences.",
+        recommendations: topInstitutes.slice(0, 3).map((inst: any, i: number) => ({
+          rank: i + 1,
+          institute_name: inst.name,
+          institute_slug: inst.slug,
+          match_score: 85 - i * 5,
+          why_best_fit: `${inst.name} is a great option with a ${inst.rating}/5 rating and ${inst.success_rate}% success rate.`,
+          key_strengths: inst.features?.slice(0, 3) || ["Quality coaching", "Experienced faculty"],
+          recommended_course: inst.courses?.[0]?.name || "Comprehensive Course",
+          course_fees: inst.courses?.[0]?.fees ? `₹${Number(inst.courses[0].fees).toLocaleString()}` : "Contact for fees",
+          course_duration: inst.courses?.[0]?.duration || "6-12 months",
+          batch_info: inst.courses?.[0]?.batch_info || "",
+        })),
+        pro_tips: ["Compare multiple institutes before enrolling", "Ask about demo classes"],
+      };
+    }
+
+    // Enrich with logo_url from our data
+    if (parsed.recommendations) {
+      parsed.recommendations = parsed.recommendations.map((rec: any) => {
+        const match = topInstitutes.find((inst: any) => 
+          inst.slug === rec.institute_slug || 
+          inst.name.toLowerCase() === rec.institute_name?.toLowerCase()
+        );
+        return {
+          ...rec,
+          logo_url: match?.logo_url || null,
+          institute_slug: match?.slug || rec.institute_slug,
+          city: match?.city || null,
+          state: match?.state || null,
+          rating: match?.rating || null,
+          students_count: match?.students_count || null,
+        };
+      });
+    }
+
+    return new Response(JSON.stringify(parsed), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("ai-coaching-finder error:", e);
