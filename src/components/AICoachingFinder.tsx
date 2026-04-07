@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, Sparkles, MapPin, IndianRupee, Monitor, Building2, ChevronRight, ChevronDown, GraduationCap, Zap, Clock, Briefcase, BookOpen, Target, Star, Users, TrendingUp, ExternalLink, Award, Lightbulb, CheckCircle2, Search, Brain, Database, BarChart3, ArrowDown } from "lucide-react";
+import { Sparkles, MapPin, IndianRupee, Monitor, Building2, ChevronRight, ChevronDown, GraduationCap, Zap, Clock, Briefcase, BookOpen, Target, Star, Users, TrendingUp, ExternalLink, Award, Lightbulb, CheckCircle2, Search, Brain, Database, BarChart3, ArrowDown, AlertCircle } from "lucide-react";
+import mbahubLogo from "@/assets/mbahub-logo.png";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -376,8 +377,8 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
       >
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg">
-              <Bot className="w-5 h-5 text-primary-foreground" />
+            <div className="w-11 h-11 rounded-2xl bg-background border border-primary/20 flex items-center justify-center shadow-lg overflow-hidden">
+              <img src={mbahubLogo} alt="MBAHub AI" className="w-8 h-8 object-contain" loading="eager" />
             </div>
             <motion.div
               className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-green-500 border-2 border-background"
@@ -611,8 +612,8 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                   <motion.div key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                     {error ? (
                       <div className="text-center py-6">
-                        <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-3">
-                          <Bot className="w-6 h-6 text-destructive" />
+                        <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-3 overflow-hidden">
+                          <AlertCircle className="w-6 h-6 text-destructive" />
                         </div>
                         <p className="text-sm text-destructive font-medium mb-2">{error}</p>
                         <div className="flex gap-2 justify-center">
@@ -659,7 +660,7 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                             className="bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/10 rounded-lg p-3 mb-4"
                           >
                             <p className="text-xs text-foreground/80 leading-relaxed">
-                              <Bot className="w-3.5 h-3.5 text-primary inline mr-1.5" />
+                              <Sparkles className="w-3.5 h-3.5 text-primary inline mr-1.5" />
                               {aiResult.summary}
                             </p>
                           </motion.div>

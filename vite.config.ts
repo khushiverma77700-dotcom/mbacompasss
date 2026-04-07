@@ -27,10 +27,13 @@ export default defineConfig(({ mode }) => ({
           supabase: ["@supabase/supabase-js"],
           ui: ["framer-motion", "sonner", "recharts"],
         },
+        chunkFileNames: "assets/[name]-[hash].js",
       },
     },
     target: "es2020",
     cssMinify: true,
     minify: "esbuild",
+    sourcemap: false,
+    chunkSizeWarningLimit: 600,
   },
 }));
