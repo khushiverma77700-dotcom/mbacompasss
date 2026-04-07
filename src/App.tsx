@@ -30,6 +30,7 @@ const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const CollegeDetailPage = lazy(() => import("./pages/CollegeDetailPage"));
 const CollegeFilterPage = lazy(() => import("./pages/CollegeFilterPage"));
 const ProfileAnalyzerPage = lazy(() => import("./pages/ProfileAnalyzerPage"));
+const CollegeFinderPage = lazy(() => import("./pages/CollegeFinderPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Lazy-loaded admin pages
@@ -221,6 +222,7 @@ const App = () => (
             <Route path="/exam/:slug" element={<PublicLayout><LazyPage><ExamDetailPage /></LazyPage></PublicLayout>} />
             <Route path="/dashboard" element={<PublicLayout><LazyPage><DashboardPage /></LazyPage></PublicLayout>} />
             <Route path="/profile-analyzer" element={<PublicLayout><LazyPage><ProfileAnalyzerPage /></LazyPage></PublicLayout>} />
+            <Route path="/college-finder" element={<PublicLayout><LazyPage><CollegeFinderPage /></LazyPage></PublicLayout>} />
             <Route path="/about" element={<PublicLayout><LazyPage><AboutPage /></LazyPage></PublicLayout>} />
             <Route path="/contact" element={<PublicLayout><LazyPage><ContactPage /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />
