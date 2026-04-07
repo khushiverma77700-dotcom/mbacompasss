@@ -44,13 +44,13 @@ const HeroSection = () => {
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiLz48L3N2Zz4=')] opacity-40 pointer-events-none" />
 
       {/* Floating decorative elements — CSS only, no JS animation overhead */}
-      <div className="absolute w-16 h-16 md:w-24 md:h-24 top-[8%] left-[5%] opacity-10 animate-bounce" style={{ animationDuration: '7s' }}>
+      <div className="absolute w-16 h-16 md:w-24 md:h-24 top-[8%] left-[5%] opacity-10 animate-bounce pointer-events-none" style={{ animationDuration: '7s' }}>
         <GraduationCap className="w-full h-full text-primary-foreground" />
       </div>
-      <div className="absolute w-10 h-10 md:w-14 md:h-14 top-[15%] right-[8%] opacity-10 animate-bounce" style={{ animationDuration: '5.5s', animationDelay: '1s' }}>
+      <div className="absolute w-10 h-10 md:w-14 md:h-14 top-[15%] right-[8%] opacity-10 animate-bounce pointer-events-none" style={{ animationDuration: '5.5s', animationDelay: '1s' }}>
         <GraduationCap className="w-full h-full text-primary-foreground" />
       </div>
-      <div className="absolute w-12 h-12 md:w-16 md:h-16 bottom-[20%] right-[20%] opacity-10 animate-bounce" style={{ animationDuration: '6s', animationDelay: '2s' }}>
+      <div className="absolute w-12 h-12 md:w-16 md:h-16 bottom-[20%] right-[20%] opacity-10 animate-bounce pointer-events-none" style={{ animationDuration: '6s', animationDelay: '2s' }}>
         <BookOpen className="w-full h-full text-primary-foreground" />
       </div>
 
