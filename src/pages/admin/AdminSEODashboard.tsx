@@ -280,18 +280,13 @@ const AdminSEODashboard = () => {
       } catch {}
       setPreviousKeys(knownKeys);
 
-      // Static pages (non-admin, non-dynamic pages)
-      const staticPages = [
-        { id: "page-home", name: "Home", slug: "/", path: "/" },
-        { id: "page-about", name: "About", slug: "/about", path: "/about" },
-        { id: "page-contact", name: "Contact", slug: "/contact", path: "/contact" },
-        { id: "page-compare", name: "Compare", slug: "/compare", path: "/compare" },
-        { id: "page-blog", name: "Blog", slug: "/blog", path: "/blog" },
-        { id: "page-colleges", name: "Colleges", slug: "/colleges", path: "/colleges" },
-        { id: "page-profile-analyzer", name: "Profile Analyzer", slug: "/profile-analyzer", path: "/profile-analyzer" },
-        { id: "page-dashboard", name: "Dashboard", slug: "/dashboard", path: "/dashboard" },
-        { id: "page-auth", name: "Auth / Sign In", slug: "/auth", path: "/auth" },
-      ];
+      // Static pages — auto-detected from centralized config
+      const staticPages = STATIC_PAGES_CONFIG.map(sp => ({
+        id: `page-${sp.key}`,
+        name: sp.label,
+        slug: sp.path,
+        path: sp.path,
+      }));
 
       const [snapshots, ...results] = await Promise.all([
         fetchAllSeoSnapshots(),
