@@ -8,18 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Save, Globe, FileText, Tag, Loader2, CheckCircle } from "lucide-react";
-
-const STATIC_PAGES = [
-  { key: "home", label: "Home Page", path: "/" },
-  { key: "about", label: "About Page", path: "/about" },
-  { key: "contact", label: "Contact Page", path: "/contact" },
-  { key: "blog", label: "Blog Page", path: "/blog" },
-  { key: "colleges", label: "Colleges Page", path: "/colleges" },
-  { key: "compare", label: "Compare Page", path: "/compare" },
-  { key: "profile-analyzer", label: "Profile Analyzer", path: "/profile-analyzer" },
-  { key: "dashboard", label: "Student Dashboard", path: "/dashboard" },
-  { key: "auth", label: "Login / Signup", path: "/auth" },
-];
+import STATIC_PAGES from "@/data/staticPages";
 
 interface PageSEO {
   meta_title: string;

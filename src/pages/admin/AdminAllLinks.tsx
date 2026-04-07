@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { RefreshCw, Copy, CheckCircle, Link2, Sparkles } from "lucide-react";
+import STATIC_PAGES_CONFIG from "@/data/staticPages";
 
 const SITE_URL = "https://bestmbacoaching.com";
 const STORAGE_KEY = "admin_known_links";
@@ -40,18 +41,12 @@ const AdminAllLinks = () => {
     try {
       const allLinks: LinkItem[] = [];
 
-      // Static pages
-      const staticPages = [
-        { url: "/", label: "Home", type: "Static" },
-        { url: "/colleges", label: "Colleges", type: "Static" },
-        { url: "/blog", label: "Blog", type: "Static" },
-        { url: "/compare", label: "Compare", type: "Static" },
-        { url: "/about", label: "About", type: "Static" },
-        { url: "/contact", label: "Contact", type: "Static" },
-        { url: "/auth", label: "Auth / Login", type: "Static" },
-        { url: "/dashboard", label: "Dashboard", type: "Static" },
-        { url: "/profile-analyzer", label: "AI Profile Analyser", type: "Static" },
-      ];
+      // Static pages — auto-detected from centralized config
+      const staticPages = STATIC_PAGES_CONFIG.map(sp => ({
+        url: sp.path,
+        label: sp.label,
+        type: "Static",
+      }));
       allLinks.push(...staticPages);
 
       // Institutes
