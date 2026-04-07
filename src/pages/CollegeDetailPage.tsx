@@ -162,7 +162,7 @@ const CollegeDetailPage = () => {
   const coursesFeesData = getSectionData("courses_fees");
   const whyJoinData = getSectionData("why_join");
 
-  const collegeJsonLd = generateCollegeSchema(college);
+  // collegeJsonLd already computed above before early returns
 
   // Q&A items from DB or fallback
   const qaItems = qaData.questions?.length > 0 ? qaData.questions.map((q: any) => ({ q: q.question, a: q.answer })) : [
