@@ -14,16 +14,18 @@ import { consumePostAuthRedirect } from "@/lib/authRedirect";
 import { supabase } from "@/integrations/supabase/client";
 import { useAllSiteSettings } from "@/hooks/useSiteSettings";
 
-// Lazy-loaded public pages
-const Index = lazy(() => import("./pages/Index"));
-const CategoryPage = lazy(() => import("./pages/CategoryPage"));
+// Eagerly load most-visited pages — no spinner
+import Index from "./pages/Index";
+import CategoryPage from "./pages/CategoryPage";
+import BlogPage from "./pages/BlogPage";
+import CollegesPage from "./pages/CollegesPage";
+import AuthPage from "./pages/AuthPage";
+
+// Lazy-loaded public pages (less frequent)
 const InstitutePage = lazy(() => import("./pages/InstitutePage"));
 const ComparePage = lazy(() => import("./pages/ComparePage"));
-const BlogPage = lazy(() => import("./pages/BlogPage"));
 const ArticlePage = lazy(() => import("./pages/ArticlePage"));
-const CollegesPage = lazy(() => import("./pages/CollegesPage"));
 const ExamDetailPage = lazy(() => import("./pages/ExamDetailPage"));
-const AuthPage = lazy(() => import("./pages/AuthPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
@@ -78,11 +80,9 @@ const queryClient = new QueryClient({
   },
 });
 
-// Minimal loading fallback — just a small spinner, no full-page blank
+// Minimal fallback — invisible so no flash
 const PageLoader = () => (
-  <div className="flex items-center justify-center min-h-[40vh]">
-    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-  </div>
+  <div className="min-h-[40vh]" />
 );
 
 // Prefetch all site settings in one batch on app mount
@@ -95,12 +95,17 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   <>
     <Navbar />
     <BackButton />
-    <Suspense fallback={<PageLoader />}>{children}</Suspense>
+    {children}
     <Footer />
     <Suspense fallback={null}>
       <ProfileAnalyzerPopup />
     </Suspense>
   </>
+);
+
+// Wrap only lazy pages in Suspense
+const LazyPage = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<PageLoader />}>{children}</Suspense>
 );
 
 const OnboardingGate = () => {
@@ -171,52 +176,56 @@ const App = () => (
           <OAuthRedirectHandler />
           <OnboardingGate />
           <Routes>
-            <Route path="/admin" element={<Suspense fallback={<PageLoader />}><AdminLayout /></Suspense>}>
-              <Route index element={<Suspense fallback={<PageLoader />}><AdminDashboard /></Suspense>} />
-              <Route path="institutes" element={<Suspense fallback={<PageLoader />}><AdminInstitutes /></Suspense>} />
-              <Route path="articles" element={<Suspense fallback={<PageLoader />}><AdminArticles /></Suspense>} />
-              <Route path="banners" element={<Suspense fallback={<PageLoader />}><AdminBanners /></Suspense>} />
-              <Route path="inquiries" element={<Suspense fallback={<PageLoader />}><AdminInquiries /></Suspense>} />
-              <Route path="courses" element={<Suspense fallback={<PageLoader />}><AdminCourses /></Suspense>} />
-              <Route path="colleges" element={<Suspense fallback={<PageLoader />}><AdminColleges /></Suspense>} />
-              <Route path="subscribers" element={<Suspense fallback={<PageLoader />}><AdminSubscribers /></Suspense>} />
-              <Route path="exams" element={<Suspense fallback={<PageLoader />}><AdminExams /></Suspense>} />
-              <Route path="categories" element={<Suspense fallback={<PageLoader />}><AdminCategories /></Suspense>} />
-              <Route path="site-settings" element={<Suspense fallback={<PageLoader />}><AdminSiteSettings /></Suspense>} />
-              <Route path="testimonials" element={<Suspense fallback={<PageLoader />}><AdminTestimonials /></Suspense>} />
-              <Route path="coupons" element={<Suspense fallback={<PageLoader />}><AdminCoupons /></Suspense>} />
-              <Route path="coaching-of-week" element={<Suspense fallback={<PageLoader />}><AdminCoachingOfWeek /></Suspense>} />
-              <Route path="college-sections" element={<Suspense fallback={<PageLoader />}><AdminCollegeSections /></Suspense>} />
-              <Route path="institute-results" element={<Suspense fallback={<PageLoader />}><AdminInstituteResults /></Suspense>} />
-              <Route path="sitemap" element={<Suspense fallback={<PageLoader />}><AdminSitemap /></Suspense>} />
-              <Route path="clear-cache" element={<Suspense fallback={<PageLoader />}><AdminClearCache /></Suspense>} />
-              <Route path="leads" element={<Suspense fallback={<PageLoader />}><AdminLeads /></Suspense>} />
-              <Route path="city-pages" element={<Suspense fallback={<PageLoader />}><AdminCityPages /></Suspense>} />
-              <Route path="all-links" element={<Suspense fallback={<PageLoader />}><AdminAllLinks /></Suspense>} />
-              <Route path="comparisons" element={<Suspense fallback={<PageLoader />}><AdminComparisons /></Suspense>} />
-              <Route path="coaching-results" element={<Suspense fallback={<PageLoader />}><AdminCoachingResults /></Suspense>} />
-              <Route path="seo-dashboard" element={<Suspense fallback={<PageLoader />}><AdminSEODashboard /></Suspense>} />
-              <Route path="profile-analyzer" element={<Suspense fallback={<PageLoader />}><AdminProfileAnalyzer /></Suspense>} />
-              <Route path="manage-admins" element={<Suspense fallback={<PageLoader />}><AdminManageAdmins /></Suspense>} />
-              <Route path="static-seo" element={<Suspense fallback={<PageLoader />}><AdminStaticPageSEO /></Suspense>} />
-              <Route path="all-leads-unified" element={<Suspense fallback={<PageLoader />}><AdminAllLeads /></Suspense>} />
+            <Route path="/admin" element={<LazyPage><AdminLayout /></LazyPage>}>
+              <Route index element={<LazyPage><AdminDashboard /></LazyPage>} />
+              <Route path="institutes" element={<LazyPage><AdminInstitutes /></LazyPage>} />
+              <Route path="articles" element={<LazyPage><AdminArticles /></LazyPage>} />
+              <Route path="banners" element={<LazyPage><AdminBanners /></LazyPage>} />
+              <Route path="inquiries" element={<LazyPage><AdminInquiries /></LazyPage>} />
+              <Route path="courses" element={<LazyPage><AdminCourses /></LazyPage>} />
+              <Route path="colleges" element={<LazyPage><AdminColleges /></LazyPage>} />
+              <Route path="subscribers" element={<LazyPage><AdminSubscribers /></LazyPage>} />
+              <Route path="exams" element={<LazyPage><AdminExams /></LazyPage>} />
+              <Route path="categories" element={<LazyPage><AdminCategories /></LazyPage>} />
+              <Route path="site-settings" element={<LazyPage><AdminSiteSettings /></LazyPage>} />
+              <Route path="testimonials" element={<LazyPage><AdminTestimonials /></LazyPage>} />
+              <Route path="coupons" element={<LazyPage><AdminCoupons /></LazyPage>} />
+              <Route path="coaching-of-week" element={<LazyPage><AdminCoachingOfWeek /></LazyPage>} />
+              <Route path="college-sections" element={<LazyPage><AdminCollegeSections /></LazyPage>} />
+              <Route path="institute-results" element={<LazyPage><AdminInstituteResults /></LazyPage>} />
+              <Route path="sitemap" element={<LazyPage><AdminSitemap /></LazyPage>} />
+              <Route path="clear-cache" element={<LazyPage><AdminClearCache /></LazyPage>} />
+              <Route path="leads" element={<LazyPage><AdminLeads /></LazyPage>} />
+              <Route path="city-pages" element={<LazyPage><AdminCityPages /></LazyPage>} />
+              <Route path="all-links" element={<LazyPage><AdminAllLinks /></LazyPage>} />
+              <Route path="comparisons" element={<LazyPage><AdminComparisons /></LazyPage>} />
+              <Route path="coaching-results" element={<LazyPage><AdminCoachingResults /></LazyPage>} />
+              <Route path="seo-dashboard" element={<LazyPage><AdminSEODashboard /></LazyPage>} />
+              <Route path="profile-analyzer" element={<LazyPage><AdminProfileAnalyzer /></LazyPage>} />
+              <Route path="manage-admins" element={<LazyPage><AdminManageAdmins /></LazyPage>} />
+              <Route path="static-seo" element={<LazyPage><AdminStaticPageSEO /></LazyPage>} />
+              <Route path="all-leads-unified" element={<LazyPage><AdminAllLeads /></LazyPage>} />
             </Route>
+
+            {/* Eagerly loaded — no spinner */}
             <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
             <Route path="/category/:slug" element={<PublicLayout><CategoryPage /></PublicLayout>} />
-            <Route path="/institute/:slug" element={<PublicLayout><InstitutePage /></PublicLayout>} />
-            <Route path="/compare" element={<PublicLayout><ComparePage /></PublicLayout>} />
             <Route path="/blog" element={<PublicLayout><BlogPage /></PublicLayout>} />
-            <Route path="/article/:slug" element={<PublicLayout><ArticlePage /></PublicLayout>} />
             <Route path="/colleges" element={<PublicLayout><CollegesPage /></PublicLayout>} />
-            <Route path="/college/:slug" element={<PublicLayout><CollegeDetailPage /></PublicLayout>} />
-            <Route path="/colleges/:region" element={<PublicLayout><CollegeFilterPage /></PublicLayout>} />
-            <Route path="/exam/:slug" element={<PublicLayout><ExamDetailPage /></PublicLayout>} />
             <Route path="/auth" element={<PublicLayout><AuthPage /></PublicLayout>} />
-            <Route path="/dashboard" element={<PublicLayout><DashboardPage /></PublicLayout>} />
-            <Route path="/profile-analyzer" element={<PublicLayout><ProfileAnalyzerPage /></PublicLayout>} />
-            <Route path="/about" element={<PublicLayout><AboutPage /></PublicLayout>} />
-            <Route path="/contact" element={<PublicLayout><ContactPage /></PublicLayout>} />
-            <Route path="*" element={<PublicLayout><NotFound /></PublicLayout>} />
+
+            {/* Lazy loaded — invisible fallback */}
+            <Route path="/institute/:slug" element={<PublicLayout><LazyPage><InstitutePage /></LazyPage></PublicLayout>} />
+            <Route path="/compare" element={<PublicLayout><LazyPage><ComparePage /></LazyPage></PublicLayout>} />
+            <Route path="/article/:slug" element={<PublicLayout><LazyPage><ArticlePage /></LazyPage></PublicLayout>} />
+            <Route path="/college/:slug" element={<PublicLayout><LazyPage><CollegeDetailPage /></LazyPage></PublicLayout>} />
+            <Route path="/colleges/:region" element={<PublicLayout><LazyPage><CollegeFilterPage /></LazyPage></PublicLayout>} />
+            <Route path="/exam/:slug" element={<PublicLayout><LazyPage><ExamDetailPage /></LazyPage></PublicLayout>} />
+            <Route path="/dashboard" element={<PublicLayout><LazyPage><DashboardPage /></LazyPage></PublicLayout>} />
+            <Route path="/profile-analyzer" element={<PublicLayout><LazyPage><ProfileAnalyzerPage /></LazyPage></PublicLayout>} />
+            <Route path="/about" element={<PublicLayout><LazyPage><AboutPage /></LazyPage></PublicLayout>} />
+            <Route path="/contact" element={<PublicLayout><LazyPage><ContactPage /></LazyPage></PublicLayout>} />
+            <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />
           </Routes>
         </AuthProvider>
       </BrowserRouter>
