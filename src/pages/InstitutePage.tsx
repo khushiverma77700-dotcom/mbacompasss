@@ -52,6 +52,25 @@ const InstitutePage = () => {
     return () => clearInterval(testimonialRef.current);
   }, []);
 
+  // Must call hooks before any early returns
+  const seoSchema = institute ? generateInstituteSchema(institute) : undefined;
+  const { seo: resolvedSeo } = useResolvedSeo(
+    institute ? "institute" : undefined,
+    institute?.id,
+    institute
+      ? {
+          title: `${institute.name} — Best MBA Coaching in ${institute.city} | MBAHub`,
+          description:
+            institute.meta_description ||
+            `${institute.name} offers top MBA coaching in ${institute.city}. ${institute.success_rate}% success rate, ${(institute.courses || []).length} courses.`,
+          keywords: (institute.keywords as string[]) || [],
+          canonical: `${window.location.origin}/institute/${institute.slug}`,
+          jsonLd: seoSchema,
+          ogImage: institute.banner_url || institute.logo_url || undefined,
+        }
+      : {},
+  );
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -80,18 +99,6 @@ const InstitutePage = () => {
   const reviews = institute.reviews || [];
   const categorySlug = (institute.categories as any)?.slug || "cat";
   const categoryName = (institute.categories as any)?.name || "MBA";
-
-  const seoSchema = generateInstituteSchema(institute);
-  const { seo: resolvedSeo } = useResolvedSeo("institute", institute.id, {
-    title: `${institute.name} — Best MBA Coaching in ${institute.city} | MBAHub`,
-    description:
-      institute.meta_description ||
-      `${institute.name} offers top MBA coaching in ${institute.city}. ${institute.success_rate}% success rate, ${(institute.courses || []).length} courses.`,
-    keywords: (institute.keywords as string[]) || [],
-    canonical: `${window.location.origin}/institute/${institute.slug}`,
-    jsonLd: seoSchema,
-    ogImage: institute.banner_url || institute.logo_url || undefined,
-  });
 
   // Filter courses based on selected target
   const filteredCourses = selectedTarget
