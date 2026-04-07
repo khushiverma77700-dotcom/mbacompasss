@@ -86,7 +86,7 @@ const HeroSection = () => {
           {/* Search bar */}
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-8">
             <div className="relative">
-              <div className="absolute -inset-1 rounded-2xl bg-white/20 blur-md opacity-20" />
+              <div className="absolute -inset-1 rounded-2xl bg-white/20 blur-md opacity-20 pointer-events-none" />
               <div className="relative">
                 <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
                 <Input
