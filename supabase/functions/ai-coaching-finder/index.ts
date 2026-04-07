@@ -17,27 +17,65 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    let query = supabase.from("institutes").select("*, courses(*), categories:category_id(name, slug)");
-    
-    if (mode && mode !== "any") query = query.ilike("mode", `%${mode}%`);
-    if (state && state !== "any") query = query.ilike("state", `%${state}%`);
-    if (city && city !== "any") query = query.ilike("city", `%${city}%`);
+    // Always fetch ALL institutes first - we'll let AI decide relevance
+    const { data: allInstitutes, error } = await supabase
+      .from("institutes")
+      .select("*, courses(*), categories:category_id(name, slug)")
+      .order("rating", { ascending: false });
 
-    const { data: institutes, error } = await query.order("rating", { ascending: false }).limit(50);
     if (error) throw error;
 
-    let filtered = institutes || [];
+    const institutes = allInstitutes || [];
+
+    // Try filtering with preferences, but always keep a fallback pool
+    let preferredMatches = [...institutes];
+    
+    if (mode && mode !== "any") {
+      const modeFiltered = preferredMatches.filter((inst: any) => 
+        (inst.mode || "").toLowerCase().includes(mode.toLowerCase())
+      );
+      if (modeFiltered.length >= 3) preferredMatches = modeFiltered;
+    }
+
+    if (state && state !== "any") {
+      const stateFiltered = preferredMatches.filter((inst: any) =>
+        (inst.state || "").toLowerCase().includes(state.toLowerCase())
+      );
+      if (stateFiltered.length >= 3) preferredMatches = stateFiltered;
+    }
+
+    if (city && city !== "any") {
+      const cityFiltered = preferredMatches.filter((inst: any) =>
+        (inst.city || "").toLowerCase().includes(city.toLowerCase())
+      );
+      if (cityFiltered.length >= 3) preferredMatches = cityFiltered;
+    }
+
     if (budget && budget !== "any") {
       const maxBudget = parseInt(budget, 10);
       if (!isNaN(maxBudget)) {
-        filtered = filtered.filter((inst: any) => {
+        const budgetFiltered = preferredMatches.filter((inst: any) => {
           const courses = inst.courses || [];
-          return courses.some((c: any) => (c.fees || 0) <= maxBudget);
+          return courses.length === 0 || courses.some((c: any) => (c.fees || 0) <= maxBudget);
         });
+        if (budgetFiltered.length >= 3) preferredMatches = budgetFiltered;
       }
     }
 
-    const topInstitutes = filtered.slice(0, 10).map((inst: any) => ({
+    // Ensure we always have at least 5 institutes for AI to choose from
+    // If filtered too aggressively, merge back top-rated from full list
+    if (preferredMatches.length < 5) {
+      const existing = new Set(preferredMatches.map((i: any) => i.id));
+      for (const inst of institutes) {
+        if (!existing.has(inst.id)) {
+          preferredMatches.push(inst);
+          existing.add(inst.id);
+        }
+        if (preferredMatches.length >= 10) break;
+      }
+    }
+
+    const topInstitutes = preferredMatches.slice(0, 12).map((inst: any) => ({
       name: inst.name,
       slug: inst.slug,
       city: inst.city,
@@ -64,13 +102,18 @@ serve(async (req) => {
       budget && budget !== "any" ? `Max Budget: ₹${parseInt(budget).toLocaleString()}` : null,
       state && state !== "any" ? `State: ${state}` : null,
       city && city !== "any" ? `City: ${city}` : null,
-      targetExam ? `Target Exam: ${targetExam}` : null,
+      targetExam && targetExam !== "any" ? `Target Exam: ${targetExam}` : null,
       experience && experience !== "any" ? `Work Experience: ${experience}` : null,
       prepStage && prepStage !== "any" ? `Preparation Stage: ${prepStage}` : null,
       batchPreference && batchPreference !== "any" ? `Batch Preference: ${batchPreference}` : null,
     ].filter(Boolean).join(", ");
 
-    const systemPrompt = `You are an expert MBA coaching advisor for BestMBACoaching.com. Based on the user's detailed profile and available institutes data, recommend the TOP 3 best-fit coaching institutes.
+    const systemPrompt = `You are an expert MBA coaching advisor for BestMBACoaching.com. Based on the user's profile and available institutes data, recommend the TOP 3 to 5 best-fit coaching institutes.
+
+CRITICAL RULES:
+1. You MUST ALWAYS recommend at least 3 institutes, ideally 5. Never return 0 recommendations.
+2. If user preferences don't perfectly match, still recommend the closest/best options and explain why.
+3. Even if location or budget doesn't match exactly, recommend alternatives and mention the mismatch.
 
 CRITICAL FORMAT INSTRUCTIONS:
 You MUST output your response in this EXACT JSON format (valid JSON only, no markdown, no code fences):
@@ -94,14 +137,14 @@ You MUST output your response in this EXACT JSON format (valid JSON only, no mar
   "pro_tips": ["tip 1 for the student", "tip 2"]
 }
 
-Use ONLY institutes from the provided data. Use their exact name and slug values. Give match_score out of 100 based on how well the institute fits ALL criteria. If fewer than 3 match well, recommend what's available and explain why.`;
+Use ONLY institutes from the provided data. Use their exact name and slug values. Give match_score out of 100 based on how well the institute fits ALL criteria. Always provide at least 3 recommendations. If fewer than 3 match perfectly, include the next best options and adjust match_score accordingly.`;
 
-    const userMessage = `Student Profile: ${userPrefsText || "No specific preferences"}
+    const userMessage = `Student Profile: ${userPrefsText || "No specific preferences - recommend the best overall options"}
 
 Available Institutes Data:
 ${JSON.stringify(topInstitutes, null, 2)}
 
-Return ONLY valid JSON. No markdown. No explanation outside JSON.`;
+IMPORTANT: You MUST recommend at least 3 institutes. Return ONLY valid JSON. No markdown.`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -135,7 +178,6 @@ Return ONLY valid JSON. No markdown. No explanation outside JSON.`;
     const aiData = await aiResponse.json();
     const rawContent = aiData.choices?.[0]?.message?.content || "";
     
-    // Parse the JSON from AI response - strip code fences if present
     let cleaned = rawContent.trim();
     if (cleaned.startsWith("```")) {
       cleaned = cleaned.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
@@ -145,23 +187,48 @@ Return ONLY valid JSON. No markdown. No explanation outside JSON.`;
     try {
       parsed = JSON.parse(cleaned);
     } catch {
-      // Fallback if AI didn't return valid JSON
+      // Fallback - always return at least 3 recommendations
       parsed = {
-        summary: "Here are our top coaching recommendations based on your preferences.",
-        recommendations: topInstitutes.slice(0, 3).map((inst: any, i: number) => ({
+        summary: "Based on your preferences, here are our top coaching recommendations from our database.",
+        recommendations: topInstitutes.slice(0, 5).map((inst: any, i: number) => ({
           rank: i + 1,
           institute_name: inst.name,
           institute_slug: inst.slug,
-          match_score: 85 - i * 5,
-          why_best_fit: `${inst.name} is a great option with a ${inst.rating}/5 rating and ${inst.success_rate}% success rate.`,
-          key_strengths: inst.features?.slice(0, 3) || ["Quality coaching", "Experienced faculty"],
+          match_score: 90 - i * 5,
+          why_best_fit: `${inst.name} is a highly rated coaching institute with a ${inst.rating}/5 rating and ${inst.success_rate}% success rate, located in ${inst.city || 'India'}.`,
+          key_strengths: inst.features?.slice(0, 3) || ["Quality coaching", "Experienced faculty", "Comprehensive study material"],
           recommended_course: inst.courses?.[0]?.name || "Comprehensive Course",
           course_fees: inst.courses?.[0]?.fees ? `₹${Number(inst.courses[0].fees).toLocaleString()}` : "Contact for fees",
           course_duration: inst.courses?.[0]?.duration || "6-12 months",
           batch_info: inst.courses?.[0]?.batch_info || "",
         })),
-        pro_tips: ["Compare multiple institutes before enrolling", "Ask about demo classes"],
+        pro_tips: [
+          "Compare multiple institutes before enrolling",
+          "Ask about demo classes and trial sessions",
+          "Check recent student reviews and success stories",
+        ],
       };
+    }
+
+    // Ensure minimum 3 recommendations
+    if (!parsed.recommendations || parsed.recommendations.length < 3) {
+      const existing = (parsed.recommendations || []).map((r: any) => r.institute_slug);
+      const additional = topInstitutes
+        .filter((inst: any) => !existing.includes(inst.slug))
+        .slice(0, 5 - (parsed.recommendations?.length || 0))
+        .map((inst: any, i: number) => ({
+          rank: (parsed.recommendations?.length || 0) + i + 1,
+          institute_name: inst.name,
+          institute_slug: inst.slug,
+          match_score: 70 - i * 5,
+          why_best_fit: `${inst.name} offers quality MBA coaching with a ${inst.rating}/5 rating in ${inst.city || 'India'}.`,
+          key_strengths: inst.features?.slice(0, 3) || ["Quality coaching", "Experienced faculty"],
+          recommended_course: inst.courses?.[0]?.name || "Comprehensive Course",
+          course_fees: inst.courses?.[0]?.fees ? `₹${Number(inst.courses[0].fees).toLocaleString()}` : "Contact for fees",
+          course_duration: inst.courses?.[0]?.duration || "6-12 months",
+          batch_info: inst.courses?.[0]?.batch_info || "",
+        }));
+      parsed.recommendations = [...(parsed.recommendations || []), ...additional];
     }
 
     // Enrich with logo_url from our data
@@ -179,6 +246,8 @@ Return ONLY valid JSON. No markdown. No explanation outside JSON.`;
           state: match?.state || null,
           rating: match?.rating || null,
           students_count: match?.students_count || null,
+          mode: match?.mode || null,
+          success_rate: match?.success_rate || null,
         };
       });
     }
