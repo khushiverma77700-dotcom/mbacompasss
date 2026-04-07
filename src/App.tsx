@@ -20,10 +20,8 @@ import CategoryPage from "./pages/CategoryPage";
 import BlogPage from "./pages/BlogPage";
 import CollegesPage from "./pages/CollegesPage";
 import AuthPage from "./pages/AuthPage";
-
-// Lazy-loaded public pages (less frequent)
-const InstitutePage = lazy(() => import("./pages/InstitutePage"));
-const ComparePage = lazy(() => import("./pages/ComparePage"));
+import InstitutePage from "./pages/InstitutePage";
+import ComparePage from "./pages/ComparePage";
 const ArticlePage = lazy(() => import("./pages/ArticlePage"));
 const ExamDetailPage = lazy(() => import("./pages/ExamDetailPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
@@ -215,8 +213,8 @@ const App = () => (
             <Route path="/auth" element={<PublicLayout><AuthPage /></PublicLayout>} />
 
             {/* Lazy loaded — invisible fallback */}
-            <Route path="/institute/:slug" element={<PublicLayout><LazyPage><InstitutePage /></LazyPage></PublicLayout>} />
-            <Route path="/compare" element={<PublicLayout><LazyPage><ComparePage /></LazyPage></PublicLayout>} />
+            <Route path="/institute/:slug" element={<PublicLayout><InstitutePage /></PublicLayout>} />
+            <Route path="/compare" element={<PublicLayout><ComparePage /></PublicLayout>} />
             <Route path="/article/:slug" element={<PublicLayout><LazyPage><ArticlePage /></LazyPage></PublicLayout>} />
             <Route path="/college/:slug" element={<PublicLayout><LazyPage><CollegeDetailPage /></LazyPage></PublicLayout>} />
             <Route path="/colleges/:region" element={<PublicLayout><LazyPage><CollegeFilterPage /></LazyPage></PublicLayout>} />
