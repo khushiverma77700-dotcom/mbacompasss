@@ -61,7 +61,7 @@ const BrowseByCitySection = () => {
                 className="group block bg-card rounded-2xl p-5 md:p-6 border border-border shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-2 text-center relative overflow-hidden"
               >
                 {/* Hover overlay */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${city.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl`} />
+                <div className={`absolute inset-0 bg-gradient-to-br ${city.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl pointer-events-none`} />
                 
                 <div className="relative z-10">
                   <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${city.gradient} shadow-md flex items-center justify-center mx-auto mb-4 group-hover:bg-white/20 transition-all`}>

@@ -69,7 +69,7 @@ const LatestArticlesSection = () => {
                     <BookOpen className="w-16 h-16 text-primary-foreground/20" />
                   </div>
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
                 <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground shadow-lg text-[10px]">
                   <Flame className="w-3 h-3 mr-1" /> Latest
                 </Badge>

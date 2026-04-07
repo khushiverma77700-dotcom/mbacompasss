@@ -37,26 +37,26 @@ const HeroSection = () => {
   return (
     <section className="relative overflow-hidden min-h-[85vh] flex items-center">
       {/* Multi-layer gradient background */}
-      <div className="absolute inset-0 hero-gradient" />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10" />
+      <div className="absolute inset-0 hero-gradient pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10 pointer-events-none" />
 
       {/* Dot pattern overlay */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiLz48L3N2Zz4=')] opacity-40" />
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiLz48L3N2Zz4=')] opacity-40 pointer-events-none" />
 
       {/* Floating decorative elements — CSS only, no JS animation overhead */}
-      <div className="absolute w-16 h-16 md:w-24 md:h-24 top-[8%] left-[5%] opacity-10 animate-bounce" style={{ animationDuration: '7s' }}>
+      <div className="absolute w-16 h-16 md:w-24 md:h-24 top-[8%] left-[5%] opacity-10 animate-bounce pointer-events-none" style={{ animationDuration: '7s' }}>
         <GraduationCap className="w-full h-full text-primary-foreground" />
       </div>
-      <div className="absolute w-10 h-10 md:w-14 md:h-14 top-[15%] right-[8%] opacity-10 animate-bounce" style={{ animationDuration: '5.5s', animationDelay: '1s' }}>
+      <div className="absolute w-10 h-10 md:w-14 md:h-14 top-[15%] right-[8%] opacity-10 animate-bounce pointer-events-none" style={{ animationDuration: '5.5s', animationDelay: '1s' }}>
         <GraduationCap className="w-full h-full text-primary-foreground" />
       </div>
-      <div className="absolute w-12 h-12 md:w-16 md:h-16 bottom-[20%] right-[20%] opacity-10 animate-bounce" style={{ animationDuration: '6s', animationDelay: '2s' }}>
+      <div className="absolute w-12 h-12 md:w-16 md:h-16 bottom-[20%] right-[20%] opacity-10 animate-bounce pointer-events-none" style={{ animationDuration: '6s', animationDelay: '2s' }}>
         <BookOpen className="w-full h-full text-primary-foreground" />
       </div>
 
       {/* Glowing orbs — CSS only */}
-      <div className="absolute w-64 h-64 -top-20 -left-20 bg-white/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
-      <div className="absolute w-96 h-96 -bottom-32 -right-32 bg-white/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '6s', animationDelay: '2s' }} />
+      <div className="absolute w-64 h-64 -top-20 -left-20 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '4s' }} />
+      <div className="absolute w-96 h-96 -bottom-32 -right-32 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '6s', animationDelay: '2s' }} />
 
       {/* Main content */}
       <div className="relative container mx-auto px-4 py-16 md:py-24 z-10">
@@ -86,7 +86,7 @@ const HeroSection = () => {
           {/* Search bar */}
           <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-8">
             <div className="relative">
-              <div className="absolute -inset-1 rounded-2xl bg-white/20 blur-md opacity-20" />
+              <div className="absolute -inset-1 rounded-2xl bg-white/20 blur-md opacity-20 pointer-events-none" />
               <div className="relative">
                 <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
                 <Input
