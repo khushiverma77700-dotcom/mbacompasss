@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { X, Star, Tag, CheckCircle, ArrowRight, BarChart3, TrendingUp, Clock, Users, BookOpen, GraduationCap, Award, Sparkles, Scale, IndianRupee, ThumbsUp, Shield, Zap, HelpCircle, ChevronDown, ChevronUp, MapPin, Globe, Phone, ExternalLink, Building2, Target, Percent, Trophy, Medal } from "lucide-react";
+import { X, Star, Tag, CheckCircle, ArrowRight, BarChart3, TrendingUp, Clock, Users, BookOpen, GraduationCap, Award, Sparkles, Scale, IndianRupee, ThumbsUp, Shield, Zap, HelpCircle, ChevronDown, ChevronUp, MapPin, Globe, Phone, ExternalLink, Building2, Target, Percent, Trophy, Medal, Bot } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead, { generateComparisonSchema, generateFAQSchema, generateBreadcrumbSchema } from "@/components/SEOHead";
+import AICoachingFinder from "@/components/AICoachingFinder";
 import React from "react";
 
 // ─── Types ──────────────────────────────────────────
@@ -162,7 +163,32 @@ const ComparePage = () => {
         </div>
       </div>
 
+      {/* AI Coaching Finder Section */}
       <div className="container mx-auto px-4 py-8 md:py-10">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-10">
+          <div className="text-center mb-5">
+            <Badge className="bg-primary/10 text-primary border-0 mb-2">
+              <Bot className="w-3.5 h-3.5 mr-1" /> AI-Powered
+            </Badge>
+            <h2 className="font-heading text-xl md:text-2xl font-bold text-foreground">
+              Not sure which coaching is right for you?
+            </h2>
+            <p className="text-sm text-muted-foreground mt-1">Let our AI analyze your needs and find the perfect match</p>
+          </div>
+          <div className="max-w-2xl mx-auto">
+            <AICoachingFinder />
+          </div>
+        </motion.div>
+
+        <div className="relative my-8">
+          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+          <div className="relative flex justify-center">
+            <span className="bg-background px-4 text-sm text-muted-foreground font-medium">Or compare manually</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 pb-8 md:pb-10">
         {/* ═══════════════════════════════════════════════ */}
         {/* COURSES COMPARISON                              */}
         {/* ═══════════════════════════════════════════════ */}
