@@ -37,11 +37,11 @@ const HeroSection = () => {
   return (
     <section className="relative overflow-hidden min-h-[85vh] flex items-center">
       {/* Multi-layer gradient background */}
-      <div className="absolute inset-0 hero-gradient" />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10" />
+      <div className="absolute inset-0 hero-gradient pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10 pointer-events-none" />
 
       {/* Dot pattern overlay */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiLz48L3N2Zz4=')] opacity-40" />
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiLz48L3N2Zz4=')] opacity-40 pointer-events-none" />
 
       {/* Floating decorative elements — CSS only, no JS animation overhead */}
       <div className="absolute w-16 h-16 md:w-24 md:h-24 top-[8%] left-[5%] opacity-10 animate-bounce" style={{ animationDuration: '7s' }}>
