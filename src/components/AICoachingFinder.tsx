@@ -1,11 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, Sparkles, MapPin, IndianRupee, Monitor, Building2, ChevronRight, ChevronDown, GraduationCap, Zap, Clock, Briefcase, BookOpen, Target, Star, Users, TrendingUp, ExternalLink, Award, Lightbulb, CheckCircle2, Search, Brain, Database, BarChart3, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
 
 type Step = "mode" | "budget" | "location_type" | "state" | "city" | "exam" | "experience" | "prep_stage" | "batch_pref" | "loading" | "result";
@@ -26,6 +25,8 @@ interface Recommendation {
   state?: string;
   rating?: number;
   students_count?: number;
+  mode?: string;
+  success_rate?: number;
 }
 
 interface AIResult {
@@ -76,11 +77,11 @@ const BUDGETS = [
 ];
 
 const LOADING_STAGES = [
-  { icon: Search, text: "Scanning our coaching database...", duration: 1500 },
-  { icon: Brain, text: "Analyzing your preferences & profile...", duration: 2000 },
-  { icon: Database, text: "Matching with top-rated institutes...", duration: 2000 },
+  { icon: Search, text: "Scanning coaching database...", duration: 1500 },
+  { icon: Brain, text: "Analyzing your preferences...", duration: 2000 },
+  { icon: Database, text: "Matching top-rated institutes...", duration: 2000 },
   { icon: BarChart3, text: "Calculating match scores...", duration: 1500 },
-  { icon: Sparkles, text: "Crafting personalized recommendations...", duration: 2000 },
+  { icon: Sparkles, text: "Crafting recommendations...", duration: 2000 },
 ];
 
 interface AICoachingFinderProps {
@@ -207,15 +208,22 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
   const totalSteps = allSteps.length;
 
   const getScoreColor = (score: number) => {
-    if (score >= 90) return "text-green-600 bg-green-50 border-green-200";
-    if (score >= 75) return "text-blue-600 bg-blue-50 border-blue-200";
-    return "text-amber-600 bg-amber-50 border-amber-200";
+    if (score >= 90) return "text-emerald-700 bg-emerald-50 border-emerald-200";
+    if (score >= 75) return "text-blue-700 bg-blue-50 border-blue-200";
+    return "text-amber-700 bg-amber-50 border-amber-200";
   };
 
-  const getRankBadge = (rank: number) => {
-    if (rank === 1) return { label: "🥇 Best Match", className: "bg-gradient-to-r from-yellow-100 to-amber-100 text-amber-800 border-amber-300" };
-    if (rank === 2) return { label: "🥈 Great Fit", className: "bg-gradient-to-r from-gray-100 to-slate-100 text-slate-700 border-slate-300" };
-    return { label: "🥉 Good Option", className: "bg-gradient-to-r from-orange-50 to-amber-50 text-orange-700 border-orange-200" };
+  const getScoreGradient = (score: number) => {
+    if (score >= 90) return "from-emerald-500 to-emerald-600";
+    if (score >= 75) return "from-blue-500 to-blue-600";
+    return "from-amber-500 to-amber-600";
+  };
+
+  const getRankStyle = (rank: number) => {
+    if (rank === 1) return { badge: "🥇 #1 Best Match", border: "border-primary/50 shadow-lg shadow-primary/10", header: "bg-gradient-to-r from-primary/15 via-primary/8 to-amber-50/30" };
+    if (rank === 2) return { badge: "🥈 #2 Great Fit", border: "border-border shadow-md", header: "bg-gradient-to-r from-muted/60 to-muted/20" };
+    if (rank === 3) return { badge: "🥉 #3 Good Option", border: "border-border shadow-sm", header: "bg-gradient-to-r from-muted/40 to-muted/10" };
+    return { badge: `#${rank} Option`, border: "border-border", header: "bg-muted/20" };
   };
 
   const OptionBtn = ({ icon: Icon, label, desc, onClick }: { icon: any; label: string; desc: string; onClick: () => void }) => (
@@ -249,101 +257,108 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
   );
 
   const RecommendationCard = ({ rec }: { rec: Recommendation }) => {
-    const rankBadge = getRankBadge(rec.rank);
+    const rankStyle = getRankStyle(rec.rank);
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: rec.rank * 0.15 }}
+        initial={{ opacity: 0, y: 20, scale: 0.97 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ delay: rec.rank * 0.12, type: "spring", stiffness: 200 }}
       >
-        <Card className={`overflow-hidden border-2 hover:shadow-xl transition-all duration-300 group ${rec.rank === 1 ? "border-primary/40 shadow-lg" : "border-border"}`}>
-          <div className={`p-3.5 flex items-center justify-between border-b ${rec.rank === 1 ? "bg-gradient-to-r from-primary/10 via-primary/5 to-amber-50/50" : "bg-gradient-to-r from-muted/50 to-muted/20"}`}>
-            <div className="flex items-center gap-2">
-              <Badge className={`text-[10px] px-2.5 py-0.5 border font-semibold ${rankBadge.className}`}>
-                {rankBadge.label}
-              </Badge>
-            </div>
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-bold ${getScoreColor(rec.match_score)}`}>
-              <Target className="w-3.5 h-3.5" />
+        <Card className={`overflow-hidden border-2 hover:shadow-xl transition-all duration-300 group ${rankStyle.border}`}>
+          {/* Rank header */}
+          <div className={`px-4 py-3 flex items-center justify-between border-b ${rankStyle.header}`}>
+            <Badge variant="outline" className="text-[10px] px-2 py-0.5 font-bold border-primary/20 bg-background/80">
+              {rankStyle.badge}
+            </Badge>
+            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold ${getScoreColor(rec.match_score)}`}>
+              <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${getScoreGradient(rec.match_score)}`} />
               {rec.match_score}% Match
             </div>
           </div>
 
           <CardContent className="p-4">
-            <div className="flex items-start gap-3.5 mb-3.5">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/10 flex items-center justify-center shrink-0 overflow-hidden shadow-sm">
+            {/* Institute info */}
+            <div className="flex items-start gap-3 mb-3">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
                 {rec.logo_url ? (
-                  <img src={rec.logo_url} alt={rec.institute_name} className="w-full h-full object-cover rounded-xl" />
+                  <img src={rec.logo_url} alt={rec.institute_name} className="w-full h-full object-cover rounded-xl" loading="lazy" />
                 ) : (
                   <GraduationCap className="w-7 h-7 text-primary" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className="font-bold text-foreground text-sm leading-tight mb-1">{rec.institute_name}</h4>
-                <div className="flex items-center gap-2.5 flex-wrap">
+                <h4 className="font-bold text-foreground text-sm leading-tight">{rec.institute_name}</h4>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
                   {rec.city && (
-                    <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                    <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground">
                       <MapPin className="w-3 h-3" /> {rec.city}{rec.state ? `, ${rec.state}` : ""}
                     </span>
                   )}
-                  {rec.rating && (
-                    <span className="flex items-center gap-0.5 text-[11px] text-amber-600 font-medium">
-                      <Star className="w-3 h-3 fill-amber-500" /> {rec.rating}
+                  {rec.rating && rec.rating > 0 && (
+                    <span className="flex items-center gap-0.5 text-[11px] text-amber-600 font-semibold">
+                      <Star className="w-3 h-3 fill-amber-500 text-amber-500" /> {rec.rating}
                     </span>
                   )}
-                  {rec.students_count ? (
-                    <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground">
-                      <Users className="w-3 h-3" /> {rec.students_count.toLocaleString()}+
+                  {rec.mode && (
+                    <Badge variant="secondary" className="text-[9px] px-1.5 py-0">{rec.mode}</Badge>
+                  )}
+                </div>
+                {/* Quick stats row */}
+                <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                  {rec.students_count && rec.students_count > 0 && (
+                    <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                      <Users className="w-2.5 h-2.5" /> {rec.students_count.toLocaleString()}+ students
                     </span>
-                  ) : null}
+                  )}
+                  {rec.success_rate && rec.success_rate > 0 && (
+                    <span className="flex items-center gap-0.5 text-[10px] text-emerald-600 font-medium">
+                      <TrendingUp className="w-2.5 h-2.5" /> {rec.success_rate}% success
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-primary/5 to-primary/[0.02] rounded-xl p-3 mb-3.5 border border-primary/10">
+            {/* AI insight */}
+            <div className="bg-gradient-to-r from-primary/[0.06] to-primary/[0.02] rounded-lg p-3 mb-3 border border-primary/10">
               <p className="text-xs text-foreground/80 leading-relaxed">
-                <Sparkles className="w-3.5 h-3.5 text-primary inline mr-1.5" />
+                <Sparkles className="w-3 h-3 text-primary inline mr-1" />
                 {rec.why_best_fit}
               </p>
             </div>
 
-            <div className="mb-3.5">
-              <h5 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">Key Strengths</h5>
-              <div className="space-y-1.5">
-                {rec.key_strengths.map((s, i) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-green-500 mt-0.5 shrink-0" />
-                    <span className="text-xs text-foreground/80">{s}</span>
-                  </div>
+            {/* Strengths */}
+            <div className="mb-3">
+              <div className="flex flex-wrap gap-1.5">
+                {rec.key_strengths.slice(0, 4).map((s, i) => (
+                  <span key={i} className="inline-flex items-center gap-1 text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full px-2 py-0.5">
+                    <CheckCircle2 className="w-2.5 h-2.5" /> {s}
+                  </span>
                 ))}
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              <div className="bg-muted/40 rounded-xl p-2.5 border border-border/50">
-                <div className="text-[9px] text-muted-foreground uppercase tracking-wider mb-0.5">Course</div>
-                <div className="text-xs font-semibold text-foreground truncate">{rec.recommended_course}</div>
+            {/* Course details grid */}
+            <div className="grid grid-cols-3 gap-1.5 mb-3">
+              <div className="bg-muted/40 rounded-lg p-2 text-center">
+                <div className="text-[8px] text-muted-foreground uppercase tracking-wider">Course</div>
+                <div className="text-[10px] font-semibold text-foreground truncate mt-0.5">{rec.recommended_course}</div>
               </div>
-              <div className="bg-primary/5 rounded-xl p-2.5 border border-primary/10">
-                <div className="text-[9px] text-muted-foreground uppercase tracking-wider mb-0.5">Fees</div>
-                <div className="text-xs font-bold text-primary">{rec.course_fees}</div>
+              <div className="bg-primary/5 rounded-lg p-2 text-center border border-primary/10">
+                <div className="text-[8px] text-muted-foreground uppercase tracking-wider">Fees</div>
+                <div className="text-[10px] font-bold text-primary mt-0.5">{rec.course_fees}</div>
               </div>
-              <div className="bg-muted/40 rounded-xl p-2.5 border border-border/50">
-                <div className="text-[9px] text-muted-foreground uppercase tracking-wider mb-0.5">Duration</div>
-                <div className="text-xs font-semibold text-foreground">{rec.course_duration}</div>
+              <div className="bg-muted/40 rounded-lg p-2 text-center">
+                <div className="text-[8px] text-muted-foreground uppercase tracking-wider">Duration</div>
+                <div className="text-[10px] font-semibold text-foreground mt-0.5">{rec.course_duration}</div>
               </div>
-              {rec.batch_info && (
-                <div className="bg-muted/40 rounded-xl p-2.5 border border-border/50">
-                  <div className="text-[9px] text-muted-foreground uppercase tracking-wider mb-0.5">Batch</div>
-                  <div className="text-xs font-semibold text-foreground truncate">{rec.batch_info}</div>
-                </div>
-              )}
             </div>
 
+            {/* CTA */}
             <Link to={`/institute/${rec.institute_slug}`}>
-              <Button size="sm" className="w-full gap-2 text-xs h-10 font-semibold group-hover:shadow-md transition-all">
+              <Button size="sm" className="w-full gap-2 text-xs h-9 font-semibold">
                 <ExternalLink className="w-3.5 h-3.5" />
-                View Full Details & Enroll
+                View Details & Enroll
               </Button>
             </Link>
           </CardContent>
@@ -359,23 +374,23 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
         onClick={() => { setIsOpen(!isOpen); if (!isOpen && step === "mode") reset(); }}
         className="w-full flex items-center justify-between p-4 md:p-5 hover:bg-primary/5 transition-colors"
       >
-        <div className="flex items-center gap-3.5">
+        <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg">
-              <Bot className="w-6 h-6 text-primary-foreground" />
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg">
+              <Bot className="w-5 h-5 text-primary-foreground" />
             </div>
             <motion.div
-              className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-background"
+              className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-green-500 border-2 border-background"
               animate={{ scale: [1, 1.2, 1] }}
               transition={{ duration: 2, repeat: Infinity }}
             />
           </div>
           <div className="text-left">
-            <h3 className="font-bold text-foreground text-sm md:text-base flex items-center gap-2">
+            <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
               AI Coaching Finder
-              <Badge className="bg-primary/15 text-primary border-0 text-[9px] px-2 py-0.5"><Sparkles className="w-2.5 h-2.5 mr-0.5" />Powered by AI</Badge>
+              <Badge className="bg-primary/15 text-primary border-0 text-[9px] px-2 py-0.5"><Sparkles className="w-2.5 h-2.5 mr-0.5" />AI</Badge>
             </h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Answer quick questions → Get personalized coaching recommendations</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">Get personalized coaching recommendations in seconds</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -412,7 +427,6 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
               )}
 
               <AnimatePresence mode="wait">
-                {/* Step: Mode */}
                 {step === "mode" && (
                   <motion.div key="mode" initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }}>
                     <h4 className="font-semibold text-foreground mb-3 text-sm">How do you prefer to learn?</h4>
@@ -425,7 +439,6 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                   </motion.div>
                 )}
 
-                {/* Step: Budget */}
                 {step === "budget" && (
                   <motion.div key="budget" initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }}>
                     <h4 className="font-semibold text-foreground mb-3 text-sm">What's your budget range?</h4>
@@ -437,7 +450,6 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                   </motion.div>
                 )}
 
-                {/* Step: Location Type */}
                 {step === "location_type" && (
                   <motion.div key="loc" initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }}>
                     <h4 className="font-semibold text-foreground mb-3 text-sm">Do you have a location preference?</h4>
@@ -448,7 +460,6 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                   </motion.div>
                 )}
 
-                {/* Step: State */}
                 {step === "state" && (
                   <motion.div key="state" initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }}>
                     <h4 className="font-semibold text-foreground mb-3 text-sm">Which state?</h4>
@@ -458,7 +469,6 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                   </motion.div>
                 )}
 
-                {/* Step: City */}
                 {step === "city" && (
                   <motion.div key="city" initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }}>
                     <h4 className="font-semibold text-foreground mb-3 text-sm">Which city in {state}?</h4>
@@ -469,7 +479,6 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                   </motion.div>
                 )}
 
-                {/* Step: Exam - Multi Select */}
                 {step === "exam" && (
                   <motion.div key="exam" initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }}>
                     <h4 className="font-semibold text-foreground mb-1 text-sm">Which exams are you preparing for?</h4>
@@ -489,35 +498,19 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                         >
                           <GraduationCap className={`w-4 h-4 ${selectedExams.includes(e) ? "text-primary" : "text-primary/70"}`} />
                           <div className={`font-semibold text-xs ${selectedExams.includes(e) ? "text-primary" : "text-foreground"}`}>{e}</div>
-                          {selectedExams.includes(e) && (
-                            <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
-                          )}
+                          {selectedExams.includes(e) && <CheckCircle2 className="w-3.5 h-3.5 text-primary" />}
                         </motion.button>
                       ))}
                     </div>
                     <div className="flex gap-2">
-                      <Button
-                        onClick={handleExamsContinue}
-                        disabled={selectedExams.length === 0}
-                        className="flex-1 gap-2"
-                        size="sm"
-                      >
-                        Continue with {selectedExams.length > 0 ? selectedExams.join(", ") : "selection"}
-                        <ChevronRight className="w-4 h-4" />
+                      <Button onClick={handleExamsContinue} disabled={selectedExams.length === 0} className="flex-1 gap-2" size="sm">
+                        Continue with {selectedExams.length > 0 ? selectedExams.join(", ") : "selection"} <ChevronRight className="w-4 h-4" />
                       </Button>
-                      <Button
-                        onClick={() => { setSelectedExams([]); handleExamsContinue(); }}
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs text-muted-foreground"
-                      >
-                        Skip
-                      </Button>
+                      <Button onClick={() => { setSelectedExams([]); handleExamsContinue(); }} variant="ghost" size="sm" className="text-xs text-muted-foreground">Skip</Button>
                     </div>
                   </motion.div>
                 )}
 
-                {/* Step: Experience */}
                 {step === "experience" && (
                   <motion.div key="exp" initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }}>
                     <h4 className="font-semibold text-foreground mb-3 text-sm">What's your work experience?</h4>
@@ -530,7 +523,6 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                   </motion.div>
                 )}
 
-                {/* Step: Prep Stage */}
                 {step === "prep_stage" && (
                   <motion.div key="prep" initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }}>
                     <h4 className="font-semibold text-foreground mb-3 text-sm">What's your current preparation stage?</h4>
@@ -542,7 +534,6 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                   </motion.div>
                 )}
 
-                {/* Step: Batch Preference */}
                 {step === "batch_pref" && (
                   <motion.div key="batch" initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -15 }}>
                     <h4 className="font-semibold text-foreground mb-3 text-sm">Preferred batch timing?</h4>
@@ -557,8 +548,8 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
 
                 {/* Loading */}
                 {step === "loading" && (
-                  <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-10">
-                    <div className="relative w-24 h-24 mx-auto mb-6">
+                  <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-8">
+                    <div className="relative w-20 h-20 mx-auto mb-5">
                       <motion.div
                         className="absolute inset-0 rounded-full bg-primary/10"
                         animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
@@ -569,22 +560,22 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                         animate={{ scale: [1, 1.2, 1], opacity: [0.7, 0.2, 0.7] }}
                         transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
                       />
-                      <div className="absolute inset-4 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-xl">
+                      <div className="absolute inset-3 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-xl">
                         <motion.div animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }}>
-                          <Brain className="w-8 h-8 text-primary-foreground" />
+                          <Brain className="w-7 h-7 text-primary-foreground" />
                         </motion.div>
                       </div>
-                      {[0, 1, 2, 3].map((i) => (
+                      {[0, 1, 2].map((i) => (
                         <motion.div
                           key={i}
-                          className="absolute w-2.5 h-2.5 rounded-full bg-primary shadow-sm"
+                          className="absolute w-2 h-2 rounded-full bg-primary"
                           animate={{
-                            x: [0, Math.cos((i * 2 * Math.PI) / 4) * 38, 0],
-                            y: [0, Math.sin((i * 2 * Math.PI) / 4) * 38, 0],
-                            opacity: [0.2, 1, 0.2],
+                            x: [0, Math.cos((i * 2 * Math.PI) / 3) * 32, 0],
+                            y: [0, Math.sin((i * 2 * Math.PI) / 3) * 32, 0],
+                            opacity: [0.3, 1, 0.3],
                           }}
-                          transition={{ duration: 2, repeat: Infinity, delay: i * 0.4 }}
-                          style={{ left: "calc(50% - 5px)", top: "calc(50% - 5px)" }}
+                          transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.4 }}
+                          style={{ left: "calc(50% - 4px)", top: "calc(50% - 4px)" }}
                         />
                       ))}
                     </div>
@@ -592,12 +583,12 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                     <AnimatePresence mode="wait">
                       <motion.div
                         key={loadingStage}
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 8 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="text-center mb-5"
+                        exit={{ opacity: 0, y: -8 }}
+                        className="text-center mb-4"
                       >
-                        <div className="flex items-center justify-center gap-2 mb-1.5">
+                        <div className="flex items-center justify-center gap-2 mb-1">
                           {(() => {
                             const StageIcon = LOADING_STAGES[loadingStage]?.icon || Sparkles;
                             return <StageIcon className="w-4 h-4 text-primary" />;
@@ -606,22 +597,11 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                             {LOADING_STAGES[loadingStage]?.text || "Almost there..."}
                           </h4>
                         </div>
-                        <p className="text-xs text-muted-foreground">AI is analyzing your profile for the best match</p>
                       </motion.div>
                     </AnimatePresence>
 
-                    <div className="max-w-sm mx-auto">
-                      <Progress value={((loadingStage + 1) / LOADING_STAGES.length) * 100} className="h-2" />
-                      <div className="flex justify-between mt-2">
-                        {LOADING_STAGES.map((_, i) => (
-                          <motion.div
-                            key={i}
-                            className={`w-2 h-2 rounded-full transition-colors ${i <= loadingStage ? "bg-primary" : "bg-muted"}`}
-                            animate={i === loadingStage ? { scale: [1, 1.5, 1] } : {}}
-                            transition={{ duration: 0.5, repeat: Infinity }}
-                          />
-                        ))}
-                      </div>
+                    <div className="max-w-xs mx-auto">
+                      <Progress value={((loadingStage + 1) / LOADING_STAGES.length) * 100} className="h-1.5" />
                     </div>
                   </motion.div>
                 )}
@@ -630,18 +610,17 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                 {step === "result" && (
                   <motion.div key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                     {error ? (
-                      <div className="text-center py-8">
-                        <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-3">
-                          <Bot className="w-7 h-7 text-destructive" />
+                      <div className="text-center py-6">
+                        <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-3">
+                          <Bot className="w-6 h-6 text-destructive" />
                         </div>
                         <p className="text-sm text-destructive font-medium mb-2">{error}</p>
-                        <p className="text-xs text-muted-foreground mb-4">Don't worry, you can try again or compare manually</p>
                         <div className="flex gap-2 justify-center">
-                          <Button onClick={reset} variant="outline" size="sm" className="gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5" /> Try Again with AI
+                          <Button onClick={reset} variant="outline" size="sm" className="gap-1.5 text-xs">
+                            <Sparkles className="w-3.5 h-3.5" /> Try Again
                           </Button>
                           {onTryManually && (
-                            <Button onClick={onTryManually} variant="secondary" size="sm" className="gap-1.5">
+                            <Button onClick={onTryManually} variant="secondary" size="sm" className="gap-1.5 text-xs">
                               <ArrowDown className="w-3.5 h-3.5" /> Try Manually
                             </Button>
                           )}
@@ -649,44 +628,45 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                       </div>
                     ) : aiResult ? (
                       <div>
-                        {/* Header badges */}
-                        <div className="flex items-center gap-2 mb-3 flex-wrap">
-                          <Badge className="bg-gradient-to-r from-primary/20 to-primary/10 text-primary border-0 text-[10px] px-2.5 py-0.5 font-semibold">
-                            <Sparkles className="w-3 h-3 mr-1" /> AI Recommendations
-                          </Badge>
-                          <Badge variant="outline" className="text-[10px] py-0.5 px-2">{aiResult.recommendations?.length || 0} matches found</Badge>
+                        {/* Results header */}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-gradient-to-r from-primary/20 to-primary/10 text-primary border-0 text-[10px] px-2 py-0.5 font-semibold">
+                              <Sparkles className="w-3 h-3 mr-1" /> AI Picks
+                            </Badge>
+                            <span className="text-[11px] text-muted-foreground font-medium">
+                              {aiResult.recommendations?.length || 0} coaching{(aiResult.recommendations?.length || 0) !== 1 ? "s" : ""} recommended
+                            </span>
+                          </div>
                         </div>
 
-                        {/* Preferences summary */}
-                        <div className="flex flex-wrap gap-1.5 mb-4">
-                          {mode && mode !== "any" && <Badge variant="outline" className="text-[10px] py-0.5 px-2 bg-muted/50">{mode}</Badge>}
-                          {budget && budget !== "any" && <Badge variant="outline" className="text-[10px] py-0.5 px-2 bg-muted/50">≤₹{parseInt(budget).toLocaleString()}</Badge>}
-                          {state && state !== "any" && <Badge variant="outline" className="text-[10px] py-0.5 px-2 bg-muted/50">{state}</Badge>}
-                          {city && city !== "any" && <Badge variant="outline" className="text-[10px] py-0.5 px-2 bg-muted/50">{city}</Badge>}
+                        {/* Preference tags */}
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {mode && mode !== "any" && <Badge variant="outline" className="text-[9px] py-0 px-1.5 bg-muted/50">{mode}</Badge>}
+                          {budget && budget !== "any" && <Badge variant="outline" className="text-[9px] py-0 px-1.5 bg-muted/50">≤₹{parseInt(budget).toLocaleString()}</Badge>}
+                          {state && state !== "any" && <Badge variant="outline" className="text-[9px] py-0 px-1.5 bg-muted/50">{state}</Badge>}
                           {selectedExams.length > 0 && selectedExams.map(e => (
-                            <Badge key={e} variant="outline" className="text-[10px] py-0.5 px-2 bg-primary/5 border-primary/20 text-primary">{e}</Badge>
+                            <Badge key={e} variant="outline" className="text-[9px] py-0 px-1.5 bg-primary/5 border-primary/20 text-primary">{e}</Badge>
                           ))}
-                          {experience && experience !== "any" && <Badge variant="outline" className="text-[10px] py-0.5 px-2 bg-muted/50">{experience}</Badge>}
+                          {experience && experience !== "any" && <Badge variant="outline" className="text-[9px] py-0 px-1.5 bg-muted/50">{experience}</Badge>}
                         </div>
 
                         {/* AI Summary */}
                         {aiResult.summary && (
                           <motion.div
-                            initial={{ opacity: 0, y: 10 }}
+                            initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
-                            className="bg-gradient-to-r from-primary/5 via-primary/[0.03] to-secondary/5 border border-primary/15 rounded-xl p-4 mb-5"
+                            className="bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/10 rounded-lg p-3 mb-4"
                           >
-                            <div className="flex items-start gap-2.5">
-                              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
-                                <Bot className="w-4 h-4 text-primary" />
-                              </div>
-                              <p className="text-sm text-foreground/80 leading-relaxed">{aiResult.summary}</p>
-                            </div>
+                            <p className="text-xs text-foreground/80 leading-relaxed">
+                              <Bot className="w-3.5 h-3.5 text-primary inline mr-1.5" />
+                              {aiResult.summary}
+                            </p>
                           </motion.div>
                         )}
 
                         {/* Recommendation cards */}
-                        <div className="space-y-4 max-h-[550px] overflow-y-auto pr-1">
+                        <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
                           {aiResult.recommendations?.map((rec) => (
                             <RecommendationCard key={rec.rank} rec={rec} />
                           ))}
@@ -697,17 +677,17 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                           <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            transition={{ delay: 0.5 }}
-                            className="mt-5 bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 rounded-xl p-4"
+                            transition={{ delay: 0.4 }}
+                            className="mt-4 bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 rounded-lg p-3"
                           >
-                            <div className="flex items-center gap-2 mb-2.5">
-                              <Lightbulb className="w-4 h-4 text-amber-600" />
-                              <h5 className="text-xs font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider">Pro Tips from AI</h5>
+                            <div className="flex items-center gap-1.5 mb-2">
+                              <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
+                              <h5 className="text-[10px] font-bold text-amber-800 dark:text-amber-400 uppercase tracking-wider">Pro Tips</h5>
                             </div>
-                            <ul className="space-y-1.5">
+                            <ul className="space-y-1">
                               {aiResult.pro_tips.map((tip, i) => (
-                                <li key={i} className="flex items-start gap-2 text-xs text-amber-700 dark:text-amber-300">
-                                  <TrendingUp className="w-3 h-3 mt-0.5 shrink-0" />
+                                <li key={i} className="flex items-start gap-1.5 text-[11px] text-amber-700 dark:text-amber-300">
+                                  <TrendingUp className="w-2.5 h-2.5 mt-0.5 shrink-0" />
                                   {tip}
                                 </li>
                               ))}
@@ -716,7 +696,7 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
                         )}
 
                         {/* Actions */}
-                        <div className="mt-5 pt-4 border-t border-border flex gap-2">
+                        <div className="mt-4 pt-3 border-t border-border flex gap-2">
                           <Button onClick={reset} variant="outline" size="sm" className="gap-1.5 text-xs flex-1">
                             <Sparkles className="w-3.5 h-3.5" /> New Search
                           </Button>
