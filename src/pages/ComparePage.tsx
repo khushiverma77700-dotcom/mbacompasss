@@ -163,24 +163,13 @@ const ComparePage = () => {
         </div>
       </div>
 
-      {/* AI Coaching Finder Section */}
-      <div className="container mx-auto px-4 py-8 md:py-10">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mb-10">
-          <div className="text-center mb-5">
-            <Badge className="bg-primary/10 text-primary border-0 mb-2">
-              <Bot className="w-3.5 h-3.5 mr-1" /> AI-Powered
-            </Badge>
-            <h2 className="font-heading text-xl md:text-2xl font-bold text-foreground">
-              Not sure which coaching is right for you?
-            </h2>
-            <p className="text-sm text-muted-foreground mt-1">Let our AI analyze your needs and find the perfect match</p>
-          </div>
-          <div className="max-w-2xl mx-auto">
-            <AICoachingFinder />
-          </div>
-        </motion.div>
+      {/* AI Coaching Finder - Compact Collapsible */}
+      <div className="container mx-auto px-4 py-6 md:py-8">
+        <div className="max-w-3xl mx-auto mb-8">
+          <AICoachingFinder />
+        </div>
 
-        <div className="relative my-8">
+        <div className="relative mb-6">
           <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
           <div className="relative flex justify-center">
             <span className="bg-background px-4 text-sm text-muted-foreground font-medium">Or compare manually</span>
