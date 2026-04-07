@@ -791,7 +791,6 @@ const ComparePage = () => {
           </Card>
         </section>
       </div>
-      </div>
     </div>
   );
 };
