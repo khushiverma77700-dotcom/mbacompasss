@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { X, Star, Tag, CheckCircle, ArrowRight, BarChart3, TrendingUp, Clock, Users, BookOpen, GraduationCap, Award, Sparkles, Scale, IndianRupee, ThumbsUp, Shield, Zap, HelpCircle, ChevronDown, ChevronUp, MapPin, Globe, Phone, ExternalLink, Building2, Target, Percent, Trophy, Medal, Bot } from "lucide-react";
+import { X, Star, Tag, CheckCircle, ArrowRight, BarChart3, TrendingUp, Clock, Users, BookOpen, GraduationCap, Award, Sparkles, Scale, IndianRupee, ThumbsUp, Shield, Zap, HelpCircle, ChevronDown, ChevronUp, MapPin, Globe, Phone, ExternalLink, Building2, Target, Percent, Trophy, Medal } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
