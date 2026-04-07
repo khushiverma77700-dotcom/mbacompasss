@@ -127,34 +127,67 @@ const CollegeFinderPage = () => {
         </ol>
       </nav>
 
-      {/* Hero — different from coaching (no gradient bg, bold typography) */}
-      <header className="py-10 md:py-14">
-        <div className="container mx-auto px-4 text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-1.5 text-xs font-semibold mb-4">
-              <Sparkles className="w-3.5 h-3.5" /> AI-Powered • 80+ Colleges • Real Data
-            </div>
-            <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-black text-foreground mb-4 leading-tight">
-              Find Your <span className="text-primary">Perfect MBA College</span>
-            </h1>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base leading-relaxed">
-              AI-powered college recommendations based on your profile, or compare colleges manually with detailed metrics — 
-              fees, placements, ROI, campus size, accreditations & recruiters.
-            </p>
-            {/* Quick stats */}
-            <div className="flex items-center justify-center gap-6 mt-6">
-              {[
-                { icon: Building2, label: "Colleges", value: `${colleges.length}+` },
-                { icon: BarChart3, label: "Data Points", value: "15+" },
-                { icon: Sparkles, label: "AI Engine", value: "Active" },
-              ].map((s, i) => (
-                <div key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <s.icon className="w-4 h-4 text-primary" />
-                  <span className="font-bold text-foreground">{s.value}</span> {s.label}
+      {/* Hero */}
+      <header className="relative overflow-hidden">
+        {/* Background pattern */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-background to-violet-500/[0.03]" />
+        <div className="absolute inset-0" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, hsl(var(--primary) / 0.05) 1px, transparent 0)", backgroundSize: "32px 32px" }} />
+        
+        <div className="relative container mx-auto px-4 py-10 md:py-16">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex flex-col md:flex-row items-center gap-8">
+              {/* Left: Text content */}
+              <div className="flex-1 text-center md:text-left">
+                <div className="inline-flex items-center gap-2 bg-primary/10 text-primary rounded-full px-4 py-1.5 text-xs font-semibold mb-4 border border-primary/20">
+                  <Sparkles className="w-3.5 h-3.5" /> Trusted by 10,000+ MBA Aspirants
                 </div>
-              ))}
+                <h1 className="font-heading text-3xl md:text-4xl lg:text-5xl font-black text-foreground mb-4 leading-[1.15]">
+                  MBA College Finder
+                  <span className="block text-primary mt-1">&amp; Smart Comparison</span>
+                </h1>
+                <p className="text-muted-foreground max-w-lg text-sm md:text-base leading-relaxed mb-6">
+                  Get AI-powered college recommendations matched to your profile — or compare B-Schools 
+                  head-to-head across fees, placements, ROI, campus & 15+ parameters.
+                </p>
+                
+                {/* Stats row */}
+                <div className="grid grid-cols-3 gap-3 max-w-sm mx-auto md:mx-0">
+                  {[
+                    { value: `${colleges.length}+`, label: "MBA Colleges", icon: Building2 },
+                    { value: "15+", label: "Parameters", icon: BarChart3 },
+                    { value: "5", label: "Comparison Tabs", icon: Layers },
+                  ].map((s, i) => (
+                    <div key={i} className="bg-card rounded-xl p-3 border border-border text-center shadow-sm">
+                      <s.icon className="w-4 h-4 text-primary mx-auto mb-1" />
+                      <div className="font-black text-foreground text-lg">{s.value}</div>
+                      <div className="text-[10px] text-muted-foreground font-medium">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right: Feature highlights */}
+              <div className="flex-shrink-0 w-full md:w-80 space-y-2.5">
+                {[
+                  { icon: Sparkles, title: "AI-Powered Matching", desc: "8-step wizard analyzes your profile for best-fit colleges", color: "from-primary/20 to-violet-500/10" },
+                  { icon: Scale, title: "Side-by-Side Compare", desc: "Compare up to 3 colleges across all key metrics", color: "from-emerald-500/20 to-teal-500/10" },
+                  { icon: TrendingUp, title: "ROI & Placement Data", desc: "Real placement stats, fees, and return on investment", color: "from-amber-500/20 to-orange-500/10" },
+                  { icon: Shield, title: "Verified Database", desc: "80+ colleges with NIRF rankings & accreditations", color: "from-blue-500/20 to-indigo-500/10" },
+                ].map((f, i) => (
+                  <motion.div key={i} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 * i }}
+                    className="flex items-center gap-3 bg-card rounded-xl p-3 border border-border shadow-sm hover:shadow-md transition-shadow">
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center shrink-0`}>
+                      <f.icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-bold text-foreground text-xs">{f.title}</div>
+                      <div className="text-[10px] text-muted-foreground leading-snug">{f.desc}</div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </header>
 
