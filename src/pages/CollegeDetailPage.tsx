@@ -96,6 +96,25 @@ const CollegeDetailPage = () => {
     return () => clearInterval(galleryRef.current);
   }, [galleryImages.length]);
 
+  // Must call useResolvedSeo before any early returns to obey hooks rules
+  const collegeJsonLd = college ? generateCollegeSchema(college) : undefined;
+  const { seo: resolvedSeo } = useResolvedSeo(
+    college ? "college" : undefined,
+    college?.id,
+    college
+      ? {
+          title: `${college.name} — Fees, Placements, Admission, Ranking | MBAHub`,
+          description:
+            (college as any).meta_description ||
+            `${college.name}, ${college.city} — Fees: ${college.fees}, Avg Package: ${college.placement_avg}.`,
+          keywords: ((college as any).keywords || [college.name, college.city || "", "MBA"]).filter(Boolean),
+          canonical: `${window.location.origin}/college/${college.slug}`,
+          jsonLd: collegeJsonLd,
+          ogImage: college.banner_url || college.logo_url || undefined,
+        }
+      : {},
+  );
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -143,7 +162,7 @@ const CollegeDetailPage = () => {
   const coursesFeesData = getSectionData("courses_fees");
   const whyJoinData = getSectionData("why_join");
 
-  const collegeJsonLd = generateCollegeSchema(college);
+  // collegeJsonLd already computed above before early returns
 
   // Q&A items from DB or fallback
   const qaItems = qaData.questions?.length > 0 ? qaData.questions.map((q: any) => ({ q: q.question, a: q.answer })) : [
@@ -242,18 +261,7 @@ const CollegeDetailPage = () => {
         { name: "Priya M.", year: "Batch 2023", rating: 4, positives: "Industry exposure through live projects.", negatives: "Hostel facilities could improve." },
       ];
 
-  // Why join rating aspects from DB or fallback
   const whyJoinRatings = whyJoinData.ratings?.length > 0 ? whyJoinData.ratings : ratingAspects;
-  const { seo: resolvedSeo } = useResolvedSeo("college", college.id, {
-    title: `${college.name} — Fees, Placements, Admission, Ranking | MBAHub`,
-    description:
-      (college as any).meta_description ||
-      `${college.name}, ${college.city} — Fees: ${college.fees}, Avg Package: ${college.placement_avg}.`,
-    keywords: ((college as any).keywords || [college.name, college.city || "", "MBA"]).filter(Boolean),
-    canonical: `${window.location.origin}/college/${college.slug}`,
-    jsonLd: collegeJsonLd,
-    ogImage: college.banner_url || college.logo_url || undefined,
-  });
 
   return (
     <div className="min-h-screen bg-background">
