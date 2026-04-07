@@ -25,16 +25,16 @@ const ProfileAnalyzerCTA = () => {
   return (
     <section className="py-20 px-4 relative overflow-hidden">
       {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5" />
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 pointer-events-none" />
       <motion.div
         animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0.3, 0.15] }}
         transition={{ repeat: Infinity, duration: 6 }}
-        className="absolute top-10 left-[10%] w-72 h-72 rounded-full bg-primary/10 blur-3xl"
+        className="absolute top-10 left-[10%] w-72 h-72 rounded-full bg-primary/10 blur-3xl pointer-events-none"
       />
       <motion.div
         animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.25, 0.1] }}
         transition={{ repeat: Infinity, duration: 8, delay: 2 }}
-        className="absolute bottom-10 right-[10%] w-96 h-96 rounded-full bg-primary/10 blur-3xl"
+        className="absolute bottom-10 right-[10%] w-96 h-96 rounded-full bg-primary/10 blur-3xl pointer-events-none"
       />
 
       <div className="max-w-7xl mx-auto relative z-10">
