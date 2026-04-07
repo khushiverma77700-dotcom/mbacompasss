@@ -88,7 +88,7 @@ const ProfileAnalyzerPopup = () => {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleDismiss(); }}>
-      <DialogContent className="max-w-[360px] w-[90vw] p-0 overflow-hidden border-0 shadow-2xl rounded-2xl">
+      <DialogContent className="max-w-[360px] w-[90vw] p-0 overflow-hidden border-0 shadow-2xl rounded-2xl max-h-[85vh] overflow-y-auto">
         {/* Compact gradient header */}
         <div className="relative hero-gradient px-5 pt-5 pb-8 overflow-hidden">
           <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '3s' }} />
