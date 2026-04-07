@@ -82,7 +82,7 @@ const FeaturedInstitutes = () => {
                   )}
 
                   {/* Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent pointer-events-none" />
 
                   {/* Badges */}
                   <div className="absolute top-3 left-3 flex gap-2 z-10">
