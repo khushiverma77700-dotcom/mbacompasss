@@ -21,16 +21,24 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ["react", "react-dom", "react-router-dom"],
-          query: ["@tanstack/react-query"],
-          supabase: ["@supabase/supabase-js"],
-          ui: ["framer-motion", "sonner", "recharts"],
+        manualChunks(id) {
+          if (id.includes("node_modules")) {
+            if (id.includes("react-dom") || id.includes("react-router") || id.includes("/react/")) return "vendor";
+            if (id.includes("@tanstack")) return "query";
+            if (id.includes("@supabase")) return "supabase";
+            if (id.includes("framer-motion") || id.includes("sonner") || id.includes("recharts")) return "ui";
+            if (id.includes("@radix-ui")) return "radix";
+            if (id.includes("@tiptap") || id.includes("prosemirror")) return "editor";
+            if (id.includes("lucide")) return "icons";
+          }
         },
+        chunkFileNames: "assets/[name]-[hash].js",
       },
     },
     target: "es2020",
     cssMinify: true,
     minify: "esbuild",
+    sourcemap: false,
+    chunkSizeWarningLimit: 600,
   },
 }));
