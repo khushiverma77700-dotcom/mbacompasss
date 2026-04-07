@@ -26,12 +26,12 @@ serve(async (req) => {
 
     const { data: colleges } = await supabase
       .from("colleges")
-      .select("name, slug, city, state, fees, placement_avg, placement_highest, placement_median, courses, exams_accepted, ranking, type, established, accreditations, total_students, description, logo_url")
+      .select("name, slug, city, state, fees, placement_avg, placement_highest, placement_median, courses, exams_accepted, ranking, type, established, accreditations, total_students, description, logo_url, campus_size, top_recruiters")
       .order("ranking", { ascending: true })
       .limit(80);
 
     const collegeContext = (colleges || []).map((c: any) =>
-      `${c.name} | Slug: ${c.slug} | Type: ${c.type || "N/A"} | City: ${c.city || "N/A"}, ${c.state || "N/A"} | Fees: ${c.fees || "N/A"} | Avg Package: ${c.placement_avg || "N/A"} | Highest: ${c.placement_highest || "N/A"} | Median: ${c.placement_median || "N/A"} | Ranking: ${c.ranking || "N/A"} | Exams: ${(c.exams_accepted || []).join(", ")} | Courses: ${(c.courses || []).join(", ")} | Accreditations: ${(c.accreditations || []).join(", ")} | Est: ${c.established || "N/A"} | Students: ${c.total_students || "N/A"} | Logo: ${c.logo_url || ""}`
+      `${c.name} | Slug: ${c.slug} | Type: ${c.type || "N/A"} | City: ${c.city || "N/A"}, ${c.state || "N/A"} | Fees: ${c.fees || "N/A"} | Avg Package: ${c.placement_avg || "N/A"} | Highest: ${c.placement_highest || "N/A"} | Median: ${c.placement_median || "N/A"} | Ranking: ${c.ranking || "N/A"} | Exams: ${(c.exams_accepted || []).join(", ")} | Courses: ${(c.courses || []).join(", ")} | Accreditations: ${(c.accreditations || []).join(", ")} | Est: ${c.established || "N/A"} | Students: ${c.total_students || "N/A"} | Campus: ${c.campus_size || "N/A"} | Logo: ${c.logo_url || ""} | Recruiters: ${(c.top_recruiters || []).slice(0, 5).join(", ")}`
     ).join("\n");
 
     const { collegeTier, targetExams, expectedScore, budget, location, specialization, experience, careerGoal } = preferences;
@@ -61,17 +61,24 @@ You MUST respond in valid JSON with this exact structure:
       "college_name": "Full College Name",
       "college_slug": "slug-from-database",
       "tier": "IIM / Tier 1 / Tier 2",
+      "type": "Government / Private / Autonomous",
       "match_score": 92,
-      "why_best_fit": "1-2 sentence personalized explanation",
+      "why_best_fit": "2-3 sentence personalized explanation with specific data points",
       "key_strengths": ["Strength 1", "Strength 2", "Strength 3", "Strength 4"],
       "fees": "₹XX Lakhs",
       "avg_package": "₹XX LPA",
       "highest_package": "₹XX LPA",
+      "median_package": "₹XX LPA",
       "roi": "X.Xx",
       "location": "City, State",
       "exams_accepted": ["CAT", "XAT"],
       "specialization_strength": "Finance, Marketing",
-      "logo_url": "url or empty"
+      "logo_url": "url or empty",
+      "established": "YYYY",
+      "campus_size": "XXX acres",
+      "total_students": "XXXX+",
+      "accreditations": ["AACSB", "EQUIS", "AMBA"],
+      "top_recruiters": ["McKinsey", "BCG", "Amazon", "Google"]
     }
   ],
   "pro_tips": ["Tip 1", "Tip 2", "Tip 3"],
@@ -83,13 +90,14 @@ You MUST respond in valid JSON with this exact structure:
 }
 
 ## RULES
-- Recommend 3-5 colleges, ranked by match score
+- Recommend 4-6 colleges, ranked by match score
 - Only use colleges from the database above
 - Be realistic about score-college mapping (99+ for IIM-A/B/C, 95+ for other IIMs)
 - Calculate ROI as (Avg Package / Fees)
 - Match score should reflect how well the college fits ALL user preferences
 - If user's profile is weak for targets, still recommend realistic alternatives
 - Never make up data — use only what's in the database
+- Include ALL available fields (established, campus_size, total_students, accreditations, top_recruiters) from the database
 - Ensure valid JSON output with no markdown formatting`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -133,7 +141,6 @@ You MUST respond in valid JSON with this exact structure:
     try {
       parsed = JSON.parse(content);
     } catch {
-      // Try extracting JSON from markdown code blocks
       const match = content?.match(/```(?:json)?\s*([\s\S]*?)```/);
       if (match) {
         parsed = JSON.parse(match[1]);
