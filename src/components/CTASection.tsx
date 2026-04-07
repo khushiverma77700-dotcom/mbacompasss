@@ -5,8 +5,8 @@ import { motion } from "framer-motion";
 
 const CTASection = () => (
   <section className="py-20 md:py-24 relative overflow-hidden">
-    <div className="absolute inset-0 hero-gradient" />
-    <div className="absolute inset-0 opacity-10">
+    <div className="absolute inset-0 hero-gradient pointer-events-none" />
+    <div className="absolute inset-0 opacity-10 pointer-events-none">
       <div className="absolute top-10 left-10 w-72 h-72 bg-white/20 rounded-full blur-3xl" />
       <div className="absolute bottom-10 right-10 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
     </div>

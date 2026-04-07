@@ -55,8 +55,8 @@ const HeroSection = () => {
       </div>
 
       {/* Glowing orbs — CSS only */}
-      <div className="absolute w-64 h-64 -top-20 -left-20 bg-white/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
-      <div className="absolute w-96 h-96 -bottom-32 -right-32 bg-white/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '6s', animationDelay: '2s' }} />
+      <div className="absolute w-64 h-64 -top-20 -left-20 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '4s' }} />
+      <div className="absolute w-96 h-96 -bottom-32 -right-32 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '6s', animationDelay: '2s' }} />
 
       {/* Main content */}
       <div className="relative container mx-auto px-4 py-16 md:py-24 z-10">
