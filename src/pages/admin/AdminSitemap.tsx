@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { RefreshCw, Globe, ExternalLink, Copy, CheckCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import STATIC_PAGES_CONFIG from "@/data/staticPages";
 
 const SITE_URL = "https://bestmbacoaching.com";
 
@@ -20,16 +21,12 @@ const AdminSitemap = () => {
     try {
       const urls: { loc: string; priority: string; changefreq: string }[] = [];
 
-      // Static pages
-      const staticPages = [
-        { loc: "/", priority: "1.0", changefreq: "daily" },
-        { loc: "/colleges", priority: "0.9", changefreq: "daily" },
-        { loc: "/blog", priority: "0.8", changefreq: "daily" },
-        { loc: "/compare", priority: "0.7", changefreq: "weekly" },
-        { loc: "/profile-analyzer", priority: "0.8", changefreq: "weekly" },
-        { loc: "/about", priority: "0.5", changefreq: "monthly" },
-        { loc: "/contact", priority: "0.5", changefreq: "monthly" },
-      ];
+      // Static pages — auto-detected from centralized config
+      const staticPages = STATIC_PAGES_CONFIG.map(sp => ({
+        loc: sp.path,
+        priority: sp.path === "/" ? "1.0" : "0.7",
+        changefreq: sp.path === "/" ? "daily" : "weekly",
+      }));
       urls.push(...staticPages);
 
       // Fetch all dynamic content from DB in parallel
