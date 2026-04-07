@@ -96,6 +96,25 @@ const CollegeDetailPage = () => {
     return () => clearInterval(galleryRef.current);
   }, [galleryImages.length]);
 
+  // Must call useResolvedSeo before any early returns to obey hooks rules
+  const collegeJsonLd = college ? generateCollegeSchema(college) : undefined;
+  const { seo: resolvedSeo } = useResolvedSeo(
+    college ? "college" : undefined,
+    college?.id,
+    college
+      ? {
+          title: `${college.name} — Fees, Placements, Admission, Ranking | MBAHub`,
+          description:
+            (college as any).meta_description ||
+            `${college.name}, ${college.city} — Fees: ${college.fees}, Avg Package: ${college.placement_avg}.`,
+          keywords: ((college as any).keywords || [college.name, college.city || "", "MBA"]).filter(Boolean),
+          canonical: `${window.location.origin}/college/${college.slug}`,
+          jsonLd: collegeJsonLd,
+          ogImage: college.banner_url || college.logo_url || undefined,
+        }
+      : {},
+  );
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
