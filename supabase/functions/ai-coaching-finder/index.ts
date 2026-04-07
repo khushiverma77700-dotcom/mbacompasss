@@ -11,29 +11,21 @@ serve(async (req) => {
 
   try {
     const { preferences } = await req.json();
-    const { mode, budget, state, city, targetExam } = preferences || {};
+    const { mode, budget, state, city, targetExam, experience, prepStage, batchPreference } = preferences || {};
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch institutes with courses
     let query = supabase.from("institutes").select("*, courses(*), categories:category_id(name, slug)");
     
-    if (mode && mode !== "any") {
-      query = query.ilike("mode", `%${mode}%`);
-    }
-    if (state && state !== "any") {
-      query = query.ilike("state", `%${state}%`);
-    }
-    if (city && city !== "any") {
-      query = query.ilike("city", `%${city}%`);
-    }
+    if (mode && mode !== "any") query = query.ilike("mode", `%${mode}%`);
+    if (state && state !== "any") query = query.ilike("state", `%${state}%`);
+    if (city && city !== "any") query = query.ilike("city", `%${city}%`);
 
     const { data: institutes, error } = await query.order("rating", { ascending: false }).limit(50);
     if (error) throw error;
 
-    // Filter by budget if provided
     let filtered = institutes || [];
     if (budget && budget !== "any") {
       const maxBudget = parseInt(budget, 10);
@@ -45,7 +37,6 @@ serve(async (req) => {
       }
     }
 
-    // Build context for AI
     const topInstitutes = filtered.slice(0, 10).map((inst: any) => ({
       name: inst.name,
       slug: inst.slug,
@@ -60,6 +51,7 @@ serve(async (req) => {
         name: c.name,
         fees: c.fees,
         duration: c.duration,
+        batch_info: c.batch_info,
       })),
     }));
 
@@ -72,26 +64,36 @@ serve(async (req) => {
       state && state !== "any" ? `State: ${state}` : null,
       city && city !== "any" ? `City: ${city}` : null,
       targetExam ? `Target Exam: ${targetExam}` : null,
+      experience && experience !== "any" ? `Work Experience: ${experience}` : null,
+      prepStage && prepStage !== "any" ? `Preparation Stage: ${prepStage}` : null,
+      batchPreference && batchPreference !== "any" ? `Batch Preference: ${batchPreference}` : null,
     ].filter(Boolean).join(", ");
 
-    const systemPrompt = `You are an expert MBA coaching advisor for BestMBACoaching.com. Based on the user's preferences and the available institutes data, recommend the TOP 3 best-fit coaching institutes. 
+    const systemPrompt = `You are an expert MBA coaching advisor for BestMBACoaching.com. Based on the user's detailed profile and available institutes data, recommend the TOP 3 best-fit coaching institutes.
+
+Consider these factors for matching:
+- Work experience level affects which coaching style suits best (freshers need structured guidance, experienced professionals need flexible/weekend options)
+- Preparation stage determines course intensity (beginners need comprehensive courses, advanced need crash courses/test series)
+- Batch timing preference should match available options
+- Budget constraints and value for money
+- Location accessibility
 
 For each recommendation, provide:
-1. Institute name and why it's a good fit
-2. Best course for their needs with fees
-3. Key strengths (2-3 bullet points)
-4. A match score out of 100
+1. Institute name and why it's specifically suited for THIS student's profile
+2. Best course with fees and duration
+3. Key strengths (2-3 bullet points) relevant to their experience/prep stage
+4. A match score out of 100 based on how well it fits ALL their criteria
 
-Be specific, helpful, and encouraging. Use the actual data provided. Format your response in clean markdown with headers for each recommendation. Start with a brief personalized summary paragraph.
+Be specific, personalized, and encouraging. Reference the student's experience level and prep stage in your reasoning. Format in clean markdown. Start with a brief personalized summary.
 
 If few or no institutes match, suggest the closest alternatives and explain why.`;
 
-    const userMessage = `User Preferences: ${userPrefsText || "No specific preferences"}
+    const userMessage = `Student Profile: ${userPrefsText || "No specific preferences"}
 
 Available Institutes Data:
 ${JSON.stringify(topInstitutes, null, 2)}
 
-Please recommend the best coaching institutes for this student.`;
+Please recommend the best coaching institutes for this student based on their complete profile.`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
