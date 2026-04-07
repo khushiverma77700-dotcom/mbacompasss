@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { RefreshCw, Copy, CheckCircle, Link2, Sparkles } from "lucide-react";
+import STATIC_PAGES_CONFIG from "@/data/staticPages";
 
 const SITE_URL = "https://bestmbacoaching.com";
 const STORAGE_KEY = "admin_known_links";

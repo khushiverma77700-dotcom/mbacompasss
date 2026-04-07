@@ -26,6 +26,7 @@ import {
   buildStoredSeoSnapshot, contentTypeConfig, fetchAllSeoSnapshots, mergeKeywordBuckets,
   saveSeoSnapshot, type SEOContentType, type StoredSEOSnapshot,
 } from "@/lib/seoAutomation";
+import STATIC_PAGES_CONFIG from "@/data/staticPages";
 
 // ── Types ──
 type ScoreStatus = "good" | "warning" | "poor";
