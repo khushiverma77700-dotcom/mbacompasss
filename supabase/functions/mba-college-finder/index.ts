@@ -10,9 +10,9 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages } = await req.json();
-    if (!messages || !Array.isArray(messages)) {
-      return new Response(JSON.stringify({ error: "messages array required" }), {
+    const { preferences } = await req.json();
+    if (!preferences || typeof preferences !== "object") {
+      return new Response(JSON.stringify({ error: "preferences object required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -20,98 +20,77 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    // Fetch colleges from DB for context
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { data: colleges } = await supabase
       .from("colleges")
-      .select("name, slug, city, state, fees, placement_avg, placement_highest, placement_median, courses, exams_accepted, ranking, type, established, accreditations, total_students, description")
+      .select("name, slug, city, state, fees, placement_avg, placement_highest, placement_median, courses, exams_accepted, ranking, type, established, accreditations, total_students, description, logo_url")
       .order("ranking", { ascending: true })
-      .limit(50);
+      .limit(80);
 
-    const collegeContext = (colleges || []).map((c: any) => 
-      `${c.name} | Slug: ${c.slug} | Type: ${c.type || "N/A"} | City: ${c.city}, ${c.state} | Fees: ${c.fees || "N/A"} | Avg Package: ${c.placement_avg || "N/A"} | Highest: ${c.placement_highest || "N/A"} | Median: ${c.placement_median || "N/A"} | Ranking: ${c.ranking || "N/A"} | Exams: ${(c.exams_accepted || []).join(", ")} | Courses: ${(c.courses || []).join(", ")} | Accreditations: ${(c.accreditations || []).join(", ")} | Est: ${c.established || "N/A"} | Students: ${c.total_students || "N/A"}`
+    const collegeContext = (colleges || []).map((c: any) =>
+      `${c.name} | Slug: ${c.slug} | Type: ${c.type || "N/A"} | City: ${c.city || "N/A"}, ${c.state || "N/A"} | Fees: ${c.fees || "N/A"} | Avg Package: ${c.placement_avg || "N/A"} | Highest: ${c.placement_highest || "N/A"} | Median: ${c.placement_median || "N/A"} | Ranking: ${c.ranking || "N/A"} | Exams: ${(c.exams_accepted || []).join(", ")} | Courses: ${(c.courses || []).join(", ")} | Accreditations: ${(c.accreditations || []).join(", ")} | Est: ${c.established || "N/A"} | Students: ${c.total_students || "N/A"} | Logo: ${c.logo_url || ""}`
     ).join("\n");
 
-    const systemPrompt = `You are an expert AI MBA College Advisor integrated into BestMBACoaching.com — India's #1 MBA coaching comparison platform. You help MBA aspirants find the best colleges based on their profile.
+    const { collegeTier, targetExams, expectedScore, budget, location, specialization, experience, careerGoal } = preferences;
 
-## YOUR PERSONALITY
-- Friendly, encouraging, and student-oriented
-- Use emojis sparingly but effectively (🎓 🏫 📊 ✅ 💡)
-- Be concise — students prefer quick, actionable answers
-- Always explain WHY a college is recommended
+    const systemPrompt = `You are an expert AI MBA College Advisor. Given user preferences, recommend the best-fit MBA colleges from the database below.
 
-## CONVERSATION FLOW
-You MUST follow this step-by-step flow. Ask ONE question at a time. After each answer, acknowledge it and move to the next.
-
-**Step 1**: Greet and ask about College Preference Type (IIMs only / Tier 1 / Tier 2 / Open to all)
-**Step 2**: Ask which entrance exams they're targeting (CAT, XAT, SNAP, NMAT, CMAT, GMAT, others)
-**Step 3**: Ask their expected score/percentile
-**Step 4**: Ask budget range (Under ₹10L / ₹10-20L / ₹20-30L / ₹30L+)
-**Step 5**: Ask location preference (specific cities or open to all)
-**Step 6**: Ask specialization interest (Marketing / Finance / Consulting / HR / Operations / Not sure)
-**Step 7**: Ask work experience (Fresher / 1-2 yrs / 2-4 yrs / 4+ yrs)
-**Step 8**: Ask career goals (High-paying job / Consulting / Startup / Abroad / Not sure)
-
-After collecting ALL inputs, generate your recommendation.
-
-## RECOMMENDATION FORMAT
-When you have enough info, respond with recommendations in this EXACT markdown format:
-
-### 🎓 Your Top College Recommendations
-
-For each college (recommend 3-5):
-
-**🏫 [College Name]**
-- **Tier:** IIM / Tier 1 / Tier 2
-- **Exams:** CAT, XAT, etc.
-- **Fees:** ₹XX Lakhs
-- **Avg Package:** ₹XX LPA
-- **Location:** City, State
-- **Match Score:** XX%
-- **Why for you:** [1-2 sentence personalized explanation]
-
----
-
-### ⚖️ Quick Comparison
-
-| Parameter | College A | College B | College C |
-|-----------|-----------|-----------|-----------|
-| Fees | ₹X | ₹X | ₹X |
-| Avg Package | ₹X | ₹X | ₹X |
-| ROI | X | X | X |
-| Best For | X | X | X |
-
----
-
-### 💡 AI Strategy Summary
-
-- **Priority targets:** ...
-- **If score improves:** ...
-- **Budget-friendly alternatives:** ...
-
----
-
-### 🚀 Next Steps
-
-Want a deeper analysis? Try our **[AI Profile Analyser](/profile-analyzer)** for a complete 5-dimension score breakdown and IIM admission probability!
+## USER PREFERENCES
+- College Tier Preference: ${collegeTier || "any"}
+- Target Exams: ${targetExams || "any"}
+- Expected Score/Percentile: ${expectedScore || "not specified"}
+- Budget: ${budget || "any"}
+- Location Preference: ${location || "any"}
+- Specialization Interest: ${specialization || "any"}
+- Work Experience: ${experience || "any"}
+- Career Goal: ${careerGoal || "any"}
 
 ## COLLEGE DATABASE
-Here are the colleges in our database. Use ONLY these for recommendations. Reference them by slug for linking:
-
 ${collegeContext}
 
+## RESPONSE FORMAT
+You MUST respond in valid JSON with this exact structure:
+{
+  "summary": "2-3 sentence personalized summary explaining the overall recommendation strategy",
+  "recommendations": [
+    {
+      "rank": 1,
+      "college_name": "Full College Name",
+      "college_slug": "slug-from-database",
+      "tier": "IIM / Tier 1 / Tier 2",
+      "match_score": 92,
+      "why_best_fit": "1-2 sentence personalized explanation",
+      "key_strengths": ["Strength 1", "Strength 2", "Strength 3", "Strength 4"],
+      "fees": "₹XX Lakhs",
+      "avg_package": "₹XX LPA",
+      "highest_package": "₹XX LPA",
+      "roi": "X.Xx",
+      "location": "City, State",
+      "exams_accepted": ["CAT", "XAT"],
+      "specialization_strength": "Finance, Marketing",
+      "logo_url": "url or empty"
+    }
+  ],
+  "pro_tips": ["Tip 1", "Tip 2", "Tip 3"],
+  "strategy": {
+    "priority_targets": "1-2 sentence advice",
+    "if_score_improves": "1-2 sentence advice",
+    "budget_alternatives": "1-2 sentence advice"
+  }
+}
+
 ## RULES
-- Only recommend colleges from the database above
-- Be realistic about score-college mapping (e.g., 99+ for IIM-A/B/C)
-- Always include match percentage based on profile fit
-- If user's profile is weak for their targets, be honest but encouraging
+- Recommend 3-5 colleges, ranked by match score
+- Only use colleges from the database above
+- Be realistic about score-college mapping (99+ for IIM-A/B/C, 95+ for other IIMs)
 - Calculate ROI as (Avg Package / Fees)
-- When mentioning a college, link it as [College Name](/college/slug)
-- Keep each message under 300 words until the final recommendation
-- NEVER make up college data — use only what's in the database`;
+- Match score should reflect how well the college fits ALL user preferences
+- If user's profile is weak for targets, still recommend realistic alternatives
+- Never make up data — use only what's in the database
+- Ensure valid JSON output with no markdown formatting`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -123,9 +102,9 @@ ${collegeContext}
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          ...messages,
+          { role: "user", content: `Find the best MBA colleges for me based on my preferences. Return JSON only.` },
         ],
-        stream: true,
+        response_format: { type: "json_object" },
       }),
     });
 
@@ -147,8 +126,24 @@ ${collegeContext}
       });
     }
 
-    return new Response(response.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+    const aiData = await response.json();
+    const content = aiData.choices?.[0]?.message?.content;
+    
+    let parsed;
+    try {
+      parsed = JSON.parse(content);
+    } catch {
+      // Try extracting JSON from markdown code blocks
+      const match = content?.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (match) {
+        parsed = JSON.parse(match[1]);
+      } else {
+        parsed = { summary: "Unable to parse recommendations", recommendations: [], pro_tips: [] };
+      }
+    }
+
+    return new Response(JSON.stringify(parsed), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("mba-college-finder error:", e);
