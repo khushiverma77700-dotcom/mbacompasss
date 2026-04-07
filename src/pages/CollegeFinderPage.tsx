@@ -1,308 +1,488 @@
-import { useState, useRef, useEffect } from "react";
-import { GraduationCap, Send, Loader2, Sparkles, RotateCcw, ChevronDown } from "lucide-react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { X, Star, Tag, CheckCircle, ArrowRight, BarChart3, TrendingUp, Users, BookOpen, GraduationCap, Award, Sparkles, Scale, IndianRupee, ThumbsUp, HelpCircle, ChevronDown, ChevronUp, MapPin, ExternalLink, Building2, Target, Trophy, Medal } from "lucide-react";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
-import ReactMarkdown from "react-markdown";
-import SEOHead from "@/components/SEOHead";
-import mbaHubLogo from "@/assets/mbahub-logo-sm.png";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { supabase } from "@/integrations/supabase/client";
+import SEOHead, { generateBreadcrumbSchema, generateFAQSchema } from "@/components/SEOHead";
+import AICollegeFinder from "@/components/AICollegeFinder";
+import React from "react";
 
-type Msg = { role: "user" | "assistant"; content: string };
-
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mba-college-finder`;
-
-const QUICK_OPTIONS: Record<number, { label: string; options: string[] }> = {
-  0: { label: "What type of colleges?", options: ["Only IIMs", "Tier 1 B-Schools", "Tier 2 Colleges", "Open to all options"] },
+type DBCollege = {
+  id: string;
+  name: string;
+  slug: string;
+  city: string | null;
+  state: string | null;
+  fees: string | null;
+  placement_avg: string | null;
+  placement_highest: string | null;
+  placement_median: string | null;
+  ranking: number | null;
+  type: string | null;
+  established: number | null;
+  accreditations: string[] | null;
+  exams_accepted: string[] | null;
+  courses: string[] | null;
+  total_students: number | null;
+  logo_url: string | null;
+  banner_url: string | null;
 };
 
-function detectStep(messages: Msg[]): number {
-  const assistantCount = messages.filter(m => m.role === "assistant").length;
-  return Math.min(assistantCount, 8);
-}
+const collegeFaqs = [
+  { q: "How do I compare MBA colleges?", a: "Select up to 3 colleges from the dropdown menus. Our tool generates a detailed side-by-side comparison covering fees, placements, rankings, accreditations, and admission processes." },
+  { q: "What does the AI College Finder consider?", a: "Our AI analyzes your target exam, expected score, budget, location preference, specialization interest, work experience, and career goals to recommend the best-fit MBA colleges from our verified database." },
+  { q: "Can I compare IIMs with private B-Schools?", a: "Yes! Our tool works across all college types — IIMs, government, private, and autonomous. The comparison clearly shows each college's tier and accreditations." },
+  { q: "How is the match score calculated?", a: "The AI weighs multiple factors: exam compatibility, score-cutoff alignment, budget fit, location preference, specialization strength, and career goal alignment." },
+  { q: "Are the placement figures accurate?", a: "Placement data is sourced from official college reports and verified periodically. Figures represent average, median, and highest packages from the most recent placement season." },
+  { q: "How often is the college data updated?", a: "We update college data regularly including fees, placement stats, cutoffs, and ranking information for accuracy." },
+];
 
 const CollegeFinderPage = () => {
-  const [messages, setMessages] = useState<Msg[]>([]);
-  const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [started, setStarted] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [colleges, setColleges] = useState<DBCollege[]>([]);
+  const [collegeSelections, setCollegeSelections] = useState<[DBCollege | null, DBCollege | null, DBCollege | null]>([null, null, null]);
+  const [loading, setLoading] = useState(true);
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const manualCompareRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    const fetchAll = async () => {
+      const { data } = await supabase
+        .from("colleges")
+        .select("id, name, slug, city, state, fees, placement_avg, placement_highest, placement_median, ranking, type, established, accreditations, exams_accepted, courses, total_students, logo_url, banner_url")
+        .order("ranking", { ascending: true });
+      if (data) setColleges(data as DBCollege[]);
+      setLoading(false);
+    };
+    fetchAll();
+  }, []);
 
-  const streamChat = async (allMessages: Msg[]) => {
-    setIsLoading(true);
-    let assistantSoFar = "";
+  const handleCollegeSelect = (index: number, value: string) => {
+    const found = colleges.find(c => c.id === value);
+    if (found) { const next = [...collegeSelections] as typeof collegeSelections; next[index] = found; setCollegeSelections(next); }
+  };
+  const handleCollegeRemove = (index: number) => { const next = [...collegeSelections] as typeof collegeSelections; next[index] = null; setCollegeSelections(next); };
+  const activeColleges = collegeSelections.filter(Boolean) as DBCollege[];
 
-    try {
-      const resp = await fetch(CHAT_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ messages: allMessages }),
-      });
+  const bestForYou = useMemo(() => {
+    if (activeColleges.length < 2) return [];
+    return [...activeColleges].sort((a, b) => {
+      const parsePackage = (v: string | null) => { if (!v) return 0; const n = parseFloat(v.replace(/[^\d.]/g, "")); return isNaN(n) ? 0 : n; };
+      const parseFees = (v: string | null) => { if (!v) return 0; const n = parseFloat(v.replace(/[^\d.]/g, "")); return isNaN(n) ? 0 : n; };
+      const scoreA = parsePackage(a.placement_avg) / Math.max(parseFees(a.fees), 1) * 100 + (a.ranking ? 100 - a.ranking : 0);
+      const scoreB = parsePackage(b.placement_avg) / Math.max(parseFees(b.fees), 1) * 100 + (b.ranking ? 100 - b.ranking : 0);
+      return scoreB - scoreA;
+    });
+  }, [activeColleges]);
 
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({ error: "Unknown error" }));
-        throw new Error(err.error || `Error ${resp.status}`);
-      }
-
-      if (!resp.body) throw new Error("No response stream");
-
-      const reader = resp.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-
-        let newlineIdx: number;
-        while ((newlineIdx = buffer.indexOf("\n")) !== -1) {
-          let line = buffer.slice(0, newlineIdx);
-          buffer = buffer.slice(newlineIdx + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (!line.startsWith("data: ")) continue;
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") break;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              assistantSoFar += content;
-              setMessages(prev => {
-                const last = prev[prev.length - 1];
-                if (last?.role === "assistant") {
-                  return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantSoFar } : m);
-                }
-                return [...prev, { role: "assistant", content: assistantSoFar }];
-              });
-            }
-          } catch {
-            buffer = line + "\n" + buffer;
-            break;
-          }
-        }
-      }
-    } catch (e: any) {
-      setMessages(prev => [...prev, { role: "assistant", content: `⚠️ ${e.message || "Something went wrong. Please try again."}` }]);
-    } finally {
-      setIsLoading(false);
-      inputRef.current?.focus();
-    }
+  const scrollToManualCompare = () => {
+    manualCompareRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const handleStart = () => {
-    setStarted(true);
-    streamChat([{ role: "user", content: "Hi, I want to find the best MBA college for me." }]);
-    setMessages([{ role: "user", content: "Hi, I want to find the best MBA college for me." }]);
-  };
-
-  const handleSend = (text?: string) => {
-    const msg = text || input.trim();
-    if (!msg || isLoading) return;
-    const userMsg: Msg = { role: "user", content: msg };
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
-    setInput("");
-    streamChat(newMessages);
-  };
-
-  const handleReset = () => {
-    setMessages([]);
-    setStarted(false);
-  };
-
-  const currentStep = detectStep(messages);
-  const totalSteps = 8;
-  const progressPct = Math.min((currentStep / totalSteps) * 100, 100);
-
-  // Show quick options only for the first question (before user answers)
-  const showQuickOptions = started && messages.length === 2 && messages[messages.length - 1]?.role === "assistant" && !isLoading;
+  const breadcrumbs = [{ name: "Home", url: "/" }, { name: "College Finder & Compare", url: "/college-finder" }];
 
   return (
-    <>
+    <div className="min-h-screen bg-background">
       <SEOHead
-        title="AI MBA College Finder — Find Your Perfect B-School | BestMBACoaching"
-        description="Use our AI-powered MBA College Finder to get personalized college recommendations based on your profile, budget, exam scores, and career goals."
-        keywords={["MBA college finder", "best MBA college for me", "AI college recommendation", "MBA admission predictor", "IIM finder"]}
+        title="AI MBA College Finder & Compare | BestMBACoaching"
+        description="Find your perfect MBA college with AI-powered recommendations. Compare top B-Schools side by side — fees, placements, rankings, ROI & more."
+        keywords={["MBA college finder", "compare MBA colleges", "best MBA college", "IIM comparison", "MBA placements comparison", "AI college recommendation", "MBA fees comparison"]}
         canonical="https://bestmbacoaching.com/college-finder"
+        jsonLd={[generateBreadcrumbSchema(breadcrumbs), generateFAQSchema(collegeFaqs)]}
       />
 
-      <div className="min-h-screen bg-background flex flex-col">
-        {/* Header */}
-        <div className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-30">
-          <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl hero-gradient flex items-center justify-center shadow-md">
-                <GraduationCap className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="font-heading text-base font-bold text-foreground">AI College Finder</h1>
-                <p className="text-[10px] text-muted-foreground">Powered by AI • Real College Data</p>
-              </div>
-            </div>
-            {started && (
-              <div className="flex items-center gap-3">
-                {/* Progress */}
-                <div className="hidden sm:flex items-center gap-2">
-                  <div className="w-24 h-1.5 bg-muted rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full bg-primary rounded-full"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${progressPct}%` }}
-                      transition={{ duration: 0.3 }}
-                    />
-                  </div>
-                  <span className="text-[10px] text-muted-foreground font-medium">
-                    {currentStep >= totalSteps ? "Done" : `${currentStep}/${totalSteps}`}
-                  </span>
-                </div>
-                <Button variant="ghost" size="icon" onClick={handleReset} className="h-8 w-8">
-                  <RotateCcw className="w-4 h-4" />
-                </Button>
-              </div>
-            )}
-          </div>
+      {/* Breadcrumb */}
+      <nav className="container mx-auto px-4 pt-4" aria-label="Breadcrumb">
+        <ol className="flex items-center gap-1.5 text-xs text-muted-foreground" itemScope itemType="https://schema.org/BreadcrumbList">
+          {breadcrumbs.map((item, i) => (
+            <li key={i} className="flex items-center gap-1.5" itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+              {i > 0 && <span aria-hidden="true">/</span>}
+              {i < breadcrumbs.length - 1 ? (
+                <Link to={item.url} className="hover:text-primary transition-colors" itemProp="item"><span itemProp="name">{item.name}</span></Link>
+              ) : (
+                <span className="text-foreground font-medium" itemProp="name">{item.name}</span>
+              )}
+              <meta itemProp="position" content={String(i + 1)} />
+            </li>
+          ))}
+        </ol>
+      </nav>
+
+      {/* Hero */}
+      <header className="hero-gradient py-8 md:py-12">
+        <div className="container mx-auto px-4 text-center">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <Badge className="bg-primary-foreground/20 text-primary-foreground border-none mb-3 text-xs px-3 py-1">
+              <GraduationCap className="w-3.5 h-3.5 mr-1.5" /> AI College Finder & Comparison
+            </Badge>
+            <h1 className="font-heading text-2xl md:text-4xl lg:text-5xl font-bold text-primary-foreground mb-3">
+              Find & Compare MBA Colleges
+            </h1>
+            <p className="text-primary-foreground/70 max-w-xl mx-auto text-sm leading-relaxed">
+              Use AI to discover your ideal B-School or compare colleges manually — fees, placements, rankings & ROI side by side.
+            </p>
+          </motion.div>
+        </div>
+      </header>
+
+      {/* AI College Finder */}
+      <section className="container mx-auto px-4 py-6 md:py-8">
+        <div className="max-w-3xl mx-auto mb-6">
+          <AICollegeFinder onTryManually={scrollToManualCompare} />
         </div>
 
-        {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="container mx-auto px-4 max-w-3xl">
-            {!started ? (
-              /* Landing state */
-              <motion.div
-                className="flex flex-col items-center justify-center min-h-[60vh] text-center py-16"
-                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-              >
-                <div className="w-16 h-16 rounded-2xl hero-gradient flex items-center justify-center shadow-xl mb-6">
-                  <GraduationCap className="w-8 h-8 text-white" />
-                </div>
-                <h2 className="font-heading text-2xl md:text-3xl font-extrabold text-foreground mb-2">
-                  AI MBA College Finder
-                </h2>
-                <p className="text-muted-foreground text-sm max-w-md mb-2">
-                  Answer a few quick questions and get AI-powered college recommendations personalized to your profile, budget, and career goals.
-                </p>
-                <div className="flex flex-wrap items-center justify-center gap-2 mb-8 text-[11px] text-muted-foreground">
-                  {["Real College Data", "AI-Powered Match", "ROI Analysis", "Personalized Strategy"].map(t => (
-                    <span key={t} className="bg-muted/50 border border-border/50 rounded-full px-3 py-1 font-medium">{t}</span>
+        {/* Divider */}
+        <div className="relative mb-6" ref={manualCompareRef}>
+          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
+          <div className="relative flex justify-center">
+            <span className="bg-background px-4 text-sm text-muted-foreground font-medium flex items-center gap-2">
+              <Scale className="w-4 h-4" /> Or compare colleges manually
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <section className="container mx-auto px-4 pb-10 md:pb-14">
+        {/* Selection cards */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          {[0, 1, 2].map((i) => (
+            <Card key={i} className={`border-2 transition-all ${collegeSelections[i] ? "border-primary/40 bg-secondary/20 shadow-md" : "border-dashed border-muted-foreground/30 hover:border-primary/20"}`}>
+              <CardContent className="pt-5 pb-5">
+                {collegeSelections[i] ? (
+                  <div className="relative">
+                    <button onClick={() => handleCollegeRemove(i)} className="absolute -top-2 -right-2 w-7 h-7 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center shadow-md hover:scale-110 transition-transform z-10" aria-label="Remove college">
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                    <div className="text-center">
+                      {collegeSelections[i]!.logo_url ? (
+                        <img src={collegeSelections[i]!.logo_url!} alt={`${collegeSelections[i]!.name} logo`} className="w-14 h-14 rounded-xl object-contain bg-muted p-1 mx-auto mb-2.5" loading="lazy" />
+                      ) : (
+                        <div className="w-14 h-14 hero-gradient rounded-xl flex items-center justify-center mx-auto mb-2.5 text-primary-foreground font-bold text-lg">{collegeSelections[i]!.name?.charAt(0)}</div>
+                      )}
+                      <h3 className="font-heading font-semibold text-foreground text-sm">{collegeSelections[i]!.name}</h3>
+                      <div className="flex items-center justify-center gap-2.5 mt-1.5 text-xs text-muted-foreground">
+                        {collegeSelections[i]!.ranking && <span className="flex items-center gap-0.5"><Trophy className="w-3 h-3 text-amber-500" /> #{collegeSelections[i]!.ranking}</span>}
+                        <span>•</span>
+                        <span>{collegeSelections[i]!.city || "India"}</span>
+                      </div>
+                      {collegeSelections[i]!.fees && <div className="mt-2 font-heading font-bold text-primary text-lg">{collegeSelections[i]!.fees}</div>}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <div className="w-14 h-14 rounded-xl bg-muted flex items-center justify-center mx-auto mb-2.5"><GraduationCap className="w-6 h-6 text-muted-foreground" /></div>
+                    <p className="text-sm font-medium text-muted-foreground mb-2.5">Select College {i + 1}</p>
+                    <Select onValueChange={(v) => handleCollegeSelect(i, v)}>
+                      <SelectTrigger className="h-10"><SelectValue placeholder="Choose a college..." /></SelectTrigger>
+                      <SelectContent>
+                        {colleges.filter(x => !collegeSelections.some(s => s?.id === x.id)).map(x => (
+                          <SelectItem key={x.id} value={x.id}>
+                            {x.name} {x.city ? `— ${x.city}` : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {activeColleges.length >= 2 ? (
+          <Tabs defaultValue="overview" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4 h-11">
+              <TabsTrigger value="overview" className="gap-1 text-xs sm:text-sm"><BarChart3 className="w-4 h-4" /> Overview</TabsTrigger>
+              <TabsTrigger value="placements" className="gap-1 text-xs sm:text-sm"><TrendingUp className="w-4 h-4" /> Placements</TabsTrigger>
+              <TabsTrigger value="admissions" className="gap-1 text-xs sm:text-sm"><BookOpen className="w-4 h-4" /> Admissions</TabsTrigger>
+              <TabsTrigger value="bestforyou" className="gap-1 text-xs sm:text-sm"><Sparkles className="w-4 h-4" /> Best for You</TabsTrigger>
+            </TabsList>
+
+            {/* Overview Tab */}
+            <TabsContent value="overview">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: "Colleges", icon: Building2, value: String(activeColleges.length) },
+                    { label: "Avg Ranking", icon: Trophy, value: `#${Math.round(activeColleges.reduce((s, c) => s + (c.ranking || 0), 0) / activeColleges.length)}` },
+                    { label: "Avg Students", icon: Users, value: `${Math.round(activeColleges.reduce((s, c) => s + (c.total_students || 0), 0) / activeColleges.length).toLocaleString()}+` },
+                    { label: "Compared", icon: Scale, value: String(activeColleges.length) },
+                  ].map((stat, i) => (
+                    <Card key={i} className="bg-secondary/30">
+                      <CardContent className="pt-3 pb-3 flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0"><stat.icon className="w-4 h-4 text-primary" /></div>
+                        <div>
+                          <div className="text-[10px] text-muted-foreground">{stat.label}</div>
+                          <div className="font-heading font-bold text-foreground text-sm">{stat.value}</div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   ))}
                 </div>
-                <Button onClick={handleStart} size="lg" className="rounded-xl gap-2 font-bold shadow-lg text-sm px-8">
-                  <Sparkles className="w-4 h-4" /> Find My College
-                </Button>
+
+                <Card>
+                  <CardHeader className="pb-3"><CardTitle className="font-heading text-base flex items-center gap-2"><BarChart3 className="w-5 h-5 text-primary" /> Detailed Comparison</CardTitle></CardHeader>
+                  <CardContent className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b-2 border-primary/20">
+                          <th className="text-left py-3 px-3 font-heading font-semibold text-foreground min-w-[120px] bg-muted/30">Feature</th>
+                          {activeColleges.map(c => (
+                            <th key={c.id} className="text-left py-3 px-3 font-heading font-semibold text-primary min-w-[150px]">
+                              <div className="text-foreground text-xs">{c.name}</div>
+                              <div className="text-[10px] font-normal text-muted-foreground">{c.type || "B-School"}</div>
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {([
+                          { label: "NIRF Ranking", render: (c: DBCollege) => c.ranking ? <span className="font-heading font-bold text-primary">#{c.ranking}</span> : "N/A" },
+                          { label: "Established", render: (c: DBCollege) => c.established || "N/A" },
+                          { label: "Type", render: (c: DBCollege) => <Badge variant="secondary" className="text-[10px]">{c.type || "N/A"}</Badge> },
+                          { label: "Fees", render: (c: DBCollege) => <span className="font-heading font-bold text-primary">{c.fees || "N/A"}</span> },
+                          { label: "Avg Package", render: (c: DBCollege) => <span className="font-semibold text-emerald-600">{c.placement_avg || "N/A"}</span> },
+                          { label: "Highest Package", render: (c: DBCollege) => c.placement_highest || "N/A" },
+                          { label: "Median Package", render: (c: DBCollege) => c.placement_median || "N/A" },
+                          { label: "Total Students", render: (c: DBCollege) => c.total_students ? `${c.total_students.toLocaleString()}+` : "N/A" },
+                          { label: "Location", render: (c: DBCollege) => `${c.city || "N/A"}, ${c.state || ""}`.replace(/, $/, "") },
+                          { label: "Accreditations", render: (c: DBCollege) => (
+                            <div className="flex flex-wrap gap-1">
+                              {(c.accreditations || []).slice(0, 3).map((a, i) => (
+                                <Badge key={i} variant="outline" className="text-[9px] px-1 py-0">{a}</Badge>
+                              ))}
+                              {(!c.accreditations || c.accreditations.length === 0) && "N/A"}
+                            </div>
+                          )},
+                          { label: "Exams Accepted", render: (c: DBCollege) => (
+                            <div className="flex flex-wrap gap-1">
+                              {(c.exams_accepted || []).slice(0, 4).map((e, i) => (
+                                <Badge key={i} className="bg-primary/10 text-primary border-0 text-[9px] px-1 py-0">{e}</Badge>
+                              ))}
+                              {(!c.exams_accepted || c.exams_accepted.length === 0) && "N/A"}
+                            </div>
+                          )},
+                        ] as { label: string; render: (c: DBCollege) => React.ReactNode }[]).map((row, idx) => (
+                          <tr key={row.label} className={`border-b border-border ${idx % 2 === 0 ? "bg-muted/10" : ""}`}>
+                            <td className="py-2.5 px-3 text-xs text-muted-foreground font-medium bg-muted/20">{row.label}</td>
+                            {activeColleges.map(c => (<td key={c.id} className="py-2.5 px-3 text-foreground">{row.render(c)}</td>))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </CardContent>
+                </Card>
               </motion.div>
-            ) : (
-              /* Chat messages */
-              <div className="py-6 space-y-4 pb-32">
-                {messages.map((msg, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-                  >
-                    <div className={`max-w-[85%] md:max-w-[75%] ${
-                      msg.role === "user"
-                        ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md px-4 py-2.5"
-                        : "bg-card border border-border rounded-2xl rounded-bl-md px-4 py-3 shadow-sm"
-                    }`}>
-                      {msg.role === "assistant" ? (
-                        <div className="prose prose-sm dark:prose-invert max-w-none text-sm [&_table]:text-xs [&_th]:px-2 [&_td]:px-2 [&_th]:py-1 [&_td]:py-1 [&_table]:border-border [&_th]:border-border [&_td]:border-border [&_a]:text-primary [&_a]:font-semibold">
-                          <ReactMarkdown
-                            components={{
-                              a: ({ href, children }) => (
-                                <a href={href} className="text-primary font-semibold hover:underline">{children}</a>
-                              ),
-                            }}
-                          >
-                            {msg.content}
-                          </ReactMarkdown>
+            </TabsContent>
+
+            {/* Placements Tab */}
+            <TabsContent value="placements">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {activeColleges.map(c => (
+                    <Card key={c.id} className="border-primary/20 overflow-hidden">
+                      <div className="h-1 hero-gradient" />
+                      <CardContent className="pt-5">
+                        <div className="text-center mb-4">
+                          {c.logo_url ? (
+                            <img src={c.logo_url} alt={c.name} className="w-12 h-12 rounded-xl object-contain bg-muted p-1 mx-auto mb-2" loading="lazy" />
+                          ) : (
+                            <div className="w-12 h-12 hero-gradient rounded-xl flex items-center justify-center mx-auto mb-2 text-primary-foreground font-bold">{c.name.charAt(0)}</div>
+                          )}
+                          <h3 className="font-heading font-semibold text-foreground text-sm">{c.name}</h3>
+                          <p className="text-xs text-muted-foreground">{c.city}, {c.state}</p>
                         </div>
-                      ) : (
-                        <p className="text-sm">{msg.content}</p>
-                      )}
-                    </div>
-                  </motion.div>
-                ))}
+                        <div className="space-y-3">
+                          {[
+                            { label: "Average Package", value: c.placement_avg, icon: BarChart3, color: "text-primary" },
+                            { label: "Highest Package", value: c.placement_highest, icon: TrendingUp, color: "text-emerald-600" },
+                            { label: "Median Package", value: c.placement_median, icon: Target, color: "text-blue-600" },
+                          ].map((p) => (
+                            <div key={p.label} className="flex items-center justify-between bg-muted/30 rounded-lg px-3 py-2">
+                              <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><p.icon className="w-3.5 h-3.5" /> {p.label}</span>
+                              <span className={`font-heading font-bold text-sm ${p.color}`}>{p.value || "N/A"}</span>
+                            </div>
+                          ))}
+                          <div className="bg-primary/5 rounded-lg p-3 border border-primary/10 text-center">
+                            <div className="text-[10px] text-muted-foreground uppercase tracking-wider">ROI (Avg Pkg / Fees)</div>
+                            <div className="font-heading font-bold text-primary text-lg mt-0.5">
+                              {(() => {
+                                const avg = parseFloat((c.placement_avg || "0").replace(/[^\d.]/g, ""));
+                                const fees = parseFloat((c.fees || "1").replace(/[^\d.]/g, ""));
+                                return fees > 0 && avg > 0 ? `${(avg / fees).toFixed(1)}x` : "N/A";
+                              })()}
+                            </div>
+                          </div>
+                        </div>
+                        <Link to={`/college/${c.slug}`}>
+                          <Button size="sm" className="w-full mt-3 gap-1 text-xs"><ExternalLink className="w-3 h-3" /> View Full Details</Button>
+                        </Link>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </motion.div>
+            </TabsContent>
 
-                {/* Quick option buttons */}
-                {showQuickOptions && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                    className="flex flex-wrap gap-2 pl-2"
-                  >
-                    {QUICK_OPTIONS[0].options.map(opt => (
-                      <Button
-                        key={opt}
-                        variant="outline"
-                        size="sm"
-                        className="rounded-full text-xs h-8"
-                        onClick={() => handleSend(opt)}
-                      >
-                        {opt}
-                      </Button>
-                    ))}
-                  </motion.div>
-                )}
-
-                {isLoading && messages[messages.length - 1]?.role === "user" && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex justify-start">
-                    <div className="bg-card border border-border rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
-                      <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Thinking...</span>
+            {/* Admissions Tab */}
+            <TabsContent value="admissions">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {activeColleges.map(c => (
+                  <Card key={c.id}>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="font-heading text-sm">{c.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div>
+                          <h4 className="text-xs font-semibold text-foreground mb-1.5">Exams Accepted</h4>
+                          <div className="flex flex-wrap gap-1.5">
+                            {(c.exams_accepted || []).map((e, i) => (
+                              <Badge key={i} className="bg-primary/10 text-primary border-0 text-[10px]">{e}</Badge>
+                            ))}
+                            {(!c.exams_accepted || c.exams_accepted.length === 0) && <span className="text-xs text-muted-foreground italic">Not specified</span>}
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-semibold text-foreground mb-1.5">Courses Offered</h4>
+                          <div className="space-y-1 max-h-32 overflow-y-auto">
+                            {(c.courses || []).map((course, idx) => (
+                              <div key={idx} className="flex items-start gap-1.5 text-xs">
+                                <CheckCircle className="w-3 h-3 text-primary mt-0.5 flex-shrink-0" />
+                                <span className="text-muted-foreground">{course}</span>
+                              </div>
+                            ))}
+                            {(!c.courses || c.courses.length === 0) && <span className="text-xs text-muted-foreground italic">Not specified</span>}
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-semibold text-foreground mb-1.5">Accreditations</h4>
+                          <div className="flex flex-wrap gap-1.5">
+                            {(c.accreditations || []).map((a, i) => (
+                              <Badge key={i} variant="outline" className="text-[10px]">{a}</Badge>
+                            ))}
+                            {(!c.accreditations || c.accreditations.length === 0) && <span className="text-xs text-muted-foreground italic">Not specified</span>}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="bg-muted/50 rounded-lg p-2 text-center">
+                            <div className="text-[10px] text-muted-foreground">Established</div>
+                            <div className="font-semibold text-foreground text-xs">{c.established || "N/A"}</div>
+                          </div>
+                          <div className="bg-muted/50 rounded-lg p-2 text-center">
+                            <div className="text-[10px] text-muted-foreground">Students</div>
+                            <div className="font-semibold text-foreground text-xs">{c.total_students ? `${c.total_students.toLocaleString()}+` : "N/A"}</div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                <div ref={chatEndRef} />
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            )}
-          </div>
-        </div>
+            </TabsContent>
 
-        {/* Input bar */}
-        {started && (
-          <div className="sticky bottom-0 bg-background/80 backdrop-blur-lg border-t border-border">
-            <div className="container mx-auto px-4 max-w-3xl py-3">
-              <form
-                onSubmit={(e) => { e.preventDefault(); handleSend(); }}
-                className="flex items-center gap-2"
-              >
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Type your answer..."
-                  disabled={isLoading}
-                  className="flex-1 bg-card border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 disabled:opacity-50"
-                />
-                <Button
-                  type="submit"
-                  size="icon"
-                  disabled={isLoading || !input.trim()}
-                  className="rounded-xl h-10 w-10 flex-shrink-0"
-                >
-                  <Send className="w-4 h-4" />
-                </Button>
-              </form>
-              <p className="text-[10px] text-muted-foreground text-center mt-1.5">
-                AI recommendations based on real college data from our database
-              </p>
-            </div>
+            {/* Best for You Tab */}
+            <TabsContent value="bestforyou">
+              <Card>
+                <CardHeader className="pb-3"><CardTitle className="font-heading text-base flex items-center gap-2"><Sparkles className="w-5 h-5 text-primary" /> Best College for You</CardTitle></CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-3 gap-2 mb-5 text-center">
+                    {[
+                      { icon: TrendingUp, label: "Placement ROI", weight: "40%" },
+                      { icon: Trophy, label: "NIRF Ranking", weight: "35%" },
+                      { icon: IndianRupee, label: "Value for Money", weight: "25%" },
+                    ].map((w, i) => (
+                      <div key={i} className="bg-muted/50 rounded-lg p-2.5">
+                        <w.icon className="w-4 h-4 text-primary mx-auto mb-1" />
+                        <div className="text-[10px] text-muted-foreground">{w.label}</div>
+                        <div className="font-heading font-bold text-foreground text-sm">{w.weight}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="space-y-3">
+                    {bestForYou.map((c, i) => {
+                      const avg = parseFloat((c.placement_avg || "0").replace(/[^\d.]/g, ""));
+                      const fees = parseFloat((c.fees || "1").replace(/[^\d.]/g, ""));
+                      const roi = fees > 0 && avg > 0 ? (avg / fees).toFixed(1) : "N/A";
+                      return (
+                        <div key={c.id} className={`flex items-center gap-3 p-4 rounded-xl border-2 ${i === 0 ? "border-primary bg-secondary/50 shadow-md" : "border-border"}`}>
+                          <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0 ${i === 0 ? "hero-gradient text-primary-foreground" : "bg-muted text-muted-foreground"}`}>#{i + 1}</div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-heading font-semibold text-foreground text-sm">{c.name}</h3>
+                              {i === 0 && <Badge className="bg-primary text-primary-foreground text-[10px]">🏆 Top Pick</Badge>}
+                            </div>
+                            <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
+                              {c.ranking && <span className="flex items-center gap-0.5"><Trophy className="w-3 h-3 text-amber-500" /> #{c.ranking}</span>}
+                              <span>{c.placement_avg || "N/A"} avg</span>
+                              <span className="font-bold text-foreground">{c.fees || "N/A"}</span>
+                            </div>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="text-[10px] text-muted-foreground">ROI</div>
+                            <div className={`font-heading font-bold text-xl ${i === 0 ? "text-primary" : "text-foreground"}`}>{roi}x</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <div className="text-center py-12">
+            <Scale className="w-14 h-14 text-muted-foreground/20 mx-auto mb-3" />
+            <h2 className="font-heading text-lg font-semibold text-foreground mb-2">Select at least 2 colleges to compare</h2>
+            <p className="text-sm text-muted-foreground">Choose from {colleges.length} colleges across India</p>
           </div>
         )}
-      </div>
-    </>
+
+        {/* FAQ Section */}
+        <section className="mt-12" aria-label="Frequently asked questions">
+          <Card className="bg-secondary/20">
+            <CardContent className="pt-6 pb-6">
+              <h2 className="font-heading text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+                <HelpCircle className="w-5 h-5 text-primary" /> Frequently Asked Questions
+              </h2>
+              <div className="space-y-2">
+                {collegeFaqs.map((faq, i) => (
+                  <div key={i} className="bg-card rounded-xl border border-border overflow-hidden">
+                    <button onClick={() => setExpandedFaq(expandedFaq === i ? null : i)} className="w-full flex items-center justify-between p-3.5 text-left" aria-expanded={expandedFaq === i}>
+                      <h3 className="font-heading font-semibold text-foreground text-sm pr-3">{faq.q}</h3>
+                      {expandedFaq === i ? <ChevronUp className="w-4 h-4 text-muted-foreground flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />}
+                    </button>
+                    {expandedFaq === i && <div className="px-3.5 pb-3.5 -mt-1"><p className="text-xs text-muted-foreground leading-relaxed">{faq.a}</p></div>}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Internal Links */}
+        <nav className="mt-6" aria-label="Related pages">
+          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { label: "All MBA Colleges", path: "/colleges", desc: "Browse full directory" },
+              { label: "Compare Coaching", path: "/compare", desc: "Coaching course comparison" },
+              { label: "Profile Analyzer", path: "/profile-analyzer", desc: "Check your chances" },
+              { label: "MBA Blog", path: "/blog", desc: "Tips & career advice" },
+            ].map((link, i) => (
+              <Link key={i} to={link.path} className="bg-card rounded-lg p-3 border border-border hover:border-primary/40 transition-colors group">
+                <h3 className="font-heading font-semibold text-foreground group-hover:text-primary transition-colors text-xs">{link.label}</h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{link.desc}</p>
+              </Link>
+            ))}
+          </div>
+        </nav>
+      </section>
+    </div>
   );
 };
 
