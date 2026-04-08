@@ -31,6 +31,7 @@ const adminNav = [
   { label: "AI SEO Dashboard", path: "/admin/seo-dashboard", icon: Sparkles },
   { label: "Static Page SEO", path: "/admin/static-seo", icon: Globe },
   { label: "Profile Analyzer", path: "/admin/profile-analyzer", icon: BarChart3 },
+  { label: "Business Inquiries", path: "/admin/business-inquiries", icon: Briefcase },
   { label: "Manage Admins", path: "/admin/manage-admins", icon: ShieldCheck },
 ];
 

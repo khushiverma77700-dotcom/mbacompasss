@@ -45,6 +45,7 @@ const Footer = () => {
                 <li key={i}><Link to={link.path} className="hover:text-primary-foreground transition-colors">{link.label}</Link></li>
               ))}
               <li><Link to="/profile-analyzer" className="hover:text-primary-foreground transition-colors">AI Profile Analyser</Link></li>
+              <li><Link to="/business-inquiries" className="hover:text-primary-foreground transition-colors">Business Inquiries</Link></li>
             </ul>
           </div>
 
