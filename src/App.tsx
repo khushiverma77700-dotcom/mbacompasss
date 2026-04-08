@@ -206,6 +206,7 @@ const App = () => (
               <Route path="manage-admins" element={<LazyPage><AdminManageAdmins /></LazyPage>} />
               <Route path="static-seo" element={<LazyPage><AdminStaticPageSEO /></LazyPage>} />
               <Route path="all-leads-unified" element={<LazyPage><AdminAllLeads /></LazyPage>} />
+              <Route path="business-inquiries" element={<LazyPage><AdminBusinessInquiries /></LazyPage>} />
             </Route>
 
             {/* Eagerly loaded — no spinner */}
