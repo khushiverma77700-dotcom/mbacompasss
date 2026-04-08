@@ -196,6 +196,48 @@ export type Database = {
         }
         Relationships: []
       }
+      business_inquiries: {
+        Row: {
+          contact_number: string
+          created_at: string
+          id: string
+          institute_name: string
+          institute_type: string
+          poc_email: string
+          poc_name: string
+          status: string
+          updated_at: string
+          website_url: string | null
+          whatsapp_number: string
+        }
+        Insert: {
+          contact_number: string
+          created_at?: string
+          id?: string
+          institute_name: string
+          institute_type: string
+          poc_email: string
+          poc_name: string
+          status?: string
+          updated_at?: string
+          website_url?: string | null
+          whatsapp_number: string
+        }
+        Update: {
+          contact_number?: string
+          created_at?: string
+          id?: string
+          institute_name?: string
+          institute_type?: string
+          poc_email?: string
+          poc_name?: string
+          status?: string
+          updated_at?: string
+          website_url?: string | null
+          whatsapp_number?: string
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
