@@ -64,6 +64,7 @@ const AdminProfileAnalyzer = lazy(() => import("./pages/admin/AdminProfileAnalyz
 const AdminManageAdmins = lazy(() => import("./pages/admin/AdminManageAdmins"));
 const AdminStaticPageSEO = lazy(() => import("./pages/admin/AdminStaticPageSEO"));
 const AdminAllLeads = lazy(() => import("./pages/admin/AdminAllLeads"));
+const AdminBusinessInquiries = lazy(() => import("./pages/admin/AdminBusinessInquiries"));
 
 // Lazy load heavy popups
 const OnboardingDialog = lazy(() => import("@/components/OnboardingDialog"));
