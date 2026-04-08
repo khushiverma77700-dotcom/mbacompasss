@@ -31,6 +31,7 @@ const CollegeDetailPage = lazy(() => import("./pages/CollegeDetailPage"));
 const CollegeFilterPage = lazy(() => import("./pages/CollegeFilterPage"));
 const ProfileAnalyzerPage = lazy(() => import("./pages/ProfileAnalyzerPage"));
 const CollegeFinderPage = lazy(() => import("./pages/CollegeFinderPage"));
+const BusinessInquiryPage = lazy(() => import("./pages/BusinessInquiryPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Lazy-loaded admin pages
@@ -63,6 +64,7 @@ const AdminProfileAnalyzer = lazy(() => import("./pages/admin/AdminProfileAnalyz
 const AdminManageAdmins = lazy(() => import("./pages/admin/AdminManageAdmins"));
 const AdminStaticPageSEO = lazy(() => import("./pages/admin/AdminStaticPageSEO"));
 const AdminAllLeads = lazy(() => import("./pages/admin/AdminAllLeads"));
+const AdminBusinessInquiries = lazy(() => import("./pages/admin/AdminBusinessInquiries"));
 
 // Lazy load heavy popups
 const OnboardingDialog = lazy(() => import("@/components/OnboardingDialog"));
@@ -204,6 +206,7 @@ const App = () => (
               <Route path="manage-admins" element={<LazyPage><AdminManageAdmins /></LazyPage>} />
               <Route path="static-seo" element={<LazyPage><AdminStaticPageSEO /></LazyPage>} />
               <Route path="all-leads-unified" element={<LazyPage><AdminAllLeads /></LazyPage>} />
+              <Route path="business-inquiries" element={<LazyPage><AdminBusinessInquiries /></LazyPage>} />
             </Route>
 
             {/* Eagerly loaded — no spinner */}
@@ -225,6 +228,7 @@ const App = () => (
             <Route path="/college-finder" element={<PublicLayout><LazyPage><CollegeFinderPage /></LazyPage></PublicLayout>} />
             <Route path="/about" element={<PublicLayout><LazyPage><AboutPage /></LazyPage></PublicLayout>} />
             <Route path="/contact" element={<PublicLayout><LazyPage><ContactPage /></LazyPage></PublicLayout>} />
+            <Route path="/business-inquiries" element={<PublicLayout><LazyPage><BusinessInquiryPage /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />
           </Routes>
         </AuthProvider>
