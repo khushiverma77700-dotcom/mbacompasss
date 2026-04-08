@@ -31,7 +31,7 @@ const tools = [
     title: "AI Coaching Finder",
     description: "Discover the ideal MBA coaching institute matched to your exam, city, budget & learning style.",
     icon: Search,
-    path: "/category/cat",
+    path: "/compare",
     color: "16, 185, 129",
     stats: [
       { icon: Users, label: "500+ Institutes" },
