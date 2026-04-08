@@ -31,6 +31,7 @@ const CollegeDetailPage = lazy(() => import("./pages/CollegeDetailPage"));
 const CollegeFilterPage = lazy(() => import("./pages/CollegeFilterPage"));
 const ProfileAnalyzerPage = lazy(() => import("./pages/ProfileAnalyzerPage"));
 const CollegeFinderPage = lazy(() => import("./pages/CollegeFinderPage"));
+const BusinessInquiryPage = lazy(() => import("./pages/BusinessInquiryPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Lazy-loaded admin pages
