@@ -74,6 +74,7 @@ const Index = () => {
       
       {/* Below-the-fold: single Suspense boundary to avoid multiple spinners */}
       <Suspense fallback={null}>
+        <AIToolsSection />
         <CoachingOfWeekSection />
         <OfferBanners />
         <FeaturedInstitutes />
