@@ -396,9 +396,9 @@ Perform DEEP, page-specific SEO analysis. Be brutally honest about current state
       suggestions = extractJsonFromResponse(content);
     }
 
-    // Wait for schema generation
-    const schemaMarkup = await schemaPromise;
+    // Use deterministic schema (already generated above)
     suggestions.schemaMarkup = schemaMarkup;
+    console.log(`[ai-seo-enhance] AI call completed in ${Date.now() - aiStartTime}ms`);
 
     // Ensure all fields have defaults
     suggestions.keywords = {
