@@ -227,6 +227,15 @@ const AdminSEODashboard = () => {
 
   const [injectLoading, setInjectLoading] = useState(false);
 
+  // Interlink Studio State
+  const [interlinkSuggestions, setInterlinkSuggestions] = useState<any[]>([]);
+  const [interlinkSummary, setInterlinkSummary] = useState("");
+  const [interlinkThemes, setInterlinkThemes] = useState<string[]>([]);
+  const [interlinkLoading, setInterlinkLoading] = useState(false);
+  const [interlinkApplying, setInterlinkApplying] = useState(false);
+  const [interlinkSelected, setInterlinkSelected] = useState<Set<number>>(new Set());
+  const [interlinkFilter, setInterlinkFilter] = useState("all");
+
   // Auto-Generate State
   const [autoGenType, setAutoGenType] = useState<SEOContentType>("article");
   const [autoGenLoading, setAutoGenLoading] = useState(false);
@@ -367,7 +376,14 @@ const AdminSEODashboard = () => {
     await saveKnownKeys(currentKeys);
   };
 
+  // Auto-poll for new pages every 90 seconds
   useEffect(() => { fetchDashboardData(); loadSavedBlogIdeas(); loadDailyReport(); }, [fetchDashboardData, loadSavedBlogIdeas]);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!loading && !bulkLoading) fetchDashboardData();
+    }, 90_000);
+    return () => clearInterval(interval);
+  }, [fetchDashboardData, loading, bulkLoading]);
 
   // ── New Feature Functions ──
   const loadDailyReport = useCallback(async () => {
