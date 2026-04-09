@@ -246,7 +246,6 @@ const AdminCityPages = () => {
                 desktopSpec={{ dimensions: "1400×500 px", ratio: "2.8:1, landscape", maxSize: "300 KB" }}
                 mobileSpec={{ dimensions: "600×400 px", ratio: "3:2", maxSize: "150 KB" }}
               />
-              </div>
             </TabsContent>
 
             <TabsContent value="content" className="space-y-4 mt-4">
