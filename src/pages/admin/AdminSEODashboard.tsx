@@ -616,7 +616,50 @@ const AdminSEODashboard = () => {
     await saveBlogIdeasToDb([]);
   };
 
-  // Filtering & stats
+  // ── Interlink Studio Functions ──
+  const runInterlinkSuggest = async () => {
+    setInterlinkLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-seo-engine", { body: { mode: "interlink_suggest" } });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setInterlinkSuggestions(data?.suggestions || []);
+      setInterlinkSummary(data?.summary || "");
+      setInterlinkThemes(data?.themes || []);
+      setInterlinkSelected(new Set((data?.suggestions || []).map((_: any, i: number) => i)));
+      toast({ title: "Interlink suggestions ready", description: `${data?.suggestions?.length || 0} link opportunities found` });
+    } catch (e: any) { toast({ title: "Interlink analysis failed", description: e.message, variant: "destructive" }); }
+    finally { setInterlinkLoading(false); }
+  };
+
+  const handleInterlinkApply = async () => {
+    const selected = interlinkSuggestions.filter((_, i) => interlinkSelected.has(i));
+    if (!selected.length) { toast({ title: "No links selected" }); return; }
+    if (!window.confirm(`Apply ${selected.length} internal links to page snapshots?`)) return;
+    setInterlinkApplying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-seo-engine", { body: { mode: "interlink_apply", links: selected } });
+      if (error) throw error;
+      toast({ title: "Internal links applied!", description: `Updated ${data?.updated || 0} page snapshots with ${data?.totalLinks || 0} links.` });
+      fetchDashboardData();
+    } catch (e: any) { toast({ title: "Apply failed", description: e.message, variant: "destructive" }); }
+    finally { setInterlinkApplying(false); }
+  };
+
+  const toggleInterlinkSelect = (index: number) => {
+    setInterlinkSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index); else next.add(index);
+      return next;
+    });
+  };
+
+  const filteredInterlinks = useMemo(() => {
+    if (interlinkFilter === "all") return interlinkSuggestions;
+    return interlinkSuggestions.filter(s => s.priority === interlinkFilter || s.theme === interlinkFilter);
+  }, [interlinkSuggestions, interlinkFilter]);
+
+
   const filteredRows = useMemo(() => {
     return rows.filter((row) => {
       if (selectedType !== "all" && row.contentType !== selectedType) return false;
