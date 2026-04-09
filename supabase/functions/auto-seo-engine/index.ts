@@ -28,6 +28,22 @@ function getName(item: Record<string, any>) {
   return item.title || item.name || item.full_name || "Untitled";
 }
 
+function extractToolResult(aiData: any): any {
+  const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+  if (toolCall?.function?.arguments) {
+    return typeof toolCall.function.arguments === "string"
+      ? JSON.parse(toolCall.function.arguments)
+      : toolCall.function.arguments;
+  }
+  const content = aiData.choices?.[0]?.message?.content || "";
+  let cleaned = content.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+  const start = cleaned.search(/[\{\[]/);
+  const end = cleaned.lastIndexOf(start !== -1 && cleaned[start] === "[" ? "]" : "}");
+  if (start === -1 || end === -1) throw new Error("No JSON in response");
+  cleaned = cleaned.substring(start, end + 1).replace(/,\s*}/g, "}").replace(/,\s*]/g, "]");
+  return JSON.parse(cleaned);
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -40,10 +56,9 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const body = await req.json();
-    const mode = body.mode || "bulk_optimize"; // bulk_optimize | uniqueness_check | content_gaps | auto_keywords
+    const mode = body.mode || "bulk_optimize";
 
     if (mode === "bulk_optimize") {
-      // Process a batch of pages through AI SEO
       const { contentType, pageIds, allPages } = body;
       
       if (!contentType || !pageIds?.length) {
@@ -60,10 +75,7 @@ serve(async (req) => {
       }
 
       const { data: pages, error: fetchErr } = await supabase
-        .from(config.table)
-        .select("*")
-        .in("id", pageIds);
-
+        .from(config.table).select("*").in("id", pageIds);
       if (fetchErr) throw fetchErr;
 
       const results: any[] = [];
@@ -74,36 +86,48 @@ serve(async (req) => {
 
       for (const page of (pages || [])) {
         try {
+          const contentText = getTextContent(page);
+          const wordCount = contentText.split(/\s+/).filter(Boolean).length;
+
           const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
             headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
               model: "google/gemini-2.5-flash",
+              generationConfig: { maxOutputTokens: 4096 },
               messages: [
                 {
                   role: "system",
                   content: `You are an SEO engine for Indian MBA education. Generate unique SEO data.
 RULES:
-- meta_title: MUST be unique, under 60 chars, include primary keyword
+- meta_title: MUST be unique, UNDER 60 chars, include primary keyword
 - meta_description: MUST be unique, 150-160 chars, include CTA
-- keywords: Generate 5-7 short-tail AND 8-12 long-tail keywords relevant to THIS specific page
-- Ensure NO duplicates with existing meta titles/descriptions provided
-- userIntent: Identify the search intent (informational, navigational, transactional, commercial)
-- contentFormat: Suggest best format (FAQ, comparison table, guide, listicle, video)
-- internalLinks: Suggest 3-5 internal link paths with anchor text
+- keywords: 5-7 short-tail AND 8-12 long-tail keywords specific to THIS page
+- Ensure NO duplicates with existing meta titles
+- Be specific to the page content, not generic
 
-Existing meta titles to AVOID duplicating: ${existingMetas.map((m: any) => m.title).filter(Boolean).slice(0, 30).join(" | ")}`,
+Existing meta titles to AVOID: ${existingMetas.map((m: any) => m.title).filter(Boolean).slice(0, 30).join(" | ")}`,
                 },
                 {
                   role: "user",
-                  content: `Page Type: ${contentType}\nPage: ${getName(page)}\nSlug: ${page.slug}\nCity: ${page.city || "N/A"}\nContent: ${getTextContent(page).slice(0, 2000)}\n\nGenerate unique SEO optimization for this page.`,
+                  content: `Page Type: ${contentType}
+Name: ${getName(page)}
+Slug: ${page.slug}
+City: ${page.city || "N/A"}
+Word Count: ${wordCount}
+Content (first 2500 chars): ${contentText.slice(0, 2500)}
+${page.courses ? `Courses: ${(page.courses || []).join(", ")}` : ""}
+${page.fees ? `Fees: ${page.fees}` : ""}
+${page.ranking ? `Ranking: #${page.ranking}` : ""}
+
+Generate unique, page-specific SEO optimization.`,
                 },
               ],
               tools: [{
                 type: "function",
                 function: {
                   name: "page_seo",
-                  description: "Return SEO data for this page",
+                  description: "Return SEO data",
                   parameters: {
                     type: "object",
                     properties: {
@@ -114,17 +138,7 @@ Existing meta titles to AVOID duplicating: ${existingMetas.map((m: any) => m.tit
                       longTailKeywords: { type: "array", items: { type: "string" } },
                       userIntent: { type: "string" },
                       contentFormat: { type: "string" },
-                      internalLinks: {
-                        type: "array",
-                        items: {
-                          type: "object",
-                          properties: {
-                            path: { type: "string" },
-                            anchorText: { type: "string" },
-                          },
-                          required: ["path", "anchorText"],
-                        },
-                      },
+                      internalLinks: { type: "array", items: { type: "object", properties: { path: { type: "string" }, anchorText: { type: "string" } }, required: ["path", "anchorText"] } },
                     },
                     required: ["meta_title", "meta_description", "h1_tag", "shortTailKeywords", "longTailKeywords", "userIntent", "contentFormat", "internalLinks"],
                   },
@@ -143,22 +157,9 @@ Existing meta titles to AVOID duplicating: ${existingMetas.map((m: any) => m.tit
             throw new Error(`AI error: ${aiResponse.status}`);
           }
 
-          const aiData = await aiResponse.json();
-          const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-          let seo: any;
-          if (toolCall?.function?.arguments) {
-            seo = typeof toolCall.function.arguments === "string"
-              ? JSON.parse(toolCall.function.arguments)
-              : toolCall.function.arguments;
-          } else {
-            const content = aiData.choices?.[0]?.message?.content || "";
-            const match = content.match(/\{[\s\S]*\}/);
-            if (match) seo = JSON.parse(match[0]);
-            else throw new Error("Could not parse AI response");
-          }
+          const seo = extractToolResult(await aiResponse.json());
 
-          // Update the page in DB
-          const allKeywords = [...(seo.shortTailKeywords || []), ...(seo.longTailKeywords || [])];
+          const allKeywords = [...new Set([...(seo.shortTailKeywords || []), ...(seo.longTailKeywords || [])])];
           const update: Record<string, any> = {
             meta_title: seo.meta_title,
             meta_description: seo.meta_description,
@@ -168,34 +169,23 @@ Existing meta titles to AVOID duplicating: ${existingMetas.map((m: any) => m.tit
 
           const { error: updateErr } = await supabase.from(config.table).update(update).eq("id", page.id);
 
-          // Save SEO snapshot
           const snapshotKey = `seo_page__${contentType}__${page.id}`;
           const snapshot = {
-            contentType,
-            recordId: page.id,
-            slug: page.slug,
-            pagePath: config.getPath(page),
-            canonicalUrl: config.getPath(page),
-            meta_title: seo.meta_title,
-            meta_description: seo.meta_description,
-            h1_tag: seo.h1_tag,
-            keywords: allKeywords,
+            contentType, recordId: page.id, slug: page.slug,
+            pagePath: config.getPath(page), canonicalUrl: config.getPath(page),
+            meta_title: seo.meta_title, meta_description: seo.meta_description,
+            h1_tag: seo.h1_tag, keywords: allKeywords,
             keywordBuckets: {
               primary: (seo.shortTailKeywords || []).slice(0, 2),
               shortTail: seo.shortTailKeywords || [],
               longTail: seo.longTailKeywords || [],
-              faq: [],
-              trending: [],
-              lsi: [],
+              faq: [], trending: [], lsi: [],
             },
-            onPageTips: [],
-            userIntent: seo.userIntent,
-            contentFormat: seo.contentFormat,
+            onPageTips: [], userIntent: seo.userIntent, contentFormat: seo.contentFormat,
             internalLinks: { suggested: (seo.internalLinks || []).map((l: any) => l.path), anchorTexts: (seo.internalLinks || []).map((l: any) => l.anchorText) },
             generatedAt: new Date().toISOString(),
           };
 
-          // Upsert snapshot
           const { data: existingSnap } = await supabase.from("site_settings").select("id").eq("key", snapshotKey).limit(1);
           if (existingSnap?.[0]?.id) {
             await supabase.from("site_settings").update({ value: snapshot as any }).eq("id", existingSnap[0].id);
@@ -203,15 +193,8 @@ Existing meta titles to AVOID duplicating: ${existingMetas.map((m: any) => m.tit
             await supabase.from("site_settings").insert({ key: snapshotKey, value: snapshot as any });
           }
 
-          results.push({
-            id: page.id,
-            name: getName(page),
-            status: updateErr ? "partial" : "success",
-            seo,
-          });
-
-          // Rate limit protection
-          await new Promise(r => setTimeout(r, 500));
+          results.push({ id: page.id, name: getName(page), status: updateErr ? "partial" : "success", seo });
+          await new Promise(r => setTimeout(r, 600));
         } catch (e: any) {
           results.push({ id: page.id, name: getName(page), status: "error", error: e.message });
         }
@@ -223,9 +206,7 @@ Existing meta titles to AVOID duplicating: ${existingMetas.map((m: any) => m.tit
     }
 
     if (mode === "uniqueness_check") {
-      // Check for duplicate meta titles/descriptions across all pages
       const allMetas: any[] = [];
-      
       for (const [ct, config] of Object.entries(CONTENT_TABLES)) {
         const { data } = await supabase.from(config.table).select("id, slug, meta_title, meta_description").limit(1000);
         (data || []).forEach((item: any) => {
@@ -236,18 +217,15 @@ Existing meta titles to AVOID duplicating: ${existingMetas.map((m: any) => m.tit
       const titleDuplicates: any[] = [];
       const descDuplicates: any[] = [];
       const missingMeta: any[] = [];
-
       const titleMap = new Map<string, any[]>();
       const descMap = new Map<string, any[]>();
 
       allMetas.forEach(m => {
         if (!m.meta_title) { missingMeta.push({ ...m, missing: "title" }); return; }
         if (!m.meta_description) missingMeta.push({ ...m, missing: "description" });
-        
         const tKey = m.meta_title.toLowerCase().trim();
         if (!titleMap.has(tKey)) titleMap.set(tKey, []);
         titleMap.get(tKey)!.push(m);
-
         if (m.meta_description) {
           const dKey = m.meta_description.toLowerCase().trim();
           if (!descMap.has(dKey)) descMap.set(dKey, []);
@@ -255,26 +233,17 @@ Existing meta titles to AVOID duplicating: ${existingMetas.map((m: any) => m.tit
         }
       });
 
-      titleMap.forEach((pages, title) => {
-        if (pages.length > 1) titleDuplicates.push({ title, pages });
-      });
-      descMap.forEach((pages, desc) => {
-        if (pages.length > 1) descDuplicates.push({ description: desc.slice(0, 80) + "...", pages });
-      });
+      titleMap.forEach((pages, title) => { if (pages.length > 1) titleDuplicates.push({ title, pages }); });
+      descMap.forEach((pages, desc) => { if (pages.length > 1) descDuplicates.push({ description: desc.slice(0, 80) + "...", pages }); });
 
       return new Response(JSON.stringify({
-        totalPages: allMetas.length,
-        titleDuplicates,
-        descDuplicates,
-        missingMeta,
+        totalPages: allMetas.length, titleDuplicates, descDuplicates, missingMeta,
         uniqueScore: Math.round(((allMetas.length - titleDuplicates.reduce((s, d) => s + d.pages.length - 1, 0) - missingMeta.length) / Math.max(allMetas.length, 1)) * 100),
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     if (mode === "content_gaps") {
-      // AI analyzes all content and finds gaps
       const contentSummary: string[] = [];
-
       for (const [ct, config] of Object.entries(CONTENT_TABLES)) {
         const { data } = await supabase.from(config.table).select("id, slug, meta_title, keywords").limit(500);
         const names = (data || []).map((d: any) => d.meta_title || d.slug).filter(Boolean);
@@ -287,9 +256,10 @@ Existing meta titles to AVOID duplicating: ${existingMetas.map((m: any) => m.tit
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
+          generationConfig: { maxOutputTokens: 6144 },
           messages: [
-            { role: "system", content: "You are an SEO expert for Indian MBA education. Analyze the content inventory and identify gaps, opportunities, and missing topics." },
-            { role: "user", content: `Content Inventory:\n${contentSummary.join("\n")}\n\nIdentify: 1) Missing topics MBA aspirants search for 2) Content gaps vs competitors (Shiksha, Collegedunia, Careers360, MBAUniverse, InsideIIM, PagalGuy) 3) Internal linking opportunities 4) Content format suggestions 5) User intent patterns we're not covering` },
+            { role: "system", content: "You are an SEO expert for Indian MBA education. Analyze content inventory and identify gaps." },
+            { role: "user", content: `Content Inventory:\n${contentSummary.join("\n")}\n\nIdentify: 1) Missing topics MBA aspirants search for 2) Content gaps vs Shiksha, Collegedunia, Careers360, MBAUniverse, InsideIIM, PagalGuy 3) Internal linking opportunities 4) Content format suggestions 5) User intent patterns we're missing` },
           ],
           tools: [{
             type: "function",
@@ -314,30 +284,12 @@ Existing meta titles to AVOID duplicating: ${existingMetas.map((m: any) => m.tit
         }),
       });
 
-      if (!aiResp.ok) {
-        const t = await aiResp.text();
-        throw new Error(`AI error: ${aiResp.status} ${t}`);
-      }
-
-      const aiData = await aiResp.json();
-      const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-      let gaps: any;
-      if (toolCall?.function?.arguments) {
-        gaps = typeof toolCall.function.arguments === "string" ? JSON.parse(toolCall.function.arguments) : toolCall.function.arguments;
-      } else {
-        const content = aiData.choices?.[0]?.message?.content || "";
-        const match = content.match(/\{[\s\S]*\}/);
-        if (match) gaps = JSON.parse(match[0]);
-        else throw new Error("Could not parse AI response");
-      }
-
-      return new Response(JSON.stringify(gaps), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      if (!aiResp.ok) throw new Error(`AI error: ${aiResp.status}`);
+      const gaps = extractToolResult(await aiResp.json());
+      return new Response(JSON.stringify(gaps), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     if (mode === "auto_keywords") {
-      // Auto-generate and insert keywords for all pages of a content type
       const { contentType } = body;
       if (!contentType || !CONTENT_TABLES[contentType]) {
         return new Response(JSON.stringify({ error: "Valid contentType required" }), {
@@ -347,7 +299,6 @@ Existing meta titles to AVOID duplicating: ${existingMetas.map((m: any) => m.tit
 
       const config = CONTENT_TABLES[contentType];
       const { data: pages } = await supabase.from(config.table).select("*").limit(500);
-
       const pagesNeedingKeywords = (pages || []).filter((p: any) => !p.keywords?.length || p.keywords.length < 4);
 
       if (!pagesNeedingKeywords.length) {
@@ -356,7 +307,6 @@ Existing meta titles to AVOID duplicating: ${existingMetas.map((m: any) => m.tit
         });
       }
 
-      // Process in batches of 5
       let updated = 0;
       for (let i = 0; i < Math.min(pagesNeedingKeywords.length, 20); i++) {
         const page = pagesNeedingKeywords[i];
@@ -367,7 +317,7 @@ Existing meta titles to AVOID duplicating: ${existingMetas.map((m: any) => m.tit
             body: JSON.stringify({
               model: "google/gemini-2.5-flash-lite",
               messages: [
-                { role: "system", content: "Generate SEO keywords for Indian MBA education pages. Return ONLY short-tail (1-2 words) and long-tail (3-6 words) keywords that students search for." },
+                { role: "system", content: "Generate SEO keywords for Indian MBA education pages. Return short-tail (1-2 words) and long-tail (3-6 words) keywords students search for." },
                 { role: "user", content: `Page: ${getName(page)}\nType: ${contentType}\nCity: ${page.city || "N/A"}\nContent: ${getTextContent(page).slice(0, 1000)}\n\nGenerate 5 short-tail and 8 long-tail keywords.` },
               ],
               tools: [{
@@ -390,17 +340,11 @@ Existing meta titles to AVOID duplicating: ${existingMetas.map((m: any) => m.tit
           });
 
           if (aiResp.ok) {
-            const aiData = await aiResp.json();
-            const tc = aiData.choices?.[0]?.message?.tool_calls?.[0];
-            let kws: any;
-            if (tc?.function?.arguments) {
-              kws = typeof tc.function.arguments === "string" ? JSON.parse(tc.function.arguments) : tc.function.arguments;
-            }
+            const kws = extractToolResult(await aiResp.json());
             if (kws) {
               const allKws = [...new Set([...(page.keywords || []), ...(kws.shortTail || []), ...(kws.longTail || [])])];
               await supabase.from(config.table).update({ keywords: allKws }).eq("id", page.id);
 
-              // Also update snapshot
               const snapKey = `seo_page__${contentType}__${page.id}`;
               const { data: existSnap } = await supabase.from("site_settings").select("id, value").eq("key", snapKey).limit(1);
               if (existSnap?.[0]) {
@@ -412,7 +356,7 @@ Existing meta titles to AVOID duplicating: ${existingMetas.map((m: any) => m.tit
               updated++;
             }
           }
-          await new Promise(r => setTimeout(r, 400));
+          await new Promise(r => setTimeout(r, 500));
         } catch { /* skip */ }
       }
 
