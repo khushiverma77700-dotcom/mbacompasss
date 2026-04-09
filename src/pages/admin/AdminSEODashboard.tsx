@@ -765,6 +765,7 @@ const AdminSEODashboard = () => {
   const navItems = [
     { id: "overview", label: "Overview", icon: BarChart3 },
     { id: "pages", label: `All Pages (${filteredRows.length})`, icon: FileText },
+    { id: "interlinks", label: "Interlink Studio", icon: Link2 },
     { id: "auto-generate", label: "Auto-Generate", icon: Zap },
     { id: "uniqueness", label: "Uniqueness Check", icon: Shield },
     { id: "content-gaps", label: "Content Gaps", icon: Crosshair },
