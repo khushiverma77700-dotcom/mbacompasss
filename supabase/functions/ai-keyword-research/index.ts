@@ -93,8 +93,8 @@ Use this real data to:
 2. Discover keywords we might miss
 3. Estimate realistic search volumes for India
 
-Find 40-60 keywords organized by category. For each provide:
-- keyword, estimated monthly search volume (India), competition (low/medium/high), difficulty (0-100), CPC in INR, intent (informational/commercial/transactional/navigational), trending direction, category
+Find 20-30 keywords organized by category. For each provide:
+- keyword, estimated monthly search volume (India), competition (low/medium/high), difficulty (0-100), intent (informational/commercial/transactional/navigational), trending direction
 
 Also provide:
 - Top 5 content gaps to fill
