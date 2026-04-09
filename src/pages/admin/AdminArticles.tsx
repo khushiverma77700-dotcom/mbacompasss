@@ -16,6 +16,7 @@ import SEOChecklist from "@/components/admin/SEOChecklist";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
+import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 
 const categories = ["news", "exam-tips", "career", "success-stories", "reviews", "college-news", "coaching", "gd-pi", "placements", "scholarships"];
 const statusOptions = [
@@ -268,8 +269,18 @@ const AdminArticles = () => {
                   <Switch checked={form.featured} onCheckedChange={(v) => setForm({ ...form, featured: v })} />
                   <Label>Featured on Homepage</Label>
                 </div>
-                <FileUpload bucket="uploads" folder="articles/banners" value={form.banner_url} onChange={(url) => setForm({ ...form, banner_url: url })} accept="image/*" label="Banner Image" sizeHint="1200×400 px (3:1 ratio, JPG/PNG)" />
-                <FileUpload bucket="uploads" folder="articles/images" value={form.image_url} onChange={(url) => setForm({ ...form, image_url: url })} accept="image/*" label="Featured Image" sizeHint="800×450 px (16:9 ratio, JPG/PNG)" />
+                <ResponsiveImageUpload
+                  bucket="uploads"
+                  folder="articles/banners"
+                  label="Banner Image"
+                  desktopValue={form.banner_url}
+                  mobileValue={(form as any).mobile_banner_url || ""}
+                  onDesktopChange={(url) => setForm({ ...form, banner_url: url })}
+                  onMobileChange={(url) => setForm({ ...form, mobile_banner_url: url } as any)}
+                  desktopSpec={{ dimensions: "1200×400 px", ratio: "3:1, landscape", maxSize: "250 KB" }}
+                  mobileSpec={{ dimensions: "600×300 px", ratio: "2:1", maxSize: "120 KB" }}
+                />
+                <FileUpload bucket="uploads" folder="articles/images" value={form.image_url} onChange={(url) => setForm({ ...form, image_url: url })} accept="image/*" label="Featured/Thumbnail Image" sizeHint="800×450 px (16:9 ratio, JPG/PNG) • Max 200 KB" />
               </TabsContent>
             </Tabs>
 

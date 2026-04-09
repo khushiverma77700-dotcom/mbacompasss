@@ -267,7 +267,7 @@ const SectionFormRenderer = ({ type, data, onChange, content, onContentChange }:
                 }}
                 accept="image/*"
                 label={`Image ${idx + 1}`}
-                sizeHint="800×600 px (4:3 ratio, JPG)"
+                sizeHint="800×600 px (4:3 ratio, JPG) • Max 200 KB"
               />
               <div className="flex-1">
                 <Input value={img.caption || ""} onChange={(e) => {

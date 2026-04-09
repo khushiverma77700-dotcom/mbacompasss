@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X, Star, MapPin } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
+import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 import SEOChecklist from "@/components/admin/SEOChecklist";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 
@@ -312,8 +313,18 @@ const AdminInstitutes = () => {
               </TabsContent>
 
               <TabsContent value="media" className="space-y-3">
-                <FileUpload bucket="uploads" folder="institutes/logos" value={form.logo_url} onChange={(url) => setForm({ ...form, logo_url: url })} accept="image/*" label="Institute Logo" sizeHint="200×200 px (square, PNG preferred)" />
-                <FileUpload bucket="uploads" folder="institutes/banners" value={form.banner_url} onChange={(url) => setForm({ ...form, banner_url: url })} accept="image/*" label="Banner Image" sizeHint="1200×400 px (3:1 ratio, JPG/PNG)" />
+                <FileUpload bucket="uploads" folder="institutes/logos" value={form.logo_url} onChange={(url) => setForm({ ...form, logo_url: url })} accept="image/*" label="Institute Logo" sizeHint="200×200 px (square, PNG) • Max 100 KB" />
+                <ResponsiveImageUpload
+                  bucket="uploads"
+                  folder="institutes/banners"
+                  label="Banner Image"
+                  desktopValue={form.banner_url}
+                  mobileValue={(form as any).mobile_banner_url || ""}
+                  onDesktopChange={(url) => setForm({ ...form, banner_url: url })}
+                  onMobileChange={(url) => setForm({ ...form, mobile_banner_url: url } as any)}
+                  desktopSpec={{ dimensions: "1200×400 px", ratio: "3:1, landscape", maxSize: "250 KB" }}
+                  mobileSpec={{ dimensions: "600×300 px", ratio: "2:1", maxSize: "120 KB" }}
+                />
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Discount Text</Label>

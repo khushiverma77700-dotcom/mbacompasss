@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Tag } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
+import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 
 const emptyForm = {
   institute_id: "",
@@ -152,7 +153,17 @@ const AdminCoachingOfWeek = () => {
                 <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Results Summary</Label>
                 <RichTextEditor content={form.results_summary} onChange={(html) => setForm({ ...form, results_summary: html })} placeholder="Key results and achievements..." />
               </div>
-              <FileUpload bucket="uploads" folder="coaching-of-week" value={form.banner_url} onChange={(url) => setForm({ ...form, banner_url: url })} accept="image/*" label="Banner Image" sizeHint="1200×500 px (landscape, JPG/PNG)" />
+              <ResponsiveImageUpload
+                bucket="uploads"
+                folder="coaching-of-week"
+                label="Banner Image"
+                desktopValue={form.banner_url}
+                mobileValue={(form as any).mobile_banner_url || ""}
+                onDesktopChange={(url) => setForm({ ...form, banner_url: url })}
+                onMobileChange={(url) => setForm({ ...form, mobile_banner_url: url } as any)}
+                desktopSpec={{ dimensions: "1200×500 px", ratio: "12:5, landscape", maxSize: "300 KB" }}
+                mobileSpec={{ dimensions: "600×400 px", ratio: "3:2", maxSize: "150 KB" }}
+              />
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
                 Active

@@ -200,7 +200,7 @@ const AdminCourses = () => {
                   onChange={(url) => setForm({ ...form, brochure_url: url })}
                   accept=".pdf,.doc,.docx,.jpg,.png"
                   label="Course Brochure (PDF/Image)"
-                  sizeHint="Upload the course brochure for students to download"
+                  sizeHint="PDF/Image brochure • Max 5 MB"
                 />
                 <div className="bg-secondary/50 rounded-lg p-4 border border-border">
                   <h4 className="font-heading font-semibold text-foreground text-sm mb-2">Course Summary</h4>

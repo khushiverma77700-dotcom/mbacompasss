@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
+import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 import SEOChecklist from "@/components/admin/SEOChecklist";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 
@@ -193,8 +194,18 @@ const AdminColleges = () => {
                   <Input type="number" placeholder="Ranking" value={form.ranking || ""} onChange={(e) => setForm({ ...form, ranking: parseInt(e.target.value) || 0 })} />
                   <Input placeholder="Fees (e.g. ₹20L)" value={form.fees} onChange={(e) => setForm({ ...form, fees: e.target.value })} />
                 </div>
-                <FileUpload bucket="uploads" folder="colleges/logos" value={form.logo_url} onChange={(url) => setForm({ ...form, logo_url: url })} accept="image/*" label="College Logo" sizeHint="200×200 px (square, PNG preferred)" />
-                <FileUpload bucket="uploads" folder="colleges/banners" value={form.banner_url} onChange={(url) => setForm({ ...form, banner_url: url })} accept="image/*" label="Banner Image" sizeHint="1200×400 px (3:1 ratio, JPG/PNG)" />
+                <FileUpload bucket="uploads" folder="colleges/logos" value={form.logo_url} onChange={(url) => setForm({ ...form, logo_url: url })} accept="image/*" label="College Logo" sizeHint="200×200 px (square, PNG) • Max 100 KB" />
+                <ResponsiveImageUpload
+                  bucket="uploads"
+                  folder="colleges/banners"
+                  label="Banner Image"
+                  desktopValue={form.banner_url}
+                  mobileValue={(form as any).mobile_banner_url || ""}
+                  onDesktopChange={(url) => setForm({ ...form, banner_url: url })}
+                  onMobileChange={(url) => setForm({ ...form, mobile_banner_url: url } as any)}
+                  desktopSpec={{ dimensions: "1200×400 px", ratio: "3:1, landscape", maxSize: "250 KB" }}
+                  mobileSpec={{ dimensions: "600×300 px", ratio: "2:1", maxSize: "120 KB" }}
+                />
                 <Input placeholder="Website URL" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
               </TabsContent>
 

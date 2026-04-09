@@ -16,6 +16,7 @@ import { Plus, Pencil, Trash2, Eye, Globe, MapPin } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import SEOChecklist from "@/components/admin/SEOChecklist";
 import FileUpload from "@/components/admin/FileUpload";
+import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 
 interface CityPage {
@@ -234,9 +235,17 @@ const AdminCityPages = () => {
                   <Label>Active</Label>
                 </div>
               </div>
-              <div>
-                <Label>Hero Image</Label>
-                <FileUpload bucket="uploads" value={form.hero_image_url} onChange={url => setForm(f => ({ ...f, hero_image_url: url }))} folder="city-pages" />
+              <ResponsiveImageUpload
+                bucket="uploads"
+                folder="city-pages"
+                label="Hero Image"
+                desktopValue={form.hero_image_url}
+                mobileValue={(form as any).mobile_hero_image_url || ""}
+                onDesktopChange={(url) => setForm(f => ({ ...f, hero_image_url: url }))}
+                onMobileChange={(url) => setForm(f => ({ ...f, mobile_hero_image_url: url } as any))}
+                desktopSpec={{ dimensions: "1400×500 px", ratio: "2.8:1, landscape", maxSize: "300 KB" }}
+                mobileSpec={{ dimensions: "600×400 px", ratio: "3:2", maxSize: "150 KB" }}
+              />
               </div>
             </TabsContent>
 
