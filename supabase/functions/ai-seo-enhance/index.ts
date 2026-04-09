@@ -204,10 +204,12 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const startTime = Date.now();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const { contentType, data, pageUrl } = await req.json();
+    console.log(`[ai-seo-enhance] Starting analysis for ${contentType}: ${data?.name || data?.title || 'unknown'}`);
 
     if (!contentType || !data) {
       return new Response(JSON.stringify({ error: "contentType and data are required" }), {
@@ -217,8 +219,9 @@ serve(async (req) => {
 
     const siteUrl = "https://bestmbacoaching.com";
 
-    // Step 1: Generate schema markup separately (focused, reliable)
-    const schemaPromise = generateSchemaMarkup(LOVABLE_API_KEY, contentType, data, siteUrl);
+    // Generate deterministic schema markup (no AI call needed - faster & more reliable)
+    const schemaMarkup = getDefaultSchemas(contentType, data, siteUrl);
+    console.log(`[ai-seo-enhance] Schema generated deterministically (${schemaMarkup.length} items) in ${Date.now() - startTime}ms`);
 
     // Step 2: Main SEO analysis
     const systemPrompt = `You are an elite SEO consultant for Indian MBA education (CAT, GMAT, XAT, SNAP, GRE, NMAT, CMAT, IIFT, TISSNET).
@@ -266,6 +269,8 @@ ${data.exam_date ? `Exam Date: ${data.exam_date}` : ""}
 
 Perform DEEP, page-specific SEO analysis. Be brutally honest about current state.`;
 
+    console.log(`[ai-seo-enhance] Calling AI gateway...`);
+    const aiStartTime = Date.now();
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
@@ -391,9 +396,9 @@ Perform DEEP, page-specific SEO analysis. Be brutally honest about current state
       suggestions = extractJsonFromResponse(content);
     }
 
-    // Wait for schema generation
-    const schemaMarkup = await schemaPromise;
+    // Use deterministic schema (already generated above)
     suggestions.schemaMarkup = schemaMarkup;
+    console.log(`[ai-seo-enhance] AI call completed in ${Date.now() - aiStartTime}ms`);
 
     // Ensure all fields have defaults
     suggestions.keywords = {

@@ -93,8 +93,8 @@ Use this real data to:
 2. Discover keywords we might miss
 3. Estimate realistic search volumes for India
 
-Find 40-60 keywords organized by category. For each provide:
-- keyword, estimated monthly search volume (India), competition (low/medium/high), difficulty (0-100), CPC in INR, intent (informational/commercial/transactional/navigational), trending direction, category
+Find 20-30 keywords organized by category. For each provide:
+- keyword, estimated monthly search volume (India), competition (low/medium/high), difficulty (0-100), intent (informational/commercial/transactional/navigational), trending direction
 
 Also provide:
 - Top 5 content gaps to fill
@@ -262,10 +262,12 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const startTime = Date.now();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const { mode, query, niche, competitors, existingKeywords } = await req.json();
+    console.log(`[ai-keyword-research] mode=${mode}, query=${query || niche || 'default'}`);
     if (!mode) {
       return new Response(JSON.stringify({ error: "mode is required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -285,7 +287,7 @@ serve(async (req) => {
         fetchWikipediaSuggestions(searchQuery),
       ]);
 
-      console.log(`Real data fetched: ${google.length} Google, ${paa.length} PAA, ${trends.length} Trends, ${wiki.length} Wiki`);
+      console.log(`[ai-keyword-research] Real data fetched in ${Date.now() - startTime}ms: ${google.length} Google, ${paa.length} PAA, ${trends.length} Trends, ${wiki.length} Wiki`);
 
       payload = buildKeywordResearchPayload(searchQuery, existingKeywords || [], { google, paa, trends, wiki });
     } else if (mode === "blog_titles") {
@@ -294,6 +296,8 @@ serve(async (req) => {
       payload = buildCompetitorPayload(competitors || []);
     }
 
+    console.log(`[ai-keyword-research] Calling AI gateway...`);
+    const aiStartTime = Date.now();
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
@@ -303,7 +307,7 @@ serve(async (req) => {
           { role: "system", content: payload.systemPrompt },
           { role: "user", content: payload.userPrompt },
         ],
-        generationConfig: { maxOutputTokens: 8192 },
+        generationConfig: { maxOutputTokens: 4096 },
         tools: [payload.tool],
         tool_choice: { type: "function", function: { name: payload.toolName } },
       }),
@@ -325,6 +329,7 @@ serve(async (req) => {
       throw new Error(`AI gateway error: ${response.status}`);
     }
 
+    console.log(`[ai-keyword-research] AI call completed in ${Date.now() - aiStartTime}ms`);
     const aiData = await response.json();
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     let result;
@@ -335,6 +340,7 @@ serve(async (req) => {
       result = extractJsonFromResponse(content);
     }
 
+    console.log(`[ai-keyword-research] Total time: ${Date.now() - startTime}ms, keywords: ${result?.keywords?.length || 0}`);
     return new Response(JSON.stringify({ success: true, data: result, mode, generatedAt: new Date().toISOString() }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
