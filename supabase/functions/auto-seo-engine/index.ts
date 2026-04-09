@@ -289,6 +289,116 @@ Generate unique, page-specific SEO optimization.`,
       return new Response(JSON.stringify(gaps), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    if (mode === "interlink_suggest") {
+      // Fetch all pages across content types to build a site map for interlinking
+      const allPages: { contentType: string; id: string; slug: string; name: string; path: string; keywords: string[]; city?: string }[] = [];
+      for (const [ct, config] of Object.entries(CONTENT_TABLES)) {
+        const { data } = await supabase.from(config.table).select("id, slug, name, title, full_name, keywords, city").limit(500);
+        (data || []).forEach((item: any) => {
+          allPages.push({
+            contentType: ct, id: item.id, slug: item.slug,
+            name: getName(item), path: config.getPath(item),
+            keywords: item.keywords || [], city: item.city || undefined,
+          });
+        });
+      }
+
+      const pageList = allPages.map(p => `[${p.contentType}] ${p.name} → ${p.path} (kw: ${p.keywords.slice(0, 5).join(", ")})`).join("\n");
+
+      const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          generationConfig: { maxOutputTokens: 8192 },
+          messages: [
+            { role: "system", content: `You are an SEO internal-linking strategist for an Indian MBA education platform. Given the full site inventory, suggest high-value internal links that boost topical authority, distribute link equity, and improve user journeys. For each suggestion provide source page, target page, and the best anchor text. Group by theme. Return 30-50 link suggestions prioritized by SEO impact.` },
+            { role: "user", content: `Site Inventory (${allPages.length} pages):\n${pageList}` },
+          ],
+          tools: [{
+            type: "function",
+            function: {
+              name: "interlink_suggestions",
+              description: "Return internal link suggestions",
+              parameters: {
+                type: "object",
+                properties: {
+                  suggestions: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        sourcePath: { type: "string" },
+                        sourceName: { type: "string" },
+                        targetPath: { type: "string" },
+                        targetName: { type: "string" },
+                        anchorText: { type: "string" },
+                        reason: { type: "string" },
+                        priority: { type: "string", enum: ["high", "medium", "low"] },
+                        theme: { type: "string" },
+                      },
+                      required: ["sourcePath", "sourceName", "targetPath", "targetName", "anchorText", "reason", "priority"],
+                    },
+                  },
+                  summary: { type: "string" },
+                  themes: { type: "array", items: { type: "string" } },
+                },
+                required: ["suggestions", "summary"],
+              },
+            },
+          }],
+          tool_choice: { type: "function", function: { name: "interlink_suggestions" } },
+        }),
+      });
+
+      if (!aiResp.ok) throw new Error(`AI error: ${aiResp.status}`);
+      const result = extractToolResult(await aiResp.json());
+      return new Response(JSON.stringify(result), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    if (mode === "interlink_apply") {
+      // Save approved interlinks to each page's SEO snapshot
+      const { links } = body;
+      if (!links?.length) {
+        return new Response(JSON.stringify({ error: "No links provided" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      // Group links by source page
+      const bySource = new Map<string, any[]>();
+      for (const link of links) {
+        const key = link.sourcePath;
+        if (!bySource.has(key)) bySource.set(key, []);
+        bySource.get(key)!.push(link);
+      }
+
+      let updated = 0;
+      // For each source page, find its snapshot and add internal links
+      for (const [sourcePath, pageLinks] of bySource) {
+        // Find the snapshot by matching pagePath
+        const { data: snapRows } = await supabase
+          .from("site_settings")
+          .select("id, key, value")
+          .like("key", "seo_page__%")
+          .limit(1000);
+
+        const matchingSnap = (snapRows || []).find((r: any) => {
+          const val = r.value as any;
+          return val?.pagePath === sourcePath || val?.slug === sourcePath.replace(/^\//, "").split("/").pop();
+        });
+
+        if (matchingSnap) {
+          const val = matchingSnap.value as any;
+          const existingLinks = val.internalLinks?.approved || [];
+          const newLinks = pageLinks.map((l: any) => ({ path: l.targetPath, anchorText: l.anchorText, targetName: l.targetName }));
+          val.internalLinks = { ...val.internalLinks, approved: [...existingLinks, ...newLinks] };
+          await supabase.from("site_settings").update({ value: val }).eq("id", matchingSnap.id);
+          updated++;
+        }
+      }
+
+      return new Response(JSON.stringify({ updated, totalLinks: links.length }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     if (mode === "auto_keywords") {
       const { contentType } = body;
       if (!contentType || !CONTENT_TABLES[contentType]) {

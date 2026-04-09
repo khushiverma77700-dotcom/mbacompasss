@@ -227,6 +227,15 @@ const AdminSEODashboard = () => {
 
   const [injectLoading, setInjectLoading] = useState(false);
 
+  // Interlink Studio State
+  const [interlinkSuggestions, setInterlinkSuggestions] = useState<any[]>([]);
+  const [interlinkSummary, setInterlinkSummary] = useState("");
+  const [interlinkThemes, setInterlinkThemes] = useState<string[]>([]);
+  const [interlinkLoading, setInterlinkLoading] = useState(false);
+  const [interlinkApplying, setInterlinkApplying] = useState(false);
+  const [interlinkSelected, setInterlinkSelected] = useState<Set<number>>(new Set());
+  const [interlinkFilter, setInterlinkFilter] = useState("all");
+
   // Auto-Generate State
   const [autoGenType, setAutoGenType] = useState<SEOContentType>("article");
   const [autoGenLoading, setAutoGenLoading] = useState(false);
@@ -367,7 +376,14 @@ const AdminSEODashboard = () => {
     await saveKnownKeys(currentKeys);
   };
 
+  // Auto-poll for new pages every 90 seconds
   useEffect(() => { fetchDashboardData(); loadSavedBlogIdeas(); loadDailyReport(); }, [fetchDashboardData, loadSavedBlogIdeas]);
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!loading && !bulkLoading) fetchDashboardData();
+    }, 90_000);
+    return () => clearInterval(interval);
+  }, [fetchDashboardData, loading, bulkLoading]);
 
   // ── New Feature Functions ──
   const loadDailyReport = useCallback(async () => {
@@ -600,7 +616,50 @@ const AdminSEODashboard = () => {
     await saveBlogIdeasToDb([]);
   };
 
-  // Filtering & stats
+  // ── Interlink Studio Functions ──
+  const runInterlinkSuggest = async () => {
+    setInterlinkLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-seo-engine", { body: { mode: "interlink_suggest" } });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setInterlinkSuggestions(data?.suggestions || []);
+      setInterlinkSummary(data?.summary || "");
+      setInterlinkThemes(data?.themes || []);
+      setInterlinkSelected(new Set((data?.suggestions || []).map((_: any, i: number) => i)));
+      toast({ title: "Interlink suggestions ready", description: `${data?.suggestions?.length || 0} link opportunities found` });
+    } catch (e: any) { toast({ title: "Interlink analysis failed", description: e.message, variant: "destructive" }); }
+    finally { setInterlinkLoading(false); }
+  };
+
+  const handleInterlinkApply = async () => {
+    const selected = interlinkSuggestions.filter((_, i) => interlinkSelected.has(i));
+    if (!selected.length) { toast({ title: "No links selected" }); return; }
+    if (!window.confirm(`Apply ${selected.length} internal links to page snapshots?`)) return;
+    setInterlinkApplying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-seo-engine", { body: { mode: "interlink_apply", links: selected } });
+      if (error) throw error;
+      toast({ title: "Internal links applied!", description: `Updated ${data?.updated || 0} page snapshots with ${data?.totalLinks || 0} links.` });
+      fetchDashboardData();
+    } catch (e: any) { toast({ title: "Apply failed", description: e.message, variant: "destructive" }); }
+    finally { setInterlinkApplying(false); }
+  };
+
+  const toggleInterlinkSelect = (index: number) => {
+    setInterlinkSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) next.delete(index); else next.add(index);
+      return next;
+    });
+  };
+
+  const filteredInterlinks = useMemo(() => {
+    if (interlinkFilter === "all") return interlinkSuggestions;
+    return interlinkSuggestions.filter(s => s.priority === interlinkFilter || s.theme === interlinkFilter);
+  }, [interlinkSuggestions, interlinkFilter]);
+
+
   const filteredRows = useMemo(() => {
     return rows.filter((row) => {
       if (selectedType !== "all" && row.contentType !== selectedType) return false;
@@ -706,6 +765,7 @@ const AdminSEODashboard = () => {
   const navItems = [
     { id: "overview", label: "Overview", icon: BarChart3 },
     { id: "pages", label: `All Pages (${filteredRows.length})`, icon: FileText },
+    { id: "interlinks", label: "Interlink Studio", icon: Link2 },
     { id: "auto-generate", label: "Auto-Generate", icon: Zap },
     { id: "uniqueness", label: "Uniqueness Check", icon: Shield },
     { id: "content-gaps", label: "Content Gaps", icon: Crosshair },
@@ -2023,6 +2083,118 @@ const AdminSEODashboard = () => {
                 <RecommendationRow icon={<Shield className="h-4 w-4" />} text="Add Content Security Policy headers for production" severity="low" />
               </CardContent>
             </Card>
+          </div>
+        )}
+
+        {/* ═══ INTERLINK STUDIO ═══ */}
+        {activeTab === "interlinks" && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div>
+                    <CardTitle className="flex items-center gap-2"><Link2 className="h-5 w-5 text-primary" /> Interlink Studio</CardTitle>
+                    <CardDescription>AI-powered internal linking. Generate, review, add/remove, then apply to your pages.</CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button onClick={runInterlinkSuggest} disabled={interlinkLoading} size="sm">
+                      {interlinkLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                      {interlinkSuggestions.length ? "Re-analyze" : "Generate Suggestions"}
+                    </Button>
+                    {interlinkSuggestions.length > 0 && (
+                      <Button onClick={handleInterlinkApply} disabled={interlinkApplying || interlinkSelected.size === 0} size="sm" variant="default">
+                        {interlinkApplying ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+                        Apply Selected ({interlinkSelected.size})
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
+              {interlinkSummary && (
+                <CardContent className="pt-0 pb-4">
+                  <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">{interlinkSummary}</p>
+                </CardContent>
+              )}
+            </Card>
+
+            {interlinkSuggestions.length > 0 && (
+              <>
+                <div className="flex flex-wrap gap-2 items-center">
+                  <Badge variant={interlinkFilter === "all" ? "default" : "outline"} className="cursor-pointer" onClick={() => setInterlinkFilter("all")}>
+                    All ({interlinkSuggestions.length})
+                  </Badge>
+                  {["high", "medium", "low"].map(p => {
+                    const count = interlinkSuggestions.filter(s => s.priority === p).length;
+                    return count > 0 ? (
+                      <Badge key={p} variant={interlinkFilter === p ? "default" : "outline"} className="cursor-pointer" onClick={() => setInterlinkFilter(p)}>
+                        {p.charAt(0).toUpperCase() + p.slice(1)} ({count})
+                      </Badge>
+                    ) : null;
+                  })}
+                  <div className="ml-auto flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => setInterlinkSelected(new Set(filteredInterlinks.map((s) => interlinkSuggestions.indexOf(s))))}>Select All</Button>
+                    <Button size="sm" variant="outline" onClick={() => setInterlinkSelected(new Set())}>Deselect All</Button>
+                  </div>
+                </div>
+
+                <div className="grid gap-3">
+                  {filteredInterlinks.map((link) => {
+                    const originalIdx = interlinkSuggestions.indexOf(link);
+                    const isSelected = interlinkSelected.has(originalIdx);
+                    return (
+                      <Card key={originalIdx} className={`transition-all ${isSelected ? "border-primary/50 bg-primary/5" : "opacity-60"}`}>
+                        <CardContent className="py-3 px-4">
+                          <div className="flex items-start gap-3">
+                            <Checkbox checked={isSelected} onCheckedChange={() => toggleInterlinkSelect(originalIdx)} className="mt-1" />
+                            <div className="flex-1 min-w-0 space-y-1.5">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Badge className={`text-[10px] ${link.priority === "high" ? "bg-red-100 text-red-700" : link.priority === "medium" ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700"}`}>{link.priority}</Badge>
+                                {link.theme && <Badge variant="outline" className="text-[10px]">{link.theme}</Badge>}
+                              </div>
+                              <div className="flex items-center gap-2 text-sm flex-wrap">
+                                <span className="font-medium truncate max-w-[200px]">{link.sourceName}</span>
+                                <ArrowRight className="h-3 w-3 text-primary shrink-0" />
+                                <span className="font-medium truncate max-w-[200px] text-primary">{link.targetName}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                                <code className="bg-muted px-1.5 py-0.5 rounded text-[10px]">{link.sourcePath}</code>
+                                <ArrowRight className="h-2.5 w-2.5 shrink-0" />
+                                <code className="bg-muted px-1.5 py-0.5 rounded text-[10px]">{link.targetPath}</code>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground">Anchor:</span>
+                                <span className="text-xs font-medium text-primary">&quot;{link.anchorText}&quot;</span>
+                              </div>
+                              {link.reason && <p className="text-xs text-muted-foreground italic">{link.reason}</p>}
+                            </div>
+                            <Button size="sm" variant="ghost" onClick={() => {
+                              const next = interlinkSuggestions.filter((_, i) => i !== originalIdx);
+                              setInterlinkSuggestions(next);
+                              setInterlinkSelected(prev => { const n = new Set<number>(); prev.forEach(v => { if (v < originalIdx) n.add(v); else if (v > originalIdx) n.add(v - 1); }); return n; });
+                            }}>
+                              <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {!interlinkLoading && interlinkSuggestions.length === 0 && (
+              <Card className="border-dashed">
+                <CardContent className="py-12 text-center">
+                  <Link2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Interlink Suggestions Yet</h3>
+                  <p className="text-sm text-muted-foreground mb-4">Click &quot;Generate Suggestions&quot; to analyze your site and get AI-powered internal linking recommendations.</p>
+                  <Button onClick={runInterlinkSuggest} disabled={interlinkLoading}>
+                    <Sparkles className="h-4 w-4 mr-2" /> Generate Suggestions
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
       </div>
