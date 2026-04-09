@@ -329,6 +329,7 @@ serve(async (req) => {
       throw new Error(`AI gateway error: ${response.status}`);
     }
 
+    console.log(`[ai-keyword-research] AI call completed in ${Date.now() - aiStartTime}ms`);
     const aiData = await response.json();
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     let result;
@@ -339,6 +340,7 @@ serve(async (req) => {
       result = extractJsonFromResponse(content);
     }
 
+    console.log(`[ai-keyword-research] Total time: ${Date.now() - startTime}ms, keywords: ${result?.keywords?.length || 0}`);
     return new Response(JSON.stringify({ success: true, data: result, mode, generatedAt: new Date().toISOString() }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
