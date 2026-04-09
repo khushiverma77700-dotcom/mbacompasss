@@ -150,7 +150,7 @@ const AdminTestimonials = () => {
                   onChange={(url) => setForm({ ...form, image_url: url })}
                   accept="image/*"
                   label={form.type === "image" ? "Screenshot Image *" : "Avatar Image (optional)"}
-                  sizeHint={form.type === "image" ? "800×600 px (4:3 ratio)" : "150×150 px (square)"}
+                  sizeHint={form.type === "image" ? "800×600 px (4:3 ratio, JPG/PNG) • Max 200 KB" : "150×150 px (square, PNG) • Max 50 KB"}
                 />
               )}
               {form.type === "video" && (

@@ -7,8 +7,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 
-const emptyForm = { title: "", subtitle: "", image_url: "", link_url: "", cta_text: "Learn More", active: true, sort_order: 0 };
+const emptyForm = { title: "", subtitle: "", image_url: "", mobile_image_url: "", link_url: "", cta_text: "Learn More", active: true, sort_order: 0 };
 
 const AdminBanners = () => {
   const [banners, setBanners] = useState<any[]>([]);
@@ -44,6 +45,7 @@ const AdminBanners = () => {
       title: banner.title,
       subtitle: banner.subtitle ?? "",
       image_url: banner.image_url ?? "",
+      mobile_image_url: (banner as any).mobile_image_url ?? "",
       link_url: banner.link_url ?? "",
       cta_text: banner.cta_text ?? "Learn More",
       active: banner.active ?? true,
@@ -73,10 +75,17 @@ const AdminBanners = () => {
             <div className="space-y-3">
               <Input placeholder="Title *" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
               <Input placeholder="Subtitle" value={form.subtitle} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} />
-              <div>
-                <Input placeholder="Image URL" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
-                <p className="text-[10px] text-muted-foreground/70 mt-1">Recommended: 1400×500 px (landscape, JPG/PNG)</p>
-              </div>
+              <ResponsiveImageUpload
+                bucket="uploads"
+                folder="banners"
+                label="Banner Image"
+                desktopValue={form.image_url}
+                mobileValue={form.mobile_image_url}
+                onDesktopChange={(url) => setForm({ ...form, image_url: url })}
+                onMobileChange={(url) => setForm({ ...form, mobile_image_url: url })}
+                desktopSpec={{ dimensions: "1400×500 px", ratio: "2.8:1, landscape", maxSize: "300 KB" }}
+                mobileSpec={{ dimensions: "600×400 px", ratio: "3:2, portrait-friendly", maxSize: "150 KB" }}
+              />
               <Input placeholder="Link URL" value={form.link_url} onChange={(e) => setForm({ ...form, link_url: e.target.value })} />
               <Input placeholder="CTA Text" value={form.cta_text} onChange={(e) => setForm({ ...form, cta_text: e.target.value })} />
               <Input placeholder="Sort Order" type="number" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} />
