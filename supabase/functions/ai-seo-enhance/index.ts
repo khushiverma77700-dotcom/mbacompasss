@@ -269,6 +269,8 @@ ${data.exam_date ? `Exam Date: ${data.exam_date}` : ""}
 
 Perform DEEP, page-specific SEO analysis. Be brutally honest about current state.`;
 
+    console.log(`[ai-seo-enhance] Calling AI gateway...`);
+    const aiStartTime = Date.now();
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
