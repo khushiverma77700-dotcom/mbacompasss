@@ -264,7 +264,7 @@ const InstitutePage = () => {
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             {/* About */}
-            <Card>
+            <Card id="institute-about">
               <CardHeader><CardTitle className="font-heading">About {institute.name}</CardTitle></CardHeader>
               <CardContent>
                 <p className="text-muted-foreground leading-relaxed mb-4">{institute.description}</p>
