@@ -18,7 +18,7 @@ const ContactPage = () => {
   const { data: settings } = useSiteSettings("contact_page");
 
   const heading = settings?.heading || "Contact Us";
-  const email = settings?.email || "info@bestmbacoaching.com";
+  const email = settings?.email || "info@bschoolbuzz.com";
   const phone = settings?.phone || "+91 98765 43210";
   const address = settings?.address || "Connaught Place, New Delhi, India 110001";
 
