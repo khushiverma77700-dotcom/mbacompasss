@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
+import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 import ReactMarkdown from "react-markdown";
 import { Link } from "react-router-dom";
 
@@ -59,9 +61,12 @@ const AIGistSection = ({ content, pageType, pageId, onScrollToContent }: AIGistS
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState<string | null>(null);
   const [askLoading, setAskLoading] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleSummarize = async () => {
+    if (!user) { setLoginOpen(true); return; }
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("ai-page-summary", {
@@ -78,6 +83,7 @@ const AIGistSection = ({ content, pageType, pageId, onScrollToContent }: AIGistS
 
   const handleAsk = async () => {
     if (!question.trim()) return;
+    if (!user) { setLoginOpen(true); return; }
     setAskLoading(true);
     setAnswer(null);
     try {
@@ -95,7 +101,9 @@ const AIGistSection = ({ content, pageType, pageId, onScrollToContent }: AIGistS
   const pageLabel = pageType === "article" ? "Article" : pageType === "college" ? "College Page" : pageType === "exam" ? "Exam Page" : pageType === "city" ? "City Guide" : "Institute Page";
 
   return (
-    <motion.div
+    <>
+      <LoginRequiredDialog open={loginOpen} onOpenChange={setLoginOpen} message="Sign in to use B School Buzz AI — get instant summaries and answers." />
+      <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
@@ -267,6 +275,7 @@ const AIGistSection = ({ content, pageType, pageId, onScrollToContent }: AIGistS
         </AnimatePresence>
       </div>
     </motion.div>
+    </>
   );
 };
 
