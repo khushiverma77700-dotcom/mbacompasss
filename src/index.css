@@ -124,3 +124,51 @@
     background-color: hsl(var(--cat-government));
   }
 }
+
+/* ── AI Gist Gemini-style animated gradient border ── */
+@keyframes ai-border-spin {
+  0% { --ai-angle: 0deg; }
+  100% { --ai-angle: 360deg; }
+}
+
+@property --ai-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.ai-gist-border {
+  background: conic-gradient(
+    from var(--ai-angle, 0deg),
+    #3b82f6 0%,
+    #8b5cf6 25%,
+    #ec4899 50%,
+    #8b5cf6 75%,
+    #3b82f6 100%
+  );
+  animation: ai-border-spin 4s linear infinite;
+}
+
+.ai-gist-border-inner {
+  background: conic-gradient(
+    from var(--ai-angle, 0deg),
+    #3b82f620 0%,
+    #8b5cf620 25%,
+    #ec489920 50%,
+    #8b5cf620 75%,
+    #3b82f620 100%
+  );
+  animation: ai-border-spin 4s linear infinite;
+}
+
+.ai-gist-input-border {
+  background: conic-gradient(
+    from var(--ai-angle, 0deg),
+    #3b82f630 0%,
+    #8b5cf630 25%,
+    #ec489930 50%,
+    #8b5cf630 75%,
+    #3b82f630 100%
+  );
+  animation: ai-border-spin 4s linear infinite;
+}

@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import SEOHead, { generateExamSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import { examDetails, institutes } from "@/data/mockData";
+import AIGistSection from "@/components/AIGistSection";
 
 const stripHtml = (value?: string | null) => (value || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 
