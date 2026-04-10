@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const DEFAULT_SITE_URL = "https://bestmbacoaching.com";
+const DEFAULT_SITE_URL = "https://bschoolbuzz.com";
 const SITE_URL = typeof window !== "undefined" ? window.location.origin : DEFAULT_SITE_URL;
 
 interface SEOHeadProps {

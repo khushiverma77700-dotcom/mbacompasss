@@ -56,12 +56,12 @@ const BlogPage = () => {
         title="MBA Blog & News — Exam Tips, Career Advice, Coaching Reviews | BestMBACoaching.com"
         description="Read expert articles on MBA entrance exams, coaching reviews, career advice, interview tips, and the latest MBA news."
         keywords={["MBA blog", "CAT preparation tips", "MBA coaching reviews", "MBA career advice", "GMAT tips"]}
-        canonical="https://bestmbacoaching.com/blog"
+        canonical="https://bschoolbuzz.com/blog"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "Blog",
           name: "BestMBACoaching Blog",
-          url: "https://bestmbacoaching.com/blog",
+          url: "https://bschoolbuzz.com/blog",
           description: "Expert articles on MBA preparation, coaching reviews, and career advice",
         }}
       />

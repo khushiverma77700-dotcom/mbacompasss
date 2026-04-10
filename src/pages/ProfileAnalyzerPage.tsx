@@ -791,7 +791,7 @@ const ProfileAnalyzerPage = () => {
         title="AI-Powered MBA Profile Analyser by B School Buzz | Check IIM Chances Free"
         description="Analyse your MBA profile with AI. Get personalised IIM admission probability, 5-dimension score breakdown, peer comparison among 25,000+ students, college-wise comparison table with difficulty ratings, and detailed preparation roadmap. 100% Free tool by B School Buzz."
         keywords={["MBA profile analyser", "IIM chances calculator", "CAT score predictor", "MBA admission probability", "B School Buzz profile analyser", "AI MBA tool", "IIM admission predictor", "MBA college comparison", "CAT preparation", "MBA peer comparison", "free MBA profile evaluation", "check IIM chances", "MBA profile checker", "IIM admission probability calculator", "MBA college predictor India", "CAT percentile predictor", "best MBA coaching", "XAT preparation profile analysis", "NMAT score predictor", "MBA after engineering chances", "MBA for working professionals", "IIM fees and placement comparison", "MBA ROI calculator", "top MBA colleges accepting CAT score", "MBA entrance exam difficulty", "should I do MBA quiz", "MBA admission chances 2025", "IIM call predictor"]}
-        canonical="https://bestmbacoaching.com/profile-analyzer"
+        canonical="https://bschoolbuzz.com/profile-analyzer"
         ogType="website"
         ogTitle="AI-Powered MBA Profile Analyser by B School Buzz"
         ogDescription="Get personalised college predictions, 5-dimension scoring, peer ranking among 25,000+ students, and AI-powered preparation roadmap for IIM, XLRI, FMS and 50+ top MBA colleges."

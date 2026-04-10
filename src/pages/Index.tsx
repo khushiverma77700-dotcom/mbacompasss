@@ -58,7 +58,7 @@ const Index = () => {
           "CAT coaching fees", "GMAT coaching India", "MBA entrance exam preparation",
           "best coaching for IIM", "MBA coaching online classes",
         ]}
-        canonical="https://bestmbacoaching.com"
+        canonical="https://bschoolbuzz.com"
         ogType="website"
         ogTitle="Best MBA Coaching 2025 — India's #1 Coaching Comparison Platform"
         ogDescription="Compare 500+ MBA coaching institutes. Find the best CAT, GMAT, XAT coaching near you with verified reviews and success rates."

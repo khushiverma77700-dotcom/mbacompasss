@@ -69,7 +69,7 @@ const CollegesPage = () => {
         title="Top MBA Colleges in India 2026 — Rankings, Fees, Placements | BestMBACoaching.com"
         description="Explore top MBA colleges in India with rankings, fees, placements, and admission details. Compare IIMs, top management institutes, PGDM colleges across all cities."
         keywords={["top MBA colleges India", "best B-schools India", "MBA college rankings", "IIM fees placements"]}
-        canonical="https://bestmbacoaching.com/colleges"
+        canonical="https://bschoolbuzz.com/colleges"
         jsonLd={jsonLd}
       />
 

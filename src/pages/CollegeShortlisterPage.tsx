@@ -334,7 +334,7 @@ const CollegeShortlisterPage = () => {
           title="AI College Shortlister — Dream, Target & Safe MBA Colleges"
           description="Get AI-powered MBA college recommendations in 30 seconds. Our simulator analyzes your profile against 100+ colleges to find Dream, Target, and Safe picks."
           keywords={["MBA college shortlisting", "AI college finder", "CAT college predictor", "MBA admission chances"]}
-          canonical="https://bestmbacoaching.com/college-shortlister"
+          canonical="https://bschoolbuzz.com/college-shortlister"
         />
 
         {/* ══ HERO ══ */}
