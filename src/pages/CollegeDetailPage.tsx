@@ -492,6 +492,8 @@ const CollegeDetailPage = () => {
               </Card>
             </div>
 
+            <InlineAIToolCTA variant="college-shortlister" />
+
             {/* Cutoff */}
             <div ref={el => { sectionRefs.current["cutoff"] = el; }}>
               <Card>

@@ -426,6 +426,8 @@ const InstitutePage = () => {
               </CardContent>
             </Card>
 
+            <InlineAIToolCTA variant="coaching-finder" />
+
             {/* Faculty */}
             {faculty.length > 0 && (
               <Card>
