@@ -37,7 +37,7 @@ const adminNav = [
   { label: "Business Inquiries", path: "/admin/business-inquiries", icon: Briefcase },
   { label: "Manage Admins", path: "/admin/manage-admins", icon: ShieldCheck },
   { label: "Database Backup", path: "/admin/database-backup", icon: Database },
-  { label: "AI Usage Tracker", path: "/admin/ai-usage", icon: Activity },
+  { label: "AI & Cloud Usage", path: "/admin/ai-usage", icon: Activity },
 ];
 
 const AdminLayout = () => {
