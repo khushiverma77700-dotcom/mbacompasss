@@ -210,14 +210,20 @@ const AdminSEODashboard = () => {
   // Keyword Research State
   const [kwQuery, setKwQuery] = useState("MBA coaching India");
   const [kwResults, setKwResults] = useState<KeywordResult[]>([]);
-  const [kwContentGaps, setKwContentGaps] = useState<string[]>([]);
-  const [kwSeasonal, setKwSeasonal] = useState<string[]>([]);
-  const [kwSnippets, setKwSnippets] = useState<string[]>([]);
+  const [kwContentGaps, setKwContentGaps] = useState<ContentGapItem[]>([]);
+  const [kwSeasonal, setKwSeasonal] = useState<SeasonalItem[]>([]);
+  const [kwSnippets, setKwSnippets] = useState<SnippetItem[]>([]);
+  const [kwClusters, setKwClusters] = useState<KeywordCluster[]>([]);
+  const [kwDataQuality, setKwDataQuality] = useState<DataQualityReport | null>(null);
+  const [kwCompetitorKws, setKwCompetitorKws] = useState<any[]>([]);
   const [kwSummary, setKwSummary] = useState("");
   const [kwLoading, setKwLoading] = useState(false);
   const [kwLastRefresh, setKwLastRefresh] = useState<string | null>(null);
   const [kwSelectedKws, setKwSelectedKws] = useState<string[]>([]);
   const [kwInjectTarget, setKwInjectTarget] = useState<"all" | SEOContentType>("all");
+  const [kwSortBy, setKwSortBy] = useState<"volume" | "difficulty" | "priority">("volume");
+  const [kwFilterSource, setKwFilterSource] = useState<string>("all");
+  const [kwFilterIntent, setKwFilterIntent] = useState<string>("all");
 
   // Blog Titles State
   const [btQuery, setBtQuery] = useState("MBA coaching");
