@@ -52,6 +52,21 @@ const FAQS = [
   { q: "What do Dream, Target, and Safe mean?", a: "Dream colleges (20-40% chance) are aspirational. Target (40-70%) are competitive but within reach. Safe (70-90%) strongly align with your profile." },
 ];
 
+interface ScoreComponent {
+  yours: number; required: number; max: number; label: string;
+}
+
+interface ScoreBreakdown {
+  examScore: ScoreComponent;
+  academicScore: ScoreComponent;
+  workExScore: ScoreComponent;
+  budgetFit: ScoreComponent;
+  overallYours: number;
+  overallRequired: number;
+  overallMax: number;
+  improvements: string[];
+}
+
 interface CollegeResult {
   id: string; name: string; slug: string; city: string | null; state: string | null;
   fees: string | null; feesNum: number; placement_avg: string | null; placement_highest: string | null;
@@ -60,7 +75,7 @@ interface CollegeResult {
   established: number | null; logo_url: string | null; chancePercent: number;
   bucket: "dream" | "target" | "safe"; whyFit: string; tips: string;
   compositeScore: number; accreditations: string[] | null; exams_accepted: string[] | null;
-  roi: number | null; badges: string[]; cutoffPercentile: number | null;
+  roi: number | null; badges: string[]; scoreBreakdown?: ScoreBreakdown;
   specializations: string[]; courses: string[] | null; campus_size: string | null; total_students: number | null;
 }
 
