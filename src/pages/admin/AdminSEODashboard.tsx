@@ -757,7 +757,7 @@ const AdminSEODashboard = () => {
     if (!selectedRows.length) { toast({ title: "No pages selected" }); return; }
     setBulkLoading(true);
     let success = 0, fail = 0;
-    for (const row of selectedRows) {
+    for (const row of selectedRows.filter(r => !isStaticPage(r))) {
       try {
         const { data, error } = await supabase.functions.invoke("ai-seo-enhance", { body: { contentType: row.contentType, data: row.item } });
         if (error) throw error;
