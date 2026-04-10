@@ -877,8 +877,32 @@ const CollegeShortlisterPage = () => {
 
   // ─── RESULTS ───────────────────────────────────────────────
 
+  const ScoreBar = ({ component, color }: { component: ScoreComponent; color: string }) => {
+    const yoursPercent = (component.yours / component.max) * 100;
+    const requiredPercent = (component.required / component.max) * 100;
+    const isAbove = component.yours >= component.required;
+    return (
+      <div className="space-y-1">
+        <div className="flex items-center justify-between text-[10px]">
+          <span className="text-muted-foreground font-medium">{component.label}</span>
+          <span className={`font-bold ${isAbove ? "text-emerald-600" : "text-red-500"}`}>
+            {component.yours}/{component.max}
+            <span className="text-muted-foreground font-normal ml-1">(need {component.required})</span>
+          </span>
+        </div>
+        <div className="relative h-2.5 bg-muted rounded-full overflow-hidden">
+          {/* Required marker */}
+          <div className="absolute top-0 bottom-0 w-0.5 bg-foreground/40 z-10" style={{ left: `${requiredPercent}%` }} />
+          {/* Your score bar */}
+          <div className={`h-full rounded-full transition-all duration-500 ${isAbove ? "bg-emerald-500" : "bg-red-400"}`} style={{ width: `${yoursPercent}%` }} />
+        </div>
+      </div>
+    );
+  };
+
   const renderCollegeCard = (college: CollegeResult, cfg: typeof bucketConfig.dream) => {
     const isExpanded = expandedCard === college.id;
+    const bd = college.scoreBreakdown;
     return (
       <motion.div key={college.id} layout>
         <Card className={`${cfg.border} border hover:shadow-lg transition-all duration-300 group overflow-hidden`}>
@@ -944,7 +968,32 @@ const CollegeShortlisterPage = () => {
                   </div>
                 </div>
 
-                {/* Why fit - styled with icon */}
+                {/* ═══ SCORE COMPARISON SECTION ═══ */}
+                {bd && (
+                  <div className="mt-3 p-3 rounded-xl bg-muted/30 border border-border/50 space-y-2.5">
+                    {/* Overall Score Bar */}
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1.5">
+                        <Gauge className="w-3.5 h-3.5 text-primary" />
+                        <span className="text-xs font-bold text-foreground">Your Score vs Required</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-sm font-bold ${bd.overallYours >= bd.overallRequired ? "text-emerald-600" : "text-red-500"}`}>
+                          {bd.overallYours}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground">/</span>
+                        <span className="text-sm font-semibold text-muted-foreground">{bd.overallRequired}</span>
+                        <span className="text-[10px] text-muted-foreground">needed</span>
+                      </div>
+                    </div>
+                    <ScoreBar component={bd.examScore} color={cfg.color} />
+                    <ScoreBar component={bd.academicScore} color={cfg.color} />
+                    <ScoreBar component={bd.workExScore} color={cfg.color} />
+                    <ScoreBar component={bd.budgetFit} color={cfg.color} />
+                  </div>
+                )}
+
+                {/* Why fit */}
                 <div className={`mt-3 p-3 rounded-xl ${cfg.bg} border ${cfg.border}`}>
                   <div className="flex items-start gap-2">
                     <CheckCircle2 className={`w-4 h-4 ${cfg.color} flex-shrink-0 mt-0.5`} />
@@ -955,17 +1004,37 @@ const CollegeShortlisterPage = () => {
                   </div>
                 </div>
 
-                {/* Expand for tips */}
+                {/* Expand for tips + improvements */}
                 <button onClick={() => setExpandedCard(isExpanded ? null : college.id)}
                   className={`text-xs font-semibold mt-2.5 flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${isExpanded ? `${cfg.bg} ${cfg.color}` : "text-primary hover:bg-primary/5"}`}>
                   <Sparkles className="w-3 h-3" />
-                  {isExpanded ? "Hide Strategy" : "Tips & Strategy"} <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                  {isExpanded ? "Hide Details" : "Tips, Strategy & Improvements"} <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                 </button>
                 <AnimatePresence>
                   {isExpanded && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                       <div className="mt-2 p-4 rounded-xl bg-gradient-to-br from-muted/50 to-muted/30 border border-border/30 space-y-3">
-                        <div className="flex items-start gap-2.5">
+                        {/* Improvement Areas */}
+                        {bd && bd.improvements.length > 0 && (
+                          <div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="w-6 h-6 rounded-md bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                                <TrendingUp className="w-3.5 h-3.5 text-amber-600" />
+                              </div>
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Areas to Improve</span>
+                            </div>
+                            <div className="space-y-1.5 ml-8">
+                              {bd.improvements.map((imp, idx) => (
+                                <div key={idx} className="flex items-start gap-2">
+                                  <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${bd.overallYours >= bd.overallRequired ? "bg-emerald-500" : "bg-amber-500"}`} />
+                                  <p className="text-xs text-foreground leading-relaxed">{imp}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex items-start gap-2.5 pt-2 border-t border-border/30">
                           <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                             <Rocket className="w-3.5 h-3.5 text-primary" />
                           </div>
