@@ -557,7 +557,7 @@ const AdminSEODashboard = () => {
     setInjectLoading(true);
     let updated = 0;
     try {
-      for (const row of targetRows) {
+      for (const row of targetRows.filter(r => !isStaticPage(r))) {
         const existing: string[] = row.item.keywords || [];
         const newKws = kwSelectedKws.filter(k => !existing.map(e => e.toLowerCase()).includes(k.toLowerCase()));
         if (!newKws.length) continue;
@@ -587,7 +587,7 @@ const AdminSEODashboard = () => {
     let updated = 0;
     try {
       const topGapKws = gapKeywords.slice(0, 10);
-      for (const row of targetRows) {
+      for (const row of targetRows.filter(r => !isStaticPage(r))) {
         const existing: string[] = row.item.keywords || [];
         const newKws = topGapKws.filter(k => !existing.map(e => e.toLowerCase()).includes(k.toLowerCase()));
         if (!newKws.length) continue;
@@ -735,7 +735,13 @@ const AdminSEODashboard = () => {
     setSelectedKeys(c => checked ? Array.from(new Set([...c, rowKey])) : c.filter(k => k !== rowKey));
   };
 
+  const isStaticPage = (row: DashboardRow) => row.key.startsWith("static:");
+
   const applySEOFields = async (row: DashboardRow, suggestions: any) => {
+    if (isStaticPage(row)) {
+      toast({ title: "Static page", description: "Use Static Page SEO settings to update this page.", variant: "default" });
+      return;
+    }
     const update: Record<string, any> = {};
     if (suggestions.meta_title) update.meta_title = suggestions.meta_title;
     if (suggestions.meta_description) update.meta_description = suggestions.meta_description;
@@ -751,7 +757,7 @@ const AdminSEODashboard = () => {
     if (!selectedRows.length) { toast({ title: "No pages selected" }); return; }
     setBulkLoading(true);
     let success = 0, fail = 0;
-    for (const row of selectedRows) {
+    for (const row of selectedRows.filter(r => !isStaticPage(r))) {
       try {
         const { data, error } = await supabase.functions.invoke("ai-seo-enhance", { body: { contentType: row.contentType, data: row.item } });
         if (error) throw error;
