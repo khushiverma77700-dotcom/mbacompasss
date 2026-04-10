@@ -134,6 +134,7 @@ City: name="${data.name}", slug="${data.slug}", state="${data.state || ''}", typ
   }
 
   const aiData = await response.json();
+  await logAIUsage("seo-enhance", "google/gemini-2.5-flash", aiData);
   const content = aiData.choices?.[0]?.message?.content || "";
 
   try {
