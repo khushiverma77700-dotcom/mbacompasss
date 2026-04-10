@@ -18,6 +18,7 @@ import { useInstituteBySlug } from "@/hooks/useInstitutes";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
+import AIGistSection from "@/components/AIGistSection";
 
 const testimonials = [
   { name: "Ankit Verma", text: "IMS coaching transformed my CAT prep. Scored 99.2 percentile. The faculty's approach to Quant was game-changing.", rating: 5, batch: "CAT 2024", type: "text" },
@@ -254,6 +255,12 @@ const InstitutePage = () => {
           </div>
         )}
 
+        <AIGistSection
+          content={institute.description || institute.name}
+          pageType="institute"
+          pageId={institute.id}
+          onScrollToContent={() => document.getElementById("institute-about")?.scrollIntoView({ behavior: "smooth" })}
+        />
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             {/* About */}
