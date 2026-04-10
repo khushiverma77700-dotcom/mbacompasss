@@ -51,7 +51,7 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are an SEO competitive intelligence analyst for bestmbacoaching.com — an Indian MBA coaching directory.
+            content: `You are an SEO competitive intelligence analyst for bschoolbuzz.com — an Indian MBA coaching directory.
 Compare our site against these competitors: ${COMPETITORS.join(", ")}.
 Our current stats: ${totalPages} pages, ${pagesWithMeta} with meta tags, ${pagesWithKeywords} with 4+ keywords.
 Site content: ${summaries.join(". ")}.
@@ -60,7 +60,7 @@ Provide actionable, specific competitive analysis. Be data-driven and honest.`,
           },
           {
             role: "user",
-            content: `Perform daily competitive analysis comparing bestmbacoaching.com against ${COMPETITORS.join(", ")}.
+            content: `Perform daily competitive analysis comparing bschoolbuzz.com against ${COMPETITORS.join(", ")}.
 Analyze: SEO rankings, content depth, keyword coverage, technical performance, and content gaps.
 Prioritize actions by impact. Focus on what we can implement TODAY.`,
           },

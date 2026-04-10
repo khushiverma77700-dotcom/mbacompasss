@@ -217,7 +217,7 @@ serve(async (req) => {
       });
     }
 
-    const siteUrl = "https://bestmbacoaching.com";
+    const siteUrl = "https://bschoolbuzz.com";
 
     // Generate deterministic schema markup (no AI call needed - faster & more reliable)
     const schemaMarkup = getDefaultSchemas(contentType, data, siteUrl);

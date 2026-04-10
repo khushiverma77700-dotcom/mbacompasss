@@ -7,7 +7,7 @@ import { RefreshCw, Globe, ExternalLink, Copy, CheckCircle } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea";
 import STATIC_PAGES_CONFIG from "@/data/staticPages";
 
-const SITE_URL = "https://bestmbacoaching.com";
+const SITE_URL = "https://bschoolbuzz.com";
 
 const AdminSitemap = () => {
   const [sitemapXml, setSitemapXml] = useState("");

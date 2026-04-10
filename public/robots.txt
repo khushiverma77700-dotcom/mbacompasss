@@ -25,4 +25,4 @@ Disallow: /admin/
 Disallow: /auth
 Disallow: /dashboard
 
-Sitemap: https://bestmbacoaching.com/sitemap.xml
+Sitemap: https://bschoolbuzz.com/sitemap.xml

@@ -202,7 +202,7 @@ function buildCompetitorPayload(competitors: string[]) {
   const competitorList = competitors.length ? competitors.join(", ") : "shiksha.com, collegedunia.com, careers360.com, mbarendezvous.com, pagalguy.com, mbauniverse.com";
   const systemPrompt = `You are a competitive intelligence expert for Indian education/MBA websites. Provide extremely detailed, actionable analysis.`;
   const userPrompt = `Competitive analysis: ${competitorList}
-Our site: bestmbacoaching.com (MBA coaching discovery, comparison, reviews)
+Our site: bschoolbuzz.com (MBA coaching discovery, comparison, reviews)
 
 For each competitor: domain authority estimate, traffic, strengths (4+), weaknesses (3+), content strategy, unique keywords (8+), top pages (3+)
 SWOT for us vs them

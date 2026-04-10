@@ -18,7 +18,7 @@ const ContactPage = () => {
   const { data: settings } = useSiteSettings("contact_page");
 
   const heading = settings?.heading || "Contact Us";
-  const email = settings?.email || "info@bestmbacoaching.com";
+  const email = settings?.email || "info@bschoolbuzz.com";
   const phone = settings?.phone || "+91 98765 43210";
   const address = settings?.address || "Connaught Place, New Delhi, India 110001";
 
@@ -41,12 +41,12 @@ const ContactPage = () => {
         title="Contact Us — BestMBACoaching.com | Get MBA Coaching Guidance"
         description="Contact BestMBACoaching.com for personalized MBA coaching guidance. Get help choosing the right coaching institute for CAT, GMAT, XAT preparation."
         keywords={["contact MBA coaching", "MBA guidance", "CAT coaching help", "MBA preparation support"]}
-        canonical="https://bestmbacoaching.com/contact"
+        canonical="https://bschoolbuzz.com/contact"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "ContactPage",
           name: "Contact BestMBACoaching.com",
-          url: "https://bestmbacoaching.com/contact",
+          url: "https://bschoolbuzz.com/contact",
         }}
       />
 

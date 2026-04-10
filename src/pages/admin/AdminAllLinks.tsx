@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { RefreshCw, Copy, CheckCircle, Link2, Sparkles } from "lucide-react";
 import STATIC_PAGES_CONFIG from "@/data/staticPages";
 
-const SITE_URL = "https://bestmbacoaching.com";
+const SITE_URL = "https://bschoolbuzz.com";
 const STORAGE_KEY = "admin_known_links";
 
 interface LinkItem {
