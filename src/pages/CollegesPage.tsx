@@ -66,7 +66,7 @@ const CollegesPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Top MBA Colleges in India 2026 — Rankings, Fees, Placements | BestMBACoaching.com"
+        title="Top MBA Colleges in India 2026 — Rankings, Fees, Placements | BSchoolBuzz.com"
         description="Explore top MBA colleges in India with rankings, fees, placements, and admission details. Compare IIMs, top management institutes, PGDM colleges across all cities."
         keywords={["top MBA colleges India", "best B-schools India", "MBA college rankings", "IIM fees placements"]}
         canonical="https://bschoolbuzz.com/colleges"

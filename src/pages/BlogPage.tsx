@@ -53,14 +53,14 @@ const BlogPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="MBA Blog & News — Exam Tips, Career Advice, Coaching Reviews | BestMBACoaching.com"
+        title="MBA Blog & News — Exam Tips, Career Advice, Coaching Reviews | BSchoolBuzz.com"
         description="Read expert articles on MBA entrance exams, coaching reviews, career advice, interview tips, and the latest MBA news."
         keywords={["MBA blog", "CAT preparation tips", "MBA coaching reviews", "MBA career advice", "GMAT tips"]}
         canonical="https://bschoolbuzz.com/blog"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "Blog",
-          name: "BestMBACoaching Blog",
+          name: "BSchoolBuzz Blog",
           url: "https://bschoolbuzz.com/blog",
           description: "Expert articles on MBA preparation, coaching reviews, and career advice",
         }}

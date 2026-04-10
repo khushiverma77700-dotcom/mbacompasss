@@ -38,14 +38,14 @@ const ContactPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Contact Us — BestMBACoaching.com | Get MBA Coaching Guidance"
-        description="Contact BestMBACoaching.com for personalized MBA coaching guidance. Get help choosing the right coaching institute for CAT, GMAT, XAT preparation."
+        title="Contact Us — BSchoolBuzz.com | Get MBA Coaching Guidance"
+        description="Contact BSchoolBuzz.com for personalized MBA coaching guidance. Get help choosing the right coaching institute for CAT, GMAT, XAT preparation."
         keywords={["contact MBA coaching", "MBA guidance", "CAT coaching help", "MBA preparation support"]}
         canonical="https://bschoolbuzz.com/contact"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "ContactPage",
-          name: "Contact BestMBACoaching.com",
+          name: "Contact BSchoolBuzz.com",
           url: "https://bschoolbuzz.com/contact",
         }}
       />
