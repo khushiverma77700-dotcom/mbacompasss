@@ -397,6 +397,7 @@ Perform DEEP, page-specific SEO analysis. Be brutally honest about current state
     }
 
     const aiData = await response.json();
+    await logAIUsage("seo-enhance", "google/gemini-2.5-flash", aiData);
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
 
     let suggestions: any;
