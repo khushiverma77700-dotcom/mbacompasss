@@ -236,6 +236,13 @@ const CollegeShortlisterPage = () => {
 
   const handleSubmit = async () => {
     if (!validateStep(3)) return;
+
+    // Gate behind login — must be logged in to see results
+    if (!user) {
+      setShowLogin(true);
+      return;
+    }
+
     setStep(4);
     setLoading(true);
     try {
