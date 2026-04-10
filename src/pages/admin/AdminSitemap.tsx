@@ -8,7 +8,27 @@ import { Textarea } from "@/components/ui/textarea";
 import STATIC_PAGES_CONFIG from "@/data/staticPages";
 
 const SITE_URL = "https://bschoolbuzz.com";
-const LIVE_SITEMAP_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/serve-sitemap`;
+const LIVE_SITEMAP_URL = `${SITE_URL}/sitemap.xml`;
+const EXCLUDED_SITEMAP_PATHS = new Set(["/auth", "/dashboard"]);
+
+const buildSitemapXml = (urls: { loc: string; priority: number }[]) => {
+  const uniqueUrls = Array.from(
+    new Map(urls.filter((url) => url.loc).map((url) => [url.loc, url])).values(),
+  );
+  const lastmod = new Date().toISOString();
+
+  return {
+    urlCount: uniqueUrls.length,
+    xml: `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+${uniqueUrls.map((url) => `  <url>
+    <loc>${SITE_URL}${url.loc}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <priority>${url.priority.toFixed(2)}</priority>
+  </url>`).join("\n")}
+</urlset>`,
+  };
+};
 
 const AdminSitemap = () => {
   const [sitemapXml, setSitemapXml] = useState("");
@@ -20,13 +40,12 @@ const AdminSitemap = () => {
   const generateSitemap = async () => {
     setLoading(true);
     try {
-      const urls: { loc: string; priority: string; changefreq: string }[] = [];
+      const urls: { loc: string; priority: number }[] = [];
 
       // Static pages — auto-detected from centralized config
-      const staticPages = STATIC_PAGES_CONFIG.map(sp => ({
+      const staticPages = STATIC_PAGES_CONFIG.filter((page) => !EXCLUDED_SITEMAP_PATHS.has(page.path)).map(sp => ({
         loc: sp.path,
-        priority: sp.path === "/" ? "1.0" : "0.7",
-        changefreq: sp.path === "/" ? "daily" : "weekly",
+        priority: sp.path === "/" ? 1.0 : 0.7,
       }));
       urls.push(...staticPages);
 
@@ -47,34 +66,25 @@ const AdminSitemap = () => {
         supabase.from("city_pages").select("slug").eq("active", true),
       ]);
 
-      institutes?.forEach((i) => urls.push({ loc: `/institute/${i.slug}`, priority: "0.8", changefreq: "weekly" }));
-      colleges?.forEach((c) => urls.push({ loc: `/college/${c.slug}`, priority: "0.8", changefreq: "weekly" }));
-      exams?.forEach((e) => urls.push({ loc: `/exam/${e.slug}`, priority: "0.7", changefreq: "weekly" }));
-      categories?.forEach((c) => urls.push({ loc: `/category/${c.slug}`, priority: "0.7", changefreq: "weekly" }));
-      articles?.forEach((a) => urls.push({ loc: `/article/${a.slug}`, priority: "0.6", changefreq: "weekly" }));
-      cityPages?.forEach((cp) => urls.push({ loc: `/colleges/${cp.slug}`, priority: "0.8", changefreq: "weekly" }));
+      institutes?.forEach((i) => i.slug && urls.push({ loc: `/institute/${i.slug}`, priority: 0.8 }));
+      colleges?.forEach((c) => c.slug && urls.push({ loc: `/college/${c.slug}`, priority: 0.8 }));
+      exams?.forEach((e) => e.slug && urls.push({ loc: `/exam/${e.slug}`, priority: 0.7 }));
+      categories?.forEach((c) => c.slug && urls.push({ loc: `/category/${c.slug}`, priority: 0.7 }));
+      articles?.forEach((a) => a.slug && urls.push({ loc: `/article/${a.slug}`, priority: 0.6 }));
+      cityPages?.forEach((cp) => cp.slug && urls.push({ loc: `/colleges/${cp.slug}`, priority: 0.8 }));
 
-      const now = new Date().toISOString().split("T")[0];
-      const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map((u) => `  <url>
-    <loc>${SITE_URL}${u.loc}</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>${u.changefreq}</changefreq>
-    <priority>${u.priority}</priority>
-  </url>`).join("\n")}
-</urlset>`;
+      const { xml, urlCount: totalUrls } = buildSitemapXml(urls);
 
       setSitemapXml(xml);
-      setUrlCount(urls.length);
+      setUrlCount(totalUrls);
 
       // Save to site_settings for reference
       await supabase.from("site_settings").upsert({
         key: "sitemap_xml",
-        value: JSON.stringify({ xml, generated_at: new Date().toISOString(), url_count: urls.length }),
+        value: JSON.stringify({ xml, generated_at: new Date().toISOString(), url_count: totalUrls }),
       }, { onConflict: "key" });
 
-      toast({ title: "Sitemap Generated!", description: `${urls.length} URLs included.` });
+      toast({ title: "Sitemap Preview Generated!", description: `${totalUrls} URLs ready. Publish the app to refresh the live sitemap.xml file.` });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
@@ -105,7 +115,7 @@ ${urls.map((u) => `  <url>
         <h1 className="font-heading text-2xl font-bold text-foreground">Sitemap Manager</h1>
         <Button onClick={generateSitemap} disabled={loading}>
           <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-          {loading ? "Generating..." : "Generate / Refresh Sitemap"}
+          {loading ? "Generating..." : "Generate Sitemap Preview"}
         </Button>
       </div>
 
@@ -118,10 +128,10 @@ ${urls.map((u) => `  <url>
           <CardContent className="space-y-4">
             <div className="bg-muted/50 rounded-lg p-4 space-y-3">
               <p className="text-sm text-muted-foreground">
-                <strong>Step 1:</strong> Click "Generate / Refresh Sitemap" above to create the latest sitemap.
+                <strong>Step 1:</strong> Click "Generate Sitemap Preview" above to review the latest sitemap XML.
               </p>
               <p className="text-sm text-muted-foreground">
-                <strong>Step 2:</strong> Download the sitemap.xml file and host it at your domain root.
+                <strong>Step 2:</strong> Publish the app so the live <code className="text-xs">/sitemap.xml</code> file updates on your domain root.
               </p>
               <p className="text-sm text-muted-foreground">
                 <strong>Step 3:</strong> Go to Google Search Console and submit the sitemap URL:
@@ -130,7 +140,7 @@ ${urls.map((u) => `  <url>
                 <code className="text-sm text-primary flex-1 break-all">{LIVE_SITEMAP_URL}</code>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                This is a live dynamic URL that always returns the latest sitemap XML. Submit this URL to Google Search Console.
+                Submit your domain sitemap URL in Google Search Console.
               </p>
             </div>
             <a
