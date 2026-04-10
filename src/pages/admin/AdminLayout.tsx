@@ -36,6 +36,7 @@ const adminNav = [
   { label: "Profile Analyzer", path: "/admin/profile-analyzer", icon: BarChart3 },
   { label: "Business Inquiries", path: "/admin/business-inquiries", icon: Briefcase },
   { label: "Manage Admins", path: "/admin/manage-admins", icon: ShieldCheck },
+  { label: "Database Backup", path: "/admin/database-backup", icon: Lock },
 ];
 
 const AdminLayout = () => {
