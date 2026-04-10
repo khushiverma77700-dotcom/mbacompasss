@@ -270,6 +270,22 @@ const AdminSEODashboard = () => {
     if (data?.value && Array.isArray(data.value)) setSavedBlogIdeas(data.value as unknown as SavedBlogIdea[]);
   }, []);
 
+  const loadRemovedLinks = useCallback(async () => {
+    setRemovedLinksLoading(true);
+    try {
+      const { getRemovedLinks } = await import("@/lib/adminCleanup");
+      const links = await getRemovedLinks();
+      setRemovedLinks(links);
+    } catch {} finally { setRemovedLinksLoading(false); }
+  }, []);
+
+  const handlePermanentDelete = async (url: string) => {
+    const { permanentlyRemoveLink } = await import("@/lib/adminCleanup");
+    await permanentlyRemoveLink(url);
+    setRemovedLinks(prev => prev.filter(l => l.url !== url));
+    toast({ title: "Link permanently removed" });
+  };
+
   const saveBlogIdeasToDb = async (ideas: SavedBlogIdea[]) => {
     const { data: existing } = await supabase.from("site_settings").select("id").eq("key", "saved_blog_ideas").maybeSingle();
     if (existing?.id) await supabase.from("site_settings").update({ value: ideas as unknown as Record<string, any> }).eq("id", existing.id);
