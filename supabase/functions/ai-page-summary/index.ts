@@ -1,4 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1";
+
+async function logAIUsage(feature: string, model: string, aiData: any, status = "success", errorMsg?: string) {
+  try {
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const usage = aiData?.usage || {};
+    await supabase.from("ai_usage_logs").insert({
+      feature, model,
+      prompt_tokens: usage.prompt_tokens || 0,
+      completion_tokens: usage.completion_tokens || 0,
+      total_tokens: usage.total_tokens || 0,
+      estimated_cost: (usage.total_tokens || 0) * 0.000002,
+      status, error_message: errorMsg || null,
+    });
+  } catch (e) { console.error("Usage log error:", e); }
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -46,6 +62,7 @@ Rules:
       }
 
       const data = await resp.json();
+      await logAIUsage("page-summary", "google/gemini-2.5-flash", data);
       const summary = data.choices?.[0]?.message?.content || "Summary unavailable.";
       return new Response(JSON.stringify({ summary }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -136,6 +153,7 @@ Rules:
       }
 
       const data = await resp.json();
+      await logAIUsage("page-summary", "google/gemini-2.5-flash", data);
       const answer = data.choices?.[0]?.message?.content || "I couldn't find an answer. Please read the full article for details.";
       return new Response(JSON.stringify({ answer }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
