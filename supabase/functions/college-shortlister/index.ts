@@ -31,10 +31,47 @@ interface UserProfile {
   roiPreference: string;
 }
 
+interface ScoreBreakdown {
+  examScore: { yours: number; required: number; max: number; label: string };
+  academicScore: { yours: number; required: number; max: number; label: string };
+  workExScore: { yours: number; required: number; max: number; label: string };
+  budgetFit: { yours: number; required: number; max: number; label: string };
+  overallYours: number;
+  overallRequired: number;
+  overallMax: number;
+  improvements: string[];
+}
+
 function parseNum(v: string | null): number {
   if (!v) return 0;
   const n = parseFloat(v.replace(/[^0-9.]/g, ""));
   return isNaN(n) ? 0 : n;
+}
+
+// Parse percentile range string to a minimum number
+function parseCutoffPercentile(cutoff: string | undefined): number {
+  if (!cutoff) return 0;
+  const c = cutoff.trim();
+  if (c.includes("99.5")) return 99.5;
+  if (c.startsWith("99")) return 99;
+  if (c.startsWith("98")) return 98;
+  if (c.startsWith("95")) return 95;
+  if (c.startsWith("90")) return 90;
+  if (c.startsWith("85")) return 85;
+  if (c.startsWith("80")) return 80;
+  if (c.startsWith("75")) return 75;
+  if (c.startsWith("70")) return 70;
+  if (c.includes("Below")) return 60;
+  // GMAT scores
+  if (c.includes("750")) return 98;
+  if (c.includes("720")) return 95;
+  if (c.includes("700")) return 92;
+  if (c.includes("680")) return 88;
+  if (c.includes("650")) return 82;
+  if (c.includes("600")) return 75;
+  if (c.includes("550")) return 65;
+  if (c.includes("Below")) return 55;
+  return 0;
 }
 
 function getCollegeDifficulty(college: any): number {
@@ -63,8 +100,16 @@ function getCollegeDifficulty(college: any): number {
   return 35;
 }
 
-function calculateCompositeScore(college: any, profile: UserProfile): number {
-  let rawScore = 0;
+// ─── DETAILED SCORING ENGINE ────────────────────────────────
+function calculateDetailedScore(college: any, profile: UserProfile): { compositeScore: number; breakdown: ScoreBreakdown } {
+  const EXAM_MAX = 40;
+  const ACADEMIC_MAX = 25;
+  const WORKEX_MAX = 15;
+  const BUDGET_MAX = 10;
+  const BONUS_MAX = 10;
+  const TOTAL_MAX = EXAM_MAX + ACADEMIC_MAX + WORKEX_MAX + BUDGET_MAX + BONUS_MAX;
+
+  // ── Exam Score ──
   let percentile = profile.scoreType === "percentile" ? profile.overallScore : 0;
   if (profile.examScores && college.exams_accepted) {
     for (const exam of college.exams_accepted) {
@@ -75,59 +120,137 @@ function calculateCompositeScore(college: any, profile: UserProfile): number {
     }
   }
 
-  if (percentile >= 99) rawScore += 40;
-  else if (percentile >= 97) rawScore += 37;
-  else if (percentile >= 95) rawScore += 34;
-  else if (percentile >= 92) rawScore += 30;
-  else if (percentile >= 90) rawScore += 27;
-  else if (percentile >= 85) rawScore += 23;
-  else if (percentile >= 80) rawScore += 19;
-  else if (percentile >= 70) rawScore += 14;
-  else if (percentile >= 60) rawScore += 10;
-  else rawScore += 6;
+  let examScore = 0;
+  if (percentile >= 99) examScore = 40;
+  else if (percentile >= 97) examScore = 37;
+  else if (percentile >= 95) examScore = 34;
+  else if (percentile >= 92) examScore = 30;
+  else if (percentile >= 90) examScore = 27;
+  else if (percentile >= 85) examScore = 23;
+  else if (percentile >= 80) examScore = 19;
+  else if (percentile >= 70) examScore = 14;
+  else if (percentile >= 60) examScore = 10;
+  else examScore = 6;
 
-  const profileAvg = (profile.tenth + profile.twelfth + profile.graduation) / 3;
-  if (profile.graduationPursuing) {
-    if (profileAvg >= 80) rawScore += 20;
-    else if (profileAvg >= 70) rawScore += 16;
-    else if (profileAvg >= 60) rawScore += 12;
-    else rawScore += 8;
+  // Calculate required exam score from cutoff_info
+  let requiredExamScore = 20; // default
+  const cutoffInfo = college.cutoff_info || {};
+  let bestCutoff = 0;
+  if (profile.exams && typeof cutoffInfo === "object") {
+    for (const exam of profile.exams) {
+      const cutoff = parseCutoffPercentile(cutoffInfo[exam]);
+      if (cutoff > bestCutoff) bestCutoff = cutoff;
+    }
+  }
+  if (bestCutoff > 0) {
+    if (bestCutoff >= 99) requiredExamScore = 38;
+    else if (bestCutoff >= 97) requiredExamScore = 35;
+    else if (bestCutoff >= 95) requiredExamScore = 32;
+    else if (bestCutoff >= 90) requiredExamScore = 27;
+    else if (bestCutoff >= 85) requiredExamScore = 23;
+    else if (bestCutoff >= 80) requiredExamScore = 19;
+    else if (bestCutoff >= 70) requiredExamScore = 14;
+    else requiredExamScore = 10;
   } else {
-    if (profileAvg >= 85) rawScore += 25;
-    else if (profileAvg >= 78) rawScore += 21;
-    else if (profileAvg >= 70) rawScore += 17;
-    else if (profileAvg >= 60) rawScore += 12;
-    else rawScore += 8;
+    // Estimate from tier/difficulty
+    const diff = getCollegeDifficulty(college);
+    requiredExamScore = Math.round((diff / 100) * EXAM_MAX);
   }
 
+  // ── Academic Score ──
+  const profileAvg = (profile.tenth + profile.twelfth + profile.graduation) / 3;
+  let academicScore = 0;
+  if (profile.graduationPursuing) {
+    if (profileAvg >= 80) academicScore = 20;
+    else if (profileAvg >= 70) academicScore = 16;
+    else if (profileAvg >= 60) academicScore = 12;
+    else academicScore = 8;
+  } else {
+    if (profileAvg >= 85) academicScore = 25;
+    else if (profileAvg >= 78) academicScore = 21;
+    else if (profileAvg >= 70) academicScore = 17;
+    else if (profileAvg >= 60) academicScore = 12;
+    else academicScore = 8;
+  }
+
+  const diff = getCollegeDifficulty(college);
+  const requiredAcademicScore = diff >= 80 ? 21 : diff >= 60 ? 17 : diff >= 40 ? 12 : 8;
+
+  // ── Work Experience Score ──
   const workYears = profile.workExperienceMonths / 12;
-  if (workYears >= 2 && workYears <= 5) rawScore += 15;
-  else if (workYears >= 1) rawScore += 12;
-  else if (workYears >= 0.5) rawScore += 8;
-  else rawScore += 4;
+  let workExScore = 0;
+  if (workYears >= 2 && workYears <= 5) workExScore = 15;
+  else if (workYears >= 1) workExScore = 12;
+  else if (workYears >= 0.5) workExScore = 8;
+  else workExScore = 4;
 
+  const requiredWorkExScore = diff >= 80 ? 12 : diff >= 60 ? 8 : 4;
+
+  // ── Budget Fit Score ──
   const fees = parseNum(college.fees);
-  if (fees > 0 && fees <= profile.budgetMax && fees >= profile.budgetMin) rawScore += 10;
-  else if (fees > 0 && fees <= profile.budgetMax * 1.2) rawScore += 6;
-  else rawScore += 3;
+  let budgetScore = 0;
+  if (fees > 0 && fees <= profile.budgetMax && fees >= profile.budgetMin) budgetScore = 10;
+  else if (fees > 0 && fees <= profile.budgetMax * 1.2) budgetScore = 6;
+  else budgetScore = 3;
+  const requiredBudgetScore = 6;
 
-  if (profile.preferredStates.length === 0) rawScore += 5;
-  else if (college.state && profile.preferredStates.some((s: string) => college.state?.toLowerCase().includes(s.toLowerCase()))) rawScore += 5;
-  else if (college.city && profile.preferredStates.some((s: string) => college.city?.toLowerCase().includes(s.toLowerCase()))) rawScore += 4;
-  else rawScore += 2;
-
-  if (profile.gender === "female") rawScore += 3;
-
+  // ── Bonus Score ──
+  let bonusScore = 0;
+  if (profile.preferredStates.length === 0) bonusScore += 3;
+  else if (college.state && profile.preferredStates.some((s: string) => college.state?.toLowerCase().includes(s.toLowerCase()))) bonusScore += 3;
+  else if (college.city && profile.preferredStates.some((s: string) => college.city?.toLowerCase().includes(s.toLowerCase()))) bonusScore += 2;
+  if (profile.gender === "female") bonusScore += 2;
   const avgPkg = parseNum(college.placement_avg);
   const roi = avgPkg > 0 && fees > 0 ? avgPkg / fees : 0;
-  if (roi >= 3) rawScore += 5;
-  else if (roi >= 2) rawScore += 3;
-  else if (roi >= 1) rawScore += 1;
+  if (roi >= 3) bonusScore += 3;
+  else if (roi >= 2) bonusScore += 2;
+  else if (roi >= 1) bonusScore += 1;
+  if (profile.roiPreference === "high_roi" && roi >= 2) bonusScore += 2;
+  if (profile.roiPreference === "premium" && (college.ranking || 999) <= 15) bonusScore += 2;
+  bonusScore = Math.min(bonusScore, BONUS_MAX);
 
-  if (profile.roiPreference === "high_roi" && roi >= 2) rawScore += 3;
-  if (profile.roiPreference === "premium" && (college.ranking || 999) <= 15) rawScore += 3;
+  const compositeScore = Math.min(examScore + academicScore + workExScore + budgetScore + bonusScore, 100);
+  const overallRequired = Math.min(requiredExamScore + requiredAcademicScore + requiredWorkExScore + requiredBudgetScore, 100);
 
-  return Math.min(rawScore, 100);
+  // ── Improvements ──
+  const improvements: string[] = [];
+  if (examScore < requiredExamScore) {
+    const gap = requiredExamScore - examScore;
+    if (gap >= 10) improvements.push(`Your exam percentile needs significant improvement — aim for 95+ to be competitive`);
+    else if (gap >= 5) improvements.push(`Boost your exam score by ${Math.ceil(gap * 0.5)}+ percentile points to cross the cutoff`);
+    else improvements.push(`You're close to the cutoff — a small percentile improvement can make the difference`);
+  }
+  if (academicScore < requiredAcademicScore) {
+    const weakest = Math.min(profile.tenth, profile.twelfth, profile.graduation);
+    if (weakest === profile.tenth) improvements.push("Your 10th score is the weakest link — highlight other strengths in your application");
+    else if (weakest === profile.twelfth) improvements.push("Your 12th score is below average — emphasize graduation performance and work-ex");
+    else improvements.push("Improve graduation GPA or pursue additional certifications to strengthen academics");
+  }
+  if (workExScore < requiredWorkExScore) {
+    if (profile.workExperienceMonths < 12) improvements.push("Gain at least 12-24 months of work experience for better chances at top colleges");
+    else improvements.push("Showcase leadership and impactful projects in your work experience");
+  }
+  if (budgetScore < requiredBudgetScore) {
+    improvements.push("Consider education loans or scholarships — this college's fees may exceed your budget");
+  }
+  if (improvements.length === 0) {
+    if (compositeScore >= overallRequired + 15) improvements.push("Strong profile match! Focus on WAT/PI preparation to seal the deal");
+    else improvements.push("Your profile meets requirements — prepare a compelling SOP and ace the interview");
+  }
+
+  return {
+    compositeScore,
+    breakdown: {
+      examScore: { yours: examScore, required: requiredExamScore, max: EXAM_MAX, label: "Exam Percentile" },
+      academicScore: { yours: academicScore, required: requiredAcademicScore, max: ACADEMIC_MAX, label: "Academics" },
+      workExScore: { yours: workExScore, required: requiredWorkExScore, max: WORKEX_MAX, label: "Work Experience" },
+      budgetFit: { yours: budgetScore, required: requiredBudgetScore, max: BUDGET_MAX, label: "Budget Fit" },
+      overallYours: compositeScore,
+      overallRequired,
+      overallMax: TOTAL_MAX,
+      improvements,
+    },
+  };
 }
 
 function classifyBucket(compositeScore: number, college: any): "dream" | "target" | "safe" {
@@ -241,7 +364,6 @@ async function handleEnrich(collegeName: string) {
   "established": number year,
   "exams_accepted": ["CAT", "XAT", etc],
   "accreditations": ["AACSB", "EQUIS", etc],
-  "description": "2-3 line description",
   "courses": ["MBA", "PGDM", etc],
   "campus_size": "string like 100 acres",
   "website": "url"
@@ -290,7 +412,7 @@ serve(async (req) => {
 
     const { data: colleges, error: dbError } = await sb
       .from("colleges")
-      .select("id, name, slug, city, state, fees, placement_avg, placement_highest, placement_median, ranking, type, tier, college_category, established, exams_accepted, accreditations, logo_url, courses, campus_size, total_students, cutoff_info, description")
+      .select("id, name, slug, city, state, fees, placement_avg, placement_highest, placement_median, ranking, type, tier, college_category, established, exams_accepted, accreditations, logo_url, courses, campus_size, total_students, cutoff_info")
       .order("ranking", { ascending: true, nullsFirst: false });
 
     if (dbError) throw dbError;
@@ -325,7 +447,8 @@ serve(async (req) => {
     const preferredSlugs = profile.preferredColleges?.map(c => c.toLowerCase()) || [];
 
     const results = filtered.map((c: any) => {
-      let compositeScore = calculateCompositeScore(c, profile);
+      const { compositeScore: rawComposite, breakdown } = calculateDetailedScore(c, profile);
+      let compositeScore = rawComposite;
       if (preferredSlugs.some(slug => c.name.toLowerCase().includes(slug) || c.slug?.toLowerCase().includes(slug))) {
         compositeScore = Math.min(compositeScore + 5, 100);
       }
@@ -335,7 +458,6 @@ serve(async (req) => {
       const avgPkg = parseNum(c.placement_avg);
       const roi = fees > 0 && avgPkg > 0 ? avgPkg / fees : 0;
       const highestPkg = parseNum(c.placement_highest);
-      const cutoffPercentile = c.cutoff_info?.general_cutoff || c.cutoff_info?.overall_cutoff || null;
 
       return {
         id: c.id, name: c.name, slug: c.slug, city: c.city, state: c.state,
@@ -353,7 +475,7 @@ serve(async (req) => {
         compositeScore,
         roi: roi > 0 ? parseFloat(roi.toFixed(1)) : null,
         badges: getBadges(c, roi),
-        cutoffPercentile,
+        scoreBreakdown: breakdown,
         specializations: c.courses || [],
       };
     });
@@ -374,7 +496,7 @@ serve(async (req) => {
       bestRoi.badges = ["Best ROI", ...bestRoi.badges].slice(0, 3);
     }
 
-    // AI insights with improved prompting
+    // AI insights
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     let aiInsights = "";
     let strategy = "";
