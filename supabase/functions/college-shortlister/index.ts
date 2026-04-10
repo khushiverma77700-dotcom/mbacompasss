@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 interface UserProfile {
-  exam: string;
+  exams: string[];
   scoreType: "percentile" | "score";
   overallScore: number;
   sectionalScores?: { varc?: number; dilr?: number; quant?: number };
@@ -20,33 +20,13 @@ interface UserProfile {
   gender?: string;
   budgetMin: number;
   budgetMax: number;
-  preferredCities: string[];
+  expectedSalaryMin?: number;
+  expectedSalaryMax?: number;
+  preferredStates: string[];
+  preferredColleges: string[];
   collegeTier: string[];
   specialization: string;
-}
-
-interface CollegeResult {
-  id: string;
-  name: string;
-  slug: string;
-  city: string | null;
-  state: string | null;
-  fees: string | null;
-  placement_avg: string | null;
-  placement_highest: string | null;
-  ranking: number | null;
-  type: string | null;
-  established: number | null;
-  exams_accepted: string[] | null;
-  accreditations: string[] | null;
-  logo_url: string | null;
-  courses: string[] | null;
-  campus_size: string | null;
-  total_students: number | null;
-  chancePercent: number;
-  bucket: "dream" | "target" | "safe";
-  whyFit: string;
-  compositeScore: number;
+  roiPreference: string;
 }
 
 function parseNum(v: string | null): number {
@@ -91,20 +71,23 @@ function calculateCompositeScore(college: any, profile: UserProfile): number {
   else score += 3;
 
   // Location preference (5%)
-  if (profile.preferredCities.length === 0) score += 5;
-  else if (college.city && profile.preferredCities.some((c: string) => college.city?.toLowerCase().includes(c.toLowerCase()))) score += 5;
+  if (profile.preferredStates.length === 0) score += 5;
+  else if (college.state && profile.preferredStates.some((s: string) => college.state?.toLowerCase().includes(s.toLowerCase()))) score += 5;
+  else if (college.city && profile.preferredStates.some((s: string) => college.city?.toLowerCase().includes(s.toLowerCase()))) score += 4;
   else score += 2;
 
   // Diversity bonus (5%)
   if (profile.gender === "female") score += 3;
 
   // ROI bonus
-  if (avgPkg > 0 && fees > 0) {
-    const roi = avgPkg / fees;
-    if (roi >= 3) score += 5;
-    else if (roi >= 2) score += 3;
-    else if (roi >= 1) score += 1;
-  }
+  const roi = avgPkg > 0 && fees > 0 ? avgPkg / fees : 0;
+  if (roi >= 3) score += 5;
+  else if (roi >= 2) score += 3;
+  else if (roi >= 1) score += 1;
+
+  // ROI preference boost
+  if (profile.roiPreference === "high_roi" && roi >= 2) score += 3;
+  if (profile.roiPreference === "premium" && ranking <= 15) score += 3;
 
   return Math.min(score, 100);
 }
@@ -115,18 +98,31 @@ function classifyBucket(score: number): "dream" | "target" | "safe" {
   return "dream";
 }
 
-function generateWhyFit(college: any, profile: UserProfile, bucket: string): string {
-  const fees = parseNum(college.fees);
-  const avgPkg = parseNum(college.placement_avg);
-  const roi = fees > 0 && avgPkg > 0 ? (avgPkg / fees).toFixed(1) : null;
+function getBadges(college: any, roi: number): string[] {
+  const badges: string[] = [];
+  if (roi >= 2.5) badges.push("High ROI");
+  if (college.ranking && college.ranking <= 10) badges.push("Top Tier");
+  if (college.ranking && college.ranking > 10 && college.ranking <= 30) badges.push("Elite");
+  if (college.established && (new Date().getFullYear() - college.established) < 20) badges.push("Fast Growing");
+  if (college.accreditations?.length >= 3) badges.push("Well Accredited");
+  return badges.slice(0, 3);
+}
 
-  if (bucket === "safe") {
-    return `Strong match — your profile aligns well with ${college.name}'s admission criteria${roi ? ` and ROI of ${roi}x` : ""}.`;
-  } else if (bucket === "target") {
-    return `Competitive chance — ${college.name} is within reach${roi ? ` with ${roi}x ROI` : ""}. Focus on WAT/PI prep.`;
-  } else {
-    return `Aspirational pick — ${college.name} is a stretch but worth trying${roi ? ` for ${roi}x ROI` : ""}. Strong profile needed.`;
-  }
+function generateWhyFit(college: any, profile: UserProfile, bucket: string, roi: number): string {
+  const parts: string[] = [];
+  if (bucket === "safe") parts.push(`Strong profile match for ${college.name}'s admission criteria.`);
+  else if (bucket === "target") parts.push(`Competitive chance at ${college.name} — your profile is within range.`);
+  else parts.push(`Aspirational pick — ${college.name} would be a stretch but worth applying.`);
+  if (roi >= 2) parts.push(`Excellent ROI of ${roi.toFixed(1)}x.`);
+  if (college.city && profile.preferredStates.some((s: string) => college.state?.toLowerCase().includes(s.toLowerCase()) || college.city?.toLowerCase().includes(s.toLowerCase())))
+    parts.push("Matches your location preference.");
+  return parts.join(" ");
+}
+
+function generateTips(college: any, profile: UserProfile, bucket: string): string {
+  if (bucket === "safe") return `Focus on WAT/GD prep. Your profile already meets cutoffs. Apply confidently and prepare for personal interview.`;
+  if (bucket === "target") return `Strengthen WAT/PI preparation. Highlight work experience in your application. Consider taking mock interviews.`;
+  return `Needs exceptional WAT/PI performance. Build extra-curriculars and consider retaking the exam for a higher score if possible.`;
 }
 
 serve(async (req) => {
@@ -135,8 +131,7 @@ serve(async (req) => {
   try {
     const profile: UserProfile = await req.json();
 
-    // Validate required fields
-    if (!profile.exam || !profile.overallScore || !profile.tenth || !profile.twelfth || !profile.graduation) {
+    if ((!profile.exams || profile.exams.length === 0) || !profile.overallScore || !profile.tenth || !profile.twelfth || !profile.graduation) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -147,10 +142,9 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const sb = createClient(supabaseUrl, supabaseKey);
 
-    // Fetch colleges from database
     const { data: colleges, error: dbError } = await sb
       .from("colleges")
-      .select("id, name, slug, city, state, fees, placement_avg, placement_highest, ranking, type, established, exams_accepted, accreditations, logo_url, courses, campus_size, total_students")
+      .select("id, name, slug, city, state, fees, placement_avg, placement_highest, placement_median, ranking, type, established, exams_accepted, accreditations, logo_url, courses, campus_size, total_students, cutoff_info, description")
       .order("ranking", { ascending: true, nullsFirst: false });
 
     if (dbError) throw dbError;
@@ -164,7 +158,9 @@ serve(async (req) => {
     // Filter by exam acceptance
     let filtered = colleges.filter((c: any) => {
       if (!c.exams_accepted || c.exams_accepted.length === 0) return true;
-      return c.exams_accepted.some((e: string) => e.toLowerCase().includes(profile.exam.toLowerCase()));
+      return profile.exams.some((exam: string) =>
+        c.exams_accepted.some((e: string) => e.toLowerCase().includes(exam.toLowerCase()))
+      );
     });
 
     // Filter by tier preference
@@ -178,15 +174,27 @@ serve(async (req) => {
           return true;
         });
       });
-      // Soft filter: if too few results, keep all
       if (tierFiltered.length >= 5) filtered = tierFiltered;
     }
 
+    // Preferred college boost
+    const preferredSlugs = profile.preferredColleges?.map(c => c.toLowerCase()) || [];
+
     // Score and classify each college
-    const results: CollegeResult[] = filtered.map((c: any) => {
-      const compositeScore = calculateCompositeScore(c, profile);
+    const results = filtered.map((c: any) => {
+      let compositeScore = calculateCompositeScore(c, profile);
+      // Boost preferred colleges
+      if (preferredSlugs.some(slug => c.name.toLowerCase().includes(slug) || c.slug?.toLowerCase().includes(slug))) {
+        compositeScore = Math.min(compositeScore + 5, 100);
+      }
       const chancePercent = Math.min(Math.max(compositeScore + Math.floor(Math.random() * 6) - 3, 5), 95);
       const bucket = classifyBucket(compositeScore);
+      const fees = parseNum(c.fees);
+      const avgPkg = parseNum(c.placement_avg);
+      const roi = fees > 0 && avgPkg > 0 ? avgPkg / fees : 0;
+      const highestPkg = parseNum(c.placement_highest);
+      const cutoffPercentile = c.cutoff_info?.general_cutoff || c.cutoff_info?.overall_cutoff || null;
+
       return {
         id: c.id,
         name: c.name,
@@ -194,8 +202,11 @@ serve(async (req) => {
         city: c.city,
         state: c.state,
         fees: c.fees,
+        feesNum: fees,
         placement_avg: c.placement_avg,
         placement_highest: c.placement_highest,
+        avgPkgNum: avgPkg,
+        highestPkgNum: highestPkg,
         ranking: c.ranking,
         type: c.type,
         established: c.established,
@@ -207,32 +218,42 @@ serve(async (req) => {
         total_students: c.total_students,
         chancePercent,
         bucket,
-        whyFit: generateWhyFit(c, profile, bucket),
+        whyFit: generateWhyFit(c, profile, bucket, roi),
+        tips: generateTips(c, profile, bucket),
         compositeScore,
+        roi: roi > 0 ? parseFloat(roi.toFixed(1)) : null,
+        badges: getBadges(c, roi),
+        cutoffPercentile,
+        specializations: c.courses || [],
       };
     });
 
-    // Sort: dream first, then target, then safe — within each bucket sort by chance
+    // Sort
     const bucketOrder = { dream: 0, target: 1, safe: 2 };
-    results.sort((a, b) => {
+    results.sort((a: any, b: any) => {
       if (a.bucket !== b.bucket) return bucketOrder[a.bucket] - bucketOrder[b.bucket];
       return b.chancePercent - a.chancePercent;
     });
 
-    // Limit to top results per bucket
-    const dream = results.filter(r => r.bucket === "dream").slice(0, 5);
-    const target = results.filter(r => r.bucket === "target").slice(0, 8);
-    const safe = results.filter(r => r.bucket === "safe").slice(0, 5);
+    const dream = results.filter((r: any) => r.bucket === "dream").slice(0, 6);
+    const target = results.filter((r: any) => r.bucket === "target").slice(0, 10);
+    const safe = results.filter((r: any) => r.bucket === "safe").slice(0, 6);
     const shortlisted = [...dream, ...target, ...safe];
 
-    // Generate AI insights via Lovable AI
+    // Best ROI college
+    const bestRoi = [...shortlisted].sort((a, b) => (b.roi || 0) - (a.roi || 0))[0];
+    if (bestRoi && !bestRoi.badges.includes("Best ROI")) {
+      bestRoi.badges = ["Best ROI", ...bestRoi.badges].slice(0, 3);
+    }
+
+    // Generate AI insights
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     let aiInsights = "";
     let strategy = "";
 
     if (LOVABLE_API_KEY && shortlisted.length > 0) {
       try {
-        const collegeList = shortlisted.map(c => `${c.bucket.toUpperCase()}: ${c.name} (${c.chancePercent}% chance, Fees: ${c.fees || "N/A"}, Avg Pkg: ${c.placement_avg || "N/A"})`).join("\n");
+        const collegeList = shortlisted.map((c: any) => `${c.bucket.toUpperCase()}: ${c.name} (${c.chancePercent}%, Fees: ${c.fees || "N/A"}, Avg Pkg: ${c.placement_avg || "N/A"}, ROI: ${c.roi || "N/A"}x)`).join("\n");
 
         const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
@@ -245,17 +266,18 @@ serve(async (req) => {
             messages: [
               {
                 role: "system",
-                content: `You are a warm, experienced MBA admissions mentor in India. Speak like a caring senior who has been through the process. Use "you" and give honest, practical advice. Be encouraging but realistic. Format with markdown. Keep it concise — max 400 words total across both sections.`,
+                content: `You are a warm, experienced MBA admissions mentor in India. Speak like a caring senior. Use "you" and give honest, practical advice. Be encouraging but realistic. Format with markdown. Keep it concise — max 500 words total across both sections.`,
               },
               {
                 role: "user",
                 content: `Student Profile:
-- Exam: ${profile.exam}, ${profile.scoreType === "percentile" ? "Percentile" : "Score"}: ${profile.overallScore}
+- Exams: ${profile.exams.join(", ")}, ${profile.scoreType === "percentile" ? "Percentile" : "Score"}: ${profile.overallScore}
 - Academics: 10th: ${profile.tenth}%, 12th: ${profile.twelfth}%, Graduation: ${profile.graduation}% (${profile.graduationStream})
 - Work Experience: ${profile.workExperienceMonths} months
 - Budget: ₹${(profile.budgetMin / 100000).toFixed(0)}L - ₹${(profile.budgetMax / 100000).toFixed(0)}L
-- Preferred Cities: ${profile.preferredCities.length > 0 ? profile.preferredCities.join(", ") : "Any"}
+- Preferred States: ${profile.preferredStates.length > 0 ? profile.preferredStates.join(", ") : "Pan India"}
 - Specialization: ${profile.specialization || "Open"}
+- ROI Preference: ${profile.roiPreference || "Balanced"}
 
 Shortlisted Colleges:
 ${collegeList}
@@ -266,13 +288,15 @@ Generate TWO sections:
 - Why these colleges fit their profile
 - What stands out in their profile (strengths)
 - Areas of concern
+- Highlight the best ROI college
 
 **SECTION 2 - STRATEGY** (heading: "📈 Your Action Plan")
 - Should they retake the exam?
 - Which application forms to prioritize NOW
 - WAT/PI preparation tips specific to their profile
 - Backup plan suggestions
-- Timeline advice`,
+- Timeline advice
+- Profile improvement tips`,
               },
             ],
           }),
@@ -287,8 +311,11 @@ Generate TWO sections:
             strategy = fullText.substring(strategyIdx).trim();
           } else {
             aiInsights = fullText;
-            strategy = "";
           }
+        } else if (aiResponse.status === 429) {
+          console.error("AI rate limited");
+        } else if (aiResponse.status === 402) {
+          console.error("AI credits exhausted");
         }
       } catch (aiErr) {
         console.error("AI generation failed (non-blocking):", aiErr);
