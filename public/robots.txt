@@ -25,4 +25,4 @@ Disallow: /admin/
 Disallow: /auth
 Disallow: /dashboard
 
-Sitemap: https://mttoiqruzzxooveooldo.supabase.co/functions/v1/serve-sitemap
+Sitemap: https://bschoolbuzz.com/sitemap.xml

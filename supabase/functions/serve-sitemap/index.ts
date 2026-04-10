@@ -1,18 +1,44 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const SITE_URL = "https://bschoolbuzz.com";
+const XML_NAMESPACE = "http://www.sitemaps.org/schemas/sitemap/0.9";
+const XML_SCHEMA_INSTANCE = "http://www.w3.org/2001/XMLSchema-instance";
+const XML_SCHEMA_LOCATION = `${XML_NAMESPACE} ${XML_NAMESPACE}/sitemap.xsd`;
 
 const STATIC_PAGES = [
-  { path: "/", priority: "1.0", changefreq: "daily" },
-  { path: "/about", priority: "0.7", changefreq: "weekly" },
-  { path: "/contact", priority: "0.7", changefreq: "weekly" },
-  { path: "/blog", priority: "0.7", changefreq: "daily" },
-  { path: "/colleges", priority: "0.7", changefreq: "weekly" },
-  { path: "/compare", priority: "0.7", changefreq: "weekly" },
-  { path: "/college-finder", priority: "0.7", changefreq: "weekly" },
-  { path: "/profile-analyzer", priority: "0.7", changefreq: "weekly" },
-  { path: "/college-shortlister", priority: "0.7", changefreq: "weekly" },
+  { loc: "/", priority: 1.0 },
+  { loc: "/about", priority: 0.7 },
+  { loc: "/contact", priority: 0.7 },
+  { loc: "/blog", priority: 0.7 },
+  { loc: "/colleges", priority: 0.7 },
+  { loc: "/compare", priority: 0.7 },
+  { loc: "/college-finder", priority: 0.7 },
+  { loc: "/profile-analyzer", priority: 0.7 },
+  { loc: "/college-shortlister", priority: 0.7 },
 ];
+
+const escapeXml = (value: string) => value
+  .replaceAll("&", "&amp;")
+  .replaceAll("<", "&lt;")
+  .replaceAll(">", "&gt;")
+  .replaceAll('"', "&quot;")
+  .replaceAll("'", "&apos;");
+
+const buildSitemapXml = (entries: { loc: string; priority: number }[]) => {
+  const lastmod = new Date().toISOString();
+  const uniqueEntries = Array.from(
+    new Map(entries.filter((entry) => entry.loc).map((entry) => [entry.loc, entry])).values(),
+  );
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="${XML_NAMESPACE}" xmlns:xsi="${XML_SCHEMA_INSTANCE}" xsi:schemaLocation="${XML_SCHEMA_LOCATION}">
+${uniqueEntries.map((entry) => `  <url>
+    <loc>${escapeXml(`${SITE_URL}${entry.loc}`)}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <priority>${entry.priority.toFixed(2)}</priority>
+  </url>`).join("\n")}
+</urlset>`;
+};
 
 Deno.serve(async () => {
   try {
@@ -20,17 +46,13 @@ Deno.serve(async () => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const urls: { loc: string; priority: string; changefreq: string }[] = [
-      ...STATIC_PAGES,
-    ];
-
     const [
-      { data: institutes },
-      { data: colleges },
-      { data: exams },
-      { data: categories },
-      { data: articles },
-      { data: cityPages },
+      { data: institutes, error: institutesError },
+      { data: colleges, error: collegesError },
+      { data: exams, error: examsError },
+      { data: categories, error: categoriesError },
+      { data: articles, error: articlesError },
+      { data: cityPages, error: cityPagesError },
     ] = await Promise.all([
       supabase.from("institutes").select("slug"),
       supabase.from("colleges").select("slug"),
@@ -40,23 +62,30 @@ Deno.serve(async () => {
       supabase.from("city_pages").select("slug").eq("active", true),
     ]);
 
-    institutes?.forEach((i: any) => urls.push({ loc: `/institute/${i.slug}`, priority: "0.8", changefreq: "weekly" }));
-    colleges?.forEach((c: any) => urls.push({ loc: `/college/${c.slug}`, priority: "0.8", changefreq: "weekly" }));
-    exams?.forEach((e: any) => urls.push({ loc: `/exam/${e.slug}`, priority: "0.7", changefreq: "weekly" }));
-    categories?.forEach((c: any) => urls.push({ loc: `/category/${c.slug}`, priority: "0.7", changefreq: "weekly" }));
-    articles?.forEach((a: any) => urls.push({ loc: `/article/${a.slug}`, priority: "0.6", changefreq: "weekly" }));
-    cityPages?.forEach((cp: any) => urls.push({ loc: `/colleges/${cp.slug}`, priority: "0.8", changefreq: "weekly" }));
+    const queryErrors = [
+      institutesError,
+      collegesError,
+      examsError,
+      categoriesError,
+      articlesError,
+      cityPagesError,
+    ].filter(Boolean);
 
-    const now = new Date().toISOString().split("T")[0];
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map((u) => `  <url>
-    <loc>${SITE_URL}${u.loc}</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>${u.changefreq}</changefreq>
-    <priority>${u.priority}</priority>
-  </url>`).join("\n")}
-</urlset>`;
+    if (queryErrors.length > 0) {
+      throw new Error(queryErrors.map((error) => error.message).join("; "));
+    }
+
+    const urls = [
+      ...STATIC_PAGES,
+      ...(institutes ?? []).flatMap((institute: { slug: string | null }) => institute.slug ? [{ loc: `/institute/${institute.slug}`, priority: 0.8 }] : []),
+      ...(colleges ?? []).flatMap((college: { slug: string | null }) => college.slug ? [{ loc: `/college/${college.slug}`, priority: 0.8 }] : []),
+      ...(exams ?? []).flatMap((exam: { slug: string | null }) => exam.slug ? [{ loc: `/exam/${exam.slug}`, priority: 0.7 }] : []),
+      ...(categories ?? []).flatMap((category: { slug: string | null }) => category.slug ? [{ loc: `/category/${category.slug}`, priority: 0.7 }] : []),
+      ...(articles ?? []).flatMap((article: { slug: string | null }) => article.slug ? [{ loc: `/article/${article.slug}`, priority: 0.6 }] : []),
+      ...(cityPages ?? []).flatMap((cityPage: { slug: string | null }) => cityPage.slug ? [{ loc: `/colleges/${cityPage.slug}`, priority: 0.8 }] : []),
+    ];
+
+    const xml = buildSitemapXml(urls);
 
     return new Response(xml, {
       headers: {
@@ -66,7 +95,9 @@ ${urls.map((u) => `  <url>
       },
     });
   } catch (err) {
-    return new Response(`<?xml version="1.0" encoding="UTF-8"?><error>${err.message}</error>`, {
+    const message = err instanceof Error ? err.message : "Unknown error";
+
+    return new Response(`<?xml version="1.0" encoding="UTF-8"?><error>${escapeXml(message)}</error>`, {
       status: 500,
       headers: { "Content-Type": "application/xml" },
     });
