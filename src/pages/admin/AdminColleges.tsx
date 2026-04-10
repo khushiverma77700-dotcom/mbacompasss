@@ -67,6 +67,7 @@ const AdminColleges = () => {
     const payload: any = {
       name: form.name, slug, description: form.description || null,
       city: form.city || null, state: form.state || null, type: form.type || null,
+      tier: form.tier || "Tier 2", college_category: form.college_category || "Non-IIM",
       established: form.established || null, ranking: form.ranking || null,
       fees: form.fees || null, website: form.website || null,
       placement_avg: form.placement_avg || null, placement_highest: form.placement_highest || null,
@@ -98,6 +99,7 @@ const AdminColleges = () => {
     setForm({
       name: data.name, slug: data.slug, description: data.description ?? "",
       city: data.city ?? "", state: data.state ?? "", type: data.type ?? "Private",
+      tier: (data as any).tier ?? "Tier 2", college_category: (data as any).college_category ?? "Non-IIM",
       established: data.established ?? 0, ranking: data.ranking ?? 0,
       fees: data.fees ?? "", website: data.website ?? "",
       placement_avg: data.placement_avg ?? "", placement_highest: data.placement_highest ?? "",
