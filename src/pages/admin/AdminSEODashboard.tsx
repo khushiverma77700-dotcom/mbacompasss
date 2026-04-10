@@ -52,6 +52,30 @@ interface DashboardRow {
 interface KeywordResult {
   keyword: string; searchVolume: number; competition: string; difficulty: number;
   cpc?: number; intent: string; trending: string; category?: string;
+  source?: string; priorityScore?: number;
+}
+
+interface KeywordCluster {
+  clusterName: string; pillarKeyword: string;
+  supportingKeywords: string[]; suggestedContentType?: string;
+}
+
+interface ContentGapItem {
+  gap: string; suggestedTitle: string;
+  estimatedTraffic?: number; difficulty?: string;
+}
+
+interface SeasonalItem {
+  keyword: string; peakMonths: string; action: string;
+}
+
+interface SnippetItem {
+  question: string; suggestedAnswer?: string; currentRanker?: string;
+}
+
+interface DataQualityReport {
+  totalRealKeywords?: number; totalAiEnriched?: number;
+  dataSourcesUsed?: string[]; confidence?: string; notes?: string;
 }
 
 interface BlogTitleResult {
@@ -186,14 +210,20 @@ const AdminSEODashboard = () => {
   // Keyword Research State
   const [kwQuery, setKwQuery] = useState("MBA coaching India");
   const [kwResults, setKwResults] = useState<KeywordResult[]>([]);
-  const [kwContentGaps, setKwContentGaps] = useState<string[]>([]);
-  const [kwSeasonal, setKwSeasonal] = useState<string[]>([]);
-  const [kwSnippets, setKwSnippets] = useState<string[]>([]);
+  const [kwContentGaps, setKwContentGaps] = useState<ContentGapItem[]>([]);
+  const [kwSeasonal, setKwSeasonal] = useState<SeasonalItem[]>([]);
+  const [kwSnippets, setKwSnippets] = useState<SnippetItem[]>([]);
+  const [kwClusters, setKwClusters] = useState<KeywordCluster[]>([]);
+  const [kwDataQuality, setKwDataQuality] = useState<DataQualityReport | null>(null);
+  const [kwCompetitorKws, setKwCompetitorKws] = useState<any[]>([]);
   const [kwSummary, setKwSummary] = useState("");
   const [kwLoading, setKwLoading] = useState(false);
   const [kwLastRefresh, setKwLastRefresh] = useState<string | null>(null);
   const [kwSelectedKws, setKwSelectedKws] = useState<string[]>([]);
   const [kwInjectTarget, setKwInjectTarget] = useState<"all" | SEOContentType>("all");
+  const [kwSortBy, setKwSortBy] = useState<"volume" | "difficulty" | "priority">("volume");
+  const [kwFilterSource, setKwFilterSource] = useState<string>("all");
+  const [kwFilterIntent, setKwFilterIntent] = useState<string>("all");
 
   // Blog Titles State
   const [btQuery, setBtQuery] = useState("MBA coaching");
@@ -481,9 +511,13 @@ const AdminSEODashboard = () => {
       setKwContentGaps(d?.contentGaps || []);
       setKwSeasonal(d?.seasonalOpportunities || []);
       setKwSnippets(d?.snippetOpportunities || []);
+      setKwClusters(d?.keywordClusters || []);
+      setKwDataQuality(d?.dataQualityReport || null);
+      setKwCompetitorKws(d?.competitorKeywords || []);
       setKwSummary(d?.summary || "");
       setKwLastRefresh(new Date().toLocaleString());
-      toast({ title: "Keyword research complete", description: `Found ${d?.keywords?.length || 0} keywords` });
+      const realCount = (d?.keywords || []).filter((k: any) => k.source !== "ai_enriched").length;
+      toast({ title: "Keyword research complete", description: `${d?.keywords?.length || 0} keywords (${realCount} from real data)` });
     } catch (e: any) {
       toast({ title: "Keyword research failed", description: e.message, variant: "destructive" });
     } finally { setKwLoading(false); }
@@ -1400,7 +1434,7 @@ const AdminSEODashboard = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2"><Search className="h-5 w-5 text-primary" /> AI Keyword Research</CardTitle>
-                <CardDescription>Discover high-value keywords. Select and auto-inject them into your pages.</CardDescription>
+                <CardDescription>Real Google data + AI enrichment. Discover, filter, and auto-inject keywords into your pages.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex gap-2">
@@ -1415,7 +1449,31 @@ const AdminSEODashboard = () => {
 
             {kwResults.length > 0 && (
               <>
+                {/* Data Quality Report */}
+                {kwDataQuality && (
+                  <Card className="border-primary/20">
+                    <CardContent className="pt-4">
+                      <div className="flex flex-wrap items-center gap-4">
+                        <div className="flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-primary" />
+                          <span className="text-sm font-medium">Data Quality:</span>
+                          <Badge className={`text-xs ${kwDataQuality.confidence === "high" ? "bg-primary/10 text-primary" : kwDataQuality.confidence === "medium" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>{kwDataQuality.confidence || "unknown"}</Badge>
+                        </div>
+                        <span className="text-xs text-muted-foreground">
+                          {kwDataQuality.totalRealKeywords || 0} real • {kwDataQuality.totalAiEnriched || 0} AI-enriched
+                        </span>
+                        {kwDataQuality.dataSourcesUsed?.length ? (
+                          <div className="flex gap-1">{kwDataQuality.dataSourcesUsed.map((s, i) => <Badge key={i} variant="outline" className="text-[10px]">{s}</Badge>)}</div>
+                        ) : null}
+                        {kwDataQuality.notes && <p className="text-xs text-muted-foreground w-full">{kwDataQuality.notes}</p>}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {kwSummary && <Card><CardContent className="pt-4"><p className="text-sm">{kwSummary}</p></CardContent></Card>}
+
+                {/* Inject Controls */}
                 <Card className="border-primary/30 bg-primary/5">
                   <CardContent className="pt-4 space-y-3">
                     <div className="flex flex-wrap items-center justify-between gap-4">
@@ -1439,31 +1497,81 @@ const AdminSEODashboard = () => {
                     {kwSelectedKws.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {kwSelectedKws.map(kw => (
-                          <Badge key={kw} variant="secondary" className="text-xs gap-1">{kw}<button onClick={() => setKwSelectedKws(p => p.filter(k => k !== kw))} className="ml-1 hover:text-red-500">×</button></Badge>
+                          <Badge key={kw} variant="secondary" className="text-xs gap-1">{kw}<button onClick={() => setKwSelectedKws(p => p.filter(k => k !== kw))} className="ml-1 hover:text-destructive">×</button></Badge>
                         ))}
                       </div>
                     )}
                   </CardContent>
                 </Card>
+
+                {/* Filters & Sort */}
+                <div className="flex flex-wrap gap-2 items-center">
+                  <span className="text-xs font-medium text-muted-foreground">Sort:</span>
+                  <Select value={kwSortBy} onValueChange={v => setKwSortBy(v as any)}>
+                    <SelectTrigger className="w-32 h-7 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="volume">Volume ↓</SelectItem>
+                      <SelectItem value="difficulty">Difficulty ↑</SelectItem>
+                      <SelectItem value="priority">Priority ↓</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <span className="text-xs font-medium text-muted-foreground ml-2">Source:</span>
+                  <Select value={kwFilterSource} onValueChange={setKwFilterSource}>
+                    <SelectTrigger className="w-36 h-7 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Sources</SelectItem>
+                      <SelectItem value="google_suggest">Google Suggest</SelectItem>
+                      <SelectItem value="paa">People Also Ask</SelectItem>
+                      <SelectItem value="alphabet">Alphabet Expansion</SelectItem>
+                      <SelectItem value="trends">Google Trends</SelectItem>
+                      <SelectItem value="ai_enriched">AI Enriched</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <span className="text-xs font-medium text-muted-foreground ml-2">Intent:</span>
+                  <Select value={kwFilterIntent} onValueChange={setKwFilterIntent}>
+                    <SelectTrigger className="w-36 h-7 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Intents</SelectItem>
+                      <SelectItem value="informational">Informational</SelectItem>
+                      <SelectItem value="commercial">Commercial</SelectItem>
+                      <SelectItem value="transactional">Transactional</SelectItem>
+                      <SelectItem value="navigational">Navigational</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="ghost" size="sm" className="text-xs ml-auto" onClick={() => { navigator.clipboard.writeText(kwResults.map(k => `${k.keyword}\t${k.searchVolume}\t${k.competition}\t${k.difficulty}\t${k.intent}\t${k.source || ""}`).join("\n")); toast({ title: "Copied to clipboard" }); }}>
+                    <Copy className="h-3 w-3 mr-1" /> Export TSV
+                  </Button>
+                </div>
+
+                {/* Keywords Table */}
                 <Card>
                   <CardContent className="p-0">
                     <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead className="w-10"><Checkbox checked={kwResults.length > 0 && kwSelectedKws.length === kwResults.length} onCheckedChange={(c) => setKwSelectedKws(c ? kwResults.map(k => k.keyword) : [])} /></TableHead>
-                          <TableHead>Keyword</TableHead><TableHead>Volume</TableHead><TableHead>Difficulty</TableHead><TableHead>Competition</TableHead><TableHead>Intent</TableHead><TableHead>Trend</TableHead><TableHead>Category</TableHead>
+                          <TableHead>Keyword</TableHead><TableHead>Volume</TableHead><TableHead>Difficulty</TableHead><TableHead>Competition</TableHead><TableHead>Intent</TableHead><TableHead>Trend</TableHead><TableHead>Source</TableHead><TableHead>Category</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {kwResults.map((kw, i) => (
+                        {kwResults
+                          .filter(kw => kwFilterSource === "all" || kw.source === kwFilterSource)
+                          .filter(kw => kwFilterIntent === "all" || kw.intent === kwFilterIntent)
+                          .sort((a, b) => {
+                            if (kwSortBy === "volume") return (b.searchVolume || 0) - (a.searchVolume || 0);
+                            if (kwSortBy === "difficulty") return (a.difficulty || 0) - (b.difficulty || 0);
+                            return (b.priorityScore || 0) - (a.priorityScore || 0);
+                          })
+                          .map((kw, i) => (
                           <TableRow key={i}>
                             <TableCell><Checkbox checked={kwSelectedKws.includes(kw.keyword)} onCheckedChange={(c) => setKwSelectedKws(prev => c ? [...prev, kw.keyword] : prev.filter(k => k !== kw.keyword))} /></TableCell>
-                            <TableCell className="font-medium">{kw.keyword}</TableCell>
-                            <TableCell><span className="font-mono text-sm">{kw.searchVolume?.toLocaleString()}</span></TableCell>
+                            <TableCell className="font-medium text-sm">{kw.keyword}</TableCell>
+                            <TableCell><span className="font-mono text-sm">{kw.searchVolume?.toLocaleString()}</span>{kw.cpc ? <span className="text-[10px] text-muted-foreground block">₹{kw.cpc}</span> : null}</TableCell>
                             <TableCell><div className="flex items-center gap-1"><Progress value={kw.difficulty} className="w-16 h-2" /><span className="text-xs">{kw.difficulty}</span></div></TableCell>
                             <TableCell><Badge variant="outline" className={`text-xs ${kw.competition === "low" ? "border-green-300 text-green-700" : kw.competition === "high" ? "border-red-300 text-red-700" : "border-amber-300 text-amber-700"}`}>{kw.competition}</Badge></TableCell>
                             <TableCell><Badge variant="secondary" className="text-xs">{kw.intent}</Badge></TableCell>
                             <TableCell>{trendIcon(kw.trending)}</TableCell>
+                            <TableCell><Badge variant="outline" className={`text-[10px] ${kw.source === "google_suggest" ? "border-blue-300 text-blue-700" : kw.source === "paa" ? "border-purple-300 text-purple-700" : kw.source === "alphabet" ? "border-cyan-300 text-cyan-700" : kw.source === "trends" ? "border-green-300 text-green-700" : kw.source === "ai_enriched" ? "border-amber-300 text-amber-700" : ""}`}>{kw.source || "—"}</Badge></TableCell>
                             <TableCell className="text-xs text-muted-foreground">{kw.category || "—"}</TableCell>
                           </TableRow>
                         ))}
@@ -1471,11 +1579,68 @@ const AdminSEODashboard = () => {
                     </Table>
                   </CardContent>
                 </Card>
+
+                {/* Keyword Clusters */}
+                {kwClusters.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Layers className="h-4 w-4" /> Keyword Clusters ({kwClusters.length})</CardTitle></CardHeader>
+                    <CardContent className="space-y-3">
+                      {kwClusters.map((c, i) => (
+                        <div key={i} className="p-3 rounded-lg border bg-card">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-medium text-sm">{c.clusterName}</span>
+                            {c.suggestedContentType && <Badge variant="outline" className="text-[10px]">{c.suggestedContentType}</Badge>}
+                          </div>
+                          <p className="text-xs text-primary font-medium mb-1">Pillar: {c.pillarKeyword}</p>
+                          <div className="flex flex-wrap gap-1">{c.supportingKeywords.map((sk, j) => <Badge key={j} variant="secondary" className="text-[10px]">{sk}</Badge>)}</div>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Content Gaps / Seasonal / Snippets */}
                 <div className="grid gap-4 lg:grid-cols-3">
-                  <Card><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Target className="h-4 w-4" /> Content Gaps</CardTitle></CardHeader><CardContent>{kwContentGaps.map((g, i) => <p key={i} className="text-sm py-1 border-b last:border-0">• {g}</p>)}</CardContent></Card>
-                  <Card><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><TrendingUp className="h-4 w-4" /> Seasonal</CardTitle></CardHeader><CardContent>{kwSeasonal.map((s, i) => <p key={i} className="text-sm py-1 border-b last:border-0">• {s}</p>)}</CardContent></Card>
-                  <Card><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Zap className="h-4 w-4" /> Snippet Opportunities</CardTitle></CardHeader><CardContent>{kwSnippets.map((s, i) => <p key={i} className="text-sm py-1 border-b last:border-0">• {s}</p>)}</CardContent></Card>
+                  <Card><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Target className="h-4 w-4" /> Content Gaps</CardTitle></CardHeader><CardContent className="space-y-2">{kwContentGaps.map((g, i) => (
+                    <div key={i} className="text-sm py-1 border-b last:border-0">
+                      <p className="font-medium">{typeof g === "string" ? g : g.gap}</p>
+                      {typeof g !== "string" && g.suggestedTitle && <p className="text-xs text-primary">→ {g.suggestedTitle}</p>}
+                      {typeof g !== "string" && g.estimatedTraffic && <span className="text-[10px] text-muted-foreground">{g.estimatedTraffic.toLocaleString()} est. traffic</span>}
+                    </div>
+                  ))}</CardContent></Card>
+                  <Card><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><TrendingUp className="h-4 w-4" /> Seasonal</CardTitle></CardHeader><CardContent className="space-y-2">{kwSeasonal.map((s, i) => (
+                    <div key={i} className="text-sm py-1 border-b last:border-0">
+                      <p className="font-medium">{typeof s === "string" ? s : s.keyword}</p>
+                      {typeof s !== "string" && <p className="text-xs text-muted-foreground">Peak: {s.peakMonths} — {s.action}</p>}
+                    </div>
+                  ))}</CardContent></Card>
+                  <Card><CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Zap className="h-4 w-4" /> Snippet Opportunities</CardTitle></CardHeader><CardContent className="space-y-2">{kwSnippets.map((s, i) => (
+                    <div key={i} className="text-sm py-1 border-b last:border-0">
+                      <p className="font-medium">{typeof s === "string" ? s : s.question}</p>
+                      {typeof s !== "string" && s.currentRanker && <p className="text-[10px] text-muted-foreground">Current: {s.currentRanker}</p>}
+                    </div>
+                  ))}</CardContent></Card>
                 </div>
+
+                {/* Competitor Keywords */}
+                {kwCompetitorKws.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Swords className="h-4 w-4" /> Competitor Keywords ({kwCompetitorKws.length})</CardTitle></CardHeader>
+                    <CardContent className="p-0">
+                      <Table>
+                        <TableHeader><TableRow><TableHead>Keyword</TableHead><TableHead>Competitor</TableHead><TableHead>Position</TableHead><TableHead>Opportunity</TableHead></TableRow></TableHeader>
+                        <TableBody>{kwCompetitorKws.slice(0, 15).map((ck, i) => (
+                          <TableRow key={i}>
+                            <TableCell className="font-medium text-sm">{ck.keyword}</TableCell>
+                            <TableCell className="text-xs">{ck.competitor}</TableCell>
+                            <TableCell className="text-xs">#{ck.estimatedPosition || "—"}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{ck.ourOpportunity || "—"}</TableCell>
+                          </TableRow>
+                        ))}</TableBody>
+                      </Table>
+                    </CardContent>
+                  </Card>
+                )}
               </>
             )}
           </div>

@@ -17,96 +17,132 @@ function extractJsonFromResponse(response: string): unknown {
   }
 }
 
-// ── Free API helpers for real keyword data ──
+// ── Real data fetchers ──
 
 async function fetchGoogleSuggest(query: string): Promise<string[]> {
   try {
     const url = `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(query)}&hl=en&gl=in`;
-    const resp = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+    const resp = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" } });
     if (!resp.ok) return [];
     const data = await resp.json();
     return (data[1] || []).slice(0, 10);
   } catch { return []; }
 }
 
+async function fetchGoogleSuggestMultiple(queries: string[]): Promise<string[]> {
+  const all = await Promise.all(queries.map(q => fetchGoogleSuggest(q)));
+  return [...new Set(all.flat())];
+}
+
 async function fetchGoogleTrends(query: string): Promise<string[]> {
   try {
     const url = `https://trends.google.com/trends/api/autocomplete/${encodeURIComponent(query)}?hl=en-US&tz=-330`;
-    const resp = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" } });
+    const resp = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" } });
     if (!resp.ok) return [];
     const text = await resp.text();
     const clean = text.replace(/^\)\]\}',?\n/, "");
     const data = JSON.parse(clean);
-    return (data.default?.topics || []).map((t: any) => t.title || t.mid).filter(Boolean).slice(0, 8);
+    return (data.default?.topics || []).map((t: any) => t.title || t.mid).filter(Boolean).slice(0, 10);
   } catch { return []; }
 }
 
 async function fetchWikipediaSuggestions(query: string): Promise<string[]> {
   try {
-    const url = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=5&format=json`;
+    const url = `https://en.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(query)}&limit=8&format=json`;
     const resp = await fetch(url);
     if (!resp.ok) return [];
     const data = await resp.json();
-    return (data[1] || []).slice(0, 5);
+    return (data[1] || []).slice(0, 8);
   } catch { return []; }
 }
 
 async function fetchPeopleAlsoAsk(query: string): Promise<string[]> {
-  // Uses Google's related searches API alternative
-  const variations = [
-    `what is ${query}`,
-    `best ${query}`,
-    `${query} vs`,
-    `how to ${query}`,
-    `${query} fees`,
-    `${query} reviews`,
-    `${query} admission`,
-    `${query} eligibility`,
+  const questionPrefixes = [
+    `what is ${query}`, `how to ${query}`, `best ${query}`,
+    `${query} vs`, `${query} fees`, `${query} reviews`,
+    `${query} admission`, `${query} eligibility`, `${query} salary`,
+    `${query} cutoff`, `${query} placement`, `is ${query} worth it`,
+    `${query} syllabus`, `${query} preparation`, `why ${query}`,
   ];
-  const results: string[] = [];
-  for (const v of variations.slice(0, 4)) {
-    const suggestions = await fetchGoogleSuggest(v);
-    results.push(...suggestions.slice(0, 3));
+  // Fetch in parallel batches of 5
+  const batches = [];
+  for (let i = 0; i < questionPrefixes.length; i += 5) {
+    batches.push(questionPrefixes.slice(i, i + 5));
   }
-  return [...new Set(results)].slice(0, 15);
+  const results: string[] = [];
+  for (const batch of batches) {
+    const batchResults = await Promise.all(batch.map(v => fetchGoogleSuggest(v)));
+    results.push(...batchResults.flat().slice(0, 3));
+  }
+  return [...new Set(results)].slice(0, 25);
+}
+
+// Alphabet expansion (a-z variations)
+async function fetchAlphabetExpansion(query: string): Promise<string[]> {
+  const letters = "abcdefghijklmnopqrstuvwxyz".split("");
+  const selected = letters.filter(() => Math.random() > 0.5).slice(0, 8); // Sample 8 random letters
+  const results = await Promise.all(
+    selected.map(letter => fetchGoogleSuggest(`${query} ${letter}`))
+  );
+  return [...new Set(results.flat())].slice(0, 20);
 }
 
 // ── Payload builders ──
 
-function buildKeywordResearchPayload(query: string, existingKeywords: string[], realSuggestions: { google: string[]; paa: string[]; trends: string[]; wiki: string[] }) {
-  const systemPrompt = `You are an elite SEO keyword research specialist for Indian MBA education (coaching, colleges, exams like CAT, GMAT, XAT, SNAP, GRE, NMAT, CMAT). 
+function buildKeywordResearchPayload(
+  query: string,
+  existingKeywords: string[],
+  realSuggestions: { google: string[]; paa: string[]; trends: string[]; wiki: string[]; alphabet: string[] }
+) {
+  const allRealKeywords = [...new Set([
+    ...realSuggestions.google, ...realSuggestions.paa, ...realSuggestions.alphabet
+  ])];
 
-You have access to REAL Google autocomplete suggestions and trends data. Use these to validate and enrich your keyword research. Be realistic with search volume estimates based on India market.`;
+  const systemPrompt = `You are an elite SEO keyword research specialist for the Indian education market, particularly MBA/management education (coaching centers, colleges, exams like CAT, XAT, SNAP, GMAT, GRE, NMAT, CMAT, MAT, IPMAT).
+
+CRITICAL RULES:
+- Use ONLY the real Google autocomplete data provided below for primary keywords
+- For each keyword you list, mark the source accurately (google_suggest, paa, trends, alphabet, ai_enriched)
+- Search volume estimates must be REALISTIC for India (not inflated). Most long-tail keywords get 100-2000 searches/month
+- Include a mix: head terms (high volume, high competition), body terms, and long-tail terms (low volume, low competition)
+- Group keywords by clear categories (exam-specific, city-specific, comparison, preparation, fees, etc.)
+- Prioritize keywords where a new/growing site can actually compete`;
 
   const userPrompt = `Research keywords for: "${query}"
 
-${existingKeywords?.length ? `Already targeting: ${existingKeywords.join(", ")}` : ""}
+${existingKeywords?.length ? `Already targeting (don't repeat these): ${existingKeywords.slice(0, 30).join(", ")}` : ""}
 
-REAL DATA FROM GOOGLE:
-- Google Autocomplete: ${realSuggestions.google.join(", ") || "N/A"}
-- People Also Search: ${realSuggestions.paa.join(", ") || "N/A"}  
-- Google Trends Related: ${realSuggestions.trends.join(", ") || "N/A"}
-- Wikipedia Related: ${realSuggestions.wiki.join(", ") || "N/A"}
+REAL GOOGLE AUTOCOMPLETE DATA (VERIFIED):
+${realSuggestions.google.length ? `✅ Direct suggestions: ${realSuggestions.google.join(" | ")}` : "⚠️ No direct suggestions found"}
 
-Use this real data to:
-1. Validate keyword ideas against actual search behavior
-2. Discover keywords we might miss
-3. Estimate realistic search volumes for India
+REAL "PEOPLE ALSO SEARCH" (VERIFIED):
+${realSuggestions.paa.length ? `✅ Related queries: ${realSuggestions.paa.join(" | ")}` : "⚠️ No PAA data"}
 
-Find 20-30 keywords organized by category. For each provide:
-- keyword, estimated monthly search volume (India), competition (low/medium/high), difficulty (0-100), intent (informational/commercial/transactional/navigational), trending direction
+ALPHABET EXPANSION (VERIFIED):  
+${realSuggestions.alphabet.length ? `✅ Expanded: ${realSuggestions.alphabet.join(" | ")}` : "⚠️ No expansion data"}
 
-Also provide:
-- Top 5 content gaps to fill
-- Seasonal keyword opportunities (exam seasons, admission windows)
-- Featured snippet opportunities (questions that can rank)
-- Competitor keywords (what Shiksha, Collegedunia, Careers360 rank for)`;
+GOOGLE TRENDS (VERIFIED):
+${realSuggestions.trends.length ? `✅ Trending: ${realSuggestions.trends.join(" | ")}` : "⚠️ No trends data"}
+
+WIKIPEDIA RELATED (VERIFIED):
+${realSuggestions.wiki.length ? `✅ Related: ${realSuggestions.wiki.join(" | ")}` : "⚠️ No wiki data"}
+
+TOTAL REAL KEYWORDS COLLECTED: ${allRealKeywords.length}
+
+Instructions:
+1. Start with the REAL keywords above — tag them with their source
+2. Then add AI-enriched keywords you're confident about — tag them as "ai_enriched"
+3. Provide 30-40 keywords total, organized into clear categories
+4. For EACH keyword: realistic India monthly search volume, competition level, difficulty score, search intent, trend direction
+5. Include CPC estimates in INR where relevant
+6. Identify content gaps, seasonal opportunities, and featured snippet chances
+7. Suggest competitor keywords (what Shiksha, Collegedunia, Careers360 rank for that we don't)`;
 
   const tool = {
     type: "function",
     function: {
       name: "keyword_data",
-      description: "Return keyword research data enriched with real search data",
+      description: "Return comprehensive keyword research data with source attribution",
       parameters: {
         type: "object",
         properties: {
@@ -116,26 +152,50 @@ Also provide:
               type: "object",
               properties: {
                 keyword: { type: "string" },
-                searchVolume: { type: "number" },
+                searchVolume: { type: "number", description: "Realistic monthly search volume for India" },
                 competition: { type: "string", enum: ["low", "medium", "high"] },
-                difficulty: { type: "number" },
-                cpc: { type: "number" },
+                difficulty: { type: "number", description: "SEO difficulty 0-100" },
+                cpc: { type: "number", description: "Estimated CPC in INR" },
                 intent: { type: "string", enum: ["informational", "commercial", "transactional", "navigational"] },
                 trending: { type: "string", enum: ["up", "stable", "down"] },
-                category: { type: "string" },
-                source: { type: "string", description: "Where this keyword was found: google_suggest, trends, ai_generated, paa" },
+                category: { type: "string", description: "Keyword grouping category" },
+                source: { type: "string", enum: ["google_suggest", "paa", "trends", "alphabet", "wiki", "ai_enriched"], description: "Where this keyword was found" },
+                priorityScore: { type: "number", description: "1-10, how important for our site" },
               },
-              required: ["keyword", "searchVolume", "competition", "difficulty", "intent", "trending"],
+              required: ["keyword", "searchVolume", "competition", "difficulty", "intent", "trending", "source"],
             },
           },
-          contentGaps: { type: "array", items: { type: "string" } },
-          seasonalOpportunities: { type: "array", items: { type: "string" } },
-          snippetOpportunities: { type: "array", items: { type: "string" } },
-          competitorKeywords: { type: "array", items: { type: "object", properties: { keyword: { type: "string" }, competitor: { type: "string" }, estimatedPosition: { type: "number" } } } },
+          keywordClusters: {
+            type: "array",
+            description: "Group related keywords into topic clusters",
+            items: {
+              type: "object",
+              properties: {
+                clusterName: { type: "string" },
+                pillarKeyword: { type: "string" },
+                supportingKeywords: { type: "array", items: { type: "string" } },
+                suggestedContentType: { type: "string" },
+              },
+              required: ["clusterName", "pillarKeyword", "supportingKeywords"],
+            },
+          },
+          contentGaps: { type: "array", items: { type: "object", properties: { gap: { type: "string" }, suggestedTitle: { type: "string" }, estimatedTraffic: { type: "number" }, difficulty: { type: "string" } }, required: ["gap", "suggestedTitle"] } },
+          seasonalOpportunities: { type: "array", items: { type: "object", properties: { keyword: { type: "string" }, peakMonths: { type: "string" }, action: { type: "string" } }, required: ["keyword", "peakMonths", "action"] } },
+          snippetOpportunities: { type: "array", items: { type: "object", properties: { question: { type: "string" }, suggestedAnswer: { type: "string" }, currentRanker: { type: "string" } }, required: ["question"] } },
+          competitorKeywords: { type: "array", items: { type: "object", properties: { keyword: { type: "string" }, competitor: { type: "string" }, estimatedPosition: { type: "number" }, ourOpportunity: { type: "string" } }, required: ["keyword", "competitor"] } },
+          dataQualityReport: {
+            type: "object",
+            properties: {
+              totalRealKeywords: { type: "number" },
+              totalAiEnriched: { type: "number" },
+              dataSourcesUsed: { type: "array", items: { type: "string" } },
+              confidence: { type: "string", enum: ["high", "medium", "low"] },
+              notes: { type: "string" },
+            },
+          },
           summary: { type: "string" },
-          dataSourcesUsed: { type: "array", items: { type: "string" } },
         },
-        required: ["keywords", "contentGaps", "seasonalOpportunities", "snippetOpportunities", "summary"],
+        required: ["keywords", "keywordClusters", "contentGaps", "seasonalOpportunities", "snippetOpportunities", "dataQualityReport", "summary"],
       },
     },
   };
@@ -279,17 +339,19 @@ serve(async (req) => {
     if (mode === "keyword_research") {
       const searchQuery = query || niche || "MBA coaching India";
       
-      // Fetch real data from free APIs in parallel
-      const [google, paa, trends, wiki] = await Promise.all([
+      // Fetch real data from multiple sources in parallel
+      const [google, paa, trends, wiki, alphabet] = await Promise.all([
         fetchGoogleSuggest(searchQuery),
         fetchPeopleAlsoAsk(searchQuery),
         fetchGoogleTrends(searchQuery),
         fetchWikipediaSuggestions(searchQuery),
+        fetchAlphabetExpansion(searchQuery),
       ]);
 
-      console.log(`[ai-keyword-research] Real data fetched in ${Date.now() - startTime}ms: ${google.length} Google, ${paa.length} PAA, ${trends.length} Trends, ${wiki.length} Wiki`);
+      const totalReal = new Set([...google, ...paa, ...alphabet]).size;
+      console.log(`[ai-keyword-research] Real data fetched in ${Date.now() - startTime}ms: ${google.length} Google, ${paa.length} PAA, ${trends.length} Trends, ${wiki.length} Wiki, ${alphabet.length} Alphabet, ${totalReal} unique`);
 
-      payload = buildKeywordResearchPayload(searchQuery, existingKeywords || [], { google, paa, trends, wiki });
+      payload = buildKeywordResearchPayload(searchQuery, existingKeywords || [], { google, paa, trends, wiki, alphabet });
     } else if (mode === "blog_titles") {
       payload = buildBlogTitlesPayload(query || niche || "MBA coaching");
     } else {
@@ -302,12 +364,12 @@ serve(async (req) => {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: payload.systemPrompt },
           { role: "user", content: payload.userPrompt },
         ],
-        generationConfig: { maxOutputTokens: 4096 },
+        max_tokens: 8192,
         tools: [payload.tool],
         tool_choice: { type: "function", function: { name: payload.toolName } },
       }),
