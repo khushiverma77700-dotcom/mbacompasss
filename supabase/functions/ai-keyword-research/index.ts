@@ -1,4 +1,20 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1";
+
+async function logAIUsage(feature: string, model: string, aiData: any, status = "success", errorMsg?: string) {
+  try {
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const usage = aiData?.usage || {};
+    await supabase.from("ai_usage_logs").insert({
+      feature, model,
+      prompt_tokens: usage.prompt_tokens || 0,
+      completion_tokens: usage.completion_tokens || 0,
+      total_tokens: usage.total_tokens || 0,
+      estimated_cost: (usage.total_tokens || 0) * 0.000002,
+      status, error_message: errorMsg || null,
+    });
+  } catch (e) { console.error("Usage log error:", e); }
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -393,6 +409,7 @@ serve(async (req) => {
 
     console.log(`[ai-keyword-research] AI call completed in ${Date.now() - aiStartTime}ms`);
     const aiData = await response.json();
+    await logAIUsage("keyword-research", "google/gemini-3-flash-preview", aiData);
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     let result;
     if (toolCall?.function?.arguments) {
