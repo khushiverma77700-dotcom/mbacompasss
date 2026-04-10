@@ -557,7 +557,7 @@ const AdminSEODashboard = () => {
     setInjectLoading(true);
     let updated = 0;
     try {
-      for (const row of targetRows) {
+      for (const row of targetRows.filter(r => !isStaticPage(r))) {
         const existing: string[] = row.item.keywords || [];
         const newKws = kwSelectedKws.filter(k => !existing.map(e => e.toLowerCase()).includes(k.toLowerCase()));
         if (!newKws.length) continue;
@@ -587,7 +587,7 @@ const AdminSEODashboard = () => {
     let updated = 0;
     try {
       const topGapKws = gapKeywords.slice(0, 10);
-      for (const row of targetRows) {
+      for (const row of targetRows.filter(r => !isStaticPage(r))) {
         const existing: string[] = row.item.keywords || [];
         const newKws = topGapKws.filter(k => !existing.map(e => e.toLowerCase()).includes(k.toLowerCase()));
         if (!newKws.length) continue;
