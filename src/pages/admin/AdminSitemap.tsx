@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import STATIC_PAGES_CONFIG from "@/data/staticPages";
 
 const SITE_URL = "https://bschoolbuzz.com";
+const LIVE_SITEMAP_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/serve-sitemap`;
 
 const AdminSitemap = () => {
   const [sitemapXml, setSitemapXml] = useState("");
@@ -126,8 +127,11 @@ ${urls.map((u) => `  <url>
                 <strong>Step 3:</strong> Go to Google Search Console and submit the sitemap URL:
               </p>
               <div className="flex items-center gap-2 bg-background border border-border rounded-md px-3 py-2">
-                <code className="text-sm text-primary flex-1 break-all">{SITE_URL}/sitemap.xml</code>
+                <code className="text-sm text-primary flex-1 break-all">{LIVE_SITEMAP_URL}</code>
               </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                This is a live dynamic URL that always returns the latest sitemap XML. Submit this URL to Google Search Console.
+              </p>
             </div>
             <a
               href="https://search.google.com/search-console"
