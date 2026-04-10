@@ -1272,8 +1272,15 @@ const CollegeShortlisterPage = () => {
 
       <LoginRequiredDialog
         open={showLogin}
-        onOpenChange={(open) => { setShowLogin(open); if (!open && user) setInsightsUnlocked(true); }}
-        message="Sign in to unlock your personalized AI insights, strategy advice, and full college analysis."
+        onOpenChange={(open) => {
+          setShowLogin(open);
+          if (!open && user) {
+            // User just logged in — auto-submit the form
+            setInsightsUnlocked(true);
+            setTimeout(() => handleSubmit(), 300);
+          }
+        }}
+        message="Create a free account or sign in to view your personalized college shortlist with AI insights and score comparison."
       />
 
       <PageKeywords contentType="static" recordId="college-shortlister" fallbackKeywords={["MBA college shortlisting", "CAT college predictor"]} />
