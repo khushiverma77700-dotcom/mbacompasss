@@ -929,45 +929,59 @@ const CollegeShortlisterPage = () => {
                   </div>
                 </div>
 
-                {/* Why fit - styled nicely */}
-                <div className={`mt-3 p-2.5 rounded-lg ${cfg.bg} text-xs text-foreground`}>
-                  <span className="font-semibold">Why you fit:</span> {college.whyFit}
+                {/* Why fit - styled with icon */}
+                <div className={`mt-3 p-3 rounded-xl ${cfg.bg} border ${cfg.border}`}>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle2 className={`w-4 h-4 ${cfg.color} flex-shrink-0 mt-0.5`} />
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Why You Fit</span>
+                      <p className="text-xs text-foreground mt-0.5 leading-relaxed">{college.whyFit}</p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Expand for tips */}
                 <button onClick={() => setExpandedCard(isExpanded ? null : college.id)}
-                  className="text-xs text-primary font-medium mt-2 flex items-center gap-1 hover:underline">
-                  {isExpanded ? "Hide Details" : "Tips & Strategy"} <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                  className={`text-xs font-semibold mt-2.5 flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${isExpanded ? `${cfg.bg} ${cfg.color}` : "text-primary hover:bg-primary/5"}`}>
+                  <Sparkles className="w-3 h-3" />
+                  {isExpanded ? "Hide Strategy" : "Tips & Strategy"} <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                 </button>
                 <AnimatePresence>
                   {isExpanded && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                      <div className="mt-2 p-3 rounded-lg bg-muted/50 text-xs text-foreground space-y-2">
-                        <div className="flex items-start gap-2">
-                          <Sparkles className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" />
-                          <p>{college.tips}</p>
+                      <div className="mt-2 p-4 rounded-xl bg-gradient-to-br from-muted/50 to-muted/30 border border-border/30 space-y-3">
+                        <div className="flex items-start gap-2.5">
+                          <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Rocket className="w-3.5 h-3.5 text-primary" />
+                          </div>
+                          <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Action Plan</span>
+                            <p className="text-xs text-foreground mt-1 leading-relaxed">{college.tips}</p>
+                          </div>
                         </div>
                         {college.exams_accepted && (
-                          <div className="flex items-start gap-2">
-                            <BookOpen className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                            <p><span className="font-medium">Exams:</span> {college.exams_accepted.join(", ")}</p>
+                          <div className="flex items-center gap-2 pt-2 border-t border-border/30">
+                            <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
+                            <span className="text-[10px] font-medium text-muted-foreground">Exams:</span>
+                            <div className="flex gap-1 flex-wrap">
+                              {college.exams_accepted.map((e, i) => (
+                                <Badge key={i} variant="outline" className="text-[9px] px-1.5 py-0">{e}</Badge>
+                              ))}
+                            </div>
                           </div>
                         )}
                         {college.specializations?.length > 0 && (
-                          <div className="flex items-start gap-2">
-                            <GraduationCap className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                            <p><span className="font-medium">Courses:</span> {college.specializations.slice(0, 5).join(", ")}</p>
+                          <div className="flex items-center gap-2 pt-2 border-t border-border/30">
+                            <GraduationCap className="w-3.5 h-3.5 text-muted-foreground" />
+                            <span className="text-[10px] font-medium text-muted-foreground">Courses:</span>
+                            <span className="text-xs text-foreground">{college.specializations.slice(0, 5).join(", ")}</span>
                           </div>
                         )}
-                        {college.accreditations && college.accreditations.length > 0 && (
-                          <div className="flex items-start gap-2">
-                            <Award className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                            <p><span className="font-medium">Accreditations:</span> {college.accreditations.join(", ")}</p>
-                          </div>
-                        )}
-                        <Link to={`/college/${college.slug}`} className="inline-flex items-center gap-1 text-primary font-semibold hover:underline mt-1">
-                          View Full College Profile <ArrowRight className="w-3 h-3" />
-                        </Link>
+                        <div className="pt-2 border-t border-border/30">
+                          <Link to={`/college/${college.slug}`} className="inline-flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline">
+                            View Full College Profile <ArrowRight className="w-3 h-3" />
+                          </Link>
+                        </div>
                       </div>
                     </motion.div>
                   )}
@@ -1162,20 +1176,29 @@ const CollegeShortlisterPage = () => {
         {(aiInsights || strategy) && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="mt-10 space-y-6">
             {aiInsights && (
-              <Card className="border-primary/20 overflow-hidden shadow-lg">
+              <Card className="border-primary/20 overflow-hidden shadow-lg relative">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/60 to-primary/20" />
                 <CardContent className="p-6 relative">
                   {!insightsUnlocked && !user && (
                     <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-transparent z-10 flex flex-col items-center justify-end pb-8">
-                      <Lock className="w-8 h-8 text-primary mb-3" />
-                      <h3 className="font-heading font-bold text-foreground text-lg mb-1">Unlock AI Insights & Strategy</h3>
-                      <p className="text-sm text-muted-foreground mb-4 text-center max-w-sm">Sign in to get personalized mentor advice, action plan, and detailed analysis</p>
-                      <Button onClick={handleUnlockInsights} className="px-6 rounded-xl shadow-lg">
+                      <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                        <Lock className="w-7 h-7 text-primary" />
+                      </div>
+                      <h3 className="font-heading font-bold text-foreground text-lg mb-1">Unlock Your Personalized Strategy</h3>
+                      <p className="text-sm text-muted-foreground mb-4 text-center max-w-sm">Sign in to get your mentor-style assessment, action plan, and detailed guidance</p>
+                      <Button onClick={handleUnlockInsights} size="lg" className="px-8 rounded-xl shadow-lg">
                         <Sparkles className="w-4 h-4 mr-2" /> Unlock Full Report
                       </Button>
                     </div>
                   )}
                   <div className={!insightsUnlocked && !user ? "max-h-40 overflow-hidden" : ""}>
-                    <div className="prose prose-sm max-w-none text-foreground dark:prose-invert">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Target className="w-4 h-4 text-primary" />
+                      </div>
+                      <h3 className="font-heading font-bold text-foreground">Profile Assessment</h3>
+                    </div>
+                    <div className="prose prose-sm max-w-none text-foreground dark:prose-invert prose-p:leading-relaxed prose-li:leading-relaxed prose-headings:font-heading">
                       <ReactMarkdown>{aiInsights}</ReactMarkdown>
                     </div>
                   </div>
@@ -1184,9 +1207,16 @@ const CollegeShortlisterPage = () => {
             )}
 
             {(insightsUnlocked || user) && strategy && (
-              <Card className="border-emerald-200 dark:border-emerald-800 bg-emerald-50/30 dark:bg-emerald-950/20 shadow-lg">
+              <Card className="border-emerald-200 dark:border-emerald-800 bg-gradient-to-br from-emerald-50/40 to-emerald-50/10 dark:from-emerald-950/30 dark:to-emerald-950/10 shadow-lg overflow-hidden relative">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-300" />
                 <CardContent className="p-6">
-                  <div className="prose prose-sm max-w-none text-foreground dark:prose-invert">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                      <Rocket className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <h3 className="font-heading font-bold text-foreground">Your Action Plan</h3>
+                  </div>
+                  <div className="prose prose-sm max-w-none text-foreground dark:prose-invert prose-p:leading-relaxed prose-li:leading-relaxed prose-headings:font-heading">
                     <ReactMarkdown>{strategy}</ReactMarkdown>
                   </div>
                 </CardContent>
