@@ -37,7 +37,7 @@ const LoginRequiredDialog = ({ open, onOpenChange, message }: LoginRequiredDialo
         toast({ title: "Welcome back!", description: "You've been signed in successfully." });
         onOpenChange(false);
       } else {
-        await signUp(email, password, displayName);
+        await signUp(email, password, displayName, phone);
         toast({ title: "Account created!", description: "Please check your email to verify your account." });
         onOpenChange(false);
       }
@@ -104,7 +104,7 @@ const LoginRequiredDialog = ({ open, onOpenChange, message }: LoginRequiredDialo
               </div>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input type="tel" placeholder="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} className="pl-10" required={!isLogin} />
+                <Input type="tel" placeholder="Phone Number *" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} className="pl-10" required={!isLogin} minLength={10} maxLength={10} />
               </div>
               <Select value={targetYear} onValueChange={setTargetYear} required>
                 <SelectTrigger>
