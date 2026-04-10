@@ -275,6 +275,7 @@ const AIGistSection = ({ content, pageType, pageId, onScrollToContent }: AIGistS
         </AnimatePresence>
       </div>
     </motion.div>
+    </>
   );
 };
 
