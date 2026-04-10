@@ -1176,20 +1176,29 @@ const CollegeShortlisterPage = () => {
         {(aiInsights || strategy) && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="mt-10 space-y-6">
             {aiInsights && (
-              <Card className="border-primary/20 overflow-hidden shadow-lg">
+              <Card className="border-primary/20 overflow-hidden shadow-lg relative">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/60 to-primary/20" />
                 <CardContent className="p-6 relative">
                   {!insightsUnlocked && !user && (
                     <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-transparent z-10 flex flex-col items-center justify-end pb-8">
-                      <Lock className="w-8 h-8 text-primary mb-3" />
-                      <h3 className="font-heading font-bold text-foreground text-lg mb-1">Unlock AI Insights & Strategy</h3>
-                      <p className="text-sm text-muted-foreground mb-4 text-center max-w-sm">Sign in to get personalized mentor advice, action plan, and detailed analysis</p>
-                      <Button onClick={handleUnlockInsights} className="px-6 rounded-xl shadow-lg">
+                      <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                        <Lock className="w-7 h-7 text-primary" />
+                      </div>
+                      <h3 className="font-heading font-bold text-foreground text-lg mb-1">Unlock Your Personalized Strategy</h3>
+                      <p className="text-sm text-muted-foreground mb-4 text-center max-w-sm">Sign in to get your mentor-style assessment, action plan, and detailed guidance</p>
+                      <Button onClick={handleUnlockInsights} size="lg" className="px-8 rounded-xl shadow-lg">
                         <Sparkles className="w-4 h-4 mr-2" /> Unlock Full Report
                       </Button>
                     </div>
                   )}
                   <div className={!insightsUnlocked && !user ? "max-h-40 overflow-hidden" : ""}>
-                    <div className="prose prose-sm max-w-none text-foreground dark:prose-invert">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Target className="w-4 h-4 text-primary" />
+                      </div>
+                      <h3 className="font-heading font-bold text-foreground">Profile Assessment</h3>
+                    </div>
+                    <div className="prose prose-sm max-w-none text-foreground dark:prose-invert prose-p:leading-relaxed prose-li:leading-relaxed prose-headings:font-heading">
                       <ReactMarkdown>{aiInsights}</ReactMarkdown>
                     </div>
                   </div>
@@ -1198,9 +1207,16 @@ const CollegeShortlisterPage = () => {
             )}
 
             {(insightsUnlocked || user) && strategy && (
-              <Card className="border-emerald-200 dark:border-emerald-800 bg-emerald-50/30 dark:bg-emerald-950/20 shadow-lg">
+              <Card className="border-emerald-200 dark:border-emerald-800 bg-gradient-to-br from-emerald-50/40 to-emerald-50/10 dark:from-emerald-950/30 dark:to-emerald-950/10 shadow-lg overflow-hidden relative">
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-300" />
                 <CardContent className="p-6">
-                  <div className="prose prose-sm max-w-none text-foreground dark:prose-invert">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                      <Rocket className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <h3 className="font-heading font-bold text-foreground">Your Action Plan</h3>
+                  </div>
+                  <div className="prose prose-sm max-w-none text-foreground dark:prose-invert prose-p:leading-relaxed prose-li:leading-relaxed prose-headings:font-heading">
                     <ReactMarkdown>{strategy}</ReactMarkdown>
                   </div>
                 </CardContent>
