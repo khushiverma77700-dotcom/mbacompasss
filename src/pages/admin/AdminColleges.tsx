@@ -17,8 +17,12 @@ import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 import SEOChecklist from "@/components/admin/SEOChecklist";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 
+const TIER_OPTIONS = ["Tier 1", "Tier 2", "Tier 3", "Tier 4"];
+const CATEGORY_OPTIONS = ["IIM", "Non-IIM"];
+
 const emptyForm = {
   name: "", slug: "", description: "", city: "", state: "", type: "Private",
+  tier: "Tier 2", college_category: "Non-IIM",
   established: 0, ranking: 0, fees: "", website: "",
   placement_avg: "", placement_highest: "", placement_median: "",
   campus_size: "", total_students: 0, admission_process: "",
@@ -37,7 +41,7 @@ const AdminColleges = () => {
   const { toast } = useToast();
 
   const fetchColleges = async () => {
-    const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, ranking, established").order("ranking", { ascending: true });
+    const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, tier, college_category, ranking, established").order("ranking", { ascending: true });
     if (data) setColleges(data);
   };
 
@@ -63,6 +67,7 @@ const AdminColleges = () => {
     const payload: any = {
       name: form.name, slug, description: form.description || null,
       city: form.city || null, state: form.state || null, type: form.type || null,
+      tier: form.tier || "Tier 2", college_category: form.college_category || "Non-IIM",
       established: form.established || null, ranking: form.ranking || null,
       fees: form.fees || null, website: form.website || null,
       placement_avg: form.placement_avg || null, placement_highest: form.placement_highest || null,
@@ -94,6 +99,7 @@ const AdminColleges = () => {
     setForm({
       name: data.name, slug: data.slug, description: data.description ?? "",
       city: data.city ?? "", state: data.state ?? "", type: data.type ?? "Private",
+      tier: (data as any).tier ?? "Tier 2", college_category: (data as any).college_category ?? "Non-IIM",
       established: data.established ?? 0, ranking: data.ranking ?? 0,
       fees: data.fees ?? "", website: data.website ?? "",
       placement_avg: data.placement_avg ?? "", placement_highest: data.placement_highest ?? "",
@@ -189,6 +195,26 @@ const AdminColleges = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Category *</Label>
+                    <Select value={form.college_category} onValueChange={(v) => setForm({ ...form, college_category: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {CATEGORY_OPTIONS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Tier *</Label>
+                    <Select value={form.tier} onValueChange={(v) => setForm({ ...form, tier: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {TIER_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <div className="grid grid-cols-3 gap-3">
                   <Input type="number" placeholder="Established Year" value={form.established || ""} onChange={(e) => setForm({ ...form, established: parseInt(e.target.value) || 0 })} />
                   <Input type="number" placeholder="Ranking" value={form.ranking || ""} onChange={(e) => setForm({ ...form, ranking: parseInt(e.target.value) || 0 })} />
@@ -273,9 +299,10 @@ const AdminColleges = () => {
               <TableRow>
                 <TableHead>Rank</TableHead>
                 <TableHead>Name</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Tier</TableHead>
                 <TableHead>City</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead>Est.</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -284,9 +311,10 @@ const AdminColleges = () => {
                 <TableRow key={c.id}>
                   <TableCell>{c.ranking ?? "—"}</TableCell>
                   <TableCell className="font-medium">{c.name}</TableCell>
+                  <TableCell><Badge variant={c.college_category === "IIM" ? "default" : "secondary"}>{c.college_category ?? "—"}</Badge></TableCell>
+                  <TableCell><Badge variant="outline">{c.tier ?? "—"}</Badge></TableCell>
                   <TableCell>{c.city ?? "—"}</TableCell>
                   <TableCell><Badge variant="secondary">{c.type ?? "—"}</Badge></TableCell>
-                  <TableCell>{c.established ?? "—"}</TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(c.id)}><Pencil className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(c.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
@@ -294,7 +322,7 @@ const AdminColleges = () => {
                 </TableRow>
               ))}
               {colleges.length === 0 && (
-                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No colleges yet</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No colleges yet</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
