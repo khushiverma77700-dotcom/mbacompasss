@@ -72,14 +72,17 @@ serve(async (req) => {
 
     const profileScore = calculateProfileScore(body);
 
-    const prompt = `You are an expert MBA admissions counselor for Indian MBA programs. Analyze this student profile and provide extremely detailed, data-driven insights.
+    const studentName = body.name || "Student";
+    const workExpLabel = body.work_experience_months === 0 ? "Fresher" : `${body.work_experience_months} months`;
+    
+    const prompt = `You are an expert MBA admissions counselor for Indian MBA programs. Analyze this student profile and provide extremely detailed, personalized, data-driven insights. Address the student by their first name "${studentName.split(" ")[0]}" throughout your analysis. Make every insight feel like it was written specifically for them.
 
 STUDENT PROFILE:
-- Name: ${body.name || "Student"}
+- Full Name: ${studentName}
 - 10th Score: ${body.tenth_score}%
 - 12th Score: ${body.twelfth_score}%
 - Graduation Score: ${body.graduation_score}% in ${body.graduation_stream} ${body.is_pursuing_graduation ? "(Currently Pursuing)" : ""}
-- Work Experience: ${body.work_experience_months} months ${body.work_experience_months === 0 ? "(Fresher)" : ""}
+- Work Experience: ${workExpLabel}
 - Category: ${body.category}
 - Gender: ${body.gender || "Not specified"}
 - Target Exams: ${body.target_exams?.join(", ")}
@@ -87,6 +90,17 @@ STUDENT PROFILE:
 - Preferred Specialization: ${body.preferred_specialization || "Not specified"}
 - Target States for MBA: ${body.target_states?.join(", ") || "Pan India"}
 - Calculated Profile Score: ${profileScore}/10
+
+PERSONALIZATION RULES:
+1. Address ${studentName.split(" ")[0]} by name in ai_summary, strengths, weaknesses, and recommendations
+2. Reference their SPECIFIC scores, stream, and target colleges in every insight
+3. Compare their profile against ACTUAL cutoffs of their target colleges
+4. If they're a fresher, emphasize how to compensate through academics and extracurriculars
+5. If they have work experience, highlight how it benefits specific college applications
+6. Mention their ${body.graduation_stream} background specifically when discussing profile fit
+7. For strengths/weaknesses, tie each one back to their specific numbers (e.g., "Your ${body.tenth_score}% in 10th...")
+8. For college predictions, use their actual target colleges and provide realistic probabilities
+9. Make study plan timeline specific to months remaining before their target exams
 
 Provide a comprehensive, highly detailed analysis. Include specific percentile targets, cutoff scores, and difficulty ratings. For the detailed_college_table, include 15-25 colleges with precise data points. Be very specific and actionable.
 
@@ -105,7 +119,7 @@ For score_breakdown, provide 5 dimension scores: academics, work_experience, div
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "You are an expert Indian MBA admissions counselor. Provide specific, data-driven insights with real college names, actual cutoffs, and precise percentile targets. Be extremely detailed and personalised." },
+          { role: "system", content: `You are an expert Indian MBA admissions counselor named "B School Buzz AI Counselor". You speak directly to the student by their first name. Every insight must reference their specific data points — never give generic advice. Be warm, encouraging, yet brutally honest about areas needing improvement. Use their actual scores, stream, work experience, and target colleges to make every sentence feel personally crafted for them.` },
           { role: "user", content: prompt },
         ],
         tools: [
@@ -296,7 +310,7 @@ For score_breakdown, provide 5 dimension scores: academics, work_experience, div
                   },
                   ai_summary: {
                     type: "string",
-                    description: "A 5-6 sentence personalized summary. Be specific, encouraging, reference actual college names. Address the student by name.",
+                    description: "A 5-6 sentence deeply personalized summary. Address the student by their first name. Reference their exact scores, stream, work experience, and target colleges. Give specific advice like 'With your 85% in Engineering and 24 months at TCS, you have a strong shot at IIM Lucknow'. Be encouraging but honest.",
                   },
                 },
                 required: ["strengths", "weaknesses", "college_predictions", "detailed_college_table", "recommendations", "study_plan", "score_breakdown", "exam_strategy", "peer_comparison", "ai_summary"],
