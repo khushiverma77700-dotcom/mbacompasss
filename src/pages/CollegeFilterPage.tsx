@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { MapPin, ArrowRight, GraduationCap, TrendingUp, Search, Filter, IndianRupee, Star, Award, Building2, ChevronRight, Briefcase, Users, BookOpen, Calendar, CheckCircle2, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { useCityPageBySlug, useCityPages } from "@/hooks/useCityPages";
 import SEOHead, { generateListingSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import PageKeywords from "@/components/PageKeywords";
+import AIGistSection from "@/components/AIGistSection";
 
 const CollegeFilterPage = () => {
   const { region } = useParams<{ region: string }>();
@@ -138,6 +139,13 @@ const CollegeFilterPage = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        {/* AI Gist */}
+        <AIGistSection
+          content={`${displayName} MBA Colleges. ${cityPage?.intro_content || ""} ${cityPage?.detailed_content || ""} ${filteredColleges.map(c => `${c.name}: Rank ${c.ranking}, Fees ${c.fees}, Placement ${c.placement_avg}`).join(". ")}`}
+          pageType="city"
+          pageId={cityPage?.id}
+          onScrollToContent={() => document.getElementById("college-list")?.scrollIntoView({ behavior: "smooth" })}
+        />
         {/* Filter Bar */}
         <div className="bg-card rounded-2xl border border-border p-5 mb-8 shadow-lg -mt-8 relative z-10">
           <div className="flex items-center gap-2 mb-4">

@@ -172,3 +172,30 @@
   );
   animation: ai-border-spin 4s linear infinite;
 }
+
+/* Firefox fallback — @property not supported, so animated conic-gradient won't work */
+@supports not (background: conic-gradient(from 0deg, red, blue)) {
+  .ai-gist-border,
+  .ai-gist-border-inner,
+  .ai-gist-input-border {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899, #8b5cf6, #3b82f6);
+    background-size: 300% 300%;
+    animation: ai-gradient-shift 4s ease infinite;
+  }
+}
+
+@-moz-document url-prefix() {
+  .ai-gist-border,
+  .ai-gist-border-inner,
+  .ai-gist-input-border {
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899, #8b5cf6, #3b82f6);
+    background-size: 300% 300%;
+    animation: ai-gradient-shift 4s ease infinite;
+  }
+}
+
+@keyframes ai-gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}

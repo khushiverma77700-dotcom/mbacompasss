@@ -14,7 +14,7 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     if (action === "summarize") {
-      const stripped = (content || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 8000);
+      const stripped = (content || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 12000);
       
       const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -22,15 +22,18 @@ serve(async (req) => {
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
           messages: [
-            { role: "system", content: `You are an expert education content summarizer for BSchoolBuzz. Write a crisp, humanized summary in 50-70 words using markdown formatting.
+            { role: "system", content: `You are an expert education content summarizer for BSchoolBuzz. Write an informative, humanized summary in 100-200 words using markdown formatting.
 
 Rules:
-- Use **bold** for key facts, numbers, college names, and important terms
-- Use bullet points (- ) for 2-3 key takeaways if the content has multiple important points
+- Start with a 1-2 sentence overview capturing the core topic
+- Use **bold** for key facts, numbers, college names, exam names, fees, and important terms
+- Use bullet points (- ) for 3-5 key takeaways covering the most important points
+- Include specific numbers: fees, percentiles, placements, rankings, deadlines when available
 - Be insightful, actionable, and specific — no fluff or generic statements
 - Write in a warm, conversational tone like a helpful senior mentor
-- End with a sharp insight or actionable tip
-- Do NOT use headings (#). Just flowing text with bold highlights and optional bullets.` },
+- End with a sharp insight, actionable tip, or key recommendation
+- Do NOT use headings (#). Just flowing text with bold highlights and bullet points.
+- Make it genuinely useful so the reader gets real value without reading the full page` },
             { role: "user", content: `Summarize this ${pageType || "article"} content:\n\n${stripped}` },
           ],
         }),
