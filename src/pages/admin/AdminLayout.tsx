@@ -1,6 +1,6 @@
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp, Sparkles, ShieldCheck, Lock, Briefcase } from "lucide-react";
+import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp, Sparkles, ShieldCheck, Lock, Briefcase, Target } from "lucide-react";
 import { useState } from "react";
 
 const adminNav = [
@@ -22,6 +22,7 @@ const adminNav = [
   { label: "Comparisons", path: "/admin/comparisons", icon: GitCompare },
   { label: "College Sections", path: "/admin/college-sections", icon: Star },
   { label: "Institute Results", path: "/admin/institute-results", icon: BarChart3 },
+  { label: "Shortlister Colleges", path: "/admin/shortlister-colleges", icon: Target },
   { label: "Sitemap", path: "/admin/sitemap", icon: MapPin },
   { label: "Student Leads", path: "/admin/leads", icon: Users },
   { label: "All Leads (Unified)", path: "/admin/all-leads-unified", icon: BarChart3 },
