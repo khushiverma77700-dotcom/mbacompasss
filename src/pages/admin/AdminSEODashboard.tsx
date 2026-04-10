@@ -225,6 +225,10 @@ const AdminSEODashboard = () => {
   const [compPageRecs, setCompPageRecs] = useState<PageRecommendation[]>([]);
   const [compSubTab, setCompSubTab] = useState("overview");
 
+  // Removed Links State
+  const [removedLinks, setRemovedLinks] = useState<any[]>([]);
+  const [removedLinksLoading, setRemovedLinksLoading] = useState(false);
+
   const [injectLoading, setInjectLoading] = useState(false);
 
   // Interlink Studio State
@@ -265,6 +269,22 @@ const AdminSEODashboard = () => {
     const { data } = await supabase.from("site_settings").select("value").eq("key", "saved_blog_ideas").maybeSingle();
     if (data?.value && Array.isArray(data.value)) setSavedBlogIdeas(data.value as unknown as SavedBlogIdea[]);
   }, []);
+
+  const loadRemovedLinks = useCallback(async () => {
+    setRemovedLinksLoading(true);
+    try {
+      const { getRemovedLinks } = await import("@/lib/adminCleanup");
+      const links = await getRemovedLinks();
+      setRemovedLinks(links);
+    } catch {} finally { setRemovedLinksLoading(false); }
+  }, []);
+
+  const handlePermanentDelete = async (url: string) => {
+    const { permanentlyRemoveLink } = await import("@/lib/adminCleanup");
+    await permanentlyRemoveLink(url);
+    setRemovedLinks(prev => prev.filter(l => l.url !== url));
+    toast({ title: "Link permanently removed" });
+  };
 
   const saveBlogIdeasToDb = async (ideas: SavedBlogIdea[]) => {
     const { data: existing } = await supabase.from("site_settings").select("id").eq("key", "saved_blog_ideas").maybeSingle();
@@ -377,7 +397,7 @@ const AdminSEODashboard = () => {
   };
 
   // Auto-poll for new pages every 90 seconds
-  useEffect(() => { fetchDashboardData(); loadSavedBlogIdeas(); loadDailyReport(); }, [fetchDashboardData, loadSavedBlogIdeas]);
+  useEffect(() => { fetchDashboardData(); loadSavedBlogIdeas(); loadDailyReport(); loadRemovedLinks(); }, [fetchDashboardData, loadSavedBlogIdeas, loadRemovedLinks]);
   useEffect(() => {
     const interval = setInterval(() => {
       if (!loading && !bulkLoading) fetchDashboardData();
@@ -765,6 +785,7 @@ const AdminSEODashboard = () => {
   const navItems = [
     { id: "overview", label: "Overview", icon: BarChart3 },
     { id: "pages", label: `All Pages (${filteredRows.length})`, icon: FileText },
+    { id: "removed-links", label: "Removed Links", icon: Trash2 },
     { id: "interlinks", label: "Interlink Studio", icon: Link2 },
     { id: "auto-generate", label: "Auto-Generate", icon: Zap },
     { id: "uniqueness", label: "Uniqueness Check", icon: Shield },
@@ -2107,6 +2128,64 @@ const AdminSEODashboard = () => {
                 <RecommendationRow icon={<Globe className="h-4 w-4" />} text="Consider SSR/pre-rendering for better crawler access to SPA content" severity="medium" />
                 <RecommendationRow icon={<Eye className="h-4 w-4" />} text="Convert images to WebP/AVIF for faster page loads" severity="low" />
                 <RecommendationRow icon={<Shield className="h-4 w-4" />} text="Add Content Security Policy headers for production" severity="low" />
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* ═══ REMOVED LINKS ═══ */}
+        {activeTab === "removed-links" && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trash2 className="h-5 w-5 text-destructive" /> Removed Links
+                </CardTitle>
+                <CardDescription>Pages deleted from admin are tracked here. Permanently remove them when ready.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {removedLinksLoading ? (
+                  <div className="flex items-center justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+                ) : removedLinks.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Trash2 className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                    <p className="text-lg font-semibold">No Removed Links</p>
+                    <p className="text-sm">When you delete pages from admin, they will appear here automatically.</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Page</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>URL</TableHead>
+                        <TableHead>Deleted At</TableHead>
+                        <TableHead>Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {removedLinks.map((link, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell className="font-medium">{link.label}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-xs capitalize">{link.type}</Badge>
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground max-w-[250px] truncate">{link.url}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{new Date(link.deletedAt).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handlePermanentDelete(link.url)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </div>

@@ -120,7 +120,12 @@ const AdminArticles = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this article?")) return;
+    const item = articles.find(a => a.id === id);
     await supabase.from("articles").delete().eq("id", id);
+    if (item) {
+      const { cleanupDeletedPage } = await import("@/lib/adminCleanup");
+      await cleanupDeletedPage({ contentType: "article", id, slug: item.slug, name: item.title });
+    }
     fetchArticles();
     toast({ title: "Article deleted" });
   };
