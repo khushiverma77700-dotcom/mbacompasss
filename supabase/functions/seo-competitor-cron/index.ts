@@ -139,6 +139,17 @@ Prioritize actions by impact. Focus on what we can implement TODAY.`,
     }
 
     const aiData = await aiResp.json();
+    await (async () => {
+      try {
+        const usage = aiData?.usage || {};
+        await supabase.from("ai_usage_logs").insert({
+          feature: "competitor-cron", model: "google/gemini-2.5-flash",
+          prompt_tokens: usage.prompt_tokens || 0, completion_tokens: usage.completion_tokens || 0,
+          total_tokens: usage.total_tokens || 0, estimated_cost: (usage.total_tokens || 0) * 0.000002,
+          status: "success",
+        });
+      } catch (e) { console.error("Usage log error:", e); }
+    })();
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     let report: any;
     if (toolCall?.function?.arguments) {

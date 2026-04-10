@@ -1,6 +1,19 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1";
 
+async function logAIUsage(feature: string, model: string, aiData: any, status = "success", errorMsg?: string) {
+  try {
+    const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const usage = aiData?.usage || {};
+    await sb.from("ai_usage_logs").insert({
+      feature, model,
+      prompt_tokens: usage.prompt_tokens || 0, completion_tokens: usage.completion_tokens || 0,
+      total_tokens: usage.total_tokens || 0, estimated_cost: (usage.total_tokens || 0) * 0.000002,
+      status, error_message: errorMsg || null,
+    });
+  } catch (e) { console.error("Usage log error:", e); }
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
@@ -285,7 +298,9 @@ Generate unique, page-specific SEO optimization.`,
       });
 
       if (!aiResp.ok) throw new Error(`AI error: ${aiResp.status}`);
-      const gaps = extractToolResult(await aiResp.json());
+      const aiJson = await aiResp.json();
+      await logAIUsage("auto-seo", "google/gemini-2.5-flash", aiJson);
+      const gaps = extractToolResult(aiJson);
       return new Response(JSON.stringify(gaps), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 

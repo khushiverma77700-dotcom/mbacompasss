@@ -1,4 +1,18 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1";
+
+async function logAIUsage(feature: string, model: string, aiData: any, status = "success", errorMsg?: string) {
+  try {
+    const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const usage = aiData?.usage || {};
+    await sb.from("ai_usage_logs").insert({
+      feature, model,
+      prompt_tokens: usage.prompt_tokens || 0, completion_tokens: usage.completion_tokens || 0,
+      total_tokens: usage.total_tokens || 0, estimated_cost: (usage.total_tokens || 0) * 0.000002,
+      status, error_message: errorMsg || null,
+    });
+  } catch (e) { console.error("Usage log error:", e); }
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -120,6 +134,7 @@ City: name="${data.name}", slug="${data.slug}", state="${data.state || ''}", typ
   }
 
   const aiData = await response.json();
+  await logAIUsage("seo-enhance", "google/gemini-2.5-flash", aiData);
   const content = aiData.choices?.[0]?.message?.content || "";
 
   try {
@@ -382,6 +397,7 @@ Perform DEEP, page-specific SEO analysis. Be brutally honest about current state
     }
 
     const aiData = await response.json();
+    await logAIUsage("seo-enhance", "google/gemini-2.5-flash", aiData);
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
 
     let suggestions: any;
