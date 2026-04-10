@@ -189,6 +189,7 @@ IMPORTANT: You MUST recommend at least 3 institutes. Return ONLY valid JSON. No 
     }
 
     const aiData = await aiResponse.json();
+    await logAIUsage("coaching-finder", "google/gemini-2.5-flash", aiData);
     const rawContent = aiData.choices?.[0]?.message?.content || "";
     
     let cleaned = rawContent.trim();
