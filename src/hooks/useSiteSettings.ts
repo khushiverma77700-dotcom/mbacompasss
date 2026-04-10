@@ -5,13 +5,20 @@ import { useEffect } from "react";
 // Batch-fetch all settings in one query, then individual hooks read from cache
 const SETTINGS_STALE = 10 * 60 * 1000; // 10 min
 
+// Only fetch the small UI-relevant settings, not huge SEO snapshots
+const UI_SETTINGS_KEYS = [
+  "header", "hero", "stats", "why_choose_us", "how_it_works",
+  "faqs", "footer", "contact_page", "announcement",
+];
+
 export const useAllSiteSettings = () => {
   return useQuery({
     queryKey: ["site_settings_all"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("site_settings")
-        .select("key, value");
+        .select("key, value")
+        .in("key", UI_SETTINGS_KEYS);
       if (error) throw error;
       const map: Record<string, any> = {};
       data?.forEach((row: any) => { map[row.key] = row.value; });
