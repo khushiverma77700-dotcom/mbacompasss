@@ -101,7 +101,9 @@ const AIGistSection = ({ content, pageType, pageId, onScrollToContent }: AIGistS
   const pageLabel = pageType === "article" ? "Article" : pageType === "college" ? "College Page" : pageType === "exam" ? "Exam Page" : pageType === "city" ? "City Guide" : "Institute Page";
 
   return (
-    <motion.div
+    <>
+      <LoginRequiredDialog open={loginOpen} onOpenChange={setLoginOpen} message="Sign in to use B School Buzz AI — get instant summaries and answers." />
+      <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
