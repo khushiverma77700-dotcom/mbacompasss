@@ -27,12 +27,34 @@ const INDIAN_STATES = [
   "Chandigarh", "Jammu & Kashmir", "Ladakh", "Puducherry"
 ];
 
-const POPULAR_CITIES = [
-  "Ahmedabad", "Bangalore", "Bhopal", "Bhubaneswar", "Chandigarh", "Chennai", "Coimbatore",
-  "Dehradun", "Delhi", "Gurgaon", "Gwalior", "Hyderabad", "Indore", "Jaipur", "Jamshedpur",
-  "Kochi", "Kolkata", "Kozhikode", "Lucknow", "Mangalore", "Mumbai", "Nagpur", "Noida",
-  "Pune", "Raipur", "Ranchi", "Rohtak", "Tiruchirappalli", "Udaipur", "Varanasi", "Visakhapatnam"
-];
+const STATE_CITIES: Record<string, string[]> = {
+  "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Tirupati", "Guntur"],
+  "Bihar": ["Patna", "Gaya", "Muzaffarpur"],
+  "Chhattisgarh": ["Raipur", "Bhilai", "Bilaspur"],
+  "Delhi": ["Delhi", "New Delhi"],
+  "Goa": ["Panaji", "Margao", "Vasco da Gama"],
+  "Gujarat": ["Ahmedabad", "Vadodara", "Surat", "Rajkot", "Gandhinagar"],
+  "Haryana": ["Gurgaon", "Rohtak", "Faridabad", "Hisar", "Karnal"],
+  "Himachal Pradesh": ["Shimla", "Dharamshala", "Mandi"],
+  "Jharkhand": ["Ranchi", "Jamshedpur", "Dhanbad", "Bokaro"],
+  "Karnataka": ["Bangalore", "Mangalore", "Mysore", "Hubli"],
+  "Kerala": ["Kochi", "Thiruvananthapuram", "Kozhikode", "Thrissur"],
+  "Madhya Pradesh": ["Bhopal", "Indore", "Gwalior", "Jabalpur"],
+  "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad", "Navi Mumbai"],
+  "Odisha": ["Bhubaneswar", "Cuttack", "Rourkela", "Sambalpur"],
+  "Punjab": ["Chandigarh", "Ludhiana", "Amritsar", "Jalandhar", "Mohali"],
+  "Rajasthan": ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Ajmer", "Pilani"],
+  "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem"],
+  "Telangana": ["Hyderabad", "Warangal", "Secunderabad"],
+  "Uttar Pradesh": ["Lucknow", "Noida", "Greater Noida", "Varanasi", "Agra", "Kanpur", "Ghaziabad", "Aligarh"],
+  "Uttarakhand": ["Dehradun", "Haridwar", "Roorkee", "Nainital"],
+  "West Bengal": ["Kolkata", "Howrah", "Durgapur", "Siliguri", "Kharagpur"],
+  "Chandigarh": ["Chandigarh"],
+  "Jammu & Kashmir": ["Jammu", "Srinagar"],
+  "Puducherry": ["Puducherry"],
+  "Assam": ["Guwahati", "Dibrugarh", "Silchar"],
+  "Sikkim": ["Gangtok"],
+};
 
 const FEE_RANGES = [
   "Below ₹5 Lakhs", "₹5 - ₹10 Lakhs", "₹10 - ₹15 Lakhs", "₹15 - ₹20 Lakhs",
@@ -73,54 +95,38 @@ const GMAT_SCORE_RANGES = [
 
 // ─── Weighted Scoring Engine ───
 const SCORING_WEIGHTS = {
-  tier: 30,          // 30% weight
-  ranking: 20,       // 20% weight  
-  avgPackage: 20,    // 20% weight
-  fees: 10,          // 10% weight (higher fees = harder/more premium)
-  accreditations: 10,// 10% weight
-  category: 10,      // 10% weight (IIM bonus)
+  tier: 30, ranking: 20, avgPackage: 20, fees: 10, accreditations: 10, category: 10,
 };
 
 const tierScore = (tier: string): number => {
   switch (tier) {
-    case "Tier 1": return 100;
-    case "Tier 2": return 70;
-    case "Tier 3": return 40;
-    case "Tier 4": return 20;
-    default: return 30;
+    case "Tier 1": return 100; case "Tier 2": return 70; case "Tier 3": return 40; case "Tier 4": return 20; default: return 30;
   }
 };
 
 const rankingScore = (ranking: string): number => {
   if (!ranking) return 30;
-  if (ranking.startsWith("1 -")) return 100;
-  if (ranking.startsWith("6 -")) return 90;
-  if (ranking.startsWith("11")) return 75;
-  if (ranking.startsWith("21")) return 60;
-  if (ranking.startsWith("31")) return 50;
-  if (ranking.startsWith("51")) return 40;
-  if (ranking.startsWith("76")) return 30;
-  return 20; // 100+
+  if (ranking.startsWith("1 -")) return 100; if (ranking.startsWith("6 -")) return 90;
+  if (ranking.startsWith("11")) return 75; if (ranking.startsWith("21")) return 60;
+  if (ranking.startsWith("31")) return 50; if (ranking.startsWith("51")) return 40;
+  if (ranking.startsWith("76")) return 30; return 20;
 };
 
 const avgPackageScore = (pkg: string): number => {
   if (!pkg) return 30;
   const idx = AVG_PACKAGE_RANGES.indexOf(pkg);
-  if (idx === -1) return 30;
-  return Math.round(20 + (idx / (AVG_PACKAGE_RANGES.length - 1)) * 80);
+  return idx === -1 ? 30 : Math.round(20 + (idx / (AVG_PACKAGE_RANGES.length - 1)) * 80);
 };
 
 const feesScore = (fees: string): number => {
   if (!fees) return 30;
   const idx = FEE_RANGES.indexOf(fees);
-  if (idx === -1) return 30;
-  return Math.round(20 + (idx / (FEE_RANGES.length - 1)) * 80);
+  return idx === -1 ? 30 : Math.round(20 + (idx / (FEE_RANGES.length - 1)) * 80);
 };
 
 const accreditationScore = (accreditations: string[]): number => {
   if (!accreditations || accreditations.length === 0) return 20;
-  const count = accreditations.length;
-  return Math.min(100, 20 + count * 15);
+  return Math.min(100, 20 + accreditations.length * 15);
 };
 
 const categoryScore = (cat: string): number => cat === "IIM" ? 100 : 40;
@@ -136,17 +142,13 @@ const calculateDifficultyScore = (form: any): number => {
 };
 
 const getScoreColor = (score: number): string => {
-  if (score >= 80) return "text-red-600";
-  if (score >= 60) return "text-amber-600";
-  if (score >= 40) return "text-blue-600";
-  return "text-emerald-600";
+  if (score >= 80) return "text-red-600"; if (score >= 60) return "text-amber-600";
+  if (score >= 40) return "text-blue-600"; return "text-emerald-600";
 };
 
 const getScoreLabel = (score: number): string => {
-  if (score >= 80) return "Very Hard";
-  if (score >= 60) return "Hard";
-  if (score >= 40) return "Moderate";
-  return "Easy";
+  if (score >= 80) return "Very Hard"; if (score >= 60) return "Hard";
+  if (score >= 40) return "Moderate"; return "Easy";
 };
 
 type ExamCutoffs = Record<string, string>;
@@ -181,6 +183,12 @@ const AdminShortlisterColleges = () => {
 
   const difficultyScore = useMemo(() => calculateDifficultyScore(form), [form.tier, form.ranking, form.placement_avg, form.fees, form.accreditations, form.college_category]);
 
+  // Cities filtered by selected state
+  const availableCities = useMemo(() => {
+    if (!form.state) return [];
+    return STATE_CITIES[form.state] || [];
+  }, [form.state]);
+
   const aiEnrich = async () => {
     if (!form.name) { toast({ title: "Enter college name first", variant: "destructive" }); return; }
     setAiLoading(true);
@@ -193,35 +201,27 @@ const AdminShortlisterColleges = () => {
         const e = data.enriched;
         setForm(f => ({
           ...f,
-          city: f.city || e.city || "",
-          state: f.state || e.state || "",
-          fees: f.fees || e.fees || "",
-          placement_avg: f.placement_avg || e.placement_avg || "",
+          city: f.city || e.city || "", state: f.state || e.state || "",
+          fees: f.fees || e.fees || "", placement_avg: f.placement_avg || e.placement_avg || "",
           placement_highest: f.placement_highest || e.placement_highest || "",
           ranking: f.ranking || (e.ranking?.toString() || ""),
-          tier: e.tier || f.tier,
-          college_category: e.college_category || f.college_category,
-          type: f.type || e.type || "",
-          established: f.established || (e.established?.toString() || ""),
+          tier: e.tier || f.tier, college_category: e.college_category || f.college_category,
+          type: f.type || e.type || "", established: f.established || (e.established?.toString() || ""),
           exams_accepted: f.exams_accepted.length > 0 ? f.exams_accepted : (e.exams_accepted || []),
           accreditations: f.accreditations.length > 0 ? f.accreditations : (e.accreditations || []),
           courses: f.courses.length > 0 ? f.courses : (e.courses || []),
-          campus_size: f.campus_size || e.campus_size || "",
-          website: f.website || e.website || "",
+          campus_size: f.campus_size || e.campus_size || "", website: f.website || e.website || "",
         }));
         toast({ title: "AI enriched college data", description: "Review and adjust before saving" });
       }
     } catch (err: any) {
       toast({ title: "AI enrichment failed", description: err.message, variant: "destructive" });
-    } finally {
-      setAiLoading(false);
-    }
+    } finally { setAiLoading(false); }
   };
 
   const handleSave = async () => {
     if (!form.name) { toast({ title: "Name is required", variant: "destructive" }); return; }
     if (!form.tier || !form.college_category) { toast({ title: "Tier and Category are mandatory", variant: "destructive" }); return; }
-
     const slug = generateSlug(form.name);
     const payload: any = {
       name: form.name, slug, city: form.city || null, state: form.state || null,
@@ -238,7 +238,6 @@ const AdminShortlisterColleges = () => {
       website: form.website || null,
       cutoff_info: Object.keys(form.exam_cutoffs).length > 0 ? form.exam_cutoffs : null,
     };
-
     if (editId) {
       const { error } = await supabase.from("colleges").update(payload).eq("id", editId);
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
@@ -277,7 +276,6 @@ const AdminShortlisterColleges = () => {
   const toggleArrayItem = (field: "exams_accepted" | "accreditations" | "courses", item: string) => {
     setForm(f => {
       const updated = f[field].includes(item) ? f[field].filter(x => x !== item) : [...f[field], item];
-      // If removing an exam, also remove its cutoff
       if (field === "exams_accepted" && f[field].includes(item)) {
         const newCutoffs = { ...f.exam_cutoffs };
         delete newCutoffs[item];
@@ -310,21 +308,16 @@ const AdminShortlisterColleges = () => {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-heading text-2xl font-bold text-foreground flex items-center gap-2">
-            <GraduationCap className="w-6 h-6 text-primary" />
-            Shortlister Colleges
+            <GraduationCap className="w-6 h-6 text-primary" /> Shortlister Colleges
           </h1>
           <p className="text-sm text-muted-foreground mt-1">Manage colleges for AI College Shortlister</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => { setForm(emptyForm); setEditId(null); }}>
-              <Plus className="w-4 h-4 mr-2" /> Add College
-            </Button>
+            <Button onClick={() => { setForm(emptyForm); setEditId(null); }}><Plus className="w-4 h-4 mr-2" /> Add College</Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editId ? "Edit" : "Add"} College</DialogTitle>
-            </DialogHeader>
+            <DialogHeader><DialogTitle>{editId ? "Edit" : "Add"} College</DialogTitle></DialogHeader>
 
             <Tabs defaultValue="basic" className="mt-2">
               <TabsList className="grid grid-cols-3 w-full">
@@ -356,13 +349,11 @@ const AdminShortlisterColleges = () => {
                     <span className="text-xs text-muted-foreground">/100</span>
                     <p className={`text-[10px] font-semibold ${getScoreColor(difficultyScore)}`}>{getScoreLabel(difficultyScore)}</p>
                   </div>
-                  {/* Mini bar */}
                   <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
                     <div className={`h-full rounded-full transition-all ${difficultyScore >= 80 ? 'bg-red-500' : difficultyScore >= 60 ? 'bg-amber-500' : difficultyScore >= 40 ? 'bg-blue-500' : 'bg-emerald-500'}`} style={{ width: `${difficultyScore}%` }} />
                   </div>
                 </div>
 
-                {/* Scoring Weights Breakdown */}
                 <details className="text-[10px] text-muted-foreground">
                   <summary className="cursor-pointer hover:text-foreground transition-colors">View scoring weights breakdown</summary>
                   <div className="mt-2 grid grid-cols-3 gap-2 p-2 bg-muted/20 rounded-md">
@@ -399,18 +390,14 @@ const AdminShortlisterColleges = () => {
                       <Label className="text-xs font-semibold mb-1.5 block">Category <span className="text-destructive">*</span></Label>
                       <Select value={form.college_category} onValueChange={v => setForm(f => ({ ...f, college_category: v }))}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                        </SelectContent>
+                        <SelectContent>{CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div>
                       <Label className="text-xs font-semibold mb-1.5 block">Tier <span className="text-destructive">*</span></Label>
                       <Select value={form.tier} onValueChange={v => setForm(f => ({ ...f, tier: v }))}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {TIERS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                        </SelectContent>
+                        <SelectContent>{TIERS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                   </div>
@@ -438,24 +425,27 @@ const AdminShortlisterColleges = () => {
                     </div>
                   </div>
 
+                  {/* State → City cascade */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs font-semibold mb-1.5 block">City</Label>
-                      <Select value={form.city || "_none"} onValueChange={v => setForm(f => ({ ...f, city: v === "_none" ? "" : v }))}>
-                        <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
+                      <Label className="text-xs font-semibold mb-1.5 block">State</Label>
+                      <Select value={form.state || "_none"} onValueChange={v => {
+                        setForm(f => ({ ...f, state: v === "_none" ? "" : v, city: "" }));
+                      }}>
+                        <SelectTrigger><SelectValue placeholder="Select state first" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="_none">Select city...</SelectItem>
-                          {POPULAR_CITIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                          <SelectItem value="_none">Select state...</SelectItem>
+                          {INDIAN_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                     <div>
-                      <Label className="text-xs font-semibold mb-1.5 block">State</Label>
-                      <Select value={form.state || "_none"} onValueChange={v => setForm(f => ({ ...f, state: v === "_none" ? "" : v }))}>
-                        <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
+                      <Label className="text-xs font-semibold mb-1.5 block">City</Label>
+                      <Select value={form.city || "_none"} onValueChange={v => setForm(f => ({ ...f, city: v === "_none" ? "" : v }))} disabled={!form.state}>
+                        <SelectTrigger><SelectValue placeholder={form.state ? "Select city" : "Select state first"} /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="_none">Select state...</SelectItem>
-                          {INDIAN_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                          <SelectItem value="_none">Select city...</SelectItem>
+                          {availableCities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
@@ -503,29 +493,20 @@ const AdminShortlisterColleges = () => {
                     </Select>
                   </div>
 
-                  {/* Exams — chip toggle */}
                   <div>
                     <Label className="text-xs font-semibold mb-2 block">Exams Accepted</Label>
                     <div className="flex flex-wrap gap-2">
                       {EXAMS.map(exam => (
-                        <Badge
-                          key={exam}
-                          variant={form.exams_accepted.includes(exam) ? "default" : "outline"}
+                        <Badge key={exam} variant={form.exams_accepted.includes(exam) ? "default" : "outline"}
                           className="cursor-pointer px-3 py-1.5 text-xs transition-colors"
-                          onClick={() => toggleArrayItem("exams_accepted", exam)}
-                        >
-                          {exam}
-                        </Badge>
+                          onClick={() => toggleArrayItem("exams_accepted", exam)}>{exam}</Badge>
                       ))}
                     </div>
                   </div>
 
-                  {/* Exam-wise Cutoff Percentile/Score */}
                   {form.exams_accepted.length > 0 && (
                     <div className="border border-border rounded-lg p-3 space-y-3 bg-muted/20">
-                      <Label className="text-xs font-semibold block">
-                        📊 Minimum Percentile / Score Required
-                      </Label>
+                      <Label className="text-xs font-semibold block">📊 Minimum Percentile / Score Required</Label>
                       <p className="text-[10px] text-muted-foreground -mt-1">Set the minimum cutoff for each selected exam</p>
                       <div className="grid grid-cols-2 gap-3">
                         {form.exams_accepted.map(exam => {
@@ -536,13 +517,8 @@ const AdminShortlisterColleges = () => {
                               <Label className="text-[10px] font-semibold mb-1 block text-muted-foreground">
                                 {exam} {isGMAT ? "Score" : "Percentile"}
                               </Label>
-                              <Select
-                                value={form.exam_cutoffs[exam] || "_none"}
-                                onValueChange={v => updateExamCutoff(exam, v === "_none" ? "" : v)}
-                              >
-                                <SelectTrigger className="h-8 text-xs">
-                                  <SelectValue placeholder={`Select ${isGMAT ? "score" : "percentile"}`} />
-                                </SelectTrigger>
+                              <Select value={form.exam_cutoffs[exam] || "_none"} onValueChange={v => updateExamCutoff(exam, v === "_none" ? "" : v)}>
+                                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder={`Select ${isGMAT ? "score" : "percentile"}`} /></SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="_none">Not set</SelectItem>
                                   {ranges.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
@@ -555,36 +531,24 @@ const AdminShortlisterColleges = () => {
                     </div>
                   )}
 
-                  {/* Accreditations — chip toggle */}
                   <div>
                     <Label className="text-xs font-semibold mb-2 block">Accreditations</Label>
                     <div className="flex flex-wrap gap-2">
                       {ACCREDITATIONS_LIST.map(a => (
-                        <Badge
-                          key={a}
-                          variant={form.accreditations.includes(a) ? "default" : "outline"}
+                        <Badge key={a} variant={form.accreditations.includes(a) ? "default" : "outline"}
                           className="cursor-pointer px-3 py-1.5 text-xs transition-colors"
-                          onClick={() => toggleArrayItem("accreditations", a)}
-                        >
-                          {a}
-                        </Badge>
+                          onClick={() => toggleArrayItem("accreditations", a)}>{a}</Badge>
                       ))}
                     </div>
                   </div>
 
-                  {/* Courses — chip toggle */}
                   <div>
                     <Label className="text-xs font-semibold mb-2 block">Courses / Programs</Label>
                     <div className="flex flex-wrap gap-2">
                       {COURSES_LIST.map(c => (
-                        <Badge
-                          key={c}
-                          variant={form.courses.includes(c) ? "default" : "outline"}
+                        <Badge key={c} variant={form.courses.includes(c) ? "default" : "outline"}
                           className="cursor-pointer px-3 py-1.5 text-xs transition-colors"
-                          onClick={() => toggleArrayItem("courses", c)}
-                        >
-                          {c}
-                        </Badge>
+                          onClick={() => toggleArrayItem("courses", c)}>{c}</Badge>
                       ))}
                     </div>
                   </div>
@@ -702,14 +666,8 @@ const AdminShortlisterColleges = () => {
                         <span className="font-medium text-xs">{c.name}</span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <Badge variant={c.college_category === "IIM" ? "default" : "outline"} className="text-[10px]">
-                        {c.college_category || "—"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className="text-[10px]">{c.tier || "—"}</Badge>
-                    </TableCell>
+                    <TableCell><Badge variant={c.college_category === "IIM" ? "default" : "outline"} className="text-[10px]">{c.college_category || "—"}</Badge></TableCell>
+                    <TableCell><Badge variant="outline" className="text-[10px]">{c.tier || "—"}</Badge></TableCell>
                     <TableCell className="text-xs text-muted-foreground">{c.city || "—"}</TableCell>
                     <TableCell className="text-xs">{c.fees || "—"}</TableCell>
                     <TableCell className="text-xs">{c.placement_avg || "—"}</TableCell>

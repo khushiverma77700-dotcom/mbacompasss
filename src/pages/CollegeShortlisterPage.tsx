@@ -5,7 +5,7 @@ import {
   GraduationCap, Target, Shield, Star, TrendingUp, IndianRupee, MapPin,
   ChevronRight, Sparkles, BookOpen, Briefcase, User, Lock, ArrowRight,
   CheckCircle2, BarChart3, Building2, Zap, Award, ChevronDown, Rocket,
-  LayoutGrid, List, Table2, ArrowUpDown, Filter, Eye, Trophy, Globe, Gauge
+  LayoutGrid, Table2, ArrowUpDown, Filter, Eye, Trophy, Globe, Gauge, Brain, Search as SearchIcon, MessageSquare
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,7 +14,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +25,6 @@ import ReactMarkdown from "react-markdown";
 import PageKeywords from "@/components/PageKeywords";
 
 const EXAMS = ["CAT", "XAT", "NMAT", "SNAP", "GMAT", "MAT", "CMAT"];
-const SCORE_EXAMS = ["CAT", "XAT", "NMAT", "SNAP"]; // Exams that need individual scores
 const STREAMS = ["Engineering", "Commerce", "Science", "Arts/Humanities", "BBA/BMS", "Economics", "Law", "Medical", "Other"];
 const SPECIALIZATIONS = ["Finance", "Marketing", "Operations", "HR", "IT/Analytics", "General Management", "Consulting", "Entrepreneurship", "Open to All"];
 const STATES = ["Pan India", "Maharashtra", "Delhi", "Karnataka", "Tamil Nadu", "Telangana", "West Bengal", "Gujarat", "Rajasthan", "Uttar Pradesh", "Madhya Pradesh", "Punjab", "Haryana", "Kerala", "Odisha", "Jharkhand", "Andhra Pradesh"];
@@ -35,6 +33,19 @@ const ROI_OPTIONS = [
   { value: "high_roi", label: "High ROI", desc: "Best return on investment" },
   { value: "premium", label: "Premium Colleges", desc: "Top-ranked institutions" },
   { value: "balanced", label: "Balanced", desc: "Mix of quality & value" },
+];
+
+// Dropdown ranges for score/percentile per exam
+const PERCENTILE_RANGES = [
+  "99.5+", "99 - 99.5", "98 - 99", "95 - 98", "90 - 95",
+  "85 - 90", "80 - 85", "75 - 80", "70 - 75", "60 - 70", "50 - 60", "Below 50"
+];
+const GMAT_SCORE_RANGES = [
+  "750+", "720 - 750", "700 - 720", "680 - 700", "650 - 680",
+  "600 - 650", "550 - 600", "500 - 550", "Below 500"
+];
+const MAT_SCORE_RANGES = [
+  "800+", "750 - 800", "700 - 750", "650 - 700", "600 - 650", "Below 600"
 ];
 
 const BENEFITS = [
@@ -50,6 +61,12 @@ const FAQS = [
   { q: "Is my data safe?", a: "Yes. Your profile data is only used for generating recommendations and is not shared with any third party." },
   { q: "Can I use this for GMAT-based admissions?", a: "Yes! The simulator supports CAT, XAT, NMAT, SNAP, GMAT, MAT, and CMAT." },
   { q: "What do Dream, Target, and Safe mean?", a: "Dream colleges (20-40% chance) are aspirational. Target (40-70%) are competitive but within reach. Safe (70-90%) strongly align with your profile." },
+];
+
+const AI_TOOLS = [
+  { title: "AI Profile Analyzer", desc: "Get a detailed profile assessment with strengths, weaknesses & college predictions", icon: Brain, path: "/profile-analyzer", color: "from-violet-500 to-purple-600" },
+  { title: "AI College Finder", desc: "Discover colleges based on your preferences with AI-powered matching", icon: SearchIcon, path: "/college-finder", color: "from-blue-500 to-cyan-500" },
+  { title: "AI Coaching Finder", desc: "Find the best coaching institutes matched to your preparation needs", icon: MessageSquare, path: "/ai-coaching-finder", color: "from-emerald-500 to-green-600" },
 ];
 
 interface ScoreComponent {
@@ -80,9 +97,9 @@ interface CollegeResult {
 }
 
 interface FormData {
-  exams: string[]; scoreType: "percentile" | "score"; overallScore: string;
-  examScores: Record<string, string>;
-  sectionalVARC: string; sectionalDILR: string; sectionalQuant: string;
+  exams: string[];
+  examScores: Record<string, string>;     // percentile dropdown value per exam
+  examRawScores: Record<string, string>;  // raw score dropdown value per exam
   tenth: string; twelfth: string; graduation: string; graduationStream: string;
   graduationPursuing: boolean;
   workExperienceMonths: string; gender: string;
@@ -92,9 +109,9 @@ interface FormData {
 }
 
 const initialForm: FormData = {
-  exams: [], scoreType: "percentile", overallScore: "",
+  exams: ["CAT"],
   examScores: {},
-  sectionalVARC: "", sectionalDILR: "", sectionalQuant: "",
+  examRawScores: {},
   tenth: "", twelfth: "", graduation: "", graduationStream: "",
   graduationPursuing: false,
   workExperienceMonths: "", gender: "",
@@ -118,6 +135,22 @@ const badgeColors: Record<string, string> = {
   "Well Accredited": "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
 };
 
+// Helper to get the best numeric percentile from dropdown value
+const percentileToNum = (val: string): number => {
+  if (!val) return 0;
+  if (val.includes("+")) return parseFloat(val.replace("+", "")) + 0.5;
+  if (val.startsWith("Below")) return parseFloat(val.replace("Below ", "")) - 5;
+  const parts = val.split(" - ");
+  if (parts.length === 2) return (parseFloat(parts[0]) + parseFloat(parts[1])) / 2;
+  return parseFloat(val) || 0;
+};
+
+const getScoreRanges = (exam: string) => {
+  if (exam === "GMAT") return { label: "Score", ranges: GMAT_SCORE_RANGES };
+  if (exam === "MAT" || exam === "CMAT") return { label: "Score", ranges: MAT_SCORE_RANGES };
+  return { label: "Percentile", ranges: PERCENTILE_RANGES };
+};
+
 const CollegeShortlisterPage = () => {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormData>(initialForm);
@@ -128,7 +161,7 @@ const CollegeShortlisterPage = () => {
   const [loading, setLoading] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [insightsUnlocked, setInsightsUnlocked] = useState(false);
-  const [viewMode, setViewMode] = useState<"section" | "detail" | "table">("section");
+  const [viewMode, setViewMode] = useState<"section" | "table">("section");
   const [expandedCard, setExpandedCard] = useState<string | null>(null);
   const [tableSort, setTableSort] = useState<{ col: string; asc: boolean }>({ col: "chancePercent", asc: false });
   const [tableFilter, setTableFilter] = useState<{ bucket: string; exam: string }>({ bucket: "all", exam: "all" });
@@ -138,6 +171,8 @@ const CollegeShortlisterPage = () => {
   const updateField = <K extends keyof FormData>(key: K, val: FormData[K]) => setForm(prev => ({ ...prev, [key]: val }));
 
   const toggleExam = (exam: string) => {
+    // CAT is always selected
+    if (exam === "CAT") return;
     setForm(prev => ({
       ...prev,
       exams: prev.exams.includes(exam) ? prev.exams.filter(e => e !== exam) : [...prev.exams, exam],
@@ -146,6 +181,10 @@ const CollegeShortlisterPage = () => {
 
   const updateExamScore = (exam: string, value: string) => {
     setForm(prev => ({ ...prev, examScores: { ...prev.examScores, [exam]: value } }));
+  };
+
+  const updateExamRawScore = (exam: string, value: string) => {
+    setForm(prev => ({ ...prev, examRawScores: { ...prev.examRawScores, [exam]: value } }));
   };
 
   const toggleState = (state: string) => {
@@ -168,19 +207,13 @@ const CollegeShortlisterPage = () => {
     }));
   };
 
-  // Which exams need individual scores
-  const scoreExamsSelected = form.exams.filter(e => SCORE_EXAMS.includes(e));
-  const needsPerExamScores = scoreExamsSelected.length > 1;
-
   const validateStep = (s: number): boolean => {
     if (s === 1) {
       if (form.exams.length === 0) { toast({ title: "Select at least one exam", variant: "destructive" }); return false; }
-      if (!needsPerExamScores && (!form.overallScore || parseFloat(form.overallScore) <= 0)) {
-        toast({ title: "Enter your score/percentile", variant: "destructive" }); return false;
-      }
-      if (needsPerExamScores) {
-        const hasAtLeastOne = scoreExamsSelected.some(e => form.examScores[e] && parseFloat(form.examScores[e]) > 0);
-        if (!hasAtLeastOne) { toast({ title: "Enter at least one exam score", variant: "destructive" }); return false; }
+      // Check CAT has a score at minimum
+      const catScore = form.examScores["CAT"];
+      if (!catScore) {
+        toast({ title: "Select your CAT percentile", variant: "destructive" }); return false;
       }
     }
     if (s === 2) {
@@ -196,29 +229,22 @@ const CollegeShortlisterPage = () => {
     setStep(4);
     setLoading(true);
     try {
-      // Calculate best overall score from per-exam scores
-      let bestScore = parseFloat(form.overallScore) || 0;
+      // Build numeric scores from dropdown values
       const examScoresNumeric: Record<string, number> = {};
-      if (needsPerExamScores) {
-        for (const exam of scoreExamsSelected) {
-          const val = parseFloat(form.examScores[exam] || "0");
-          if (val > 0) {
-            examScoresNumeric[exam] = val;
-            if (val > bestScore) bestScore = val;
-          }
+      let bestScore = 0;
+      for (const exam of form.exams) {
+        const val = percentileToNum(form.examScores[exam] || "");
+        if (val > 0) {
+          examScoresNumeric[exam] = val;
+          if (val > bestScore) bestScore = val;
         }
       }
 
       const payload = {
         exams: form.exams,
-        scoreType: form.scoreType,
+        scoreType: "percentile" as const,
         overallScore: bestScore,
         examScores: Object.keys(examScoresNumeric).length > 0 ? examScoresNumeric : undefined,
-        sectionalScores: form.sectionalVARC ? {
-          varc: parseFloat(form.sectionalVARC) || 0,
-          dilr: parseFloat(form.sectionalDILR) || 0,
-          quant: parseFloat(form.sectionalQuant) || 0,
-        } : undefined,
         tenth: parseFloat(form.tenth),
         twelfth: parseFloat(form.twelfth),
         graduation: parseFloat(form.graduation),
@@ -559,99 +585,62 @@ const CollegeShortlisterPage = () => {
                       <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center"><BookOpen className="w-5 h-5 text-primary" /></div>
                       Exam & Score Details
                     </CardTitle>
-                    <p className="text-sm text-muted-foreground">Select your exams and enter your score</p>
+                    <p className="text-sm text-muted-foreground">Select your exams and choose your score/percentile from dropdown</p>
                   </CardHeader>
                   <CardContent className="space-y-6">
+                    {/* Exam Selection - CAT is always on */}
                     <div>
-                      <label className="text-sm font-medium text-foreground mb-2.5 block">Which exams are you targeting? <span className="text-destructive">*</span> <span className="text-muted-foreground font-normal">(multi-select)</span></label>
+                      <label className="text-sm font-medium text-foreground mb-2.5 block">Which exams are you targeting? <span className="text-destructive">*</span> <span className="text-muted-foreground font-normal text-xs">(CAT is default, add others)</span></label>
                       <div className="grid grid-cols-4 gap-2">
                         {EXAMS.map(exam => (
                           <button key={exam} onClick={() => toggleExam(exam)}
-                            className={`px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${form.exams.includes(exam) ? "bg-primary text-primary-foreground border-primary shadow-md scale-[1.02]" : "border-border hover:border-primary/50 hover:bg-muted/50 text-foreground"}`}>
+                            className={`px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${form.exams.includes(exam) ? "bg-primary text-primary-foreground border-primary shadow-md scale-[1.02]" : "border-border hover:border-primary/50 hover:bg-muted/50 text-foreground"} ${exam === "CAT" ? "ring-2 ring-primary/30" : ""}`}>
                             {exam}
                           </button>
                         ))}
                       </div>
                     </div>
 
-                    <div>
-                      <label className="text-sm font-medium text-foreground mb-2 block">Score Type</label>
-                      <Select value={form.scoreType} onValueChange={(v) => updateField("scoreType", v as "percentile" | "score")}>
-                        <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="percentile">Percentile (Expected/Actual)</SelectItem>
-                          <SelectItem value="score">Raw Score</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Per-exam scores when multiple exams selected */}
-                    {needsPerExamScores ? (
-                      <div>
-                        <label className="text-sm font-medium text-foreground mb-2 block">
-                          Enter {form.scoreType === "percentile" ? "Expected/Actual Percentile" : "Score"} for each exam <span className="text-destructive">*</span>
-                        </label>
-                        <p className="text-xs text-muted-foreground mb-3">Fill in scores for exams you've appeared for or expect to appear</p>
-                        <div className="grid grid-cols-2 gap-3">
-                          {scoreExamsSelected.map(exam => (
-                            <div key={exam}>
-                              <label className="text-xs font-medium text-muted-foreground mb-1 block">{exam}</label>
-                              <Input
-                                type="number"
-                                placeholder={form.scoreType === "percentile" ? `${exam} percentile` : `${exam} score`}
-                                value={form.examScores[exam] || ""}
-                                onChange={e => updateExamScore(exam, e.target.value)}
-                                max={form.scoreType === "percentile" ? 100 : undefined}
-                                className="rounded-xl"
-                              />
+                    {/* Per-exam Score & Percentile dropdowns */}
+                    <div className="space-y-4">
+                      {form.exams.map(exam => {
+                        const info = getScoreRanges(exam);
+                        const isPercentileBased = info.label === "Percentile";
+                        return (
+                          <div key={exam} className="p-4 rounded-xl border border-border/60 bg-muted/20 space-y-3">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="default" className="text-xs">{exam}</Badge>
+                              <span className="text-xs text-muted-foreground">— Select your {info.label.toLowerCase()}</span>
                             </div>
-                          ))}
-                        </div>
-                        {/* Also show exams that aren't in SCORE_EXAMS */}
-                        {form.exams.filter(e => !SCORE_EXAMS.includes(e)).length > 0 && (
-                          <div className="mt-3">
-                            <label className="text-xs font-medium text-muted-foreground mb-1 block">Other Exams</label>
                             <div className="grid grid-cols-2 gap-3">
-                              {form.exams.filter(e => !SCORE_EXAMS.includes(e)).map(exam => (
-                                <div key={exam}>
-                                  <label className="text-xs font-medium text-muted-foreground mb-1 block">{exam}</label>
+                              <div>
+                                <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">
+                                  {isPercentileBased ? "Percentile (Expected/Actual)" : "Score (Expected/Actual)"}
+                                </label>
+                                <Select value={form.examScores[exam] || "_none"} onValueChange={v => updateExamScore(exam, v === "_none" ? "" : v)}>
+                                  <SelectTrigger className="rounded-xl h-9 text-xs"><SelectValue placeholder={`Select ${info.label.toLowerCase()}`} /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="_none">Select...</SelectItem>
+                                    {info.ranges.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              {isPercentileBased && (
+                                <div>
+                                  <label className="text-[11px] font-semibold text-muted-foreground mb-1 block">Raw Score (optional)</label>
                                   <Input
                                     type="number"
-                                    placeholder={`${exam} score`}
-                                    value={form.examScores[exam] || ""}
-                                    onChange={e => updateExamScore(exam, e.target.value)}
-                                    className="rounded-xl"
+                                    placeholder="e.g. 120"
+                                    value={form.examRawScores[exam] || ""}
+                                    onChange={e => updateExamRawScore(exam, e.target.value)}
+                                    className="rounded-xl h-9 text-xs"
                                   />
                                 </div>
-                              ))}
+                              )}
                             </div>
                           </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div>
-                        <label className="text-sm font-medium text-foreground mb-2 block">
-                          {form.exams.length > 0 ? form.exams[0] : "Overall"} {form.scoreType === "percentile" ? "Percentile (Expected/Actual)" : "Score"} <span className="text-destructive">*</span>
-                        </label>
-                        <Input
-                          type="number"
-                          placeholder={form.scoreType === "percentile" ? "e.g. 92.5" : "e.g. 180"}
-                          value={form.overallScore}
-                          onChange={e => updateField("overallScore", e.target.value)}
-                          max={form.scoreType === "percentile" ? 100 : undefined}
-                          className="rounded-xl"
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">Enter expected score if you haven't given the exam yet</p>
-                      </div>
-                    )}
-
-                    <div>
-                      <label className="text-sm font-medium text-muted-foreground mb-2 block">Sectional Scores <span className="text-xs">(optional — improves accuracy for CAT)</span></label>
-                      <div className="grid grid-cols-3 gap-3">
-                        <Input placeholder="VARC" type="number" value={form.sectionalVARC} onChange={e => updateField("sectionalVARC", e.target.value)} className="rounded-xl" />
-                        <Input placeholder="DILR" type="number" value={form.sectionalDILR} onChange={e => updateField("sectionalDILR", e.target.value)} className="rounded-xl" />
-                        <Input placeholder="Quant" type="number" value={form.sectionalQuant} onChange={e => updateField("sectionalQuant", e.target.value)} className="rounded-xl" />
-                      </div>
+                        );
+                      })}
                     </div>
                   </CardContent>
                 </Card>
@@ -679,7 +668,6 @@ const CollegeShortlisterPage = () => {
                       </div>
                     </div>
 
-                    {/* Graduation with Pursuing toggle */}
                     <div>
                       <div className="flex items-center justify-between mb-2">
                         <label className="text-sm font-medium text-foreground">Graduation % <span className="text-destructive">*</span></label>
@@ -883,194 +871,178 @@ const CollegeShortlisterPage = () => {
     const isAbove = component.yours >= component.required;
     return (
       <div className="space-y-1">
-        <div className="flex items-center justify-between text-[10px]">
-          <span className="text-muted-foreground font-medium">{component.label}</span>
-          <span className={`font-bold ${isAbove ? "text-emerald-600" : "text-red-500"}`}>
-            {component.yours}/{component.max}
-            <span className="text-muted-foreground font-normal ml-1">(need {component.required})</span>
-          </span>
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-medium text-muted-foreground">{component.label}</span>
+          <div className="flex items-center gap-1.5">
+            <span className={`text-[10px] font-bold ${isAbove ? "text-emerald-600" : "text-red-500"}`}>{component.yours}</span>
+            <span className="text-[8px] text-muted-foreground">/</span>
+            <span className="text-[10px] text-muted-foreground">{component.required} req</span>
+          </div>
         </div>
-        <div className="relative h-2.5 bg-muted rounded-full overflow-hidden">
-          {/* Required marker */}
-          <div className="absolute top-0 bottom-0 w-0.5 bg-foreground/40 z-10" style={{ left: `${requiredPercent}%` }} />
-          {/* Your score bar */}
-          <div className={`h-full rounded-full transition-all duration-500 ${isAbove ? "bg-emerald-500" : "bg-red-400"}`} style={{ width: `${yoursPercent}%` }} />
+        <div className="relative h-2 bg-muted rounded-full overflow-hidden">
+          <div className={`absolute top-0 left-0 h-full rounded-full transition-all ${isAbove ? "bg-emerald-500" : "bg-red-400"}`}
+            style={{ width: `${Math.min(yoursPercent, 100)}%` }} />
+          <div className="absolute top-0 h-full w-0.5 bg-foreground/40 rounded" style={{ left: `${Math.min(requiredPercent, 100)}%` }} />
         </div>
       </div>
     );
   };
 
   const renderCollegeCard = (college: CollegeResult, cfg: typeof bucketConfig.dream) => {
+    const Icon = cfg.icon;
     const isExpanded = expandedCard === college.id;
     const bd = college.scoreBreakdown;
+
     return (
-      <motion.div key={college.id} layout>
-        <Card className={`${cfg.border} border hover:shadow-lg transition-all duration-300 group overflow-hidden`}>
-          <CardContent className="p-4 md:p-5">
-            <div className="flex items-start gap-4">
-              <div className={`w-14 h-14 rounded-xl ${cfg.bg} flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform`}>
-                {college.logo_url ? <img src={college.logo_url} alt={college.name} className="w-11 h-11 rounded-lg object-contain" /> : <Building2 className={`w-7 h-7 ${cfg.color}`} />}
+      <motion.div key={college.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} layout>
+        <Card className={`border ${cfg.border} hover:shadow-lg transition-all group overflow-hidden`}>
+          <CardContent className="p-0">
+            <div className="p-4">
+              {/* Header */}
+              <div className="flex items-start gap-3 mb-3">
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${cfg.gradient} flex items-center justify-center shadow-md flex-shrink-0`}>
+                  {college.logo_url ? <img src={college.logo_url} alt="" className="w-7 h-7 rounded object-contain" /> : <Building2 className="w-5 h-5 text-white" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <Link to={`/college/${college.slug}`} className="font-heading font-semibold text-foreground text-sm hover:text-primary transition-colors line-clamp-1 block">{college.name}</Link>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[11px] text-muted-foreground flex items-center gap-0.5"><MapPin className="w-3 h-3" />{college.city}{college.state ? `, ${college.state}` : ""}</span>
+                    {college.tier && <Badge variant="outline" className="text-[9px] px-1.5 py-0">{college.tier}</Badge>}
+                  </div>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <div className={`text-lg font-bold ${cfg.color}`}>{college.chancePercent}%</div>
+                  <Badge className={`${cfg.badge} text-[9px]`}>{college.bucket}</Badge>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
+
+              {/* Badges */}
+              {college.badges.length > 0 && (
+                <div className="flex flex-wrap gap-1 mb-3">
+                  {college.badges.map((b, i) => (
+                    <Badge key={i} className={`text-[9px] px-1.5 py-0 ${badgeColors[b] || cfg.badge}`}>{b}</Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Stats Grid */}
+              <div className="grid grid-cols-4 gap-3 mt-3 pt-3 border-t border-border/50">
+                <div className="text-center">
+                  <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5"><IndianRupee className="w-2.5 h-2.5" />Fees</div>
+                  <div className="text-xs font-semibold text-foreground">{college.fees || "N/A"}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5"><TrendingUp className="w-2.5 h-2.5" />Avg CTC</div>
+                  <div className="text-xs font-semibold text-foreground">{college.placement_avg || "N/A"}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5"><Award className="w-2.5 h-2.5" />Top CTC</div>
+                  <div className="text-xs font-semibold text-foreground">{college.placement_highest || "N/A"}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5"><BarChart3 className="w-2.5 h-2.5" />ROI</div>
+                  <div className={`text-xs font-bold ${college.roi && college.roi >= 2 ? "text-emerald-600" : "text-foreground"}`}>{college.roi ? `${college.roi}x` : "N/A"}</div>
+                </div>
+              </div>
+
+              {/* Score Comparison */}
+              {bd && (
+                <div className="mt-3 p-3 rounded-xl bg-muted/30 border border-border/50 space-y-2.5">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-1.5">
+                      <Gauge className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-xs font-bold text-foreground">Your Score vs Required</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm font-bold ${bd.overallYours >= bd.overallRequired ? "text-emerald-600" : "text-red-500"}`}>{bd.overallYours}</span>
+                      <span className="text-[10px] text-muted-foreground">/</span>
+                      <span className="text-sm font-semibold text-muted-foreground">{bd.overallRequired}</span>
+                      <span className="text-[10px] text-muted-foreground">needed</span>
+                    </div>
+                  </div>
+                  <ScoreBar component={bd.examScore} color={cfg.color} />
+                  <ScoreBar component={bd.academicScore} color={cfg.color} />
+                  <ScoreBar component={bd.workExScore} color={cfg.color} />
+                  <ScoreBar component={bd.budgetFit} color={cfg.color} />
+                </div>
+              )}
+
+              {/* Why fit */}
+              <div className={`mt-3 p-3 rounded-xl ${cfg.bg} border ${cfg.border}`}>
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className={`w-4 h-4 ${cfg.color} flex-shrink-0 mt-0.5`} />
                   <div>
-                    <Link to={`/college/${college.slug}`} className="font-heading font-semibold text-foreground hover:text-primary transition-colors text-sm md:text-base">
-                      {college.name}
-                    </Link>
-                    <div className="flex items-center gap-2 mt-1 flex-wrap">
-                      {college.city && <span className="text-xs text-muted-foreground flex items-center gap-0.5"><MapPin className="w-3 h-3" /> {college.city}{college.state ? `, ${college.state}` : ""}</span>}
-                      {college.ranking && <Badge variant="outline" className="text-[10px] px-1.5 py-0">Rank #{college.ranking}</Badge>}
-                      {college.tier && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{college.tier}</Badge>}
-                    </div>
-                    {college.badges.length > 0 && (
-                      <div className="flex gap-1.5 mt-1.5 flex-wrap">
-                        {college.badges.map(b => (
-                          <Badge key={b} className={`text-[10px] px-2 py-0.5 ${badgeColors[b] || "bg-muted text-foreground"}`}>
-                            {(b === "High ROI" || b === "Best ROI") && <Trophy className="w-3 h-3 mr-0.5" />}{b}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  {/* Chance visual */}
-                  <div className="text-right flex-shrink-0">
-                    <div className="relative w-16 h-16">
-                      <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
-                        <circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="4" className="text-muted/30" />
-                        <circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="4"
-                          strokeDasharray={`${(college.chancePercent / 100) * 175.9} 175.9`}
-                          className={cfg.color} strokeLinecap="round" />
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className={`text-base font-bold ${cfg.color}`}>{college.chancePercent}%</span>
-                      </div>
-                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Why You Fit</span>
+                    <p className="text-xs text-foreground mt-0.5 leading-relaxed">{college.whyFit}</p>
                   </div>
                 </div>
-
-                {/* Stats Grid */}
-                <div className="grid grid-cols-4 gap-3 mt-3 pt-3 border-t border-border/50">
-                  <div className="text-center">
-                    <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5"><IndianRupee className="w-2.5 h-2.5" />Fees</div>
-                    <div className="text-xs font-semibold text-foreground">{college.fees || "N/A"}</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5"><TrendingUp className="w-2.5 h-2.5" />Avg CTC</div>
-                    <div className="text-xs font-semibold text-foreground">{college.placement_avg || "N/A"}</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5"><Award className="w-2.5 h-2.5" />Top CTC</div>
-                    <div className="text-xs font-semibold text-foreground">{college.placement_highest || "N/A"}</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-[10px] text-muted-foreground flex items-center justify-center gap-0.5"><BarChart3 className="w-2.5 h-2.5" />ROI</div>
-                    <div className={`text-xs font-bold ${college.roi && college.roi >= 2 ? "text-emerald-600" : "text-foreground"}`}>{college.roi ? `${college.roi}x` : "N/A"}</div>
-                  </div>
-                </div>
-
-                {/* ═══ SCORE COMPARISON SECTION ═══ */}
-                {bd && (
-                  <div className="mt-3 p-3 rounded-xl bg-muted/30 border border-border/50 space-y-2.5">
-                    {/* Overall Score Bar */}
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-1.5">
-                        <Gauge className="w-3.5 h-3.5 text-primary" />
-                        <span className="text-xs font-bold text-foreground">Your Score vs Required</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-sm font-bold ${bd.overallYours >= bd.overallRequired ? "text-emerald-600" : "text-red-500"}`}>
-                          {bd.overallYours}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground">/</span>
-                        <span className="text-sm font-semibold text-muted-foreground">{bd.overallRequired}</span>
-                        <span className="text-[10px] text-muted-foreground">needed</span>
-                      </div>
-                    </div>
-                    <ScoreBar component={bd.examScore} color={cfg.color} />
-                    <ScoreBar component={bd.academicScore} color={cfg.color} />
-                    <ScoreBar component={bd.workExScore} color={cfg.color} />
-                    <ScoreBar component={bd.budgetFit} color={cfg.color} />
-                  </div>
-                )}
-
-                {/* Why fit */}
-                <div className={`mt-3 p-3 rounded-xl ${cfg.bg} border ${cfg.border}`}>
-                  <div className="flex items-start gap-2">
-                    <CheckCircle2 className={`w-4 h-4 ${cfg.color} flex-shrink-0 mt-0.5`} />
-                    <div>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Why You Fit</span>
-                      <p className="text-xs text-foreground mt-0.5 leading-relaxed">{college.whyFit}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Expand for tips + improvements */}
-                <button onClick={() => setExpandedCard(isExpanded ? null : college.id)}
-                  className={`text-xs font-semibold mt-2.5 flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${isExpanded ? `${cfg.bg} ${cfg.color}` : "text-primary hover:bg-primary/5"}`}>
-                  <Sparkles className="w-3 h-3" />
-                  {isExpanded ? "Hide Details" : "Tips, Strategy & Improvements"} <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
-                </button>
-                <AnimatePresence>
-                  {isExpanded && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                      <div className="mt-2 p-4 rounded-xl bg-gradient-to-br from-muted/50 to-muted/30 border border-border/30 space-y-3">
-                        {/* Improvement Areas */}
-                        {bd && bd.improvements.length > 0 && (
-                          <div>
-                            <div className="flex items-center gap-2 mb-2">
-                              <div className="w-6 h-6 rounded-md bg-amber-500/10 flex items-center justify-center flex-shrink-0">
-                                <TrendingUp className="w-3.5 h-3.5 text-amber-600" />
-                              </div>
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Areas to Improve</span>
-                            </div>
-                            <div className="space-y-1.5 ml-8">
-                              {bd.improvements.map((imp, idx) => (
-                                <div key={idx} className="flex items-start gap-2">
-                                  <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${bd.overallYours >= bd.overallRequired ? "bg-emerald-500" : "bg-amber-500"}`} />
-                                  <p className="text-xs text-foreground leading-relaxed">{imp}</p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="flex items-start gap-2.5 pt-2 border-t border-border/30">
-                          <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <Rocket className="w-3.5 h-3.5 text-primary" />
-                          </div>
-                          <div>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Action Plan</span>
-                            <p className="text-xs text-foreground mt-1 leading-relaxed">{college.tips}</p>
-                          </div>
-                        </div>
-                        {college.exams_accepted && (
-                          <div className="flex items-center gap-2 pt-2 border-t border-border/30">
-                            <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
-                            <span className="text-[10px] font-medium text-muted-foreground">Exams:</span>
-                            <div className="flex gap-1 flex-wrap">
-                              {college.exams_accepted.map((e, i) => (
-                                <Badge key={i} variant="outline" className="text-[9px] px-1.5 py-0">{e}</Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {college.specializations?.length > 0 && (
-                          <div className="flex items-center gap-2 pt-2 border-t border-border/30">
-                            <GraduationCap className="w-3.5 h-3.5 text-muted-foreground" />
-                            <span className="text-[10px] font-medium text-muted-foreground">Courses:</span>
-                            <span className="text-xs text-foreground">{college.specializations.slice(0, 5).join(", ")}</span>
-                          </div>
-                        )}
-                        <div className="pt-2 border-t border-border/30">
-                          <Link to={`/college/${college.slug}`} className="inline-flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline">
-                            View Full College Profile <ArrowRight className="w-3 h-3" />
-                          </Link>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
+
+              {/* Expand for tips + improvements */}
+              <button onClick={() => setExpandedCard(isExpanded ? null : college.id)}
+                className={`text-xs font-semibold mt-2.5 flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all ${isExpanded ? `${cfg.bg} ${cfg.color}` : "text-primary hover:bg-primary/5"}`}>
+                <Sparkles className="w-3 h-3" />
+                {isExpanded ? "Hide Details" : "Tips, Strategy & Improvements"} <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+              </button>
+              <AnimatePresence>
+                {isExpanded && (
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                    <div className="mt-2 p-4 rounded-xl bg-gradient-to-br from-muted/50 to-muted/30 border border-border/30 space-y-3">
+                      {bd && bd.improvements.length > 0 && (
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-6 h-6 rounded-md bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                              <TrendingUp className="w-3.5 h-3.5 text-amber-600" />
+                            </div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Areas to Improve</span>
+                          </div>
+                          <div className="space-y-1.5 ml-8">
+                            {bd.improvements.map((imp, idx) => (
+                              <div key={idx} className="flex items-start gap-2">
+                                <div className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${bd.overallYours >= bd.overallRequired ? "bg-emerald-500" : "bg-amber-500"}`} />
+                                <p className="text-xs text-foreground leading-relaxed">{imp}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex items-start gap-2.5 pt-2 border-t border-border/30">
+                        <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <Rocket className="w-3.5 h-3.5 text-primary" />
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Action Plan</span>
+                          <p className="text-xs text-foreground mt-1 leading-relaxed">{college.tips}</p>
+                        </div>
+                      </div>
+                      {college.exams_accepted && (
+                        <div className="flex items-center gap-2 pt-2 border-t border-border/30">
+                          <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span className="text-[10px] font-medium text-muted-foreground">Exams:</span>
+                          <div className="flex gap-1 flex-wrap">
+                            {college.exams_accepted.map((e, i) => (
+                              <Badge key={i} variant="outline" className="text-[9px] px-1.5 py-0">{e}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {college.specializations?.length > 0 && (
+                        <div className="flex items-center gap-2 pt-2 border-t border-border/30">
+                          <GraduationCap className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span className="text-[10px] font-medium text-muted-foreground">Courses:</span>
+                          <span className="text-xs text-foreground">{college.specializations.slice(0, 5).join(", ")}</span>
+                        </div>
+                      )}
+                      <div className="pt-2 border-t border-border/30">
+                        <Link to={`/college/${college.slug}`} className="inline-flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline">
+                          View Full College Profile <ArrowRight className="w-3 h-3" />
+                        </Link>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </CardContent>
         </Card>
@@ -1108,12 +1080,11 @@ const CollegeShortlisterPage = () => {
       </section>
 
       <div className="container mx-auto px-4 py-6 max-w-6xl">
-        {/* View Mode Tabs */}
+        {/* View Mode Tabs — only Section and Table */}
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
           <div className="flex bg-muted rounded-xl p-1 gap-1">
             {([
               { value: "section" as const, icon: LayoutGrid, label: "Section View" },
-              { value: "detail" as const, icon: List, label: "Detailed View" },
               { value: "table" as const, icon: Table2, label: "Table View" },
             ]).map(v => (
               <button key={v.value} onClick={() => setViewMode(v.value)}
@@ -1122,9 +1093,6 @@ const CollegeShortlisterPage = () => {
               </button>
             ))}
           </div>
-          <Button variant="outline" size="sm" className="rounded-xl" onClick={() => { setStep(0); setResults([]); setForm(initialForm); }}>
-            New Analysis
-          </Button>
         </div>
 
         {/* ═══ SECTION VIEW ═══ */}
@@ -1163,16 +1131,6 @@ const CollegeShortlisterPage = () => {
                   )}
                 </motion.div>
               );
-            })}
-          </div>
-        )}
-
-        {/* ═══ DETAILED VIEW ═══ */}
-        {viewMode === "detail" && (
-          <div className="grid gap-4">
-            {results.map(college => {
-              const cfg = bucketConfig[college.bucket];
-              return renderCollegeCard(college, cfg);
             })}
           </div>
         )}
@@ -1234,9 +1192,7 @@ const CollegeShortlisterPage = () => {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell>
-                          <Badge className={`${cfg.badge} text-[10px]`}>{college.bucket}</Badge>
-                        </TableCell>
+                        <TableCell><Badge className={`${cfg.badge} text-[10px]`}>{college.bucket}</Badge></TableCell>
                         <TableCell><span className={`font-bold text-sm ${cfg.color}`}>{college.chancePercent}%</span></TableCell>
                         <TableCell className="text-xs">{college.fees || "N/A"}</TableCell>
                         <TableCell className="text-xs">{college.placement_avg || "N/A"}</TableCell>
@@ -1256,58 +1212,38 @@ const CollegeShortlisterPage = () => {
           </div>
         )}
 
-        {/* AI Insights — Gated */}
-        {(aiInsights || strategy) && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="mt-10 space-y-6">
-            {aiInsights && (
-              <Card className="border-primary/20 overflow-hidden shadow-lg relative">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/60 to-primary/20" />
-                <CardContent className="p-6 relative">
-                  {!insightsUnlocked && !user && (
-                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/95 to-transparent z-10 flex flex-col items-center justify-end pb-8">
-                      <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-                        <Lock className="w-7 h-7 text-primary" />
+        {/* AI Tools Section — replaces Profile Assessment & Action Plan */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="mt-10">
+          <Card className="border-primary/20 overflow-hidden shadow-lg relative">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/60 to-primary/20" />
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-5">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                </div>
+                <h3 className="font-heading font-bold text-foreground">Explore More AI Tools</h3>
+                <span className="text-xs text-muted-foreground ml-1">Boost your MBA preparation</span>
+              </div>
+              <div className="grid sm:grid-cols-3 gap-4">
+                {AI_TOOLS.map((tool, i) => (
+                  <Link key={i} to={tool.path}>
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 + i * 0.1 }}
+                      className="group p-4 rounded-xl border border-border/50 hover:border-primary/40 hover:shadow-md transition-all bg-card">
+                      <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${tool.color} flex items-center justify-center mb-3 shadow-md group-hover:scale-110 transition-transform`}>
+                        <tool.icon className="w-5 h-5 text-white" />
                       </div>
-                      <h3 className="font-heading font-bold text-foreground text-lg mb-1">Unlock Your Personalized Strategy</h3>
-                      <p className="text-sm text-muted-foreground mb-4 text-center max-w-sm">Sign in to get your mentor-style assessment, action plan, and detailed guidance</p>
-                      <Button onClick={handleUnlockInsights} size="lg" className="px-8 rounded-xl shadow-lg">
-                        <Sparkles className="w-4 h-4 mr-2" /> Unlock Full Report
-                      </Button>
-                    </div>
-                  )}
-                  <div className={!insightsUnlocked && !user ? "max-h-40 overflow-hidden" : ""}>
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Target className="w-4 h-4 text-primary" />
+                      <h4 className="font-heading font-semibold text-foreground text-sm mb-1 group-hover:text-primary transition-colors">{tool.title}</h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{tool.desc}</p>
+                      <div className="mt-3 flex items-center gap-1 text-xs text-primary font-semibold">
+                        Try Now <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                       </div>
-                      <h3 className="font-heading font-bold text-foreground">Profile Assessment</h3>
-                    </div>
-                    <div className="prose prose-sm max-w-none text-foreground dark:prose-invert prose-p:leading-relaxed prose-li:leading-relaxed prose-headings:font-heading">
-                      <ReactMarkdown>{aiInsights}</ReactMarkdown>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {(insightsUnlocked || user) && strategy && (
-              <Card className="border-emerald-200 dark:border-emerald-800 bg-gradient-to-br from-emerald-50/40 to-emerald-50/10 dark:from-emerald-950/30 dark:to-emerald-950/10 shadow-lg overflow-hidden relative">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-emerald-300" />
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                      <Rocket className="w-4 h-4 text-emerald-600" />
-                    </div>
-                    <h3 className="font-heading font-bold text-foreground">Your Action Plan</h3>
-                  </div>
-                  <div className="prose prose-sm max-w-none text-foreground dark:prose-invert prose-p:leading-relaxed prose-li:leading-relaxed prose-headings:font-heading">
-                    <ReactMarkdown>{strategy}</ReactMarkdown>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-          </motion.div>
-        )}
+                    </motion.div>
+                  </Link>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Retry */}
         <div className="text-center mt-10 mb-8">

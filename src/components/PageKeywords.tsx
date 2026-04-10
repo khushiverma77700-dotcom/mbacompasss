@@ -12,10 +12,10 @@ interface PageKeywordsProps {
 }
 
 const sectionStyles = [
-  { label: "Popular Topics", icon: TrendingUp, gradient: "from-primary/20 to-primary/5", iconColor: "text-primary", badgeBg: "bg-primary/10 text-primary border-primary/20 hover:bg-primary/15" },
-  { label: "Detailed Keywords", icon: Search, gradient: "from-secondary/30 to-secondary/10", iconColor: "text-secondary-foreground", badgeBg: "bg-secondary/60 text-secondary-foreground border-secondary/30 hover:bg-secondary/80" },
-  { label: "Trending Now", icon: Flame, gradient: "from-orange-500/15 to-amber-500/5", iconColor: "text-orange-500", badgeBg: "bg-orange-50 text-orange-700 border-orange-200/60 hover:bg-orange-100 dark:bg-orange-950/30 dark:text-orange-400 dark:border-orange-800/40" },
-  { label: "People Also Ask", icon: Search, gradient: "from-sky-500/15 to-blue-500/5", iconColor: "text-sky-500", badgeBg: "bg-sky-50 text-sky-700 border-sky-200/60 hover:bg-sky-100 dark:bg-sky-950/30 dark:text-sky-400 dark:border-sky-800/40" },
+  { label: "Popular Topics", icon: TrendingUp, accent: "from-violet-500 to-purple-600", badgeBg: "bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-500/20 hover:bg-violet-500/20", iconBg: "bg-violet-500/10", iconColor: "text-violet-500" },
+  { label: "Detailed Keywords", icon: Search, accent: "from-sky-500 to-blue-600", badgeBg: "bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/20 hover:bg-sky-500/20", iconBg: "bg-sky-500/10", iconColor: "text-sky-500" },
+  { label: "Trending Now", icon: Flame, accent: "from-orange-500 to-red-500", badgeBg: "bg-orange-500/10 text-orange-700 dark:text-orange-300 border-orange-500/20 hover:bg-orange-500/20", iconBg: "bg-orange-500/10", iconColor: "text-orange-500" },
+  { label: "People Also Ask", icon: Search, accent: "from-emerald-500 to-teal-600", badgeBg: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20 hover:bg-emerald-500/20", iconBg: "bg-emerald-500/10", iconColor: "text-emerald-500" },
 ];
 
 const PageKeywords = ({ contentType, recordId, fallbackKeywords = [] }: PageKeywordsProps) => {
@@ -50,7 +50,7 @@ const PageKeywords = ({ contentType, recordId, fallbackKeywords = [] }: PageKeyw
   ].filter(s => s.items.length > 0);
 
   return (
-    <section className="mt-16 pt-10 border-t border-border/20">
+    <section className="mt-16 pt-10 border-t border-border/30">
       <div className="max-w-5xl mx-auto px-4 space-y-10">
         {/* Internal Links Section */}
         {hasLinks && (
@@ -95,21 +95,29 @@ const PageKeywords = ({ contentType, recordId, fallbackKeywords = [] }: PageKeyw
             </div>
 
             {hasAIKeywords && (
-              <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {sections.map((section, si) => (
-                  <motion.div key={section.label} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: si * 0.1 }}>
-                    <div className={`rounded-xl p-4 bg-gradient-to-r ${section.gradient} border border-border/20`}>
-                      <div className="flex items-center gap-2 mb-3">
-                        <section.icon className={`h-4 w-4 ${section.iconColor}`} />
-                        <span className="text-xs font-bold text-foreground uppercase tracking-wider">{section.label}</span>
-                        <span className="text-[10px] text-muted-foreground ml-1 bg-background/60 px-1.5 py-0.5 rounded-full">{section.items.length}</span>
+                  <motion.div key={section.label} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: si * 0.08 }}>
+                    <div className="rounded-2xl border border-border/40 bg-card p-5 hover:shadow-md transition-shadow h-full">
+                      {/* Section header */}
+                      <div className="flex items-center gap-2.5 mb-4">
+                        <div className={`w-9 h-9 rounded-xl ${section.iconBg} flex items-center justify-center`}>
+                          <section.icon className={`h-4.5 w-4.5 ${section.iconColor}`} />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="text-sm font-bold text-foreground">{section.label}</h3>
+                        </div>
+                        <span className="text-[10px] font-semibold text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                          {section.items.length}
+                        </span>
                       </div>
-                      <div className="flex flex-wrap gap-2">
+                      {/* Tags */}
+                      <div className="flex flex-wrap gap-1.5">
                         {section.items.map((kw: string, i: number) => (
                           <Badge
                             key={`${section.label}-${i}`}
                             variant="outline"
-                            className={`px-3 py-1.5 text-xs font-medium rounded-lg cursor-default transition-all duration-200 ${section.badgeBg}`}
+                            className={`px-2.5 py-1 text-[11px] font-medium rounded-full cursor-default transition-all duration-200 ${section.badgeBg}`}
                           >
                             {kw}
                           </Badge>
@@ -127,7 +135,7 @@ const PageKeywords = ({ contentType, recordId, fallbackKeywords = [] }: PageKeyw
                   <Badge
                     key={`kw-${i}`}
                     variant="outline"
-                    className="px-3 py-1.5 text-xs font-medium rounded-lg cursor-default border-border/40 bg-muted/40 text-muted-foreground hover:bg-muted/60 transition-colors"
+                    className="px-3 py-1.5 text-xs font-medium rounded-full cursor-default border-border/40 bg-muted/40 text-muted-foreground hover:bg-muted/60 transition-colors"
                   >
                     <Hash className="w-3 h-3 mr-1 opacity-40" />
                     {kw}
