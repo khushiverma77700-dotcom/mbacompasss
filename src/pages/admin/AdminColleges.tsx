@@ -17,8 +17,12 @@ import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 import SEOChecklist from "@/components/admin/SEOChecklist";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 
+const TIER_OPTIONS = ["Tier 1", "Tier 2", "Tier 3", "Tier 4"];
+const CATEGORY_OPTIONS = ["IIM", "Non-IIM"];
+
 const emptyForm = {
   name: "", slug: "", description: "", city: "", state: "", type: "Private",
+  tier: "Tier 2", college_category: "Non-IIM",
   established: 0, ranking: 0, fees: "", website: "",
   placement_avg: "", placement_highest: "", placement_median: "",
   campus_size: "", total_students: 0, admission_process: "",
@@ -37,7 +41,7 @@ const AdminColleges = () => {
   const { toast } = useToast();
 
   const fetchColleges = async () => {
-    const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, ranking, established").order("ranking", { ascending: true });
+    const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, tier, college_category, ranking, established").order("ranking", { ascending: true });
     if (data) setColleges(data);
   };
 
