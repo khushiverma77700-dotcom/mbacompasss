@@ -10,15 +10,14 @@ import { Table as TipTapTable } from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableHeader from "@tiptap/extension-table-header";
 import TableCell from "@tiptap/extension-table-cell";
-import { Button } from "@/components/ui/button";
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   Heading1, Heading2, Heading3, List, ListOrdered,
   AlignLeft, AlignCenter, AlignRight, Link2, Image as ImageIcon,
   Table2, Highlighter, Undo, Redo, Quote, Code, Minus,
 } from "lucide-react";
-import { useCallback, useEffect } from "react";
-import { useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import { cn } from "@/lib/utils";
 
 interface RichTextEditorProps {
   content: string;
@@ -34,6 +33,8 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },
+        bulletList: { keepMarks: true, keepAttributes: false },
+        orderedList: { keepMarks: true, keepAttributes: false },
       }),
       Underline,
       Highlight,
@@ -52,7 +53,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
     },
     editorProps: {
       attributes: {
-        class: "outline-none",
+        class: "outline-none min-h-[180px] px-3 py-2",
       },
     },
   });
@@ -90,20 +91,27 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
   if (!editor) return null;
 
   const ToolBtn = ({ onClick, active, children, title }: { onClick: () => void; active?: boolean; children: React.ReactNode; title?: string }) => (
-    <Button
+    <button
       type="button"
-      variant={active ? "default" : "ghost"}
-      size="sm"
-      onClick={onClick}
-      className="h-7 w-7 p-0"
+      onMouseDown={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onClick();
+      }}
+      className={cn(
+        "inline-flex items-center justify-center h-7 w-7 rounded-md text-sm transition-colors",
+        active
+          ? "bg-primary text-primary-foreground"
+          : "hover:bg-muted text-muted-foreground hover:text-foreground"
+      )}
       title={title}
     >
       {children}
-    </Button>
+    </button>
   );
 
   return (
-    <div className={`border border-input rounded-md overflow-hidden ${className || ""}`}>
+    <div className={cn("border border-input rounded-md overflow-hidden", className)}>
       <div className="flex flex-wrap gap-0.5 p-1.5 bg-muted/50 border-b border-border">
         <ToolBtn onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold">
           <Bold className="w-3.5 h-3.5" />
@@ -187,7 +195,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing...", c
 
       <EditorContent
         editor={editor}
-        className="prose prose-sm max-w-none p-3 min-h-[200px] focus-within:outline-none [&_.tiptap]:outline-none [&_.tiptap]:min-h-[180px] [&_.tiptap_p.is-editor-empty:first-child::before]:text-muted-foreground [&_.tiptap_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.tiptap_p.is-editor-empty:first-child::before]:float-left [&_.tiptap_p.is-editor-empty:first-child::before]:pointer-events-none [&_.tiptap_table]:border-collapse [&_.tiptap_table]:w-full [&_.tiptap_td]:border [&_.tiptap_td]:border-border [&_.tiptap_td]:p-2 [&_.tiptap_th]:border [&_.tiptap_th]:border-border [&_.tiptap_th]:p-2 [&_.tiptap_th]:bg-muted/50 [&_.tiptap_th]:font-semibold"
+        className="prose prose-sm max-w-none min-h-[200px] focus-within:outline-none [&_.tiptap]:outline-none [&_.tiptap_p.is-editor-empty:first-child::before]:text-muted-foreground [&_.tiptap_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)] [&_.tiptap_p.is-editor-empty:first-child::before]:float-left [&_.tiptap_p.is-editor-empty:first-child::before]:pointer-events-none [&_.tiptap_table]:border-collapse [&_.tiptap_table]:w-full [&_.tiptap_td]:border [&_.tiptap_td]:border-border [&_.tiptap_td]:p-2 [&_.tiptap_th]:border [&_.tiptap_th]:border-border [&_.tiptap_th]:p-2 [&_.tiptap_th]:bg-muted/50 [&_.tiptap_th]:font-semibold [&_.tiptap_ul]:list-disc [&_.tiptap_ul]:pl-6 [&_.tiptap_ol]:list-decimal [&_.tiptap_ol]:pl-6 [&_.tiptap_li]:my-1 [&_.tiptap_blockquote]:border-l-4 [&_.tiptap_blockquote]:border-border [&_.tiptap_blockquote]:pl-4 [&_.tiptap_blockquote]:italic [&_.tiptap_h1]:text-2xl [&_.tiptap_h1]:font-bold [&_.tiptap_h1]:my-3 [&_.tiptap_h2]:text-xl [&_.tiptap_h2]:font-bold [&_.tiptap_h2]:my-2 [&_.tiptap_h3]:text-lg [&_.tiptap_h3]:font-semibold [&_.tiptap_h3]:my-2 [&_.tiptap_p]:my-1 [&_.tiptap_hr]:my-4 [&_.tiptap_hr]:border-border"
       />
     </div>
   );
