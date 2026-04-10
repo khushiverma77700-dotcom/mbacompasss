@@ -298,7 +298,9 @@ Generate unique, page-specific SEO optimization.`,
       });
 
       if (!aiResp.ok) throw new Error(`AI error: ${aiResp.status}`);
-      const gaps = extractToolResult(await aiResp.json());
+      const aiJson = await aiResp.json();
+      await logAIUsage("auto-seo", "google/gemini-2.5-flash", aiJson);
+      const gaps = extractToolResult(aiJson);
       return new Response(JSON.stringify(gaps), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
