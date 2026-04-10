@@ -37,21 +37,17 @@ function parseNum(v: string | null): number {
   return isNaN(n) ? 0 : n;
 }
 
-// Get college difficulty factor based on ranking & tier
 function getCollegeDifficulty(college: any): number {
   const ranking = college.ranking || 999;
   const tier = (college.tier || "Tier 2").toLowerCase();
   const category = (college.college_category || "").toLowerCase();
 
-  // IIMs are hardest
   if (category === "iim" || college.name?.toLowerCase().includes("iim")) {
-    if (ranking <= 5) return 95; // IIM-A, B, C
+    if (ranking <= 5) return 95;
     if (ranking <= 10) return 88;
     if (ranking <= 20) return 80;
     return 72;
   }
-
-  // Tier-based difficulty
   if (tier === "tier 1" || ranking <= 25) {
     if (ranking <= 5) return 90;
     if (ranking <= 15) return 82;
@@ -69,8 +65,6 @@ function getCollegeDifficulty(college: any): number {
 
 function calculateCompositeScore(college: any, profile: UserProfile): number {
   let rawScore = 0;
-
-  // Get the best exam score for this college
   let percentile = profile.scoreType === "percentile" ? profile.overallScore : 0;
   if (profile.examScores && college.exams_accepted) {
     for (const exam of college.exams_accepted) {
@@ -81,7 +75,6 @@ function calculateCompositeScore(college: any, profile: UserProfile): number {
     }
   }
 
-  // Exam score component (0-40)
   if (percentile >= 99) rawScore += 40;
   else if (percentile >= 97) rawScore += 37;
   else if (percentile >= 95) rawScore += 34;
@@ -93,10 +86,8 @@ function calculateCompositeScore(college: any, profile: UserProfile): number {
   else if (percentile >= 60) rawScore += 10;
   else rawScore += 6;
 
-  // Profile score (0-25)
   const profileAvg = (profile.tenth + profile.twelfth + profile.graduation) / 3;
   if (profile.graduationPursuing) {
-    // Slightly lower weight for pursuing students
     if (profileAvg >= 80) rawScore += 20;
     else if (profileAvg >= 70) rawScore += 16;
     else if (profileAvg >= 60) rawScore += 12;
@@ -109,29 +100,24 @@ function calculateCompositeScore(college: any, profile: UserProfile): number {
     else rawScore += 8;
   }
 
-  // Work experience (0-15)
   const workYears = profile.workExperienceMonths / 12;
   if (workYears >= 2 && workYears <= 5) rawScore += 15;
   else if (workYears >= 1) rawScore += 12;
   else if (workYears >= 0.5) rawScore += 8;
   else rawScore += 4;
 
-  // Budget fit (0-10)
   const fees = parseNum(college.fees);
   if (fees > 0 && fees <= profile.budgetMax && fees >= profile.budgetMin) rawScore += 10;
   else if (fees > 0 && fees <= profile.budgetMax * 1.2) rawScore += 6;
   else rawScore += 3;
 
-  // Location (0-5)
   if (profile.preferredStates.length === 0) rawScore += 5;
   else if (college.state && profile.preferredStates.some((s: string) => college.state?.toLowerCase().includes(s.toLowerCase()))) rawScore += 5;
   else if (college.city && profile.preferredStates.some((s: string) => college.city?.toLowerCase().includes(s.toLowerCase()))) rawScore += 4;
   else rawScore += 2;
 
-  // Diversity bonus
   if (profile.gender === "female") rawScore += 3;
 
-  // ROI bonus
   const avgPkg = parseNum(college.placement_avg);
   const roi = avgPkg > 0 && fees > 0 ? avgPkg / fees : 0;
   if (roi >= 3) rawScore += 5;
@@ -146,20 +132,15 @@ function calculateCompositeScore(college: any, profile: UserProfile): number {
 
 function classifyBucket(compositeScore: number, college: any): "dream" | "target" | "safe" {
   const difficulty = getCollegeDifficulty(college);
-
-  // Chance = how much student score exceeds college difficulty
   const gap = compositeScore - difficulty;
-
-  if (gap >= 15) return "safe";       // Student is well above what college needs
-  if (gap >= -5) return "target";     // Student is in competitive range
-  return "dream";                      // Student needs to stretch
+  if (gap >= 15) return "safe";
+  if (gap >= -5) return "target";
+  return "dream";
 }
 
 function getChancePercent(compositeScore: number, college: any): number {
   const difficulty = getCollegeDifficulty(college);
   const gap = compositeScore - difficulty;
-
-  // Map gap to a percentage
   let chance: number;
   if (gap >= 25) chance = 88;
   else if (gap >= 15) chance = 75;
@@ -168,8 +149,6 @@ function getChancePercent(compositeScore: number, college: any): number {
   else if (gap >= -15) chance = 35;
   else if (gap >= -25) chance = 22;
   else chance = 12;
-
-  // Add small randomness for natural feel
   chance += Math.floor(Math.random() * 6) - 3;
   return Math.min(Math.max(chance, 5), 95);
 }
@@ -186,28 +165,117 @@ function getBadges(college: any, roi: number): string[] {
 
 function generateWhyFit(college: any, profile: UserProfile, bucket: string, roi: number): string {
   const parts: string[] = [];
-  if (bucket === "safe") parts.push(`Your profile is a strong match for ${college.name}.`);
-  else if (bucket === "target") parts.push(`You're competitive for ${college.name} — within striking range.`);
-  else parts.push(`${college.name} is a stretch goal — worth the effort.`);
-  if (roi >= 2) parts.push(`Great ROI at ${roi.toFixed(1)}x.`);
+  const name = college.name;
+  
+  if (bucket === "safe") {
+    if (profile.overallScore >= 90) parts.push(`Your strong percentile makes ${name} a comfortable fit.`);
+    else parts.push(`Your profile aligns well with ${name}'s admission criteria.`);
+  } else if (bucket === "target") {
+    parts.push(`You're in a competitive position for ${name} — a focused effort can get you in.`);
+  } else {
+    if ((college.college_category || "").toLowerCase() === "iim") parts.push(`${name} is aspirational — but every IIM call list has surprises.`);
+    else parts.push(`${name} is a stretch, but worth applying — your profile has potential.`);
+  }
+  
+  if (roi >= 2.5) parts.push(`Excellent ROI at ${roi.toFixed(1)}x your investment.`);
+  else if (roi >= 1.5) parts.push(`Solid placement record with ${roi.toFixed(1)}x returns.`);
+  
   if (college.city && profile.preferredStates.some((s: string) =>
     college.state?.toLowerCase().includes(s.toLowerCase()) ||
     college.city?.toLowerCase().includes(s.toLowerCase())))
-    parts.push("Matches your location preference.");
+    parts.push("Located in your preferred region.");
+    
+  const avgPkg = parseNum(college.placement_avg);
+  if (avgPkg >= 2000000) parts.push(`Strong avg package of ${college.placement_avg}.`);
+    
   return parts.join(" ");
 }
 
 function generateTips(college: any, profile: UserProfile, bucket: string): string {
-  if (bucket === "safe") return `Focus on WAT/GD prep. Your profile meets cutoffs. Apply confidently and prepare well for the personal interview.`;
-  if (bucket === "target") return `Strengthen your WAT/PI preparation. Highlight work experience and achievements in your application. Practice mock interviews.`;
-  return `Needs strong WAT/PI performance. Build differentiators, strengthen extra-curriculars, and consider improving your exam score.`;
+  const tips: string[] = [];
+  const cat = (college.college_category || "").toLowerCase();
+  
+  if (bucket === "safe") {
+    tips.push("✅ Your profile is a strong fit — focus on nailing the interview stage.");
+    if (cat === "iim") tips.push("Prepare well for WAT/PI with structured mock sessions.");
+    else tips.push("Craft a compelling SOP highlighting your unique strengths.");
+    tips.push("Apply early and keep your documents ready.");
+  } else if (bucket === "target") {
+    tips.push("📋 You're competitive — preparation quality will make the difference.");
+    if (profile.workExperienceMonths < 12) tips.push("Highlight academic projects and internships to compensate for limited work-ex.");
+    else tips.push(`Your ${Math.floor(profile.workExperienceMonths / 12)}+ years of work-ex is an advantage — showcase impact and leadership.`);
+    tips.push("Practice group discussions and case-study based interviews.");
+  } else {
+    tips.push("🎯 This is a stretch goal — here's how to maximize your chances:");
+    if (profile.overallScore < 95) tips.push("Consider retaking the exam to boost your percentile above 95+.");
+    tips.push("Build a standout profile — certifications, volunteering, or publications help.");
+    tips.push("Write an exceptional SOP connecting your career goals to the college's strengths.");
+  }
+  
+  return tips.join(" ");
+}
+
+// ─── AI ENRICH ACTION ───────────────────────────────────────
+async function handleEnrich(collegeName: string) {
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) return { enriched: null };
+
+  const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: "You are a database of Indian MBA colleges. Return ONLY valid JSON, no markdown." },
+        { role: "user", content: `Provide details for the MBA college "${collegeName}" in India. Return JSON with these fields:
+{
+  "city": "string",
+  "state": "string", 
+  "fees": "string like ₹23 Lakhs",
+  "placement_avg": "string like ₹18 LPA",
+  "placement_highest": "string like ₹1.2 Cr",
+  "ranking": number or null,
+  "tier": "Tier 1" or "Tier 2" or "Tier 3" or "Tier 4",
+  "college_category": "IIM" or "Non-IIM",
+  "type": "Government" or "Private" or "Autonomous",
+  "established": number year,
+  "exams_accepted": ["CAT", "XAT", etc],
+  "accreditations": ["AACSB", "EQUIS", etc],
+  "description": "2-3 line description",
+  "courses": ["MBA", "PGDM", etc],
+  "campus_size": "string like 100 acres",
+  "website": "url"
+}
+Only return the JSON object.` },
+      ],
+    }),
+  });
+
+  if (!aiResponse.ok) return { enriched: null };
+  const aiData = await aiResponse.json();
+  const text = aiData.choices?.[0]?.message?.content || "";
+  try {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) return { enriched: JSON.parse(jsonMatch[0]) };
+  } catch { /* ignore parse errors */ }
+  return { enriched: null };
 }
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const profile: UserProfile = await req.json();
+    const body = await req.json();
+
+    // Handle enrich action
+    if (body.action === "enrich" && body.collegeName) {
+      const result = await handleEnrich(body.collegeName);
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const profile: UserProfile = body;
 
     if ((!profile.exams || profile.exams.length === 0) || !profile.overallScore || !profile.tenth || !profile.twelfth || !profile.graduation) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -233,7 +301,6 @@ serve(async (req) => {
       });
     }
 
-    // Filter by exam acceptance
     let filtered = colleges.filter((c: any) => {
       if (!c.exams_accepted || c.exams_accepted.length === 0) return true;
       return profile.exams.some((exam: string) =>
@@ -241,7 +308,6 @@ serve(async (req) => {
       );
     });
 
-    // Filter by tier preference
     if (profile.collegeTier.length > 0) {
       const tierFiltered = filtered.filter((c: any) => {
         const tier = (c.tier || "").toLowerCase();
@@ -258,7 +324,6 @@ serve(async (req) => {
 
     const preferredSlugs = profile.preferredColleges?.map(c => c.toLowerCase()) || [];
 
-    // Score and classify each college
     const results = filtered.map((c: any) => {
       let compositeScore = calculateCompositeScore(c, profile);
       if (preferredSlugs.some(slug => c.name.toLowerCase().includes(slug) || c.slug?.toLowerCase().includes(slug))) {
@@ -293,7 +358,6 @@ serve(async (req) => {
       };
     });
 
-    // Sort: dream first, then target, then safe
     const bucketOrder = { dream: 0, target: 1, safe: 2 };
     results.sort((a: any, b: any) => {
       if (a.bucket !== b.bucket) return bucketOrder[a.bucket] - bucketOrder[b.bucket];
@@ -305,13 +369,12 @@ serve(async (req) => {
     const safe = results.filter((r: any) => r.bucket === "safe").slice(0, 8);
     const shortlisted = [...dream, ...target, ...safe];
 
-    // Best ROI badge
     const bestRoi = [...shortlisted].sort((a, b) => (b.roi || 0) - (a.roi || 0))[0];
     if (bestRoi && !bestRoi.badges.includes("Best ROI")) {
       bestRoi.badges = ["Best ROI", ...bestRoi.badges].slice(0, 3);
     }
 
-    // AI insights
+    // AI insights with improved prompting
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     let aiInsights = "";
     let strategy = "";
@@ -321,6 +384,7 @@ serve(async (req) => {
         const dreamList = dream.map(c => `${c.name} (${c.chancePercent}%)`).join(", ");
         const targetList = target.map(c => `${c.name} (${c.chancePercent}%)`).join(", ");
         const safeList = safe.map(c => `${c.name} (${c.chancePercent}%)`).join(", ");
+        const workYrs = (profile.workExperienceMonths / 12).toFixed(1);
 
         const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
@@ -333,33 +397,41 @@ serve(async (req) => {
             messages: [
               {
                 role: "system",
-                content: `You are a warm, experienced MBA admissions mentor in India. Write like a caring senior giving honest advice. Use "you" throughout. Be specific and practical. Use emojis sparingly. Keep total response under 400 words across both sections. Format with markdown headers and bullet points.
+                content: `You are a warm, experienced MBA admissions mentor from India. Write naturally like a caring elder giving advice over chai — NOT like an AI. 
 
-IMPORTANT: Do NOT use generic phrases. Be specific to the student's actual scores and colleges. Don't repeat information already shown in the results.`,
+RULES:
+- Use "you" and "your" throughout — speak directly to the student
+- Be SPECIFIC to their actual numbers — mention their exact percentile, scores, work-ex
+- NO generic filler phrases like "based on our analysis" or "our AI suggests"
+- Use short, punchy sentences. Mix encouragement with honest reality checks
+- Use bullet points (•) not dashes
+- Keep total under 350 words across both sections
+- Add 1-2 relevant emojis per section, NOT more`,
               },
               {
                 role: "user",
-                content: `Student:
-- Exams: ${profile.exams.join(", ")}, ${profile.scoreType === "percentile" ? "Percentile" : "Score"}: ${profile.overallScore}
-- Academics: 10th: ${profile.tenth}%, 12th: ${profile.twelfth}%, Graduation: ${profile.graduation}%${profile.graduationPursuing ? " (Pursuing)" : ""} (${profile.graduationStream})
-- Work Exp: ${profile.workExperienceMonths} months
-- Budget: ₹${(profile.budgetMin / 100000).toFixed(0)}L - ₹${(profile.budgetMax / 100000).toFixed(0)}L
+                content: `Student Profile:
+• Exams: ${profile.exams.join(", ")}
+• ${profile.scoreType === "percentile" ? "Percentile" : "Score"}: ${profile.overallScore}
+• 10th: ${profile.tenth}% | 12th: ${profile.twelfth}% | Graduation: ${profile.graduation}%${profile.graduationPursuing ? " (still pursuing)" : ""} — ${profile.graduationStream}
+• Work Experience: ${workYrs} years (${profile.workExperienceMonths} months)
+• Budget: ₹${(profile.budgetMin / 100000).toFixed(0)}L – ₹${(profile.budgetMax / 100000).toFixed(0)}L
+• Preference: ${profile.roiPreference === "high_roi" ? "High ROI" : profile.roiPreference === "premium" ? "Premium colleges" : "Balanced"}
 
-Dream Colleges: ${dreamList || "None"}
-Target Colleges: ${targetList || "None"}
-Safe Colleges: ${safeList || "None"}
+Results:
+• Dream (${dream.length}): ${dreamList || "None matched"}
+• Target (${target.length}): ${targetList || "None matched"}
+• Safe (${safe.length}): ${safeList || "None matched"}
 
-Write TWO sections:
+Write exactly TWO sections with these headers:
 
-**🎯 Your Profile Assessment**
-- 2-3 specific strengths in their profile
-- 1-2 areas to improve (be honest but kind)
-- Which bucket has their best options and why
+## 🎯 Your Profile Assessment
 
-**📋 Your Application Strategy**
-- Top 3 immediate action items
-- Which 3 colleges to prioritize applications for and why
-- One backup strategy tip`,
+Write 3-4 short paragraphs: what's working in their favor, what needs work, and which bucket they should focus on. Be honest but encouraging.
+
+## 📋 Smart Action Plan
+
+Give exactly 4 numbered action items. Each should be one concrete step (e.g., "Fill the XAT form before Dec 15", "Start WAT practice with 2 essays/week"). End with one motivational line.`,
               },
             ],
           }),
@@ -368,7 +440,7 @@ Write TWO sections:
         if (aiResponse.ok) {
           const aiData = await aiResponse.json();
           const fullText = aiData.choices?.[0]?.message?.content || "";
-          const strategyIdx = fullText.indexOf("📋");
+          const strategyIdx = fullText.indexOf("## 📋");
           if (strategyIdx > -1) {
             aiInsights = fullText.substring(0, strategyIdx).trim();
             strategy = fullText.substring(strategyIdx).trim();
