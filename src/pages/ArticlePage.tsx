@@ -102,8 +102,14 @@ const ArticlePage = () => {
   }
 
   const renderContent = (content: string) => {
-    if (content.includes("<table") || content.includes("<h") || content.includes("<p")) {
-      return <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-heading prose-headings:text-foreground prose-p:text-muted-foreground prose-a:text-primary prose-img:rounded-xl" dangerouslySetInnerHTML={{ __html: content }} />;
+    const isHtml = /<\/?[a-z][\s\S]*>/i.test(content);
+    if (isHtml) {
+      return (
+        <div
+          className="prose prose-lg max-w-none dark:prose-invert prose-headings:font-heading prose-headings:text-foreground prose-p:text-muted-foreground prose-a:text-primary prose-img:rounded-xl prose-ul:list-disc prose-ul:pl-6 prose-ol:list-decimal prose-ol:pl-6 prose-li:my-1 prose-blockquote:border-l-4 prose-blockquote:border-border prose-blockquote:pl-4 prose-blockquote:italic prose-table:border-collapse [&_table]:w-full [&_td]:border [&_td]:border-border [&_td]:p-2 [&_th]:border [&_th]:border-border [&_th]:p-2 [&_th]:bg-muted/50 [&_th]:font-semibold prose-hr:my-6 prose-hr:border-border prose-h1:text-3xl prose-h1:font-bold prose-h1:my-4 prose-h2:text-2xl prose-h2:font-bold prose-h2:my-3 prose-h3:text-xl prose-h3:font-semibold prose-h3:my-2 prose-p:my-2 prose-p:leading-relaxed [&_mark]:bg-yellow-200 [&_mark]:px-1"
+          dangerouslySetInnerHTML={{ __html: content }}
+        />
+      );
     }
     return (
       <div className="prose prose-lg max-w-none dark:prose-invert space-y-4">
