@@ -52,7 +52,7 @@ const ArticlePage = () => {
     article?.id,
     article
       ? {
-          title: `${(article as any).meta_title || article.title} | BestMBACoaching Blog`,
+          title: `${(article as any).meta_title || article.title} | BSchoolBuzz Blog`,
           description: (article as any).meta_description || article.excerpt || undefined,
           keywords: articleKeywords,
           canonical: `${window.location.origin}/article/${article.slug}`,
@@ -64,7 +64,7 @@ const ArticlePage = () => {
 
   useEffect(() => {
     if (article) {
-      document.title = `${(article as any).meta_title || article.title} | BestMBACoaching`;
+      document.title = `${(article as any).meta_title || article.title} | BSchoolBuzz`;
     }
   }, [article]);
 

@@ -103,7 +103,7 @@ const CollegeFinderPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="AI MBA College Finder & Compare | BestMBACoaching"
+        title="AI MBA College Finder & Compare | BSchoolBuzz"
         description="Find your perfect MBA college with AI-powered recommendations. Compare top B-Schools side by side — fees, placements, rankings, ROI & more."
         keywords={["MBA college finder", "compare MBA colleges", "best MBA college", "IIM comparison", "MBA placements comparison", "AI college recommendation", "MBA fees comparison"]}
         canonical="https://bschoolbuzz.com/college-finder"
