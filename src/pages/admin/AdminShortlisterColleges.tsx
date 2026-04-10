@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Search, GraduationCap, Sparkles, Loader2, Building2, TrendingUp, MapPin, Filter } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, GraduationCap, Sparkles, Loader2, Building2, TrendingUp, MapPin, Filter, Gauge } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TIERS = ["Tier 1", "Tier 2", "Tier 3", "Tier 4"];
@@ -61,12 +61,102 @@ const ESTABLISHED_RANGES = [
   "Before 1960", "1960 - 1980", "1980 - 2000", "2000 - 2010", "2010 - 2020", "After 2020"
 ];
 
+const PERCENTILE_RANGES = [
+  "99.5+", "99 - 99.5", "98 - 99", "95 - 98", "90 - 95",
+  "85 - 90", "80 - 85", "75 - 80", "70 - 75", "Below 70"
+];
+
+const GMAT_SCORE_RANGES = [
+  "750+", "720 - 750", "700 - 720", "680 - 700", "650 - 680",
+  "600 - 650", "550 - 600", "Below 550"
+];
+
+// ─── Weighted Scoring Engine ───
+const SCORING_WEIGHTS = {
+  tier: 30,          // 30% weight
+  ranking: 20,       // 20% weight  
+  avgPackage: 20,    // 20% weight
+  fees: 10,          // 10% weight (higher fees = harder/more premium)
+  accreditations: 10,// 10% weight
+  category: 10,      // 10% weight (IIM bonus)
+};
+
+const tierScore = (tier: string): number => {
+  switch (tier) {
+    case "Tier 1": return 100;
+    case "Tier 2": return 70;
+    case "Tier 3": return 40;
+    case "Tier 4": return 20;
+    default: return 30;
+  }
+};
+
+const rankingScore = (ranking: string): number => {
+  if (!ranking) return 30;
+  if (ranking.startsWith("1 -")) return 100;
+  if (ranking.startsWith("6 -")) return 90;
+  if (ranking.startsWith("11")) return 75;
+  if (ranking.startsWith("21")) return 60;
+  if (ranking.startsWith("31")) return 50;
+  if (ranking.startsWith("51")) return 40;
+  if (ranking.startsWith("76")) return 30;
+  return 20; // 100+
+};
+
+const avgPackageScore = (pkg: string): number => {
+  if (!pkg) return 30;
+  const idx = AVG_PACKAGE_RANGES.indexOf(pkg);
+  if (idx === -1) return 30;
+  return Math.round(20 + (idx / (AVG_PACKAGE_RANGES.length - 1)) * 80);
+};
+
+const feesScore = (fees: string): number => {
+  if (!fees) return 30;
+  const idx = FEE_RANGES.indexOf(fees);
+  if (idx === -1) return 30;
+  return Math.round(20 + (idx / (FEE_RANGES.length - 1)) * 80);
+};
+
+const accreditationScore = (accreditations: string[]): number => {
+  if (!accreditations || accreditations.length === 0) return 20;
+  const count = accreditations.length;
+  return Math.min(100, 20 + count * 15);
+};
+
+const categoryScore = (cat: string): number => cat === "IIM" ? 100 : 40;
+
+const calculateDifficultyScore = (form: any): number => {
+  const tS = tierScore(form.tier) * (SCORING_WEIGHTS.tier / 100);
+  const rS = rankingScore(form.ranking) * (SCORING_WEIGHTS.ranking / 100);
+  const pS = avgPackageScore(form.placement_avg) * (SCORING_WEIGHTS.avgPackage / 100);
+  const fS = feesScore(form.fees) * (SCORING_WEIGHTS.fees / 100);
+  const aS = accreditationScore(form.accreditations) * (SCORING_WEIGHTS.accreditations / 100);
+  const cS = categoryScore(form.college_category) * (SCORING_WEIGHTS.category / 100);
+  return Math.round(tS + rS + pS + fS + aS + cS);
+};
+
+const getScoreColor = (score: number): string => {
+  if (score >= 80) return "text-red-600";
+  if (score >= 60) return "text-amber-600";
+  if (score >= 40) return "text-blue-600";
+  return "text-emerald-600";
+};
+
+const getScoreLabel = (score: number): string => {
+  if (score >= 80) return "Very Hard";
+  if (score >= 60) return "Hard";
+  if (score >= 40) return "Moderate";
+  return "Easy";
+};
+
+type ExamCutoffs = Record<string, string>;
+
 const emptyForm = {
-  name: "", slug: "", city: "", state: "", fees: "", placement_avg: "", placement_highest: "",
+  name: "", city: "", state: "", fees: "", placement_avg: "", placement_highest: "",
   ranking: "", tier: "Tier 2", college_category: "Non-IIM", type: "", established: "",
-  exams_accepted: [] as string[], accreditations: [] as string[], description: "",
+  exams_accepted: [] as string[], accreditations: [] as string[],
   courses: [] as string[], campus_size: "", total_students: "", website: "",
-  meta_title: "", meta_description: "", logo_url: "", banner_url: "",
+  exam_cutoffs: {} as ExamCutoffs,
 };
 
 const AdminShortlisterColleges = () => {
@@ -81,7 +171,7 @@ const AdminShortlisterColleges = () => {
   const { toast } = useToast();
 
   const fetchColleges = async () => {
-    const { data } = await supabase.from("colleges").select("id, name, slug, city, state, fees, placement_avg, ranking, tier, college_category, exams_accepted, established, logo_url").order("ranking", { ascending: true, nullsFirst: false });
+    const { data } = await supabase.from("colleges").select("id, name, slug, city, state, fees, placement_avg, ranking, tier, college_category, exams_accepted, established, logo_url, accreditations, cutoff_info").order("ranking", { ascending: true, nullsFirst: false });
     if (data) setColleges(data);
   };
 
@@ -89,9 +179,7 @@ const AdminShortlisterColleges = () => {
 
   const generateSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
-  const handleNameChange = (name: string) => {
-    setForm(f => ({ ...f, name, slug: editId ? f.slug : generateSlug(name) }));
-  };
+  const difficultyScore = useMemo(() => calculateDifficultyScore(form), [form.tier, form.ranking, form.placement_avg, form.fees, form.accreditations, form.college_category]);
 
   const aiEnrich = async () => {
     if (!form.name) { toast({ title: "Enter college name first", variant: "destructive" }); return; }
@@ -117,7 +205,6 @@ const AdminShortlisterColleges = () => {
           established: f.established || (e.established?.toString() || ""),
           exams_accepted: f.exams_accepted.length > 0 ? f.exams_accepted : (e.exams_accepted || []),
           accreditations: f.accreditations.length > 0 ? f.accreditations : (e.accreditations || []),
-          description: f.description || e.description || "",
           courses: f.courses.length > 0 ? f.courses : (e.courses || []),
           campus_size: f.campus_size || e.campus_size || "",
           website: f.website || e.website || "",
@@ -132,11 +219,12 @@ const AdminShortlisterColleges = () => {
   };
 
   const handleSave = async () => {
-    if (!form.name || !form.slug) { toast({ title: "Name and slug are required", variant: "destructive" }); return; }
+    if (!form.name) { toast({ title: "Name is required", variant: "destructive" }); return; }
     if (!form.tier || !form.college_category) { toast({ title: "Tier and Category are mandatory", variant: "destructive" }); return; }
 
+    const slug = generateSlug(form.name);
     const payload: any = {
-      name: form.name, slug: form.slug, city: form.city || null, state: form.state || null,
+      name: form.name, slug, city: form.city || null, state: form.state || null,
       fees: form.fees || null, placement_avg: form.placement_avg || null,
       placement_highest: form.placement_highest || null,
       ranking: form.ranking ? parseInt(form.ranking) : null,
@@ -144,13 +232,11 @@ const AdminShortlisterColleges = () => {
       established: form.established ? parseInt(form.established) : null,
       exams_accepted: form.exams_accepted.length > 0 ? form.exams_accepted : null,
       accreditations: form.accreditations.length > 0 ? form.accreditations : null,
-      description: form.description || null,
       courses: form.courses.length > 0 ? form.courses : null,
       campus_size: form.campus_size || null,
       total_students: form.total_students ? parseInt(form.total_students) : null,
       website: form.website || null,
-      meta_title: form.meta_title || null, meta_description: form.meta_description || null,
-      logo_url: form.logo_url || null, banner_url: form.banner_url || null,
+      cutoff_info: Object.keys(form.exam_cutoffs).length > 0 ? form.exam_cutoffs : null,
     };
 
     if (editId) {
@@ -166,19 +252,18 @@ const AdminShortlisterColleges = () => {
   };
 
   const handleEdit = (college: any) => {
+    const cutoffs = (college.cutoff_info && typeof college.cutoff_info === "object") ? college.cutoff_info as ExamCutoffs : {};
     setForm({
-      name: college.name || "", slug: college.slug || "", city: college.city || "", state: college.state || "",
+      name: college.name || "", city: college.city || "", state: college.state || "",
       fees: college.fees || "", placement_avg: college.placement_avg || "",
       placement_highest: college.placement_highest || "",
       ranking: college.ranking?.toString() || "", tier: college.tier || "Tier 2",
       college_category: college.college_category || "Non-IIM", type: college.type || "",
       established: college.established?.toString() || "",
       exams_accepted: college.exams_accepted || [], accreditations: college.accreditations || [],
-      description: college.description || "", courses: college.courses || [],
+      courses: college.courses || [],
       campus_size: college.campus_size || "", total_students: college.total_students?.toString() || "",
-      website: college.website || "", meta_title: college.meta_title || "",
-      meta_description: college.meta_description || "", logo_url: college.logo_url || "",
-      banner_url: college.banner_url || "",
+      website: college.website || "", exam_cutoffs: cutoffs,
     });
     setEditId(college.id); setDialogOpen(true);
   };
@@ -190,10 +275,20 @@ const AdminShortlisterColleges = () => {
   };
 
   const toggleArrayItem = (field: "exams_accepted" | "accreditations" | "courses", item: string) => {
-    setForm(f => ({
-      ...f,
-      [field]: f[field].includes(item) ? f[field].filter(x => x !== item) : [...f[field], item]
-    }));
+    setForm(f => {
+      const updated = f[field].includes(item) ? f[field].filter(x => x !== item) : [...f[field], item];
+      // If removing an exam, also remove its cutoff
+      if (field === "exams_accepted" && f[field].includes(item)) {
+        const newCutoffs = { ...f.exam_cutoffs };
+        delete newCutoffs[item];
+        return { ...f, [field]: updated, exam_cutoffs: newCutoffs };
+      }
+      return { ...f, [field]: updated };
+    });
+  };
+
+  const updateExamCutoff = (exam: string, value: string) => {
+    setForm(f => ({ ...f, exam_cutoffs: { ...f.exam_cutoffs, [exam]: value } }));
   };
 
   const filtered = colleges.filter(c => {
@@ -218,7 +313,7 @@ const AdminShortlisterColleges = () => {
             <GraduationCap className="w-6 h-6 text-primary" />
             Shortlister Colleges
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage colleges for AI College Shortlister results</p>
+          <p className="text-sm text-muted-foreground mt-1">Manage colleges for AI College Shortlister</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -232,17 +327,16 @@ const AdminShortlisterColleges = () => {
             </DialogHeader>
 
             <Tabs defaultValue="basic" className="mt-2">
-              <TabsList className="grid grid-cols-4 w-full">
+              <TabsList className="grid grid-cols-3 w-full">
                 <TabsTrigger value="basic" className="text-xs">Basic Info</TabsTrigger>
-                <TabsTrigger value="academics" className="text-xs">Academics</TabsTrigger>
-                <TabsTrigger value="placement" className="text-xs">Placement</TabsTrigger>
-                <TabsTrigger value="seo" className="text-xs">SEO & Media</TabsTrigger>
+                <TabsTrigger value="academics" className="text-xs">Academics & Cutoffs</TabsTrigger>
+                <TabsTrigger value="placement" className="text-xs">Placement & Fees</TabsTrigger>
               </TabsList>
 
               <div className="mt-4 space-y-4">
-                {/* AI Enrich */}
+                {/* AI Enrich + Difficulty Score */}
                 <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
-                  <Sparkles className="w-4 h-4 text-primary" />
+                  <Sparkles className="w-4 h-4 text-primary shrink-0" />
                   <span className="text-xs text-foreground flex-1">Auto-fill missing data using AI</span>
                   <Button size="sm" variant="outline" onClick={aiEnrich} disabled={aiLoading || !form.name}>
                     {aiLoading ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <Sparkles className="w-3 h-3 mr-1" />}
@@ -250,27 +344,54 @@ const AdminShortlisterColleges = () => {
                   </Button>
                 </div>
 
+                {/* Live Difficulty Score */}
+                <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/30">
+                  <Gauge className="w-5 h-5 text-muted-foreground" />
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-foreground">Difficulty Score</p>
+                    <p className="text-[10px] text-muted-foreground">Auto-calculated from Tier, Ranking, Package, Fees, Accreditations & Category</p>
+                  </div>
+                  <div className="text-right">
+                    <span className={`text-2xl font-bold ${getScoreColor(difficultyScore)}`}>{difficultyScore}</span>
+                    <span className="text-xs text-muted-foreground">/100</span>
+                    <p className={`text-[10px] font-semibold ${getScoreColor(difficultyScore)}`}>{getScoreLabel(difficultyScore)}</p>
+                  </div>
+                  {/* Mini bar */}
+                  <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all ${difficultyScore >= 80 ? 'bg-red-500' : difficultyScore >= 60 ? 'bg-amber-500' : difficultyScore >= 40 ? 'bg-blue-500' : 'bg-emerald-500'}`} style={{ width: `${difficultyScore}%` }} />
+                  </div>
+                </div>
+
+                {/* Scoring Weights Breakdown */}
+                <details className="text-[10px] text-muted-foreground">
+                  <summary className="cursor-pointer hover:text-foreground transition-colors">View scoring weights breakdown</summary>
+                  <div className="mt-2 grid grid-cols-3 gap-2 p-2 bg-muted/20 rounded-md">
+                    {Object.entries(SCORING_WEIGHTS).map(([key, weight]) => {
+                      let raw = 0;
+                      switch (key) {
+                        case "tier": raw = tierScore(form.tier); break;
+                        case "ranking": raw = rankingScore(form.ranking); break;
+                        case "avgPackage": raw = avgPackageScore(form.placement_avg); break;
+                        case "fees": raw = feesScore(form.fees); break;
+                        case "accreditations": raw = accreditationScore(form.accreditations); break;
+                        case "category": raw = categoryScore(form.college_category); break;
+                      }
+                      const weighted = Math.round(raw * (weight / 100));
+                      return (
+                        <div key={key} className="flex justify-between border border-border/50 rounded px-2 py-1">
+                          <span className="capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+                          <span className="font-mono font-semibold">{weighted}/{weight}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </details>
+
                 {/* ===== BASIC INFO ===== */}
                 <TabsContent value="basic" className="space-y-4 mt-0">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="col-span-2">
-                      <Label className="text-xs font-semibold mb-1.5 block">College Name <span className="text-destructive">*</span></Label>
-                      <Input value={form.name} onChange={e => handleNameChange(e.target.value)} placeholder="e.g. IIM Ahmedabad" />
-                    </div>
-                    <div>
-                      <Label className="text-xs font-semibold mb-1.5 block">Slug <span className="text-destructive">*</span></Label>
-                      <Input value={form.slug} onChange={e => setForm(f => ({ ...f, slug: e.target.value }))} />
-                    </div>
-                    <div>
-                      <Label className="text-xs font-semibold mb-1.5 block">Type</Label>
-                      <Select value={form.type || "_none"} onValueChange={v => setForm(f => ({ ...f, type: v === "_none" ? "" : v }))}>
-                        <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="_none">Select type...</SelectItem>
-                          {COLLEGE_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <div>
+                    <Label className="text-xs font-semibold mb-1.5 block">College Name <span className="text-destructive">*</span></Label>
+                    <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. IIM Ahmedabad" />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
@@ -294,7 +415,30 @@ const AdminShortlisterColleges = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs font-semibold mb-1.5 block">Type</Label>
+                      <Select value={form.type || "_none"} onValueChange={v => setForm(f => ({ ...f, type: v === "_none" ? "" : v }))}>
+                        <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">Select type...</SelectItem>
+                          {COLLEGE_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold mb-1.5 block">Established</Label>
+                      <Select value={form.established || "_none"} onValueChange={v => setForm(f => ({ ...f, established: v === "_none" ? "" : v }))}>
+                        <SelectTrigger><SelectValue placeholder="Select range" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">Select range...</SelectItem>
+                          {ESTABLISHED_RANGES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs font-semibold mb-1.5 block">City</Label>
                       <Select value={form.city || "_none"} onValueChange={v => setForm(f => ({ ...f, city: v === "_none" ? "" : v }))}>
@@ -315,25 +459,15 @@ const AdminShortlisterColleges = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div>
-                      <Label className="text-xs font-semibold mb-1.5 block">Established</Label>
-                      <Select value={form.established || "_none"} onValueChange={v => setForm(f => ({ ...f, established: v === "_none" ? "" : v }))}>
-                        <SelectTrigger><SelectValue placeholder="Select range" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="_none">Select range...</SelectItem>
-                          {ESTABLISHED_RANGES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
                   </div>
 
                   <div>
-                    <Label className="text-xs font-semibold mb-1.5 block">Description</Label>
-                    <textarea className="w-full border border-border rounded-md p-2 text-sm bg-background min-h-[80px]" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="Brief about the college..." />
+                    <Label className="text-xs font-semibold mb-1.5 block">Website</Label>
+                    <Input value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} placeholder="https://..." />
                   </div>
                 </TabsContent>
 
-                {/* ===== ACADEMICS ===== */}
+                {/* ===== ACADEMICS & CUTOFFS ===== */}
                 <TabsContent value="academics" className="space-y-4 mt-0">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -357,21 +491,16 @@ const AdminShortlisterColleges = () => {
                       </Select>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <Label className="text-xs font-semibold mb-1.5 block">Total Students</Label>
-                      <Select value={form.total_students || "_none"} onValueChange={v => setForm(f => ({ ...f, total_students: v === "_none" ? "" : v }))}>
-                        <SelectTrigger><SelectValue placeholder="Select range" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="_none">Select range...</SelectItem>
-                          {STUDENT_RANGES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="text-xs font-semibold mb-1.5 block">Website</Label>
-                      <Input value={form.website} onChange={e => setForm(f => ({ ...f, website: e.target.value }))} placeholder="https://..." />
-                    </div>
+
+                  <div>
+                    <Label className="text-xs font-semibold mb-1.5 block">Total Students</Label>
+                    <Select value={form.total_students || "_none"} onValueChange={v => setForm(f => ({ ...f, total_students: v === "_none" ? "" : v }))}>
+                      <SelectTrigger><SelectValue placeholder="Select range" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="_none">Select range...</SelectItem>
+                        {STUDENT_RANGES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   {/* Exams — chip toggle */}
@@ -390,6 +519,41 @@ const AdminShortlisterColleges = () => {
                       ))}
                     </div>
                   </div>
+
+                  {/* Exam-wise Cutoff Percentile/Score */}
+                  {form.exams_accepted.length > 0 && (
+                    <div className="border border-border rounded-lg p-3 space-y-3 bg-muted/20">
+                      <Label className="text-xs font-semibold block">
+                        📊 Minimum Percentile / Score Required
+                      </Label>
+                      <p className="text-[10px] text-muted-foreground -mt-1">Set the minimum cutoff for each selected exam</p>
+                      <div className="grid grid-cols-2 gap-3">
+                        {form.exams_accepted.map(exam => {
+                          const isGMAT = exam === "GMAT";
+                          const ranges = isGMAT ? GMAT_SCORE_RANGES : PERCENTILE_RANGES;
+                          return (
+                            <div key={exam}>
+                              <Label className="text-[10px] font-semibold mb-1 block text-muted-foreground">
+                                {exam} {isGMAT ? "Score" : "Percentile"}
+                              </Label>
+                              <Select
+                                value={form.exam_cutoffs[exam] || "_none"}
+                                onValueChange={v => updateExamCutoff(exam, v === "_none" ? "" : v)}
+                              >
+                                <SelectTrigger className="h-8 text-xs">
+                                  <SelectValue placeholder={`Select ${isGMAT ? "score" : "percentile"}`} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="_none">Not set</SelectItem>
+                                  {ranges.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Accreditations — chip toggle */}
                   <div>
@@ -426,59 +590,37 @@ const AdminShortlisterColleges = () => {
                   </div>
                 </TabsContent>
 
-                {/* ===== PLACEMENT ===== */}
+                {/* ===== PLACEMENT & FEES ===== */}
                 <TabsContent value="placement" className="space-y-4 mt-0">
-                  <div className="grid grid-cols-1 gap-4">
-                    <div>
-                      <Label className="text-xs font-semibold mb-1.5 block">Total Fees (Full Program)</Label>
-                      <Select value={form.fees || "_none"} onValueChange={v => setForm(f => ({ ...f, fees: v === "_none" ? "" : v }))}>
-                        <SelectTrigger><SelectValue placeholder="Select fee range" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="_none">Select fee range...</SelectItem>
-                          {FEE_RANGES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="text-xs font-semibold mb-1.5 block">Average Package (CTC)</Label>
-                      <Select value={form.placement_avg || "_none"} onValueChange={v => setForm(f => ({ ...f, placement_avg: v === "_none" ? "" : v }))}>
-                        <SelectTrigger><SelectValue placeholder="Select avg package range" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="_none">Select range...</SelectItem>
-                          {AVG_PACKAGE_RANGES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label className="text-xs font-semibold mb-1.5 block">Highest Package</Label>
-                      <Select value={form.placement_highest || "_none"} onValueChange={v => setForm(f => ({ ...f, placement_highest: v === "_none" ? "" : v }))}>
-                        <SelectTrigger><SelectValue placeholder="Select highest package range" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="_none">Select range...</SelectItem>
-                          {HIGHEST_PACKAGE_RANGES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </TabsContent>
-
-                {/* ===== SEO ===== */}
-                <TabsContent value="seo" className="space-y-4 mt-0">
                   <div>
-                    <Label className="text-xs font-semibold mb-1.5 block">Logo URL</Label>
-                    <Input value={form.logo_url} onChange={e => setForm(f => ({ ...f, logo_url: e.target.value }))} placeholder="https://..." />
+                    <Label className="text-xs font-semibold mb-1.5 block">Total Fees (Full Program)</Label>
+                    <Select value={form.fees || "_none"} onValueChange={v => setForm(f => ({ ...f, fees: v === "_none" ? "" : v }))}>
+                      <SelectTrigger><SelectValue placeholder="Select fee range" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="_none">Select fee range...</SelectItem>
+                        {FEE_RANGES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
-                    <Label className="text-xs font-semibold mb-1.5 block">Banner URL</Label>
-                    <Input value={form.banner_url} onChange={e => setForm(f => ({ ...f, banner_url: e.target.value }))} placeholder="https://..." />
+                    <Label className="text-xs font-semibold mb-1.5 block">Average Package (CTC)</Label>
+                    <Select value={form.placement_avg || "_none"} onValueChange={v => setForm(f => ({ ...f, placement_avg: v === "_none" ? "" : v }))}>
+                      <SelectTrigger><SelectValue placeholder="Select avg package range" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="_none">Select range...</SelectItem>
+                        {AVG_PACKAGE_RANGES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div>
-                    <Label className="text-xs font-semibold mb-1.5 block">Meta Title</Label>
-                    <Input value={form.meta_title} onChange={e => setForm(f => ({ ...f, meta_title: e.target.value }))} />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-semibold mb-1.5 block">Meta Description</Label>
-                    <textarea className="w-full border border-border rounded-md p-2 text-sm bg-background min-h-[60px]" value={form.meta_description} onChange={e => setForm(f => ({ ...f, meta_description: e.target.value }))} />
+                    <Label className="text-xs font-semibold mb-1.5 block">Highest Package</Label>
+                    <Select value={form.placement_highest || "_none"} onValueChange={v => setForm(f => ({ ...f, placement_highest: v === "_none" ? "" : v }))}>
+                      <SelectTrigger><SelectValue placeholder="Select highest package range" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="_none">Select range...</SelectItem>
+                        {HIGHEST_PACKAGE_RANGES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </TabsContent>
               </div>
@@ -539,39 +681,49 @@ const AdminShortlisterColleges = () => {
                 <TableHead className="text-xs">Category</TableHead>
                 <TableHead className="text-xs">Tier</TableHead>
                 <TableHead className="text-xs">City</TableHead>
-                <TableHead className="text-xs">Rank</TableHead>
                 <TableHead className="text-xs">Fees</TableHead>
                 <TableHead className="text-xs">Avg CTC</TableHead>
+                <TableHead className="text-xs">Score</TableHead>
                 <TableHead className="text-xs text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map(c => (
-                <TableRow key={c.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {c.logo_url ? <img src={c.logo_url} className="w-7 h-7 rounded object-contain" alt="" /> : <Building2 className="w-4 h-4 text-muted-foreground" />}
-                      <span className="font-medium text-xs">{c.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={c.college_category === "IIM" ? "default" : "outline"} className="text-[10px]">
-                      {c.college_category || "—"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="text-[10px]">{c.tier || "—"}</Badge>
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{c.city || "—"}</TableCell>
-                  <TableCell className="text-xs">{c.ranking || "—"}</TableCell>
-                  <TableCell className="text-xs">{c.fees || "—"}</TableCell>
-                  <TableCell className="text-xs">{c.placement_avg || "—"}</TableCell>
-                  <TableCell className="text-right space-x-1">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(c)}><Pencil className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(c.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {filtered.map(c => {
+                const score = calculateDifficultyScore({
+                  tier: c.tier, ranking: c.ranking?.toString() || "",
+                  placement_avg: c.placement_avg || "", fees: c.fees || "",
+                  accreditations: c.accreditations || [], college_category: c.college_category || "Non-IIM"
+                });
+                return (
+                  <TableRow key={c.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {c.logo_url ? <img src={c.logo_url} className="w-7 h-7 rounded object-contain" alt="" /> : <Building2 className="w-4 h-4 text-muted-foreground" />}
+                        <span className="font-medium text-xs">{c.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={c.college_category === "IIM" ? "default" : "outline"} className="text-[10px]">
+                        {c.college_category || "—"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-[10px]">{c.tier || "—"}</Badge>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{c.city || "—"}</TableCell>
+                    <TableCell className="text-xs">{c.fees || "—"}</TableCell>
+                    <TableCell className="text-xs">{c.placement_avg || "—"}</TableCell>
+                    <TableCell>
+                      <span className={`text-xs font-bold ${getScoreColor(score)}`}>{score}</span>
+                      <span className="text-[9px] text-muted-foreground ml-0.5">/ 100</span>
+                    </TableCell>
+                    <TableCell className="text-right space-x-1">
+                      <Button variant="ghost" size="sm" onClick={() => handleEdit(c)}><Pencil className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(c.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
               {filtered.length === 0 && (
                 <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No colleges found. Add your first college above.</TableCell></TableRow>
               )}
