@@ -5,7 +5,7 @@ import {
   GraduationCap, Target, Shield, Star, TrendingUp, IndianRupee, MapPin,
   ChevronRight, Sparkles, BookOpen, Briefcase, User, Lock, ArrowRight,
   CheckCircle2, BarChart3, Building2, Zap, Award, ChevronDown, Rocket,
-  LayoutGrid, List, Table2, ArrowUpDown, Filter, Eye, Trophy, Globe
+  LayoutGrid, List, Table2, ArrowUpDown, Filter, Eye, Trophy, Globe, Gauge
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
