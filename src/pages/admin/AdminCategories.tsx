@@ -59,7 +59,12 @@ const AdminCategories = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this category?")) return;
+    const item = categories.find(c => c.id === id);
     await supabase.from("categories").delete().eq("id", id);
+    if (item) {
+      const { cleanupDeletedPage } = await import("@/lib/adminCleanup");
+      await cleanupDeletedPage({ contentType: "category", id, slug: item.slug, name: item.name });
+    }
     fetchCategories();
     toast({ title: "Category deleted" });
   };

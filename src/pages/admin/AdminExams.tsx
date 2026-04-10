@@ -79,7 +79,12 @@ const AdminExams = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this exam?")) return;
+    const item = exams.find(e => e.id === id);
     await supabase.from("exams").delete().eq("id", id);
+    if (item) {
+      const { cleanupDeletedPage } = await import("@/lib/adminCleanup");
+      await cleanupDeletedPage({ contentType: "exam", id, slug: item.slug, name: item.name });
+    }
     fetchExams(); toast({ title: "Exam deleted" });
   };
 

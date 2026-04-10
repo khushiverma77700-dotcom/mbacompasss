@@ -147,7 +147,12 @@ const AdminCityPages = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this page?")) return;
+    const item = pages.find(p => p.id === id);
     await supabase.from("city_pages").delete().eq("id", id);
+    if (item) {
+      const { cleanupDeletedPage } = await import("@/lib/adminCleanup");
+      await cleanupDeletedPage({ contentType: "cityPage", id, slug: item.slug, name: item.name });
+    }
     toast.success("Deleted");
     fetchPages();
   };

@@ -116,7 +116,12 @@ const AdminColleges = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Delete this college?")) return;
+    const item = colleges.find(c => c.id === id);
     await supabase.from("colleges").delete().eq("id", id);
+    if (item) {
+      const { cleanupDeletedPage } = await import("@/lib/adminCleanup");
+      await cleanupDeletedPage({ contentType: "college", id, slug: item.slug, name: item.name });
+    }
     fetchColleges(); toast({ title: "College deleted" });
   };
 
