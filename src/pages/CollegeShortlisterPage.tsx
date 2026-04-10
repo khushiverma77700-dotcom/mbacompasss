@@ -49,10 +49,19 @@ const MAT_SCORE_RANGES = [
 ];
 
 const BENEFITS = [
-  { icon: Zap, title: "AI-Powered Analysis", desc: "Advanced scoring using real college data, cutoffs & placements", color: "from-blue-500 to-cyan-500" },
-  { icon: Target, title: "Personalized Results", desc: "Dream, Target & Safe colleges matched to YOUR exact profile", color: "from-amber-500 to-orange-500" },
-  { icon: TrendingUp, title: "ROI Intelligence", desc: "Compare fees vs placement returns to maximize your investment", color: "from-emerald-500 to-green-500" },
-  { icon: Rocket, title: "Strategy & Tips", desc: "AI mentor advice on applications, WAT/PI prep & backup plans", color: "from-purple-500 to-pink-500" },
+  { icon: Zap, title: "AI-Powered Analysis", desc: "Advanced scoring using real college data, cutoffs & placements from 100+ MBA colleges", color: "from-blue-500 to-cyan-500", stat: "100+" },
+  { icon: Target, title: "Personalized Results", desc: "Dream, Target & Safe colleges matched to YOUR exact academic & exam profile", color: "from-amber-500 to-orange-500", stat: "3 Buckets" },
+  { icon: TrendingUp, title: "ROI Intelligence", desc: "Compare fees vs placement returns. See which college gives best bang for your buck", color: "from-emerald-500 to-green-500", stat: "ROI Score" },
+  { icon: Gauge, title: "Score Comparison", desc: "See your score vs college requirements — know exactly where you stand", color: "from-rose-500 to-pink-500", stat: "Live Score" },
+  { icon: Brain, title: "Improvement Areas", desc: "Get specific tips on what to improve — academics, exam score, or experience", color: "from-violet-500 to-purple-500", stat: "AI Tips" },
+  { icon: Rocket, title: "Strategy & Action Plan", desc: "AI mentor advice on applications, WAT/PI prep, timeline & backup plans", color: "from-purple-500 to-pink-500", stat: "Mentor" },
+];
+
+const STATS_COUNTER = [
+  { value: "25,000+", label: "Students Helped", icon: User },
+  { value: "100+", label: "MBA Colleges", icon: Building2 },
+  { value: "7", label: "Exams Supported", icon: BookOpen },
+  { value: "30s", label: "Result Time", icon: Zap },
 ];
 
 const FAQS = [
@@ -61,6 +70,7 @@ const FAQS = [
   { q: "Is my data safe?", a: "Yes. Your profile data is only used for generating recommendations and is not shared with any third party." },
   { q: "Can I use this for GMAT-based admissions?", a: "Yes! The simulator supports CAT, XAT, NMAT, SNAP, GMAT, MAT, and CMAT." },
   { q: "What do Dream, Target, and Safe mean?", a: "Dream colleges (20-40% chance) are aspirational. Target (40-70%) are competitive but within reach. Safe (70-90%) strongly align with your profile." },
+  { q: "Do I need to sign up to use this tool?", a: "You can fill in your profile without signing up. However, to view your personalized results and AI insights, you'll need to create a free account." },
 ];
 
 const AI_TOOLS = [
