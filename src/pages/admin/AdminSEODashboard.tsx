@@ -2133,6 +2133,64 @@ const AdminSEODashboard = () => {
           </div>
         )}
 
+        {/* ═══ REMOVED LINKS ═══ */}
+        {activeTab === "removed-links" && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trash2 className="h-5 w-5 text-destructive" /> Removed Links
+                </CardTitle>
+                <CardDescription>Pages deleted from admin are tracked here. Permanently remove them when ready.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {removedLinksLoading ? (
+                  <div className="flex items-center justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+                ) : removedLinks.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Trash2 className="h-12 w-12 mx-auto mb-4 opacity-20" />
+                    <p className="text-lg font-semibold">No Removed Links</p>
+                    <p className="text-sm">When you delete pages from admin, they will appear here automatically.</p>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Page</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>URL</TableHead>
+                        <TableHead>Deleted At</TableHead>
+                        <TableHead>Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {removedLinks.map((link, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell className="font-medium">{link.label}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-xs capitalize">{link.type}</Badge>
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground max-w-[250px] truncate">{link.url}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{new Date(link.deletedAt).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handlePermanentDelete(link.url)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* ═══ INTERLINK STUDIO ═══ */}
         {activeTab === "interlinks" && (
           <div className="space-y-6">
