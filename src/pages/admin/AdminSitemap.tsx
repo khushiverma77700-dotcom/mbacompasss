@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import STATIC_PAGES_CONFIG from "@/data/staticPages";
 
 const SITE_URL = "https://bschoolbuzz.com";
-const LIVE_SITEMAP_URL = `${SITE_URL}/sitemap.xml`;
+const LIVE_SITEMAP_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/serve-sitemap`;
 const EXCLUDED_SITEMAP_PATHS = new Set(["/auth", "/dashboard"]);
 const DEFAULT_PRIORITY = 0.8;
 
@@ -132,19 +132,19 @@ const AdminSitemap = () => {
           <CardContent className="space-y-4">
             <div className="bg-muted/50 rounded-lg p-4 space-y-3">
               <p className="text-sm text-muted-foreground">
-                <strong>Step 1:</strong> Click "Generate Sitemap Preview" above to review the latest sitemap XML.
+                <strong>Step 1:</strong> Click "Generate Sitemap Preview" to review the latest sitemap XML locally.
               </p>
               <p className="text-sm text-muted-foreground">
-                <strong>Step 2:</strong> Publish the app so the live <code className="text-xs">/sitemap.xml</code> file updates on your domain root.
+                <strong>Step 2:</strong> The live sitemap URL below is always up-to-date — any new page you add is automatically included.
               </p>
               <p className="text-sm text-muted-foreground">
-                <strong>Step 3:</strong> Go to Google Search Console and submit the sitemap URL:
+                <strong>Step 3:</strong> Copy the live sitemap URL below and submit it in Google Search Console:
               </p>
               <div className="flex items-center gap-2 bg-background border border-border rounded-md px-3 py-2">
                 <code className="text-sm text-primary flex-1 break-all">{LIVE_SITEMAP_URL}</code>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Submit your domain sitemap URL in Google Search Console.
+                This is a <strong>live dynamic URL</strong> — it always returns the latest sitemap XML with all pages from your database. No manual refresh needed for Google.
               </p>
             </div>
             <a
