@@ -140,7 +140,12 @@ const ExamDetailPage = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
-            <Card>
+            <AIGistSection
+              content={exam.rawDescription || exam.description || exam.name}
+              pageType="exam"
+              onScrollToContent={() => document.getElementById("exam-content")?.scrollIntoView({ behavior: "smooth" })}
+            />
+            <Card id="exam-content">
               <CardHeader><CardTitle className="font-heading">About {exam.name}</CardTitle></CardHeader>
               <CardContent>
                 {exam.rawDescription?.includes("<") ? (
