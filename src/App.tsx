@@ -67,6 +67,7 @@ const AdminStaticPageSEO = lazy(() => import("./pages/admin/AdminStaticPageSEO")
 const AdminAllLeads = lazy(() => import("./pages/admin/AdminAllLeads"));
 const AdminBusinessInquiries = lazy(() => import("./pages/admin/AdminBusinessInquiries"));
 const AdminShortlisterColleges = lazy(() => import("./pages/admin/AdminShortlisterColleges"));
+const AdminCallbacks = lazy(() => import("./pages/admin/AdminCallbacks"));
 
 // Lazy load heavy popups
 const OnboardingDialog = lazy(() => import("@/components/OnboardingDialog"));
@@ -210,6 +211,7 @@ const App = () => (
               <Route path="all-leads-unified" element={<LazyPage><AdminAllLeads /></LazyPage>} />
               <Route path="business-inquiries" element={<LazyPage><AdminBusinessInquiries /></LazyPage>} />
               <Route path="shortlister-colleges" element={<LazyPage><AdminShortlisterColleges /></LazyPage>} />
+              <Route path="callbacks" element={<LazyPage><AdminCallbacks /></LazyPage>} />
             </Route>
 
             {/* Eagerly loaded — no spinner */}

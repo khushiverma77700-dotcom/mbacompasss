@@ -1,11 +1,13 @@
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp, Sparkles, ShieldCheck, Lock, Briefcase, Target } from "lucide-react";
-import { useState } from "react";
+import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp, Sparkles, ShieldCheck, Lock, Briefcase, Target, PhoneCall } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const adminNav = [
   { label: "Dashboard", path: "/admin", icon: LayoutDashboard },
   { label: "Site Settings", path: "/admin/site-settings", icon: Settings },
+  { label: "Callback Requests", path: "/admin/callbacks", icon: PhoneCall, showDot: true },
   { label: "Institutes", path: "/admin/institutes", icon: Building2 },
   { label: "Courses", path: "/admin/courses", icon: BookOpen },
   { label: "Colleges", path: "/admin/colleges", icon: GraduationCap },
@@ -40,6 +42,24 @@ const AdminLayout = () => {
   const { user, isAdmin, allowedSections, loading } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [unreadCallbacks, setUnreadCallbacks] = useState(0);
+
+  useEffect(() => {
+    if (!user || !isAdmin) return;
+    const fetchUnread = async () => {
+      const { count } = await supabase.from("inquiries").select("*", { count: "exact", head: true }).eq("type", "general").eq("read", false);
+      setUnreadCallbacks(count || 0);
+    };
+    fetchUnread();
+
+    // Subscribe to realtime changes
+    const channel = supabase
+      .channel("callback-unread")
+      .on("postgres_changes", { event: "*", schema: "public", table: "inquiries" }, () => { fetchUnread(); })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user, isAdmin]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
   if (!user || !isAdmin) return <Navigate to="/auth" replace />;
@@ -75,7 +95,13 @@ const AdminLayout = () => {
             }`}
           >
             <item.icon className="w-4 h-4" />
-            {item.label}
+            <span className="flex-1">{item.label}</span>
+            {(item as any).showDot && unreadCallbacks > 0 && (
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-destructive" />
+              </span>
+            )}
           </Link>
         ))}
       </nav>

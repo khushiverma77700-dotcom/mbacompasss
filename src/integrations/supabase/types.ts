@@ -882,6 +882,7 @@ export type Database = {
           message: string | null
           name: string
           phone: string | null
+          read: boolean
           type: string | null
         }
         Insert: {
@@ -892,6 +893,7 @@ export type Database = {
           message?: string | null
           name: string
           phone?: string | null
+          read?: boolean
           type?: string | null
         }
         Update: {
@@ -902,6 +904,7 @@ export type Database = {
           message?: string | null
           name?: string
           phone?: string | null
+          read?: boolean
           type?: string | null
         }
         Relationships: [
