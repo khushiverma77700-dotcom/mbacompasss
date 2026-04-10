@@ -1597,7 +1597,9 @@ const ProfileAnalyzerPage = () => {
             {/* Header */}
             <div className="text-center space-y-4">
               <Badge className="text-sm"><CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Full Report Unlocked</Badge>
-              <h2 className="text-3xl md:text-4xl font-bold">Your Complete MBA Roadmap</h2>
+              <h2 className="text-3xl md:text-4xl font-bold">
+                {form.name ? `${form.name.split(" ")[0]}'s Complete MBA Roadmap` : "Your Complete MBA Roadmap"}
+              </h2>
               <p className="text-muted-foreground max-w-3xl mx-auto">{result.ai_summary}</p>
 
               {/* Main score + breakdown */}
