@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import SEOHead, { generateArticleSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import AIGistSection from "@/components/AIGistSection";
+import InlineAIToolCTA from "@/components/InlineAIToolCTA";
 
 const ArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -198,6 +199,8 @@ const ArticlePage = () => {
                 <p className="text-muted-foreground text-center py-10">Full article content coming soon.</p>
               )}
             </div>
+
+            <InlineAIToolCTA variant="profile-analyzer" />
 
             {/* Tags */}
             <div className="mt-8 p-6 bg-card rounded-2xl border border-border">

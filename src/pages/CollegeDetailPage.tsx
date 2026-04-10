@@ -17,6 +17,7 @@ import SEOHead, { generateCollegeSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 import AIGistSection from "@/components/AIGistSection";
+import InlineAIToolCTA from "@/components/InlineAIToolCTA";
 
 // ── Fallback data used when no DB sections exist ──
 const fallbackRatingAspects = [

@@ -19,6 +19,7 @@ import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 import AIGistSection from "@/components/AIGistSection";
+import InlineAIToolCTA from "@/components/InlineAIToolCTA";
 
 const testimonials = [
   { name: "Ankit Verma", text: "IMS coaching transformed my CAT prep. Scored 99.2 percentile. The faculty's approach to Quant was game-changing.", rating: 5, batch: "CAT 2024", type: "text" },
