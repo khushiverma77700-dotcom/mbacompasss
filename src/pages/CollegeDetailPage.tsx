@@ -16,6 +16,7 @@ import { useQuery } from "@tanstack/react-query";
 import SEOHead, { generateCollegeSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
+import AIGistSection from "@/components/AIGistSection";
 
 // ── Fallback data used when no DB sections exist ──
 const fallbackRatingAspects = [
@@ -325,6 +326,12 @@ const CollegeDetailPage = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        <AIGistSection
+          content={college.description || college.name}
+          pageType="college"
+          pageId={college.id}
+          onScrollToContent={() => sectionRefs.current["overview"]?.scrollIntoView({ behavior: "smooth" })}
+        />
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
 

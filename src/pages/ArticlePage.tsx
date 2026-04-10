@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import SEOHead, { generateArticleSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
+import AIGistSection from "@/components/AIGistSection";
 
 const ArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -179,13 +180,20 @@ const ArticlePage = () => {
               </motion.div>
             )}
 
+            <AIGistSection
+              content={article.content || article.excerpt || ""}
+              pageType="article"
+              pageId={article.id}
+              onScrollToContent={() => document.getElementById("article-content")?.scrollIntoView({ behavior: "smooth" })}
+            />
+
             {article.excerpt && (
               <div className="bg-primary/5 border-l-4 border-primary rounded-r-2xl p-5 mb-8">
                 <p className="text-foreground font-medium italic text-base leading-relaxed">{article.excerpt}</p>
               </div>
             )}
 
-            <div className="bg-card rounded-2xl border border-border p-6 md:p-10 shadow-sm">
+            <div id="article-content" className="bg-card rounded-2xl border border-border p-6 md:p-10 shadow-sm">
               {article.content ? renderContent(article.content) : (
                 <p className="text-muted-foreground text-center py-10">Full article content coming soon.</p>
               )}
