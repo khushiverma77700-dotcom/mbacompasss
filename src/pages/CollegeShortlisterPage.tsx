@@ -26,6 +26,7 @@ import ReactMarkdown from "react-markdown";
 import PageKeywords from "@/components/PageKeywords";
 
 const EXAMS = ["CAT", "XAT", "NMAT", "SNAP", "GMAT", "MAT", "CMAT"];
+const SCORE_EXAMS = ["CAT", "XAT", "NMAT", "SNAP"]; // Exams that need individual scores
 const STREAMS = ["Engineering", "Commerce", "Science", "Arts/Humanities", "BBA/BMS", "Economics", "Law", "Medical", "Other"];
 const SPECIALIZATIONS = ["Finance", "Marketing", "Operations", "HR", "IT/Analytics", "General Management", "Consulting", "Entrepreneurship", "Open to All"];
 const STATES = ["Pan India", "Maharashtra", "Delhi", "Karnataka", "Tamil Nadu", "Telangana", "West Bengal", "Gujarat", "Rajasthan", "Uttar Pradesh", "Madhya Pradesh", "Punjab", "Haryana", "Kerala", "Odisha", "Jharkhand", "Andhra Pradesh"];
@@ -55,6 +56,7 @@ interface CollegeResult {
   id: string; name: string; slug: string; city: string | null; state: string | null;
   fees: string | null; feesNum: number; placement_avg: string | null; placement_highest: string | null;
   avgPkgNum: number; highestPkgNum: number; ranking: number | null; type: string | null;
+  tier: string | null; college_category: string | null;
   established: number | null; logo_url: string | null; chancePercent: number;
   bucket: "dream" | "target" | "safe"; whyFit: string; tips: string;
   compositeScore: number; accreditations: string[] | null; exams_accepted: string[] | null;
@@ -64,8 +66,10 @@ interface CollegeResult {
 
 interface FormData {
   exams: string[]; scoreType: "percentile" | "score"; overallScore: string;
+  examScores: Record<string, string>;
   sectionalVARC: string; sectionalDILR: string; sectionalQuant: string;
   tenth: string; twelfth: string; graduation: string; graduationStream: string;
+  graduationPursuing: boolean;
   workExperienceMonths: string; gender: string;
   budgetRange: [number, number]; expectedSalaryRange: [number, number];
   preferredStates: string[]; preferredColleges: string;
@@ -74,8 +78,10 @@ interface FormData {
 
 const initialForm: FormData = {
   exams: [], scoreType: "percentile", overallScore: "",
+  examScores: {},
   sectionalVARC: "", sectionalDILR: "", sectionalQuant: "",
   tenth: "", twelfth: "", graduation: "", graduationStream: "",
+  graduationPursuing: false,
   workExperienceMonths: "", gender: "",
   budgetRange: [200000, 2500000], expectedSalaryRange: [500000, 3000000],
   preferredStates: [], preferredColleges: "",
@@ -83,9 +89,9 @@ const initialForm: FormData = {
 };
 
 const bucketConfig = {
-  dream: { label: "Dream Colleges", desc: "Aspirational picks — aim high!", icon: Star, color: "text-amber-500", gradient: "from-amber-500 to-orange-500", bg: "bg-amber-50 dark:bg-amber-950/30", border: "border-amber-200 dark:border-amber-800", badge: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300", chance: "20-40%", ring: "ring-amber-500/20" },
-  target: { label: "Target Colleges", desc: "Competitive but within reach", icon: Target, color: "text-blue-500", gradient: "from-blue-500 to-indigo-500", bg: "bg-blue-50 dark:bg-blue-950/30", border: "border-blue-200 dark:border-blue-800", badge: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300", chance: "40-70%", ring: "ring-blue-500/20" },
-  safe: { label: "Safe Colleges", desc: "Strong profile match", icon: Shield, color: "text-emerald-500", gradient: "from-emerald-500 to-green-500", bg: "bg-emerald-50 dark:bg-emerald-950/30", border: "border-emerald-200 dark:border-emerald-800", badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300", chance: "70-90%", ring: "ring-emerald-500/20" },
+  dream: { label: "Dream Colleges", desc: "Aspirational — aim high!", icon: Star, color: "text-amber-500", gradient: "from-amber-500 to-orange-500", bg: "bg-amber-50 dark:bg-amber-950/30", border: "border-amber-200 dark:border-amber-800", badge: "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300", chance: "20-40%", ring: "ring-amber-500/20", progressColor: "bg-amber-500" },
+  target: { label: "Target Colleges", desc: "Competitive but within reach", icon: Target, color: "text-blue-500", gradient: "from-blue-500 to-indigo-500", bg: "bg-blue-50 dark:bg-blue-950/30", border: "border-blue-200 dark:border-blue-800", badge: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300", chance: "40-70%", ring: "ring-blue-500/20", progressColor: "bg-blue-500" },
+  safe: { label: "Safe Colleges", desc: "Strong profile match", icon: Shield, color: "text-emerald-500", gradient: "from-emerald-500 to-green-500", bg: "bg-emerald-50 dark:bg-emerald-950/30", border: "border-emerald-200 dark:border-emerald-800", badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300", chance: "70-90%", ring: "ring-emerald-500/20", progressColor: "bg-emerald-500" },
 };
 
 const badgeColors: Record<string, string> = {
@@ -123,6 +129,10 @@ const CollegeShortlisterPage = () => {
     }));
   };
 
+  const updateExamScore = (exam: string, value: string) => {
+    setForm(prev => ({ ...prev, examScores: { ...prev.examScores, [exam]: value } }));
+  };
+
   const toggleState = (state: string) => {
     if (state === "Pan India") {
       setForm(prev => ({ ...prev, preferredStates: prev.preferredStates.includes("Pan India") ? [] : ["Pan India"] }));
@@ -143,13 +153,24 @@ const CollegeShortlisterPage = () => {
     }));
   };
 
+  // Which exams need individual scores
+  const scoreExamsSelected = form.exams.filter(e => SCORE_EXAMS.includes(e));
+  const needsPerExamScores = scoreExamsSelected.length > 1;
+
   const validateStep = (s: number): boolean => {
     if (s === 1) {
       if (form.exams.length === 0) { toast({ title: "Select at least one exam", variant: "destructive" }); return false; }
-      if (!form.overallScore || parseFloat(form.overallScore) <= 0) { toast({ title: "Enter your score/percentile", variant: "destructive" }); return false; }
+      if (!needsPerExamScores && (!form.overallScore || parseFloat(form.overallScore) <= 0)) {
+        toast({ title: "Enter your score/percentile", variant: "destructive" }); return false;
+      }
+      if (needsPerExamScores) {
+        const hasAtLeastOne = scoreExamsSelected.some(e => form.examScores[e] && parseFloat(form.examScores[e]) > 0);
+        if (!hasAtLeastOne) { toast({ title: "Enter at least one exam score", variant: "destructive" }); return false; }
+      }
     }
     if (s === 2) {
-      if (!form.tenth || !form.twelfth || !form.graduation) { toast({ title: "Enter all academic scores", variant: "destructive" }); return false; }
+      if (!form.tenth || !form.twelfth) { toast({ title: "Enter 10th and 12th scores", variant: "destructive" }); return false; }
+      if (!form.graduation) { toast({ title: "Enter graduation percentage", variant: "destructive" }); return false; }
       if (!form.graduationStream) { toast({ title: "Select graduation stream", variant: "destructive" }); return false; }
     }
     return true;
@@ -160,10 +181,24 @@ const CollegeShortlisterPage = () => {
     setStep(4);
     setLoading(true);
     try {
+      // Calculate best overall score from per-exam scores
+      let bestScore = parseFloat(form.overallScore) || 0;
+      const examScoresNumeric: Record<string, number> = {};
+      if (needsPerExamScores) {
+        for (const exam of scoreExamsSelected) {
+          const val = parseFloat(form.examScores[exam] || "0");
+          if (val > 0) {
+            examScoresNumeric[exam] = val;
+            if (val > bestScore) bestScore = val;
+          }
+        }
+      }
+
       const payload = {
         exams: form.exams,
         scoreType: form.scoreType,
-        overallScore: parseFloat(form.overallScore),
+        overallScore: bestScore,
+        examScores: Object.keys(examScoresNumeric).length > 0 ? examScoresNumeric : undefined,
         sectionalScores: form.sectionalVARC ? {
           varc: parseFloat(form.sectionalVARC) || 0,
           dilr: parseFloat(form.sectionalDILR) || 0,
@@ -173,6 +208,7 @@ const CollegeShortlisterPage = () => {
         twelfth: parseFloat(form.twelfth),
         graduation: parseFloat(form.graduation),
         graduationStream: form.graduationStream,
+        graduationPursuing: form.graduationPursuing,
         workExperienceMonths: parseInt(form.workExperienceMonths) || 0,
         gender: form.gender || undefined,
         budgetMin: form.budgetRange[0],
@@ -212,7 +248,6 @@ const CollegeShortlisterPage = () => {
   const formatBudget = (val: number) => val >= 10000000 ? `₹${(val / 10000000).toFixed(1)}Cr` : `₹${(val / 100000).toFixed(0)}L`;
   const formatSalary = (val: number) => val >= 10000000 ? `₹${(val / 10000000).toFixed(1)}Cr` : `₹${(val / 100000).toFixed(0)}L`;
 
-  // Sorted/filtered table data
   const tableData = useMemo(() => {
     let data = [...results];
     if (tableFilter.bucket !== "all") data = data.filter(r => r.bucket === tableFilter.bucket);
@@ -249,12 +284,10 @@ const CollegeShortlisterPage = () => {
           <div className="absolute inset-0 hero-gradient" />
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiLz48L3N2Zz4=')] opacity-40 pointer-events-none" />
           <div className="absolute w-72 h-72 -top-20 -right-20 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '5s' }} />
-          <div className="absolute w-96 h-96 -bottom-32 -left-32 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '7s', animationDelay: '2s' }} />
 
           <div className="relative container mx-auto px-4 py-16 md:py-24 z-10">
             <div className="max-w-4xl mx-auto">
               <div className="grid lg:grid-cols-2 gap-12 items-center">
-                {/* Left: Text */}
                 <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
                   <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md rounded-full px-4 py-1.5 mb-6 border border-white/20">
                     <Sparkles className="w-4 h-4 text-yellow-300" />
@@ -268,19 +301,11 @@ const CollegeShortlisterPage = () => {
                     Get your Dream, Target & Safe colleges shortlisted in 30 seconds using AI — like having a personal mentor.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <Button
-                      size="lg"
-                      className="bg-white text-primary hover:bg-white/90 font-bold text-lg px-8 py-6 rounded-xl shadow-xl hover:shadow-2xl transition-all hover:-translate-y-0.5"
-                      onClick={() => setStep(1)}
-                    >
+                    <Button size="lg" className="bg-white text-primary hover:bg-white/90 font-bold text-lg px-8 py-6 rounded-xl shadow-xl" onClick={() => setStep(1)}>
                       Start Shortlisting <ArrowRight className="ml-2 w-5 h-5" />
                     </Button>
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="border-white/30 text-primary-foreground hover:bg-white/10 font-semibold px-6 py-6 rounded-xl backdrop-blur-sm"
-                      onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}
-                    >
+                    <Button size="lg" variant="outline" className="border-white/30 text-primary-foreground hover:bg-white/10 font-semibold px-6 py-6 rounded-xl"
+                      onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}>
                       See How It Works
                     </Button>
                   </div>
@@ -299,20 +324,14 @@ const CollegeShortlisterPage = () => {
                   </div>
                 </motion.div>
 
-                {/* Right: Preview Cards */}
                 <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="hidden lg:block">
                   <div className="space-y-3">
-                    {(["safe", "target", "dream"] as const).map((bucket, i) => {
+                    {(["dream", "target", "safe"] as const).map((bucket, i) => {
                       const cfg = bucketConfig[bucket];
                       const Icon = cfg.icon;
                       return (
-                        <motion.div
-                          key={bucket}
-                          initial={{ opacity: 0, x: 20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: 0.4 + i * 0.15 }}
-                          className={`bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/15 hover:bg-white/15 transition-all`}
-                        >
+                        <motion.div key={bucket} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 + i * 0.15 }}
+                          className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/15 hover:bg-white/15 transition-all">
                           <div className="flex items-center gap-3">
                             <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${cfg.gradient} flex items-center justify-center shadow-lg`}>
                               <Icon className="w-5 h-5 text-white" />
@@ -332,7 +351,6 @@ const CollegeShortlisterPage = () => {
             </div>
           </div>
 
-          {/* Bottom wave */}
           <div className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none">
             <svg viewBox="0 0 1440 60" fill="none" className="w-full h-full" preserveAspectRatio="none">
               <path d="M0,30 C240,60 480,0 720,30 C960,60 1200,0 1440,30 L1440,60 L0,60 Z" fill="hsl(var(--background))" />
@@ -434,7 +452,7 @@ const CollegeShortlisterPage = () => {
           </div>
         </section>
 
-        {/* Trust / Testimonials */}
+        {/* Testimonials */}
         <section className="bg-muted/40 py-16">
           <div className="container mx-auto px-4 max-w-4xl">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-10">
@@ -481,7 +499,7 @@ const CollegeShortlisterPage = () => {
           <div className="container mx-auto px-4 text-center">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}>
               <h2 className="text-2xl font-heading font-bold text-foreground mb-4">Ready to Find Your Best-Fit Colleges?</h2>
-              <Button size="lg" className="font-bold text-lg px-10 py-6 rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all" onClick={() => setStep(1)}>
+              <Button size="lg" className="font-bold text-lg px-10 py-6 rounded-xl shadow-lg" onClick={() => setStep(1)}>
                 Start Free Shortlisting <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
               <p className="text-muted-foreground text-sm mt-3">No signup required • Results in 30 seconds</p>
@@ -533,31 +551,72 @@ const CollegeShortlisterPage = () => {
                       <label className="text-sm font-medium text-foreground mb-2.5 block">Which exams are you targeting? <span className="text-destructive">*</span> <span className="text-muted-foreground font-normal">(multi-select)</span></label>
                       <div className="grid grid-cols-4 gap-2">
                         {EXAMS.map(exam => (
-                          <button
-                            key={exam}
-                            onClick={() => toggleExam(exam)}
-                            className={`px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${form.exams.includes(exam) ? "bg-primary text-primary-foreground border-primary shadow-md scale-[1.02]" : "border-border hover:border-primary/50 hover:bg-muted/50 text-foreground"}`}
-                          >
+                          <button key={exam} onClick={() => toggleExam(exam)}
+                            className={`px-3 py-2.5 rounded-xl border text-sm font-medium transition-all duration-200 ${form.exams.includes(exam) ? "bg-primary text-primary-foreground border-primary shadow-md scale-[1.02]" : "border-border hover:border-primary/50 hover:bg-muted/50 text-foreground"}`}>
                             {exam}
                           </button>
                         ))}
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-sm font-medium text-foreground mb-2 block">Score Type</label>
-                        <Select value={form.scoreType} onValueChange={(v) => updateField("scoreType", v as "percentile" | "score")}>
-                          <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="percentile">Percentile</SelectItem>
-                            <SelectItem value="score">Raw Score</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    <div>
+                      <label className="text-sm font-medium text-foreground mb-2 block">Score Type</label>
+                      <Select value={form.scoreType} onValueChange={(v) => updateField("scoreType", v as "percentile" | "score")}>
+                        <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="percentile">Percentile (Expected/Actual)</SelectItem>
+                          <SelectItem value="score">Raw Score</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Per-exam scores when multiple exams selected */}
+                    {needsPerExamScores ? (
                       <div>
                         <label className="text-sm font-medium text-foreground mb-2 block">
-                          Overall {form.scoreType === "percentile" ? "Percentile" : "Score"} <span className="text-destructive">*</span>
+                          Enter {form.scoreType === "percentile" ? "Expected/Actual Percentile" : "Score"} for each exam <span className="text-destructive">*</span>
+                        </label>
+                        <p className="text-xs text-muted-foreground mb-3">Fill in scores for exams you've appeared for or expect to appear</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          {scoreExamsSelected.map(exam => (
+                            <div key={exam}>
+                              <label className="text-xs font-medium text-muted-foreground mb-1 block">{exam}</label>
+                              <Input
+                                type="number"
+                                placeholder={form.scoreType === "percentile" ? `${exam} percentile` : `${exam} score`}
+                                value={form.examScores[exam] || ""}
+                                onChange={e => updateExamScore(exam, e.target.value)}
+                                max={form.scoreType === "percentile" ? 100 : undefined}
+                                className="rounded-xl"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        {/* Also show exams that aren't in SCORE_EXAMS */}
+                        {form.exams.filter(e => !SCORE_EXAMS.includes(e)).length > 0 && (
+                          <div className="mt-3">
+                            <label className="text-xs font-medium text-muted-foreground mb-1 block">Other Exams</label>
+                            <div className="grid grid-cols-2 gap-3">
+                              {form.exams.filter(e => !SCORE_EXAMS.includes(e)).map(exam => (
+                                <div key={exam}>
+                                  <label className="text-xs font-medium text-muted-foreground mb-1 block">{exam}</label>
+                                  <Input
+                                    type="number"
+                                    placeholder={`${exam} score`}
+                                    value={form.examScores[exam] || ""}
+                                    onChange={e => updateExamScore(exam, e.target.value)}
+                                    className="rounded-xl"
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">
+                          {form.exams.length > 0 ? form.exams[0] : "Overall"} {form.scoreType === "percentile" ? "Percentile (Expected/Actual)" : "Score"} <span className="text-destructive">*</span>
                         </label>
                         <Input
                           type="number"
@@ -567,11 +626,12 @@ const CollegeShortlisterPage = () => {
                           max={form.scoreType === "percentile" ? 100 : undefined}
                           className="rounded-xl"
                         />
+                        <p className="text-xs text-muted-foreground mt-1">Enter expected score if you haven't given the exam yet</p>
                       </div>
-                    </div>
+                    )}
 
                     <div>
-                      <label className="text-sm font-medium text-muted-foreground mb-2 block">Sectional Scores <span className="text-xs">(optional — improves accuracy)</span></label>
+                      <label className="text-sm font-medium text-muted-foreground mb-2 block">Sectional Scores <span className="text-xs">(optional — improves accuracy for CAT)</span></label>
                       <div className="grid grid-cols-3 gap-3">
                         <Input placeholder="VARC" type="number" value={form.sectionalVARC} onChange={e => updateField("sectionalVARC", e.target.value)} className="rounded-xl" />
                         <Input placeholder="DILR" type="number" value={form.sectionalDILR} onChange={e => updateField("sectionalDILR", e.target.value)} className="rounded-xl" />
@@ -593,17 +653,39 @@ const CollegeShortlisterPage = () => {
                     <p className="text-sm text-muted-foreground">Your academic scores and work experience</p>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    <div className="grid grid-cols-3 gap-4">
-                      {[
-                        { label: "10th %", key: "tenth" as const, placeholder: "92" },
-                        { label: "12th %", key: "twelfth" as const, placeholder: "88" },
-                        { label: "Graduation %", key: "graduation" as const, placeholder: "75" },
-                      ].map(f => (
-                        <div key={f.key}>
-                          <label className="text-sm font-medium text-foreground mb-2 block">{f.label} <span className="text-destructive">*</span></label>
-                          <Input type="number" placeholder={f.placeholder} value={form[f.key]} onChange={e => updateField(f.key, e.target.value)} max={100} className="rounded-xl" />
-                        </div>
-                      ))}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">10th % <span className="text-destructive">*</span></label>
+                        <Input type="number" placeholder="92" value={form.tenth} onChange={e => updateField("tenth", e.target.value)} max={100} className="rounded-xl" />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-foreground mb-2 block">12th % <span className="text-destructive">*</span></label>
+                        <Input type="number" placeholder="88" value={form.twelfth} onChange={e => updateField("twelfth", e.target.value)} max={100} className="rounded-xl" />
+                      </div>
+                    </div>
+
+                    {/* Graduation with Pursuing toggle */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-sm font-medium text-foreground">Graduation % <span className="text-destructive">*</span></label>
+                        <button
+                          onClick={() => updateField("graduationPursuing", !form.graduationPursuing)}
+                          className={`text-xs px-3 py-1 rounded-full border transition-all ${form.graduationPursuing ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}
+                        >
+                          {form.graduationPursuing ? "✓ Pursuing" : "Pursuing?"}
+                        </button>
+                      </div>
+                      <Input
+                        type="number"
+                        placeholder={form.graduationPursuing ? "e.g. 78 (till last semester)" : "e.g. 75"}
+                        value={form.graduation}
+                        onChange={e => updateField("graduation", e.target.value)}
+                        max={100}
+                        className="rounded-xl"
+                      />
+                      {form.graduationPursuing && (
+                        <p className="text-xs text-muted-foreground mt-1">Enter your percentage/CGPA average till the last completed semester</p>
+                      )}
                     </div>
 
                     <div>
@@ -650,7 +732,6 @@ const CollegeShortlisterPage = () => {
                     <p className="text-sm text-muted-foreground">Help us narrow down the best colleges for you</p>
                   </CardHeader>
                   <CardContent className="space-y-6">
-                    {/* Fee Range */}
                     <div>
                       <label className="text-sm font-medium text-foreground mb-1 block">
                         Fee Budget: {formatBudget(form.budgetRange[0])} – {formatBudget(form.budgetRange[1])}
@@ -659,7 +740,6 @@ const CollegeShortlisterPage = () => {
                       <div className="flex justify-between text-xs text-muted-foreground mt-1"><span>₹0</span><span>₹60L</span></div>
                     </div>
 
-                    {/* Expected Salary */}
                     <div>
                       <label className="text-sm font-medium text-foreground mb-1 block">
                         Expected Post-MBA Salary: {formatSalary(form.expectedSalaryRange[0])} – {formatSalary(form.expectedSalaryRange[1])}
@@ -668,7 +748,6 @@ const CollegeShortlisterPage = () => {
                       <div className="flex justify-between text-xs text-muted-foreground mt-1"><span>₹3L</span><span>₹50L</span></div>
                     </div>
 
-                    {/* State Preference */}
                     <div>
                       <label className="text-sm font-medium text-foreground mb-2.5 block">State Preference <span className="text-xs text-muted-foreground">(multi-select)</span></label>
                       <div className="flex flex-wrap gap-2">
@@ -681,7 +760,6 @@ const CollegeShortlisterPage = () => {
                       </div>
                     </div>
 
-                    {/* College Tier */}
                     <div>
                       <label className="text-sm font-medium text-foreground mb-2.5 block">College Tier</label>
                       <div className="grid grid-cols-2 gap-2">
@@ -694,7 +772,6 @@ const CollegeShortlisterPage = () => {
                       </div>
                     </div>
 
-                    {/* Specialization */}
                     <div>
                       <label className="text-sm font-medium text-foreground mb-2.5 block">Preferred Specialization</label>
                       <div className="grid grid-cols-3 gap-2">
@@ -707,7 +784,6 @@ const CollegeShortlisterPage = () => {
                       </div>
                     </div>
 
-                    {/* ROI Preference */}
                     <div>
                       <label className="text-sm font-medium text-foreground mb-2.5 block">ROI Preference</label>
                       <div className="grid grid-cols-3 gap-2">
@@ -721,15 +797,9 @@ const CollegeShortlisterPage = () => {
                       </div>
                     </div>
 
-                    {/* Preferred Colleges */}
                     <div>
                       <label className="text-sm font-medium text-foreground mb-2 block">Preferred Colleges <span className="text-xs text-muted-foreground">(optional, comma-separated)</span></label>
-                      <Input
-                        placeholder="e.g. IIM Ahmedabad, XLRI, MDI"
-                        value={form.preferredColleges}
-                        onChange={e => updateField("preferredColleges", e.target.value)}
-                        className="rounded-xl"
-                      />
+                      <Input placeholder="e.g. IIM Ahmedabad, XLRI, MDI" value={form.preferredColleges} onChange={e => updateField("preferredColleges", e.target.value)} className="rounded-xl" />
                     </div>
                   </CardContent>
                 </Card>
@@ -811,21 +881,31 @@ const CollegeShortlisterPage = () => {
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       {college.city && <span className="text-xs text-muted-foreground flex items-center gap-0.5"><MapPin className="w-3 h-3" /> {college.city}{college.state ? `, ${college.state}` : ""}</span>}
                       {college.ranking && <Badge variant="outline" className="text-[10px] px-1.5 py-0">Rank #{college.ranking}</Badge>}
+                      {college.tier && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{college.tier}</Badge>}
                     </div>
-                    {/* Badges */}
                     {college.badges.length > 0 && (
                       <div className="flex gap-1.5 mt-1.5 flex-wrap">
                         {college.badges.map(b => (
                           <Badge key={b} className={`text-[10px] px-2 py-0.5 ${badgeColors[b] || "bg-muted text-foreground"}`}>
-                            {b === "High ROI" || b === "Best ROI" ? <Trophy className="w-3 h-3 mr-0.5" /> : null}{b}
+                            {(b === "High ROI" || b === "Best ROI") && <Trophy className="w-3 h-3 mr-0.5" />}{b}
                           </Badge>
                         ))}
                       </div>
                     )}
                   </div>
+                  {/* Chance visual */}
                   <div className="text-right flex-shrink-0">
-                    <div className={`text-2xl font-bold ${cfg.color}`}>{college.chancePercent}%</div>
-                    <div className="text-[10px] text-muted-foreground">chance</div>
+                    <div className="relative w-16 h-16">
+                      <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
+                        <circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="4" className="text-muted/30" />
+                        <circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="4"
+                          strokeDasharray={`${(college.chancePercent / 100) * 175.9} 175.9`}
+                          className={cfg.color} strokeLinecap="round" />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className={`text-base font-bold ${cfg.color}`}>{college.chancePercent}%</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -849,21 +929,42 @@ const CollegeShortlisterPage = () => {
                   </div>
                 </div>
 
-                <p className="text-xs text-muted-foreground mt-2 italic">"{college.whyFit}"</p>
+                {/* Why fit - styled nicely */}
+                <div className={`mt-3 p-2.5 rounded-lg ${cfg.bg} text-xs text-foreground`}>
+                  <span className="font-semibold">Why you fit:</span> {college.whyFit}
+                </div>
 
                 {/* Expand for tips */}
                 <button onClick={() => setExpandedCard(isExpanded ? null : college.id)}
                   className="text-xs text-primary font-medium mt-2 flex items-center gap-1 hover:underline">
-                  {isExpanded ? "Hide" : "Tips & Strategy"} <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                  {isExpanded ? "Hide Details" : "Tips & Strategy"} <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
                 </button>
                 <AnimatePresence>
                   {isExpanded && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
                       <div className="mt-2 p-3 rounded-lg bg-muted/50 text-xs text-foreground space-y-2">
-                        <p><strong>💡 Strategy:</strong> {college.tips}</p>
-                        {college.exams_accepted && <p><strong>📝 Exams:</strong> {college.exams_accepted.join(", ")}</p>}
-                        {college.specializations?.length > 0 && <p><strong>🎓 Courses:</strong> {college.specializations.slice(0, 5).join(", ")}</p>}
-                        {college.accreditations && college.accreditations.length > 0 && <p><strong>🏆 Accreditations:</strong> {college.accreditations.join(", ")}</p>}
+                        <div className="flex items-start gap-2">
+                          <Sparkles className="w-3.5 h-3.5 text-primary flex-shrink-0 mt-0.5" />
+                          <p>{college.tips}</p>
+                        </div>
+                        {college.exams_accepted && (
+                          <div className="flex items-start gap-2">
+                            <BookOpen className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                            <p><span className="font-medium">Exams:</span> {college.exams_accepted.join(", ")}</p>
+                          </div>
+                        )}
+                        {college.specializations?.length > 0 && (
+                          <div className="flex items-start gap-2">
+                            <GraduationCap className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                            <p><span className="font-medium">Courses:</span> {college.specializations.slice(0, 5).join(", ")}</p>
+                          </div>
+                        )}
+                        {college.accreditations && college.accreditations.length > 0 && (
+                          <div className="flex items-start gap-2">
+                            <Award className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                            <p><span className="font-medium">Accreditations:</span> {college.accreditations.join(", ")}</p>
+                          </div>
+                        )}
                         <Link to={`/college/${college.slug}`} className="inline-flex items-center gap-1 text-primary font-semibold hover:underline mt-1">
                           View Full College Profile <ArrowRight className="w-3 h-3" />
                         </Link>
@@ -885,13 +986,12 @@ const CollegeShortlisterPage = () => {
 
       {/* Results Header */}
       <section className="relative overflow-hidden" style={{ background: "var(--hero-gradient)" }}>
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiLz48L3N2Zz4=')] opacity-40 pointer-events-none" />
         <div className="container mx-auto px-4 py-10 md:py-14 relative z-10 text-center">
           <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}>
             <Badge className="mb-3 bg-white/20 text-white border-white/30 backdrop-blur-sm"><CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Analysis Complete</Badge>
             <h1 className="text-2xl md:text-4xl font-heading font-bold text-white mb-2">Your Personalized College Shortlist</h1>
             <p className="text-white/70 text-sm md:text-base">
-              {form.exams.join(", ")} {form.scoreType === "percentile" ? "Percentile" : "Score"}: {form.overallScore} • {stats.totalAnalyzed} colleges analyzed
+              {form.exams.join(", ")} • {stats.totalAnalyzed} colleges analyzed
             </p>
             <div className="flex justify-center gap-8 mt-5">
               {([
@@ -932,14 +1032,13 @@ const CollegeShortlisterPage = () => {
         {/* ═══ SECTION VIEW ═══ */}
         {viewMode === "section" && (
           <div className="space-y-8">
-            {(["safe", "target", "dream"] as const).map((bucket) => {
+            {(["dream", "target", "safe"] as const).map((bucket) => {
               const colleges = bucket === "dream" ? dream : bucket === "target" ? target : safe;
-              if (colleges.length === 0) return null;
               const cfg = bucketConfig[bucket];
               const Icon = cfg.icon;
               return (
                 <motion.div key={bucket} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: bucket === "safe" ? 0.1 : bucket === "target" ? 0.25 : 0.4 }}>
+                  transition={{ delay: bucket === "dream" ? 0.1 : bucket === "target" ? 0.25 : 0.4 }}>
                   <div className="flex items-center gap-3 mb-4">
                     <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${cfg.gradient} flex items-center justify-center shadow-md`}>
                       <Icon className="w-5 h-5 text-white" />
@@ -950,9 +1049,20 @@ const CollegeShortlisterPage = () => {
                     </div>
                     <Badge className={cfg.badge + " ml-auto"}>{colleges.length} colleges</Badge>
                   </div>
-                  <div className="grid gap-3">
-                    {colleges.map(college => renderCollegeCard(college, cfg))}
-                  </div>
+                  {colleges.length > 0 ? (
+                    <div className="grid gap-3">
+                      {colleges.map(college => renderCollegeCard(college, cfg))}
+                    </div>
+                  ) : (
+                    <div className={`p-6 rounded-xl border-2 border-dashed ${cfg.border} text-center`}>
+                      <Icon className={`w-8 h-8 mx-auto mb-2 ${cfg.color} opacity-40`} />
+                      <p className="text-sm text-muted-foreground">
+                        {bucket === "dream" ? "No dream colleges found — your profile may already match well with top colleges!" :
+                         bucket === "target" ? "No target colleges in this range." :
+                         "No safe colleges found — try adjusting your preferences."}
+                      </p>
+                    </div>
+                  )}
                 </motion.div>
               );
             })}
@@ -972,7 +1082,6 @@ const CollegeShortlisterPage = () => {
         {/* ═══ TABLE VIEW ═══ */}
         {viewMode === "table" && (
           <div>
-            {/* Filters */}
             <div className="flex gap-3 mb-4 flex-wrap">
               <Select value={tableFilter.bucket} onValueChange={v => setTableFilter(prev => ({ ...prev, bucket: v }))}>
                 <SelectTrigger className="w-[140px] rounded-xl text-xs"><Filter className="w-3 h-3 mr-1" /><SelectValue /></SelectTrigger>

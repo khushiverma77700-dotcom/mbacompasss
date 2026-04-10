@@ -11,11 +11,13 @@ interface UserProfile {
   exams: string[];
   scoreType: "percentile" | "score";
   overallScore: number;
+  examScores?: Record<string, number>;
   sectionalScores?: { varc?: number; dilr?: number; quant?: number };
   tenth: number;
   twelfth: number;
   graduation: number;
   graduationStream: string;
+  graduationPursuing?: boolean;
   workExperienceMonths: number;
   gender?: string;
   budgetMin: number;
@@ -35,67 +37,141 @@ function parseNum(v: string | null): number {
   return isNaN(n) ? 0 : n;
 }
 
-function calculateCompositeScore(college: any, profile: UserProfile): number {
-  let score = 0;
-  const fees = parseNum(college.fees);
-  const avgPkg = parseNum(college.placement_avg);
-
-  // Exam score weight (40%)
-  const percentile = profile.scoreType === "percentile" ? profile.overallScore : 0;
+// Get college difficulty factor based on ranking & tier
+function getCollegeDifficulty(college: any): number {
   const ranking = college.ranking || 999;
-  if (percentile >= 99 && ranking <= 10) score += 40;
-  else if (percentile >= 95 && ranking <= 25) score += 35;
-  else if (percentile >= 90 && ranking <= 50) score += 30;
-  else if (percentile >= 85 && ranking <= 75) score += 25;
-  else if (percentile >= 80) score += 20;
-  else if (percentile >= 70) score += 15;
-  else score += 10;
+  const tier = (college.tier || "Tier 2").toLowerCase();
+  const category = (college.college_category || "").toLowerCase();
 
-  // Profile score weight (25%)
-  const profileAvg = (profile.tenth + profile.twelfth + profile.graduation) / 3;
-  if (profileAvg >= 85) score += 25;
-  else if (profileAvg >= 75) score += 20;
-  else if (profileAvg >= 65) score += 15;
-  else score += 10;
+  // IIMs are hardest
+  if (category === "iim" || college.name?.toLowerCase().includes("iim")) {
+    if (ranking <= 5) return 95; // IIM-A, B, C
+    if (ranking <= 10) return 88;
+    if (ranking <= 20) return 80;
+    return 72;
+  }
 
-  // Work experience weight (15%)
-  const workYears = profile.workExperienceMonths / 12;
-  if (workYears >= 2 && workYears <= 5) score += 15;
-  else if (workYears >= 1) score += 12;
-  else if (workYears >= 0.5) score += 8;
-  else score += 5;
-
-  // Budget fit (10%)
-  if (fees > 0 && fees <= profile.budgetMax && fees >= profile.budgetMin) score += 10;
-  else if (fees > 0 && fees <= profile.budgetMax * 1.2) score += 6;
-  else score += 3;
-
-  // Location preference (5%)
-  if (profile.preferredStates.length === 0) score += 5;
-  else if (college.state && profile.preferredStates.some((s: string) => college.state?.toLowerCase().includes(s.toLowerCase()))) score += 5;
-  else if (college.city && profile.preferredStates.some((s: string) => college.city?.toLowerCase().includes(s.toLowerCase()))) score += 4;
-  else score += 2;
-
-  // Diversity bonus (5%)
-  if (profile.gender === "female") score += 3;
-
-  // ROI bonus
-  const roi = avgPkg > 0 && fees > 0 ? avgPkg / fees : 0;
-  if (roi >= 3) score += 5;
-  else if (roi >= 2) score += 3;
-  else if (roi >= 1) score += 1;
-
-  // ROI preference boost
-  if (profile.roiPreference === "high_roi" && roi >= 2) score += 3;
-  if (profile.roiPreference === "premium" && ranking <= 15) score += 3;
-
-  return Math.min(score, 100);
+  // Tier-based difficulty
+  if (tier === "tier 1" || ranking <= 25) {
+    if (ranking <= 5) return 90;
+    if (ranking <= 15) return 82;
+    return 75;
+  }
+  if (tier === "tier 2" || (ranking > 25 && ranking <= 75)) {
+    if (ranking <= 40) return 60;
+    if (ranking <= 60) return 50;
+    return 42;
+  }
+  if (tier === "tier 3") return 30;
+  if (tier === "tier 4") return 20;
+  return 35;
 }
 
-function classifyBucket(score: number): "dream" | "target" | "safe" {
-  if (score >= 70) return "safe";
-  if (score >= 40) return "target";
-  return "dream";
+function calculateCompositeScore(college: any, profile: UserProfile): number {
+  let rawScore = 0;
+
+  // Get the best exam score for this college
+  let percentile = profile.scoreType === "percentile" ? profile.overallScore : 0;
+  if (profile.examScores && college.exams_accepted) {
+    for (const exam of college.exams_accepted) {
+      const examKey = exam.toUpperCase().trim();
+      if (profile.examScores[examKey] && profile.examScores[examKey] > percentile) {
+        percentile = profile.examScores[examKey];
+      }
+    }
+  }
+
+  // Exam score component (0-40)
+  if (percentile >= 99) rawScore += 40;
+  else if (percentile >= 97) rawScore += 37;
+  else if (percentile >= 95) rawScore += 34;
+  else if (percentile >= 92) rawScore += 30;
+  else if (percentile >= 90) rawScore += 27;
+  else if (percentile >= 85) rawScore += 23;
+  else if (percentile >= 80) rawScore += 19;
+  else if (percentile >= 70) rawScore += 14;
+  else if (percentile >= 60) rawScore += 10;
+  else rawScore += 6;
+
+  // Profile score (0-25)
+  const profileAvg = (profile.tenth + profile.twelfth + profile.graduation) / 3;
+  if (profile.graduationPursuing) {
+    // Slightly lower weight for pursuing students
+    if (profileAvg >= 80) rawScore += 20;
+    else if (profileAvg >= 70) rawScore += 16;
+    else if (profileAvg >= 60) rawScore += 12;
+    else rawScore += 8;
+  } else {
+    if (profileAvg >= 85) rawScore += 25;
+    else if (profileAvg >= 78) rawScore += 21;
+    else if (profileAvg >= 70) rawScore += 17;
+    else if (profileAvg >= 60) rawScore += 12;
+    else rawScore += 8;
+  }
+
+  // Work experience (0-15)
+  const workYears = profile.workExperienceMonths / 12;
+  if (workYears >= 2 && workYears <= 5) rawScore += 15;
+  else if (workYears >= 1) rawScore += 12;
+  else if (workYears >= 0.5) rawScore += 8;
+  else rawScore += 4;
+
+  // Budget fit (0-10)
+  const fees = parseNum(college.fees);
+  if (fees > 0 && fees <= profile.budgetMax && fees >= profile.budgetMin) rawScore += 10;
+  else if (fees > 0 && fees <= profile.budgetMax * 1.2) rawScore += 6;
+  else rawScore += 3;
+
+  // Location (0-5)
+  if (profile.preferredStates.length === 0) rawScore += 5;
+  else if (college.state && profile.preferredStates.some((s: string) => college.state?.toLowerCase().includes(s.toLowerCase()))) rawScore += 5;
+  else if (college.city && profile.preferredStates.some((s: string) => college.city?.toLowerCase().includes(s.toLowerCase()))) rawScore += 4;
+  else rawScore += 2;
+
+  // Diversity bonus
+  if (profile.gender === "female") rawScore += 3;
+
+  // ROI bonus
+  const avgPkg = parseNum(college.placement_avg);
+  const roi = avgPkg > 0 && fees > 0 ? avgPkg / fees : 0;
+  if (roi >= 3) rawScore += 5;
+  else if (roi >= 2) rawScore += 3;
+  else if (roi >= 1) rawScore += 1;
+
+  if (profile.roiPreference === "high_roi" && roi >= 2) rawScore += 3;
+  if (profile.roiPreference === "premium" && (college.ranking || 999) <= 15) rawScore += 3;
+
+  return Math.min(rawScore, 100);
+}
+
+function classifyBucket(compositeScore: number, college: any): "dream" | "target" | "safe" {
+  const difficulty = getCollegeDifficulty(college);
+
+  // Chance = how much student score exceeds college difficulty
+  const gap = compositeScore - difficulty;
+
+  if (gap >= 15) return "safe";       // Student is well above what college needs
+  if (gap >= -5) return "target";     // Student is in competitive range
+  return "dream";                      // Student needs to stretch
+}
+
+function getChancePercent(compositeScore: number, college: any): number {
+  const difficulty = getCollegeDifficulty(college);
+  const gap = compositeScore - difficulty;
+
+  // Map gap to a percentage
+  let chance: number;
+  if (gap >= 25) chance = 88;
+  else if (gap >= 15) chance = 75;
+  else if (gap >= 5) chance = 62;
+  else if (gap >= -5) chance = 48;
+  else if (gap >= -15) chance = 35;
+  else if (gap >= -25) chance = 22;
+  else chance = 12;
+
+  // Add small randomness for natural feel
+  chance += Math.floor(Math.random() * 6) - 3;
+  return Math.min(Math.max(chance, 5), 95);
 }
 
 function getBadges(college: any, roi: number): string[] {
@@ -110,19 +186,21 @@ function getBadges(college: any, roi: number): string[] {
 
 function generateWhyFit(college: any, profile: UserProfile, bucket: string, roi: number): string {
   const parts: string[] = [];
-  if (bucket === "safe") parts.push(`Strong profile match for ${college.name}'s admission criteria.`);
-  else if (bucket === "target") parts.push(`Competitive chance at ${college.name} — your profile is within range.`);
-  else parts.push(`Aspirational pick — ${college.name} would be a stretch but worth applying.`);
-  if (roi >= 2) parts.push(`Excellent ROI of ${roi.toFixed(1)}x.`);
-  if (college.city && profile.preferredStates.some((s: string) => college.state?.toLowerCase().includes(s.toLowerCase()) || college.city?.toLowerCase().includes(s.toLowerCase())))
+  if (bucket === "safe") parts.push(`Your profile is a strong match for ${college.name}.`);
+  else if (bucket === "target") parts.push(`You're competitive for ${college.name} — within striking range.`);
+  else parts.push(`${college.name} is a stretch goal — worth the effort.`);
+  if (roi >= 2) parts.push(`Great ROI at ${roi.toFixed(1)}x.`);
+  if (college.city && profile.preferredStates.some((s: string) =>
+    college.state?.toLowerCase().includes(s.toLowerCase()) ||
+    college.city?.toLowerCase().includes(s.toLowerCase())))
     parts.push("Matches your location preference.");
   return parts.join(" ");
 }
 
 function generateTips(college: any, profile: UserProfile, bucket: string): string {
-  if (bucket === "safe") return `Focus on WAT/GD prep. Your profile already meets cutoffs. Apply confidently and prepare for personal interview.`;
-  if (bucket === "target") return `Strengthen WAT/PI preparation. Highlight work experience in your application. Consider taking mock interviews.`;
-  return `Needs exceptional WAT/PI performance. Build extra-curriculars and consider retaking the exam for a higher score if possible.`;
+  if (bucket === "safe") return `Focus on WAT/GD prep. Your profile meets cutoffs. Apply confidently and prepare well for the personal interview.`;
+  if (bucket === "target") return `Strengthen your WAT/PI preparation. Highlight work experience and achievements in your application. Practice mock interviews.`;
+  return `Needs strong WAT/PI performance. Build differentiators, strengthen extra-curriculars, and consider improving your exam score.`;
 }
 
 serve(async (req) => {
@@ -144,7 +222,7 @@ serve(async (req) => {
 
     const { data: colleges, error: dbError } = await sb
       .from("colleges")
-      .select("id, name, slug, city, state, fees, placement_avg, placement_highest, placement_median, ranking, type, established, exams_accepted, accreditations, logo_url, courses, campus_size, total_students, cutoff_info, description")
+      .select("id, name, slug, city, state, fees, placement_avg, placement_highest, placement_median, ranking, type, tier, college_category, established, exams_accepted, accreditations, logo_url, courses, campus_size, total_students, cutoff_info, description")
       .order("ranking", { ascending: true, nullsFirst: false });
 
     if (dbError) throw dbError;
@@ -166,29 +244,28 @@ serve(async (req) => {
     // Filter by tier preference
     if (profile.collegeTier.length > 0) {
       const tierFiltered = filtered.filter((c: any) => {
-        const type = (c.type || "").toLowerCase();
+        const tier = (c.tier || "").toLowerCase();
+        const cat = (c.college_category || "").toLowerCase();
         return profile.collegeTier.some((t: string) => {
-          if (t === "Only IIMs") return c.name.toLowerCase().includes("iim");
-          if (t === "Tier 1") return (c.ranking && c.ranking <= 25) || type.includes("iim") || type.includes("government");
-          if (t === "Tier 2") return c.ranking && c.ranking > 25 && c.ranking <= 75;
+          if (t === "Only IIMs") return cat === "iim" || c.name.toLowerCase().includes("iim");
+          if (t === "Tier 1") return tier === "tier 1" || (c.ranking && c.ranking <= 25);
+          if (t === "Tier 2") return tier === "tier 2" || (c.ranking && c.ranking > 25 && c.ranking <= 75);
           return true;
         });
       });
-      if (tierFiltered.length >= 5) filtered = tierFiltered;
+      if (tierFiltered.length >= 3) filtered = tierFiltered;
     }
 
-    // Preferred college boost
     const preferredSlugs = profile.preferredColleges?.map(c => c.toLowerCase()) || [];
 
     // Score and classify each college
     const results = filtered.map((c: any) => {
       let compositeScore = calculateCompositeScore(c, profile);
-      // Boost preferred colleges
       if (preferredSlugs.some(slug => c.name.toLowerCase().includes(slug) || c.slug?.toLowerCase().includes(slug))) {
         compositeScore = Math.min(compositeScore + 5, 100);
       }
-      const chancePercent = Math.min(Math.max(compositeScore + Math.floor(Math.random() * 6) - 3, 5), 95);
-      const bucket = classifyBucket(compositeScore);
+      const bucket = classifyBucket(compositeScore, c);
+      const chancePercent = getChancePercent(compositeScore, c);
       const fees = parseNum(c.fees);
       const avgPkg = parseNum(c.placement_avg);
       const roi = fees > 0 && avgPkg > 0 ? avgPkg / fees : 0;
@@ -196,28 +273,16 @@ serve(async (req) => {
       const cutoffPercentile = c.cutoff_info?.general_cutoff || c.cutoff_info?.overall_cutoff || null;
 
       return {
-        id: c.id,
-        name: c.name,
-        slug: c.slug,
-        city: c.city,
-        state: c.state,
-        fees: c.fees,
-        feesNum: fees,
-        placement_avg: c.placement_avg,
-        placement_highest: c.placement_highest,
-        avgPkgNum: avgPkg,
-        highestPkgNum: highestPkg,
-        ranking: c.ranking,
-        type: c.type,
-        established: c.established,
-        exams_accepted: c.exams_accepted,
-        accreditations: c.accreditations,
-        logo_url: c.logo_url,
-        courses: c.courses,
-        campus_size: c.campus_size,
+        id: c.id, name: c.name, slug: c.slug, city: c.city, state: c.state,
+        fees: c.fees, feesNum: fees, placement_avg: c.placement_avg,
+        placement_highest: c.placement_highest, avgPkgNum: avgPkg,
+        highestPkgNum: highestPkg, ranking: c.ranking, type: c.type,
+        tier: c.tier, college_category: c.college_category,
+        established: c.established, exams_accepted: c.exams_accepted,
+        accreditations: c.accreditations, logo_url: c.logo_url,
+        courses: c.courses, campus_size: c.campus_size,
         total_students: c.total_students,
-        chancePercent,
-        bucket,
+        chancePercent, bucket,
         whyFit: generateWhyFit(c, profile, bucket, roi),
         tips: generateTips(c, profile, bucket),
         compositeScore,
@@ -228,32 +293,34 @@ serve(async (req) => {
       };
     });
 
-    // Sort
+    // Sort: dream first, then target, then safe
     const bucketOrder = { dream: 0, target: 1, safe: 2 };
     results.sort((a: any, b: any) => {
       if (a.bucket !== b.bucket) return bucketOrder[a.bucket] - bucketOrder[b.bucket];
       return b.chancePercent - a.chancePercent;
     });
 
-    const dream = results.filter((r: any) => r.bucket === "dream").slice(0, 6);
+    const dream = results.filter((r: any) => r.bucket === "dream").slice(0, 8);
     const target = results.filter((r: any) => r.bucket === "target").slice(0, 10);
-    const safe = results.filter((r: any) => r.bucket === "safe").slice(0, 6);
+    const safe = results.filter((r: any) => r.bucket === "safe").slice(0, 8);
     const shortlisted = [...dream, ...target, ...safe];
 
-    // Best ROI college
+    // Best ROI badge
     const bestRoi = [...shortlisted].sort((a, b) => (b.roi || 0) - (a.roi || 0))[0];
     if (bestRoi && !bestRoi.badges.includes("Best ROI")) {
       bestRoi.badges = ["Best ROI", ...bestRoi.badges].slice(0, 3);
     }
 
-    // Generate AI insights
+    // AI insights
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     let aiInsights = "";
     let strategy = "";
 
     if (LOVABLE_API_KEY && shortlisted.length > 0) {
       try {
-        const collegeList = shortlisted.map((c: any) => `${c.bucket.toUpperCase()}: ${c.name} (${c.chancePercent}%, Fees: ${c.fees || "N/A"}, Avg Pkg: ${c.placement_avg || "N/A"}, ROI: ${c.roi || "N/A"}x)`).join("\n");
+        const dreamList = dream.map(c => `${c.name} (${c.chancePercent}%)`).join(", ");
+        const targetList = target.map(c => `${c.name} (${c.chancePercent}%)`).join(", ");
+        const safeList = safe.map(c => `${c.name} (${c.chancePercent}%)`).join(", ");
 
         const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
           method: "POST",
@@ -266,37 +333,33 @@ serve(async (req) => {
             messages: [
               {
                 role: "system",
-                content: `You are a warm, experienced MBA admissions mentor in India. Speak like a caring senior. Use "you" and give honest, practical advice. Be encouraging but realistic. Format with markdown. Keep it concise — max 500 words total across both sections.`,
+                content: `You are a warm, experienced MBA admissions mentor in India. Write like a caring senior giving honest advice. Use "you" throughout. Be specific and practical. Use emojis sparingly. Keep total response under 400 words across both sections. Format with markdown headers and bullet points.
+
+IMPORTANT: Do NOT use generic phrases. Be specific to the student's actual scores and colleges. Don't repeat information already shown in the results.`,
               },
               {
                 role: "user",
-                content: `Student Profile:
+                content: `Student:
 - Exams: ${profile.exams.join(", ")}, ${profile.scoreType === "percentile" ? "Percentile" : "Score"}: ${profile.overallScore}
-- Academics: 10th: ${profile.tenth}%, 12th: ${profile.twelfth}%, Graduation: ${profile.graduation}% (${profile.graduationStream})
-- Work Experience: ${profile.workExperienceMonths} months
+- Academics: 10th: ${profile.tenth}%, 12th: ${profile.twelfth}%, Graduation: ${profile.graduation}%${profile.graduationPursuing ? " (Pursuing)" : ""} (${profile.graduationStream})
+- Work Exp: ${profile.workExperienceMonths} months
 - Budget: ₹${(profile.budgetMin / 100000).toFixed(0)}L - ₹${(profile.budgetMax / 100000).toFixed(0)}L
-- Preferred States: ${profile.preferredStates.length > 0 ? profile.preferredStates.join(", ") : "Pan India"}
-- Specialization: ${profile.specialization || "Open"}
-- ROI Preference: ${profile.roiPreference || "Balanced"}
 
-Shortlisted Colleges:
-${collegeList}
+Dream Colleges: ${dreamList || "None"}
+Target Colleges: ${targetList || "None"}
+Safe Colleges: ${safeList || "None"}
 
-Generate TWO sections:
-**SECTION 1 - INSIGHTS** (heading: "🧠 Your Personalized Analysis")
-- Honest assessment of their chances
-- Why these colleges fit their profile
-- What stands out in their profile (strengths)
-- Areas of concern
-- Highlight the best ROI college
+Write TWO sections:
 
-**SECTION 2 - STRATEGY** (heading: "📈 Your Action Plan")
-- Should they retake the exam?
-- Which application forms to prioritize NOW
-- WAT/PI preparation tips specific to their profile
-- Backup plan suggestions
-- Timeline advice
-- Profile improvement tips`,
+**🎯 Your Profile Assessment**
+- 2-3 specific strengths in their profile
+- 1-2 areas to improve (be honest but kind)
+- Which bucket has their best options and why
+
+**📋 Your Application Strategy**
+- Top 3 immediate action items
+- Which 3 colleges to prioritize applications for and why
+- One backup strategy tip`,
               },
             ],
           }),
@@ -305,17 +368,13 @@ Generate TWO sections:
         if (aiResponse.ok) {
           const aiData = await aiResponse.json();
           const fullText = aiData.choices?.[0]?.message?.content || "";
-          const strategyIdx = fullText.indexOf("📈");
+          const strategyIdx = fullText.indexOf("📋");
           if (strategyIdx > -1) {
             aiInsights = fullText.substring(0, strategyIdx).trim();
             strategy = fullText.substring(strategyIdx).trim();
           } else {
             aiInsights = fullText;
           }
-        } else if (aiResponse.status === 429) {
-          console.error("AI rate limited");
-        } else if (aiResponse.status === 402) {
-          console.error("AI credits exhausted");
         }
       } catch (aiErr) {
         console.error("AI generation failed (non-blocking):", aiErr);
