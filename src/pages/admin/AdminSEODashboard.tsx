@@ -735,7 +735,13 @@ const AdminSEODashboard = () => {
     setSelectedKeys(c => checked ? Array.from(new Set([...c, rowKey])) : c.filter(k => k !== rowKey));
   };
 
+  const isStaticPage = (row: DashboardRow) => row.key.startsWith("static:");
+
   const applySEOFields = async (row: DashboardRow, suggestions: any) => {
+    if (isStaticPage(row)) {
+      toast({ title: "Static page", description: "Use Static Page SEO settings to update this page.", variant: "default" });
+      return;
+    }
     const update: Record<string, any> = {};
     if (suggestions.meta_title) update.meta_title = suggestions.meta_title;
     if (suggestions.meta_description) update.meta_description = suggestions.meta_description;
