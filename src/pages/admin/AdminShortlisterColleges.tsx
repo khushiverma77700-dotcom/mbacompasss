@@ -2,19 +2,64 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, Search, GraduationCap, Sparkles, Loader2, Building2, IndianRupee, TrendingUp, MapPin, Filter } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, GraduationCap, Sparkles, Loader2, Building2, TrendingUp, MapPin, Filter } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TIERS = ["Tier 1", "Tier 2", "Tier 3", "Tier 4"];
 const CATEGORIES = ["IIM", "Non-IIM"];
 const EXAMS = ["CAT", "XAT", "NMAT", "SNAP", "GMAT", "MAT", "CMAT"];
+const COLLEGE_TYPES = ["Government", "Private", "Autonomous", "Deemed University", "Public-Private"];
+const ACCREDITATIONS_LIST = ["AACSB", "EQUIS", "AMBA", "NAAC A++", "NAAC A+", "NAAC A", "NBA", "NIRF Top 50", "NIRF Top 100"];
+const COURSES_LIST = ["MBA", "PGDM", "PGPM", "Executive MBA", "MBA (Part-Time)", "Ph.D", "FPM", "BBA", "Integrated MBA"];
+
+const INDIAN_STATES = [
+  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Delhi", "Goa", "Gujarat",
+  "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra",
+  "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim",
+  "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
+  "Chandigarh", "Jammu & Kashmir", "Ladakh", "Puducherry"
+];
+
+const POPULAR_CITIES = [
+  "Ahmedabad", "Bangalore", "Bhopal", "Bhubaneswar", "Chandigarh", "Chennai", "Coimbatore",
+  "Dehradun", "Delhi", "Gurgaon", "Gwalior", "Hyderabad", "Indore", "Jaipur", "Jamshedpur",
+  "Kochi", "Kolkata", "Kozhikode", "Lucknow", "Mangalore", "Mumbai", "Nagpur", "Noida",
+  "Pune", "Raipur", "Ranchi", "Rohtak", "Tiruchirappalli", "Udaipur", "Varanasi", "Visakhapatnam"
+];
+
+const FEE_RANGES = [
+  "Below ₹5 Lakhs", "₹5 - ₹10 Lakhs", "₹10 - ₹15 Lakhs", "₹15 - ₹20 Lakhs",
+  "₹20 - ₹25 Lakhs", "₹25 - ₹30 Lakhs", "₹30 - ₹40 Lakhs", "Above ₹40 Lakhs"
+];
+
+const AVG_PACKAGE_RANGES = [
+  "Below ₹5 LPA", "₹5 - ₹8 LPA", "₹8 - ₹12 LPA", "₹12 - ₹16 LPA",
+  "₹16 - ₹20 LPA", "₹20 - ₹25 LPA", "₹25 - ₹35 LPA", "Above ₹35 LPA"
+];
+
+const HIGHEST_PACKAGE_RANGES = [
+  "Below ₹10 LPA", "₹10 - ₹20 LPA", "₹20 - ₹40 LPA", "₹40 - ₹60 LPA",
+  "₹60 - ₹80 LPA", "₹80 LPA - ₹1 Cr", "₹1 Cr - ₹1.5 Cr", "Above ₹1.5 Cr"
+];
+
+const RANKING_RANGES = [
+  "1 - 5", "6 - 10", "11 - 20", "21 - 30", "31 - 50", "51 - 75", "76 - 100", "100+"
+];
+
+const CAMPUS_SIZES = ["Below 10 Acres", "10 - 25 Acres", "25 - 50 Acres", "50 - 100 Acres", "100 - 200 Acres", "200+ Acres"];
+
+const STUDENT_RANGES = ["Below 200", "200 - 500", "500 - 1000", "1000 - 2000", "2000 - 5000", "5000+"];
+
+const ESTABLISHED_RANGES = [
+  "Before 1960", "1960 - 1980", "1980 - 2000", "2000 - 2010", "2010 - 2020", "After 2020"
+];
 
 const emptyForm = {
   name: "", slug: "", city: "", state: "", fees: "", placement_avg: "", placement_highest: "",
@@ -33,14 +78,10 @@ const AdminShortlisterColleges = () => {
   const [filterTier, setFilterTier] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
   const [aiLoading, setAiLoading] = useState(false);
-  const [newExam, setNewExam] = useState("");
-  const [newAccr, setNewAccr] = useState("");
-  const [newCourse, setNewCourse] = useState("");
   const { toast } = useToast();
 
   const fetchColleges = async () => {
-    let q = supabase.from("colleges").select("id, name, slug, city, state, fees, placement_avg, ranking, tier, college_category, exams_accepted, established, logo_url").order("ranking", { ascending: true, nullsFirst: false });
-    const { data } = await q;
+    const { data } = await supabase.from("colleges").select("id, name, slug, city, state, fees, placement_avg, ranking, tier, college_category, exams_accepted, established, logo_url").order("ranking", { ascending: true, nullsFirst: false });
     if (data) setColleges(data);
   };
 
@@ -148,6 +189,13 @@ const AdminShortlisterColleges = () => {
     fetchColleges(); toast({ title: "College deleted" });
   };
 
+  const toggleArrayItem = (field: "exams_accepted" | "accreditations" | "courses", item: string) => {
+    setForm(f => ({
+      ...f,
+      [field]: f[field].includes(item) ? f[field].filter(x => x !== item) : [...f[field], item]
+    }));
+  };
+
   const filtered = colleges.filter(c => {
     const matchSearch = !search || c.name?.toLowerCase().includes(search.toLowerCase()) || c.city?.toLowerCase().includes(search.toLowerCase());
     const matchTier = filterTier === "all" || c.tier === filterTier;
@@ -170,7 +218,7 @@ const AdminShortlisterColleges = () => {
             <GraduationCap className="w-6 h-6 text-primary" />
             Shortlister Colleges
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage colleges that appear in AI College Shortlister results</p>
+          <p className="text-sm text-muted-foreground mt-1">Manage colleges for AI College Shortlister results</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -180,9 +228,7 @@ const AdminShortlisterColleges = () => {
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                {editId ? "Edit" : "Add"} College
-              </DialogTitle>
+              <DialogTitle>{editId ? "Edit" : "Add"} College</DialogTitle>
             </DialogHeader>
 
             <Tabs defaultValue="basic" className="mt-2">
@@ -194,7 +240,7 @@ const AdminShortlisterColleges = () => {
               </TabsList>
 
               <div className="mt-4 space-y-4">
-                {/* AI Enrich Button */}
+                {/* AI Enrich */}
                 <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/5 border border-primary/20">
                   <Sparkles className="w-4 h-4 text-primary" />
                   <span className="text-xs text-foreground flex-1">Auto-fill missing data using AI</span>
@@ -204,6 +250,7 @@ const AdminShortlisterColleges = () => {
                   </Button>
                 </div>
 
+                {/* ===== BASIC INFO ===== */}
                 <TabsContent value="basic" className="space-y-4 mt-0">
                   <div className="grid grid-cols-2 gap-3">
                     <div className="col-span-2">
@@ -216,7 +263,13 @@ const AdminShortlisterColleges = () => {
                     </div>
                     <div>
                       <Label className="text-xs font-semibold mb-1.5 block">Type</Label>
-                      <Input value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} placeholder="e.g. Private / Government" />
+                      <Select value={form.type || "_none"} onValueChange={v => setForm(f => ({ ...f, type: v === "_none" ? "" : v }))}>
+                        <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">Select type...</SelectItem>
+                          {COLLEGE_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
@@ -244,15 +297,33 @@ const AdminShortlisterColleges = () => {
                   <div className="grid grid-cols-3 gap-3">
                     <div>
                       <Label className="text-xs font-semibold mb-1.5 block">City</Label>
-                      <Input value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} placeholder="Mumbai" />
+                      <Select value={form.city || "_none"} onValueChange={v => setForm(f => ({ ...f, city: v === "_none" ? "" : v }))}>
+                        <SelectTrigger><SelectValue placeholder="Select city" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">Select city...</SelectItem>
+                          {POPULAR_CITIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <Label className="text-xs font-semibold mb-1.5 block">State</Label>
-                      <Input value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))} placeholder="Maharashtra" />
+                      <Select value={form.state || "_none"} onValueChange={v => setForm(f => ({ ...f, state: v === "_none" ? "" : v }))}>
+                        <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">Select state...</SelectItem>
+                          {INDIAN_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <Label className="text-xs font-semibold mb-1.5 block">Established</Label>
-                      <Input type="number" value={form.established} onChange={e => setForm(f => ({ ...f, established: e.target.value }))} placeholder="1961" />
+                      <Select value={form.established || "_none"} onValueChange={v => setForm(f => ({ ...f, established: v === "_none" ? "" : v }))}>
+                        <SelectTrigger><SelectValue placeholder="Select range" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">Select range...</SelectItem>
+                          {ESTABLISHED_RANGES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 
@@ -262,21 +333,40 @@ const AdminShortlisterColleges = () => {
                   </div>
                 </TabsContent>
 
+                {/* ===== ACADEMICS ===== */}
                 <TabsContent value="academics" className="space-y-4 mt-0">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs font-semibold mb-1.5 block">Ranking</Label>
-                      <Input type="number" value={form.ranking} onChange={e => setForm(f => ({ ...f, ranking: e.target.value }))} placeholder="e.g. 5" />
+                      <Label className="text-xs font-semibold mb-1.5 block">NIRF / Overall Ranking</Label>
+                      <Select value={form.ranking || "_none"} onValueChange={v => setForm(f => ({ ...f, ranking: v === "_none" ? "" : v }))}>
+                        <SelectTrigger><SelectValue placeholder="Select range" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">Select range...</SelectItem>
+                          {RANKING_RANGES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <Label className="text-xs font-semibold mb-1.5 block">Campus Size</Label>
-                      <Input value={form.campus_size} onChange={e => setForm(f => ({ ...f, campus_size: e.target.value }))} placeholder="e.g. 100 acres" />
+                      <Select value={form.campus_size || "_none"} onValueChange={v => setForm(f => ({ ...f, campus_size: v === "_none" ? "" : v }))}>
+                        <SelectTrigger><SelectValue placeholder="Select size" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">Select size...</SelectItem>
+                          {CAMPUS_SIZES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className="text-xs font-semibold mb-1.5 block">Total Students</Label>
-                      <Input type="number" value={form.total_students} onChange={e => setForm(f => ({ ...f, total_students: e.target.value }))} />
+                      <Select value={form.total_students || "_none"} onValueChange={v => setForm(f => ({ ...f, total_students: v === "_none" ? "" : v }))}>
+                        <SelectTrigger><SelectValue placeholder="Select range" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">Select range...</SelectItem>
+                          {STUDENT_RANGES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <Label className="text-xs font-semibold mb-1.5 block">Website</Label>
@@ -284,76 +374,95 @@ const AdminShortlisterColleges = () => {
                     </div>
                   </div>
 
-                  {/* Exams accepted */}
+                  {/* Exams — chip toggle */}
                   <div>
-                    <Label className="text-xs font-semibold mb-1.5 block">Exams Accepted</Label>
-                    <div className="flex flex-wrap gap-1.5 mb-2">
-                      {form.exams_accepted.map((e, i) => (
-                        <Badge key={i} variant="secondary" className="cursor-pointer" onClick={() => setForm(f => ({ ...f, exams_accepted: f.exams_accepted.filter((_, j) => j !== i) }))}>
-                          {e} ×
+                    <Label className="text-xs font-semibold mb-2 block">Exams Accepted</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {EXAMS.map(exam => (
+                        <Badge
+                          key={exam}
+                          variant={form.exams_accepted.includes(exam) ? "default" : "outline"}
+                          className="cursor-pointer px-3 py-1.5 text-xs transition-colors"
+                          onClick={() => toggleArrayItem("exams_accepted", exam)}
+                        >
+                          {exam}
                         </Badge>
                       ))}
                     </div>
-                    <div className="flex gap-2">
-                      <Select value={newExam} onValueChange={v => { if (v && !form.exams_accepted.includes(v)) setForm(f => ({ ...f, exams_accepted: [...f.exams_accepted, v] })); setNewExam(""); }}>
-                        <SelectTrigger className="flex-1"><SelectValue placeholder="Add exam..." /></SelectTrigger>
+                  </div>
+
+                  {/* Accreditations — chip toggle */}
+                  <div>
+                    <Label className="text-xs font-semibold mb-2 block">Accreditations</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {ACCREDITATIONS_LIST.map(a => (
+                        <Badge
+                          key={a}
+                          variant={form.accreditations.includes(a) ? "default" : "outline"}
+                          className="cursor-pointer px-3 py-1.5 text-xs transition-colors"
+                          onClick={() => toggleArrayItem("accreditations", a)}
+                        >
+                          {a}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Courses — chip toggle */}
+                  <div>
+                    <Label className="text-xs font-semibold mb-2 block">Courses / Programs</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {COURSES_LIST.map(c => (
+                        <Badge
+                          key={c}
+                          variant={form.courses.includes(c) ? "default" : "outline"}
+                          className="cursor-pointer px-3 py-1.5 text-xs transition-colors"
+                          onClick={() => toggleArrayItem("courses", c)}
+                        >
+                          {c}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </TabsContent>
+
+                {/* ===== PLACEMENT ===== */}
+                <TabsContent value="placement" className="space-y-4 mt-0">
+                  <div className="grid grid-cols-1 gap-4">
+                    <div>
+                      <Label className="text-xs font-semibold mb-1.5 block">Total Fees (Full Program)</Label>
+                      <Select value={form.fees || "_none"} onValueChange={v => setForm(f => ({ ...f, fees: v === "_none" ? "" : v }))}>
+                        <SelectTrigger><SelectValue placeholder="Select fee range" /></SelectTrigger>
                         <SelectContent>
-                          {EXAMS.filter(e => !form.exams_accepted.includes(e)).map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                          <SelectItem value="_none">Select fee range...</SelectItem>
+                          {FEE_RANGES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold mb-1.5 block">Average Package (CTC)</Label>
+                      <Select value={form.placement_avg || "_none"} onValueChange={v => setForm(f => ({ ...f, placement_avg: v === "_none" ? "" : v }))}>
+                        <SelectTrigger><SelectValue placeholder="Select avg package range" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">Select range...</SelectItem>
+                          {AVG_PACKAGE_RANGES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="text-xs font-semibold mb-1.5 block">Highest Package</Label>
+                      <Select value={form.placement_highest || "_none"} onValueChange={v => setForm(f => ({ ...f, placement_highest: v === "_none" ? "" : v }))}>
+                        <SelectTrigger><SelectValue placeholder="Select highest package range" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="_none">Select range...</SelectItem>
+                          {HIGHEST_PACKAGE_RANGES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
-
-                  {/* Accreditations */}
-                  <div>
-                    <Label className="text-xs font-semibold mb-1.5 block">Accreditations</Label>
-                    <div className="flex flex-wrap gap-1.5 mb-2">
-                      {form.accreditations.map((a, i) => (
-                        <Badge key={i} variant="outline" className="cursor-pointer" onClick={() => setForm(f => ({ ...f, accreditations: f.accreditations.filter((_, j) => j !== i) }))}>
-                          {a} ×
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex gap-2">
-                      <Input value={newAccr} onChange={e => setNewAccr(e.target.value)} placeholder="e.g. AACSB, EQUIS" onKeyDown={e => { if (e.key === "Enter" && newAccr.trim()) { setForm(f => ({ ...f, accreditations: [...f.accreditations, newAccr.trim()] })); setNewAccr(""); } }} />
-                      <Button size="sm" variant="outline" onClick={() => { if (newAccr.trim()) { setForm(f => ({ ...f, accreditations: [...f.accreditations, newAccr.trim()] })); setNewAccr(""); } }}>Add</Button>
-                    </div>
-                  </div>
-
-                  {/* Courses */}
-                  <div>
-                    <Label className="text-xs font-semibold mb-1.5 block">Courses / Programs</Label>
-                    <div className="flex flex-wrap gap-1.5 mb-2">
-                      {form.courses.map((c, i) => (
-                        <Badge key={i} variant="outline" className="cursor-pointer" onClick={() => setForm(f => ({ ...f, courses: f.courses.filter((_, j) => j !== i) }))}>
-                          {c} ×
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex gap-2">
-                      <Input value={newCourse} onChange={e => setNewCourse(e.target.value)} placeholder="e.g. MBA, PGDM" onKeyDown={e => { if (e.key === "Enter" && newCourse.trim()) { setForm(f => ({ ...f, courses: [...f.courses, newCourse.trim()] })); setNewCourse(""); } }} />
-                      <Button size="sm" variant="outline" onClick={() => { if (newCourse.trim()) { setForm(f => ({ ...f, courses: [...f.courses, newCourse.trim()] })); setNewCourse(""); } }}>Add</Button>
-                    </div>
-                  </div>
                 </TabsContent>
 
-                <TabsContent value="placement" className="space-y-4 mt-0">
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <Label className="text-xs font-semibold mb-1.5 block">Total Fees</Label>
-                      <Input value={form.fees} onChange={e => setForm(f => ({ ...f, fees: e.target.value }))} placeholder="e.g. ₹23 Lakhs" />
-                    </div>
-                    <div>
-                      <Label className="text-xs font-semibold mb-1.5 block">Avg Package (CTC)</Label>
-                      <Input value={form.placement_avg} onChange={e => setForm(f => ({ ...f, placement_avg: e.target.value }))} placeholder="e.g. ₹32 LPA" />
-                    </div>
-                    <div>
-                      <Label className="text-xs font-semibold mb-1.5 block">Highest Package</Label>
-                      <Input value={form.placement_highest} onChange={e => setForm(f => ({ ...f, placement_highest: e.target.value }))} placeholder="e.g. ₹1.2 Cr" />
-                    </div>
-                  </div>
-                </TabsContent>
-
+                {/* ===== SEO ===== */}
                 <TabsContent value="seo" className="space-y-4 mt-0">
                   <div>
                     <Label className="text-xs font-semibold mb-1.5 block">Logo URL</Label>
@@ -380,7 +489,7 @@ const AdminShortlisterColleges = () => {
         </Dialog>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats */}
       <div className="grid grid-cols-4 gap-3 mb-6">
         {[
           { label: "Total Colleges", value: stats.total, icon: Building2, color: "text-primary" },
@@ -420,6 +529,7 @@ const AdminShortlisterColleges = () => {
         </Select>
       </div>
 
+      {/* Table */}
       <Card>
         <CardContent className="p-0">
           <Table>
