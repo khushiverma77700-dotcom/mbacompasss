@@ -49,10 +49,19 @@ const MAT_SCORE_RANGES = [
 ];
 
 const BENEFITS = [
-  { icon: Zap, title: "AI-Powered Analysis", desc: "Advanced scoring using real college data, cutoffs & placements", color: "from-blue-500 to-cyan-500" },
-  { icon: Target, title: "Personalized Results", desc: "Dream, Target & Safe colleges matched to YOUR exact profile", color: "from-amber-500 to-orange-500" },
-  { icon: TrendingUp, title: "ROI Intelligence", desc: "Compare fees vs placement returns to maximize your investment", color: "from-emerald-500 to-green-500" },
-  { icon: Rocket, title: "Strategy & Tips", desc: "AI mentor advice on applications, WAT/PI prep & backup plans", color: "from-purple-500 to-pink-500" },
+  { icon: Zap, title: "AI-Powered Analysis", desc: "Advanced scoring using real college data, cutoffs & placements from 100+ MBA colleges", color: "from-blue-500 to-cyan-500", stat: "100+" },
+  { icon: Target, title: "Personalized Results", desc: "Dream, Target & Safe colleges matched to YOUR exact academic & exam profile", color: "from-amber-500 to-orange-500", stat: "3 Buckets" },
+  { icon: TrendingUp, title: "ROI Intelligence", desc: "Compare fees vs placement returns. See which college gives best bang for your buck", color: "from-emerald-500 to-green-500", stat: "ROI Score" },
+  { icon: Gauge, title: "Score Comparison", desc: "See your score vs college requirements — know exactly where you stand", color: "from-rose-500 to-pink-500", stat: "Live Score" },
+  { icon: Brain, title: "Improvement Areas", desc: "Get specific tips on what to improve — academics, exam score, or experience", color: "from-violet-500 to-purple-500", stat: "AI Tips" },
+  { icon: Rocket, title: "Strategy & Action Plan", desc: "AI mentor advice on applications, WAT/PI prep, timeline & backup plans", color: "from-purple-500 to-pink-500", stat: "Mentor" },
+];
+
+const STATS_COUNTER = [
+  { value: "25,000+", label: "Students Helped", icon: User },
+  { value: "100+", label: "MBA Colleges", icon: Building2 },
+  { value: "7", label: "Exams Supported", icon: BookOpen },
+  { value: "30s", label: "Result Time", icon: Zap },
 ];
 
 const FAQS = [
@@ -61,6 +70,7 @@ const FAQS = [
   { q: "Is my data safe?", a: "Yes. Your profile data is only used for generating recommendations and is not shared with any third party." },
   { q: "Can I use this for GMAT-based admissions?", a: "Yes! The simulator supports CAT, XAT, NMAT, SNAP, GMAT, MAT, and CMAT." },
   { q: "What do Dream, Target, and Safe mean?", a: "Dream colleges (20-40% chance) are aspirational. Target (40-70%) are competitive but within reach. Safe (70-90%) strongly align with your profile." },
+  { q: "Do I need to sign up to use this tool?", a: "You can fill in your profile without signing up. However, to view your personalized results and AI insights, you'll need to create a free account." },
 ];
 
 const AI_TOOLS = [
@@ -226,6 +236,13 @@ const CollegeShortlisterPage = () => {
 
   const handleSubmit = async () => {
     if (!validateStep(3)) return;
+
+    // Gate behind login — must be logged in to see results
+    if (!user) {
+      setShowLogin(true);
+      return;
+    }
+
     setStep(4);
     setLoading(true);
     try {
@@ -320,34 +337,35 @@ const CollegeShortlisterPage = () => {
           canonical="https://bestmbacoaching.com/college-shortlister"
         />
 
-        {/* Premium Hero */}
-        <section className="relative overflow-hidden min-h-[90vh] flex items-center">
+        {/* ══ HERO ══ */}
+        <section className="relative overflow-hidden min-h-[85vh] flex items-center">
           <div className="absolute inset-0 hero-gradient" />
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiLz48L3N2Zz4=')] opacity-40 pointer-events-none" />
-          <div className="absolute w-72 h-72 -top-20 -right-20 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '5s' }} />
+          <div className="absolute w-96 h-96 -top-32 -right-32 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '6s' }} />
+          <div className="absolute w-64 h-64 bottom-20 -left-20 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '8s' }} />
 
-          <div className="relative container mx-auto px-4 py-16 md:py-24 z-10">
-            <div className="max-w-4xl mx-auto">
+          <div className="relative container mx-auto px-4 py-16 md:py-20 z-10">
+            <div className="max-w-6xl mx-auto">
               <div className="grid lg:grid-cols-2 gap-12 items-center">
                 <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
                   <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md rounded-full px-4 py-1.5 mb-6 border border-white/20">
                     <Sparkles className="w-4 h-4 text-yellow-300" />
-                    <span className="text-sm font-semibold text-primary-foreground">AI-Powered • 100+ Colleges</span>
+                    <span className="text-sm font-semibold text-white">AI-Powered • 100+ Colleges • Free</span>
                   </div>
-                  <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-extrabold text-primary-foreground mb-4 leading-[1.1]">
+                  <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-4 leading-[1.1]">
                     Find Your Best-Fit
                     <span className="block bg-gradient-to-r from-yellow-200 to-amber-300 bg-clip-text text-transparent">MBA Colleges</span>
                   </h1>
-                  <p className="text-primary-foreground/75 text-lg md:text-xl mb-8 leading-relaxed">
-                    Get your Dream, Target & Safe colleges shortlisted in 30 seconds using AI — like having a personal mentor.
+                  <p className="text-white/80 text-lg md:text-xl mb-8 leading-relaxed">
+                    Get your Dream, Target & Safe colleges shortlisted in 30 seconds using AI — with score comparison, ROI analysis & improvement tips.
                   </p>
                   <div className="flex flex-col sm:flex-row gap-3">
                     <Button size="lg" className="bg-white text-primary hover:bg-white/90 font-bold text-lg px-8 py-6 rounded-xl shadow-xl" onClick={() => setStep(1)}>
                       Start Shortlisting <ArrowRight className="ml-2 w-5 h-5" />
                     </Button>
-                    <Button size="lg" variant="outline" className="border-white/30 text-primary-foreground hover:bg-white/10 font-semibold px-6 py-6 rounded-xl"
+                    <Button size="lg" variant="ghost" className="bg-white/15 backdrop-blur-sm border border-white/25 text-white hover:bg-white/25 hover:text-white font-semibold px-6 py-6 rounded-xl"
                       onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}>
-                      See How It Works
+                      How It Works
                     </Button>
                   </div>
                   <div className="flex items-center gap-6 mt-8">
@@ -359,29 +377,38 @@ const CollegeShortlisterPage = () => {
                       ))}
                     </div>
                     <div>
-                      <div className="text-primary-foreground font-bold text-sm">25,000+ Students</div>
-                      <div className="text-primary-foreground/60 text-xs">used this tool successfully</div>
+                      <div className="text-white font-bold text-sm">25,000+ Students</div>
+                      <div className="text-white/60 text-xs">used this tool successfully</div>
                     </div>
                   </div>
                 </motion.div>
 
+                {/* Right side — interactive preview cards */}
                 <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.2 }} className="hidden lg:block">
                   <div className="space-y-3">
                     {(["dream", "target", "safe"] as const).map((bucket, i) => {
                       const cfg = bucketConfig[bucket];
                       const Icon = cfg.icon;
+                      const sampleColleges = bucket === "dream" ? ["IIM Ahmedabad", "IIM Bangalore"] : bucket === "target" ? ["XLRI Jamshedpur", "MDI Gurgaon"] : ["IMT Ghaziabad", "TAPMI Manipal"];
                       return (
                         <motion.div key={bucket} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 + i * 0.15 }}
                           className="bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/15 hover:bg-white/15 transition-all">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 mb-2">
                             <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${cfg.gradient} flex items-center justify-center shadow-lg`}>
                               <Icon className="w-5 h-5 text-white" />
                             </div>
                             <div className="flex-1">
-                              <div className="text-primary-foreground font-semibold text-sm">{cfg.label}</div>
-                              <div className="text-primary-foreground/50 text-xs">{cfg.desc}</div>
+                              <div className="text-white font-semibold text-sm">{cfg.label}</div>
+                              <div className="text-white/50 text-xs">{cfg.desc}</div>
                             </div>
                             <Badge className="bg-white/20 text-white border-0 text-xs">{cfg.chance}</Badge>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 ml-13">
+                            {sampleColleges.map((name, j) => (
+                              <div key={j} className="text-[11px] text-white/60 flex items-center gap-1">
+                                <Building2 className="w-3 h-3" /> {name}
+                              </div>
+                            ))}
                           </div>
                         </motion.div>
                       );
@@ -399,22 +426,18 @@ const CollegeShortlisterPage = () => {
           </div>
         </section>
 
-        {/* Benefits */}
-        <section className="container mx-auto px-4 py-16">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-3">Why Students Trust Our Shortlister</h2>
-            <p className="text-muted-foreground max-w-lg mx-auto">Data-backed recommendations powered by real college data and advanced AI</p>
-          </motion.div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-5xl mx-auto">
-            {BENEFITS.map((b, i) => (
+        {/* ══ STATS COUNTER ══ */}
+        <section className="container mx-auto px-4 -mt-8 relative z-20 mb-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            {STATS_COUNTER.map((stat, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-                <Card className="h-full border-border/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
-                  <CardContent className="pt-6 pb-5 text-center">
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${b.color} flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform`}>
-                      <b.icon className="w-6 h-6 text-white" />
+                <Card className="text-center border-border/50 shadow-lg bg-card hover:shadow-xl transition-all">
+                  <CardContent className="pt-5 pb-4">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-2">
+                      <stat.icon className="w-5 h-5 text-primary" />
                     </div>
-                    <h3 className="font-heading font-semibold text-foreground mb-1.5">{b.title}</h3>
-                    <p className="text-muted-foreground text-sm">{b.desc}</p>
+                    <div className="text-2xl font-heading font-extrabold text-foreground">{stat.value}</div>
+                    <div className="text-xs text-muted-foreground font-medium">{stat.label}</div>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -422,18 +445,51 @@ const CollegeShortlisterPage = () => {
           </div>
         </section>
 
-        {/* How it Works */}
+        {/* ══ BENEFITS ══ */}
+        <section className="container mx-auto px-4 py-16">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
+            <Badge variant="outline" className="mb-3">Why Choose Us</Badge>
+            <h2 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-3">Everything You Need to Decide</h2>
+            <p className="text-muted-foreground max-w-lg mx-auto">Our AI analyzes every angle — scores, ROI, placements, and more — to give you the complete picture</p>
+          </motion.div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
+            {BENEFITS.map((b, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
+                <Card className="h-full border-border/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden">
+                  <div className={`absolute top-0 left-0 w-1 h-full bg-gradient-to-b ${b.color}`} />
+                  <CardContent className="pt-6 pb-5 pl-6">
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${b.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform flex-shrink-0`}>
+                        <b.icon className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="font-heading font-semibold text-foreground">{b.title}</h3>
+                          <Badge variant="outline" className="text-[10px] font-bold">{b.stat}</Badge>
+                        </div>
+                        <p className="text-muted-foreground text-sm leading-relaxed">{b.desc}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* ══ HOW IT WORKS ══ */}
         <section id="how-it-works" className="bg-muted/40 py-16">
           <div className="container mx-auto px-4">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
+              <Badge variant="outline" className="mb-3">Simple Process</Badge>
               <h2 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-3">How It Works</h2>
               <p className="text-muted-foreground">3 simple steps to your personalized shortlist</p>
             </motion.div>
             <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
               {[
-                { icon: BookOpen, title: "Enter Your Profile", desc: "Exam scores, academics, work experience & preferences — takes 60 seconds.", step: "01" },
-                { icon: Zap, title: "AI Analyzes Colleges", desc: "Our algorithm scores each college using cutoffs, placements, ROI & your profile.", step: "02" },
-                { icon: GraduationCap, title: "Get Your Shortlist", desc: "Receive Dream/Target/Safe colleges with chance %, ROI, tips & AI strategy.", step: "03" },
+                { icon: BookOpen, title: "Enter Your Profile", desc: "Exam scores, academics, work experience & budget preferences — takes just 60 seconds.", step: "01", detail: "CAT, XAT, GMAT, NMAT, SNAP, MAT, CMAT" },
+                { icon: Zap, title: "AI Analyzes 100+ Colleges", desc: "Our algorithm scores each college using cutoffs, placements, ROI & your exact profile match.", step: "02", detail: "Weighted scoring with 5 parameters" },
+                { icon: GraduationCap, title: "Get Your Shortlist", desc: "Receive Dream/Target/Safe colleges with chance %, score comparison, improvement tips & AI strategy.", step: "03", detail: "Free with account signup" },
               ].map((item, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.15 }}>
                   <div className="relative text-center">
@@ -443,22 +499,29 @@ const CollegeShortlisterPage = () => {
                         <item.icon className="w-7 h-7 text-primary" />
                       </div>
                       <h3 className="font-heading font-semibold text-foreground text-lg mb-2">{item.title}</h3>
-                      <p className="text-muted-foreground text-sm">{item.desc}</p>
+                      <p className="text-muted-foreground text-sm mb-3">{item.desc}</p>
+                      <Badge variant="secondary" className="text-[10px]">{item.detail}</Badge>
                     </div>
                   </div>
                 </motion.div>
               ))}
             </div>
+            <div className="text-center mt-10">
+              <Button size="lg" className="font-bold text-lg px-10 py-6 rounded-xl shadow-lg" onClick={() => setStep(1)}>
+                Start Now — It's Free <ArrowRight className="ml-2 w-5 h-5" />
+              </Button>
+            </div>
           </div>
         </section>
 
-        {/* Sample Output */}
+        {/* ══ WHAT YOU GET ══ */}
         <section className="container mx-auto px-4 py-16">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-10">
+            <Badge variant="outline" className="mb-3">Sample Output</Badge>
             <h2 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-3">What You'll Get</h2>
-            <p className="text-muted-foreground max-w-lg mx-auto">A rich, interactive report with multiple views</p>
+            <p className="text-muted-foreground max-w-lg mx-auto">A rich, interactive report with detailed analysis for each college</p>
           </motion.div>
-          <div className="grid md:grid-cols-3 gap-5 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-5 max-w-4xl mx-auto mb-8">
             {(["dream", "target", "safe"] as const).map((bucket, bi) => {
               const cfg = bucketConfig[bucket];
               const Icon = cfg.icon;
@@ -491,27 +554,53 @@ const CollegeShortlisterPage = () => {
               );
             })}
           </div>
+
+          {/* Feature highlights of results */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            {[
+              { icon: Gauge, label: "Score vs Required", desc: "Visual comparison bars" },
+              { icon: TrendingUp, label: "ROI Analysis", desc: "Fees vs placement returns" },
+              { icon: Brain, label: "Improvement Tips", desc: "Specific action items" },
+              { icon: Rocket, label: "AI Strategy", desc: "Application timeline" },
+            ].map((f, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 + i * 0.08 }}>
+                <div className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/30">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <f.icon className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-foreground">{f.label}</div>
+                    <div className="text-[11px] text-muted-foreground">{f.desc}</div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </section>
 
-        {/* Testimonials */}
+        {/* ══ TESTIMONIALS ══ */}
         <section className="bg-muted/40 py-16">
           <div className="container mx-auto px-4 max-w-4xl">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-10">
+              <Badge variant="outline" className="mb-3">Student Reviews</Badge>
               <h2 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-3">Trusted by MBA Aspirants</h2>
             </motion.div>
             <div className="grid md:grid-cols-3 gap-5">
               {[
-                { text: "This tool saved me hours of research. Got my shortlist in seconds and it was spot-on!", name: "Priya S.", tag: "CAT 95.6 %ile" },
-                { text: "The Dream/Target/Safe bucketing is genius. I knew exactly where to focus my applications.", name: "Rahul M.", tag: "XAT 92.1 %ile" },
-                { text: "AI strategy advice was like having a personal mentor. Recommended to all my friends.", name: "Ananya K.", tag: "CAT 88.3 %ile" },
+                { text: "This tool saved me hours of research. Got my shortlist in seconds and it was spot-on! The score comparison helped me understand exactly where I stood.", name: "Priya S.", tag: "CAT 95.6 %ile", college: "IIM Lucknow" },
+                { text: "The Dream/Target/Safe bucketing is genius. I knew exactly where to focus my applications. The ROI analysis was an eye-opener.", name: "Rahul M.", tag: "XAT 92.1 %ile", college: "XLRI Jamshedpur" },
+                { text: "AI strategy advice was like having a personal mentor. The improvement tips helped me focus on weak areas and boost my profile.", name: "Ananya K.", tag: "CAT 88.3 %ile", college: "MDI Gurgaon" },
               ].map((t, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
                   <Card className="h-full border-border/50">
                     <CardContent className="pt-5">
                       <div className="flex gap-0.5 mb-3">{[1,2,3,4,5].map(s => <Star key={s} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}</div>
-                      <p className="text-foreground text-sm mb-4 italic">"{t.text}"</p>
+                      <p className="text-foreground text-sm mb-4 italic leading-relaxed">"{t.text}"</p>
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold text-foreground">{t.name}</span>
+                        <div>
+                          <span className="text-sm font-semibold text-foreground block">{t.name}</span>
+                          <span className="text-[11px] text-muted-foreground">Admitted: {t.college}</span>
+                        </div>
                         <Badge variant="outline" className="text-xs">{t.tag}</Badge>
                       </div>
                     </CardContent>
@@ -522,28 +611,61 @@ const CollegeShortlisterPage = () => {
           </div>
         </section>
 
-        {/* FAQ */}
-        <section className="container mx-auto px-4 py-16 max-w-3xl">
-          <h2 className="text-2xl font-heading font-bold text-foreground mb-8 text-center">Frequently Asked Questions</h2>
-          <Accordion type="single" collapsible className="space-y-2">
-            {FAQS.map((faq, i) => (
-              <AccordionItem key={i} value={`faq-${i}`} className="border rounded-xl px-4">
-                <AccordionTrigger className="text-left font-medium text-foreground hover:no-underline">{faq.q}</AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">{faq.a}</AccordionContent>
-              </AccordionItem>
+        {/* ══ AI TOOLS CROSS-PROMOTE ══ */}
+        <section className="container mx-auto px-4 py-16">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-3">More AI Tools for Your MBA Journey</h2>
+            <p className="text-muted-foreground">Complete suite of AI-powered tools to ace your MBA preparation</p>
+          </motion.div>
+          <div className="grid sm:grid-cols-3 gap-5 max-w-4xl mx-auto">
+            {AI_TOOLS.map((tool, i) => (
+              <Link key={i} to={tool.path}>
+                <motion.div initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
+                  <Card className="h-full border-border/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+                    <CardContent className="pt-6">
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${tool.color} flex items-center justify-center mb-4 shadow-md group-hover:scale-110 transition-transform`}>
+                        <tool.icon className="w-6 h-6 text-white" />
+                      </div>
+                      <h3 className="font-heading font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">{tool.title}</h3>
+                      <p className="text-muted-foreground text-sm leading-relaxed mb-3">{tool.desc}</p>
+                      <span className="text-xs text-primary font-semibold flex items-center gap-1">
+                        Try Now <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                      </span>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </Link>
             ))}
-          </Accordion>
+          </div>
         </section>
 
-        {/* Bottom CTA */}
-        <section className="py-12 mb-8">
+        {/* ══ FAQ ══ */}
+        <section className="bg-muted/40 py-16">
+          <div className="container mx-auto px-4 max-w-3xl">
+            <h2 className="text-2xl font-heading font-bold text-foreground mb-8 text-center">Frequently Asked Questions</h2>
+            <Accordion type="single" collapsible className="space-y-2">
+              {FAQS.map((faq, i) => (
+                <AccordionItem key={i} value={`faq-${i}`} className="border rounded-xl px-4 bg-card">
+                  <AccordionTrigger className="text-left font-medium text-foreground hover:no-underline">{faq.q}</AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">{faq.a}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </section>
+
+        {/* ══ BOTTOM CTA ══ */}
+        <section className="py-16">
           <div className="container mx-auto px-4 text-center">
             <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}>
-              <h2 className="text-2xl font-heading font-bold text-foreground mb-4">Ready to Find Your Best-Fit Colleges?</h2>
-              <Button size="lg" className="font-bold text-lg px-10 py-6 rounded-xl shadow-lg" onClick={() => setStep(1)}>
-                Start Free Shortlisting <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-              <p className="text-muted-foreground text-sm mt-3">No signup required • Results in 30 seconds</p>
+              <div className="max-w-2xl mx-auto">
+                <h2 className="text-2xl md:text-3xl font-heading font-bold text-foreground mb-4">Ready to Find Your Best-Fit Colleges?</h2>
+                <p className="text-muted-foreground mb-6">Join 25,000+ students who found their perfect MBA college match using our AI</p>
+                <Button size="lg" className="font-bold text-lg px-10 py-6 rounded-xl shadow-lg" onClick={() => setStep(1)}>
+                  Start Free Shortlisting <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+                <p className="text-muted-foreground text-sm mt-3">Free to use • Results in 30 seconds • Login required to view results</p>
+              </div>
             </motion.div>
           </div>
         </section>
@@ -1255,8 +1377,15 @@ const CollegeShortlisterPage = () => {
 
       <LoginRequiredDialog
         open={showLogin}
-        onOpenChange={(open) => { setShowLogin(open); if (!open && user) setInsightsUnlocked(true); }}
-        message="Sign in to unlock your personalized AI insights, strategy advice, and full college analysis."
+        onOpenChange={(open) => {
+          setShowLogin(open);
+          if (!open && user) {
+            // User just logged in — auto-submit the form
+            setInsightsUnlocked(true);
+            setTimeout(() => handleSubmit(), 300);
+          }
+        }}
+        message="Create a free account or sign in to view your personalized college shortlist with AI insights and score comparison."
       />
 
       <PageKeywords contentType="static" recordId="college-shortlister" fallbackKeywords={["MBA college shortlisting", "CAT college predictor"]} />
