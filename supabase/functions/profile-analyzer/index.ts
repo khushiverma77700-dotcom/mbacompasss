@@ -310,7 +310,7 @@ For score_breakdown, provide 5 dimension scores: academics, work_experience, div
                   },
                   ai_summary: {
                     type: "string",
-                    description: "A 5-6 sentence personalized summary. Be specific, encouraging, reference actual college names. Address the student by name.",
+                    description: "A 5-6 sentence deeply personalized summary. Address the student by their first name. Reference their exact scores, stream, work experience, and target colleges. Give specific advice like 'With your 85% in Engineering and 24 months at TCS, you have a strong shot at IIM Lucknow'. Be encouraging but honest.",
                   },
                 },
                 required: ["strengths", "weaknesses", "college_predictions", "detailed_college_table", "recommendations", "study_plan", "score_breakdown", "exam_strategy", "peer_comparison", "ai_summary"],
