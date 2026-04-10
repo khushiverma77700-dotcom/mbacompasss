@@ -195,6 +195,26 @@ const AdminColleges = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Category *</Label>
+                    <Select value={form.college_category} onValueChange={(v) => setForm({ ...form, college_category: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {CATEGORY_OPTIONS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Tier *</Label>
+                    <Select value={form.tier} onValueChange={(v) => setForm({ ...form, tier: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {TIER_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <div className="grid grid-cols-3 gap-3">
                   <Input type="number" placeholder="Established Year" value={form.established || ""} onChange={(e) => setForm({ ...form, established: parseInt(e.target.value) || 0 })} />
                   <Input type="number" placeholder="Ranking" value={form.ranking || ""} onChange={(e) => setForm({ ...form, ranking: parseInt(e.target.value) || 0 })} />
@@ -279,9 +299,10 @@ const AdminColleges = () => {
               <TableRow>
                 <TableHead>Rank</TableHead>
                 <TableHead>Name</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Tier</TableHead>
                 <TableHead>City</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead>Est.</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -290,9 +311,10 @@ const AdminColleges = () => {
                 <TableRow key={c.id}>
                   <TableCell>{c.ranking ?? "—"}</TableCell>
                   <TableCell className="font-medium">{c.name}</TableCell>
+                  <TableCell><Badge variant={c.college_category === "IIM" ? "default" : "secondary"}>{c.college_category ?? "—"}</Badge></TableCell>
+                  <TableCell><Badge variant="outline">{c.tier ?? "—"}</Badge></TableCell>
                   <TableCell>{c.city ?? "—"}</TableCell>
                   <TableCell><Badge variant="secondary">{c.type ?? "—"}</Badge></TableCell>
-                  <TableCell>{c.established ?? "—"}</TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(c.id)}><Pencil className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(c.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
@@ -300,7 +322,7 @@ const AdminColleges = () => {
                 </TableRow>
               ))}
               {colleges.length === 0 && (
-                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No colleges yet</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No colleges yet</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
