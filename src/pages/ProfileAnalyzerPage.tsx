@@ -1488,50 +1488,81 @@ const ProfileAnalyzerPage = () => {
         {step === 6 && result && (
           <motion.div key="partial" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="max-w-4xl mx-auto px-4 py-10 space-y-8">
+            
+            {/* Personalized greeting */}
             <div className="text-center space-y-4">
               <Badge variant="secondary" className="text-sm"><Sparkles className="w-3.5 h-3.5 mr-1" /> AI Analysis Complete</Badge>
-              <h2 className="text-3xl font-bold">Your Profile Analysis</h2>
-              <div className="inline-flex items-center gap-6 bg-card border border-border rounded-2xl p-6 shadow-lg">
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground mb-1">Profile Score</p>
-                  <p className={`text-5xl font-bold ${scoreColor(result.profile_score)}`}>{result.profile_score}</p>
-                  <p className="text-sm text-muted-foreground">/10</p>
-                </div>
-                {result.score_breakdown && (
-                  <div className="border-l border-border pl-6 space-y-1.5 text-left">
-                    <div className="flex items-center gap-2 text-sm"><Award className="w-4 h-4 text-primary" /> Academics: <strong>{result.score_breakdown.academics_score}/10</strong></div>
-                    <div className="flex items-center gap-2 text-sm"><Briefcase className="w-4 h-4 text-primary" /> Experience: <strong>{result.score_breakdown.work_experience_score}/10</strong></div>
-                    <div className="flex items-center gap-2 text-sm"><Layers className="w-4 h-4 text-primary" /> Diversity: <strong>{result.score_breakdown.diversity_score}/10</strong></div>
-                    <Badge variant="outline" className="mt-1">{result.score_breakdown.overall_competitiveness}</Badge>
+              <h2 className="text-3xl font-bold">
+                {formData.name ? `Hey ${formData.name.split(" ")[0]}, here's your profile snapshot` : "Your Profile Analysis"}
+              </h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto text-sm">
+                Based on your <strong>{formData.graduation_stream}</strong> background
+                {formData.work_experience_months && Number(formData.work_experience_months) > 0
+                  ? `, ${Number(formData.work_experience_months)} months of work experience,`
+                  : " as a fresher,"} and targets for <strong>{formData.target_exams.join(", ")}</strong>
+              </p>
+              
+              {/* Score card with gradient border */}
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.2, type: "spring" }}
+                className="inline-block rounded-2xl p-[2px] ai-gist-border"
+              >
+                <div className="bg-background rounded-[14px] p-6 flex items-center gap-6">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-1">Profile Score</p>
+                    <p className={`text-5xl font-bold ${scoreColor(result.profile_score)}`}>{result.profile_score}</p>
+                    <p className="text-sm text-muted-foreground">/10</p>
                   </div>
-                )}
-              </div>
+                  {result.score_breakdown && (
+                    <div className="border-l border-border pl-6 space-y-1.5 text-left">
+                      <div className="flex items-center gap-2 text-sm"><Award className="w-4 h-4 text-primary" /> Academics: <strong>{result.score_breakdown.academics_score}/10</strong></div>
+                      <div className="flex items-center gap-2 text-sm"><Briefcase className="w-4 h-4 text-primary" /> Experience: <strong>{result.score_breakdown.work_experience_score}/10</strong></div>
+                      <div className="flex items-center gap-2 text-sm"><Layers className="w-4 h-4 text-primary" /> Diversity: <strong>{result.score_breakdown.diversity_score}/10</strong></div>
+                      <Badge variant="outline" className="mt-1">{result.score_breakdown.overall_competitiveness}</Badge>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
             </div>
 
             {/* Strengths */}
-            <Card>
-              <CardHeader><CardTitle className="flex items-center gap-2 text-green-600"><CheckCircle2 className="w-5 h-5" /> Your Strengths</CardTitle></CardHeader>
+            <Card className="border-green-200/50 dark:border-green-800/30">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-green-600">
+                  <CheckCircle2 className="w-5 h-5" />
+                  {formData.name ? `${formData.name.split(" ")[0]}, here's what makes you stand out` : "Your Strengths"}
+                </CardTitle>
+              </CardHeader>
               <CardContent className="space-y-3">
                 {result.strengths?.map((s, i) => (
-                  <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-green-50 dark:bg-green-950/20">
-                    <Badge variant="outline" className="text-green-600 border-green-300 shrink-0">{s.impact}</Badge>
+                  <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 }}
+                    className="flex items-start gap-3 p-3 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-100 dark:border-green-900/30">
+                    <Badge variant="outline" className="text-green-600 border-green-300 shrink-0 mt-0.5">{s.impact}</Badge>
                     <div><p className="font-semibold text-sm">{s.title}</p><p className="text-sm text-muted-foreground">{s.description}</p></div>
-                  </div>
+                  </motion.div>
                 ))}
               </CardContent>
             </Card>
 
             {/* Weaknesses */}
-            <Card>
-              <CardHeader><CardTitle className="flex items-center gap-2 text-amber-600"><AlertTriangle className="w-5 h-5" /> Areas to Improve</CardTitle></CardHeader>
+            <Card className="border-amber-200/50 dark:border-amber-800/30">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-amber-600">
+                  <AlertTriangle className="w-5 h-5" />
+                  Areas to improve — with actionable fixes
+                </CardTitle>
+              </CardHeader>
               <CardContent className="space-y-3">
                 {result.weaknesses?.map((w, i) => (
-                  <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20">
-                    <Badge variant="outline" className="text-amber-600 border-amber-300 shrink-0">{w.severity}</Badge>
+                  <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.1 + 0.3 }}
+                    className="flex items-start gap-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30">
+                    <Badge variant="outline" className="text-amber-600 border-amber-300 shrink-0 mt-0.5">{w.severity}</Badge>
                     <div><p className="font-semibold text-sm">{w.title}</p><p className="text-sm text-muted-foreground">{w.description}</p>
                       <p className="text-sm text-primary mt-1 flex items-center gap-1"><Lightbulb className="w-3.5 h-3.5" /> {w.fix}</p>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </CardContent>
             </Card>
@@ -1542,7 +1573,9 @@ const ProfileAnalyzerPage = () => {
                 <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 2 }}>
                   <Lock className="w-14 h-14 text-primary/60" />
                 </motion.div>
-                <h3 className="text-2xl font-bold">Unlock Your Full Report</h3>
+                <h3 className="text-2xl font-bold">
+                  {formData.name ? `${formData.name.split(" ")[0]}, unlock your complete MBA roadmap` : "Unlock Your Full Report"}
+                </h3>
                 <p className="text-muted-foreground text-center max-w-md">Get the detailed college comparison table, peer comparison, exam strategy, AI roadmap, and personalised study plan.</p>
                 <Button size="lg" onClick={() => setShowLeadModal(true)} className="rounded-2xl px-8 shadow-xl">
                   <Lock className="w-4 h-4 mr-2" /> Unlock Full Report
