@@ -1493,13 +1493,13 @@ const ProfileAnalyzerPage = () => {
             <div className="text-center space-y-4">
               <Badge variant="secondary" className="text-sm"><Sparkles className="w-3.5 h-3.5 mr-1" /> AI Analysis Complete</Badge>
               <h2 className="text-3xl font-bold">
-                {formData.name ? `Hey ${formData.name.split(" ")[0]}, here's your profile snapshot` : "Your Profile Analysis"}
+                {form.name ? `Hey ${form.name.split(" ")[0]}, here's your profile snapshot` : "Your Profile Analysis"}
               </h2>
               <p className="text-muted-foreground max-w-2xl mx-auto text-sm">
-                Based on your <strong>{formData.graduation_stream}</strong> background
-                {formData.work_experience_months && Number(formData.work_experience_months) > 0
-                  ? `, ${Number(formData.work_experience_months)} months of work experience,`
-                  : " as a fresher,"} and targets for <strong>{formData.target_exams.join(", ")}</strong>
+                Based on your <strong>{form.graduation_stream}</strong> background
+                {form.work_experience_months && Number(form.work_experience_months) > 0
+                  ? `, ${Number(form.work_experience_months)} months of work experience,`
+                  : " as a fresher,"} and targets for <strong>{form.target_exams.join(", ")}</strong>
               </p>
               
               {/* Score card with gradient border */}
@@ -1532,7 +1532,7 @@ const ProfileAnalyzerPage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-green-600">
                   <CheckCircle2 className="w-5 h-5" />
-                  {formData.name ? `${formData.name.split(" ")[0]}, here's what makes you stand out` : "Your Strengths"}
+                  {form.name ? `${form.name.split(" ")[0]}, here's what makes you stand out` : "Your Strengths"}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -1574,7 +1574,7 @@ const ProfileAnalyzerPage = () => {
                   <Lock className="w-14 h-14 text-primary/60" />
                 </motion.div>
                 <h3 className="text-2xl font-bold">
-                  {formData.name ? `${formData.name.split(" ")[0]}, unlock your complete MBA roadmap` : "Unlock Your Full Report"}
+                  {form.name ? `${form.name.split(" ")[0]}, unlock your complete MBA roadmap` : "Unlock Your Full Report"}
                 </h3>
                 <p className="text-muted-foreground text-center max-w-md">Get the detailed college comparison table, peer comparison, exam strategy, AI roadmap, and personalised study plan.</p>
                 <Button size="lg" onClick={() => setShowLeadModal(true)} className="rounded-2xl px-8 shadow-xl">
