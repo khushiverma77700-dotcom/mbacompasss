@@ -1523,18 +1523,44 @@ const AdminSEODashboard = () => {
                   <Table>
                     <TableHeader><TableRow><TableHead>Title</TableHead><TableHead>Meta Title</TableHead><TableHead>Slug</TableHead><TableHead>Keyword</TableHead><TableHead>Vol</TableHead><TableHead>Priority</TableHead><TableHead>Saved</TableHead><TableHead className="w-10"></TableHead></TableRow></TableHeader>
                     <TableBody>
-                      {savedBlogIdeas.map(idea => (
+                      {savedBlogIdeas.map(idea => {
+                        const copyCell = (text: string) => {
+                          navigator.clipboard.writeText(text);
+                          toast({ title: "Copied!", description: text.slice(0, 60) });
+                        };
+                        return (
                         <TableRow key={idea.id}>
-                          <TableCell className="font-medium max-w-[200px] truncate">{idea.title}</TableCell>
-                          <TableCell className="text-xs text-blue-600 max-w-[150px] truncate">{idea.metaTitle}</TableCell>
-                          <TableCell className="text-xs text-green-600">/{idea.slug}</TableCell>
-                          <TableCell className="text-xs">{idea.targetKeyword}</TableCell>
+                          <TableCell className="font-medium max-w-[250px]">
+                            <div className="flex items-center gap-1 group">
+                              <span className="truncate cursor-help" title={idea.title}>{idea.title}</span>
+                              <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => copyCell(idea.title)}><Copy className="h-3 w-3" /></Button>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs text-blue-600 max-w-[200px]">
+                            <div className="flex items-center gap-1 group">
+                              <span className="truncate cursor-help" title={idea.metaTitle}>{idea.metaTitle}</span>
+                              <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => copyCell(idea.metaTitle)}><Copy className="h-3 w-3" /></Button>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs text-green-600 max-w-[180px]">
+                            <div className="flex items-center gap-1 group">
+                              <span className="truncate cursor-help" title={`/${idea.slug}`}>/{idea.slug}</span>
+                              <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => copyCell(`/${idea.slug}`)}><Copy className="h-3 w-3" /></Button>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-xs max-w-[140px]">
+                            <div className="flex items-center gap-1 group">
+                              <span className="truncate cursor-help" title={idea.targetKeyword}>{idea.targetKeyword}</span>
+                              <Button variant="ghost" size="icon" className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => copyCell(idea.targetKeyword)}><Copy className="h-3 w-3" /></Button>
+                            </div>
+                          </TableCell>
                           <TableCell className="font-mono text-xs">{idea.searchVolume?.toLocaleString()}</TableCell>
                           <TableCell><Badge className={`text-[10px] ${priorityColor(idea.priority)}`}>{idea.priority}</Badge></TableCell>
                           <TableCell className="text-[10px] text-muted-foreground">{new Date(idea.savedAt).toLocaleDateString()}</TableCell>
                           <TableCell><Button variant="ghost" size="icon" className="h-6 w-6 text-red-400 hover:text-red-600" onClick={() => handleDeleteBlogIdea(idea.id)}><Trash2 className="h-3 w-3" /></Button></TableCell>
                         </TableRow>
-                      ))}
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </CardContent>
