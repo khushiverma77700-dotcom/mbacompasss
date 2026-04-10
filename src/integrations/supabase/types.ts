@@ -494,6 +494,7 @@ export type Database = {
           banner_url: string | null
           campus_size: string | null
           city: string | null
+          college_category: string | null
           courses: string[] | null
           created_at: string
           cutoff_info: Json | null
@@ -514,6 +515,7 @@ export type Database = {
           ranking: number | null
           slug: string
           state: string | null
+          tier: string | null
           top_recruiters: string[] | null
           total_students: number | null
           type: string | null
@@ -526,6 +528,7 @@ export type Database = {
           banner_url?: string | null
           campus_size?: string | null
           city?: string | null
+          college_category?: string | null
           courses?: string[] | null
           created_at?: string
           cutoff_info?: Json | null
@@ -546,6 +549,7 @@ export type Database = {
           ranking?: number | null
           slug: string
           state?: string | null
+          tier?: string | null
           top_recruiters?: string[] | null
           total_students?: number | null
           type?: string | null
@@ -558,6 +562,7 @@ export type Database = {
           banner_url?: string | null
           campus_size?: string | null
           city?: string | null
+          college_category?: string | null
           courses?: string[] | null
           created_at?: string
           cutoff_info?: Json | null
@@ -578,6 +583,7 @@ export type Database = {
           ranking?: number | null
           slug?: string
           state?: string | null
+          tier?: string | null
           top_recruiters?: string[] | null
           total_students?: number | null
           type?: string | null
