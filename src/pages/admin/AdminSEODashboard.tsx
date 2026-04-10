@@ -52,6 +52,30 @@ interface DashboardRow {
 interface KeywordResult {
   keyword: string; searchVolume: number; competition: string; difficulty: number;
   cpc?: number; intent: string; trending: string; category?: string;
+  source?: string; priorityScore?: number;
+}
+
+interface KeywordCluster {
+  clusterName: string; pillarKeyword: string;
+  supportingKeywords: string[]; suggestedContentType?: string;
+}
+
+interface ContentGapItem {
+  gap: string; suggestedTitle: string;
+  estimatedTraffic?: number; difficulty?: string;
+}
+
+interface SeasonalItem {
+  keyword: string; peakMonths: string; action: string;
+}
+
+interface SnippetItem {
+  question: string; suggestedAnswer?: string; currentRanker?: string;
+}
+
+interface DataQualityReport {
+  totalRealKeywords?: number; totalAiEnriched?: number;
+  dataSourcesUsed?: string[]; confidence?: string; notes?: string;
 }
 
 interface BlogTitleResult {
