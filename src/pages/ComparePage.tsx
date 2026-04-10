@@ -84,7 +84,7 @@ const ComparePage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Compare MBA Coaching Courses Side by Side | BestMBACoaching"
+        title="Compare MBA Coaching Courses Side by Side | BSchoolBuzz"
         description="Compare top MBA coaching courses side by side. Analyze fees, curriculum, success rates, faculty & more. AI-powered coaching finder for personalized recommendations."
         keywords={["compare MBA courses", "MBA coaching comparison", "CAT coaching compare", "MBA coaching fees comparison", "best MBA coaching India", "AI coaching finder", "MBA course fees", "coaching institute comparison"]}
         canonical="https://bschoolbuzz.com/compare"
