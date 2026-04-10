@@ -511,9 +511,13 @@ const AdminSEODashboard = () => {
       setKwContentGaps(d?.contentGaps || []);
       setKwSeasonal(d?.seasonalOpportunities || []);
       setKwSnippets(d?.snippetOpportunities || []);
+      setKwClusters(d?.keywordClusters || []);
+      setKwDataQuality(d?.dataQualityReport || null);
+      setKwCompetitorKws(d?.competitorKeywords || []);
       setKwSummary(d?.summary || "");
       setKwLastRefresh(new Date().toLocaleString());
-      toast({ title: "Keyword research complete", description: `Found ${d?.keywords?.length || 0} keywords` });
+      const realCount = (d?.keywords || []).filter((k: any) => k.source !== "ai_enriched").length;
+      toast({ title: "Keyword research complete", description: `${d?.keywords?.length || 0} keywords (${realCount} from real data)` });
     } catch (e: any) {
       toast({ title: "Keyword research failed", description: e.message, variant: "destructive" });
     } finally { setKwLoading(false); }
