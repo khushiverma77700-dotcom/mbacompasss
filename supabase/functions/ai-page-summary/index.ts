@@ -14,16 +14,23 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     if (action === "summarize") {
-      // Summarize content in ~60 words
       const stripped = (content || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 8000);
       
       const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash-lite",
+          model: "google/gemini-2.5-flash",
           messages: [
-            { role: "system", content: "You are an expert education content summarizer for BSchoolBuzz. Write a crisp, humanized summary in exactly 50-60 words. Be insightful and actionable. No fluff. No markdown formatting - just plain text." },
+            { role: "system", content: `You are an expert education content summarizer for BSchoolBuzz. Write a crisp, humanized summary in 50-70 words using markdown formatting.
+
+Rules:
+- Use **bold** for key facts, numbers, college names, and important terms
+- Use bullet points (- ) for 2-3 key takeaways if the content has multiple important points
+- Be insightful, actionable, and specific — no fluff or generic statements
+- Write in a warm, conversational tone like a helpful senior mentor
+- End with a sharp insight or actionable tip
+- Do NOT use headings (#). Just flowing text with bold highlights and optional bullets.` },
             { role: "user", content: `Summarize this ${pageType || "article"} content:\n\n${stripped}` },
           ],
         }),
@@ -41,35 +48,61 @@ serve(async (req) => {
     }
 
     if (action === "ask") {
-      // First search DB for relevant content
       const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
       const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
       
       let dbContext = "";
       
-      // Search articles for relevant answers
-      const searchResp = await fetch(`${SUPABASE_URL}/rest/v1/articles?published=eq.true&select=title,content,excerpt&limit=3&or=(title.ilike.*${encodeURIComponent(question?.split(" ").slice(0, 3).join("*"))}*,content.ilike.*${encodeURIComponent(question?.split(" ").slice(0, 3).join("*"))}*)`, {
-        headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` },
-      });
-      
-      if (searchResp.ok) {
-        const articles = await searchResp.json();
-        if (articles?.length > 0) {
-          dbContext = articles.map((a: any) => `Article: ${a.title}\n${(a.content || a.excerpt || "").replace(/<[^>]*>/g, " ").slice(0, 1500)}`).join("\n\n");
+      // Search articles
+      try {
+        const searchTerms = (question || "").split(" ").filter(w => w.length > 2).slice(0, 4);
+        if (searchTerms.length > 0) {
+          const orFilter = searchTerms.map(t => `title.ilike.*${t}*,content.ilike.*${t}*`).join(",");
+          const searchResp = await fetch(`${SUPABASE_URL}/rest/v1/articles?published=eq.true&select=title,content,excerpt&limit=3&or=(${encodeURIComponent(orFilter)})`, {
+            headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` },
+          });
+          if (searchResp.ok) {
+            const articles = await searchResp.json();
+            if (articles?.length > 0) {
+              dbContext = articles.map((a: any) => `Article: ${a.title}\n${(a.content || a.excerpt || "").replace(/<[^>]*>/g, " ").slice(0, 1500)}`).join("\n\n");
+            }
+          }
         }
-      }
+      } catch (e) { console.error("Article search error:", e); }
 
-      // Search colleges too
-      const collegeResp = await fetch(`${SUPABASE_URL}/rest/v1/colleges?select=name,description,fees,placement_avg,courses&limit=3&or=(name.ilike.*${encodeURIComponent(question?.split(" ").slice(0, 2).join("*"))}*,description.ilike.*${encodeURIComponent(question?.split(" ").slice(0, 2).join("*"))}*)`, {
-        headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` },
-      });
-      
-      if (collegeResp.ok) {
-        const colleges = await collegeResp.json();
-        if (colleges?.length > 0) {
-          dbContext += "\n\n" + colleges.map((c: any) => `College: ${c.name} | Fees: ${c.fees} | Avg Placement: ${c.placement_avg} | Courses: ${(c.courses || []).join(", ")}`).join("\n");
+      // Search colleges
+      try {
+        const searchTerms = (question || "").split(" ").filter(w => w.length > 2).slice(0, 3);
+        if (searchTerms.length > 0) {
+          const orFilter = searchTerms.map(t => `name.ilike.*${t}*,description.ilike.*${t}*`).join(",");
+          const collegeResp = await fetch(`${SUPABASE_URL}/rest/v1/colleges?select=name,description,fees,placement_avg,courses&limit=3&or=(${encodeURIComponent(orFilter)})`, {
+            headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` },
+          });
+          if (collegeResp.ok) {
+            const colleges = await collegeResp.json();
+            if (colleges?.length > 0) {
+              dbContext += "\n\n" + colleges.map((c: any) => `College: ${c.name} | Fees: ${c.fees} | Avg Placement: ${c.placement_avg} | Courses: ${(c.courses || []).join(", ")}`).join("\n");
+            }
+          }
         }
-      }
+      } catch (e) { console.error("College search error:", e); }
+
+      // Search institutes
+      try {
+        const searchTerms = (question || "").split(" ").filter(w => w.length > 2).slice(0, 3);
+        if (searchTerms.length > 0) {
+          const orFilter = searchTerms.map(t => `name.ilike.*${t}*,description.ilike.*${t}*`).join(",");
+          const instResp = await fetch(`${SUPABASE_URL}/rest/v1/institutes?select=name,description,city,rating,success_rate,features&limit=3&or=(${encodeURIComponent(orFilter)})`, {
+            headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` },
+          });
+          if (instResp.ok) {
+            const institutes = await instResp.json();
+            if (institutes?.length > 0) {
+              dbContext += "\n\n" + institutes.map((i: any) => `Institute: ${i.name} | City: ${i.city} | Rating: ${i.rating} | Success Rate: ${i.success_rate}%`).join("\n");
+            }
+          }
+        }
+      } catch (e) { console.error("Institute search error:", e); }
 
       const pageContent = (content || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 4000);
 
@@ -79,7 +112,15 @@ serve(async (req) => {
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
           messages: [
-            { role: "system", content: `You are a helpful MBA admission expert for BSchoolBuzz. Answer questions concisely in 2-4 sentences. Be factual and actionable. Use the provided context from our database and current page. If no relevant data is found, give your best expert answer. No markdown.` },
+            { role: "system", content: `You are a helpful MBA admission expert for BSchoolBuzz. Answer questions accurately using markdown formatting.
+
+Rules:
+- Use **bold** for key facts, names, numbers
+- Use bullet points for multiple items
+- Be factual, concise (3-5 sentences max), and actionable
+- If database context has the answer, use it. If not, use your general knowledge to give the best possible answer.
+- Never say "I don't have information" — always provide a helpful answer from your knowledge
+- Write in a warm, mentor-like tone` },
             { role: "user", content: `Page context:\n${pageContent}\n\n${dbContext ? `Database context:\n${dbContext}\n\n` : ""}User question: ${question}` },
           ],
         }),
