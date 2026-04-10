@@ -225,6 +225,10 @@ const AdminSEODashboard = () => {
   const [compPageRecs, setCompPageRecs] = useState<PageRecommendation[]>([]);
   const [compSubTab, setCompSubTab] = useState("overview");
 
+  // Removed Links State
+  const [removedLinks, setRemovedLinks] = useState<any[]>([]);
+  const [removedLinksLoading, setRemovedLinksLoading] = useState(false);
+
   const [injectLoading, setInjectLoading] = useState(false);
 
   // Interlink Studio State
