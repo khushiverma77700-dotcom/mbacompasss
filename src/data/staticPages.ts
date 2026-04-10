@@ -16,6 +16,7 @@ const STATIC_PAGES: StaticPageDef[] = [
   { key: "compare", label: "Compare Coaching", path: "/compare" },
   { key: "college-finder", label: "AI College Finder & Compare", path: "/college-finder" },
   { key: "profile-analyzer", label: "Profile Analyzer", path: "/profile-analyzer" },
+  { key: "college-shortlister", label: "AI College Shortlister", path: "/college-shortlister" },
   { key: "dashboard", label: "Student Dashboard", path: "/dashboard" },
   { key: "auth", label: "Login / Signup", path: "/auth" },
 ];
