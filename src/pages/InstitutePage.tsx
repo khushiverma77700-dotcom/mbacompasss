@@ -103,16 +103,31 @@ const InstitutePage = () => {
   const categorySlug = (institute.categories as any)?.slug || "cat";
   const categoryName = (institute.categories as any)?.name || "MBA";
 
-  // Filter courses based on selected target
-  const filteredCourses = selectedTarget
-    ? courses.filter((c: any) => {
-        const target = selectedTarget.toLowerCase();
-        const name = c.name.toLowerCase();
-        return name.includes(target.split(" ")[0]) || name.includes(target);
-      })
-    : courses;
+  // Extract unique course categories from courses
+  const courseCategories = Array.from(
+    new Map(
+      courses
+        .filter((c: any) => c.course_categories?.id)
+        .map((c: any) => [c.course_categories.id, { id: c.course_categories.id, name: c.course_categories.name }])
+    ).values()
+  );
 
-  const displayCourses = filteredCourses.length > 0 ? filteredCourses : courses;
+  // Filter courses based on selected target AND selected course category
+  const filteredCourses = courses.filter((c: any) => {
+    let matchTarget = true;
+    let matchCategory = true;
+    if (selectedTarget) {
+      const target = selectedTarget.toLowerCase();
+      const name = c.name.toLowerCase();
+      matchTarget = name.includes(target.split(" ")[0]) || name.includes(target);
+    }
+    if (selectedCourseCategory) {
+      matchCategory = c.course_categories?.id === selectedCourseCategory;
+    }
+    return matchTarget && matchCategory;
+  });
+
+  const displayCourses = filteredCourses.length > 0 ? filteredCourses : (selectedCourseCategory ? [] : courses);
 
   const handleGetBestOffer = () => {
     if (!user) {
