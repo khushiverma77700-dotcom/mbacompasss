@@ -163,9 +163,9 @@ const BlogPage = () => {
                 >
                   <div className="grid md:grid-cols-5">
                     <div className="md:col-span-3 h-64 md:h-[420px] overflow-hidden relative">
-                      {featuredArticle.image_url ? (
+                      {(featuredArticle.image_url || featuredArticle.banner_url) ? (
                         <img
-                          src={featuredArticle.image_url}
+                          src={(featuredArticle.image_url || featuredArticle.banner_url)!}
                           alt={featuredArticle.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                           loading="lazy"
@@ -236,9 +236,9 @@ const BlogPage = () => {
                         className="group flex flex-col bg-card rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-border h-full hover:-translate-y-1"
                       >
                         <div className="h-48 overflow-hidden relative">
-                          {item.image_url ? (
+                          {(item.image_url || item.banner_url) ? (
                             <img
-                              src={item.image_url}
+                              src={(item.image_url || item.banner_url)!}
                               alt={item.title}
                               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                               loading="lazy"
