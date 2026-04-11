@@ -10,6 +10,7 @@ const adminNav = [
   { label: "Callback Requests", path: "/admin/callbacks", icon: PhoneCall, showDot: true },
   { label: "Institutes", path: "/admin/institutes", icon: Building2 },
   { label: "Courses", path: "/admin/courses", icon: BookOpen },
+  { label: "Course Categories", path: "/admin/course-categories", icon: Tag },
   { label: "Colleges", path: "/admin/colleges", icon: GraduationCap },
   { label: "Exams", path: "/admin/exams", icon: FileText },
   { label: "Categories", path: "/admin/categories", icon: Tag },

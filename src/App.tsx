@@ -70,6 +70,7 @@ const AdminShortlisterColleges = lazy(() => import("./pages/admin/AdminShortlist
 const AdminCallbacks = lazy(() => import("./pages/admin/AdminCallbacks"));
 const AdminDatabaseBackup = lazy(() => import("./pages/admin/AdminDatabaseBackup"));
 const AdminAIUsage = lazy(() => import("./pages/admin/AdminAIUsage"));
+const AdminCourseCategories = lazy(() => import("./pages/admin/AdminCourseCategories"));
 
 // Lazy load heavy popups
 const OnboardingDialog = lazy(() => import("@/components/OnboardingDialog"));
@@ -216,6 +217,7 @@ const App = () => (
               <Route path="callbacks" element={<LazyPage><AdminCallbacks /></LazyPage>} />
               <Route path="database-backup" element={<LazyPage><AdminDatabaseBackup /></LazyPage>} />
               <Route path="ai-usage" element={<LazyPage><AdminAIUsage /></LazyPage>} />
+              <Route path="course-categories" element={<LazyPage><AdminCourseCategories /></LazyPage>} />
             </Route>
 
             {/* Eagerly loaded — no spinner */}

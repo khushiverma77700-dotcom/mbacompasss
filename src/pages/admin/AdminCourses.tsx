@@ -135,6 +135,17 @@ const AdminCourses = () => {
                   </Select>
                 </div>
                 <div>
+                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Course Category</Label>
+                  <Select value={form.course_category_id} onValueChange={(v) => setForm({ ...form, course_category_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Select Category (optional)" /></SelectTrigger>
+                    <SelectContent>
+                      {courseCategories.map(cc => (
+                        <SelectItem key={cc.id} value={cc.id}>{cc.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Course Name *</Label>
                   <Input placeholder="e.g. CAT 2026 Complete Course" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
                 </div>
