@@ -1,10 +1,10 @@
 // CAT Response Sheet Parser
-// Parses the HTML from digialm.com CAT response sheets
+// Parses the HTML from digialm.com CAT response sheets (TCS iON platform)
 
 export interface ParsedQuestion {
-  section: string;        // VARC, DILR, QA
+  section: string;
   questionNumber: number;
-  questionType: "MCQ" | "SA";  // SA = TITA (Type In The Answer)
+  questionType: "MCQ" | "SA";
   status: string;
   chosenOption: string | null;
   correctOption: string | null;
@@ -46,16 +46,13 @@ export interface CATResult {
 
 function extractCandidateInfo(doc: Document) {
   const info: Record<string, string> = {};
-  // The info table is in .main-info-pnl > table
-  const infoTable = doc.querySelector(".main-info-pnl table");
-  if (infoTable) {
-    const rows = infoTable.querySelectorAll("tr");
+  const infoPanel = doc.querySelector(".main-info-pnl");
+  if (infoPanel) {
+    const rows = infoPanel.querySelectorAll("table tr");
     rows.forEach((row) => {
       const cells = row.querySelectorAll("td");
       if (cells.length >= 2) {
-        const key = cells[0].textContent?.trim() || "";
-        const value = cells[1].textContent?.trim() || "";
-        info[key] = value;
+        info[cells[0].textContent?.trim() || ""] = cells[1].textContent?.trim() || "";
       }
     });
   }
@@ -68,117 +65,176 @@ function extractCandidateInfo(doc: Document) {
   };
 }
 
+function extractMetadata(panel: Element): Record<string, string> {
+  const metadata: Record<string, string> = {};
+  // The metadata table is typically the LAST table in the question panel
+  // It contains rows like "Question Type : MCQ", "Status : Answered", etc.
+  const allTables = panel.querySelectorAll("table");
+
+  for (let t = allTables.length - 1; t >= 0; t--) {
+    const table = allTables[t];
+    const rows = table.querySelectorAll("tr");
+    let foundMeta = false;
+
+    rows.forEach((row) => {
+      const cells = row.querySelectorAll("td");
+      if (cells.length >= 2) {
+        const key = cells[0].textContent?.trim().replace(/\s*:\s*$/, "").replace(/\s+/g, " ") || "";
+        const value = cells[1].textContent?.trim() || "";
+
+        if (
+          key === "Question Type" ||
+          key === "Status" ||
+          key === "Chosen Option" ||
+          key === "Question ID" ||
+          key === "Possible Answer" ||
+          key === "Given Answer" ||
+          key.startsWith("Option") ||
+          key === "Answer Type" ||
+          key === "Case Sensitivity"
+        ) {
+          metadata[key] = value;
+          foundMeta = true;
+        }
+      }
+    });
+
+    if (foundMeta) break;
+  }
+
+  return metadata;
+}
+
+function findCorrectOption(panel: Element, questionType: string): string | null {
+  if (questionType === "SA") {
+    // For SA/TITA, look for "Possible Answer" in metadata
+    const metadata = extractMetadata(panel);
+    return metadata["Possible Answer"] || null;
+  }
+
+  // For MCQ: find the answer option with green styling (correct answer indicator)
+  // The answer section starts with "Ans" and lists options
+  // Correct answer: green text/image indicator
+  // Wrong answer: red text/image indicator
+
+  // Strategy 1: Look for elements with green color styling
+  const allElements = panel.querySelectorAll("td, span, div, font");
+  for (const el of allElements) {
+    const style = (el as HTMLElement).style?.color || el.getAttribute("style") || "";
+    const parentText = el.parentElement?.textContent || "";
+
+    // Check for green color indicators
+    if (
+      style.includes("green") ||
+      style.includes("#00") ||
+      style.includes("#0f") ||
+      style.includes("#0F") ||
+      style.includes("rgb(0,") ||
+      style.includes("rgb(0, ")
+    ) {
+      // Extract option number from text like "1. Option 1" or just "1"
+      const text = el.textContent?.trim() || "";
+      const match = text.match(/^(\d+)\./);
+      if (match) return match[1];
+    }
+  }
+
+  // Strategy 2: Look for the option that has a "right" or "correct" image next to it
+  const imgs = panel.querySelectorAll("img");
+  for (const img of imgs) {
+    const src = img.getAttribute("src") || "";
+    const alt = img.getAttribute("alt") || "";
+    if (
+      src.includes("right") ||
+      src.includes("correct") ||
+      src.includes("tick") ||
+      src.includes("green") ||
+      alt.includes("right") ||
+      alt.includes("correct")
+    ) {
+      // Find nearest text with option number
+      const parent = img.closest("td") || img.parentElement;
+      const text = parent?.textContent?.trim() || "";
+      const match = text.match(/(\d+)\./);
+      if (match) return match[1];
+    }
+  }
+
+  // Strategy 3: Look for the "Ans" row and check which option has the checkmark
+  // Sometimes the indicator is just positioning/className
+  const tdElements = panel.querySelectorAll("td");
+  let foundAns = false;
+  for (const td of tdElements) {
+    const text = td.textContent?.trim() || "";
+    if (text === "Ans") {
+      foundAns = true;
+      continue;
+    }
+    if (foundAns) {
+      // The next td with an image that isn't "wrong/cross" is the correct answer
+      const img = td.querySelector("img");
+      if (img) {
+        const src = img.getAttribute("src") || "";
+        if (!src.includes("wrong") && !src.includes("cross") && !src.includes("red")) {
+          const optText = td.textContent?.trim() || "";
+          const match = optText.match(/(\d+)\./);
+          if (match) return match[1];
+        }
+      }
+    }
+  }
+
+  // Strategy 4: Check for colored font tags
+  const fonts = panel.querySelectorAll("font[color]");
+  for (const font of fonts) {
+    const color = font.getAttribute("color") || "";
+    if (color.toLowerCase().includes("green") || color === "#00ff00" || color === "#008000") {
+      const text = font.textContent?.trim() || "";
+      const match = text.match(/(\d+)\./);
+      if (match) return match[1];
+    }
+  }
+
+  return null;
+}
+
 function parseQuestions(doc: Document): ParsedQuestion[] {
   const questions: ParsedQuestion[] = [];
-  let currentSection = "";
-
-  // Iterate through section containers
   const sectionContainers = doc.querySelectorAll(".section-cntnr");
 
   sectionContainers.forEach((container) => {
-    // Get section name
     const sectionLabel = container.querySelector(".section-lbl .bold");
-    if (sectionLabel) {
-      currentSection = sectionLabel.textContent?.trim() || "";
-    }
+    const currentSection = sectionLabel?.textContent?.trim() || "Unknown";
 
-    // Get all question panels in this section
     const questionPanels = container.querySelectorAll(".question-pnl");
-
     questionPanels.forEach((panel) => {
-      // Extract question metadata from the menu-tbl
-      const menuTable = panel.querySelector(".menu-tbl");
-      if (!menuTable) return;
+      const metadata = extractMetadata(panel);
 
-      const metadata: Record<string, string> = {};
-      const menuRows = menuTable.querySelectorAll("tr");
-      menuRows.forEach((row) => {
-        const cells = row.querySelectorAll("td");
-        if (cells.length >= 2) {
-          const key = cells[0].textContent?.trim().replace(/\s*:\s*$/, "") || "";
-          const value = cells[1].textContent?.trim() || "";
-          metadata[key] = value;
-        }
-      });
-
-      const questionType = (metadata["Question Type"] || "MCQ") as "MCQ" | "SA";
-      const status = (metadata["Status"] || "Not Answered") as ParsedQuestion["status"];
-      const chosenOption = metadata["Chosen Option"] || null;
-
-      // Get question number from the bold Q.N text
-      const qNumEl = panel.querySelector(".questionRowTbl .bold");
+      // Get question number
       let questionNumber = 0;
-      if (qNumEl) {
-        const match = qNumEl.textContent?.match(/Q\.(\d+)/);
+      const qBold = panel.querySelector(".questionRowTbl .bold");
+      if (qBold) {
+        const match = qBold.textContent?.match(/Q\.(\d+)/);
         if (match) questionNumber = parseInt(match[1]);
       }
 
-      // Determine correct answer
-      let correctOption: string | null = null;
+      const questionType = (metadata["Question Type"] === "SA" ? "SA" : "MCQ") as "MCQ" | "SA";
+      const status = metadata["Status"] || "Not Answered";
+      const chosenOption = metadata["Chosen Option"] && metadata["Chosen Option"] !== "--"
+        ? metadata["Chosen Option"]
+        : null;
 
-      if (questionType === "MCQ") {
-        // For MCQ: the correct answer has a green checkmark image (right-answer or cross/tick icon)
-        // The answer row table has options with img indicators
-        const answerTable = panel.querySelector(".questionRowTbl");
-        if (answerTable) {
-          // Look for the green tick - typically an img with src containing "right" or "correct" or tick
-          const allTds = answerTable.querySelectorAll("td");
-          allTds.forEach((td) => {
-            const img = td.querySelector("img");
-            const text = td.textContent?.trim() || "";
-            if (img) {
-              const src = img.getAttribute("src") || "";
-              // Green tick image indicates correct answer
-              if (src.includes("right") || src.includes("correct") || src.includes("tick")) {
-                // The option number is in a sibling or parent text
-                const optMatch = text.match(/(\d+)\./);
-                if (optMatch) {
-                  correctOption = optMatch[1];
-                }
-              }
-            }
-          });
-        }
-
-        // Fallback: look for the answer in the Ans row
-        if (!correctOption) {
-          // Sometimes correct answer is indicated with specific styling
-          const ansRows = panel.querySelectorAll("tr");
-          ansRows.forEach((row) => {
-            const cells = row.querySelectorAll("td");
-            cells.forEach((cell) => {
-              // Look for green-colored text which is the correct answer
-              const greenSpans = cell.querySelectorAll('span[style*="color"]');
-              greenSpans.forEach((span) => {
-                const style = span.getAttribute("style") || "";
-                if (style.includes("green") || style.includes("#0") || style.includes("rgb(0")) {
-                  const optMatch = span.textContent?.match(/(\d+)/);
-                  if (optMatch) correctOption = optMatch[1];
-                }
-              });
-            });
-          });
-        }
-      } else {
-        // SA/TITA: Look for "Possible Answer" in the metadata
-        correctOption = metadata["Possible Answer"] || null;
-      }
-
-      // For SA: check "Given Answer" or extract from the panel
-      let givenAnswer = chosenOption;
-      if (questionType === "SA") {
-        // Look for Given Answer in metadata
-        givenAnswer = metadata["Given Answer"] || metadata["Chosen Option"] || null;
-      }
+      const correctOption = findCorrectOption(panel, questionType);
 
       // Determine if correct
       let isCorrect = false;
-      if (status === "Answered" && correctOption) {
-        if (questionType === "MCQ") {
-          isCorrect = chosenOption === correctOption;
-        } else {
-          // SA: case-insensitive comparison
-          isCorrect = (givenAnswer || "").toLowerCase() === (correctOption || "").toLowerCase();
+      if (status === "Answered" || status === "Answered & Marked for Review") {
+        if (chosenOption && correctOption) {
+          if (questionType === "MCQ") {
+            isCorrect = chosenOption === correctOption;
+          } else {
+            isCorrect = chosenOption.toLowerCase().trim() === correctOption.toLowerCase().trim();
+          }
         }
       }
 
@@ -187,7 +243,7 @@ function parseQuestions(doc: Document): ParsedQuestion[] {
         questionNumber,
         questionType,
         status,
-        chosenOption: questionType === "SA" ? givenAnswer : chosenOption,
+        chosenOption,
         correctOption,
         isCorrect,
       });
@@ -199,25 +255,20 @@ function parseQuestions(doc: Document): ParsedQuestion[] {
 
 function calculateSectionScores(questions: ParsedQuestion[]): SectionScore[] {
   const sectionMap = new Map<string, ParsedQuestion[]>();
-
   questions.forEach((q) => {
     const existing = sectionMap.get(q.section) || [];
     existing.push(q);
     sectionMap.set(q.section, existing);
   });
 
-  const sections: SectionScore[] = [];
-
-  // Maintain order: VARC, DILR, QA
   const sectionOrder = ["VARC", "DILR", "QA"];
   const allSections = Array.from(sectionMap.keys());
   const orderedSections = sectionOrder.filter((s) => allSections.includes(s));
-  // Add any remaining sections
   allSections.forEach((s) => {
     if (!orderedSections.includes(s)) orderedSections.push(s);
   });
 
-  orderedSections.forEach((section) => {
+  return orderedSections.map((section) => {
     const sectionQs = sectionMap.get(section) || [];
     const total = sectionQs.length;
     const attempted = sectionQs.filter(
@@ -225,7 +276,7 @@ function calculateSectionScores(questions: ParsedQuestion[]): SectionScore[] {
     ).length;
     const correct = sectionQs.filter((q) => q.isCorrect).length;
 
-    // For incorrect: MCQ wrong = -1, SA wrong = 0
+    // MCQ wrong answers get -1, SA wrong answers get 0 (no negative marking for TITA)
     const mcqIncorrect = sectionQs.filter(
       (q) =>
         q.questionType === "MCQ" &&
@@ -242,50 +293,21 @@ function calculateSectionScores(questions: ParsedQuestion[]): SectionScore[] {
 
     const incorrect = mcqIncorrect + saIncorrect;
     const unattempted = total - attempted;
-
-    // Score: +3 for correct, -1 for MCQ incorrect, 0 for SA incorrect
-    const score = correct * 3 - mcqIncorrect * 1;
+    const score = correct * 3 - mcqIncorrect * 1; // +3 correct, -1 MCQ wrong, 0 SA wrong
     const maxScore = total * 3;
     const accuracy = attempted > 0 ? (correct / attempted) * 100 : 0;
 
-    sections.push({
-      section,
-      total,
-      attempted,
-      correct,
-      incorrect,
-      unattempted,
-      score,
-      maxScore,
-      accuracy,
-    });
+    return { section, total, attempted, correct, incorrect, unattempted, score, maxScore, accuracy };
   });
-
-  return sections;
 }
 
 function estimatePercentile(totalScore: number): number {
-  // Rough CAT percentile estimates based on historical data
-  // These are approximate and based on CAT 2024/2025 trends
+  // Approximate CAT percentile based on historical data
   const brackets: [number, number][] = [
-    [200, 99.99],
-    [170, 99.9],
-    [150, 99.5],
-    [130, 99],
-    [115, 98],
-    [105, 97],
-    [95, 95],
-    [85, 93],
-    [75, 90],
-    [65, 85],
-    [55, 80],
-    [45, 70],
-    [35, 60],
-    [25, 45],
-    [15, 30],
-    [5, 15],
-    [0, 5],
-    [-10, 1],
+    [200, 99.99], [170, 99.9], [150, 99.5], [130, 99], [115, 98],
+    [105, 97], [95, 95], [85, 93], [75, 90], [65, 85],
+    [55, 80], [45, 70], [35, 60], [25, 45], [15, 30],
+    [5, 15], [0, 5], [-10, 1],
   ];
 
   for (const [score, percentile] of brackets) {
@@ -319,14 +341,8 @@ export function parseCATResponseSheet(htmlContent: string): CATResult {
     questions,
     sections,
     overall: {
-      totalQuestions,
-      attempted,
-      correct,
-      incorrect,
-      unattempted,
-      totalScore,
-      maxScore,
-      accuracy,
+      totalQuestions, attempted, correct, incorrect, unattempted,
+      totalScore, maxScore, accuracy,
     },
     estimatedPercentile: estimatePercentile(totalScore),
   };
