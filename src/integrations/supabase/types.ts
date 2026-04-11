@@ -283,6 +283,129 @@ export type Database = {
         }
         Relationships: []
       }
+      cat_score_submissions: {
+        Row: {
+          accuracy: number | null
+          application_no: string | null
+          attempted: number | null
+          candidate_name: string
+          correct: number | null
+          created_at: string
+          dilr_accuracy: number | null
+          dilr_attempted: number | null
+          dilr_correct: number | null
+          dilr_incorrect: number | null
+          dilr_score: number | null
+          email: string | null
+          estimated_percentile: number | null
+          id: string
+          incorrect: number | null
+          max_score: number
+          negative_marks: number | null
+          phone: string | null
+          qa_accuracy: number | null
+          qa_attempted: number | null
+          qa_correct: number | null
+          qa_incorrect: number | null
+          qa_score: number | null
+          questions_data: Json | null
+          sections_data: Json | null
+          state: string | null
+          subject: string | null
+          test_date: string | null
+          test_time: string | null
+          total_questions: number | null
+          total_score: number
+          unattempted: number | null
+          user_id: string | null
+          varc_accuracy: number | null
+          varc_attempted: number | null
+          varc_correct: number | null
+          varc_incorrect: number | null
+          varc_score: number | null
+        }
+        Insert: {
+          accuracy?: number | null
+          application_no?: string | null
+          attempted?: number | null
+          candidate_name?: string
+          correct?: number | null
+          created_at?: string
+          dilr_accuracy?: number | null
+          dilr_attempted?: number | null
+          dilr_correct?: number | null
+          dilr_incorrect?: number | null
+          dilr_score?: number | null
+          email?: string | null
+          estimated_percentile?: number | null
+          id?: string
+          incorrect?: number | null
+          max_score?: number
+          negative_marks?: number | null
+          phone?: string | null
+          qa_accuracy?: number | null
+          qa_attempted?: number | null
+          qa_correct?: number | null
+          qa_incorrect?: number | null
+          qa_score?: number | null
+          questions_data?: Json | null
+          sections_data?: Json | null
+          state?: string | null
+          subject?: string | null
+          test_date?: string | null
+          test_time?: string | null
+          total_questions?: number | null
+          total_score?: number
+          unattempted?: number | null
+          user_id?: string | null
+          varc_accuracy?: number | null
+          varc_attempted?: number | null
+          varc_correct?: number | null
+          varc_incorrect?: number | null
+          varc_score?: number | null
+        }
+        Update: {
+          accuracy?: number | null
+          application_no?: string | null
+          attempted?: number | null
+          candidate_name?: string
+          correct?: number | null
+          created_at?: string
+          dilr_accuracy?: number | null
+          dilr_attempted?: number | null
+          dilr_correct?: number | null
+          dilr_incorrect?: number | null
+          dilr_score?: number | null
+          email?: string | null
+          estimated_percentile?: number | null
+          id?: string
+          incorrect?: number | null
+          max_score?: number
+          negative_marks?: number | null
+          phone?: string | null
+          qa_accuracy?: number | null
+          qa_attempted?: number | null
+          qa_correct?: number | null
+          qa_incorrect?: number | null
+          qa_score?: number | null
+          questions_data?: Json | null
+          sections_data?: Json | null
+          state?: string | null
+          subject?: string | null
+          test_date?: string | null
+          test_time?: string | null
+          total_questions?: number | null
+          total_score?: number
+          unattempted?: number | null
+          user_id?: string | null
+          varc_accuracy?: number | null
+          varc_attempted?: number | null
+          varc_correct?: number | null
+          varc_incorrect?: number | null
+          varc_score?: number | null
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           created_at: string
