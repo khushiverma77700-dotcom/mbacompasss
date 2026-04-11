@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Brain, School, Search, BarChart3, ArrowRight, Sparkles, Target, TrendingUp, Users } from "lucide-react";
+import { Brain, School, Search, BarChart3, ArrowRight, Sparkles, Target, TrendingUp, Users, Calculator } from "lucide-react";
 import { motion } from "framer-motion";
 
 const tools = [
@@ -50,6 +50,18 @@ const tools = [
       { icon: Target, label: "50+ Metrics" },
     ],
     tag: "Deep Dive",
+  },
+  {
+    title: "CAT Score Calculator",
+    description: "Paste your CAT response sheet and get instant section-wise score, accuracy & percentile estimate.",
+    icon: Calculator,
+    path: "/cat-score-calculator",
+    color: "6, 182, 212",
+    stats: [
+      { icon: Target, label: "Section-wise" },
+      { icon: TrendingUp, label: "Percentile" },
+    ],
+    tag: "🔥 Viral",
   },
 ];
 
