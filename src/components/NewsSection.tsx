@@ -82,8 +82,8 @@ const NewsSection = () => {
                 className="group block bg-card rounded-2xl overflow-hidden card-shadow hover:card-shadow-hover transition-all duration-300 border border-border h-full"
               >
                 <div className="h-48 md:h-56 overflow-hidden relative">
-                  {featured.image_url ? (
-                    <img src={featured.image_url} alt={featured.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
+                  {getImage(featured) ? (
+                    <img src={getImage(featured)} alt={featured.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
                   ) : (
                     <div className="w-full h-full hero-gradient flex items-center justify-center">
                       <BookOpen className="w-12 h-12 text-primary-foreground/30" />
@@ -137,8 +137,8 @@ const NewsSection = () => {
                   className="group flex gap-4 bg-card rounded-xl p-4 card-shadow hover:card-shadow-hover transition-all duration-300 border border-border hover:-translate-y-0.5"
                 >
                   <div className="w-28 h-24 rounded-lg overflow-hidden flex-shrink-0">
-                    {item.image_url ? (
-                      <img src={item.image_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                    {getImage(item) ? (
+                      <img src={getImage(item)} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     ) : (
                       <div className="w-full h-full hero-gradient flex items-center justify-center">
                         <span className="text-primary-foreground/40 text-xs font-bold">{item.category}</span>
