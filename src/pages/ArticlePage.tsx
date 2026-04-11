@@ -132,9 +132,9 @@ const ArticlePage = () => {
     <div className="min-h-screen bg-background">
       <SEOHead {...resolvedSeo} />
 
-      {/* Cinematic Hero with article image as background */}
-      <div className="relative overflow-hidden min-h-[320px] md:min-h-[400px] lg:min-h-[440px] flex items-end">
-        {/* Background: article image or gradient fallback */}
+      {/* Cinematic Hero */}
+      <div className="relative overflow-hidden min-h-[340px] md:min-h-[420px] lg:min-h-[460px] flex items-end">
+        {/* Background: article image or rich gradient fallback */}
         {(article.image_url || article.banner_url) ? (
           <img
             src={(article.image_url || article.banner_url)!}
@@ -143,50 +143,66 @@ const ArticlePage = () => {
             aria-hidden="true"
           />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-accent/80" />
+          <div className="absolute inset-0">
+            <div className="absolute inset-0 bg-gradient-to-br from-[hsl(210,80%,30%)] via-[hsl(200,75%,35%)] to-[hsl(185,65%,40%)]" />
+            {/* Rich decorative layers for no-image state */}
+            <div className="absolute inset-0 pointer-events-none" style={{
+              background: 'radial-gradient(ellipse 70% 50% at 80% 20%, hsl(200 80% 55% / 0.35), transparent), radial-gradient(ellipse 60% 60% at 10% 80%, hsl(220 70% 50% / 0.25), transparent)'
+            }} />
+            <div className="absolute top-12 right-[12%] w-24 h-24 border border-white/[0.06] rounded-3xl rotate-12 pointer-events-none" />
+            <div className="absolute bottom-16 right-[30%] w-16 h-16 border border-white/[0.05] rounded-2xl -rotate-6 pointer-events-none" />
+            <div className="absolute top-[30%] left-[8%] w-20 h-20 border border-white/[0.04] rounded-full pointer-events-none" />
+            <div className="absolute top-[20%] right-[25%] w-2 h-2 bg-white/20 rounded-full pointer-events-none" />
+            <div className="absolute bottom-[35%] left-[25%] w-1.5 h-1.5 bg-white/15 rounded-full pointer-events-none" />
+            <div className="absolute top-[55%] right-[10%] w-1 h-1 bg-white/25 rounded-full pointer-events-none" />
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+          </div>
         )}
 
-        {/* Cinematic overlays */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10 pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-transparent to-transparent pointer-events-none" />
+        {/* Overlay gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/5 pointer-events-none" />
+        {(article.image_url || article.banner_url) && (
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/15 via-transparent to-transparent pointer-events-none" />
+        )}
 
-        {/* Content anchored to bottom */}
-        <div className="relative z-10 w-full pt-24 pb-8 md:pt-32 md:pb-12">
+        {/* Content */}
+        <div className="relative z-10 w-full pt-24 pb-10 md:pt-32 md:pb-14">
           <div className="container mx-auto px-4">
             {/* Breadcrumb */}
-            <nav className="flex items-center gap-1.5 text-[11px] text-white/45 mb-4 font-medium" aria-label="Breadcrumb">
-              <Link to="/" className="hover:text-white/75 transition-colors">Home</Link>
+            <nav className="flex items-center gap-1.5 text-[11px] text-white/40 mb-5 font-medium" aria-label="Breadcrumb">
+              <Link to="/" className="hover:text-white/70 transition-colors">Home</Link>
               <ChevronRight className="w-3 h-3" />
-              <Link to="/blog" className="hover:text-white/75 transition-colors">Blog</Link>
+              <Link to="/blog" className="hover:text-white/70 transition-colors">Blog</Link>
               <ChevronRight className="w-3 h-3" />
-              <span className="text-white/60 line-clamp-1 max-w-[200px]">{article.title}</span>
+              <span className="text-white/55 line-clamp-1 max-w-[200px]">{article.title}</span>
             </nav>
 
-            <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: "easeOut" }}>
-              {/* Category */}
-              <span className="inline-block mb-3 bg-primary text-white text-[10px] font-bold uppercase tracking-[0.14em] px-3 py-1 rounded-md">
+            <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+              {/* Category pill */}
+              <span className="inline-flex items-center gap-1.5 mb-4 bg-white/[0.12] backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-[0.14em] px-3.5 py-1.5 rounded-full border border-white/[0.1]">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                 {article.category}
               </span>
 
               {/* Title */}
-              <h1 className="font-heading text-[1.6rem] md:text-[2.2rem] lg:text-[2.6rem] font-extrabold text-white mb-5 max-w-3xl leading-[1.14] tracking-[-0.01em]" style={{ textShadow: '0 1px 12px rgba(0,0,0,0.4)' }}>
+              <h1 className="font-heading text-[1.65rem] md:text-[2.25rem] lg:text-[2.7rem] font-extrabold text-white mb-6 max-w-3xl leading-[1.12] tracking-[-0.015em]" style={{ textShadow: '0 2px 16px rgba(0,0,0,0.3)' }}>
                 {(article as any).h1_tag || article.title}
               </h1>
 
-              {/* Meta row */}
-              <div className="flex flex-wrap items-center gap-3 md:gap-4 text-white/60 text-xs">
+              {/* Meta bar - frosted glass */}
+              <div className="inline-flex flex-wrap items-center gap-3 md:gap-4 bg-white/[0.07] backdrop-blur-md rounded-full px-4 py-2.5 border border-white/[0.08]">
                 {article.author && (
                   <span className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                    <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center">
                       <User className="w-3 h-3 text-white/80" />
                     </div>
-                    <span className="font-semibold text-white/85 text-[13px]">{article.author}</span>
+                    <span className="font-semibold text-white/90 text-[13px]">{article.author}</span>
                   </span>
                 )}
-                {article.author && <span className="w-px h-3.5 bg-white/20 hidden sm:block" />}
-                <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {formatDate(article.created_at)}</span>
-                <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {readTime} read</span>
-                <button onClick={handleShare} className="flex items-center gap-1.5 text-white/55 hover:text-white transition-colors font-medium ml-auto bg-white/10 hover:bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10">
+                {article.author && <span className="w-px h-3.5 bg-white/15 hidden sm:block" />}
+                <span className="flex items-center gap-1.5 text-white/55 text-xs"><Calendar className="w-3 h-3" /> {formatDate(article.created_at)}</span>
+                <span className="flex items-center gap-1.5 text-white/55 text-xs"><Clock className="w-3 h-3" /> {readTime} read</span>
+                <button onClick={handleShare} className="flex items-center gap-1.5 text-white/55 hover:text-white transition-colors text-xs font-medium hover:bg-white/10 px-2 py-1 rounded-full">
                   <Share2 className="w-3 h-3" /> Share
                 </button>
               </div>
@@ -208,8 +224,8 @@ const ArticlePage = () => {
             />
 
             {article.excerpt && (
-              <div className="bg-primary/5 border-l-4 border-primary rounded-r-2xl p-5 mb-8">
-                <p className="text-foreground font-medium italic text-base leading-relaxed">{article.excerpt}</p>
+              <div className="bg-gradient-to-r from-primary/[0.06] to-transparent border-l-[3px] border-primary rounded-r-xl p-5 mb-8">
+                <p className="text-foreground/80 font-medium italic text-[15px] leading-relaxed">{article.excerpt}</p>
               </div>
             )}
 
@@ -222,10 +238,10 @@ const ArticlePage = () => {
             <InlineAIToolCTA variant="profile-analyzer" />
 
             {/* Tags */}
-            <div className="mt-8 p-6 bg-card rounded-2xl border border-border">
-              <div className="flex items-center gap-3 flex-wrap">
-                <Tag className="w-4 h-4 text-muted-foreground" />
-                <Badge variant="secondary" className="text-xs">{article.category}</Badge>
+            <div className="mt-8 p-5 bg-card rounded-2xl border border-border">
+              <div className="flex items-center gap-2.5 flex-wrap">
+                <Tag className="w-3.5 h-3.5 text-muted-foreground" />
+                <Badge variant="secondary" className="text-xs font-semibold">{article.category}</Badge>
                 {articleKeywords.slice(0, 5).map((kw: string) => (
                   <Badge key={kw} variant="outline" className="text-xs">{kw}</Badge>
                 ))}
