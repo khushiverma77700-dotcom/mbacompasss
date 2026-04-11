@@ -132,80 +132,66 @@ const ArticlePage = () => {
     <div className="min-h-screen bg-background">
       <SEOHead {...resolvedSeo} />
 
-      {/* Hero */}
-      <div className="relative overflow-hidden">
-        {/* Main gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(200,85%,45%)] via-primary to-[hsl(190,75%,40%)]" />
-        
-        {/* Mesh gradient overlay */}
-        <div className="absolute inset-0 pointer-events-none opacity-60" style={{
-          background: 'radial-gradient(ellipse 80% 60% at 20% 80%, hsl(200 90% 60% / 0.4), transparent), radial-gradient(ellipse 60% 50% at 80% 20%, hsl(180 70% 50% / 0.3), transparent), radial-gradient(ellipse 50% 40% at 50% 50%, hsl(210 80% 55% / 0.2), transparent)'
-        }} />
+      {/* Cinematic Hero with article image as background */}
+      <div className="relative overflow-hidden min-h-[320px] md:min-h-[400px] lg:min-h-[440px] flex items-end">
+        {/* Background: article image or gradient fallback */}
+        {(article.image_url || article.banner_url) ? (
+          <img
+            src={(article.image_url || article.banner_url)!}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover scale-[1.02]"
+            aria-hidden="true"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-accent/80" />
+        )}
 
-        {/* Decorative elements */}
-        <div className="absolute inset-0 pointer-events-none">
-          {/* Light streak */}
-          <div className="absolute -top-32 -right-32 w-[600px] h-[600px] bg-white/[0.03] rounded-full blur-3xl" />
-          <div className="absolute -bottom-20 -left-20 w-[400px] h-[300px] bg-white/[0.04] rounded-full blur-3xl" />
-          {/* Floating geometric shapes */}
-          <div className="absolute top-16 right-[15%] w-20 h-20 border border-white/[0.08] rounded-2xl rotate-12" />
-          <div className="absolute bottom-20 left-[10%] w-14 h-14 border border-white/[0.06] rounded-xl -rotate-12" />
-          <div className="absolute top-1/3 right-[8%] w-2 h-2 bg-white/25 rounded-full" />
-          <div className="absolute top-[60%] left-[20%] w-1.5 h-1.5 bg-white/15 rounded-full" />
-          {/* Subtle dot pattern */}
-          <div className="absolute inset-0 opacity-[0.035]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
-        </div>
+        {/* Cinematic overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/10 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-transparent to-transparent pointer-events-none" />
 
-        {/* Content */}
-        <div className="relative z-10 pt-10 pb-16 md:pt-14 md:pb-20">
+        {/* Content anchored to bottom */}
+        <div className="relative z-10 w-full pt-24 pb-8 md:pt-32 md:pb-12">
           <div className="container mx-auto px-4">
             {/* Breadcrumb */}
-            <nav className="flex items-center gap-1.5 text-[11px] text-white/45 mb-8 font-medium" aria-label="Breadcrumb">
+            <nav className="flex items-center gap-1.5 text-[11px] text-white/45 mb-4 font-medium" aria-label="Breadcrumb">
               <Link to="/" className="hover:text-white/75 transition-colors">Home</Link>
               <ChevronRight className="w-3 h-3" />
               <Link to="/blog" className="hover:text-white/75 transition-colors">Blog</Link>
               <ChevronRight className="w-3 h-3" />
-              <span className="text-white/60 line-clamp-1 max-w-[180px]">{article.title}</span>
+              <span className="text-white/60 line-clamp-1 max-w-[200px]">{article.title}</span>
             </nav>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut" }}>
-              {/* Category pill */}
-              <div className="inline-flex items-center gap-1.5 mb-5 bg-white/[0.12] backdrop-blur-md text-white/90 text-[11px] font-bold uppercase tracking-[0.12em] px-3.5 py-1.5 rounded-full border border-white/[0.12]">
-                <div className="w-1.5 h-1.5 bg-white/60 rounded-full" />
+            <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: "easeOut" }}>
+              {/* Category */}
+              <span className="inline-block mb-3 bg-primary text-white text-[10px] font-bold uppercase tracking-[0.14em] px-3 py-1 rounded-md">
                 {article.category}
-              </div>
+              </span>
 
               {/* Title */}
-              <h1 className="font-heading text-[1.75rem] md:text-[2.5rem] lg:text-[3rem] font-extrabold text-white mb-8 max-w-3xl leading-[1.1] tracking-[-0.02em]" style={{ textShadow: '0 2px 20px rgba(0,0,0,0.15)' }}>
+              <h1 className="font-heading text-[1.6rem] md:text-[2.2rem] lg:text-[2.6rem] font-extrabold text-white mb-5 max-w-3xl leading-[1.14] tracking-[-0.01em]" style={{ textShadow: '0 1px 12px rgba(0,0,0,0.4)' }}>
                 {(article as any).h1_tag || article.title}
               </h1>
 
-              {/* Author & Meta - glassmorphism card */}
-              <div className="inline-flex flex-wrap items-center gap-4 bg-white/[0.08] backdrop-blur-md rounded-2xl px-5 py-3 border border-white/[0.1]">
+              {/* Meta row */}
+              <div className="flex flex-wrap items-center gap-3 md:gap-4 text-white/60 text-xs">
                 {article.author && (
-                  <span className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
-                      <User className="w-3.5 h-3.5 text-white/80" />
+                  <span className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                      <User className="w-3 h-3 text-white/80" />
                     </div>
-                    <span className="font-semibold text-white/90 text-sm">{article.author}</span>
+                    <span className="font-semibold text-white/85 text-[13px]">{article.author}</span>
                   </span>
                 )}
-                {article.author && <span className="w-px h-4 bg-white/15 hidden sm:block" />}
-                <span className="flex items-center gap-1.5 text-white/55 text-xs"><Calendar className="w-3.5 h-3.5" /> {formatDate(article.created_at)}</span>
-                <span className="flex items-center gap-1.5 text-white/55 text-xs"><Clock className="w-3.5 h-3.5" /> {readTime} read</span>
-                <button onClick={handleShare} className="flex items-center gap-1.5 text-white/60 hover:text-white/90 transition-colors text-xs font-medium ml-auto sm:ml-2 hover:bg-white/10 px-2.5 py-1 rounded-lg">
-                  <Share2 className="w-3.5 h-3.5" /> Share
+                {article.author && <span className="w-px h-3.5 bg-white/20 hidden sm:block" />}
+                <span className="flex items-center gap-1.5"><Calendar className="w-3 h-3" /> {formatDate(article.created_at)}</span>
+                <span className="flex items-center gap-1.5"><Clock className="w-3 h-3" /> {readTime} read</span>
+                <button onClick={handleShare} className="flex items-center gap-1.5 text-white/55 hover:text-white transition-colors font-medium ml-auto bg-white/10 hover:bg-white/20 backdrop-blur-sm px-3 py-1.5 rounded-full border border-white/10">
+                  <Share2 className="w-3 h-3" /> Share
                 </button>
               </div>
             </motion.div>
           </div>
-        </div>
-
-        {/* Bottom curve */}
-        <div className="absolute bottom-0 left-0 right-0 pointer-events-none">
-          <svg viewBox="0 0 1440 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto block" preserveAspectRatio="none">
-            <path d="M0 48V24C360 0 720 0 1080 12C1260 18 1350 24 1440 24V48H0Z" fill="hsl(var(--background))" />
-          </svg>
         </div>
       </div>
 
@@ -213,11 +199,6 @@ const ArticlePage = () => {
         <div className="grid lg:grid-cols-3 gap-10">
           {/* Main Article */}
           <article className="lg:col-span-2">
-            {(article.image_url || article.banner_url) && (
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl overflow-hidden mb-8 shadow-xl -mt-8 relative z-10">
-                <img src={(article.image_url || article.banner_url)!} alt={article.title} className="w-full aspect-video object-cover" />
-              </motion.div>
-            )}
 
             <AIGistSection
               content={article.content || article.excerpt || ""}
