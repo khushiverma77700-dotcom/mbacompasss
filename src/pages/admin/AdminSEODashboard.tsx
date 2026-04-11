@@ -297,7 +297,12 @@ const AdminSEODashboard = () => {
   // Load saved blog ideas
   const loadSavedBlogIdeas = useCallback(async () => {
     const { data } = await supabase.from("site_settings").select("value").eq("key", "saved_blog_ideas").maybeSingle();
-    if (data?.value && Array.isArray(data.value)) setSavedBlogIdeas(data.value as unknown as SavedBlogIdea[]);
+    if (data?.value) {
+      const val = data.value as any;
+      // Support both wrapped {items: [...]} and legacy array format
+      const ideas = Array.isArray(val) ? val : (val?.items && Array.isArray(val.items) ? val.items : []);
+      setSavedBlogIdeas(ideas as SavedBlogIdea[]);
+    }
   }, []);
 
   const loadRemovedLinks = useCallback(async () => {
@@ -317,9 +322,20 @@ const AdminSEODashboard = () => {
   };
 
   const saveBlogIdeasToDb = async (ideas: SavedBlogIdea[]) => {
-    const { data: existing } = await supabase.from("site_settings").select("id").eq("key", "saved_blog_ideas").maybeSingle();
-    if (existing?.id) await supabase.from("site_settings").update({ value: ideas as unknown as Record<string, any> }).eq("id", existing.id);
-    else await supabase.from("site_settings").insert({ key: "saved_blog_ideas", value: ideas as unknown as Record<string, any> });
+    try {
+      const payload = { items: ideas } as unknown as Record<string, any>;
+      const { data: existing } = await supabase.from("site_settings").select("id").eq("key", "saved_blog_ideas").maybeSingle();
+      if (existing?.id) {
+        const { error } = await supabase.from("site_settings").update({ value: payload }).eq("id", existing.id);
+        if (error) { console.error("Save blog ideas update error:", error); toast({ title: "Save failed", description: error.message, variant: "destructive" }); }
+      } else {
+        const { error } = await supabase.from("site_settings").insert({ key: "saved_blog_ideas", value: payload });
+        if (error) { console.error("Save blog ideas insert error:", error); toast({ title: "Save failed", description: error.message, variant: "destructive" }); }
+      }
+    } catch (e: any) {
+      console.error("Save blog ideas error:", e);
+      toast({ title: "Save failed", description: e?.message || "Unknown error", variant: "destructive" });
+    }
   };
 
   const fetchDashboardData = useCallback(async () => {
