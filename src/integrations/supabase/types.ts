@@ -755,10 +755,41 @@ export type Database = {
           },
         ]
       }
+      course_categories: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          id: string
+          name: string
+          slug: string
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           batch_info: string | null
           brochure_url: string | null
+          course_category_id: string | null
           created_at: string
           curriculum: string[] | null
           description: string | null
@@ -773,6 +804,7 @@ export type Database = {
         Insert: {
           batch_info?: string | null
           brochure_url?: string | null
+          course_category_id?: string | null
           created_at?: string
           curriculum?: string[] | null
           description?: string | null
@@ -787,6 +819,7 @@ export type Database = {
         Update: {
           batch_info?: string | null
           brochure_url?: string | null
+          course_category_id?: string | null
           created_at?: string
           curriculum?: string[] | null
           description?: string | null
@@ -799,6 +832,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "courses_course_category_id_fkey"
+            columns: ["course_category_id"]
+            isOneToOne: false
+            referencedRelation: "course_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "courses_institute_id_fkey"
             columns: ["institute_id"]
