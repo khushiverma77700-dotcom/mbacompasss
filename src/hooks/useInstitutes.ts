@@ -31,7 +31,7 @@ export const useInstituteBySlug = (slug?: string) => {
         .from("institutes")
         .select(`
           *,
-          courses(*),
+          courses(*, course_categories(id, name, slug)),
           faculty(*),
           categories:category_id(name, slug),
           reviews(*)
