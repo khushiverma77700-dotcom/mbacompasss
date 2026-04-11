@@ -134,36 +134,23 @@ const ArticlePage = () => {
 
       {/* Cinematic Hero */}
       <div className="relative overflow-hidden min-h-[340px] md:min-h-[420px] lg:min-h-[460px] flex items-end">
-        {/* Background: article image or rich gradient fallback */}
-        {(article.image_url || article.banner_url) ? (
-          <img
-            src={(article.image_url || article.banner_url)!}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover scale-[1.02]"
-            aria-hidden="true"
-          />
-        ) : (
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-[hsl(210,80%,30%)] via-[hsl(200,75%,35%)] to-[hsl(185,65%,40%)]" />
-            {/* Rich decorative layers for no-image state */}
-            <div className="absolute inset-0 pointer-events-none" style={{
-              background: 'radial-gradient(ellipse 70% 50% at 80% 20%, hsl(200 80% 55% / 0.35), transparent), radial-gradient(ellipse 60% 60% at 10% 80%, hsl(220 70% 50% / 0.25), transparent)'
-            }} />
-            <div className="absolute top-12 right-[12%] w-24 h-24 border border-white/[0.06] rounded-3xl rotate-12 pointer-events-none" />
-            <div className="absolute bottom-16 right-[30%] w-16 h-16 border border-white/[0.05] rounded-2xl -rotate-6 pointer-events-none" />
-            <div className="absolute top-[30%] left-[8%] w-20 h-20 border border-white/[0.04] rounded-full pointer-events-none" />
-            <div className="absolute top-[20%] right-[25%] w-2 h-2 bg-white/20 rounded-full pointer-events-none" />
-            <div className="absolute bottom-[35%] left-[25%] w-1.5 h-1.5 bg-white/15 rounded-full pointer-events-none" />
-            <div className="absolute top-[55%] right-[10%] w-1 h-1 bg-white/25 rounded-full pointer-events-none" />
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-          </div>
-        )}
+        {/* Background: always use rich gradient */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-[hsl(210,80%,30%)] via-[hsl(200,75%,35%)] to-[hsl(185,65%,40%)]" />
+          <div className="absolute inset-0 pointer-events-none" style={{
+            background: 'radial-gradient(ellipse 70% 50% at 80% 20%, hsl(200 80% 55% / 0.35), transparent), radial-gradient(ellipse 60% 60% at 10% 80%, hsl(220 70% 50% / 0.25), transparent)'
+          }} />
+          <div className="absolute top-12 right-[12%] w-24 h-24 border border-white/[0.06] rounded-3xl rotate-12 pointer-events-none" />
+          <div className="absolute bottom-16 right-[30%] w-16 h-16 border border-white/[0.05] rounded-2xl -rotate-6 pointer-events-none" />
+          <div className="absolute top-[30%] left-[8%] w-20 h-20 border border-white/[0.04] rounded-full pointer-events-none" />
+          <div className="absolute top-[20%] right-[25%] w-2 h-2 bg-white/20 rounded-full pointer-events-none" />
+          <div className="absolute bottom-[35%] left-[25%] w-1.5 h-1.5 bg-white/15 rounded-full pointer-events-none" />
+          <div className="absolute top-[55%] right-[10%] w-1 h-1 bg-white/25 rounded-full pointer-events-none" />
+          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+        </div>
 
         {/* Overlay gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/5 pointer-events-none" />
-        {(article.image_url || article.banner_url) && (
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/15 via-transparent to-transparent pointer-events-none" />
-        )}
 
         {/* Content */}
         <div className="relative z-10 w-full pt-24 pb-10 md:pt-32 md:pb-14">

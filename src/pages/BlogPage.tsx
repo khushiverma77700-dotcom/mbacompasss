@@ -162,7 +162,7 @@ const BlogPage = () => {
                   className="group block relative rounded-2xl overflow-hidden bg-card border border-border shadow-xl hover:shadow-2xl transition-all duration-500"
                 >
                   <div className="grid md:grid-cols-5">
-                    <div className="md:col-span-3 h-64 md:h-[420px] overflow-hidden relative">
+                    <div className="md:col-span-3 aspect-[16/9] md:aspect-auto md:h-[420px] overflow-hidden relative">
                       {(featuredArticle.image_url || featuredArticle.banner_url) ? (
                         <img
                           src={(featuredArticle.image_url || featuredArticle.banner_url)!}
@@ -235,7 +235,7 @@ const BlogPage = () => {
                         to={`/article/${item.slug}`}
                         className="group flex flex-col bg-card rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-border h-full hover:-translate-y-1"
                       >
-                        <div className="h-48 overflow-hidden relative">
+                        <div className="aspect-[16/9] overflow-hidden relative">
                           {(item.image_url || item.banner_url) ? (
                             <img
                               src={(item.image_url || item.banner_url)!}
