@@ -298,59 +298,78 @@ const InstitutePage = () => {
             </Card>
 
             {/* Courses - Detailed */}
-            <Card>
-              <CardHeader className="flex flex-col gap-3">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <CardTitle className="font-heading">
-                    {selectedTarget ? `Courses for ${selectedTarget}` : `All Courses (${courses.length})`}
-                    {selectedCourseCategory && <span className="text-sm font-normal text-muted-foreground ml-2">— filtered by category</span>}
-                  </CardTitle>
+            <Card className="overflow-hidden border-0 shadow-lg">
+              {/* Gradient Header */}
+              <div className="relative bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 px-6 py-5 border-b border-border/50">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,hsl(var(--primary)/0.08),transparent_70%)] pointer-events-none" />
+                <div className="relative flex items-center justify-between flex-wrap gap-3">
+                  <div>
+                    <CardTitle className="font-heading text-xl flex items-center gap-2">
+                      <div className="w-9 h-9 rounded-xl bg-primary/15 flex items-center justify-center">
+                        <BookOpen className="w-5 h-5 text-primary" />
+                      </div>
+                      {selectedTarget ? `Courses for ${selectedTarget}` : `All Courses`}
+                      <Badge variant="secondary" className="ml-1 text-xs font-mono">{displayCourses.length}</Badge>
+                    </CardTitle>
+                    {selectedCourseCategory && (
+                      <p className="text-xs text-muted-foreground mt-1 ml-11">Filtered by category</p>
+                    )}
+                  </div>
                   <div className="flex gap-2">
                     {compareSelection.length >= 2 && (
-                      <Button size="sm" variant="default" className="gap-1" onClick={() => setShowCompare(!showCompare)}>
+                      <Button size="sm" variant="default" className="gap-1.5 shadow-md" onClick={() => setShowCompare(!showCompare)}>
                         <Columns2 className="w-4 h-4" /> Compare ({compareSelection.length})
                       </Button>
                     )}
-                    <Button variant="outline" size="sm" className="gap-1" onClick={handleDownloadPDF}><Download className="w-4 h-4" /> Brochure</Button>
+                    <Button variant="outline" size="sm" className="gap-1.5 bg-background/80 backdrop-blur-sm" onClick={handleDownloadPDF}>
+                      <Download className="w-4 h-4" /> Brochure
+                    </Button>
                   </div>
                 </div>
                 {/* Course Category Filter Tabs */}
                 {courseCategories.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      size="sm"
-                      variant={selectedCourseCategory === null ? "default" : "outline"}
-                      className="text-xs h-8 rounded-full"
+                  <div className="relative flex flex-wrap gap-2 mt-4 ml-11">
+                    <button
                       onClick={() => setSelectedCourseCategory(null)}
+                      className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
+                        selectedCourseCategory === null
+                          ? "bg-primary text-primary-foreground shadow-md shadow-primary/25 scale-105"
+                          : "bg-background/70 text-muted-foreground hover:bg-background hover:text-foreground border border-border/50"
+                      }`}
                     >
-                      All
-                    </Button>
+                      All Courses
+                    </button>
                     {courseCategories.map((cc: any) => (
-                      <Button
+                      <button
                         key={cc.id}
-                        size="sm"
-                        variant={selectedCourseCategory === cc.id ? "default" : "outline"}
-                        className="text-xs h-8 rounded-full"
                         onClick={() => setSelectedCourseCategory(selectedCourseCategory === cc.id ? null : cc.id)}
+                        className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 ${
+                          selectedCourseCategory === cc.id
+                            ? "bg-primary text-primary-foreground shadow-md shadow-primary/25 scale-105"
+                            : "bg-background/70 text-muted-foreground hover:bg-background hover:text-foreground border border-border/50"
+                        }`}
                       >
                         {cc.name}
-                      </Button>
+                      </button>
                     ))}
                   </div>
                 )}
-              </CardHeader>
-              <CardContent>
+              </div>
+
+              <CardContent className="p-5">
                 {/* Course comparison */}
                 <AnimatePresence>
                   {showCompare && compareCourses.length >= 2 && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden mb-6">
-                      <div className="bg-secondary/30 rounded-lg p-4 border border-primary/30">
-                        <h4 className="font-heading font-semibold text-foreground mb-3">Course Comparison</h4>
+                      <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl p-5 border border-primary/20">
+                        <h4 className="font-heading font-semibold text-foreground mb-4 flex items-center gap-2">
+                          <Columns2 className="w-4 h-4 text-primary" /> Course Comparison
+                        </h4>
                         <div className="overflow-x-auto">
                           <table className="w-full text-sm border-collapse">
-                            <thead><tr className="bg-muted/50">
-                              <th className="text-left py-2 px-3 font-semibold text-foreground border-b border-border">Feature</th>
-                              {compareCourses.map((c: any) => <th key={c.id} className="text-left py-2 px-3 font-semibold text-primary border-b border-border">{c.name}</th>)}
+                            <thead><tr className="bg-muted/50 rounded-lg">
+                              <th className="text-left py-3 px-4 font-semibold text-foreground border-b border-border rounded-tl-lg">Feature</th>
+                              {compareCourses.map((c: any) => <th key={c.id} className="text-left py-3 px-4 font-semibold text-primary border-b border-border">{c.name}</th>)}
                             </tr></thead>
                             <tbody>
                               {[
@@ -359,10 +378,10 @@ const InstitutePage = () => {
                                 { label: "Batch", key: "batch_info" },
                                 { label: "Curriculum Items", key: "curriculum", format: (v: any) => `${(v || []).length} topics` },
                               ].map(row => (
-                                <tr key={row.label} className="border-b border-border">
-                                  <td className="py-2 px-3 font-medium text-foreground">{row.label}</td>
+                                <tr key={row.label} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                                  <td className="py-3 px-4 font-medium text-foreground">{row.label}</td>
                                   {compareCourses.map((c: any) => (
-                                    <td key={c.id} className="py-2 px-3 text-muted-foreground">{row.format ? row.format(c[row.key]) : (c[row.key] || "N/A")}</td>
+                                    <td key={c.id} className="py-3 px-4 text-muted-foreground">{row.format ? row.format(c[row.key]) : (c[row.key] || "N/A")}</td>
                                   ))}
                                 </tr>
                               ))}
@@ -374,52 +393,132 @@ const InstitutePage = () => {
                   )}
                 </AnimatePresence>
 
-                {/* Course Cards */}
-                <div className="space-y-3">
-                  {displayCourses.length === 0 && selectedCourseCategory && (
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground text-sm">No courses found in this category.</p>
-                      <Button variant="ghost" size="sm" className="mt-2" onClick={() => setSelectedCourseCategory(null)}>Show all courses</Button>
+                {/* Empty state */}
+                {displayCourses.length === 0 && selectedCourseCategory && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center py-12"
+                  >
+                    <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
+                      <BookOpen className="w-7 h-7 text-muted-foreground/50" />
                     </div>
-                  )}
-                  {displayCourses.map((course: any) => {
+                    <p className="text-muted-foreground text-sm mb-1">No courses found in this category.</p>
+                    <Button variant="ghost" size="sm" className="mt-2 text-primary" onClick={() => setSelectedCourseCategory(null)}>
+                      ← Show all courses
+                    </Button>
+                  </motion.div>
+                )}
+
+                {/* Course Cards */}
+                <div className="space-y-4">
+                  {displayCourses.map((course: any, courseIdx: number) => {
                     const isExpanded = expandedCourse === course.id;
+                    const categoryName = course.course_categories?.name;
                     return (
-                      <div key={course.id} className="rounded-lg border border-border overflow-hidden">
-                        <div className="flex items-center gap-2 p-4 bg-muted/30 hover:bg-muted/50 transition-colors">
+                      <motion.div
+                        key={course.id}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: courseIdx * 0.05, duration: 0.3 }}
+                        className={`group rounded-xl border overflow-hidden transition-all duration-300 ${
+                          isExpanded
+                            ? "border-primary/30 shadow-lg shadow-primary/5 ring-1 ring-primary/10"
+                            : "border-border/60 hover:border-primary/20 hover:shadow-md"
+                        }`}
+                      >
+                        {/* Course Header */}
+                        <div className={`flex items-center gap-3 p-4 transition-colors ${
+                          isExpanded ? "bg-gradient-to-r from-primary/8 to-transparent" : "bg-card hover:bg-muted/30"
+                        }`}>
                           <Checkbox
                             checked={compareSelection.includes(course.id)}
                             onCheckedChange={() => toggleCompare(course.id)}
                             className="flex-shrink-0"
                           />
-                          <button onClick={() => setExpandedCourse(isExpanded ? null : course.id)} className="flex-1 flex items-center justify-between text-left">
-                            <div className="flex-1">
-                              <h4 className="font-heading font-semibold text-foreground">{course.name}</h4>
-                              <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
-                                <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {course.duration}</span>
-                                <span className="font-heading font-bold text-primary">₹{Number(course.fees).toLocaleString()}</span>
-                                {course.batch_info && <span className="text-xs">{course.batch_info}</span>}
+                          <button onClick={() => setExpandedCourse(isExpanded ? null : course.id)} className="flex-1 flex items-center justify-between text-left gap-3">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className="font-heading font-semibold text-foreground text-base leading-tight">{course.name}</h4>
+                                {categoryName && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-accent/50 text-accent-foreground border border-accent/30">
+                                    {categoryName}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-4 mt-2 flex-wrap">
+                                <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                                  <Clock className="w-3.5 h-3.5 text-primary/70" /> {course.duration || "N/A"}
+                                </span>
+                                <span className="inline-flex items-center gap-1 font-heading font-bold text-primary text-base">
+                                  ₹{Number(course.fees).toLocaleString()}
+                                </span>
+                                {course.batch_info && (
+                                  <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/60 px-2.5 py-1 rounded-full">
+                                    <Users className="w-3 h-3" /> {course.batch_info}
+                                  </span>
+                                )}
                               </div>
                             </div>
-                            {isExpanded ? <ChevronUp className="w-5 h-5 text-muted-foreground" /> : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
+                              isExpanded ? "bg-primary text-primary-foreground rotate-180" : "bg-muted text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary"
+                            }`}>
+                              <ChevronDown className="w-4 h-4" />
+                            </div>
                           </button>
                         </div>
+
+                        {/* Expanded Content */}
                         <AnimatePresence>
                           {isExpanded && (
-                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                              <div className="p-4 bg-card space-y-4">
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.3, ease: "easeInOut" }}
+                              className="overflow-hidden"
+                            >
+                              <div className="px-5 pb-5 pt-1 space-y-5 bg-gradient-to-b from-transparent to-muted/10">
+                                {/* Stats Grid */}
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                  <div className="bg-muted/50 rounded-lg p-3"><div className="text-xs text-muted-foreground">Duration</div><div className="font-semibold text-foreground text-sm">{course.duration}</div></div>
-                                  <div className="bg-muted/50 rounded-lg p-3"><div className="text-xs text-muted-foreground">Batch Info</div><div className="font-semibold text-foreground text-sm">{course.batch_info || "N/A"}</div></div>
-                                  <div className="bg-muted/50 rounded-lg p-3"><div className="text-xs text-muted-foreground">Fees</div><div className="font-semibold text-foreground text-sm">₹{Number(course.fees).toLocaleString()}</div></div>
-                                  <div className="bg-muted/50 rounded-lg p-3"><div className="text-xs text-muted-foreground">Mode</div><div className="font-semibold text-foreground text-sm">{institute.mode}</div></div>
+                                  {[
+                                    { label: "Duration", value: course.duration || "N/A", icon: Clock, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30" },
+                                    { label: "Batch Info", value: course.batch_info || "N/A", icon: Users, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/30" },
+                                    { label: "Fees", value: `₹${Number(course.fees).toLocaleString()}`, icon: TrendingUp, color: "text-primary", bg: "bg-primary/5" },
+                                    { label: "Mode", value: institute.mode || "Offline", icon: Award, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/30" },
+                                  ].map((stat, i) => (
+                                    <motion.div
+                                      key={stat.label}
+                                      initial={{ opacity: 0, y: 8 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      transition={{ delay: i * 0.08 }}
+                                      className={`${stat.bg} rounded-xl p-3.5 border border-border/30`}
+                                    >
+                                      <div className="flex items-center gap-1.5 mb-1">
+                                        <stat.icon className={`w-3.5 h-3.5 ${stat.color}`} />
+                                        <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{stat.label}</span>
+                                      </div>
+                                      <div className="font-heading font-bold text-foreground text-sm">{stat.value}</div>
+                                    </motion.div>
+                                  ))}
                                 </div>
-                                {course.description && <p className="text-sm text-muted-foreground leading-relaxed">{course.description}</p>}
 
-                                {/* Deliverables */}
+                                {/* Description */}
+                                {course.description && (
+                                  <div className="bg-muted/20 rounded-xl p-4 border border-border/30">
+                                    <p className="text-sm text-muted-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: course.description }} />
+                                  </div>
+                                )}
+
+                                {/* What You Get */}
                                 <div>
-                                  <h5 className="font-heading font-semibold text-foreground text-sm mb-2">What You Get</h5>
-                                  <div className="grid sm:grid-cols-2 gap-1.5">
+                                  <h5 className="font-heading font-semibold text-foreground text-sm mb-3 flex items-center gap-2">
+                                    <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
+                                      <Star className="w-3 h-3 text-primary" />
+                                    </div>
+                                    What You Get
+                                  </h5>
+                                  <div className="grid sm:grid-cols-2 gap-2">
                                     {[
                                       "Complete Study Material",
                                       "Live & Recorded Lectures",
@@ -430,34 +529,60 @@ const InstitutePage = () => {
                                       "Interview Preparation",
                                       "Mentor Support",
                                     ].map((d, i) => (
-                                      <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <CheckCircle className="w-3.5 h-3.5 text-primary flex-shrink-0" />{d}
-                                      </div>
+                                      <motion.div
+                                        key={i}
+                                        initial={{ opacity: 0, x: -8 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.15 + i * 0.04 }}
+                                        className="flex items-center gap-2.5 text-sm text-muted-foreground py-1.5 px-3 rounded-lg hover:bg-muted/40 transition-colors"
+                                      >
+                                        <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
+                                        <span>{d}</span>
+                                      </motion.div>
                                     ))}
                                   </div>
                                 </div>
 
+                                {/* Curriculum */}
                                 {(course.curriculum || []).length > 0 && (
                                   <div>
-                                    <h5 className="font-heading font-semibold text-foreground text-sm mb-2">Curriculum</h5>
-                                    <div className="space-y-1.5">
+                                    <h5 className="font-heading font-semibold text-foreground text-sm mb-3 flex items-center gap-2">
+                                      <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
+                                        <BookOpen className="w-3 h-3 text-primary" />
+                                      </div>
+                                      Curriculum
+                                      <Badge variant="secondary" className="text-[10px] ml-1">{(course.curriculum as string[]).length} topics</Badge>
+                                    </h5>
+                                    <div className="grid sm:grid-cols-2 gap-2">
                                       {(course.curriculum as string[]).map((item, idx) => (
-                                        <div key={idx} className="flex items-start gap-2 text-sm">
-                                          <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                                        <motion.div
+                                          key={idx}
+                                          initial={{ opacity: 0, x: -8 }}
+                                          animate={{ opacity: 1, x: 0 }}
+                                          transition={{ delay: 0.2 + idx * 0.03 }}
+                                          className="flex items-start gap-2.5 text-sm py-2 px-3 rounded-lg bg-muted/20 border border-border/20"
+                                        >
+                                          <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            {idx + 1}
+                                          </span>
                                           <span className="text-muted-foreground">{item}</span>
-                                        </div>
+                                        </motion.div>
                                       ))}
                                     </div>
                                   </div>
                                 )}
-                                <div className="flex gap-2 flex-wrap">
-                                  <Button size="sm">Enquire Now</Button>
-                                  <Button size="sm" variant="outline" className="gap-1" onClick={handleGetBestOffer}>
+
+                                {/* Action Buttons */}
+                                <div className="flex gap-2.5 flex-wrap pt-2 border-t border-border/30">
+                                  <Button size="sm" className="shadow-md shadow-primary/20 gap-1.5">
+                                    <GraduationCap className="w-4 h-4" /> Enquire Now
+                                  </Button>
+                                  <Button size="sm" variant="outline" className="gap-1.5" onClick={handleGetBestOffer}>
                                     <Tag className="w-3.5 h-3.5" /> Get Best Offer
                                   </Button>
                                   {(course as any).brochure_url && (
                                     <a href={(course as any).brochure_url} target="_blank" rel="noopener noreferrer">
-                                      <Button size="sm" variant="outline" className="gap-1">
+                                      <Button size="sm" variant="outline" className="gap-1.5">
                                         <Download className="w-3.5 h-3.5" /> Download Brochure
                                       </Button>
                                     </a>
@@ -467,7 +592,7 @@ const InstitutePage = () => {
                             </motion.div>
                           )}
                         </AnimatePresence>
-                      </div>
+                      </motion.div>
                     );
                   })}
                 </div>
