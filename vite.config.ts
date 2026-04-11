@@ -21,14 +21,12 @@ export default defineConfig(({ mode }) => ({
   build: {
     rollupOptions: {
       output: {
-        onlyExplicitManualChunks: true,
         manualChunks(id) {
           if (id.includes("node_modules")) {
             if (id.includes("react-dom") || id.includes("react-router") || id.includes("/react/")) return "vendor";
             if (id.includes("@tanstack")) return "query";
             if (id.includes("@supabase")) return "supabase";
             if (id.includes("framer-motion")) return "motion";
-            if (id.includes("recharts") || id.includes("d3-")) return "charts";
             if (id.includes("sonner")) return "sonner";
             if (id.includes("@radix-ui")) return "radix";
             if (id.includes("@tiptap") || id.includes("prosemirror")) return "editor";
