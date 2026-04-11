@@ -17,11 +17,13 @@ import FileUpload from "@/components/admin/FileUpload";
 const emptyForm = {
   name: "", description: "", institute_id: "", duration: "", fees: 0,
   batch_info: "", syllabus_url: "", curriculum: [] as string[], brochure_url: "",
+  course_category_id: "",
 };
 
 const AdminCourses = () => {
   const [courses, setCourses] = useState<any[]>([]);
   const [institutes, setInstitutes] = useState<any[]>([]);
+  const [courseCategories, setCourseCategories] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
@@ -30,12 +32,14 @@ const AdminCourses = () => {
   const { toast } = useToast();
 
   const fetchData = async () => {
-    const [c, i] = await Promise.all([
-      supabase.from("courses").select("*, institutes(name, city, mode)").order("created_at", { ascending: false }),
+    const [c, i, cc] = await Promise.all([
+      supabase.from("courses").select("*, institutes(name, city, mode), course_categories(name)").order("created_at", { ascending: false }),
       supabase.from("institutes").select("id, name, city").order("name"),
+      supabase.from("course_categories").select("*").eq("active", true).order("sort_order").order("name"),
     ]);
     if (c.data) setCourses(c.data);
     if (i.data) setInstitutes(i.data);
+    if (cc.data) setCourseCategories(cc.data);
   };
 
   useEffect(() => { fetchData(); }, []);
@@ -60,6 +64,7 @@ const AdminCourses = () => {
       syllabus_url: form.syllabus_url || null,
       brochure_url: (form as any).brochure_url || null,
       curriculum: form.curriculum.length > 0 ? form.curriculum : null,
+      course_category_id: form.course_category_id || null,
     };
 
     if (editId) {
@@ -80,6 +85,7 @@ const AdminCourses = () => {
       fees: course.fees ?? 0, batch_info: course.batch_info ?? "",
       syllabus_url: course.syllabus_url ?? "", curriculum: course.curriculum ?? [],
       brochure_url: (course as any).brochure_url ?? "",
+      course_category_id: course.course_category_id ?? "",
     });
     setEditId(course.id); setDialogOpen(true);
   };
