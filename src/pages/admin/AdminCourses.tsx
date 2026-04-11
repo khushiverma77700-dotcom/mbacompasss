@@ -263,7 +263,12 @@ const AdminCourses = () => {
                   <TableCell>
                     <div>
                       <div className="font-medium text-foreground">{c.name}</div>
-                      {c.syllabus_url && <span className="text-xs text-primary">📄 Syllabus attached</span>}
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        {c.syllabus_url && <span className="text-xs text-primary">📄 Syllabus</span>}
+                        {(c as any).course_categories?.name && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">{(c as any).course_categories.name}</Badge>
+                        )}
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell>
