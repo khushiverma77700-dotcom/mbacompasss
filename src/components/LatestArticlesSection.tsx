@@ -24,6 +24,8 @@ const LatestArticlesSection = () => {
   const featured = articles[0];
   const rest = articles.slice(1);
 
+  const getImage = (article: typeof featured) => article.image_url || article.banner_url;
+
   const getReadTime = (content: string | null) => {
     if (!content) return "3 min";
     const words = content.replace(/<[^>]*>/g, "").split(/\s+/).length;
