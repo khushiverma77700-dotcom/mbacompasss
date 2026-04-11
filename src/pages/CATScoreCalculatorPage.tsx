@@ -212,6 +212,24 @@ const CATScoreCalculatorPage: React.FC = () => {
     } as any);
   };
 
+  const handleFetchUrl = useCallback(async () => {
+    if (!user) { setShowLoginDialog(true); return; }
+    if (!urlInput.trim()) { setError("Please enter your CAT response sheet URL."); return; }
+    setError(""); setUrlFetching(true);
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke("fetch-response-sheet", {
+        body: { url: urlInput.trim() },
+      });
+      if (fnError) { setError("Network error fetching the response sheet. Try pasting HTML instead."); setUrlFetching(false); return; }
+      if (!data?.success) { setError(data?.error || "Could not fetch. Try pasting HTML source code instead."); setUrlFetching(false); return; }
+      setHtmlInput(data.html);
+      setInputMode("paste");
+      toast.success("Response sheet fetched! Click 'Calculate My Score' to analyze.");
+    } catch {
+      setError("Failed to fetch. The server may be blocking. Please paste the HTML source code instead.");
+    } finally { setUrlFetching(false); }
+  }, [urlInput, user]);
+
   const handleCalculate = useCallback(async () => {
     if (!user) { setShowLoginDialog(true); return; }
     if (!htmlInput.trim()) { setError("Please paste the HTML source code of your CAT response sheet."); return; }
