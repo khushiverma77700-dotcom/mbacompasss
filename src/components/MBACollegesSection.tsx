@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, MapPin, GraduationCap, Search } from "lucide-react";
+import { ArrowRight, MapPin, GraduationCap } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { mbaColleges } from "@/data/mockData";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { mbaColleges as fallbackColleges } from "@/data/mockData";
 
 const tabs = [
   { label: "IIMs", type: "IIM" },
@@ -20,7 +21,37 @@ const MBACollegesSection = () => {
   const [activeTab, setActiveTab] = useState<string>("IIM");
   const [activeCity, setActiveCity] = useState<string>("All");
 
-  const filtered = mbaColleges.filter((c) => {
+  const { data: dbColleges } = useQuery({
+    queryKey: ["mba-colleges-section"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("colleges")
+        .select("id, name, slug, city, state, type, ranking, fees, placement_avg, exams_accepted, courses, college_category")
+        .not("ranking", "is", null)
+        .order("ranking", { ascending: true })
+        .limit(50);
+      return data;
+    },
+  });
+
+  // Map DB colleges to display format, fall back to mock data
+  const colleges = dbColleges && dbColleges.length > 0
+    ? dbColleges.map((c) => ({
+        id: c.id,
+        name: c.name,
+        slug: c.slug,
+        city: c.city || "",
+        state: c.state || "",
+        type: (c.college_category || c.type || "University") as string,
+        ranking: c.ranking || 99,
+        fees: c.fees || "N/A",
+        avgPackage: c.placement_avg || "N/A",
+        examsAccepted: (c.exams_accepted || []) as string[],
+        courses: (c.courses || []) as string[],
+      }))
+    : fallbackColleges;
+
+  const filtered = colleges.filter((c) => {
     if (c.type !== activeTab) return false;
     if (activeCity !== "All" && c.city !== activeCity) return false;
     return true;
