@@ -2,7 +2,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import PageKeywords from "@/components/PageKeywords";
 import { useState, useEffect, useRef } from "react";
 import SEOHead, { generateInstituteSchema } from "@/components/SEOHead";
-import { Star, MapPin, Clock, Users, Award, BookOpen, ArrowLeft, Download, Tag, TrendingUp, GraduationCap, CheckCircle, ChevronDown, ChevronUp, Heart, Lock, Play, Quote, Columns2 } from "lucide-react";
+import { Star, MapPin, Clock, Users, Award, BookOpen, ArrowLeft, Download, Tag, TrendingUp, GraduationCap, CheckCircle, ChevronDown, ChevronUp, Heart, Lock, Play, Quote, Columns2, Calendar, Video, Zap, Shield } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -427,6 +427,13 @@ const InstitutePage = () => {
                             : "border-border/60 hover:border-primary/20 hover:shadow-md"
                         }`}
                       >
+                        {/* Discount Banner */}
+                        {course.discount_text && (
+                          <div className="bg-gradient-to-r from-destructive/90 to-destructive/70 text-destructive-foreground text-xs font-bold px-4 py-1.5 flex items-center gap-1.5">
+                            <Zap className="w-3 h-3" /> {course.discount_text}
+                          </div>
+                        )}
+
                         {/* Course Header */}
                         <div className={`flex items-center gap-3 p-4 transition-colors ${
                           isExpanded ? "bg-gradient-to-r from-primary/8 to-transparent" : "bg-card hover:bg-muted/30"
@@ -445,6 +452,9 @@ const InstitutePage = () => {
                                     {categoryName}
                                   </span>
                                 )}
+                                {course.mode && course.mode !== "Offline" && (
+                                  <Badge variant="secondary" className="text-[10px]">{course.mode}</Badge>
+                                )}
                               </div>
                               <div className="flex items-center gap-4 mt-2 flex-wrap">
                                 <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
@@ -453,9 +463,15 @@ const InstitutePage = () => {
                                 <span className="inline-flex items-center gap-1 font-heading font-bold text-primary text-base">
                                   ₹{Number(course.fees).toLocaleString()}
                                 </span>
-                                {course.batch_info && (
+                                {course.rating > 0 && (
+                                  <span className="inline-flex items-center gap-1 text-sm">
+                                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                                    <span className="font-semibold text-foreground">{Number(course.rating).toFixed(1)}</span>
+                                  </span>
+                                )}
+                                {course.enrolled_count > 0 && (
                                   <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/60 px-2.5 py-1 rounded-full">
-                                    <Users className="w-3 h-3" /> {course.batch_info}
+                                    <Users className="w-3 h-3" /> {course.enrolled_count} enrolled
                                   </span>
                                 )}
                               </div>
@@ -483,9 +499,9 @@ const InstitutePage = () => {
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                   {[
                                     { label: "Duration", value: course.duration || "N/A", icon: Clock, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30" },
-                                    { label: "Batch Info", value: course.batch_info || "N/A", icon: Users, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/30" },
                                     { label: "Fees", value: `₹${Number(course.fees).toLocaleString()}`, icon: TrendingUp, color: "text-primary", bg: "bg-primary/5" },
-                                    { label: "Mode", value: institute.mode || "Offline", icon: Award, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/30" },
+                                    { label: "Mode", value: course.mode || institute.mode || "Offline", icon: Award, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/30" },
+                                    { label: "Batch", value: course.batch_info || "N/A", icon: Users, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/30" },
                                   ].map((stat, i) => (
                                     <motion.div
                                       key={stat.label}
@@ -503,6 +519,49 @@ const InstitutePage = () => {
                                   ))}
                                 </div>
 
+                                {/* Extra Info Row: Start Date, Seats, Rating, Enrolled */}
+                                {(course.start_date || course.total_seats || course.rating > 0 || course.enrolled_count > 0) && (
+                                  <div className="flex flex-wrap gap-3">
+                                    {course.start_date && (
+                                      <div className="flex items-center gap-2 text-sm bg-muted/30 rounded-lg px-3 py-2 border border-border/20">
+                                        <Calendar className="w-4 h-4 text-primary" />
+                                        <span className="text-muted-foreground">Starts: <span className="font-semibold text-foreground">{course.start_date}</span></span>
+                                      </div>
+                                    )}
+                                    {course.total_seats > 0 && (
+                                      <div className="flex items-center gap-2 text-sm bg-muted/30 rounded-lg px-3 py-2 border border-border/20">
+                                        <Users className="w-4 h-4 text-primary" />
+                                        <span className="text-muted-foreground">Seats: <span className="font-semibold text-foreground">{course.total_seats}</span></span>
+                                      </div>
+                                    )}
+                                    {course.rating > 0 && (
+                                      <div className="flex items-center gap-2 text-sm bg-amber-50 dark:bg-amber-950/20 rounded-lg px-3 py-2 border border-amber-200/30 dark:border-amber-800/30">
+                                        <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+                                        <span className="font-semibold text-foreground">{Number(course.rating).toFixed(1)}</span>
+                                        <span className="text-muted-foreground text-xs">/ 5</span>
+                                      </div>
+                                    )}
+                                    {course.enrolled_count > 0 && (
+                                      <div className="flex items-center gap-2 text-sm bg-emerald-50 dark:bg-emerald-950/20 rounded-lg px-3 py-2 border border-emerald-200/30 dark:border-emerald-800/30">
+                                        <GraduationCap className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                                        <span className="font-semibold text-foreground">{course.enrolled_count}</span>
+                                        <span className="text-muted-foreground text-xs">students enrolled</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Eligibility */}
+                                {course.eligibility && (
+                                  <div className="flex items-start gap-3 bg-blue-50/50 dark:bg-blue-950/10 rounded-xl p-4 border border-blue-200/30 dark:border-blue-800/20">
+                                    <Shield className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                                    <div>
+                                      <h5 className="font-heading font-semibold text-foreground text-sm mb-0.5">Eligibility</h5>
+                                      <p className="text-sm text-muted-foreground">{course.eligibility}</p>
+                                    </div>
+                                  </div>
+                                )}
+
                                 {/* Description */}
                                 {course.description && (
                                   <div className="bg-muted/20 rounded-xl p-4 border border-border/30">
@@ -510,11 +569,52 @@ const InstitutePage = () => {
                                   </div>
                                 )}
 
+                                {/* Demo Video */}
+                                {course.demo_video_url && (
+                                  <a href={course.demo_video_url} target="_blank" rel="noopener noreferrer"
+                                    className="flex items-center gap-3 bg-gradient-to-r from-primary/5 to-accent/5 rounded-xl p-4 border border-primary/20 hover:border-primary/40 transition-colors group/video">
+                                    <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center group-hover/video:bg-primary/25 transition-colors">
+                                      <Video className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <div>
+                                      <h5 className="font-heading font-semibold text-foreground text-sm">Watch Demo Class</h5>
+                                      <p className="text-xs text-muted-foreground">Preview a free lecture before enrolling</p>
+                                    </div>
+                                    <Play className="w-4 h-4 text-primary ml-auto" />
+                                  </a>
+                                )}
+
+                                {/* Highlights */}
+                                {(course.highlights || []).length > 0 && (
+                                  <div>
+                                    <h5 className="font-heading font-semibold text-foreground text-sm mb-3 flex items-center gap-2">
+                                      <div className="w-5 h-5 rounded-md bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                                        <Zap className="w-3 h-3 text-amber-600 dark:text-amber-400" />
+                                      </div>
+                                      Course Highlights
+                                    </h5>
+                                    <div className="grid sm:grid-cols-2 gap-2">
+                                      {(course.highlights as string[]).map((h: string, i: number) => (
+                                        <motion.div
+                                          key={i}
+                                          initial={{ opacity: 0, x: -8 }}
+                                          animate={{ opacity: 1, x: 0 }}
+                                          transition={{ delay: 0.1 + i * 0.04 }}
+                                          className="flex items-center gap-2.5 text-sm text-foreground py-2 px-3 rounded-lg bg-gradient-to-r from-amber-50/50 to-transparent dark:from-amber-950/10 border border-amber-200/20 dark:border-amber-800/10"
+                                        >
+                                          <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 flex-shrink-0" />
+                                          <span>{h}</span>
+                                        </motion.div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
                                 {/* What You Get */}
                                 <div>
                                   <h5 className="font-heading font-semibold text-foreground text-sm mb-3 flex items-center gap-2">
                                     <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
-                                      <Star className="w-3 h-3 text-primary" />
+                                      <CheckCircle className="w-3 h-3 text-primary" />
                                     </div>
                                     What You Get
                                   </h5>
@@ -573,17 +673,24 @@ const InstitutePage = () => {
                                 )}
 
                                 {/* Action Buttons */}
-                                <div className="flex gap-2.5 flex-wrap pt-2 border-t border-border/30">
+                                <div className="flex gap-2.5 flex-wrap pt-3 border-t border-border/30">
                                   <Button size="sm" className="shadow-md shadow-primary/20 gap-1.5">
                                     <GraduationCap className="w-4 h-4" /> Enquire Now
                                   </Button>
                                   <Button size="sm" variant="outline" className="gap-1.5" onClick={handleGetBestOffer}>
                                     <Tag className="w-3.5 h-3.5" /> Get Best Offer
                                   </Button>
+                                  {course.demo_video_url && (
+                                    <a href={course.demo_video_url} target="_blank" rel="noopener noreferrer">
+                                      <Button size="sm" variant="outline" className="gap-1.5">
+                                        <Play className="w-3.5 h-3.5" /> Watch Demo
+                                      </Button>
+                                    </a>
+                                  )}
                                   {(course as any).brochure_url && (
                                     <a href={(course as any).brochure_url} target="_blank" rel="noopener noreferrer">
                                       <Button size="sm" variant="outline" className="gap-1.5">
-                                        <Download className="w-3.5 h-3.5" /> Download Brochure
+                                        <Download className="w-3.5 h-3.5" /> Brochure
                                       </Button>
                                     </a>
                                   )}
