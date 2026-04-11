@@ -35,6 +35,7 @@ const InstitutePage = () => {
   const { data: institute, isLoading } = useInstituteBySlug(slug);
   const { user } = useAuth();
   const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
+  const [selectedCourseCategory, setSelectedCourseCategory] = useState<string | null>(null);
   const [expandedFaculty, setExpandedFaculty] = useState<string | null>(null);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [discountClaimed, setDiscountClaimed] = useState(false);
@@ -102,16 +103,31 @@ const InstitutePage = () => {
   const categorySlug = (institute.categories as any)?.slug || "cat";
   const categoryName = (institute.categories as any)?.name || "MBA";
 
-  // Filter courses based on selected target
-  const filteredCourses = selectedTarget
-    ? courses.filter((c: any) => {
-        const target = selectedTarget.toLowerCase();
-        const name = c.name.toLowerCase();
-        return name.includes(target.split(" ")[0]) || name.includes(target);
-      })
-    : courses;
+  // Extract unique course categories from courses
+  const courseCategories = Array.from(
+    new Map(
+      courses
+        .filter((c: any) => c.course_categories?.id)
+        .map((c: any) => [c.course_categories.id, { id: c.course_categories.id, name: c.course_categories.name }])
+    ).values()
+  );
 
-  const displayCourses = filteredCourses.length > 0 ? filteredCourses : courses;
+  // Filter courses based on selected target AND selected course category
+  const filteredCourses = courses.filter((c: any) => {
+    let matchTarget = true;
+    let matchCategory = true;
+    if (selectedTarget) {
+      const target = selectedTarget.toLowerCase();
+      const name = c.name.toLowerCase();
+      matchTarget = name.includes(target.split(" ")[0]) || name.includes(target);
+    }
+    if (selectedCourseCategory) {
+      matchCategory = c.course_categories?.id === selectedCourseCategory;
+    }
+    return matchTarget && matchCategory;
+  });
+
+  const displayCourses = filteredCourses.length > 0 ? filteredCourses : (selectedCourseCategory ? [] : courses);
 
   const handleGetBestOffer = () => {
     if (!user) {
@@ -283,19 +299,45 @@ const InstitutePage = () => {
 
             {/* Courses - Detailed */}
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
-                <CardTitle className="font-heading">
-                  {selectedTarget ? `Courses for ${selectedTarget}` : `All Courses (${courses.length})`}
-                  {selectedTarget && filteredCourses.length === 0 && <span className="text-sm font-normal text-muted-foreground ml-2">— showing all courses</span>}
-                </CardTitle>
-                <div className="flex gap-2">
-                  {compareSelection.length >= 2 && (
-                    <Button size="sm" variant="default" className="gap-1" onClick={() => setShowCompare(!showCompare)}>
-                      <Columns2 className="w-4 h-4" /> Compare ({compareSelection.length})
-                    </Button>
-                  )}
-                  <Button variant="outline" size="sm" className="gap-1" onClick={handleDownloadPDF}><Download className="w-4 h-4" /> Brochure</Button>
+              <CardHeader className="flex flex-col gap-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <CardTitle className="font-heading">
+                    {selectedTarget ? `Courses for ${selectedTarget}` : `All Courses (${courses.length})`}
+                    {selectedCourseCategory && <span className="text-sm font-normal text-muted-foreground ml-2">— filtered by category</span>}
+                  </CardTitle>
+                  <div className="flex gap-2">
+                    {compareSelection.length >= 2 && (
+                      <Button size="sm" variant="default" className="gap-1" onClick={() => setShowCompare(!showCompare)}>
+                        <Columns2 className="w-4 h-4" /> Compare ({compareSelection.length})
+                      </Button>
+                    )}
+                    <Button variant="outline" size="sm" className="gap-1" onClick={handleDownloadPDF}><Download className="w-4 h-4" /> Brochure</Button>
+                  </div>
                 </div>
+                {/* Course Category Filter Tabs */}
+                {courseCategories.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant={selectedCourseCategory === null ? "default" : "outline"}
+                      className="text-xs h-8 rounded-full"
+                      onClick={() => setSelectedCourseCategory(null)}
+                    >
+                      All
+                    </Button>
+                    {courseCategories.map((cc: any) => (
+                      <Button
+                        key={cc.id}
+                        size="sm"
+                        variant={selectedCourseCategory === cc.id ? "default" : "outline"}
+                        className="text-xs h-8 rounded-full"
+                        onClick={() => setSelectedCourseCategory(selectedCourseCategory === cc.id ? null : cc.id)}
+                      >
+                        {cc.name}
+                      </Button>
+                    ))}
+                  </div>
+                )}
               </CardHeader>
               <CardContent>
                 {/* Course comparison */}
@@ -334,6 +376,12 @@ const InstitutePage = () => {
 
                 {/* Course Cards */}
                 <div className="space-y-3">
+                  {displayCourses.length === 0 && selectedCourseCategory && (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground text-sm">No courses found in this category.</p>
+                      <Button variant="ghost" size="sm" className="mt-2" onClick={() => setSelectedCourseCategory(null)}>Show all courses</Button>
+                    </div>
+                  )}
                   {displayCourses.map((course: any) => {
                     const isExpanded = expandedCourse === course.id;
                     return (
