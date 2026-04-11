@@ -792,13 +792,22 @@ export type Database = {
           course_category_id: string | null
           created_at: string
           curriculum: string[] | null
+          demo_video_url: string | null
           description: string | null
+          discount_text: string | null
           duration: string | null
+          eligibility: string | null
+          enrolled_count: number | null
           fees: number | null
+          highlights: string[] | null
           id: string
           institute_id: string
+          mode: string | null
           name: string
+          rating: number | null
+          start_date: string | null
           syllabus_url: string | null
+          total_seats: number | null
           updated_at: string
         }
         Insert: {
@@ -807,13 +816,22 @@ export type Database = {
           course_category_id?: string | null
           created_at?: string
           curriculum?: string[] | null
+          demo_video_url?: string | null
           description?: string | null
+          discount_text?: string | null
           duration?: string | null
+          eligibility?: string | null
+          enrolled_count?: number | null
           fees?: number | null
+          highlights?: string[] | null
           id?: string
           institute_id: string
+          mode?: string | null
           name: string
+          rating?: number | null
+          start_date?: string | null
           syllabus_url?: string | null
+          total_seats?: number | null
           updated_at?: string
         }
         Update: {
@@ -822,13 +840,22 @@ export type Database = {
           course_category_id?: string | null
           created_at?: string
           curriculum?: string[] | null
+          demo_video_url?: string | null
           description?: string | null
+          discount_text?: string | null
           duration?: string | null
+          eligibility?: string | null
+          enrolled_count?: number | null
           fees?: number | null
+          highlights?: string[] | null
           id?: string
           institute_id?: string
+          mode?: string | null
           name?: string
+          rating?: number | null
+          start_date?: string | null
           syllabus_url?: string | null
+          total_seats?: number | null
           updated_at?: string
         }
         Relationships: [
