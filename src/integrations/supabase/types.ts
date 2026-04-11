@@ -210,6 +210,7 @@ export type Database = {
           id: string
           image_url: string | null
           link_url: string | null
+          mobile_image_url: string | null
           sort_order: number | null
           subtitle: string | null
           title: string
@@ -221,6 +222,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           link_url?: string | null
+          mobile_image_url?: string | null
           sort_order?: number | null
           subtitle?: string | null
           title: string
@@ -232,6 +234,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           link_url?: string | null
+          mobile_image_url?: string | null
           sort_order?: number | null
           subtitle?: string | null
           title?: string
