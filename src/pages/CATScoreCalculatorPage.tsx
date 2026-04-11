@@ -154,12 +154,14 @@ const useLiveStats = () => {
 /* ═══════ MAIN COMPONENT ═══════ */
 const CATScoreCalculatorPage: React.FC = () => {
   const [htmlInput, setHtmlInput] = useState("");
+  const [urlInput, setUrlInput] = useState("");
+  const [urlFetching, setUrlFetching] = useState(false);
   const [result, setResult] = useState<CATResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [error, setError] = useState("");
-  const [inputMode, setInputMode] = useState<"paste" | "upload">("paste");
+  const [inputMode, setInputMode] = useState<"url" | "paste" | "upload">("url");
   const [showQuestions, setShowQuestions] = useState(false);
   const [showLoginDialog, setShowLoginDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
