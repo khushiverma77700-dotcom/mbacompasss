@@ -299,19 +299,45 @@ const InstitutePage = () => {
 
             {/* Courses - Detailed */}
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
-                <CardTitle className="font-heading">
-                  {selectedTarget ? `Courses for ${selectedTarget}` : `All Courses (${courses.length})`}
-                  {selectedTarget && filteredCourses.length === 0 && <span className="text-sm font-normal text-muted-foreground ml-2">— showing all courses</span>}
-                </CardTitle>
-                <div className="flex gap-2">
-                  {compareSelection.length >= 2 && (
-                    <Button size="sm" variant="default" className="gap-1" onClick={() => setShowCompare(!showCompare)}>
-                      <Columns2 className="w-4 h-4" /> Compare ({compareSelection.length})
-                    </Button>
-                  )}
-                  <Button variant="outline" size="sm" className="gap-1" onClick={handleDownloadPDF}><Download className="w-4 h-4" /> Brochure</Button>
+              <CardHeader className="flex flex-col gap-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <CardTitle className="font-heading">
+                    {selectedTarget ? `Courses for ${selectedTarget}` : `All Courses (${courses.length})`}
+                    {selectedCourseCategory && <span className="text-sm font-normal text-muted-foreground ml-2">— filtered by category</span>}
+                  </CardTitle>
+                  <div className="flex gap-2">
+                    {compareSelection.length >= 2 && (
+                      <Button size="sm" variant="default" className="gap-1" onClick={() => setShowCompare(!showCompare)}>
+                        <Columns2 className="w-4 h-4" /> Compare ({compareSelection.length})
+                      </Button>
+                    )}
+                    <Button variant="outline" size="sm" className="gap-1" onClick={handleDownloadPDF}><Download className="w-4 h-4" /> Brochure</Button>
+                  </div>
                 </div>
+                {/* Course Category Filter Tabs */}
+                {courseCategories.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant={selectedCourseCategory === null ? "default" : "outline"}
+                      className="text-xs h-8 rounded-full"
+                      onClick={() => setSelectedCourseCategory(null)}
+                    >
+                      All
+                    </Button>
+                    {courseCategories.map((cc: any) => (
+                      <Button
+                        key={cc.id}
+                        size="sm"
+                        variant={selectedCourseCategory === cc.id ? "default" : "outline"}
+                        className="text-xs h-8 rounded-full"
+                        onClick={() => setSelectedCourseCategory(selectedCourseCategory === cc.id ? null : cc.id)}
+                      >
+                        {cc.name}
+                      </Button>
+                    ))}
+                  </div>
+                )}
               </CardHeader>
               <CardContent>
                 {/* Course comparison */}
