@@ -376,6 +376,12 @@ const InstitutePage = () => {
 
                 {/* Course Cards */}
                 <div className="space-y-3">
+                  {displayCourses.length === 0 && selectedCourseCategory && (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground text-sm">No courses found in this category.</p>
+                      <Button variant="ghost" size="sm" className="mt-2" onClick={() => setSelectedCourseCategory(null)}>Show all courses</Button>
+                    </div>
+                  )}
                   {displayCourses.map((course: any) => {
                     const isExpanded = expandedCourse === course.id;
                     return (
