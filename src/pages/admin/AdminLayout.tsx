@@ -1,6 +1,6 @@
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp, Sparkles, ShieldCheck, Lock, Briefcase, Target, PhoneCall, Database, Activity } from "lucide-react";
+import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp, Sparkles, ShieldCheck, Lock, Briefcase, Target, PhoneCall, Database, Activity, Calculator } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -39,6 +39,7 @@ const adminNav = [
   { label: "Manage Admins", path: "/admin/manage-admins", icon: ShieldCheck },
   { label: "Database Backup", path: "/admin/database-backup", icon: Database },
   { label: "AI & Cloud Usage", path: "/admin/ai-usage", icon: Activity },
+  { label: "CAT Score Submissions", path: "/admin/cat-scores", icon: Calculator },
 ];
 
 const AdminLayout = () => {

@@ -71,6 +71,7 @@ const AdminCallbacks = lazy(() => import("./pages/admin/AdminCallbacks"));
 const AdminDatabaseBackup = lazy(() => import("./pages/admin/AdminDatabaseBackup"));
 const AdminAIUsage = lazy(() => import("./pages/admin/AdminAIUsage"));
 const AdminCourseCategories = lazy(() => import("./pages/admin/AdminCourseCategories"));
+const AdminCATScores = lazy(() => import("./pages/admin/AdminCATScores"));
 const CATScoreCalculatorPage = lazy(() => import("./pages/CATScoreCalculatorPage"));
 
 // Lazy load heavy popups
@@ -219,6 +220,7 @@ const App = () => (
               <Route path="database-backup" element={<LazyPage><AdminDatabaseBackup /></LazyPage>} />
               <Route path="ai-usage" element={<LazyPage><AdminAIUsage /></LazyPage>} />
               <Route path="course-categories" element={<LazyPage><AdminCourseCategories /></LazyPage>} />
+              <Route path="cat-scores" element={<LazyPage><AdminCATScores /></LazyPage>} />
             </Route>
 
             {/* Eagerly loaded — no spinner */}
