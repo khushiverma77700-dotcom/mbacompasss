@@ -41,7 +41,7 @@ const AnnouncementBanner = () => {
         .eq("key", "announcements")
         .maybeSingle();
       if (data?.value && Array.isArray(data.value) && data.value.length > 0) {
-        setAnnouncements(data.value as SiteAnnouncement[]);
+        setAnnouncements(data.value as unknown as SiteAnnouncement[]);
       }
     };
     fetchAnnouncements();
