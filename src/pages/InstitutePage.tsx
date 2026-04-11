@@ -35,6 +35,7 @@ const InstitutePage = () => {
   const { data: institute, isLoading } = useInstituteBySlug(slug);
   const { user } = useAuth();
   const [expandedCourse, setExpandedCourse] = useState<string | null>(null);
+  const [selectedCourseCategory, setSelectedCourseCategory] = useState<string | null>(null);
   const [expandedFaculty, setExpandedFaculty] = useState<string | null>(null);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [discountClaimed, setDiscountClaimed] = useState(false);
