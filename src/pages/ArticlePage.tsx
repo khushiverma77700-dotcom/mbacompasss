@@ -175,9 +175,9 @@ const ArticlePage = () => {
         <div className="grid lg:grid-cols-3 gap-10">
           {/* Main Article */}
           <article className="lg:col-span-2">
-            {article.image_url && (
+            {(article.image_url || article.banner_url) && (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl overflow-hidden mb-8 shadow-xl -mt-8 relative z-10">
-                <img src={article.image_url} alt={article.title} className="w-full aspect-video object-cover" />
+                <img src={(article.image_url || article.banner_url)!} alt={article.title} className="w-full aspect-video object-cover" />
               </motion.div>
             )}
 
@@ -230,8 +230,8 @@ const ArticlePage = () => {
                 {sidebar.map((r: any) => (
                   <Link key={r.id} to={`/article/${r.slug}`} className="group block p-3 rounded-xl hover:bg-muted/60 transition-colors border border-transparent hover:border-border">
                     <div className="flex gap-3">
-                      {r.image_url ? (
-                        <img src={r.image_url} alt="" className="w-16 h-12 rounded-lg object-cover flex-shrink-0" />
+                      {(r.image_url || r.banner_url) ? (
+                        <img src={(r.image_url || r.banner_url)!} alt="" className="w-16 h-12 rounded-lg object-cover flex-shrink-0" />
                       ) : (
                         <div className="w-16 h-12 rounded-lg bg-muted flex-shrink-0 flex items-center justify-center">
                           <BookOpen className="w-4 h-4 text-muted-foreground/30" />
