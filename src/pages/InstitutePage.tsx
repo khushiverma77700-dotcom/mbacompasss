@@ -457,12 +457,16 @@ const InstitutePage = () => {
                                 )}
                               </div>
                               <div className="flex items-center gap-4 mt-2 flex-wrap">
-                                <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
-                                  <Clock className="w-3.5 h-3.5 text-primary/70" /> {course.duration || "N/A"}
-                                </span>
-                                <span className="inline-flex items-center gap-1 font-heading font-bold text-primary text-base">
-                                  ₹{Number(course.fees).toLocaleString()}
-                                </span>
+                                {course.duration && (
+                                  <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+                                    <Clock className="w-3.5 h-3.5 text-primary/70" /> {course.duration}
+                                  </span>
+                                )}
+                                {course.fees && Number(course.fees) > 0 && (
+                                  <span className="inline-flex items-center gap-1 font-heading font-bold text-primary text-base">
+                                    ₹{Number(course.fees).toLocaleString()}
+                                  </span>
+                                )}
                                 {course.rating > 0 && (
                                   <span className="inline-flex items-center gap-1 text-sm">
                                     <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
@@ -495,29 +499,35 @@ const InstitutePage = () => {
                               className="overflow-hidden"
                             >
                               <div className="px-5 pb-5 pt-1 space-y-5 bg-gradient-to-b from-transparent to-muted/10">
-                                {/* Stats Grid */}
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                  {[
-                                    { label: "Duration", value: course.duration || "N/A", icon: Clock, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30" },
-                                    { label: "Fees", value: `₹${Number(course.fees).toLocaleString()}`, icon: TrendingUp, color: "text-primary", bg: "bg-primary/5" },
-                                    { label: "Mode", value: course.mode || institute.mode || "Offline", icon: Award, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/30" },
-                                    { label: "Batch", value: course.batch_info || "N/A", icon: Users, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/30" },
-                                  ].map((stat, i) => (
-                                    <motion.div
-                                      key={stat.label}
-                                      initial={{ opacity: 0, y: 8 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      transition={{ delay: i * 0.08 }}
-                                      className={`${stat.bg} rounded-xl p-3.5 border border-border/30`}
-                                    >
-                                      <div className="flex items-center gap-1.5 mb-1">
-                                        <stat.icon className={`w-3.5 h-3.5 ${stat.color}`} />
-                                        <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{stat.label}</span>
-                                      </div>
-                                      <div className="font-heading font-bold text-foreground text-sm">{stat.value}</div>
-                                    </motion.div>
-                                  ))}
-                                </div>
+                                {/* Stats Grid - only show fields with data */}
+                                {(() => {
+                                  const statsItems = [
+                                    course.duration ? { label: "Duration", value: course.duration, icon: Clock, color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-950/30" } : null,
+                                    course.fees && Number(course.fees) > 0 ? { label: "Fees", value: `₹${Number(course.fees).toLocaleString()}`, icon: TrendingUp, color: "text-primary", bg: "bg-primary/5" } : null,
+                                    (course.mode || institute.mode) ? { label: "Mode", value: course.mode || institute.mode || "", icon: Award, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-950/30" } : null,
+                                    course.batch_info ? { label: "Batch", value: course.batch_info, icon: Users, color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-950/30" } : null,
+                                  ].filter(Boolean) as { label: string; value: string; icon: any; color: string; bg: string }[];
+                                  if (statsItems.length === 0) return null;
+                                  return (
+                                    <div className={`grid grid-cols-2 ${statsItems.length >= 3 ? 'sm:grid-cols-' + Math.min(statsItems.length, 4) : ''} gap-3`}>
+                                      {statsItems.map((stat, i) => (
+                                        <motion.div
+                                          key={stat.label}
+                                          initial={{ opacity: 0, y: 8 }}
+                                          animate={{ opacity: 1, y: 0 }}
+                                          transition={{ delay: i * 0.08 }}
+                                          className={`${stat.bg} rounded-xl p-3.5 border border-border/30`}
+                                        >
+                                          <div className="flex items-center gap-1.5 mb-1">
+                                            <stat.icon className={`w-3.5 h-3.5 ${stat.color}`} />
+                                            <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">{stat.label}</span>
+                                          </div>
+                                          <div className="font-heading font-bold text-foreground text-sm">{stat.value}</div>
+                                        </motion.div>
+                                      ))}
+                                    </div>
+                                  );
+                                })()}
 
                                 {/* Extra Info Row: Start Date, Seats, Rating, Enrolled */}
                                 {(course.start_date || course.total_seats || course.rating > 0 || course.enrolled_count > 0) && (
@@ -610,7 +620,8 @@ const InstitutePage = () => {
                                   </div>
                                 )}
 
-                                {/* What You Get */}
+                                {/* What You Get - only show if institute has features */}
+                                {institute.features && institute.features.length > 0 && (
                                 <div>
                                   <h5 className="font-heading font-semibold text-foreground text-sm mb-3 flex items-center gap-2">
                                     <div className="w-5 h-5 rounded-md bg-primary/10 flex items-center justify-center">
@@ -619,16 +630,7 @@ const InstitutePage = () => {
                                     What You Get
                                   </h5>
                                   <div className="grid sm:grid-cols-2 gap-2">
-                                    {[
-                                      "Complete Study Material",
-                                      "Live & Recorded Lectures",
-                                      "Sectional Mock Tests",
-                                      "Full-Length Mock Tests",
-                                      "Doubt Clearing Sessions",
-                                      "Performance Analytics",
-                                      "Interview Preparation",
-                                      "Mentor Support",
-                                    ].map((d, i) => (
+                                    {institute.features.map((d: string, i: number) => (
                                       <motion.div
                                         key={i}
                                         initial={{ opacity: 0, x: -8 }}
@@ -642,6 +644,7 @@ const InstitutePage = () => {
                                     ))}
                                   </div>
                                 </div>
+                                )}
 
                                 {/* Curriculum */}
                                 {(course.curriculum || []).length > 0 && (
