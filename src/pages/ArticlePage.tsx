@@ -133,41 +133,59 @@ const ArticlePage = () => {
       <SEOHead {...resolvedSeo} />
 
       {/* Hero */}
-      <div className="hero-gradient py-12 md:py-16 relative overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute top-0 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+      <div className="relative py-14 md:py-20 overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-accent/80">
+        {/* Decorative layers */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute -top-20 -right-20 w-[500px] h-[500px] bg-white/[0.04] rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
+          <div className="absolute top-1/2 right-1/3 w-3 h-3 bg-white/20 rounded-full" />
+          <div className="absolute top-1/4 right-1/4 w-2 h-2 bg-white/15 rounded-full" />
+          <div className="absolute bottom-1/3 left-1/3 w-2.5 h-2.5 bg-white/10 rounded-full" />
+          {/* Subtle grid pattern */}
+          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
         </div>
+
         <div className="container mx-auto px-4 relative z-10">
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-1.5 text-xs text-primary-foreground/60 mb-5" aria-label="Breadcrumb">
-            <Link to="/" className="hover:text-primary-foreground transition-colors">Home</Link>
+          <nav className="flex items-center gap-1.5 text-xs text-primary-foreground/50 mb-6" aria-label="Breadcrumb">
+            <Link to="/" className="hover:text-primary-foreground/80 transition-colors">Home</Link>
             <ChevronRight className="w-3 h-3" />
-            <Link to="/blog" className="hover:text-primary-foreground transition-colors">Blog</Link>
+            <Link to="/blog" className="hover:text-primary-foreground/80 transition-colors">Blog</Link>
             <ChevronRight className="w-3 h-3" />
-            <span className="text-primary-foreground/80 line-clamp-1 max-w-[200px]">{article.title}</span>
+            <span className="text-primary-foreground/70 line-clamp-1 max-w-[200px]">{article.title}</span>
           </nav>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <Badge className="mb-4 bg-white/15 text-primary-foreground border-white/20 text-xs">{article.category}</Badge>
-            <h1 className="font-heading text-2xl md:text-4xl lg:text-5xl font-extrabold text-primary-foreground mb-5 max-w-4xl leading-tight">
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+            <Badge className="mb-5 bg-white/10 text-primary-foreground border-white/15 text-xs backdrop-blur-sm px-3 py-1 rounded-full uppercase tracking-wider font-semibold">
+              {article.category}
+            </Badge>
+            <h1 className="font-heading text-3xl md:text-4xl lg:text-[2.75rem] font-extrabold text-primary-foreground mb-6 max-w-3xl leading-[1.15] tracking-tight drop-shadow-sm">
               {(article as any).h1_tag || article.title}
             </h1>
-            <div className="flex flex-wrap items-center gap-5 text-primary-foreground/75 text-sm">
+            <div className="flex flex-wrap items-center gap-5 text-primary-foreground/65 text-sm">
               {article.author && (
-                <span className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
-                    <User className="w-4 h-4 text-primary-foreground" />
+                <span className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center ring-1 ring-white/15">
+                    <User className="w-4 h-4 text-primary-foreground/80" />
                   </div>
-                  <span className="font-medium">{article.author}</span>
+                  <span className="font-semibold text-primary-foreground/85">{article.author}</span>
                 </span>
               )}
-              <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> {formatDate(article.created_at)}</span>
-              <span className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> {readTime} read</span>
-              <button onClick={handleShare} className="flex items-center gap-1.5 hover:text-primary-foreground transition-colors ml-auto">
-                <Share2 className="w-4 h-4" /> Share
+              <span className="w-px h-4 bg-white/20 hidden sm:block" />
+              <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {formatDate(article.created_at)}</span>
+              <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {readTime} read</span>
+              <button onClick={handleShare} className="flex items-center gap-1.5 hover:text-primary-foreground/90 transition-colors ml-auto bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-medium ring-1 ring-white/10">
+                <Share2 className="w-3.5 h-3.5" /> Share
               </button>
             </div>
           </motion.div>
+        </div>
+
+        {/* Bottom wave */}
+        <div className="absolute bottom-0 left-0 right-0">
+          <svg viewBox="0 0 1440 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto" preserveAspectRatio="none">
+            <path d="M0 40V20C240 0 480 0 720 20C960 40 1200 40 1440 20V40H0Z" fill="hsl(var(--background))" />
+          </svg>
         </div>
       </div>
 
