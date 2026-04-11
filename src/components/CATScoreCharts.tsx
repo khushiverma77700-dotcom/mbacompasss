@@ -65,14 +65,6 @@ export const AttemptBreakdownPie: React.FC<{ result: CATResult }> = ({ result })
 };
 
 export const SectionScoreBar: React.FC<{ result: CATResult }> = ({ result }) => {
-  const data = result.sections.map((s) => ({
-    section: s.section,
-    Score: s.score,
-    "Max Score": s.maxScore,
-    "Negative Marks": s.questionType === "MCQ" ? s.incorrect : 0,
-  }));
-
-  // Calculate negative marks per section
   const dataWithNeg = result.sections.map((s) => {
     const mcqWrong = result.questions.filter(
       (q) => q.section === s.section && q.questionType === "MCQ" && !q.isCorrect &&
