@@ -5,13 +5,15 @@ async function logAIUsage(feature: string, model: string, aiData: any, status = 
   try {
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const usage = aiData?.usage || {};
-    await sb.from("ai_usage_logs").insert({
+    const { error } = await sb.from("ai_usage_logs").insert({
       feature, model,
       prompt_tokens: usage.prompt_tokens || 0, completion_tokens: usage.completion_tokens || 0,
       total_tokens: usage.total_tokens || 0, estimated_cost: (usage.total_tokens || 0) * 0.000002,
       status, error_message: errorMsg || null,
     });
-  } catch (e) { console.error("Usage log error:", e); }
+    if (error) console.error("[ai-usage-log] Insert failed:", JSON.stringify(error));
+    else console.log("[ai-usage-log] Logged usage for", feature);
+  } catch (e) { console.error("[ai-usage-log] Exception:", e); }
 }
 
 const corsHeaders = {
