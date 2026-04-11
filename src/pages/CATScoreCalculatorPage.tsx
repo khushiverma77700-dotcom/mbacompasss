@@ -499,7 +499,6 @@ const CATScoreCalculatorPage: React.FC = () => {
             )}
 
             {error && <p className="text-destructive text-sm mt-3 flex items-center gap-1"><XCircle className="w-4 h-4" /> {error}</p>}
-            </div>
           </Card>
         </SectionInView>
       )}
