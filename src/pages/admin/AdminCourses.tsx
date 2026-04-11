@@ -68,7 +68,7 @@ const AdminCourses = () => {
       toast({ title: "Error", description: "Name and Institute are required", variant: "destructive" });
       return;
     }
-    const payload: Record<string, any> = {
+    const payload = {
       name: form.name, description: form.description || null,
       institute_id: form.institute_id, duration: form.duration || null,
       fees: form.fees || null, batch_info: form.batch_info || null,
@@ -79,13 +79,13 @@ const AdminCourses = () => {
       mode: form.mode || "Offline",
       start_date: form.start_date || null,
       total_seats: form.total_seats || null,
-      highlights: form.highlights.length > 0 ? form.highlights : null,
+      highlights: form.highlights.length > 0 ? form.highlights : [],
       eligibility: form.eligibility || null,
       demo_video_url: form.demo_video_url || null,
       discount_text: form.discount_text || null,
       rating: form.rating || 0,
       enrolled_count: form.enrolled_count || 0,
-    };
+    } as any;
 
     if (editId) {
       const { error } = await supabase.from("courses").update(payload).eq("id", editId);
