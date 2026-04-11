@@ -71,6 +71,7 @@ const AdminCallbacks = lazy(() => import("./pages/admin/AdminCallbacks"));
 const AdminDatabaseBackup = lazy(() => import("./pages/admin/AdminDatabaseBackup"));
 const AdminAIUsage = lazy(() => import("./pages/admin/AdminAIUsage"));
 const AdminCourseCategories = lazy(() => import("./pages/admin/AdminCourseCategories"));
+const CATScoreCalculatorPage = lazy(() => import("./pages/CATScoreCalculatorPage"));
 
 // Lazy load heavy popups
 const OnboardingDialog = lazy(() => import("@/components/OnboardingDialog"));

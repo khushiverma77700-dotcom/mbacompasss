@@ -5,7 +5,7 @@ export interface ParsedQuestion {
   section: string;        // VARC, DILR, QA
   questionNumber: number;
   questionType: "MCQ" | "SA";  // SA = TITA (Type In The Answer)
-  status: "Answered" | "Not Answered" | "Marked for Review" | "Not Visited";
+  status: string;
   chosenOption: string | null;
   correctOption: string | null;
   isCorrect: boolean;
