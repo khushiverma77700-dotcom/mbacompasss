@@ -30,6 +30,8 @@ const NewsSection = () => {
   const featured = articles?.[0];
   const rest = articles?.slice(1, 4) || [];
 
+  const getImage = (a: any) => a?.image_url || a?.banner_url;
+
   if (isLoading) {
     return (
       <section className="py-16 bg-muted/30">
