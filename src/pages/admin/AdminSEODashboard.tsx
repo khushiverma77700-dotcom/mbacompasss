@@ -297,7 +297,12 @@ const AdminSEODashboard = () => {
   // Load saved blog ideas
   const loadSavedBlogIdeas = useCallback(async () => {
     const { data } = await supabase.from("site_settings").select("value").eq("key", "saved_blog_ideas").maybeSingle();
-    if (data?.value && Array.isArray(data.value)) setSavedBlogIdeas(data.value as unknown as SavedBlogIdea[]);
+    if (data?.value) {
+      const val = data.value as any;
+      // Support both wrapped {items: [...]} and legacy array format
+      const ideas = Array.isArray(val) ? val : (val?.items && Array.isArray(val.items) ? val.items : []);
+      setSavedBlogIdeas(ideas as SavedBlogIdea[]);
+    }
   }, []);
 
   const loadRemovedLinks = useCallback(async () => {
