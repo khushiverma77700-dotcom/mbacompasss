@@ -11,7 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import SEOHead, { generateExamSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
-import { examDetails, institutes } from "@/data/mockData";
+import { examDetails } from "@/data/mockData";
 import AIGistSection from "@/components/AIGistSection";
 import InlineAIToolCTA from "@/components/InlineAIToolCTA";
 
@@ -123,7 +123,37 @@ const ExamDetailPage = () => {
     </div>
   );
 
-  const relatedInstitutes = institutes.filter((i) => i.category === slug || i.courses.some((c) => c.name.toLowerCase().includes(exam.name.toLowerCase())));
+  const { data: relatedInstitutes = [] } = useQuery({
+    queryKey: ["exam-related-institutes", slug],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("institutes")
+        .select("id, name, slug, city, state, rating, logo_url")
+        .order("rating", { ascending: false })
+        .limit(4);
+      return (data || []).map((inst) => ({
+        id: inst.id,
+        name: inst.name,
+        slug: inst.slug,
+        location: `${inst.city || ""}, ${inst.state || ""}`,
+        rating: inst.rating || 0,
+      }));
+    },
+    enabled: !!exam,
+  });
+
+  const { data: otherExams = [] } = useQuery({
+    queryKey: ["other-exams", slug],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("exams")
+        .select("id, name, slug")
+        .neq("slug", slug!)
+        .limit(10);
+      return data || [];
+    },
+    enabled: !!slug,
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -211,7 +241,7 @@ const ExamDetailPage = () => {
           <div className="space-y-4">
             <Card><CardHeader><CardTitle className="font-heading text-base">Important Dates</CardTitle></CardHeader><CardContent><div className="space-y-3">{exam.importantDates.map((d, i) => <div key={i} className="flex items-start gap-3"><Calendar className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" /><div><div className="text-sm font-medium text-foreground">{d.event}</div><div className="text-xs text-muted-foreground">{d.date}</div></div></div>)}</div></CardContent></Card>
             <Card><CardHeader><CardTitle className="font-heading text-base">Top Colleges Accepting {exam.name}</CardTitle></CardHeader><CardContent><div className="space-y-2">{exam.topColleges.map((col, i) => <div key={i} className="flex items-center gap-2 text-sm"><span className="w-5 h-5 rounded-full bg-secondary flex items-center justify-center text-xs font-semibold text-secondary-foreground">{i + 1}</span><span className="text-foreground">{col}</span></div>)}</div><Link to="/colleges"><Button variant="outline" size="sm" className="w-full mt-4 gap-1">View All Colleges <ArrowRight className="w-3.5 h-3.5" /></Button></Link></CardContent></Card>
-            <Card><CardHeader><CardTitle className="font-heading text-base">Other MBA Exams</CardTitle></CardHeader><CardContent><div className="space-y-2">{examDetails.filter((e) => e.slug !== slug).map((e) => <Link key={e.id} to={`/exam/${e.slug}`} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted transition-colors"><span className="text-sm font-medium text-foreground">{e.name}</span><ArrowRight className="w-3.5 h-3.5 text-muted-foreground" /></Link>)}</div></CardContent></Card>
+            <Card><CardHeader><CardTitle className="font-heading text-base">Other MBA Exams</CardTitle></CardHeader><CardContent><div className="space-y-2">{(otherExams.length > 0 ? otherExams : examDetails.filter((e) => e.slug !== slug)).map((e) => <Link key={e.id} to={`/exam/${e.slug}`} className="flex items-center justify-between p-2 rounded-lg hover:bg-muted transition-colors"><span className="text-sm font-medium text-foreground">{e.name}</span><ArrowRight className="w-3.5 h-3.5 text-muted-foreground" /></Link>)}</div></CardContent></Card>
           </div>
       </div>
       {dbExam?.id && <PageKeywords contentType="exam" recordId={dbExam.id} fallbackKeywords={dbExam.keywords || []} />}
