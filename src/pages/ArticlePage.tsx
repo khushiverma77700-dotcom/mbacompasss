@@ -133,58 +133,78 @@ const ArticlePage = () => {
       <SEOHead {...resolvedSeo} />
 
       {/* Hero */}
-      <div className="relative py-14 md:py-20 overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-accent/80">
-        {/* Decorative layers */}
+      <div className="relative overflow-hidden">
+        {/* Main gradient background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(200,85%,45%)] via-primary to-[hsl(190,75%,40%)]" />
+        
+        {/* Mesh gradient overlay */}
+        <div className="absolute inset-0 pointer-events-none opacity-60" style={{
+          background: 'radial-gradient(ellipse 80% 60% at 20% 80%, hsl(200 90% 60% / 0.4), transparent), radial-gradient(ellipse 60% 50% at 80% 20%, hsl(180 70% 50% / 0.3), transparent), radial-gradient(ellipse 50% 40% at 50% 50%, hsl(210 80% 55% / 0.2), transparent)'
+        }} />
+
+        {/* Decorative elements */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute -top-20 -right-20 w-[500px] h-[500px] bg-white/[0.04] rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-accent/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4" />
-          <div className="absolute top-1/2 right-1/3 w-3 h-3 bg-white/20 rounded-full" />
-          <div className="absolute top-1/4 right-1/4 w-2 h-2 bg-white/15 rounded-full" />
-          <div className="absolute bottom-1/3 left-1/3 w-2.5 h-2.5 bg-white/10 rounded-full" />
-          {/* Subtle grid pattern */}
-          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+          {/* Light streak */}
+          <div className="absolute -top-32 -right-32 w-[600px] h-[600px] bg-white/[0.03] rounded-full blur-3xl" />
+          <div className="absolute -bottom-20 -left-20 w-[400px] h-[300px] bg-white/[0.04] rounded-full blur-3xl" />
+          {/* Floating geometric shapes */}
+          <div className="absolute top-16 right-[15%] w-20 h-20 border border-white/[0.08] rounded-2xl rotate-12" />
+          <div className="absolute bottom-20 left-[10%] w-14 h-14 border border-white/[0.06] rounded-xl -rotate-12" />
+          <div className="absolute top-1/3 right-[8%] w-2 h-2 bg-white/25 rounded-full" />
+          <div className="absolute top-[60%] left-[20%] w-1.5 h-1.5 bg-white/15 rounded-full" />
+          {/* Subtle dot pattern */}
+          <div className="absolute inset-0 opacity-[0.035]" style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '28px 28px' }} />
         </div>
 
-        <div className="container mx-auto px-4 relative z-10">
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-1.5 text-xs text-primary-foreground/50 mb-6" aria-label="Breadcrumb">
-            <Link to="/" className="hover:text-primary-foreground/80 transition-colors">Home</Link>
-            <ChevronRight className="w-3 h-3" />
-            <Link to="/blog" className="hover:text-primary-foreground/80 transition-colors">Blog</Link>
-            <ChevronRight className="w-3 h-3" />
-            <span className="text-primary-foreground/70 line-clamp-1 max-w-[200px]">{article.title}</span>
-          </nav>
+        {/* Content */}
+        <div className="relative z-10 pt-10 pb-16 md:pt-14 md:pb-20">
+          <div className="container mx-auto px-4">
+            {/* Breadcrumb */}
+            <nav className="flex items-center gap-1.5 text-[11px] text-white/45 mb-8 font-medium" aria-label="Breadcrumb">
+              <Link to="/" className="hover:text-white/75 transition-colors">Home</Link>
+              <ChevronRight className="w-3 h-3" />
+              <Link to="/blog" className="hover:text-white/75 transition-colors">Blog</Link>
+              <ChevronRight className="w-3 h-3" />
+              <span className="text-white/60 line-clamp-1 max-w-[180px]">{article.title}</span>
+            </nav>
 
-          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <Badge className="mb-5 bg-white/10 text-primary-foreground border-white/15 text-xs backdrop-blur-sm px-3 py-1 rounded-full uppercase tracking-wider font-semibold">
-              {article.category}
-            </Badge>
-            <h1 className="font-heading text-3xl md:text-4xl lg:text-[2.75rem] font-extrabold text-primary-foreground mb-6 max-w-3xl leading-[1.15] tracking-tight drop-shadow-sm">
-              {(article as any).h1_tag || article.title}
-            </h1>
-            <div className="flex flex-wrap items-center gap-5 text-primary-foreground/65 text-sm">
-              {article.author && (
-                <span className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center ring-1 ring-white/15">
-                    <User className="w-4 h-4 text-primary-foreground/80" />
-                  </div>
-                  <span className="font-semibold text-primary-foreground/85">{article.author}</span>
-                </span>
-              )}
-              <span className="w-px h-4 bg-white/20 hidden sm:block" />
-              <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {formatDate(article.created_at)}</span>
-              <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {readTime} read</span>
-              <button onClick={handleShare} className="flex items-center gap-1.5 hover:text-primary-foreground/90 transition-colors ml-auto bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-medium ring-1 ring-white/10">
-                <Share2 className="w-3.5 h-3.5" /> Share
-              </button>
-            </div>
-          </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: "easeOut" }}>
+              {/* Category pill */}
+              <div className="inline-flex items-center gap-1.5 mb-5 bg-white/[0.12] backdrop-blur-md text-white/90 text-[11px] font-bold uppercase tracking-[0.12em] px-3.5 py-1.5 rounded-full border border-white/[0.12]">
+                <div className="w-1.5 h-1.5 bg-white/60 rounded-full" />
+                {article.category}
+              </div>
+
+              {/* Title */}
+              <h1 className="font-heading text-[1.75rem] md:text-[2.5rem] lg:text-[3rem] font-extrabold text-white mb-8 max-w-3xl leading-[1.1] tracking-[-0.02em]" style={{ textShadow: '0 2px 20px rgba(0,0,0,0.15)' }}>
+                {(article as any).h1_tag || article.title}
+              </h1>
+
+              {/* Author & Meta - glassmorphism card */}
+              <div className="inline-flex flex-wrap items-center gap-4 bg-white/[0.08] backdrop-blur-md rounded-2xl px-5 py-3 border border-white/[0.1]">
+                {article.author && (
+                  <span className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center">
+                      <User className="w-3.5 h-3.5 text-white/80" />
+                    </div>
+                    <span className="font-semibold text-white/90 text-sm">{article.author}</span>
+                  </span>
+                )}
+                {article.author && <span className="w-px h-4 bg-white/15 hidden sm:block" />}
+                <span className="flex items-center gap-1.5 text-white/55 text-xs"><Calendar className="w-3.5 h-3.5" /> {formatDate(article.created_at)}</span>
+                <span className="flex items-center gap-1.5 text-white/55 text-xs"><Clock className="w-3.5 h-3.5" /> {readTime} read</span>
+                <button onClick={handleShare} className="flex items-center gap-1.5 text-white/60 hover:text-white/90 transition-colors text-xs font-medium ml-auto sm:ml-2 hover:bg-white/10 px-2.5 py-1 rounded-lg">
+                  <Share2 className="w-3.5 h-3.5" /> Share
+                </button>
+              </div>
+            </motion.div>
+          </div>
         </div>
 
-        {/* Bottom wave */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto" preserveAspectRatio="none">
-            <path d="M0 40V20C240 0 480 0 720 20C960 40 1200 40 1440 20V40H0Z" fill="hsl(var(--background))" />
+        {/* Bottom curve */}
+        <div className="absolute bottom-0 left-0 right-0 pointer-events-none">
+          <svg viewBox="0 0 1440 48" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto block" preserveAspectRatio="none">
+            <path d="M0 48V24C360 0 720 0 1080 12C1260 18 1350 24 1440 24V48H0Z" fill="hsl(var(--background))" />
           </svg>
         </div>
       </div>
