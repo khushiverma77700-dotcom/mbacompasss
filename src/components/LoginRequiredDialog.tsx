@@ -271,6 +271,13 @@ const LoginRequiredDialog = ({ open, onOpenChange, message }: LoginRequiredDialo
           <Button type="submit" className="w-full" disabled={loading || (!isLogin && !phoneVerified)}>
             {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
           </Button>
+          {isLogin && (
+            <div className="text-right">
+              <Link to="/forgot-password" className="text-sm text-primary hover:underline" onClick={() => onOpenChange(false)}>
+                Forgot Password?
+              </Link>
+            </div>
+          )}
         </form>
         <div className="text-center text-sm text-muted-foreground">
           {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
