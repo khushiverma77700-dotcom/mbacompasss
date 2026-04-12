@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { GraduationCap, Briefcase, Phone, AlertCircle, CheckCircle2 } from "lucide-react";
+import { GraduationCap, Briefcase, Phone, AlertCircle, CheckCircle2, ShieldCheck } from "lucide-react";
 
 const EXAMS = ["CAT", "NMAT", "XAT", "SNAP", "GMAT", "MAT", "CMAT", "IIFT"];
 const EXPERIENCE_OPTIONS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10+"];
@@ -26,7 +27,21 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  // OTP states
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+
   const allSelected = selectedExams.length === EXAMS.length;
+
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const interval = setInterval(() => setResendTimer((t) => t - 1), 1000);
+    return () => clearInterval(interval);
+  }, [resendTimer]);
 
   const validatePhone = (value: string) => {
     const digits = value.replace(/\D/g, "");
@@ -40,8 +55,56 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
   const handlePhoneChange = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 10);
     setPhone(digits);
+    setPhoneVerified(false);
+    setOtpStep(false);
+    setOtpValue("");
     if (phoneTouched) {
       setPhoneError(validatePhone(digits));
+    }
+  };
+
+  const handleSendOtp = async () => {
+    const err = validatePhone(phone);
+    if (err) {
+      setPhoneError(err);
+      setPhoneTouched(true);
+      return;
+    }
+    setOtpSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-otp", {
+        body: { phone },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "OTP Sent!", description: `A 6-digit OTP has been sent to ${phone}.` });
+      setOtpStep(true);
+      setResendTimer(30);
+    } catch (err: any) {
+      toast({ title: "Failed to send OTP", description: err.message, variant: "destructive" });
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otpValue.length !== 6) return;
+    setOtpVerifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-otp", {
+        body: { phone, otp: otpValue },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      if (data?.verified) {
+        setPhoneVerified(true);
+        setOtpStep(false);
+        toast({ title: "Phone Verified! ✅", description: "Your phone number has been verified." });
+      }
+    } catch (err: any) {
+      toast({ title: "Verification Failed", description: err.message, variant: "destructive" });
+    } finally {
+      setOtpVerifying(false);
     }
   };
 
@@ -60,8 +123,8 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
     const phoneErr = validatePhone(phone);
     setPhoneError(phoneErr);
 
-    if (phoneErr) {
-      toast({ title: "Please enter a valid mobile number", variant: "destructive" });
+    if (!phoneVerified) {
+      toast({ title: "Phone not verified", description: "Please verify your phone number with OTP first.", variant: "destructive" });
       return;
     }
     if (selectedExams.length === 0) {
@@ -99,8 +162,6 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
     setLoading(false);
   };
 
-  const isPhoneValid = phone.length === 10 && !validatePhone(phone);
-
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
@@ -115,7 +176,7 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
         </DialogHeader>
 
         <div className="space-y-5 pt-2">
-          {/* Phone Number — First */}
+          {/* Phone Number with OTP */}
           <div>
             <label className="text-sm font-medium text-foreground mb-2 flex items-center gap-1.5">
               <Phone className="w-4 h-4" />
@@ -135,17 +196,25 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
                   setPhoneError(validatePhone(phone));
                 }}
                 placeholder="Enter 10-digit mobile number"
-                className={`pl-12 pr-10 ${phoneTouched && phoneError ? "border-destructive focus-visible:ring-destructive" : ""} ${isPhoneValid ? "border-green-500 focus-visible:ring-green-500" : ""}`}
+                className={`pl-12 pr-24 ${phoneTouched && phoneError ? "border-destructive focus-visible:ring-destructive" : ""} ${phoneVerified ? "border-emerald-500 focus-visible:ring-emerald-500" : ""}`}
                 maxLength={10}
+                disabled={phoneVerified}
               />
-              {phoneTouched && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  {isPhoneValid ? (
-                    <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  ) : phoneError ? (
-                    <AlertCircle className="w-4 h-4 text-destructive" />
-                  ) : null}
-                </div>
+              {phoneVerified ? (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium flex items-center gap-1 text-emerald-600">
+                  <ShieldCheck className="w-4 h-4" /> Verified
+                </span>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 text-xs"
+                  onClick={handleSendOtp}
+                  disabled={otpSending || phone.length !== 10 || resendTimer > 0}
+                >
+                  {otpSending ? "Sending..." : resendTimer > 0 ? `Resend (${resendTimer}s)` : otpStep ? "Resend OTP" : "Send OTP"}
+                </Button>
               )}
             </div>
             {phoneTouched && phoneError && (
@@ -154,9 +223,36 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
                 {phoneError}
               </p>
             )}
-            <p className="text-xs text-muted-foreground mt-1">
-              Enter your correct number — OTP verification may be required later.
-            </p>
+
+            {/* OTP Input */}
+            {otpStep && !phoneVerified && (
+              <div className="space-y-2 p-3 mt-2 rounded-lg border border-border bg-muted/30">
+                <p className="text-xs text-muted-foreground">
+                  Enter the 6-digit OTP sent to <span className="font-medium text-foreground">{phone}</span>
+                </p>
+                <div className="flex justify-center">
+                  <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
+                <Button
+                  type="button"
+                  className="w-full"
+                  size="sm"
+                  onClick={handleVerifyOtp}
+                  disabled={otpVerifying || otpValue.length !== 6}
+                >
+                  {otpVerifying ? "Verifying..." : "Verify OTP"}
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Exam Selection */}
@@ -206,7 +302,7 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
             </Select>
           </div>
 
-          <Button onClick={handleSubmit} className="w-full" disabled={loading}>
+          <Button onClick={handleSubmit} className="w-full" disabled={loading || !phoneVerified}>
             {loading ? "Saving..." : "Continue"}
           </Button>
         </div>
