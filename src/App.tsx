@@ -73,6 +73,8 @@ const AdminAIUsage = lazy(() => import("./pages/admin/AdminAIUsage"));
 const AdminCourseCategories = lazy(() => import("./pages/admin/AdminCourseCategories"));
 const AdminCATScores = lazy(() => import("./pages/admin/AdminCATScores"));
 const CATScoreCalculatorPage = lazy(() => import("./pages/CATScoreCalculatorPage"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 
 // Lazy load heavy popups
 const OnboardingDialog = lazy(() => import("@/components/OnboardingDialog"));
@@ -245,6 +247,8 @@ const App = () => (
             <Route path="/contact" element={<PublicLayout><LazyPage><ContactPage /></LazyPage></PublicLayout>} />
             <Route path="/cat-score-calculator" element={<PublicLayout><LazyPage><CATScoreCalculatorPage /></LazyPage></PublicLayout>} />
             <Route path="/business-inquiries" element={<PublicLayout><LazyPage><BusinessInquiryPage /></LazyPage></PublicLayout>} />
+            <Route path="/forgot-password" element={<PublicLayout><LazyPage><ForgotPasswordPage /></LazyPage></PublicLayout>} />
+            <Route path="/reset-password" element={<PublicLayout><LazyPage><ResetPasswordPage /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />
           </Routes>
         </AuthProvider>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Mail, Lock, User, Phone, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -275,6 +275,13 @@ const AuthPage = () => {
             <Button type="submit" className="w-full" disabled={loading || (!isLogin && !phoneVerified)}>
               {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
             </Button>
+            {isLogin && (
+              <div className="text-right">
+                <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                  Forgot Password?
+                </Link>
+              </div>
+            )}
           </form>
           <div className="text-center text-sm text-muted-foreground">
             {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
