@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Mail, Lock, User, Phone } from "lucide-react";
+import { Mail, Lock, User, Phone, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { lovable } from "@/integrations/lovable/index";
+import { supabase } from "@/integrations/supabase/client";
 import { getAuthRedirectUri, normalizeRedirectPath, storePostAuthRedirect } from "@/lib/authRedirect";
 import mbahubLogo from "@/assets/mbahub-logo.png";
 
@@ -26,10 +28,78 @@ const AuthPage = () => {
   const location = useLocation();
   const { toast } = useToast();
 
+  // OTP states
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+
   const redirectTo = (location.state as any)?.from || "/";
+
+  // Resend countdown timer
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const interval = setInterval(() => setResendTimer((t) => t - 1), 1000);
+    return () => clearInterval(interval);
+  }, [resendTimer]);
+
+  const handleSendOtp = async () => {
+    if (!/^\d{10}$/.test(phone)) {
+      toast({ title: "Invalid Phone", description: "Enter a valid 10-digit phone number.", variant: "destructive" });
+      return;
+    }
+    setOtpSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-otp", {
+        body: { phone },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "OTP Sent!", description: `A 6-digit OTP has been sent to ${phone}.` });
+      setOtpStep(true);
+      setResendTimer(30);
+    } catch (err: any) {
+      toast({ title: "Failed to send OTP", description: err.message, variant: "destructive" });
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otpValue.length !== 6) {
+      toast({ title: "Invalid OTP", description: "Please enter the complete 6-digit OTP.", variant: "destructive" });
+      return;
+    }
+    setOtpVerifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-otp", {
+        body: { phone, otp: otpValue },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      if (data?.verified) {
+        setPhoneVerified(true);
+        setOtpStep(false);
+        toast({ title: "Phone Verified! ✅", description: "Your phone number has been verified." });
+      }
+    } catch (err: any) {
+      toast({ title: "Verification Failed", description: err.message, variant: "destructive" });
+    } finally {
+      setOtpVerifying(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // For sign up, require phone verification
+    if (!isLogin && !phoneVerified) {
+      toast({ title: "Phone not verified", description: "Please verify your phone number first.", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
     try {
       if (isLogin) {
@@ -60,6 +130,15 @@ const AuthPage = () => {
     } finally {
       setGoogleLoading(false);
     }
+  };
+
+  // Reset OTP state when switching between login/signup
+  const handleToggleMode = () => {
+    setIsLogin(!isLogin);
+    setOtpStep(false);
+    setOtpValue("");
+    setPhoneVerified(false);
+    setResendTimer(0);
   };
 
   return (
@@ -104,10 +183,75 @@ const AuthPage = () => {
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input placeholder="Full Name" value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="pl-10" required={!isLogin} />
                 </div>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input type="tel" placeholder="Phone Number *" value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))} className="pl-10" required={!isLogin} minLength={10} maxLength={10} />
+
+                {/* Phone + OTP Section */}
+                <div className="space-y-3">
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="tel"
+                      placeholder="Phone Number *"
+                      value={phone}
+                      onChange={(e) => {
+                        setPhone(e.target.value.replace(/\D/g, "").slice(0, 10));
+                        setPhoneVerified(false);
+                        setOtpStep(false);
+                        setOtpValue("");
+                      }}
+                      className="pl-10 pr-24"
+                      required={!isLogin}
+                      minLength={10}
+                      maxLength={10}
+                      disabled={phoneVerified}
+                    />
+                    {phoneVerified ? (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-green-600 flex items-center gap-1">
+                        <ShieldCheck className="w-4 h-4" /> Verified
+                      </span>
+                    ) : (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 text-xs"
+                        onClick={handleSendOtp}
+                        disabled={otpSending || phone.length !== 10 || resendTimer > 0}
+                      >
+                        {otpSending ? "Sending..." : resendTimer > 0 ? `Resend (${resendTimer}s)` : otpStep ? "Resend OTP" : "Send OTP"}
+                      </Button>
+                    )}
+                  </div>
+
+                  {otpStep && !phoneVerified && (
+                    <div className="space-y-3 p-3 rounded-lg border border-border bg-muted/30">
+                      <p className="text-xs text-muted-foreground">
+                        Enter the 6-digit OTP sent to <span className="font-medium text-foreground">{phone}</span>
+                      </p>
+                      <div className="flex justify-center">
+                        <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                          </InputOTPGroup>
+                        </InputOTP>
+                      </div>
+                      <Button
+                        type="button"
+                        className="w-full"
+                        size="sm"
+                        onClick={handleVerifyOtp}
+                        disabled={otpVerifying || otpValue.length !== 6}
+                      >
+                        {otpVerifying ? "Verifying..." : "Verify OTP"}
+                      </Button>
+                    </div>
+                  )}
                 </div>
+
                 <Select value={targetYear} onValueChange={setTargetYear} required>
                   <SelectTrigger>
                     <SelectValue placeholder="CAT Target Year" />
@@ -128,13 +272,13 @@ const AuthPage = () => {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10" required minLength={6} />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading || (!isLogin && !phoneVerified)}>
               {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
             </Button>
           </form>
           <div className="text-center text-sm text-muted-foreground">
             {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
-            <button onClick={() => setIsLogin(!isLogin)} className="text-primary font-medium hover:underline">
+            <button onClick={handleToggleMode} className="text-primary font-medium hover:underline">
               {isLogin ? "Sign up" : "Sign in"}
             </button>
           </div>
