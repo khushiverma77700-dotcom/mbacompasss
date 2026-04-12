@@ -60,7 +60,10 @@ Deno.serve(async (req) => {
       throw new Error("Failed to store OTP");
     }
 
-    // Send OTP via Fast2SMS (DLT route / quick-send)
+    // Send OTP via Fast2SMS using Quick Transactional SMS route (route "q")
+    // This route works without DLT/website verification
+    const smsMessage = `Your MBAHub verification code is ${otp}. Valid for 5 minutes. Do not share with anyone.`;
+
     const smsResponse = await fetch(
       "https://www.fast2sms.com/dev/bulkV2",
       {
@@ -70,9 +73,10 @@ Deno.serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          route: "otp",
-          variables_values: otp,
-          flash: "0",
+          route: "q",
+          message: smsMessage,
+          language: "english",
+          flash: 0,
           numbers: phone,
         }),
       }
@@ -84,6 +88,8 @@ Deno.serve(async (req) => {
       console.error("Fast2SMS error:", JSON.stringify(smsResult));
       throw new Error(`SMS send failed: ${smsResult.message || "Unknown error"}`);
     }
+
+    console.log("OTP sent successfully to", phone);
 
     return new Response(
       JSON.stringify({ success: true, message: "OTP sent successfully" }),
