@@ -96,7 +96,19 @@ const AdminCityPages = () => {
     if (data) setAllColleges(data);
   };
 
-  useEffect(() => { fetchPages(); }, []);
+  useEffect(() => { fetchPages(); fetchAllColleges(); }, []);
+
+  // When editing, pre-select colleges that match this city
+  const loadCityColleges = (page: CityPage) => {
+    const aliases = [page.name.toLowerCase(), ...(page.city_aliases || []).map(a => a.toLowerCase())];
+    const matched = new Set<string>();
+    allColleges.forEach(c => {
+      if (c.city && aliases.includes(c.city.toLowerCase())) {
+        matched.add(c.id);
+      }
+    });
+    setSelectedCollegeIds(matched);
+  };
 
   const generateSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
