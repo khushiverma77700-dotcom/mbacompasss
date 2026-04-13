@@ -284,7 +284,7 @@ const InstitutePage = () => {
             <Card id="institute-about">
               <CardHeader><CardTitle className="font-heading">About {institute.name}</CardTitle></CardHeader>
               <CardContent>
-                <p className="text-muted-foreground leading-relaxed mb-4">{institute.description}</p>
+                <div className="prose prose-sm max-w-none text-muted-foreground dark:prose-invert leading-relaxed mb-4" dangerouslySetInnerHTML={{ __html: institute.description || '' }} />
                 {(institute.features || []).length > 0 && (
                   <div className="grid sm:grid-cols-2 gap-2">
                     {(institute.features as string[]).map((h, i) => (
