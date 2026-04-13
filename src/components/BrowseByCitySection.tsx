@@ -5,29 +5,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useCityPages } from "@/hooks/useCityPages";
 import { useColleges } from "@/hooks/useInstitutes";
-
-const fallbackImages: Record<string, string> = {
-  mumbai: "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=600&h=400&fit=crop",
-  delhi: "https://images.unsplash.com/photo-1587474260584-136574528ed5?w=600&h=400&fit=crop",
-  bangalore: "https://images.unsplash.com/photo-1596176530529-78163a4f7af2?w=600&h=400&fit=crop",
-  pune: "https://images.unsplash.com/photo-1572782252655-9c8771392601?w=600&h=400&fit=crop",
-  hyderabad: "https://images.unsplash.com/photo-1572695157366-5e585ab2b69f?w=600&h=400&fit=crop",
-  chennai: "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=600&h=400&fit=crop",
-  kolkata: "https://images.unsplash.com/photo-1558431382-27e303142255?w=600&h=400&fit=crop",
-  ahmedabad: "https://images.unsplash.com/photo-1609948543911-7155701b82e1?w=600&h=400&fit=crop",
-  jaipur: "https://images.unsplash.com/photo-1477587458883-47145ed94245?w=600&h=400&fit=crop",
-  lucknow: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=400&fit=crop",
-  chandigarh: "https://images.unsplash.com/photo-1614082242765-7c98ca0f3df3?w=600&h=400&fit=crop",
-  indore: "https://images.unsplash.com/photo-1590012314607-cda9d9b699ae?w=600&h=400&fit=crop",
-};
-
-const defaultFallback = "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=600&h=400&fit=crop";
-
-const getCityImage = (cp: { hero_image_url?: string | null; name: string; slug: string }) => {
-  const slug = cp.name.toLowerCase().replace(/\s+/g, "");
-  // Use admin hero_image_url if set, otherwise use curated fallbacks
-  return cp.hero_image_url || fallbackImages[slug] || fallbackImages[cp.slug] || defaultFallback;
-};
+import { getLocationImage, isGeneratedBanner } from "@/data/cityImages";
 
 const BrowseByCitySection = () => {
   const { data: cityPages } = useCityPages();
@@ -44,13 +22,16 @@ const BrowseByCitySection = () => {
           (c.state || "").toLowerCase().includes(a.toLowerCase())
       )
     ).length;
-    return { ...cp, count, image: getCityImage(cp) };
+    // Prefer real photos: use hero_image_url only if it's a real upload (not generated)
+    const adminImage = cp.hero_image_url && !isGeneratedBanner(cp.hero_image_url) ? cp.hero_image_url : null;
+    const image = adminImage || getLocationImage(cp.name, cp.state);
+    return { ...cp, count, image };
   });
 
-  // Auto-scroll on desktop: when user reaches near end, nudge forward
+  // Auto-scroll on desktop: nudge forward near end
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
-    if (!el || window.innerWidth < 768) return; // skip on mobile
+    if (!el || window.innerWidth < 768) return;
     const { scrollLeft, scrollWidth, clientWidth } = el;
     const distanceFromEnd = scrollWidth - clientWidth - scrollLeft;
     if (distanceFromEnd > 0 && distanceFromEnd < 180) {
@@ -107,7 +88,8 @@ const BrowseByCitySection = () => {
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/5 pointer-events-none" />
+            {/* Brownish faded overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#2c1810]/85 via-[#3d2317]/40 to-[#4a2c1a]/15 pointer-events-none" />
 
             <div className="absolute inset-0 flex flex-col justify-between p-5 md:p-6">
               <div className="flex items-center gap-2.5">
@@ -178,7 +160,8 @@ const BrowseByCitySection = () => {
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       loading="lazy"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent pointer-events-none" />
+                    {/* Brownish faded overlay for small cards */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#2c1810]/80 via-[#3d2317]/20 to-transparent pointer-events-none" />
 
                     {/* Active indicator */}
                     {activeIndex === i && (

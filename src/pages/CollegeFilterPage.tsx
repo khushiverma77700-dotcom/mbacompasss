@@ -1,4 +1,5 @@
 import { useParams, Link } from "react-router-dom";
+import { getLocationImage, isGeneratedBanner } from "@/data/cityImages";
 import { useState, useMemo, useRef } from "react";
 import { MapPin, ArrowRight, GraduationCap, TrendingUp, Search, Filter, IndianRupee, Star, Award, Building2, ChevronRight, Briefcase, Users, BookOpen, Calendar, CheckCircle2, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
@@ -83,8 +84,16 @@ const CollegeFilterPage = () => {
 
       {/* Hero */}
       <div
-        className="hero-gradient py-14 md:py-20 relative overflow-hidden"
-        style={cityPage?.hero_image_url ? { backgroundImage: `linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.7)), url(${cityPage.hero_image_url})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+        className="py-14 md:py-20 relative overflow-hidden"
+        style={{
+          backgroundImage: (() => {
+            const adminImg = cityPage?.hero_image_url && !isGeneratedBanner(cityPage.hero_image_url) ? cityPage.hero_image_url : null;
+            const img = adminImg || getLocationImage(displayName, cityPage?.state);
+            return `linear-gradient(to bottom, rgba(44,24,16,0.6), rgba(61,35,23,0.75)), url(${img})`;
+          })(),
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
       >
         <div className="absolute inset-0">
           <div className="absolute top-0 right-1/3 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
