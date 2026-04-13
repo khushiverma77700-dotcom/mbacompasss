@@ -172,29 +172,31 @@ const BrowseByCitySection = () => {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.05 }}
                   className="flex-shrink-0 snap-start"
+                  onMouseEnter={() => setActiveIndex(i)}
                 >
-                  <button
-                    onClick={() => setActiveIndex(i)}
-                    className={`relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-500 ease-out group/card
+                  <Link
+                    to={`/colleges/${city.slug}`}
+                    className={`relative block rounded-2xl overflow-hidden cursor-pointer group/card
+                      w-[150px] md:w-[170px] h-[230px] md:h-[330px]
+                      transition-all duration-500 ease-out
                       ${activeIndex === i
-                        ? "w-[180px] md:w-[200px] h-[260px] md:h-[370px] ring-2 ring-primary shadow-xl shadow-primary/25 scale-[1.03]"
-                        : "w-[150px] md:w-[170px] h-[230px] md:h-[330px] ring-1 ring-border/20 hover:ring-border/50 hover:shadow-lg hover:scale-[1.05]"
+                        ? "ring-2 ring-primary shadow-2xl shadow-primary/30 scale-110 z-10"
+                        : "ring-1 ring-border/20 hover:ring-primary/40 hover:shadow-xl hover:scale-110 hover:z-10"
                       }`}
-                    style={{ transformStyle: "preserve-3d", perspective: "800px" }}
                   >
                     <img
                       src={city.image}
                       alt={`MBA coaching in ${city.name}`}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-115"
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-110"
                       loading="lazy"
                     />
                     {/* Brownish faded overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a0e08]/85 via-[#2c1810]/30 to-transparent pointer-events-none transition-opacity duration-300" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a0e08]/85 via-[#2c1810]/30 to-transparent pointer-events-none" />
 
                     {/* Hover shine */}
-                    <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 pointer-events-none bg-gradient-to-tr from-transparent via-white/8 to-transparent" />
+                    <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 pointer-events-none bg-gradient-to-tr from-transparent via-white/10 to-transparent" />
 
-                    {/* Active indicator with glow */}
+                    {/* Active indicator */}
                     {activeIndex === i && (
                       <div className="absolute top-3 right-3">
                         <div className="w-3 h-3 rounded-full bg-primary ring-2 ring-white shadow-lg animate-pulse" />
@@ -203,8 +205,7 @@ const BrowseByCitySection = () => {
 
                     {/* City Info */}
                     <div className="absolute bottom-0 inset-x-0 p-4">
-                      <h3 className={`text-white font-bold leading-tight drop-shadow-lg transition-all duration-300
-                        ${activeIndex === i ? "text-base md:text-lg" : "text-sm md:text-[15px]"}`}>
+                      <h3 className="text-white text-sm md:text-base font-bold leading-tight drop-shadow-lg">
                         {city.name}
                       </h3>
                       <p className="text-white/80 text-[11px] md:text-xs font-medium mt-1.5 flex items-center gap-1">
@@ -212,7 +213,7 @@ const BrowseByCitySection = () => {
                         {city.count} {city.count === 1 ? "College" : "Colleges"}
                       </p>
                     </div>
-                  </button>
+                  </Link>
                 </motion.div>
               ))}
             </div>
