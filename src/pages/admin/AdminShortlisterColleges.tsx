@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { INDIAN_STATES as CENTRALIZED_STATES, INDIAN_STATES_CITIES as CENTRALIZED_STATE_CITIES } from "@/data/indianLocations";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,42 +20,8 @@ const COLLEGE_TYPES = ["Government", "Private", "Autonomous", "Deemed University
 const ACCREDITATIONS_LIST = ["AACSB", "EQUIS", "AMBA", "NAAC A++", "NAAC A+", "NAAC A", "NBA", "NIRF Top 50", "NIRF Top 100"];
 const COURSES_LIST = ["MBA", "PGDM", "PGPM", "Executive MBA", "MBA (Part-Time)", "Ph.D", "FPM", "BBA", "Integrated MBA"];
 
-const INDIAN_STATES = [
-  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Delhi", "Goa", "Gujarat",
-  "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra",
-  "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim",
-  "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
-  "Chandigarh", "Jammu & Kashmir", "Ladakh", "Puducherry"
-];
-
-const STATE_CITIES: Record<string, string[]> = {
-  "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Tirupati", "Guntur"],
-  "Bihar": ["Patna", "Gaya", "Muzaffarpur"],
-  "Chhattisgarh": ["Raipur", "Bhilai", "Bilaspur"],
-  "Delhi": ["Delhi", "New Delhi"],
-  "Goa": ["Panaji", "Margao", "Vasco da Gama"],
-  "Gujarat": ["Ahmedabad", "Vadodara", "Surat", "Rajkot", "Gandhinagar"],
-  "Haryana": ["Gurgaon", "Rohtak", "Faridabad", "Hisar", "Karnal"],
-  "Himachal Pradesh": ["Shimla", "Dharamshala", "Mandi"],
-  "Jharkhand": ["Ranchi", "Jamshedpur", "Dhanbad", "Bokaro"],
-  "Karnataka": ["Bangalore", "Mangalore", "Mysore", "Hubli"],
-  "Kerala": ["Kochi", "Thiruvananthapuram", "Kozhikode", "Thrissur"],
-  "Madhya Pradesh": ["Bhopal", "Indore", "Gwalior", "Jabalpur"],
-  "Maharashtra": ["Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad", "Navi Mumbai"],
-  "Odisha": ["Bhubaneswar", "Cuttack", "Rourkela", "Sambalpur"],
-  "Punjab": ["Chandigarh", "Ludhiana", "Amritsar", "Jalandhar", "Mohali"],
-  "Rajasthan": ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Ajmer", "Pilani"],
-  "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem"],
-  "Telangana": ["Hyderabad", "Warangal", "Secunderabad"],
-  "Uttar Pradesh": ["Lucknow", "Noida", "Greater Noida", "Varanasi", "Agra", "Kanpur", "Ghaziabad", "Aligarh"],
-  "Uttarakhand": ["Dehradun", "Haridwar", "Roorkee", "Nainital"],
-  "West Bengal": ["Kolkata", "Howrah", "Durgapur", "Siliguri", "Kharagpur"],
-  "Chandigarh": ["Chandigarh"],
-  "Jammu & Kashmir": ["Jammu", "Srinagar"],
-  "Puducherry": ["Puducherry"],
-  "Assam": ["Guwahati", "Dibrugarh", "Silchar"],
-  "Sikkim": ["Gangtok"],
-};
+const INDIAN_STATES = CENTRALIZED_STATES;
+const STATE_CITIES = CENTRALIZED_STATE_CITIES;
 
 const FEE_RANGES = [
   "Below ₹5 Lakhs", "₹5 - ₹10 Lakhs", "₹10 - ₹15 Lakhs", "₹15 - ₹20 Lakhs",

@@ -18,6 +18,7 @@ import SEOChecklist from "@/components/admin/SEOChecklist";
 import FileUpload from "@/components/admin/FileUpload";
 import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
+import { INDIAN_STATES, getCitiesForState } from "@/data/indianLocations";
 
 interface CityPage {
   id: string;
@@ -220,7 +221,13 @@ const AdminCityPages = () => {
                 </div>
                 <div>
                   <Label>Parent State</Label>
-                  <Input value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))} placeholder="e.g., Maharashtra" />
+                  <Select value={form.state || "_none"} onValueChange={v => setForm(f => ({ ...f, state: v === "_none" ? "" : v }))}>
+                    <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Select state...</SelectItem>
+                      {INDIAN_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <TagInput

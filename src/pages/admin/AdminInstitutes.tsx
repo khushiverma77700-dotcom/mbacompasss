@@ -16,6 +16,7 @@ import FileUpload from "@/components/admin/FileUpload";
 import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 import SEOChecklist from "@/components/admin/SEOChecklist";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
+import StateCitySelect from "@/components/admin/StateCitySelect";
 
 type Institute = {
   id: string; name: string; slug: string; city: string | null;
@@ -225,16 +226,12 @@ const AdminInstitutes = () => {
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Description</Label>
                   <RichTextEditor content={form.description} onChange={(html) => setForm({ ...form, description: html })} placeholder="Detailed institute description..." />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">City</Label>
-                    <Input placeholder="Mumbai" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">State</Label>
-                    <Input placeholder="Maharashtra" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
-                  </div>
-                </div>
+                <StateCitySelect
+                  state={form.state}
+                  city={form.city}
+                  onStateChange={(s) => setForm({ ...form, state: s, city: "" })}
+                  onCityChange={(c) => setForm({ ...form, city: c })}
+                />
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Full Address</Label>
                   <Input placeholder="Street address..." value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />

@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import StateCitySelect from "@/components/admin/StateCitySelect";
 import FileUpload from "@/components/admin/FileUpload";
 import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 import SEOChecklist from "@/components/admin/SEOChecklist";
@@ -189,8 +190,13 @@ const AdminColleges = () => {
                   <RichTextEditor content={form.description} onChange={(html) => setForm({ ...form, description: html })} placeholder="College description..." />
                 </div>
                 <div className="grid grid-cols-3 gap-3">
-                  <Input placeholder="City" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-                  <Input placeholder="State" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
+                  <StateCitySelect
+                    state={form.state}
+                    city={form.city}
+                    onStateChange={(s) => setForm({ ...form, state: s, city: "" })}
+                    onCityChange={(c) => setForm({ ...form, city: c })}
+                    showLabels={false}
+                  />
                   <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
