@@ -136,7 +136,7 @@ const BrowseByCitySection = () => {
           </AnimatePresence>
 
           {/* Scrollable City Cards */}
-          <div className="flex-1 min-w-0 relative">
+          <div className="flex-1 min-w-0 relative overflow-visible">
             {/* Scroll arrows */}
             {canScrollLeft && (
               <button
@@ -161,7 +161,7 @@ const BrowseByCitySection = () => {
 
             <div
               ref={scrollRef}
-              className="flex gap-4 overflow-x-auto pb-4 px-2 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
+              className="flex gap-4 overflow-x-auto overflow-y-visible pb-6 pt-6 px-4 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
               style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
             >
               {cities.map((city, i) => (
