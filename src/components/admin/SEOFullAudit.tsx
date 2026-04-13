@@ -367,6 +367,43 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
         </div>
       )}
 
+      {/* Bulk Actions */}
+      {auditResults.length > 0 && overallStats && overallStats.fixable > 0 && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-semibold text-sm">Bulk Actions</p>
+                  <p className="text-xs text-muted-foreground">
+                    {Object.values(approvedFixes).reduce((s, set) => s + set.size, 0)} fixes approved across {Object.values(approvedFixes).filter(s => s.size > 0).length} pages
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={approveAllPages}>
+                  <Check className="h-3 w-3 mr-1" /> Approve All Pages
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={makeAllLive}
+                  disabled={applyingAll || Object.values(approvedFixes).every(s => s.size === 0)}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {applyingAll ? (
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  ) : (
+                    <Zap className="h-3 w-3 mr-1" />
+                  )}
+                  Make All Live ({Object.values(approvedFixes).filter(s => s.size > 0).length} pages)
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Audit Results */}
       {auditResults.map((result) => {
         const isExpanded = expandedPage === result.pageId;
