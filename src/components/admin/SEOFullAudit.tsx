@@ -194,10 +194,10 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
     onRefresh();
   };
 
-  const makeLive = async (result: AuditResult) => {
+  const makeLive = async (result: AuditResult, silent = false) => {
     const approved = approvedFixes[result.pageId];
     if (!approved?.size) {
-      toast({ title: "No fixes approved", description: "Approve at least one fix before making live." });
+      if (!silent) toast({ title: "No fixes approved", description: "Approve at least one fix before making live." });
       return;
     }
 
