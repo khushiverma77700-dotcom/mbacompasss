@@ -402,7 +402,7 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={approveAllPages}>
+                <Button size="sm" variant="outline" onClick={approveAllPages} disabled={applyingAll}>
                   <Check className="h-3 w-3 mr-1" /> Approve All Pages
                 </Button>
                 <Button
@@ -420,6 +420,15 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
                 </Button>
               </div>
             </div>
+            {bulkProgress && (
+              <div className="mt-3 space-y-1">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span className="truncate max-w-[60%]">Applying: {bulkProgress.currentPage}</span>
+                  <span>{bulkProgress.current} / {bulkProgress.total} pages</span>
+                </div>
+                <Progress value={(bulkProgress.current / bulkProgress.total) * 100} className="h-2" />
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
