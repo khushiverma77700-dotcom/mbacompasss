@@ -244,10 +244,11 @@ const AdminCityPages = () => {
             </div>
           </DialogHeader>
           <Tabs defaultValue="basic" className="mt-4">
-            <TabsList className="grid grid-cols-4 w-full">
+            <TabsList className="grid grid-cols-5 w-full">
               <TabsTrigger value="basic">Basic Info</TabsTrigger>
               <TabsTrigger value="content">Content</TabsTrigger>
               <TabsTrigger value="seo">SEO & Keywords</TabsTrigger>
+              <TabsTrigger value="colleges">Manually Add</TabsTrigger>
               <TabsTrigger value="preview">Preview</TabsTrigger>
             </TabsList>
 
