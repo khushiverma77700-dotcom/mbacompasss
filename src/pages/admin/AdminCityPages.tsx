@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Eye, Globe, MapPin } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, Globe, MapPin, Search, GraduationCap } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import SEOChecklist from "@/components/admin/SEOChecklist";
 import FileUpload from "@/components/admin/FileUpload";
@@ -20,6 +20,7 @@ import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import { INDIAN_STATES, getCitiesForState } from "@/data/indianLocations";
 import { generateAndUploadLocationBanner } from "@/lib/locationBanner";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface CityPage {
   id: string;
