@@ -68,6 +68,8 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
   const [applyingPageId, setApplyingPageId] = useState<string | null>(null);
   const [applyingAll, setApplyingAll] = useState(false);
   const [expandedPage, setExpandedPage] = useState<string | null>(null);
+  const [bulkProgress, setBulkProgress] = useState<{ current: number; total: number; currentPage: string } | null>(null);
+  const [auditProgress, setAuditProgress] = useState<{ current: number; total: number } | null>(null);
   const { toast } = useToast();
 
   const targetRows = rows.filter(r => {
