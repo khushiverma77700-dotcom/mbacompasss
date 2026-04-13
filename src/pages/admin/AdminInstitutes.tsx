@@ -17,6 +17,7 @@ import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 import SEOChecklist from "@/components/admin/SEOChecklist";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import StateCitySelect from "@/components/admin/StateCitySelect";
+import { generateAndUploadLocationBanner } from "@/lib/locationBanner";
 
 type Institute = {
   id: string; name: string; slug: string; city: string | null;
@@ -70,6 +71,11 @@ const AdminInstitutes = () => {
   const handleSave = async () => {
     if (!form.name) { toast({ title: "Error", description: "Name is required", variant: "destructive" }); return; }
     const slug = form.slug || form.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    // Auto-generate banner if city & state are set and no banner exists
+    let bannerUrl = form.banner_url;
+    if (!bannerUrl && form.city && form.state) {
+      bannerUrl = await generateAndUploadLocationBanner(form.city, form.state, "institute-banners") || "";
+    }
     const payload: any = {
       name: form.name, slug, description: form.description || null,
       city: form.city || null, state: form.state || null, address: form.address || null,
@@ -79,7 +85,7 @@ const AdminInstitutes = () => {
       discount: form.discount || null, offer: form.offer || null,
       meta_title: form.meta_title || null, meta_description: form.meta_description || null,
       keywords: form.keywords.length > 0 ? form.keywords : null,
-      logo_url: form.logo_url || null, banner_url: form.banner_url || null,
+      logo_url: form.logo_url || null, banner_url: bannerUrl || null,
       category_id: form.category_id || null,
       rating: form.rating || 0, total_reviews: form.total_reviews || 0,
       students_count: form.students_count || 0, success_rate: form.success_rate || 0,

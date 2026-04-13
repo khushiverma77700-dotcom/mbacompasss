@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import StateCitySelect from "@/components/admin/StateCitySelect";
+import { generateAndUploadLocationBanner } from "@/lib/locationBanner";
 import FileUpload from "@/components/admin/FileUpload";
 import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 import SEOChecklist from "@/components/admin/SEOChecklist";
@@ -65,6 +66,11 @@ const AdminColleges = () => {
   const handleSave = async () => {
     if (!form.name) { toast({ title: "Error", description: "Name is required", variant: "destructive" }); return; }
     const slug = form.slug || generateSlug(form.name);
+    // Auto-generate banner if city & state are set and no banner exists
+    let bannerUrl = form.banner_url;
+    if (!bannerUrl && form.city && form.state) {
+      bannerUrl = await generateAndUploadLocationBanner(form.city, form.state, "college-banners") || "";
+    }
     const payload: any = {
       name: form.name, slug, description: form.description || null,
       city: form.city || null, state: form.state || null, type: form.type || null,
@@ -74,7 +80,7 @@ const AdminColleges = () => {
       placement_avg: form.placement_avg || null, placement_highest: form.placement_highest || null,
       placement_median: form.placement_median || null, campus_size: form.campus_size || null,
       total_students: form.total_students || null, admission_process: form.admission_process || null,
-      logo_url: form.logo_url || null, banner_url: form.banner_url || null,
+      logo_url: form.logo_url || null, banner_url: bannerUrl || null,
       courses: form.courses.length > 0 ? form.courses : null,
       accreditations: form.accreditations.length > 0 ? form.accreditations : null,
       exams_accepted: form.exams_accepted.length > 0 ? form.exams_accepted : null,
