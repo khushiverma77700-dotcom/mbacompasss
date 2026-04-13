@@ -147,14 +147,14 @@ const BrowseByCitySection = () => {
           <div className="flex-1 min-w-0">
             <div
               ref={scrollRef}
-              className="flex gap-3 md:gap-4 overflow-x-auto pb-3 snap-x snap-mandatory"
+              data-city-scroll
+              className="flex gap-3 md:gap-4 overflow-x-auto pb-3 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
               style={{
                 scrollbarWidth: "none",
                 msOverflowStyle: "none",
                 WebkitOverflowScrolling: "touch",
               }}
             >
-              <style>{`[data-city-scroll]::-webkit-scrollbar { display: none; }`}</style>
               {cities.map((city, i) => (
                 <motion.div
                   key={city.slug}
