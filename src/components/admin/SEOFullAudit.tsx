@@ -68,6 +68,8 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
   const [applyingPageId, setApplyingPageId] = useState<string | null>(null);
   const [applyingAll, setApplyingAll] = useState(false);
   const [expandedPage, setExpandedPage] = useState<string | null>(null);
+  const [bulkProgress, setBulkProgress] = useState<{ current: number; total: number; currentPage: string } | null>(null);
+  const [auditProgress, setAuditProgress] = useState<{ current: number; total: number } | null>(null);
   const { toast } = useToast();
 
   const targetRows = rows.filter(r => {
@@ -81,9 +83,9 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
     setApprovedFixes({});
 
     try {
-      // Process in batches of 5
       const pagesToAudit = targetRows.slice(0, 30);
       const results: AuditResult[] = [];
+      setAuditProgress({ current: 0, total: pagesToAudit.length });
 
       for (let i = 0; i < pagesToAudit.length; i += 5) {
         const batch = pagesToAudit.slice(i, i + 5);
@@ -101,7 +103,6 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
               if (error) throw error;
               return data as AuditResult;
             } catch (e: any) {
-              // Return a minimal result on error
               return {
                 pageId: row.id,
                 pageName: row.name,
@@ -117,15 +118,18 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
           })
         );
         results.push(...batchResults);
+        setAuditProgress({ current: results.length, total: pagesToAudit.length });
       }
 
       setAuditResults(results);
+      setAuditProgress(null);
       toast({
         title: "Full SEO Audit Complete",
         description: `Audited ${results.length} pages. Avg score: ${Math.round(results.reduce((s, r) => s + r.overallScore, 0) / Math.max(results.length, 1))}%`,
       });
     } catch (e: any) {
       toast({ title: "Audit failed", description: e.message, variant: "destructive" });
+      setAuditProgress(null);
     } finally {
       setLoading(false);
     }
@@ -174,19 +178,24 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
     }
 
     setApplyingAll(true);
+    setBulkProgress({ current: 0, total: pagesWithApprovals.length, currentPage: "" });
     let successCount = 0;
     let failCount = 0;
 
-    for (const result of pagesWithApprovals) {
+    for (let i = 0; i < pagesWithApprovals.length; i++) {
+      const result = pagesWithApprovals[i];
+      setBulkProgress({ current: i, total: pagesWithApprovals.length, currentPage: result.pageName });
       try {
         await makeLive(result, true);
         successCount++;
       } catch {
         failCount++;
       }
+      setBulkProgress({ current: i + 1, total: pagesWithApprovals.length, currentPage: result.pageName });
     }
 
     setApplyingAll(false);
+    setBulkProgress(null);
     toast({
       title: `✅ Bulk Apply Complete`,
       description: `${successCount} pages updated${failCount > 0 ? `, ${failCount} failed` : ""}.`,
@@ -316,10 +325,21 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
               Run Full Audit ({Math.min(targetRows.length, 30)} pages)
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Audits up to 30 pages per run across Technical SEO, On-Page SEO, Content SEO & Internal Linking.
-            Each check gets ✅ Pass / ⚠️ Warning / ❌ Fail. Auto-fixes are generated for failed items.
-          </p>
+          {auditProgress && (
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Auditing pages...</span>
+                <span>{auditProgress.current} / {auditProgress.total}</span>
+              </div>
+              <Progress value={(auditProgress.current / auditProgress.total) * 100} className="h-2" />
+            </div>
+          )}
+          {!auditProgress && (
+            <p className="text-xs text-muted-foreground">
+              Audits up to 30 pages per run across Technical SEO, On-Page SEO, Content SEO & Internal Linking.
+              Each check gets ✅ Pass / ⚠️ Warning / ❌ Fail. Auto-fixes are generated for failed items.
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -382,7 +402,7 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={approveAllPages}>
+                <Button size="sm" variant="outline" onClick={approveAllPages} disabled={applyingAll}>
                   <Check className="h-3 w-3 mr-1" /> Approve All Pages
                 </Button>
                 <Button
@@ -400,6 +420,15 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
                 </Button>
               </div>
             </div>
+            {bulkProgress && (
+              <div className="mt-3 space-y-1">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span className="truncate max-w-[60%]">Applying: {bulkProgress.currentPage}</span>
+                  <span>{bulkProgress.current} / {bulkProgress.total} pages</span>
+                </div>
+                <Progress value={(bulkProgress.current / bulkProgress.total) * 100} className="h-2" />
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
