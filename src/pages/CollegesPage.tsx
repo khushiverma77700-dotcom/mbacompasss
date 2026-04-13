@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { INDIAN_STATES, getCitiesForState } from "@/data/indianLocations";
 import { Link } from "react-router-dom";
 import { MapPin, Search, Users, IndianRupee, TrendingUp, GraduationCap, Award, ChevronRight, ArrowRight, Building2, Filter, Star, Briefcase, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -30,7 +31,8 @@ const CollegesPage = () => {
   const [sortBy, setSortBy] = useState("ranking");
 
   const collegeCities = useMemo(() => [...new Set(colleges.map((c: any) => c.city).filter(Boolean))].sort() as string[], [colleges]);
-  const collegeStates = useMemo(() => [...new Set(colleges.map((c: any) => c.state).filter(Boolean))].sort() as string[], [colleges]);
+  const collegeStates = useMemo(() => INDIAN_STATES.filter(s => colleges.some((c: any) => c.state === s)), [colleges]);
+  const collegeCitiesForState = useMemo(() => selectedState !== "all" ? getCitiesForState(selectedState).filter(c => colleges.some((col: any) => col.city === c)) : [...new Set(colleges.map((c: any) => c.city).filter(Boolean))].sort() as string[], [colleges, selectedState]);
   const allExams = useMemo(() => [...new Set(colleges.flatMap((c: any) => c.exams_accepted || []))].sort() as string[], [colleges]);
 
   const filtered = useMemo(() => {
@@ -154,9 +156,13 @@ const CollegesPage = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input placeholder="Search by college name or city..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 rounded-xl" />
             </div>
-            <Select value={selectedState} onValueChange={setSelectedState}>
+            <Select value={selectedState} onValueChange={(v) => { setSelectedState(v); setSelectedCity("all"); }}>
               <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="State" /></SelectTrigger>
               <SelectContent><SelectItem value="all">All States</SelectItem>{collegeStates.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+            </Select>
+            <Select value={selectedCity} onValueChange={setSelectedCity}>
+              <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="City" /></SelectTrigger>
+              <SelectContent><SelectItem value="all">All Cities</SelectItem>{collegeCitiesForState.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
             </Select>
             <Select value={selectedCity} onValueChange={setSelectedCity}>
               <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="City" /></SelectTrigger>
