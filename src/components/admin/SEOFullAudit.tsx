@@ -66,6 +66,7 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
   const [loading, setLoading] = useState(false);
   const [approvedFixes, setApprovedFixes] = useState<Record<string, Set<string>>>({}); // pageId -> set of check ids
   const [applyingPageId, setApplyingPageId] = useState<string | null>(null);
+  const [applyingAll, setApplyingAll] = useState(false);
   const [expandedPage, setExpandedPage] = useState<string | null>(null);
   const { toast } = useToast();
 
