@@ -358,7 +358,76 @@ const AdminCityPages = () => {
               }} contentType="cityPage" recordId={editId || undefined} />
             </TabsContent>
 
-            <TabsContent value="preview" className="mt-4">
+            <TabsContent value="colleges" className="space-y-4 mt-4">
+              <div className="flex items-center gap-2">
+                <GraduationCap className="w-5 h-5 text-primary" />
+                <h3 className="font-semibold text-foreground">Assign Colleges to "{form.name}"</h3>
+                <Badge variant="secondary" className="ml-auto">{selectedCollegeIds.size} selected</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Select colleges that should appear under this city. Their city field will be updated on save.
+              </p>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search colleges by name..."
+                  value={collegeSearch}
+                  onChange={e => setCollegeSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <div className="border rounded-lg max-h-[350px] overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-10"></TableHead>
+                      <TableHead>College Name</TableHead>
+                      <TableHead>Current City</TableHead>
+                      <TableHead>State</TableHead>
+                      <TableHead>Tier</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {allColleges
+                      .filter(c => !collegeSearch || c.name.toLowerCase().includes(collegeSearch.toLowerCase()))
+                      .map(c => (
+                        <TableRow key={c.id} className="cursor-pointer" onClick={() => {
+                          setSelectedCollegeIds(prev => {
+                            const next = new Set(prev);
+                            if (next.has(c.id)) next.delete(c.id);
+                            else next.add(c.id);
+                            return next;
+                          });
+                        }}>
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedCollegeIds.has(c.id)}
+                              onCheckedChange={(checked) => {
+                                setSelectedCollegeIds(prev => {
+                                  const next = new Set(prev);
+                                  if (checked) next.add(c.id);
+                                  else next.delete(c.id);
+                                  return next;
+                                });
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell className="font-medium text-sm">{c.name}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{c.city || "—"}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{c.state || "—"}</TableCell>
+                          <TableCell><Badge variant="outline" className="text-xs">{c.tier || "—"}</Badge></TableCell>
+                        </TableRow>
+                      ))}
+                    {allColleges.filter(c => !collegeSearch || c.name.toLowerCase().includes(collegeSearch.toLowerCase())).length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">No colleges found</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </TabsContent>
+
               <Card>
                 <CardContent className="p-6 space-y-4">
                   <div className="text-xs text-muted-foreground">Page URL: /colleges/{form.slug}</div>
