@@ -325,10 +325,21 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
               Run Full Audit ({Math.min(targetRows.length, 30)} pages)
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Audits up to 30 pages per run across Technical SEO, On-Page SEO, Content SEO & Internal Linking.
-            Each check gets ✅ Pass / ⚠️ Warning / ❌ Fail. Auto-fixes are generated for failed items.
-          </p>
+          {auditProgress && (
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Auditing pages...</span>
+                <span>{auditProgress.current} / {auditProgress.total}</span>
+              </div>
+              <Progress value={(auditProgress.current / auditProgress.total) * 100} className="h-2" />
+            </div>
+          )}
+          {!auditProgress && (
+            <p className="text-xs text-muted-foreground">
+              Audits up to 30 pages per run across Technical SEO, On-Page SEO, Content SEO & Internal Linking.
+              Each check gets ✅ Pass / ⚠️ Warning / ❌ Fail. Auto-fixes are generated for failed items.
+            </p>
+          )}
         </CardContent>
       </Card>
 
