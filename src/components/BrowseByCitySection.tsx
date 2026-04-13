@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { useCityPages } from "@/hooks/useCityPages";
 import { useColleges } from "@/hooks/useInstitutes";
 
-// City landmark images from Unsplash (free)
 const cityImages: Record<string, string> = {
   mumbai: "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?w=600&h=800&fit=crop",
   delhi: "https://images.unsplash.com/photo-1587474260584-136574528ed5?w=600&h=800&fit=crop",
@@ -32,7 +31,7 @@ const BrowseByCitySection = () => {
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
-  const updateScrollButtons = () => {
+  const checkScroll = () => {
     if (!scrollRef.current) return;
     const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
     setCanScrollLeft(scrollLeft > 10);
@@ -42,14 +41,14 @@ const BrowseByCitySection = () => {
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    el.addEventListener("scroll", updateScrollButtons);
-    updateScrollButtons();
-    return () => el.removeEventListener("scroll", updateScrollButtons);
+    el.addEventListener("scroll", checkScroll);
+    checkScroll();
+    return () => el.removeEventListener("scroll", checkScroll);
   }, [cityPages?.length]);
 
   if (!cityPages?.length) return null;
 
-  const cities = cityPages.slice(0, 12).map((cp, i) => {
+  const cities = cityPages.slice(0, 12).map((cp) => {
     const aliases = cp.city_aliases || [cp.name.toLowerCase()];
     const count = (colleges || []).filter(c =>
       aliases.some(a => (c.city || "").toLowerCase().includes(a.toLowerCase()) || (c.state || "").toLowerCase().includes(a.toLowerCase()))
@@ -59,28 +58,12 @@ const BrowseByCitySection = () => {
     return { ...cp, count, image };
   });
 
-  const featured = cities[activeIndex];
-
-  const updateScrollButtons = () => {
-    if (!scrollRef.current) return;
-    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-    setCanScrollLeft(scrollLeft > 10);
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-  };
+  const featured = cities[activeIndex] || cities[0];
 
   const scroll = (dir: "left" | "right") => {
     if (!scrollRef.current) return;
-    const amount = 200;
-    scrollRef.current.scrollBy({ left: dir === "left" ? -amount : amount, behavior: "smooth" });
+    scrollRef.current.scrollBy({ left: dir === "left" ? -200 : 200, behavior: "smooth" });
   };
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.addEventListener("scroll", updateScrollButtons);
-    updateScrollButtons();
-    return () => el.removeEventListener("scroll", updateScrollButtons);
-  }, [cities.length]);
 
   return (
     <section className="py-16 md:py-20 bg-background">
@@ -100,15 +83,15 @@ const BrowseByCitySection = () => {
           </p>
         </motion.div>
 
-        {/* Main layout: Featured + Slider */}
+        {/* Main layout */}
         <div className="flex flex-col lg:flex-row gap-5">
-          {/* Featured City Card (large) */}
+          {/* Featured City Card */}
           <motion.div
             key={featured.slug}
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.35 }}
-            className="relative w-full lg:w-[380px] xl:w-[420px] h-[340px] md:h-[400px] rounded-3xl overflow-hidden flex-shrink-0 group"
+            className="relative w-full lg:w-[380px] xl:w-[420px] h-[300px] md:h-[380px] rounded-3xl overflow-hidden flex-shrink-0 group"
           >
             <img
               src={featured.image}
@@ -118,9 +101,7 @@ const BrowseByCitySection = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none" />
 
-            {/* Content overlay */}
             <div className="absolute inset-0 flex flex-col justify-between p-5 md:p-7">
-              {/* Top badge */}
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-full bg-white/90 shadow-md flex items-center justify-center">
                   <MapPin className="w-5 h-5 text-primary" />
@@ -130,23 +111,19 @@ const BrowseByCitySection = () => {
                 </h3>
               </div>
 
-              {/* Bottom info */}
               <div>
-                {/* Stats */}
                 <div className="space-y-2 mb-4">
                   {[
-                    { icon: Building2, text: `${featured.count} Colleges` },
-                    { icon: GraduationCap, text: "Top MBA Programs" },
-                    { icon: BookOpen, text: "Coaching Institutes" },
+                    { text: `${featured.count} Colleges` },
+                    { text: "Top MBA Programs" },
+                    { text: "Coaching Institutes" },
                   ].map((s) => (
                     <div key={s.text} className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4 text-primary-foreground/90 flex-shrink-0" />
+                      <CheckCircle2 className="w-4 h-4 text-white/90 flex-shrink-0" />
                       <span className="text-white text-sm font-medium">{s.text}</span>
                     </div>
                   ))}
                 </div>
-
-                {/* CTAs */}
                 <div className="flex gap-2">
                   <Link to={`/colleges/${featured.slug}`}>
                     <Button size="sm" variant="secondary" className="rounded-full text-xs font-bold bg-white/95 text-foreground hover:bg-white shadow-md">
@@ -165,7 +142,6 @@ const BrowseByCitySection = () => {
 
           {/* Scrollable city cards */}
           <div className="relative flex-1 min-w-0">
-            {/* Navigation arrows */}
             {canScrollLeft && (
               <button
                 onClick={() => scroll("left")}
@@ -185,7 +161,7 @@ const BrowseByCitySection = () => {
 
             <div
               ref={scrollRef}
-              className="flex gap-3 md:gap-4 overflow-x-auto scrollbar-hide pb-2"
+              className="flex gap-3 md:gap-4 overflow-x-auto pb-2"
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               {cities.map((city, i) => (
@@ -199,7 +175,7 @@ const BrowseByCitySection = () => {
                 >
                   <button
                     onClick={() => setActiveIndex(i)}
-                    className={`relative w-[120px] md:w-[140px] h-[280px] md:h-[340px] rounded-[2rem] overflow-hidden group cursor-pointer transition-all duration-300 ${
+                    className={`relative w-[110px] md:w-[130px] h-[260px] md:h-[340px] rounded-[2rem] overflow-hidden group cursor-pointer transition-all duration-300 ${
                       activeIndex === i
                         ? "ring-3 ring-primary ring-offset-2 shadow-xl scale-[1.03]"
                         : "hover:shadow-lg hover:scale-[1.02]"
@@ -213,12 +189,10 @@ const BrowseByCitySection = () => {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
 
-                    {/* City icon badge */}
                     <div className="absolute bottom-14 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center border-2 border-white">
                       <MapPin className="w-4 h-4 text-primary" />
                     </div>
 
-                    {/* City name */}
                     <div className="absolute bottom-3 inset-x-0 text-center">
                       <span className="text-white text-xs md:text-sm font-bold drop-shadow-lg leading-tight block">
                         {city.name}
