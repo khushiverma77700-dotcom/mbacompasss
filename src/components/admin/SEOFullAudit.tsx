@@ -83,9 +83,9 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
     setApprovedFixes({});
 
     try {
-      // Process in batches of 5
       const pagesToAudit = targetRows.slice(0, 30);
       const results: AuditResult[] = [];
+      setAuditProgress({ current: 0, total: pagesToAudit.length });
 
       for (let i = 0; i < pagesToAudit.length; i += 5) {
         const batch = pagesToAudit.slice(i, i + 5);
@@ -103,7 +103,6 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
               if (error) throw error;
               return data as AuditResult;
             } catch (e: any) {
-              // Return a minimal result on error
               return {
                 pageId: row.id,
                 pageName: row.name,
@@ -119,15 +118,18 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
           })
         );
         results.push(...batchResults);
+        setAuditProgress({ current: results.length, total: pagesToAudit.length });
       }
 
       setAuditResults(results);
+      setAuditProgress(null);
       toast({
         title: "Full SEO Audit Complete",
         description: `Audited ${results.length} pages. Avg score: ${Math.round(results.reduce((s, r) => s + r.overallScore, 0) / Math.max(results.length, 1))}%`,
       });
     } catch (e: any) {
       toast({ title: "Audit failed", description: e.message, variant: "destructive" });
+      setAuditProgress(null);
     } finally {
       setLoading(false);
     }
