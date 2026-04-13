@@ -27,6 +27,7 @@ import {
   saveSeoSnapshot, type SEOContentType, type StoredSEOSnapshot,
 } from "@/lib/seoAutomation";
 import STATIC_PAGES_CONFIG from "@/data/staticPages";
+import SEOFullAudit from "@/components/admin/SEOFullAudit";
 
 // ── Types ──
 type ScoreStatus = "good" | "warning" | "poor";
