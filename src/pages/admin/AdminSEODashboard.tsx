@@ -27,6 +27,7 @@ import {
   saveSeoSnapshot, type SEOContentType, type StoredSEOSnapshot,
 } from "@/lib/seoAutomation";
 import STATIC_PAGES_CONFIG from "@/data/staticPages";
+import SEOFullAudit from "@/components/admin/SEOFullAudit";
 
 // ── Types ──
 type ScoreStatus = "good" | "warning" | "poor";
@@ -840,6 +841,7 @@ const AdminSEODashboard = () => {
 
   const navItems = [
     { id: "overview", label: "Overview", icon: BarChart3 },
+    { id: "full-audit", label: "🔥 Full Audit & Fix", icon: FileCheck },
     { id: "pages", label: `All Pages (${filteredRows.length})`, icon: FileText },
     { id: "removed-links", label: "Removed Links", icon: Trash2 },
     { id: "interlinks", label: "Interlink Studio", icon: Link2 },
@@ -982,6 +984,10 @@ const AdminSEODashboard = () => {
               </div>
             </CardContent>
           </Card>
+        )}
+        {/* ═══ FULL AUDIT & AUTO-FIX ═══ */}
+        {activeTab === "full-audit" && (
+          <SEOFullAudit rows={rows} onRefresh={fetchDashboardData} />
         )}
         {/* ═══ OVERVIEW ═══ */}
         {activeTab === "overview" && (
