@@ -178,19 +178,24 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
     }
 
     setApplyingAll(true);
+    setBulkProgress({ current: 0, total: pagesWithApprovals.length, currentPage: "" });
     let successCount = 0;
     let failCount = 0;
 
-    for (const result of pagesWithApprovals) {
+    for (let i = 0; i < pagesWithApprovals.length; i++) {
+      const result = pagesWithApprovals[i];
+      setBulkProgress({ current: i, total: pagesWithApprovals.length, currentPage: result.pageName });
       try {
         await makeLive(result, true);
         successCount++;
       } catch {
         failCount++;
       }
+      setBulkProgress({ current: i + 1, total: pagesWithApprovals.length, currentPage: result.pageName });
     }
 
     setApplyingAll(false);
+    setBulkProgress(null);
     toast({
       title: `✅ Bulk Apply Complete`,
       description: `${successCount} pages updated${failCount > 0 ? `, ${failCount} failed` : ""}.`,
