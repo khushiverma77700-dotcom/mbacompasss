@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Eye, Globe, MapPin } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, Globe, MapPin, Search, GraduationCap } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import SEOChecklist from "@/components/admin/SEOChecklist";
 import FileUpload from "@/components/admin/FileUpload";
@@ -20,6 +20,7 @@ import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import { INDIAN_STATES, getCitiesForState } from "@/data/indianLocations";
 import { generateAndUploadLocationBanner } from "@/lib/locationBanner";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface CityPage {
   id: string;
@@ -81,12 +82,33 @@ const AdminCityPages = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
 
+  const [allColleges, setAllColleges] = useState<any[]>([]);
+  const [selectedCollegeIds, setSelectedCollegeIds] = useState<Set<string>>(new Set());
+  const [collegeSearch, setCollegeSearch] = useState("");
+
   const fetchPages = async () => {
     const { data } = await supabase.from("city_pages").select("*").order("sort_order");
     if (data) setPages(data as any);
   };
 
-  useEffect(() => { fetchPages(); }, []);
+  const fetchAllColleges = async () => {
+    const { data } = await supabase.from("colleges").select("id, name, city, state, tier, college_category").order("name");
+    if (data) setAllColleges(data);
+  };
+
+  useEffect(() => { fetchPages(); fetchAllColleges(); }, []);
+
+  // When editing, pre-select colleges that match this city
+  const loadCityColleges = (page: CityPage) => {
+    const aliases = [page.name.toLowerCase(), ...(page.city_aliases || []).map(a => a.toLowerCase())];
+    const matched = new Set<string>();
+    allColleges.forEach(c => {
+      if (c.city && aliases.includes(c.city.toLowerCase())) {
+        matched.add(c.id);
+      }
+    });
+    setSelectedCollegeIds(matched);
+  };
 
   const generateSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
@@ -126,9 +148,33 @@ const AdminCityPages = () => {
       toast.success("Page created");
     }
 
+    // Save manually assigned colleges: update city field for selected colleges
+    if (editId || !editId) {
+      const cityName = form.name;
+      const aliases = [cityName.toLowerCase(), ...form.city_aliases.map(a => a.toLowerCase())];
+      
+      // Remove city from colleges that were unselected
+      const toUnassign = allColleges.filter(c => 
+        c.city && aliases.includes(c.city.toLowerCase()) && !selectedCollegeIds.has(c.id)
+      );
+      for (const c of toUnassign) {
+        await supabase.from("colleges").update({ city: null }).eq("id", c.id);
+      }
+      
+      // Assign city to newly selected colleges
+      for (const id of selectedCollegeIds) {
+        const col = allColleges.find(c => c.id === id);
+        if (col && (!col.city || !aliases.includes(col.city.toLowerCase()))) {
+          await supabase.from("colleges").update({ city: cityName, state: form.state || col.state }).eq("id", id);
+        }
+      }
+      fetchAllColleges();
+    }
+
     setDialogOpen(false);
     setEditId(null);
     setForm(emptyForm);
+    setSelectedCollegeIds(new Set());
     fetchPages();
   };
 
@@ -150,6 +196,8 @@ const AdminCityPages = () => {
       active: page.active,
     });
     setEditId(page.id);
+    loadCityColleges(page);
+    setCollegeSearch("");
     setDialogOpen(true);
   };
 
@@ -196,10 +244,11 @@ const AdminCityPages = () => {
             </div>
           </DialogHeader>
           <Tabs defaultValue="basic" className="mt-4">
-            <TabsList className="grid grid-cols-4 w-full">
+            <TabsList className="grid grid-cols-5 w-full">
               <TabsTrigger value="basic">Basic Info</TabsTrigger>
               <TabsTrigger value="content">Content</TabsTrigger>
               <TabsTrigger value="seo">SEO & Keywords</TabsTrigger>
+              <TabsTrigger value="colleges">Manually Add</TabsTrigger>
               <TabsTrigger value="preview">Preview</TabsTrigger>
             </TabsList>
 
@@ -307,6 +356,76 @@ const AdminCityPages = () => {
                 keywords: form.keywords,
                 slug: form.slug,
               }} contentType="cityPage" recordId={editId || undefined} />
+            </TabsContent>
+
+            <TabsContent value="colleges" className="space-y-4 mt-4">
+              <div className="flex items-center gap-2">
+                <GraduationCap className="w-5 h-5 text-primary" />
+                <h3 className="font-semibold text-foreground">Assign Colleges to "{form.name}"</h3>
+                <Badge variant="secondary" className="ml-auto">{selectedCollegeIds.size} selected</Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Select colleges that should appear under this city. Their city field will be updated on save.
+              </p>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search colleges by name..."
+                  value={collegeSearch}
+                  onChange={e => setCollegeSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <div className="border rounded-lg max-h-[350px] overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-10"></TableHead>
+                      <TableHead>College Name</TableHead>
+                      <TableHead>Current City</TableHead>
+                      <TableHead>State</TableHead>
+                      <TableHead>Tier</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {allColleges
+                      .filter(c => !collegeSearch || c.name.toLowerCase().includes(collegeSearch.toLowerCase()))
+                      .map(c => (
+                        <TableRow key={c.id} className="cursor-pointer" onClick={() => {
+                          setSelectedCollegeIds(prev => {
+                            const next = new Set(prev);
+                            if (next.has(c.id)) next.delete(c.id);
+                            else next.add(c.id);
+                            return next;
+                          });
+                        }}>
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedCollegeIds.has(c.id)}
+                              onCheckedChange={(checked) => {
+                                setSelectedCollegeIds(prev => {
+                                  const next = new Set(prev);
+                                  if (checked) next.add(c.id);
+                                  else next.delete(c.id);
+                                  return next;
+                                });
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell className="font-medium text-sm">{c.name}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{c.city || "—"}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{c.state || "—"}</TableCell>
+                          <TableCell><Badge variant="outline" className="text-xs">{c.tier || "—"}</Badge></TableCell>
+                        </TableRow>
+                      ))}
+                    {allColleges.filter(c => !collegeSearch || c.name.toLowerCase().includes(collegeSearch.toLowerCase())).length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">No colleges found</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </TabsContent>
 
             <TabsContent value="preview" className="mt-4">
