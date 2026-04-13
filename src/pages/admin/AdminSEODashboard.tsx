@@ -985,6 +985,10 @@ const AdminSEODashboard = () => {
             </CardContent>
           </Card>
         )}
+        {/* ═══ FULL AUDIT & AUTO-FIX ═══ */}
+        {activeTab === "full-audit" && (
+          <SEOFullAudit rows={rows} onRefresh={fetchDashboardData} />
+        )}
         {/* ═══ OVERVIEW ═══ */}
         {activeTab === "overview" && (
           <div className="space-y-4">
