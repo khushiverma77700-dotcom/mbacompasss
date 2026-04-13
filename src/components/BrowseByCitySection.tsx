@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Building2, ArrowRight } from "lucide-react";
+import { MapPin, Building2, ArrowRight, GraduationCap } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useCityPages } from "@/hooks/useCityPages";
@@ -23,13 +23,18 @@ const fallbackImages: Record<string, string> = {
 
 const defaultFallback = "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=600&h=400&fit=crop";
 
+const getCityImage = (cp: { hero_image_url?: string | null; name: string; slug: string }) => {
+  const slug = cp.name.toLowerCase().replace(/\s+/g, "");
+  // Use admin hero_image_url if set, otherwise use curated fallbacks
+  return cp.hero_image_url || fallbackImages[slug] || fallbackImages[cp.slug] || defaultFallback;
+};
+
 const BrowseByCitySection = () => {
   const { data: cityPages } = useCityPages();
   const { data: colleges } = useColleges();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  // Build city list
   const cities = (cityPages || []).slice(0, 12).map((cp) => {
     const aliases = cp.city_aliases || [cp.name.toLowerCase()];
     const count = (colleges || []).filter((c) =>
@@ -39,21 +44,17 @@ const BrowseByCitySection = () => {
           (c.state || "").toLowerCase().includes(a.toLowerCase())
       )
     ).length;
-    const slug = cp.name.toLowerCase().replace(/\s+/g, "");
-    // Use admin-uploaded hero_image_url first, then fallback
-    const image = cp.hero_image_url || fallbackImages[slug] || fallbackImages[cp.slug] || defaultFallback;
-    return { ...cp, count, image };
+    return { ...cp, count, image: getCityImage(cp) };
   });
 
-  // Auto-scroll: when user scrolls near end, nudge 2-3 cards forward
+  // Auto-scroll on desktop: when user reaches near end, nudge forward
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
-    if (!el) return;
+    if (!el || window.innerWidth < 768) return; // skip on mobile
     const { scrollLeft, scrollWidth, clientWidth } = el;
     const distanceFromEnd = scrollWidth - clientWidth - scrollLeft;
-    // If within 200px of the end and there's room to scroll, auto-scroll 2 cards
-    if (distanceFromEnd > 0 && distanceFromEnd < 200) {
-      el.scrollBy({ left: 400, behavior: "smooth" });
+    if (distanceFromEnd > 0 && distanceFromEnd < 180) {
+      el.scrollBy({ left: 480, behavior: "smooth" });
     }
   }, []);
 
@@ -90,7 +91,7 @@ const BrowseByCitySection = () => {
           </p>
         </motion.div>
 
-        {/* Layout: Featured + Scrollable cards */}
+        {/* Layout: Featured + Grid/Scroll */}
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Featured City — Large Card */}
           <motion.div
@@ -98,7 +99,7 @@ const BrowseByCitySection = () => {
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            className="relative w-full lg:w-[400px] xl:w-[440px] h-[280px] md:h-[360px] rounded-2xl overflow-hidden flex-shrink-0 group"
+            className="relative w-full lg:w-[380px] xl:w-[420px] h-[260px] md:h-[340px] rounded-2xl overflow-hidden flex-shrink-0 group border border-border/50 shadow-lg"
           >
             <img
               src={featured.image}
@@ -106,29 +107,28 @@ const BrowseByCitySection = () => {
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
               loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/5 pointer-events-none" />
 
-            <div className="absolute inset-0 flex flex-col justify-between p-6">
-              {/* Top badge */}
-              <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-full bg-white/90 flex items-center justify-center shadow-md">
+            <div className="absolute inset-0 flex flex-col justify-between p-5 md:p-6">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-white/90 flex items-center justify-center shadow">
                   <MapPin className="w-4 h-4 text-primary" />
                 </div>
-                <span className="text-white font-heading text-lg md:text-xl font-bold drop-shadow-lg">
+                <h3 className="text-white font-heading text-lg md:text-xl font-bold drop-shadow-lg">
                   {featured.name}
-                </span>
+                </h3>
               </div>
 
-              {/* Bottom info */}
               <div>
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
-                    <Building2 className="w-3.5 h-3.5 text-white" />
-                    <span className="text-white text-xs font-semibold">{featured.count} Colleges</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5">
-                    <span className="text-white text-xs font-semibold">Top MBA Programs</span>
-                  </div>
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  <span className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5 text-white text-xs font-semibold">
+                    <Building2 className="w-3.5 h-3.5" />
+                    {featured.count} Colleges
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5 text-white text-xs font-semibold">
+                    <GraduationCap className="w-3.5 h-3.5" />
+                    Top MBA Programs
+                  </span>
                 </div>
                 <Link to={`/colleges/${featured.slug}`}>
                   <Button
@@ -143,28 +143,33 @@ const BrowseByCitySection = () => {
             </div>
           </motion.div>
 
-          {/* Scrollable City Cards — no arrows, touch swipe + auto-scroll */}
-          <div className="flex-1 min-w-0 overflow-hidden">
+          {/* Scrollable City Cards */}
+          <div className="flex-1 min-w-0">
             <div
               ref={scrollRef}
               className="flex gap-3 md:gap-4 overflow-x-auto pb-3 snap-x snap-mandatory"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
+              style={{
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+                WebkitOverflowScrolling: "touch",
+              }}
             >
+              <style>{`[data-city-scroll]::-webkit-scrollbar { display: none; }`}</style>
               {cities.map((city, i) => (
                 <motion.div
                   key={city.slug}
                   initial={{ opacity: 0, y: 16 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.03 }}
+                  transition={{ delay: i * 0.04 }}
                   className="flex-shrink-0 snap-start"
                 >
                   <button
                     onClick={() => setActiveIndex(i)}
-                    className={`relative w-[140px] md:w-[160px] h-[200px] md:h-[260px] rounded-2xl overflow-hidden group cursor-pointer transition-all duration-300 border-2 ${
+                    className={`relative w-[150px] md:w-[170px] h-[210px] md:h-[280px] rounded-2xl overflow-hidden group cursor-pointer transition-all duration-300 border-2 ${
                       activeIndex === i
-                        ? "border-primary shadow-lg shadow-primary/20 scale-[1.03]"
-                        : "border-transparent hover:shadow-md hover:scale-[1.01]"
+                        ? "border-primary shadow-lg shadow-primary/20 scale-[1.02]"
+                        : "border-border/30 hover:border-border hover:shadow-md"
                     }`}
                   >
                     <img
@@ -173,22 +178,22 @@ const BrowseByCitySection = () => {
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       loading="lazy"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/15 to-transparent pointer-events-none" />
+
+                    {/* Active indicator */}
+                    {activeIndex === i && (
+                      <div className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-primary ring-2 ring-white shadow" />
+                    )}
 
                     {/* City Info */}
-                    <div className="absolute bottom-0 inset-x-0 p-3 text-left">
-                      <h3 className="text-white text-sm md:text-base font-bold leading-tight drop-shadow-lg">
+                    <div className="absolute bottom-0 inset-x-0 p-3.5">
+                      <h3 className="text-white text-sm md:text-[15px] font-bold leading-tight drop-shadow-lg">
                         {city.name}
                       </h3>
-                      <p className="text-white/80 text-[11px] md:text-xs font-medium mt-0.5">
+                      <p className="text-white/75 text-[11px] md:text-xs font-medium mt-1">
                         {city.count} {city.count === 1 ? "College" : "Colleges"}
                       </p>
                     </div>
-
-                    {/* Active indicator dot */}
-                    {activeIndex === i && (
-                      <div className="absolute top-2.5 right-2.5 w-2.5 h-2.5 rounded-full bg-primary shadow-sm" />
-                    )}
                   </button>
                 </motion.div>
               ))}
@@ -196,10 +201,10 @@ const BrowseByCitySection = () => {
           </div>
         </div>
 
-        {/* View All CTA */}
+        {/* View All */}
         <div className="text-center mt-8">
           <Link to="/colleges">
-            <Button variant="outline" className="rounded-full gap-2 font-semibold">
+            <Button variant="outline" className="rounded-full gap-2 font-semibold border-primary/30 text-primary hover:bg-primary/5">
               View All Cities
               <ArrowRight className="w-4 h-4" />
             </Button>
