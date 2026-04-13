@@ -118,7 +118,7 @@ const ProfileAnalyzerPopup = () => {
               <div className="space-y-1.5">
                 {highlights.map((h) => (
                   <div key={h} className="flex items-center gap-2">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300 flex-shrink-0" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground/80 flex-shrink-0" />
                     <span className="text-white/80 text-xs">{h}</span>
                   </div>
                 ))}
