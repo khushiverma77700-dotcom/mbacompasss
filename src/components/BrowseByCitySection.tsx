@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { MapPin, Building2, ArrowRight, GraduationCap } from "lucide-react";
-import { motion } from "framer-motion";
+import { MapPin, Building2, ArrowRight, GraduationCap, ChevronLeft, ChevronRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useCityPages } from "@/hooks/useCityPages";
 import { useColleges } from "@/hooks/useInstitutes";
@@ -12,6 +12,8 @@ const BrowseByCitySection = () => {
   const { data: colleges } = useColleges();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
 
   const cities = (cityPages || []).slice(0, 12).map((cp) => {
     const aliases = cp.city_aliases || [cp.name.toLowerCase()];
@@ -22,49 +24,49 @@ const BrowseByCitySection = () => {
           (c.state || "").toLowerCase().includes(a.toLowerCase())
       )
     ).length;
-    // Prefer real photos: use hero_image_url only if it's a real upload (not generated)
     const adminImage = cp.hero_image_url && !isGeneratedBanner(cp.hero_image_url) ? cp.hero_image_url : null;
     const image = adminImage || getLocationImage(cp.name, cp.state);
     return { ...cp, count, image };
   });
 
-  // Auto-scroll on desktop: nudge forward near end
-  const handleScroll = useCallback(() => {
+  const updateScrollButtons = useCallback(() => {
     const el = scrollRef.current;
-    if (!el || window.innerWidth < 768) return;
-    const { scrollLeft, scrollWidth, clientWidth } = el;
-    const distanceFromEnd = scrollWidth - clientWidth - scrollLeft;
-    if (distanceFromEnd > 0 && distanceFromEnd < 180) {
-      el.scrollBy({ left: 480, behavior: "smooth" });
-    }
+    if (!el) return;
+    setCanScrollLeft(el.scrollLeft > 10);
+    setCanScrollRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 10);
   }, []);
 
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
-    el.addEventListener("scroll", handleScroll);
-    return () => el.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
+    el.addEventListener("scroll", updateScrollButtons);
+    updateScrollButtons();
+    return () => el.removeEventListener("scroll", updateScrollButtons);
+  }, [updateScrollButtons, cities.length]);
+
+  const scroll = (dir: "left" | "right") => {
+    scrollRef.current?.scrollBy({ left: dir === "left" ? -300 : 300, behavior: "smooth" });
+  };
 
   if (!cities.length) return null;
 
   const featured = cities[activeIndex] || cities[0];
 
   return (
-    <section className="py-14 md:py-20 bg-muted/30">
+    <section className="py-16 md:py-24 bg-gradient-to-b from-background via-muted/20 to-background overflow-hidden">
       <div className="container mx-auto px-4">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-10"
+          className="text-center mb-12"
         >
-          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-sm font-semibold mb-4">
+          <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-5 py-2 rounded-full text-sm font-semibold mb-5 backdrop-blur-sm border border-primary/10">
             <MapPin className="w-4 h-4" />
             Explore by Location
           </div>
-          <h2 className="font-heading text-2xl md:text-3xl lg:text-4xl font-bold text-foreground mb-3">
+          <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground mb-3 tracking-tight">
             Browse by <span className="text-primary">City</span>
           </h2>
           <p className="text-muted-foreground text-sm md:text-base max-w-2xl mx-auto">
@@ -72,108 +74,141 @@ const BrowseByCitySection = () => {
           </p>
         </motion.div>
 
-        {/* Layout: Featured + Grid/Scroll */}
-        <div className="flex flex-col lg:flex-row gap-6">
+        {/* Layout */}
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Featured City — Large Card */}
-          <motion.div
-            key={featured.slug}
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-            className="relative w-full lg:w-[380px] xl:w-[420px] h-[260px] md:h-[340px] rounded-2xl overflow-hidden flex-shrink-0 group border border-border/50 shadow-lg"
-          >
-            <img
-              src={featured.image}
-              alt={`MBA colleges in ${featured.name}`}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              loading="lazy"
-            />
-            {/* Brownish faded overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#2c1810]/85 via-[#3d2317]/40 to-[#4a2c1a]/15 pointer-events-none" />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={featured.slug}
+              initial={{ opacity: 0, scale: 0.95, rotateY: -4 }}
+              animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.45, ease: "easeOut" }}
+              className="relative w-full lg:w-[420px] xl:w-[480px] h-[300px] md:h-[400px] rounded-3xl overflow-hidden flex-shrink-0 group shadow-2xl"
+              style={{ perspective: "1200px", transformStyle: "preserve-3d" }}
+            >
+              <img
+                src={featured.image}
+                alt={`MBA colleges in ${featured.name}`}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                loading="lazy"
+              />
+              {/* Premium overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1a0e08]/90 via-[#2c1810]/50 to-transparent pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
 
-            <div className="absolute inset-0 flex flex-col justify-between p-5 md:p-6">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-white/90 flex items-center justify-center shadow">
-                  <MapPin className="w-4 h-4 text-primary" />
-                </div>
-                <h3 className="text-white font-heading text-lg md:text-xl font-bold drop-shadow-lg">
-                  {featured.name}
-                </h3>
-              </div>
+              {/* Shine effect on hover */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none bg-gradient-to-tr from-transparent via-white/10 to-transparent" />
 
-              <div>
-                <div className="flex flex-wrap items-center gap-2 mb-4">
-                  <span className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5 text-white text-xs font-semibold">
-                    <Building2 className="w-3.5 h-3.5" />
-                    {featured.count} Colleges
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5 text-white text-xs font-semibold">
-                    <GraduationCap className="w-3.5 h-3.5" />
-                    Top MBA Programs
-                  </span>
+              <div className="absolute inset-0 flex flex-col justify-between p-6 md:p-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-2xl bg-white/95 flex items-center justify-center shadow-lg backdrop-blur-sm">
+                    <MapPin className="w-5 h-5 text-primary" />
+                  </div>
+                  <h3 className="text-white font-heading text-2xl md:text-3xl font-extrabold drop-shadow-lg tracking-tight">
+                    {featured.name}
+                  </h3>
                 </div>
-                <Link to={`/colleges/${featured.slug}`}>
-                  <Button
-                    size="sm"
-                    className="rounded-full text-xs font-bold bg-white text-foreground hover:bg-white/90 shadow-lg gap-1.5"
-                  >
-                    Explore {featured.name}
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Button>
-                </Link>
+
+                <div>
+                  <div className="flex flex-wrap items-center gap-2.5 mb-5">
+                    <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md rounded-full px-4 py-2 text-white text-xs font-semibold border border-white/10">
+                      <Building2 className="w-3.5 h-3.5" />
+                      {featured.count} Colleges
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md rounded-full px-4 py-2 text-white text-xs font-semibold border border-white/10">
+                      <GraduationCap className="w-3.5 h-3.5" />
+                      Top MBA Programs
+                    </span>
+                  </div>
+                  <Link to={`/colleges/${featured.slug}`}>
+                    <Button
+                      size="sm"
+                      className="rounded-full text-sm font-bold bg-white text-foreground hover:bg-white/90 shadow-xl gap-2 px-6 py-2.5 transition-all hover:scale-105 hover:shadow-2xl"
+                    >
+                      Explore {featured.name}
+                      <ArrowRight className="w-4 h-4" />
+                    </Button>
+                  </Link>
+                </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </AnimatePresence>
 
           {/* Scrollable City Cards */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 relative">
+            {/* Scroll arrows */}
+            {canScrollLeft && (
+              <button
+                onClick={() => scroll("left")}
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm shadow-lg border border-border flex items-center justify-center hover:bg-background transition-all hover:scale-110"
+              >
+                <ChevronLeft className="w-5 h-5 text-foreground" />
+              </button>
+            )}
+            {canScrollRight && (
+              <button
+                onClick={() => scroll("right")}
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm shadow-lg border border-border flex items-center justify-center hover:bg-background transition-all hover:scale-110"
+              >
+                <ChevronRight className="w-5 h-5 text-foreground" />
+              </button>
+            )}
+
+            {/* Fade edges */}
+            <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+
             <div
               ref={scrollRef}
-              data-city-scroll
-              className="flex gap-3 md:gap-4 overflow-x-auto pb-3 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
-              style={{
-                scrollbarWidth: "none",
-                msOverflowStyle: "none",
-                WebkitOverflowScrolling: "touch",
-              }}
+              className="flex gap-4 overflow-x-auto pb-4 px-2 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden"
+              style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
             >
               {cities.map((city, i) => (
                 <motion.div
                   key={city.slug}
-                  initial={{ opacity: 0, y: 16 }}
+                  initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ delay: i * 0.04 }}
+                  transition={{ delay: i * 0.05 }}
                   className="flex-shrink-0 snap-start"
                 >
                   <button
                     onClick={() => setActiveIndex(i)}
-                    className={`relative w-[150px] md:w-[170px] h-[210px] md:h-[280px] rounded-2xl overflow-hidden group cursor-pointer transition-all duration-300 border-2 ${
-                      activeIndex === i
-                        ? "border-primary shadow-lg shadow-primary/20 scale-[1.02]"
-                        : "border-border/30 hover:border-border hover:shadow-md"
-                    }`}
+                    className={`relative rounded-2xl overflow-hidden cursor-pointer transition-all duration-500 ease-out group/card
+                      ${activeIndex === i
+                        ? "w-[180px] md:w-[200px] h-[260px] md:h-[370px] ring-2 ring-primary shadow-xl shadow-primary/25 scale-[1.03]"
+                        : "w-[150px] md:w-[170px] h-[230px] md:h-[330px] ring-1 ring-border/20 hover:ring-border/50 hover:shadow-lg hover:scale-[1.05]"
+                      }`}
+                    style={{ transformStyle: "preserve-3d", perspective: "800px" }}
                   >
                     <img
                       src={city.image}
                       alt={`MBA coaching in ${city.name}`}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-115"
                       loading="lazy"
                     />
-                    {/* Brownish faded overlay for small cards */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#2c1810]/80 via-[#3d2317]/20 to-transparent pointer-events-none" />
+                    {/* Brownish faded overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a0e08]/85 via-[#2c1810]/30 to-transparent pointer-events-none transition-opacity duration-300" />
 
-                    {/* Active indicator */}
+                    {/* Hover shine */}
+                    <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 pointer-events-none bg-gradient-to-tr from-transparent via-white/8 to-transparent" />
+
+                    {/* Active indicator with glow */}
                     {activeIndex === i && (
-                      <div className="absolute top-3 right-3 w-2.5 h-2.5 rounded-full bg-primary ring-2 ring-white shadow" />
+                      <div className="absolute top-3 right-3">
+                        <div className="w-3 h-3 rounded-full bg-primary ring-2 ring-white shadow-lg animate-pulse" />
+                      </div>
                     )}
 
                     {/* City Info */}
-                    <div className="absolute bottom-0 inset-x-0 p-3.5">
-                      <h3 className="text-white text-sm md:text-[15px] font-bold leading-tight drop-shadow-lg">
+                    <div className="absolute bottom-0 inset-x-0 p-4">
+                      <h3 className={`text-white font-bold leading-tight drop-shadow-lg transition-all duration-300
+                        ${activeIndex === i ? "text-base md:text-lg" : "text-sm md:text-[15px]"}`}>
                         {city.name}
                       </h3>
-                      <p className="text-white/75 text-[11px] md:text-xs font-medium mt-1">
+                      <p className="text-white/80 text-[11px] md:text-xs font-medium mt-1.5 flex items-center gap-1">
+                        <Building2 className="w-3 h-3" />
                         {city.count} {city.count === 1 ? "College" : "Colleges"}
                       </p>
                     </div>
@@ -185,9 +220,12 @@ const BrowseByCitySection = () => {
         </div>
 
         {/* View All */}
-        <div className="text-center mt-8">
+        <div className="text-center mt-10">
           <Link to="/colleges">
-            <Button variant="outline" className="rounded-full gap-2 font-semibold border-primary/30 text-primary hover:bg-primary/5">
+            <Button
+              variant="outline"
+              className="rounded-full gap-2 font-semibold border-primary/30 text-primary hover:bg-primary/5 hover:scale-105 transition-all px-8 py-3 text-sm shadow-sm hover:shadow-md"
+            >
               View All Cities
               <ArrowRight className="w-4 h-4" />
             </Button>
