@@ -154,6 +154,46 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
     setApprovedFixes(prev => ({ ...prev, [pageId]: new Set() }));
   };
 
+  const approveAllPages = () => {
+    const next: Record<string, Set<string>> = {};
+    for (const result of auditResults) {
+      const fixable = result.checks.filter(c => c.autoFixAvailable && c.status !== "pass");
+      if (fixable.length > 0) {
+        next[result.pageId] = new Set(fixable.map(c => c.id));
+      }
+    }
+    setApprovedFixes(next);
+    toast({ title: "All pages approved", description: `Approved fixes for ${Object.keys(next).length} pages.` });
+  };
+
+  const makeAllLive = async () => {
+    const pagesWithApprovals = auditResults.filter(r => (approvedFixes[r.pageId]?.size || 0) > 0);
+    if (pagesWithApprovals.length === 0) {
+      toast({ title: "No fixes approved", description: "Approve fixes on at least one page first.", variant: "destructive" });
+      return;
+    }
+
+    setApplyingAll(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const result of pagesWithApprovals) {
+      try {
+        await makeLive(result, true);
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+
+    setApplyingAll(false);
+    toast({
+      title: `✅ Bulk Apply Complete`,
+      description: `${successCount} pages updated${failCount > 0 ? `, ${failCount} failed` : ""}.`,
+    });
+    onRefresh();
+  };
+
   const makeLive = async (result: AuditResult) => {
     const approved = approvedFixes[result.pageId];
     if (!approved?.size) {
