@@ -428,6 +428,7 @@ const AdminCityPages = () => {
               </div>
             </TabsContent>
 
+            <TabsContent value="preview" className="mt-4">
               <Card>
                 <CardContent className="p-6 space-y-4">
                   <div className="text-xs text-muted-foreground">Page URL: /colleges/{form.slug}</div>
