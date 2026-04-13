@@ -66,6 +66,7 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
   const [loading, setLoading] = useState(false);
   const [approvedFixes, setApprovedFixes] = useState<Record<string, Set<string>>>({}); // pageId -> set of check ids
   const [applyingPageId, setApplyingPageId] = useState<string | null>(null);
+  const [applyingAll, setApplyingAll] = useState(false);
   const [expandedPage, setExpandedPage] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -153,10 +154,50 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
     setApprovedFixes(prev => ({ ...prev, [pageId]: new Set() }));
   };
 
-  const makeLive = async (result: AuditResult) => {
+  const approveAllPages = () => {
+    const next: Record<string, Set<string>> = {};
+    for (const result of auditResults) {
+      const fixable = result.checks.filter(c => c.autoFixAvailable && c.status !== "pass");
+      if (fixable.length > 0) {
+        next[result.pageId] = new Set(fixable.map(c => c.id));
+      }
+    }
+    setApprovedFixes(next);
+    toast({ title: "All pages approved", description: `Approved fixes for ${Object.keys(next).length} pages.` });
+  };
+
+  const makeAllLive = async () => {
+    const pagesWithApprovals = auditResults.filter(r => (approvedFixes[r.pageId]?.size || 0) > 0);
+    if (pagesWithApprovals.length === 0) {
+      toast({ title: "No fixes approved", description: "Approve fixes on at least one page first.", variant: "destructive" });
+      return;
+    }
+
+    setApplyingAll(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const result of pagesWithApprovals) {
+      try {
+        await makeLive(result, true);
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+
+    setApplyingAll(false);
+    toast({
+      title: `✅ Bulk Apply Complete`,
+      description: `${successCount} pages updated${failCount > 0 ? `, ${failCount} failed` : ""}.`,
+    });
+    onRefresh();
+  };
+
+  const makeLive = async (result: AuditResult, silent = false) => {
     const approved = approvedFixes[result.pageId];
     if (!approved?.size) {
-      toast({ title: "No fixes approved", description: "Approve at least one fix before making live." });
+      if (!silent) toast({ title: "No fixes approved", description: "Approve at least one fix before making live." });
       return;
     }
 
@@ -223,10 +264,11 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
         }
       }
 
-      toast({ title: "✅ Changes Applied Live!", description: `${approved.size} fixes applied to "${result.pageName}".` });
-      onRefresh();
+      if (!silent) toast({ title: "✅ Changes Applied Live!", description: `${approved.size} fixes applied to "${result.pageName}".` });
+      if (!silent) onRefresh();
     } catch (e: any) {
-      toast({ title: "Apply failed", description: e.message, variant: "destructive" });
+      if (!silent) toast({ title: "Apply failed", description: e.message, variant: "destructive" });
+      throw e;
     } finally {
       setApplyingPageId(null);
     }
@@ -323,6 +365,43 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Bulk Actions */}
+      {auditResults.length > 0 && overallStats && overallStats.fixable > 0 && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-2">
+                <Zap className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-semibold text-sm">Bulk Actions</p>
+                  <p className="text-xs text-muted-foreground">
+                    {Object.values(approvedFixes).reduce((s, set) => s + set.size, 0)} fixes approved across {Object.values(approvedFixes).filter(s => s.size > 0).length} pages
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={approveAllPages}>
+                  <Check className="h-3 w-3 mr-1" /> Approve All Pages
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={makeAllLive}
+                  disabled={applyingAll || Object.values(approvedFixes).every(s => s.size === 0)}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {applyingAll ? (
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                  ) : (
+                    <Zap className="h-3 w-3 mr-1" />
+                  )}
+                  Make All Live ({Object.values(approvedFixes).filter(s => s.size > 0).length} pages)
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Audit Results */}
