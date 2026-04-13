@@ -148,9 +148,33 @@ const AdminCityPages = () => {
       toast.success("Page created");
     }
 
+    // Save manually assigned colleges: update city field for selected colleges
+    if (editId || !editId) {
+      const cityName = form.name;
+      const aliases = [cityName.toLowerCase(), ...form.city_aliases.map(a => a.toLowerCase())];
+      
+      // Remove city from colleges that were unselected
+      const toUnassign = allColleges.filter(c => 
+        c.city && aliases.includes(c.city.toLowerCase()) && !selectedCollegeIds.has(c.id)
+      );
+      for (const c of toUnassign) {
+        await supabase.from("colleges").update({ city: null }).eq("id", c.id);
+      }
+      
+      // Assign city to newly selected colleges
+      for (const id of selectedCollegeIds) {
+        const col = allColleges.find(c => c.id === id);
+        if (col && (!col.city || !aliases.includes(col.city.toLowerCase()))) {
+          await supabase.from("colleges").update({ city: cityName, state: form.state || col.state }).eq("id", id);
+        }
+      }
+      fetchAllColleges();
+    }
+
     setDialogOpen(false);
     setEditId(null);
     setForm(emptyForm);
+    setSelectedCollegeIds(new Set());
     fetchPages();
   };
 
