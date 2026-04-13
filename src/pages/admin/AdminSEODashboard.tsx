@@ -840,6 +840,7 @@ const AdminSEODashboard = () => {
 
   const navItems = [
     { id: "overview", label: "Overview", icon: BarChart3 },
+    { id: "full-audit", label: "🔥 Full Audit & Fix", icon: FileCheck },
     { id: "pages", label: `All Pages (${filteredRows.length})`, icon: FileText },
     { id: "removed-links", label: "Removed Links", icon: Trash2 },
     { id: "interlinks", label: "Interlink Studio", icon: Link2 },
