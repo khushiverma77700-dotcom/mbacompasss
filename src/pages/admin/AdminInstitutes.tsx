@@ -16,6 +16,8 @@ import FileUpload from "@/components/admin/FileUpload";
 import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 import SEOChecklist from "@/components/admin/SEOChecklist";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
+import StateCitySelect from "@/components/admin/StateCitySelect";
+import { generateAndUploadLocationBanner } from "@/lib/locationBanner";
 
 type Institute = {
   id: string; name: string; slug: string; city: string | null;
@@ -69,6 +71,11 @@ const AdminInstitutes = () => {
   const handleSave = async () => {
     if (!form.name) { toast({ title: "Error", description: "Name is required", variant: "destructive" }); return; }
     const slug = form.slug || form.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    // Auto-generate banner if city & state are set and no banner exists
+    let bannerUrl = form.banner_url;
+    if (!bannerUrl && form.city && form.state) {
+      bannerUrl = await generateAndUploadLocationBanner(form.city, form.state, "institute-banners") || "";
+    }
     const payload: any = {
       name: form.name, slug, description: form.description || null,
       city: form.city || null, state: form.state || null, address: form.address || null,
@@ -78,7 +85,7 @@ const AdminInstitutes = () => {
       discount: form.discount || null, offer: form.offer || null,
       meta_title: form.meta_title || null, meta_description: form.meta_description || null,
       keywords: form.keywords.length > 0 ? form.keywords : null,
-      logo_url: form.logo_url || null, banner_url: form.banner_url || null,
+      logo_url: form.logo_url || null, banner_url: bannerUrl || null,
       category_id: form.category_id || null,
       rating: form.rating || 0, total_reviews: form.total_reviews || 0,
       students_count: form.students_count || 0, success_rate: form.success_rate || 0,
@@ -225,16 +232,12 @@ const AdminInstitutes = () => {
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Description</Label>
                   <RichTextEditor content={form.description} onChange={(html) => setForm({ ...form, description: html })} placeholder="Detailed institute description..." />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">City</Label>
-                    <Input placeholder="Mumbai" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">State</Label>
-                    <Input placeholder="Maharashtra" value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} />
-                  </div>
-                </div>
+                <StateCitySelect
+                  state={form.state}
+                  city={form.city}
+                  onStateChange={(s) => setForm({ ...form, state: s, city: "" })}
+                  onCityChange={(c) => setForm({ ...form, city: c })}
+                />
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Full Address</Label>
                   <Input placeholder="Street address..." value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />

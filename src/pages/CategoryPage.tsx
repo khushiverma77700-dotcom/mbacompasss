@@ -1,5 +1,6 @@
 import { Link, useSearchParams } from "react-router-dom";
 import { useState, useMemo, useEffect } from "react";
+import { INDIAN_STATES, getCitiesForState } from "@/data/indianLocations";
 import { Star, MapPin, Users, TrendingUp, SlidersHorizontal, X, Monitor, Building, Wifi } from "lucide-react";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -29,8 +30,8 @@ const CategoryPage = () => {
 
   const category = categories.find((c: any) => c.slug === slug);
 
-  const cities = useMemo(() => [...new Set(institutes.map((i: any) => i.city).filter(Boolean))].sort() as string[], [institutes]);
-  const states = useMemo(() => [...new Set(institutes.map((i: any) => i.state).filter(Boolean))].sort() as string[], [institutes]);
+  const cities = useMemo(() => selectedState !== "all" ? getCitiesForState(selectedState).filter(c => institutes.some((i: any) => i.city === c)) : [...new Set(institutes.map((i: any) => i.city).filter(Boolean))].sort() as string[], [institutes, selectedState]);
+  const states = useMemo(() => INDIAN_STATES.filter(s => institutes.some((i: any) => i.state === s)), [institutes]);
 
   useEffect(() => {
     const title = category
@@ -118,7 +119,7 @@ const CategoryPage = () => {
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div>
                   <label className="text-sm font-medium text-foreground mb-2 block">State</label>
-                  <Select value={selectedState} onValueChange={setSelectedState}>
+                  <Select value={selectedState} onValueChange={(v) => { setSelectedState(v); setSelectedCity("all"); }}>
                     <SelectTrigger><SelectValue placeholder="All States" /></SelectTrigger>
                     <SelectContent><SelectItem value="all">All States</SelectItem>{states.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                   </Select>

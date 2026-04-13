@@ -18,6 +18,8 @@ import SEOChecklist from "@/components/admin/SEOChecklist";
 import FileUpload from "@/components/admin/FileUpload";
 import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
+import { INDIAN_STATES, getCitiesForState } from "@/data/indianLocations";
+import { generateAndUploadLocationBanner } from "@/lib/locationBanner";
 
 interface CityPage {
   id: string;
@@ -91,6 +93,12 @@ const AdminCityPages = () => {
   const handleSave = async () => {
     if (!form.name || !form.slug) { toast.error("Name and slug are required"); return; }
 
+    // Auto-generate hero image if not set and state is available
+    let heroUrl = form.hero_image_url;
+    if (!heroUrl && form.name && form.state) {
+      heroUrl = await generateAndUploadLocationBanner(form.name, form.state, "city-banners") || "";
+    }
+
     const payload = {
       name: form.name,
       slug: form.slug,
@@ -102,7 +110,7 @@ const AdminCityPages = () => {
       intro_content: form.intro_content || null,
       detailed_content: form.detailed_content || null,
       faq_content: form.faq_content || null,
-      hero_image_url: form.hero_image_url || null,
+      hero_image_url: heroUrl || null,
       city_aliases: form.city_aliases,
       sort_order: form.sort_order,
       active: form.active,
@@ -220,7 +228,13 @@ const AdminCityPages = () => {
                 </div>
                 <div>
                   <Label>Parent State</Label>
-                  <Input value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))} placeholder="e.g., Maharashtra" />
+                  <Select value={form.state || "_none"} onValueChange={v => setForm(f => ({ ...f, state: v === "_none" ? "" : v }))}>
+                    <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none">Select state...</SelectItem>
+                      {INDIAN_STATES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <TagInput
