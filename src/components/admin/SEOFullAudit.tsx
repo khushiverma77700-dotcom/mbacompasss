@@ -264,10 +264,11 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
         }
       }
 
-      toast({ title: "✅ Changes Applied Live!", description: `${approved.size} fixes applied to "${result.pageName}".` });
-      onRefresh();
+      if (!silent) toast({ title: "✅ Changes Applied Live!", description: `${approved.size} fixes applied to "${result.pageName}".` });
+      if (!silent) onRefresh();
     } catch (e: any) {
-      toast({ title: "Apply failed", description: e.message, variant: "destructive" });
+      if (!silent) toast({ title: "Apply failed", description: e.message, variant: "destructive" });
+      throw e;
     } finally {
       setApplyingPageId(null);
     }
