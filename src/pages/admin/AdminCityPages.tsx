@@ -172,6 +172,8 @@ const AdminCityPages = () => {
       active: page.active,
     });
     setEditId(page.id);
+    loadCityColleges(page);
+    setCollegeSearch("");
     setDialogOpen(true);
   };
 
