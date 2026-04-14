@@ -1638,51 +1638,90 @@ const ProfileAnalyzerPage = () => {
 
               <div className="space-y-3">
                 <h2 className="text-2xl font-bold">AI is Analysing Your Profile</h2>
-                <p className="text-muted-foreground">Cross-referencing 10,000+ data points to generate personalised insights...</p>
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={Math.floor(loadingProgress / 10)}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="text-muted-foreground"
+                  >
+                    {loadingProgress < 15 ? "Evaluating your academic credentials..." :
+                     loadingProgress < 30 ? "Scoring work experience & profile diversity..." :
+                     loadingProgress < 45 ? "Computing 5-dimension profile scores..." :
+                     loadingProgress < 58 ? "Matching against 50+ MBA colleges..." :
+                     loadingProgress < 72 ? "Running peer comparison with 25,000+ students..." :
+                     loadingProgress < 82 ? "Building your personalised roadmap..." :
+                     loadingProgress < 88 ? "Analysing additional datasets & trends..." :
+                     loadingProgress < 92 ? "Cross-referencing your profile with admission data..." :
+                     loadingProgress < 95 ? "Generating visual insights & charts..." :
+                     "Finalising your comprehensive report..."}
+                  </motion.p>
+                </AnimatePresence>
               </div>
 
               {/* Animated progress with glowing effect */}
               <div className="relative">
-                <Progress value={loadingProgress} className="h-3" />
-                <motion.div
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                  className="absolute top-0 h-3 rounded-full bg-primary/20 blur-sm"
-                  style={{ width: `${loadingProgress}%` }}
-                />
-                <p className="text-right text-xs text-muted-foreground mt-1 font-mono">{Math.round(loadingProgress)}%</p>
+                <div className="h-4 bg-muted rounded-full overflow-hidden relative">
+                  <motion.div
+                    className="h-full rounded-full bg-gradient-to-r from-primary via-primary/80 to-primary relative overflow-hidden"
+                    style={{ width: `${loadingProgress}%` }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <motion.div
+                      animate={{ x: ["-100%", "200%"] }}
+                      transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                    />
+                  </motion.div>
+                </div>
+                <div className="flex justify-between mt-2">
+                  <motion.span
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    className="text-xs text-primary font-medium"
+                  >
+                    {loadingProgress < 50 ? "⚡ Processing..." : loadingProgress < 85 ? "🧠 Deep analysis in progress..." : "✨ Almost ready..."}
+                  </motion.span>
+                  <span className="text-xs text-muted-foreground font-mono font-bold">{Math.round(loadingProgress)}%</span>
+                </div>
               </div>
 
               {/* Step-by-step processing stages */}
-              <div className="space-y-3 text-sm">
+              <div className="space-y-2 text-sm">
                 {[
-                  { threshold: 10, icon: GraduationCap, label: "Evaluating academic profile...", done: "Academic profile evaluated" },
-                  { threshold: 25, icon: Briefcase, label: "Scoring work experience...", done: "Work experience scored" },
-                  { threshold: 40, icon: PieChart, label: "Computing 5-dimension scores...", done: "5-dimension scores computed" },
-                  { threshold: 55, icon: Building2, label: "Matching against 50+ colleges...", done: "College matching complete" },
-                  { threshold: 70, icon: Users, label: "Running peer comparison...", done: "Peer comparison ready" },
-                  { threshold: 85, icon: Sparkles, label: "Building personalised roadmap...", done: "Roadmap generated" },
+                  { threshold: 12, icon: GraduationCap, label: "Evaluating academic profile...", done: "Academic profile evaluated ✓" },
+                  { threshold: 28, icon: Briefcase, label: "Scoring work experience...", done: "Work experience scored ✓" },
+                  { threshold: 42, icon: PieChart, label: "Computing 5-dimension scores...", done: "5-dimension scores computed ✓" },
+                  { threshold: 55, icon: Building2, label: "Matching against 50+ colleges...", done: "College matching complete ✓" },
+                  { threshold: 70, icon: Users, label: "Running peer comparison...", done: "Peer comparison ready ✓" },
+                  { threshold: 80, icon: Sparkles, label: "Building personalised roadmap...", done: "Roadmap generated ✓" },
+                  { threshold: 87, icon: LineChart, label: "Analysing more datasets...", done: "Additional analysis complete ✓" },
+                  { threshold: 93, icon: Gauge, label: "Cross-referencing your profile...", done: "Profile cross-referenced ✓" },
+                  { threshold: 96, icon: BarChart3, label: "Generating visual insights...", done: "Insights generated ✓" },
                 ].map((stage, i) => {
-                  const isActive = loadingProgress > stage.threshold - 10 && loadingProgress <= stage.threshold + 10;
-                  const isDone = loadingProgress > stage.threshold;
-                  if (loadingProgress < stage.threshold - 10) return null;
+                  const isActive = loadingProgress > stage.threshold - 8 && loadingProgress <= stage.threshold + 5;
+                  const isDone = loadingProgress > stage.threshold + 5;
+                  if (loadingProgress < stage.threshold - 8) return null;
                   return (
                     <motion.div
                       key={i}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className={`flex items-center gap-3 px-4 py-2.5 rounded-lg border transition-all ${
+                      className={`flex items-center gap-3 px-4 py-2 rounded-lg border transition-all ${
                         isDone ? "bg-green-500/5 border-green-500/20" : "bg-primary/5 border-primary/20"
                       }`}
                     >
                       {isDone ? (
-                        <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                          <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                        </motion.div>
                       ) : (
                         <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
                           <stage.icon className="w-4 h-4 text-primary shrink-0" />
                         </motion.div>
                       )}
-                      <span className={isDone ? "text-green-600" : "text-foreground"}>
+                      <span className={isDone ? "text-green-600 dark:text-green-400" : "text-foreground"}>
                         {isDone ? stage.done : stage.label}
                       </span>
                       {isActive && (
@@ -1695,6 +1734,7 @@ const ProfileAnalyzerPage = () => {
                     </motion.div>
                   );
                 })}
+              </div>
               </div>
             </div>
           </motion.div>
