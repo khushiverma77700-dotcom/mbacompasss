@@ -499,7 +499,7 @@ const HowItWorksAnimated = () => {
 
 /* ──────────── BELL CURVE / PEER COMPARISON ──────────── */
 const PeerComparisonScale = ({ peerData, userScore }: { peerData: AnalysisResult["peer_comparison"]; userScore: number }) => {
-  if (!peerData) return null;
+  if (!peerData || !Array.isArray(peerData.score_distribution) || peerData.score_distribution.length === 0) return null;
 
   const maxCount = Math.max(...peerData.score_distribution.map(d => d.count));
 
@@ -682,19 +682,19 @@ const ProfileAnalyzerPage = () => {
             const reconstructed: any = {
               profile_id: profileData.id,
               profile_score: profileData.profile_score,
-              strengths: analysisData.strengths,
-              weaknesses: analysisData.weaknesses,
+              strengths: Array.isArray(analysisData.strengths) ? analysisData.strengths : [],
+              weaknesses: Array.isArray(analysisData.weaknesses) ? analysisData.weaknesses : [],
               college_predictions: analysisData.college_predictions,
-              recommendations: analysisData.recommendations,
-              study_plan: analysisData.study_plan,
+              recommendations: Array.isArray(analysisData.recommendations) ? analysisData.recommendations : [],
+              study_plan: Array.isArray(analysisData.study_plan) ? analysisData.study_plan : [],
               ai_summary: analysisData.ai_summary,
               // Extract nested fields from probability_scores
               score_breakdown: analysisData.probability_scores,
-              exam_strategy: (analysisData.probability_scores as any)?.exam_strategy,
-              peer_comparison: (analysisData.probability_scores as any)?.peer_comparison,
-              roi_analysis: (analysisData.probability_scores as any)?.roi_analysis,
-              salary_benchmarking: (analysisData.probability_scores as any)?.salary_benchmarking,
-              improvement_roadmap: (analysisData.probability_scores as any)?.improvement_roadmap,
+              exam_strategy: Array.isArray((analysisData.probability_scores as any)?.exam_strategy) ? (analysisData.probability_scores as any).exam_strategy : [],
+              peer_comparison: (analysisData.probability_scores as any)?.peer_comparison || null,
+              roi_analysis: Array.isArray((analysisData.probability_scores as any)?.roi_analysis) ? (analysisData.probability_scores as any).roi_analysis : [],
+              salary_benchmarking: (analysisData.probability_scores as any)?.salary_benchmarking || null,
+              improvement_roadmap: Array.isArray((analysisData.probability_scores as any)?.improvement_roadmap) ? (analysisData.probability_scores as any).improvement_roadmap : [],
               detailed_college_table: Array.isArray((analysisData.college_predictions as any)?.detailed_college_table) ? (analysisData.college_predictions as any).detailed_college_table : Array.isArray(analysisData.college_predictions) ? analysisData.college_predictions : [],
             };
             setResult(reconstructed);
@@ -2143,7 +2143,7 @@ const ProfileAnalyzerPage = () => {
             </Card>
 
             {/* Exam Strategy */}
-            {result.exam_strategy && result.exam_strategy.length > 0 && (
+            {Array.isArray(result.exam_strategy) && result.exam_strategy.length > 0 && (
               <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <Card className="overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
@@ -2301,7 +2301,7 @@ const ProfileAnalyzerPage = () => {
             </motion.div>
 
             {/* ─── ROI ANALYSIS ─── */}
-            {result.roi_analysis && result.roi_analysis.length > 0 && (
+            {Array.isArray(result.roi_analysis) && result.roi_analysis.length > 0 && (
               <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <Card className="border-2 border-primary/20 overflow-hidden">
                 <CardHeader>
@@ -2387,7 +2387,7 @@ const ProfileAnalyzerPage = () => {
                   )}
 
                   {/* Salary Growth Trajectory Chart */}
-                  {result.salary_benchmarking.salary_growth_trajectory?.length > 0 && (
+                  {Array.isArray(result.salary_benchmarking?.salary_growth_trajectory) && result.salary_benchmarking.salary_growth_trajectory.length > 0 && (
                     <div>
                       <p className="text-sm font-semibold mb-3">10-Year Salary Growth: MBA vs No MBA</p>
                       <div className="space-y-2">
@@ -2418,7 +2418,7 @@ const ProfileAnalyzerPage = () => {
             )}
 
             {/* ─── IMPROVEMENT ROADMAP ─── */}
-            {result.improvement_roadmap && result.improvement_roadmap.length > 0 && (
+            {Array.isArray(result.improvement_roadmap) && result.improvement_roadmap.length > 0 && (
               <Card className="border-2 border-primary/20">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2"><Rocket className="w-5 h-5 text-primary" /> Month-by-Month Improvement Roadmap</CardTitle>
