@@ -142,6 +142,35 @@ interface AnalysisResult {
   };
 }
 
+  roi_analysis: Array<{
+    college_name: string;
+    total_investment_lakhs: number;
+    expected_starting_salary_lakhs: number;
+    payback_period_months: number;
+    five_year_roi_percent: number;
+    ten_year_earnings_advantage_lakhs?: number;
+    roi_rating: string;
+  }>;
+  salary_benchmarking: {
+    current_estimated_salary_lakhs: number;
+    post_mba_salary_range: {
+      tier1_min: number; tier1_max: number;
+      tier2_min: number; tier2_max: number;
+      tier3_min: number; tier3_max: number;
+    };
+    sector_wise_salary: Array<{ sector: string; avg_salary_lakhs: number; top_salary_lakhs: number; growth_rate_percent: number }>;
+    salary_growth_trajectory: Array<{ year: number; with_mba_lakhs: number; without_mba_lakhs: number }>;
+  };
+  improvement_roadmap: Array<{
+    month: number;
+    milestone: string;
+    target_percentile?: string;
+    focus_areas: string[];
+    mock_score_target?: string;
+    profile_score_target: number;
+  }>;
+}
+
 interface FormData {
   name: string;
   email: string;
@@ -157,6 +186,17 @@ interface FormData {
   target_colleges: string[];
   preferred_specialization: string;
   target_states: string[];
+  fee_budget_lakhs: string;
+  expected_salary_lakhs: string;
+  current_employer_type: string;
+  graduation_year: string;
+  has_certifications: string[];
+  extracurriculars: string[];
+  leadership_roles: string;
+  preparation_months_remaining: string;
+  current_city: string;
+  has_gap_years: boolean;
+  gap_year_reason: string;
 }
 
 const initialForm: FormData = {
@@ -165,6 +205,10 @@ const initialForm: FormData = {
   is_pursuing_graduation: false,
   work_experience_months: "", category: "General", gender: "",
   target_exams: [], target_colleges: [], preferred_specialization: "", target_states: [],
+  fee_budget_lakhs: "", expected_salary_lakhs: "", current_employer_type: "",
+  graduation_year: "", has_certifications: [], extracurriculars: [],
+  leadership_roles: "", preparation_months_remaining: "", current_city: "",
+  has_gap_years: false, gap_year_reason: "",
 };
 
 /* ──────────── 3D FLOATING ELEMENTS ──────────── */
