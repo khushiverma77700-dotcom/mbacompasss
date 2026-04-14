@@ -690,10 +690,10 @@ const ProfileAnalyzerPage = () => {
     setErrors(prev => { const n = { ...prev }; delete n[key]; return n; });
   };
 
-  const toggleArrayItem = (key: "target_exams" | "target_colleges" | "target_states", item: string) => {
+  const toggleArrayItem = (key: "target_exams" | "target_colleges" | "target_states" | "has_certifications" | "extracurriculars", item: string) => {
     setForm(prev => ({
       ...prev,
-      [key]: prev[key].includes(item) ? prev[key].filter(c => c !== item) : [...prev[key], item],
+      [key]: (prev[key] as string[]).includes(item) ? (prev[key] as string[]).filter(c => c !== item) : [...(prev[key] as string[]), item],
     }));
   };
   const toggleAllExams = () => {
