@@ -1451,16 +1451,28 @@ const ProfileAnalyzerPage = () => {
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <Label className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" /> Current Employer Type</Label>
-                        <Select value={form.current_employer_type} onValueChange={v => updateField("current_employer_type", v)}>
-                          <SelectTrigger><SelectValue placeholder="Industry / Sector" /></SelectTrigger>
-                          <SelectContent>{EMPLOYER_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                        </Select>
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" /> Current Employer Type(s)</Label>
+                        <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-border rounded-lg p-3">
+                          {EMPLOYER_TYPES.map(t => (
+                            <label key={t} className={`flex items-center gap-2 text-sm cursor-pointer rounded-lg border p-2 transition-colors ${(form.current_employer_type as string[]).includes(t) ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
+                              <Checkbox checked={(form.current_employer_type as string[]).includes(t)} onCheckedChange={() => toggleArrayItem("current_employer_type" as any, t)} />
+                              {t}
+                            </label>
+                          ))}
+                        </div>
+                        <p className="text-xs text-muted-foreground">{(form.current_employer_type as string[]).length ? (form.current_employer_type as string[]).join(", ") : "Select your industry sectors"}</p>
                       </div>
                       <div className="space-y-1.5">
                         <Label className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Graduation Year</Label>
-                        <Input type="number" min="2010" max="2030" placeholder="e.g., 2023" value={form.graduation_year} onChange={e => updateField("graduation_year", e.target.value)} />
+                        <Select value={form.graduation_year} onValueChange={v => updateField("graduation_year", v)}>
+                          <SelectTrigger><SelectValue placeholder="Select year" /></SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 22 }, (_, i) => String(2014 + i)).map(y => (
+                              <SelectItem key={y} value={y}>{y}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1471,6 +1483,7 @@ const ProfileAnalyzerPage = () => {
                       <div className="space-y-1.5">
                         <Label className="flex items-center gap-1.5"><Timer className="w-3.5 h-3.5" /> Months Until Exam</Label>
                         <Input type="number" min="1" max="24" placeholder="e.g., 6" value={form.preparation_months_remaining} onChange={e => updateField("preparation_months_remaining", e.target.value)} />
+                        <p className="text-xs text-muted-foreground flex items-center gap-1"><Info className="w-3 h-3 shrink-0" /> How many months are left before your target entrance exam (CAT/XAT/etc). This helps us plan your preparation roadmap.</p>
                       </div>
                     </div>
                     <div className="space-y-1.5">
