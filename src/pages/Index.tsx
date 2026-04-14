@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import HeroSection from "@/components/HeroSection";
 import StatsCounterSection from "@/components/StatsCounterSection";
 import CategoryCards from "@/components/CategoryCards";
@@ -33,6 +33,16 @@ const homepageFAQs = [
 ];
 
 const Index = () => {
+  const [showDeferredSections, setShowDeferredSections] = useState(false);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setShowDeferredSections(true);
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, []);
+
   const jsonLdSchemas = [
     generateWebsiteSchema(),
     generateOrganizationSchema(),
@@ -72,31 +82,35 @@ const Index = () => {
       <StatsCounterSection />
       <CategoryCards />
       
-      {/* Below-the-fold: single Suspense boundary to avoid multiple spinners */}
-      <Suspense fallback={null}>
-        <AIToolsSection />
-        <CoachingOfWeekSection />
-        <OfferBanners />
-        <FeaturedInstitutes />
-        <TopRankedCollegesSection />
-        <BrowseByCitySection />
-        <ExamDeadlinesTicker />
-        <PopularExamsSection />
-        <HowItWorksSection />
-        <LearningResourcesSection />
-        <ProfileAnalyzerCTA />
-        <LatestArticlesSection />
-        <SuccessStoriesSection />
-        <WhyChooseUs />
-        <FAQSection />
-        <CTASection />
-      </Suspense>
-
-      <div className="container mx-auto px-4 pb-8">
+      {/* Below-the-fold: mount after first paint so hero appears immediately */}
+      {showDeferredSections && (
         <Suspense fallback={null}>
-          <PageKeywords contentType="static" recordId="homepage" fallbackKeywords={["best MBA coaching", "MBA coaching institutes India", "CAT coaching", "MBA entrance exam", "IIM preparation"]} />
+          <AIToolsSection />
+          <CoachingOfWeekSection />
+          <OfferBanners />
+          <FeaturedInstitutes />
+          <TopRankedCollegesSection />
+          <BrowseByCitySection />
+          <ExamDeadlinesTicker />
+          <PopularExamsSection />
+          <HowItWorksSection />
+          <LearningResourcesSection />
+          <ProfileAnalyzerCTA />
+          <LatestArticlesSection />
+          <SuccessStoriesSection />
+          <WhyChooseUs />
+          <FAQSection />
+          <CTASection />
         </Suspense>
-      </div>
+      )}
+
+      {showDeferredSections && (
+        <div className="container mx-auto px-4 pb-8">
+          <Suspense fallback={null}>
+            <PageKeywords contentType="static" recordId="homepage" fallbackKeywords={["best MBA coaching", "MBA coaching institutes India", "CAT coaching", "MBA entrance exam", "IIM preparation"]} />
+          </Suspense>
+        </div>
+      )}
     </>
   );
 };
