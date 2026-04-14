@@ -446,6 +446,7 @@ export type Database = {
           created_at: string
           detailed_content: string | null
           faq_content: string | null
+          h1_tag: string | null
           hero_image_url: string | null
           id: string
           intro_content: string | null
@@ -465,6 +466,7 @@ export type Database = {
           created_at?: string
           detailed_content?: string | null
           faq_content?: string | null
+          h1_tag?: string | null
           hero_image_url?: string | null
           id?: string
           intro_content?: string | null
@@ -484,6 +486,7 @@ export type Database = {
           created_at?: string
           detailed_content?: string | null
           faq_content?: string | null
+          h1_tag?: string | null
           hero_image_url?: string | null
           id?: string
           intro_content?: string | null
@@ -670,6 +673,7 @@ export type Database = {
           established: number | null
           exams_accepted: string[] | null
           fees: string | null
+          h1_tag: string | null
           highlights: Json | null
           id: string
           keywords: string[] | null
@@ -704,6 +708,7 @@ export type Database = {
           established?: number | null
           exams_accepted?: string[] | null
           fees?: string | null
+          h1_tag?: string | null
           highlights?: Json | null
           id?: string
           keywords?: string[] | null
@@ -738,6 +743,7 @@ export type Database = {
           established?: number | null
           exams_accepted?: string[] | null
           fees?: string | null
+          h1_tag?: string | null
           highlights?: Json | null
           id?: string
           keywords?: string[] | null
@@ -1008,6 +1014,7 @@ export type Database = {
           exam_date: string | null
           frequency: string | null
           full_name: string | null
+          h1_tag: string | null
           id: string
           important_dates: Json | null
           keywords: string[] | null
@@ -1028,6 +1035,7 @@ export type Database = {
           exam_date?: string | null
           frequency?: string | null
           full_name?: string | null
+          h1_tag?: string | null
           id?: string
           important_dates?: Json | null
           keywords?: string[] | null
@@ -1048,6 +1056,7 @@ export type Database = {
           exam_date?: string | null
           frequency?: string | null
           full_name?: string | null
+          h1_tag?: string | null
           id?: string
           important_dates?: Json | null
           keywords?: string[] | null
@@ -1202,6 +1211,7 @@ export type Database = {
           email: string | null
           featured: boolean | null
           features: string[] | null
+          h1_tag: string | null
           id: string
           keywords: string[] | null
           latitude: number | null
@@ -1234,6 +1244,7 @@ export type Database = {
           email?: string | null
           featured?: boolean | null
           features?: string[] | null
+          h1_tag?: string | null
           id?: string
           keywords?: string[] | null
           latitude?: number | null
@@ -1266,6 +1277,7 @@ export type Database = {
           email?: string | null
           featured?: boolean | null
           features?: string[] | null
+          h1_tag?: string | null
           id?: string
           keywords?: string[] | null
           latitude?: number | null
