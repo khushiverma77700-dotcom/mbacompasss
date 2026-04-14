@@ -2387,7 +2387,7 @@ const ProfileAnalyzerPage = () => {
                   )}
 
                   {/* Salary Growth Trajectory Chart */}
-                  {result.salary_benchmarking.salary_growth_trajectory?.length > 0 && (
+                  {Array.isArray(result.salary_benchmarking?.salary_growth_trajectory) && result.salary_benchmarking.salary_growth_trajectory.length > 0 && (
                     <div>
                       <p className="text-sm font-semibold mb-3">10-Year Salary Growth: MBA vs No MBA</p>
                       <div className="space-y-2">
