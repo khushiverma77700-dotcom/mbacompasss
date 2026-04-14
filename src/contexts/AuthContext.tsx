@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,23 +21,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [allowedSections, setAllowedSections] = useState<string[] | null>(null);
+  const resolvedAdminUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
+    const applySession = (nextSession: Session | null) => {
+      if (cancelled) return;
+
+      setSession((prev) =>
+        prev?.access_token === nextSession?.access_token ? prev : nextSession
+      );
+      setUser((prev) =>
+        prev?.id === nextSession?.user?.id ? prev : nextSession?.user ?? null
+      );
+      setLoading(false);
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+      (_event, nextSession) => {
+        applySession(nextSession);
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+    supabase.auth.getSession().then(({ data: { session: nextSession } }) => {
+      applySession(nextSession);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -45,25 +59,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const loadAdminStatus = async () => {
       if (!user) {
+        resolvedAdminUserIdRef.current = null;
         setIsAdmin(false);
         setAllowedSections(null);
         return;
       }
 
-      const { data } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
+      if (resolvedAdminUserIdRef.current === user.id) return;
+      resolvedAdminUserIdRef.current = user.id;
 
-      if (cancelled) return;
+      try {
+        const { data } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("role", "admin")
+          .maybeSingle();
 
-      const adminStatus = !!data;
-      setIsAdmin(adminStatus);
+        if (cancelled) return;
 
-      if (adminStatus) {
-        // Load granular permissions
+        const adminStatus = !!data;
+        setIsAdmin(adminStatus);
+
+        if (!adminStatus) {
+          setAllowedSections(null);
+          return;
+        }
+
         const { data: permData } = await supabase
           .from("admin_permissions")
           .select("allowed_sections")
@@ -71,11 +93,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .maybeSingle();
 
         if (!cancelled) {
-          // No permissions record = super admin (full access)
-          setAllowedSections(permData?.allowed_sections as string[] | null ?? null);
+          setAllowedSections((permData?.allowed_sections as string[] | null) ?? null);
         }
-      } else {
-        setAllowedSections(null);
+      } catch {
+        resolvedAdminUserIdRef.current = null;
+        if (!cancelled) {
+          setIsAdmin(false);
+          setAllowedSections(null);
+        }
       }
     };
 
@@ -84,7 +109,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user?.id, user?.email]);
 
   const signUp = async (email: string, password: string, displayName: string, phone?: string) => {
     const signupPageUrl = window.location.pathname;
