@@ -1629,10 +1629,10 @@ const ProfileAnalyzerPage = () => {
           const factIndex = Math.floor(loadingProgress / 10) % funFacts.length;
           return (
           <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="min-h-[80vh] flex items-center justify-center px-4">
-            <div className="max-w-lg mx-auto text-center space-y-8">
+            className="min-h-[60vh] md:min-h-[80vh] flex items-start md:items-center justify-center px-4 py-8">
+            <div className="max-w-lg mx-auto text-center space-y-6 md:space-y-8 w-full">
               {/* Main animated logo with orbital rings */}
-              <div className="relative w-40 h-40 mx-auto">
+              <div className="relative w-28 h-28 md:w-40 md:h-40 mx-auto">
                 <motion.div
                   animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0, 0.3] }}
                   transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
@@ -1661,7 +1661,7 @@ const ProfileAnalyzerPage = () => {
                 </motion.div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}>
-                    <img src={bschoolLogo} alt="B School Buzz" className="w-16 h-16 rounded-2xl shadow-2xl" />
+                    <img src={bschoolLogo} alt="B School Buzz" className="w-12 h-12 md:w-16 md:h-16 rounded-2xl shadow-2xl" />
                   </motion.div>
                 </div>
                 {[...Array(6)].map((_, i) => (
