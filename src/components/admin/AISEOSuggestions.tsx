@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -6,12 +6,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { buildStoredSeoSnapshot, mergeKeywordBuckets, saveSeoSnapshot, type SEOContentType, contentTypeConfig } from "@/lib/seoAutomation";
 import {
   Sparkles, Loader2, Check, Copy, Lightbulb, Link, Code, Tag, Search,
   AlertTriangle, XCircle, CheckCircle, Globe, Smartphone, Shield, Gauge,
-  Share2, BarChart3, FileText, Eye, ArrowRight,
+  Share2, BarChart3, FileText, Eye, ArrowRight, Pencil, Save,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -97,11 +99,18 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
     meta_title: true, meta_description: true, h1_tag: true, keywords: true, schema: true, socialMeta: true,
   });
   const [applying, setApplying] = useState(false);
+  const [autoApplied, setAutoApplied] = useState(false);
+  // Editable overrides for fields the user wants to manually tweak
+  const [editMode, setEditMode] = useState<Record<string, boolean>>({});
+  const [editValues, setEditValues] = useState<Record<string, string>>({});
   const { toast } = useToast();
 
   const analyze = async () => {
     setLoading(true);
     setSuggestions(null);
+    setAutoApplied(false);
+    setEditMode({});
+    setEditValues({});
     try {
       const { data: result, error } = await supabase.functions.invoke("ai-seo-enhance", {
         body: { contentType, data },
@@ -116,34 +125,119 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
     }
   };
 
+  // Auto-apply as soon as suggestions are ready
+  useEffect(() => {
+    if (suggestions && !autoApplied && recordId) {
+      setAutoApplied(true);
+      handleAutoApply(suggestions);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [suggestions, autoApplied, recordId]);
+
+  const handleAutoApply = async (sug: SEOSuggestions) => {
+    setApplying(true);
+    try {
+      const applied: any = {};
+      applied.meta_title = sug.meta_title;
+      applied.meta_description = sug.meta_description;
+      applied.h1_tag = sug.h1_tag;
+      applied.keywords = mergeKeywordBuckets(sug.keywords);
+
+      // Save full SEO snapshot
+      const snapshot = buildStoredSeoSnapshot(contentType, { ...data, id: recordId }, sug);
+      await saveSeoSnapshot(snapshot);
+
+      // Update the DB record
+      const table = contentTypeConfig[contentType].table as "articles" | "institutes" | "colleges" | "exams" | "city_pages";
+      const updatePayload: Record<string, any> = {
+        meta_title: sug.meta_title,
+        meta_description: sug.meta_description,
+        keywords: mergeKeywordBuckets(sug.keywords),
+      };
+      if (contentTypeConfig[contentType].supportsH1Column) {
+        updatePayload.h1_tag = sug.h1_tag;
+      }
+
+      const { error: updateError } = await supabase
+        .from(table)
+        .update(updatePayload)
+        .eq("id", recordId!);
+
+      if (updateError) {
+        console.error("Failed to update record:", updateError);
+        toast({ title: "Partial Save", description: "Snapshot saved but DB update failed: " + updateError.message, variant: "destructive" });
+      } else {
+        toast({
+          title: "✅ AI SEO Auto-Applied",
+          description: "Meta title, description, H1, keywords & schema saved to database automatically.",
+        });
+      }
+
+      onApply(applied);
+    } catch (e: any) {
+      toast({ title: "Auto-apply Error", description: e.message || "Failed", variant: "destructive" });
+    } finally {
+      setApplying(false);
+    }
+  };
+
+  const handleManualSave = async (field: string) => {
+    if (!recordId || !editValues[field]) return;
+    try {
+      const table = contentTypeConfig[contentType].table as "articles" | "institutes" | "colleges" | "exams" | "city_pages";
+      const update: Record<string, any> = { [field]: editValues[field] };
+      const { error } = await supabase.from(table).update(update).eq("id", recordId);
+      if (error) throw error;
+
+      // Also update snapshot if it exists
+      const snapshotKey = `seo_page__${contentType}__${recordId}`;
+      const { data: existingSnap } = await supabase.from("site_settings").select("id, value").eq("key", snapshotKey).limit(1);
+      if (existingSnap?.[0]) {
+        const snapValue = existingSnap[0].value as any;
+        snapValue[field] = editValues[field];
+        await supabase.from("site_settings").update({ value: snapValue }).eq("id", existingSnap[0].id);
+      }
+
+      setEditMode(m => ({ ...m, [field]: false }));
+      toast({ title: "✅ Saved", description: `${field.replace(/_/g, ' ')} updated successfully.` });
+      // Update suggestions display
+      if (suggestions) {
+        setSuggestions({ ...suggestions, [field]: editValues[field] });
+      }
+    } catch (e: any) {
+      toast({ title: "Save Error", description: e.message, variant: "destructive" });
+    }
+  };
+
   const handleApply = async () => {
     if (!suggestions) return;
     setApplying(true);
 
     try {
       const applied: any = {};
-      if (selected.meta_title) applied.meta_title = suggestions.meta_title;
-      if (selected.meta_description) applied.meta_description = suggestions.meta_description;
-      if (selected.h1_tag) applied.h1_tag = suggestions.h1_tag;
+      if (selected.meta_title) applied.meta_title = editValues.meta_title || suggestions.meta_title;
+      if (selected.meta_description) applied.meta_description = editValues.meta_description || suggestions.meta_description;
+      if (selected.h1_tag) applied.h1_tag = editValues.h1_tag || suggestions.h1_tag;
       if (selected.keywords) {
         applied.keywords = mergeKeywordBuckets(suggestions.keywords);
       }
 
-      // Save full SEO snapshot (includes schema, social meta, technical SEO)
       if (recordId) {
-        const snapshot = buildStoredSeoSnapshot(contentType, { ...data, id: recordId }, suggestions);
+        const snapshot = buildStoredSeoSnapshot(contentType, { ...data, id: recordId }, {
+          ...suggestions,
+          meta_title: applied.meta_title || suggestions.meta_title,
+          meta_description: applied.meta_description || suggestions.meta_description,
+          h1_tag: applied.h1_tag || suggestions.h1_tag,
+        });
         await saveSeoSnapshot(snapshot);
 
-        // Also update the actual record's table with meta fields
         const table = contentTypeConfig[contentType].table as "articles" | "institutes" | "colleges" | "exams" | "city_pages";
         const updatePayload: Record<string, any> = {};
-        if (selected.meta_title) updatePayload.meta_title = suggestions.meta_title;
-        if (selected.meta_description) updatePayload.meta_description = suggestions.meta_description;
-        if (selected.keywords) updatePayload.keywords = mergeKeywordBuckets(suggestions.keywords);
-        
-        // Update h1_tag only for content types that support it
+        if (selected.meta_title) updatePayload.meta_title = applied.meta_title;
+        if (selected.meta_description) updatePayload.meta_description = applied.meta_description;
+        if (selected.keywords) updatePayload.keywords = applied.keywords;
         if (selected.h1_tag && contentTypeConfig[contentType].supportsH1Column) {
-          updatePayload.h1_tag = suggestions.h1_tag;
+          updatePayload.h1_tag = applied.h1_tag;
         }
 
         if (Object.keys(updatePayload).length > 0) {
@@ -151,19 +245,14 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
             .from(table)
             .update(updatePayload)
             .eq("id", recordId);
-
-          if (updateError) {
-            console.error("Failed to update record:", updateError);
-          }
+          if (updateError) console.error("Failed to update record:", updateError);
         }
       }
 
       onApply(applied);
       toast({
         title: "✅ SEO Applied & Saved",
-        description: recordId
-          ? "Meta fields updated in database. Schema markup, social meta & technical SEO saved for automatic page rendering."
-          : "Selected SEO fields updated in form. Save the record to persist changes.",
+        description: "All SEO fields updated in database.",
       });
       setOpen(false);
     } catch (e: any) {
@@ -213,9 +302,14 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-primary" />
               AI SEO Analysis — {contentType}
+              {autoApplied && (
+                <Badge className="bg-green-500 text-white ml-2">
+                  <Check className="h-3 w-3 mr-1" /> Auto-Applied
+                </Badge>
+              )}
               {suggestions && (
                 <Badge className={`ml-2 ${scoreBarColor(suggestions.seoScore.overall)} text-white`}>
-                  Current Score: {suggestions.seoScore.overall}/100
+                  Score: {suggestions.seoScore.overall}/100
                 </Badge>
               )}
             </DialogTitle>
@@ -224,19 +318,39 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
           {loading && (
             <div className="flex flex-col items-center justify-center py-12 gap-3">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Deep SEO research in progress...</p>
-              <p className="text-xs text-muted-foreground">Analyzing keywords, schema, technical SEO, competitors...</p>
+              <p className="text-sm text-muted-foreground">Analyzing & auto-applying SEO fixes...</p>
+              <p className="text-xs text-muted-foreground">Meta title, description, H1, keywords & schema will be saved automatically</p>
+            </div>
+          )}
+
+          {applying && !loading && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 rounded-lg border border-primary/20 mb-2">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-sm text-primary">Saving SEO fixes to database...</span>
             </div>
           )}
 
           {suggestions && (
             <ScrollArea className="max-h-[75vh]">
-              {/* Current Page Score - Honest Assessment */}
+              {/* Auto-Applied Banner */}
+              {autoApplied && (
+                <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg p-3 mb-4">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <div>
+                      <h4 className="text-sm font-semibold text-green-700 dark:text-green-400">All AI-fixable items have been auto-applied!</h4>
+                      <p className="text-xs text-green-600 dark:text-green-500">Meta title, description, H1 tag, keywords & schema saved to database. Click ✏️ to manually edit any field.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Current Page Score */}
               <div className={`border rounded-lg p-4 mb-4 ${scoreBg(suggestions.seoScore.overall)}`}>
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <h3 className="font-semibold text-sm">Current Page SEO Health</h3>
-                    <p className="text-xs text-muted-foreground">Score based on page data BEFORE applying AI suggestions</p>
+                    <p className="text-xs text-muted-foreground">Score after AI optimization</p>
                   </div>
                   <div className={`text-3xl font-bold ${scoreColor(suggestions.seoScore.overall)}`}>
                     {suggestions.seoScore.overall}<span className="text-lg">/100</span>
@@ -252,48 +366,18 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                 </div>
               </div>
 
-              {/* What Will Be Applied */}
-              <div className="bg-primary/5 border border-primary/20 rounded-lg p-3 mb-4">
-                <h4 className="text-sm font-semibold flex items-center gap-2 mb-2">
-                  <ArrowRight className="h-4 w-4" /> What gets applied when you click "Apply"
-                </h4>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <label className="flex items-center gap-2">
-                    <Checkbox checked={selected.meta_title} onCheckedChange={(v) => setSelected(s => ({ ...s, meta_title: !!v }))} />
-                    Meta Title, Description & H1
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <Checkbox checked={selected.keywords} onCheckedChange={(v) => setSelected(s => ({ ...s, keywords: !!v }))} />
-                    Keywords ({totalKeywords} found)
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <Checkbox checked={selected.schema} onCheckedChange={(v) => setSelected(s => ({ ...s, schema: !!v }))} />
-                    Schema Markup ({schemaCount} schemas)
-                  </label>
-                  <label className="flex items-center gap-2">
-                    <Checkbox checked={selected.socialMeta} onCheckedChange={(v) => setSelected(s => ({ ...s, socialMeta: !!v }))} />
-                    Social Meta (OG + Twitter)
-                  </label>
-                </div>
-                {recordId ? (
-                  <p className="text-[10px] text-green-600 mt-2">
-                    ✅ Record exists — meta fields will be saved to the database AND schema/social will be saved for automatic page rendering.
-                  </p>
-                ) : (
-                  <p className="text-[10px] text-amber-600 mt-2">
-                    ⚠️ Save this record first, then re-run AI SEO to persist schema & technical data.
-                  </p>
-                )}
-              </div>
-
-              {/* Critical Issues Banner */}
-              {suggestions.seoScore.criticalIssues.length > 0 && (
-                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 mb-4">
-                  <h4 className="text-sm font-semibold text-destructive flex items-center gap-1 mb-1">
-                    <XCircle className="h-4 w-4" /> {suggestions.seoScore.criticalIssues.length} Critical Issues Found
+              {/* Non-AI-fixable items that need manual edit */}
+              {(suggestions.seoScore.warnings.length > 0 || suggestions.seoScore.criticalIssues.length > 0) && (
+                <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mb-4">
+                  <h4 className="text-sm font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-2 mb-2">
+                    <Pencil className="h-4 w-4" /> Items Needing Manual Attention
                   </h4>
+                  <p className="text-xs text-amber-600 dark:text-amber-500 mb-2">These items are outside AI's scope — use the edit buttons below to fix them manually.</p>
                   {suggestions.seoScore.criticalIssues.map((issue, i) => (
-                    <p key={i} className="text-xs text-destructive/80 ml-5">• {issue}</p>
+                    <p key={`c-${i}`} className="text-xs text-red-600 dark:text-red-400 ml-4">🔴 {issue}</p>
+                  ))}
+                  {suggestions.seoScore.warnings.map((w, i) => (
+                    <p key={`w-${i}`} className="text-xs text-amber-600 dark:text-amber-400 ml-4">⚠️ {w}</p>
                   ))}
                 </div>
               )}
@@ -314,33 +398,54 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
 
                 {/* META TAB */}
                 <TabsContent value="meta" className="space-y-4 mt-4">
-                  <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded">
-                    ℹ️ Only meta titles, descriptions, and headers are modified. Your core content remains untouched.
+                  <p className="text-xs text-muted-foreground bg-green-50 dark:bg-green-950/20 p-2 rounded border border-green-200 dark:border-green-800">
+                    ✅ These fields have been auto-applied. Click ✏️ to override with your own values.
                   </p>
-                  <SuggestionField
+                  <EditableSuggestionField
                     label="Meta Title"
-                    value={suggestions.meta_title}
+                    value={editValues.meta_title || suggestions.meta_title}
                     current={data.meta_title}
                     charLimit={60}
-                    checked={selected.meta_title}
-                    onCheckedChange={(v) => setSelected(s => ({ ...s, meta_title: !!v }))}
+                    fieldKey="meta_title"
+                    editMode={editMode.meta_title || false}
+                    onToggleEdit={() => {
+                      setEditMode(m => ({ ...m, meta_title: !m.meta_title }));
+                      if (!editValues.meta_title) setEditValues(v => ({ ...v, meta_title: suggestions.meta_title }));
+                    }}
+                    editValue={editValues.meta_title || suggestions.meta_title}
+                    onEditChange={(val) => setEditValues(v => ({ ...v, meta_title: val }))}
+                    onSave={() => handleManualSave("meta_title")}
                     onCopy={copyToClipboard}
                   />
-                  <SuggestionField
+                  <EditableSuggestionField
                     label="Meta Description"
-                    value={suggestions.meta_description}
+                    value={editValues.meta_description || suggestions.meta_description}
                     current={data.meta_description}
-                    charLimit={155}
-                    checked={selected.meta_description}
-                    onCheckedChange={(v) => setSelected(s => ({ ...s, meta_description: !!v }))}
+                    charLimit={160}
+                    fieldKey="meta_description"
+                    editMode={editMode.meta_description || false}
+                    onToggleEdit={() => {
+                      setEditMode(m => ({ ...m, meta_description: !m.meta_description }));
+                      if (!editValues.meta_description) setEditValues(v => ({ ...v, meta_description: suggestions.meta_description }));
+                    }}
+                    editValue={editValues.meta_description || suggestions.meta_description}
+                    onEditChange={(val) => setEditValues(v => ({ ...v, meta_description: val }))}
+                    onSave={() => handleManualSave("meta_description")}
                     onCopy={copyToClipboard}
                   />
-                  <SuggestionField
+                  <EditableSuggestionField
                     label="H1 Tag"
-                    value={suggestions.h1_tag}
+                    value={editValues.h1_tag || suggestions.h1_tag}
                     current={data.h1_tag}
-                    checked={selected.h1_tag}
-                    onCheckedChange={(v) => setSelected(s => ({ ...s, h1_tag: !!v }))}
+                    fieldKey="h1_tag"
+                    editMode={editMode.h1_tag || false}
+                    onToggleEdit={() => {
+                      setEditMode(m => ({ ...m, h1_tag: !m.h1_tag }));
+                      if (!editValues.h1_tag) setEditValues(v => ({ ...v, h1_tag: suggestions.h1_tag }));
+                    }}
+                    editValue={editValues.h1_tag || suggestions.h1_tag}
+                    onEditChange={(val) => setEditValues(v => ({ ...v, h1_tag: val }))}
+                    onSave={() => handleManualSave("h1_tag")}
                     onCopy={copyToClipboard}
                   />
                 </TabsContent>
@@ -349,8 +454,8 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                 <TabsContent value="keywords" className="space-y-4 mt-4">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <Checkbox checked={selected.keywords} onCheckedChange={(v) => setSelected(s => ({ ...s, keywords: !!v }))} />
-                      <span className="text-sm font-medium">Apply all {totalKeywords} keywords</span>
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-sm font-medium">All {totalKeywords} keywords auto-applied</span>
                     </div>
                     <Badge variant="outline">{totalKeywords} total</Badge>
                   </div>
@@ -369,7 +474,6 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                     <TechCard icon={<Link className="h-4 w-4" />} title="URL Slug Suggestion" value={suggestions.technicalSEO.urlSlugSuggestion} />
                   </div>
 
-                  {/* Content Length */}
                   <div className="border rounded-lg p-3">
                     <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
                       <Gauge className="h-4 w-4" /> Content Length Analysis
@@ -377,7 +481,7 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                     <div className="flex items-center gap-4 text-sm">
                       <span>Current: <strong>{suggestions.technicalSEO.contentLengthAnalysis.currentWordCount}</strong> words</span>
                       <span>Recommended: <strong>{suggestions.technicalSEO.contentLengthAnalysis.recommendedMinimum}+</strong></span>
-                      <Badge variant={suggestions.technicalSEO.contentLengthAnalysis.verdict === "excellent" ? "default" : "destructive"} className="text-xs">
+                      <Badge variant={suggestions.technicalSEO.contentLengthAnalysis.currentWordCount >= suggestions.technicalSEO.contentLengthAnalysis.recommendedMinimum ? "default" : "destructive"} className="text-xs">
                         {suggestions.technicalSEO.contentLengthAnalysis.verdict}
                       </Badge>
                     </div>
@@ -385,9 +489,13 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                       value={Math.min(100, (suggestions.technicalSEO.contentLengthAnalysis.currentWordCount / suggestions.technicalSEO.contentLengthAnalysis.recommendedMinimum) * 100)}
                       className="mt-2 h-2"
                     />
+                    {suggestions.technicalSEO.contentLengthAnalysis.currentWordCount < suggestions.technicalSEO.contentLengthAnalysis.recommendedMinimum && (
+                      <p className="text-xs text-amber-600 mt-2 flex items-center gap-1">
+                        <Pencil className="h-3 w-3" /> Manual action needed: Add more content to reach {suggestions.technicalSEO.contentLengthAnalysis.recommendedMinimum}+ words
+                      </p>
+                    )}
                   </div>
 
-                  {/* Header Structure */}
                   {suggestions.technicalSEO.headerStructure?.length > 0 && (
                     <div className="border rounded-lg p-3">
                       <h4 className="text-sm font-semibold mb-2">Recommended Header Structure</h4>
@@ -418,13 +526,9 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
 
                 {/* SOCIAL META TAB */}
                 <TabsContent value="social" className="space-y-4 mt-4">
-                  <p className="text-xs text-muted-foreground bg-muted/50 p-2 rounded flex items-center gap-1">
-                    <Share2 className="h-3 w-3" /> Social meta tags optimize how your page appears when shared on Facebook, Twitter, LinkedIn etc.
+                  <p className="text-xs text-muted-foreground bg-green-50 dark:bg-green-950/20 p-2 rounded border border-green-200 dark:border-green-800 flex items-center gap-1">
+                    <CheckCircle className="h-3 w-3 text-green-500" /> Social meta auto-saved to SEO snapshot for automatic rendering.
                   </p>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Checkbox checked={selected.socialMeta} onCheckedChange={(v) => setSelected(s => ({ ...s, socialMeta: !!v }))} />
-                    <span className="text-sm font-medium">Apply social meta to SEO snapshot</span>
-                  </div>
                   <MetaPreview label="Open Graph (Facebook/LinkedIn)" title={suggestions.socialMeta.ogTitle} description={suggestions.socialMeta.ogDescription} onCopy={copyToClipboard} />
                   <MetaPreview label="Twitter Card" title={suggestions.socialMeta.twitterTitle} description={suggestions.socialMeta.twitterDescription} onCopy={copyToClipboard} />
                 </TabsContent>
@@ -436,24 +540,17 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                       <h4 className="font-semibold flex items-center gap-2">
                         <Code className="h-4 w-4" /> JSON-LD Schema Markup
                         <Badge variant="default" className="text-xs">{schemaCount} {schemaCount === 1 ? 'schema' : 'schemas'}</Badge>
+                        <Badge className="bg-green-500 text-white text-[9px]">Auto-Saved</Badge>
                       </h4>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Production-ready schema — automatically injected into the page's &lt;head&gt; when applied.
+                        Schema markup auto-injected into page &lt;head&gt;.
                       </p>
                     </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="ghost" onClick={() => copyToClipboard(JSON.stringify(suggestions.schemaMarkup, null, 2))}>
-                        <Copy className="h-3 w-3 mr-1" /> Copy All
-                      </Button>
-                    </div>
+                    <Button size="sm" variant="ghost" onClick={() => copyToClipboard(JSON.stringify(suggestions.schemaMarkup, null, 2))}>
+                      <Copy className="h-3 w-3 mr-1" /> Copy All
+                    </Button>
                   </div>
 
-                  <div className="flex items-center gap-2 mb-3">
-                    <Checkbox checked={selected.schema} onCheckedChange={(v) => setSelected(s => ({ ...s, schema: !!v }))} />
-                    <span className="text-sm font-medium">Include schema in SEO snapshot (auto-renders on page)</span>
-                  </div>
-
-                  {/* Show each schema type as a card */}
                   {(Array.isArray(suggestions.schemaMarkup) ? suggestions.schemaMarkup : [suggestions.schemaMarkup]).map((schema, i) => (
                     <div key={i} className="mb-3 border rounded-lg overflow-hidden">
                       <div className="bg-muted/50 px-3 py-2 flex items-center justify-between border-b">
@@ -512,25 +609,13 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                   ))}
 
                   <h4 className="font-semibold mt-4">Content Structure Suggestions</h4>
-                  <p className="text-xs text-muted-foreground">These suggestions improve content structure without changing your existing text.</p>
+                  <p className="text-xs text-muted-foreground">These suggestions improve content structure — requires manual edits in the content editor.</p>
                   {suggestions.contentSuggestions.map((s, i) => (
                     <div key={i} className="flex gap-2 p-3 rounded-lg bg-muted/50 text-sm">
-                      <Sparkles className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                      <Pencil className="h-4 w-4 text-primary mt-0.5 shrink-0" />
                       <span>{s}</span>
                     </div>
                   ))}
-
-                  {/* Warnings */}
-                  {suggestions.seoScore.warnings.length > 0 && (
-                    <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
-                      <h4 className="text-sm font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1 mb-1">
-                        <AlertTriangle className="h-4 w-4" /> Warnings ({suggestions.seoScore.warnings.length})
-                      </h4>
-                      {suggestions.seoScore.warnings.map((w, i) => (
-                        <p key={i} className="text-xs text-amber-600 dark:text-amber-300 ml-5">• {w}</p>
-                      ))}
-                    </div>
-                  )}
 
                   {/* Passed */}
                   {suggestions.seoScore.passed.length > 0 && (
@@ -549,11 +634,11 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
               <div className="flex justify-between gap-2 mt-6 pt-4 border-t sticky bottom-0 bg-background pb-2">
                 <Button variant="outline" onClick={() => analyze()} disabled={loading || applying}>
                   {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
-                  Re-analyze
+                  Re-analyze & Apply
                 </Button>
                 <Button onClick={handleApply} disabled={loading || applying} className="gap-2">
-                  {applying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
-                  {recordId ? "Apply & Save to Database" : "Apply to Form"}
+                  {applying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  Save Changes
                 </Button>
               </div>
             </ScrollArea>
@@ -564,9 +649,10 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
   );
 };
 
-function SuggestionField({ label, value, current, charLimit, checked, onCheckedChange, onCopy }: {
-  label: string; value: string; current?: string; charLimit?: number; checked: boolean;
-  onCheckedChange: (v: boolean | "indeterminate") => void; onCopy: (v: string) => void;
+function EditableSuggestionField({ label, value, current, charLimit, fieldKey, editMode, onToggleEdit, editValue, onEditChange, onSave, onCopy }: {
+  label: string; value: string; current?: string; charLimit?: number; fieldKey: string;
+  editMode: boolean; onToggleEdit: () => void; editValue: string;
+  onEditChange: (val: string) => void; onSave: () => void; onCopy: (v: string) => void;
 }) {
   const isOverLimit = charLimit && value.length > charLimit;
   const hasChanged = current && current !== value;
@@ -574,16 +660,19 @@ function SuggestionField({ label, value, current, charLimit, checked, onCheckedC
     <div className="border rounded-lg p-3 space-y-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Checkbox checked={checked} onCheckedChange={onCheckedChange} />
+          <CheckCircle className="h-4 w-4 text-green-500" />
           <span className="text-sm font-medium">{label}</span>
-          {hasChanged && <Badge variant="outline" className="text-[9px] text-amber-600">Changed</Badge>}
+          {hasChanged && <Badge variant="outline" className="text-[9px] text-green-600 border-green-300">Applied</Badge>}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           {charLimit && (
             <span className={`text-xs ${isOverLimit ? "text-destructive" : "text-muted-foreground"}`}>
-              {value.length}/{charLimit}
+              {(editMode ? editValue : value).length}/{charLimit}
             </span>
           )}
+          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={onToggleEdit} title="Edit manually">
+            <Pencil className="h-3 w-3" />
+          </Button>
           <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => onCopy(value)}>
             <Copy className="h-3 w-3" />
           </Button>
@@ -594,7 +683,34 @@ function SuggestionField({ label, value, current, charLimit, checked, onCheckedC
           {current}
         </div>
       )}
-      <p className="text-sm bg-muted/50 p-2 rounded">{value}</p>
+      {editMode ? (
+        <div className="space-y-2">
+          {charLimit && charLimit > 100 ? (
+            <Textarea
+              value={editValue}
+              onChange={(e) => onEditChange(e.target.value)}
+              className="text-sm min-h-[60px]"
+              rows={2}
+            />
+          ) : (
+            <Input
+              value={editValue}
+              onChange={(e) => onEditChange(e.target.value)}
+              className="text-sm"
+            />
+          )}
+          <div className="flex gap-2">
+            <Button size="sm" onClick={onSave} className="gap-1 h-7 text-xs">
+              <Save className="h-3 w-3" /> Save to DB
+            </Button>
+            <Button size="sm" variant="ghost" onClick={onToggleEdit} className="h-7 text-xs">
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm bg-muted/50 p-2 rounded">{value}</p>
+      )}
     </div>
   );
 }
