@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useCityPages } from "@/hooks/useCityPages";
 import { useColleges } from "@/hooks/useInstitutes";
 import { getLocationImage, isGeneratedBanner } from "@/data/cityImages";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const BrowseByCitySection = () => {
   const { data: cityPages } = useCityPages();
@@ -14,6 +15,9 @@ const BrowseByCitySection = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const isMobile = useIsMobile();
+  const autoScrollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const userInteractedRef = useRef(false);
 
   const cities = (cityPages || []).slice(0, 12).map((cp) => {
     const aliases = cp.city_aliases || [cp.name.toLowerCase()];
@@ -44,6 +48,41 @@ const BrowseByCitySection = () => {
     return () => el.removeEventListener("scroll", updateScrollButtons);
   }, [updateScrollButtons, cities.length]);
 
+  // Auto-scroll on mobile
+  useEffect(() => {
+    if (!isMobile || !cities.length) return;
+
+    const startAutoScroll = () => {
+      autoScrollRef.current = setInterval(() => {
+        if (userInteractedRef.current) return;
+        setActiveIndex((prev) => (prev + 1) % cities.length);
+      }, 3000);
+    };
+
+    startAutoScroll();
+    return () => {
+      if (autoScrollRef.current) clearInterval(autoScrollRef.current);
+    };
+  }, [isMobile, cities.length]);
+
+  // Pause auto-scroll on touch
+  const handleTouchStart = useCallback(() => {
+    userInteractedRef.current = true;
+    if (autoScrollRef.current) clearInterval(autoScrollRef.current);
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    setTimeout(() => {
+      userInteractedRef.current = false;
+      if (isMobile && cities.length) {
+        autoScrollRef.current = setInterval(() => {
+          if (userInteractedRef.current) return;
+          setActiveIndex((prev) => (prev + 1) % cities.length);
+        }, 3000);
+      }
+    }, 5000);
+  }, [isMobile, cities.length]);
+
   const scroll = (dir: "left" | "right") => {
     scrollRef.current?.scrollBy({ left: dir === "left" ? -300 : 300, behavior: "smooth" });
   };
@@ -52,6 +91,169 @@ const BrowseByCitySection = () => {
 
   const featured = cities[activeIndex] || cities[0];
 
+  // Mobile layout — fullscreen card carousel
+  if (isMobile) {
+    return (
+      <section className="py-10 bg-gradient-to-b from-background via-muted/20 to-background overflow-hidden">
+        <div className="px-4">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-6"
+          >
+            <div className="inline-flex items-center gap-1.5 bg-primary/10 text-primary px-4 py-1.5 rounded-full text-xs font-semibold mb-3 border border-primary/10">
+              <MapPin className="w-3.5 h-3.5" />
+              Explore by Location
+            </div>
+            <h2 className="font-heading text-2xl font-extrabold text-foreground mb-1.5 tracking-tight">
+              Browse by <span className="text-primary">City</span>
+            </h2>
+            <p className="text-muted-foreground text-xs max-w-sm mx-auto">
+              Find the best MBA colleges in your preferred city
+            </p>
+          </motion.div>
+
+          {/* Featured Card — Mobile */}
+          <div
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={featured.slug}
+                initial={{ opacity: 0, x: 40 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -40 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="relative w-full h-[220px] rounded-2xl overflow-hidden shadow-xl"
+              >
+                <img
+                  src={featured.image}
+                  alt={`MBA colleges in ${featured.name}`}
+                  className="absolute inset-0 w-full h-full object-cover"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-[#2c1810]/25 pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1a0e08]/90 via-[#2c1810]/40 to-transparent pointer-events-none" />
+
+                <div className="absolute inset-0 flex flex-col justify-between p-5">
+                  <div className="flex items-center gap-2">
+                    <div className="w-9 h-9 rounded-xl bg-white/95 flex items-center justify-center shadow-md">
+                      <MapPin className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-heading text-xl font-extrabold drop-shadow-lg leading-tight">
+                        {featured.name}
+                      </h3>
+                      {featured.state && (
+                        <p className="text-white/60 text-[10px] font-medium tracking-wide uppercase">
+                          {featured.state}, India
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex flex-wrap items-center gap-1.5 mb-3">
+                      <span className="inline-flex items-center gap-1 bg-white/15 backdrop-blur-md rounded-full px-2.5 py-1 text-white text-[10px] font-semibold border border-white/10">
+                        <Building2 className="w-3 h-3" />
+                        {featured.count} Colleges
+                      </span>
+                      <span className="inline-flex items-center gap-1 bg-white/15 backdrop-blur-md rounded-full px-2.5 py-1 text-white text-[10px] font-semibold border border-white/10">
+                        <GraduationCap className="w-3 h-3" />
+                        Top MBA
+                      </span>
+                      {featured.count >= 5 && (
+                        <span className="inline-flex items-center gap-1 bg-primary/60 backdrop-blur-md rounded-full px-2.5 py-1 text-white text-[10px] font-semibold border border-primary/30">
+                          🔥 Popular
+                        </span>
+                      )}
+                    </div>
+                    <Link to={`/colleges/${featured.slug}`}>
+                      <Button
+                        size="sm"
+                        className="rounded-full text-xs font-bold bg-white text-foreground hover:bg-white/90 shadow-lg gap-1.5 px-4 py-2"
+                      >
+                        Explore {featured.name}
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Dot indicators */}
+            <div className="flex justify-center gap-1.5 mt-4">
+              {cities.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setActiveIndex(i);
+                    userInteractedRef.current = true;
+                    setTimeout(() => { userInteractedRef.current = false; }, 5000);
+                  }}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    i === activeIndex
+                      ? "bg-primary w-6"
+                      : "bg-muted-foreground/30 w-1.5 hover:bg-muted-foreground/50"
+                  }`}
+                />
+              ))}
+            </div>
+
+            {/* Mini thumbnails row */}
+            <div className="flex gap-2 mt-4 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
+              {cities.map((city, i) => (
+                <button
+                  key={city.slug}
+                  onClick={() => {
+                    setActiveIndex(i);
+                    userInteractedRef.current = true;
+                    setTimeout(() => { userInteractedRef.current = false; }, 5000);
+                  }}
+                  className={`relative flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden transition-all duration-300 ${
+                    i === activeIndex
+                      ? "ring-2 ring-primary scale-110 shadow-lg"
+                      : "opacity-60 hover:opacity-90"
+                  }`}
+                >
+                  <img
+                    src={city.image}
+                    alt={city.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-[#2c1810]/30 pointer-events-none" />
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-1">
+                    <span className="text-white text-[8px] font-bold leading-none">{city.name}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* View All */}
+          <div className="text-center mt-6">
+            <Link to="/colleges">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full gap-1.5 font-semibold border-primary/30 text-primary hover:bg-primary/5 text-xs px-5"
+              >
+                View All Cities
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Desktop layout
   return (
     <section className="py-16 md:py-24 bg-gradient-to-b from-background via-muted/20 to-background overflow-hidden">
       <div className="container mx-auto px-4">
@@ -93,11 +295,8 @@ const BrowseByCitySection = () => {
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 loading="lazy"
               />
-              {/* Premium overlay */}
               <div className="absolute inset-0 bg-gradient-to-t from-[#1a0e08]/90 via-[#2c1810]/50 to-transparent pointer-events-none" />
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent pointer-events-none" />
-
-              {/* Shine effect on hover */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none bg-gradient-to-tr from-transparent via-white/10 to-transparent" />
 
               <div className="absolute inset-0 flex flex-col justify-between p-6 md:p-8">
@@ -147,7 +346,6 @@ const BrowseByCitySection = () => {
 
           {/* Scrollable City Cards */}
           <div className="flex-1 min-w-0 relative overflow-visible">
-            {/* Scroll arrows */}
             {canScrollLeft && (
               <button
                 onClick={() => scroll("left")}
@@ -165,7 +363,6 @@ const BrowseByCitySection = () => {
               </button>
             )}
 
-            {/* Fade edges */}
             <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
             <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
 
@@ -200,22 +397,16 @@ const BrowseByCitySection = () => {
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover/card:scale-110"
                       loading="lazy"
                     />
-                    {/* Warm tint overlay for consistent look */}
                     <div className="absolute inset-0 bg-[#2c1810]/25 pointer-events-none" />
-                    {/* Bottom gradient for text readability */}
                     <div className="absolute inset-0 bg-gradient-to-t from-[#1a0e08]/85 via-[#2c1810]/35 to-transparent pointer-events-none" />
-
-                    {/* Hover shine */}
                     <div className="absolute inset-0 opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 pointer-events-none bg-gradient-to-tr from-transparent via-white/10 to-transparent" />
 
-                    {/* Active indicator */}
                     {activeIndex === i && (
                       <div className="absolute top-3 right-3">
                         <div className="w-3 h-3 rounded-full bg-primary ring-2 ring-white shadow-lg animate-pulse" />
                       </div>
                     )}
 
-                    {/* City Info */}
                     <div className="absolute bottom-0 inset-x-0 p-4">
                       <h3 className="text-white text-sm md:text-base font-bold leading-tight drop-shadow-lg">
                         {city.name}
