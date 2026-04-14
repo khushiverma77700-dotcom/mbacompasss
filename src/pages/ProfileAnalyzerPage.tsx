@@ -2081,30 +2081,43 @@ const ProfileAnalyzerPage = () => {
 
             {/* Exam Strategy */}
             {result.exam_strategy && result.exam_strategy.length > 0 && (
-              <Card>
-                <CardHeader><CardTitle className="flex items-center gap-2"><Flame className="w-5 h-5 text-primary" /> Exam-wise Strategy</CardTitle></CardHeader>
-                <CardContent>
+              <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <Card className="overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+                  <CardTitle className="flex items-center gap-2"><Flame className="w-5 h-5 text-primary" /> Exam-wise Strategy</CardTitle>
+                  <CardDescription>Your personalised difficulty rating and target scores for each exam</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {result.exam_strategy.map((ex, i) => (
-                      <div key={i} className="p-4 rounded-xl border border-border bg-card hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-bold text-lg">{ex.exam_name}</h4>
-                          <Badge className={`text-xs ${
-                            ex.difficulty_for_student === "Easy" ? "bg-green-100 text-green-700" :
-                            ex.difficulty_for_student === "Medium" ? "bg-amber-100 text-amber-700" :
-                            "bg-red-100 text-red-700"
+                      <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}
+                        className="p-5 rounded-2xl border border-border bg-gradient-to-br from-card to-muted/30 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="font-bold text-xl group-hover:text-primary transition-colors">{ex.exam_name}</h4>
+                          <Badge className={`text-xs px-3 py-1 ${
+                            ex.difficulty_for_student === "Easy" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
+                            ex.difficulty_for_student === "Medium" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                            "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                           }`}>{ex.difficulty_for_student}</Badge>
                         </div>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between"><span className="text-muted-foreground">Target Score</span><span className="font-semibold">{ex.recommended_score}</span></div>
-                          <div className="flex justify-between"><span className="text-muted-foreground">Prep Time</span><span className="font-semibold">{ex.preparation_months} months</span></div>
-                          <div className="flex justify-between"><span className="text-muted-foreground">ROI Rating</span><span className="font-semibold">{ex.roi_rating}</span></div>
+                        <div className="space-y-3">
+                          {[
+                            { label: "Target Score", value: ex.recommended_score, icon: Target },
+                            { label: "Prep Time", value: `${ex.preparation_months} months`, icon: Clock },
+                            { label: "ROI Rating", value: ex.roi_rating, icon: TrendingUp },
+                          ].map(item => (
+                            <div key={item.label} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                              <span className="text-xs text-muted-foreground flex items-center gap-1.5"><item.icon className="w-3 h-3" />{item.label}</span>
+                              <span className="text-sm font-bold">{item.value}</span>
+                            </div>
+                          ))}
                         </div>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
+              </motion.div>
             )}
 
             {/* Strengths & Weaknesses */}
