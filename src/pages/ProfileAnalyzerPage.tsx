@@ -771,7 +771,7 @@ const ProfileAnalyzerPage = () => {
       if (data?.error) throw new Error(data.error);
       setResult(data);
       localStorage.removeItem(STORAGE_KEY);
-      setTimeout(() => setStep(6), 600);
+      setTimeout(() => setStep(7), 600);
     } catch (e: any) {
       clearInterval(interval);
       toast({ title: "Analysis Failed", description: e.message || "Please try again.", variant: "destructive" });
@@ -791,7 +791,7 @@ const ProfileAnalyzerPage = () => {
       }
       setUnlocked(true);
       setShowLeadModal(false);
-      setStep(7);
+      setStep(5);
       toast({ title: "Report Unlocked", description: "Your personalised MBA roadmap is ready." });
     } catch {
       toast({ title: "Error", description: "Please try again.", variant: "destructive" });
@@ -1528,7 +1528,7 @@ const ProfileAnalyzerPage = () => {
         )}
 
         {/* ════════════════ LOADING ════════════════ */}
-        {step === 5 && (
+        {step === 6 && (
           <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="min-h-[80vh] flex items-center justify-center px-4">
             <div className="max-w-lg mx-auto text-center space-y-8">
@@ -1657,7 +1657,7 @@ const ProfileAnalyzerPage = () => {
         )}
 
         {/* ════════════════ PARTIAL RESULT (LOCKED) ════════════════ */}
-        {step === 6 && result && (
+        {step === 7 && result && (
           <motion.div key="partial" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="max-w-4xl mx-auto px-4 py-10 space-y-8">
             
@@ -1763,7 +1763,7 @@ const ProfileAnalyzerPage = () => {
         )}
 
         {/* ════════════════ FULL DASHBOARD (UNLOCKED) ════════════════ */}
-        {step === 7 && result && unlocked && (
+        {step === 8 && result && unlocked && (
           <motion.div key="full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} ref={reportRef}
             className="max-w-7xl mx-auto px-4 py-10 space-y-8">
             {/* Header */}
