@@ -695,7 +695,7 @@ const ProfileAnalyzerPage = () => {
               roi_analysis: (analysisData.probability_scores as any)?.roi_analysis,
               salary_benchmarking: (analysisData.probability_scores as any)?.salary_benchmarking,
               improvement_roadmap: (analysisData.probability_scores as any)?.improvement_roadmap,
-              detailed_college_table: (analysisData.college_predictions as any)?.detailed_college_table || analysisData.college_predictions,
+              detailed_college_table: Array.isArray((analysisData.college_predictions as any)?.detailed_college_table) ? (analysisData.college_predictions as any).detailed_college_table : Array.isArray(analysisData.college_predictions) ? analysisData.college_predictions : [],
             };
             setResult(reconstructed);
             setUnlocked(!!profileData.report_unlocked);
@@ -886,7 +886,7 @@ const ProfileAnalyzerPage = () => {
   };
 
   const sortedColleges = useMemo(() => {
-    if (!result?.detailed_college_table) return [];
+    if (!result?.detailed_college_table || !Array.isArray(result.detailed_college_table)) return [];
     let arr = [...result.detailed_college_table];
     if (collegeFilter !== "all") arr = arr.filter(c => c.tier === collegeFilter);
     arr.sort((a: any, b: any) => {
