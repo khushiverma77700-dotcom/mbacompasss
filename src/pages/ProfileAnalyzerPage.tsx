@@ -791,6 +791,7 @@ const ProfileAnalyzerPage = () => {
     try {
       const { data, error } = await supabase.functions.invoke("profile-analyzer", {
         body: {
+          user_id: user?.id || undefined,
           name: form.name, email: form.email,
           tenth_score: +form.tenth_score, twelfth_score: +form.twelfth_score,
           graduation_score: +form.graduation_score, graduation_stream: form.graduation_stream,
