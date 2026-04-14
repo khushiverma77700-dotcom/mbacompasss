@@ -767,26 +767,37 @@ const ProfileAnalyzerPage = () => {
     setLoadingProgress(0);
     window.scrollTo({ top: 0, behavior: "smooth" });
     const loadingStages = [
-      { target: 15, label: "Evaluating academic profile..." },
-      { target: 30, label: "Scoring work experience..." },
-      { target: 45, label: "Computing 5-dimension scores..." },
-      { target: 58, label: "Matching against 50+ colleges..." },
-      { target: 72, label: "Running peer comparison..." },
-      { target: 82, label: "Building personalised roadmap..." },
-      { target: 88, label: "Analysing more datasets..." },
-      { target: 92, label: "Cross-referencing your profile..." },
-      { target: 95, label: "Generating visual insights..." },
-      { target: 97, label: "Finalising your report..." },
+      { target: 8, label: "Evaluating academic profile..." },
+      { target: 16, label: "Scoring work experience..." },
+      { target: 24, label: "Computing 5-dimension scores..." },
+      { target: 32, label: "Matching against 50+ colleges..." },
+      { target: 40, label: "Running peer comparison..." },
+      { target: 48, label: "Building personalised roadmap..." },
+      { target: 55, label: "Analysing additional datasets..." },
+      { target: 62, label: "Cross-referencing admission data..." },
+      { target: 68, label: "Generating ROI projections..." },
+      { target: 73, label: "Calculating salary benchmarks..." },
+      { target: 77, label: "Building improvement timeline..." },
+      { target: 80, label: "Ranking college fit scores..." },
+      { target: 83, label: "Comparing with peer cohorts..." },
+      { target: 85, label: "Generating visual insights..." },
+      { target: 87, label: "Polishing your report..." },
     ];
     let stageIndex = 0;
+    let slowTick = 0;
     const interval = setInterval(() => {
       setLoadingProgress(prev => {
-        if (stageIndex >= loadingStages.length) { clearInterval(interval); return prev; }
-        const target = loadingStages[stageIndex].target;
-        if (prev >= target - 1) { stageIndex++; }
-        return Math.min(prev + Math.random() * 3 + 0.5, stageIndex < loadingStages.length ? loadingStages[stageIndex].target : 98);
+        if (stageIndex < loadingStages.length) {
+          const target = loadingStages[stageIndex].target;
+          if (prev >= target - 0.5) { stageIndex++; }
+          return Math.min(prev + Math.random() * 1.2 + 0.3, stageIndex < loadingStages.length ? loadingStages[stageIndex].target : 87);
+        }
+        // After all stages, crawl very slowly — never exceed 95
+        slowTick++;
+        const crawl = 0.08 / (1 + slowTick * 0.05);
+        return Math.min(prev + crawl, 95);
       });
-    }, 350);
+    }, 600);
 
     try {
       const { data, error } = await supabase.functions.invoke("profile-analyzer", {
@@ -1602,19 +1613,31 @@ const ProfileAnalyzerPage = () => {
         )}
 
         {/* ════════════════ LOADING ════════════════ */}
-        {step === 6 && (
+        {step === 6 && (() => {
+          const funFacts = [
+            { emoji: "📊", text: "IIM Ahmedabad receives 10,000+ applications for just 400 seats every year." },
+            { emoji: "💰", text: "Average ROI of a top MBA is 300-500% within 5 years of graduating." },
+            { emoji: "🎯", text: "A strong profile score can compensate for 5-10 percentile points in CAT." },
+            { emoji: "🌍", text: "Over 60% of IIM graduates receive international placement offers." },
+            { emoji: "📈", text: "Work experience of 2-4 years is considered ideal for top B-schools." },
+            { emoji: "🏆", text: "Non-engineers have a higher acceptance rate at ISB Hyderabad." },
+            { emoji: "🧠", text: "The average CAT 99%ile scorer practices 3,000+ questions during prep." },
+            { emoji: "💼", text: "Consulting & Finance together account for 45% of all IIM placements." },
+            { emoji: "🎓", text: "FMS Delhi offers the best ROI among all Indian B-schools." },
+            { emoji: "📝", text: "Your SOPs and essays carry 20-30% weightage in IIM shortlisting." },
+          ];
+          const factIndex = Math.floor(loadingProgress / 10) % funFacts.length;
+          return (
           <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="min-h-[80vh] flex items-center justify-center px-4">
             <div className="max-w-lg mx-auto text-center space-y-8">
               {/* Main animated logo with orbital rings */}
               <div className="relative w-40 h-40 mx-auto">
-                {/* Outer pulsing ring */}
                 <motion.div
                   animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0, 0.3] }}
                   transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
                   className="absolute inset-0 rounded-full bg-primary/10"
                 />
-                {/* Rotating orbit 1 */}
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
@@ -1622,7 +1645,6 @@ const ProfileAnalyzerPage = () => {
                 >
                   <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-primary shadow-lg shadow-primary/50" />
                 </motion.div>
-                {/* Rotating orbit 2 (reverse) */}
                 <motion.div
                   animate={{ rotate: -360 }}
                   transition={{ repeat: Infinity, duration: 6, ease: "linear" }}
@@ -1630,7 +1652,6 @@ const ProfileAnalyzerPage = () => {
                 >
                   <div className="absolute -bottom-1 right-0 w-2.5 h-2.5 rounded-full bg-primary/70 shadow-lg shadow-primary/30" />
                 </motion.div>
-                {/* Rotating orbit 3 */}
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
@@ -1638,30 +1659,18 @@ const ProfileAnalyzerPage = () => {
                 >
                   <div className="absolute top-0 right-2 w-2 h-2 rounded-full bg-primary/50" />
                 </motion.div>
-                {/* Center logo */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.div
-                    animate={{ scale: [1, 1.08, 1] }}
-                    transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                  >
+                  <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}>
                     <img src={bschoolLogo} alt="B School Buzz" className="w-16 h-16 rounded-2xl shadow-2xl" />
                   </motion.div>
                 </div>
-                {/* Floating particles */}
                 {[...Array(6)].map((_, i) => (
                   <motion.div
                     key={i}
-                    animate={{
-                      y: [0, -20, 0],
-                      x: [0, (i % 2 === 0 ? 10 : -10), 0],
-                      opacity: [0, 1, 0],
-                    }}
+                    animate={{ y: [0, -20, 0], x: [0, (i % 2 === 0 ? 10 : -10), 0], opacity: [0, 1, 0] }}
                     transition={{ repeat: Infinity, duration: 2 + i * 0.3, delay: i * 0.4, ease: "easeInOut" }}
                     className="absolute w-1.5 h-1.5 rounded-full bg-primary/40"
-                    style={{
-                      top: `${20 + Math.sin(i * 60 * Math.PI / 180) * 40}%`,
-                      left: `${50 + Math.cos(i * 60 * Math.PI / 180) * 45}%`,
-                    }}
+                    style={{ top: `${20 + Math.sin(i * 60 * Math.PI / 180) * 40}%`, left: `${50 + Math.cos(i * 60 * Math.PI / 180) * 45}%` }}
                   />
                 ))}
               </div>
@@ -1670,33 +1679,38 @@ const ProfileAnalyzerPage = () => {
                 <h2 className="text-2xl font-bold">AI is Analysing Your Profile</h2>
                 <AnimatePresence mode="wait">
                   <motion.p
-                    key={Math.floor(loadingProgress / 10)}
+                    key={Math.floor(loadingProgress / 7)}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     className="text-muted-foreground"
                   >
-                    {loadingProgress < 15 ? "Evaluating your academic credentials..." :
-                     loadingProgress < 30 ? "Scoring work experience & profile diversity..." :
-                     loadingProgress < 45 ? "Computing 5-dimension profile scores..." :
-                     loadingProgress < 58 ? "Matching against 50+ MBA colleges..." :
-                     loadingProgress < 72 ? "Running peer comparison with 25,000+ students..." :
-                     loadingProgress < 82 ? "Building your personalised roadmap..." :
-                     loadingProgress < 88 ? "Analysing additional datasets & trends..." :
-                     loadingProgress < 92 ? "Cross-referencing your profile with admission data..." :
-                     loadingProgress < 95 ? "Generating visual insights & charts..." :
-                     "Finalising your comprehensive report..."}
+                    {loadingProgress < 8 ? "Evaluating your academic credentials..." :
+                     loadingProgress < 16 ? "Scoring work experience & profile diversity..." :
+                     loadingProgress < 24 ? "Computing 5-dimension profile scores..." :
+                     loadingProgress < 32 ? "Matching against 50+ MBA colleges..." :
+                     loadingProgress < 40 ? "Running peer comparison with 25,000+ students..." :
+                     loadingProgress < 48 ? "Building your personalised roadmap..." :
+                     loadingProgress < 55 ? "Analysing additional datasets & trends..." :
+                     loadingProgress < 62 ? "Cross-referencing with admission data..." :
+                     loadingProgress < 68 ? "Generating ROI & salary projections..." :
+                     loadingProgress < 73 ? "Calculating sector-wise salary benchmarks..." :
+                     loadingProgress < 77 ? "Building month-by-month improvement plan..." :
+                     loadingProgress < 80 ? "Ranking college fit scores for your profile..." :
+                     loadingProgress < 83 ? "Comparing with similar peer cohorts..." :
+                     loadingProgress < 87 ? "Generating visual insights & charts..." :
+                     "Polishing your comprehensive report..."}
                   </motion.p>
                 </AnimatePresence>
               </div>
 
-              {/* Animated progress with glowing effect */}
+              {/* Progress bar */}
               <div className="relative">
                 <div className="h-4 bg-muted rounded-full overflow-hidden relative">
                   <motion.div
                     className="h-full rounded-full bg-gradient-to-r from-primary via-primary/80 to-primary relative overflow-hidden"
                     style={{ width: `${loadingProgress}%` }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
                   >
                     <motion.div
                       animate={{ x: ["-100%", "200%"] }}
@@ -1706,33 +1720,51 @@ const ProfileAnalyzerPage = () => {
                   </motion.div>
                 </div>
                 <div className="flex justify-between mt-2">
-                  <motion.span
-                    animate={{ opacity: [0.5, 1, 0.5] }}
-                    transition={{ repeat: Infinity, duration: 2 }}
-                    className="text-xs text-primary font-medium"
-                  >
-                    {loadingProgress < 50 ? "⚡ Processing..." : loadingProgress < 85 ? "🧠 Deep analysis in progress..." : "✨ Almost ready..."}
+                  <motion.span animate={{ opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 2 }} className="text-xs text-primary font-medium">
+                    {loadingProgress < 35 ? "⚡ Processing..." : loadingProgress < 65 ? "🧠 Deep analysis in progress..." : loadingProgress < 85 ? "📊 Generating insights..." : "✨ Almost ready..."}
                   </motion.span>
                   <span className="text-xs text-muted-foreground font-mono font-bold">{Math.round(loadingProgress)}%</span>
                 </div>
               </div>
 
+              {/* Animated fun fact card */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={factIndex}
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                  transition={{ duration: 0.5 }}
+                  className="bg-primary/5 border border-primary/15 rounded-2xl p-5 text-left"
+                >
+                  <p className="text-xs font-semibold text-primary mb-2 uppercase tracking-wider">💡 Did You Know?</p>
+                  <p className="text-sm text-foreground leading-relaxed">
+                    <span className="text-lg mr-2">{funFacts[factIndex].emoji}</span>
+                    {funFacts[factIndex].text}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
+
               {/* Step-by-step processing stages */}
-              <div className="space-y-2 text-sm">
+              <div className="space-y-2 text-sm max-h-60 overflow-y-auto pr-1">
                 {[
-                  { threshold: 12, icon: GraduationCap, label: "Evaluating academic profile...", done: "Academic profile evaluated ✓" },
-                  { threshold: 28, icon: Briefcase, label: "Scoring work experience...", done: "Work experience scored ✓" },
-                  { threshold: 42, icon: PieChart, label: "Computing 5-dimension scores...", done: "5-dimension scores computed ✓" },
-                  { threshold: 55, icon: Building2, label: "Matching against 50+ colleges...", done: "College matching complete ✓" },
-                  { threshold: 70, icon: Users, label: "Running peer comparison...", done: "Peer comparison ready ✓" },
-                  { threshold: 80, icon: Sparkles, label: "Building personalised roadmap...", done: "Roadmap generated ✓" },
-                  { threshold: 87, icon: LineChart, label: "Analysing more datasets...", done: "Additional analysis complete ✓" },
-                  { threshold: 93, icon: Gauge, label: "Cross-referencing your profile...", done: "Profile cross-referenced ✓" },
-                  { threshold: 96, icon: BarChart3, label: "Generating visual insights...", done: "Insights generated ✓" },
+                  { threshold: 6, icon: GraduationCap, label: "Evaluating academic profile...", done: "Academic profile evaluated ✓" },
+                  { threshold: 14, icon: Briefcase, label: "Scoring work experience...", done: "Work experience scored ✓" },
+                  { threshold: 22, icon: PieChart, label: "Computing 5-dimension scores...", done: "5-dimension scores computed ✓" },
+                  { threshold: 30, icon: Building2, label: "Matching against 50+ colleges...", done: "College matching complete ✓" },
+                  { threshold: 38, icon: Users, label: "Running peer comparison...", done: "Peer comparison ready ✓" },
+                  { threshold: 46, icon: Sparkles, label: "Building personalised roadmap...", done: "Roadmap generated ✓" },
+                  { threshold: 53, icon: LineChart, label: "Analysing more datasets...", done: "Additional analysis complete ✓" },
+                  { threshold: 60, icon: Gauge, label: "Cross-referencing your profile...", done: "Profile cross-referenced ✓" },
+                  { threshold: 66, icon: BarChart3, label: "Generating ROI projections...", done: "ROI analysis complete ✓" },
+                  { threshold: 71, icon: Target, label: "Calculating salary benchmarks...", done: "Salary benchmarks ready ✓" },
+                  { threshold: 76, icon: Calendar, label: "Building improvement timeline...", done: "Timeline created ✓" },
+                  { threshold: 81, icon: Award, label: "Ranking college fit scores...", done: "College rankings ready ✓" },
+                  { threshold: 85, icon: TrendingUp, label: "Generating visual insights...", done: "Visual insights ready ✓" },
                 ].map((stage, i) => {
-                  const isActive = loadingProgress > stage.threshold - 8 && loadingProgress <= stage.threshold + 5;
-                  const isDone = loadingProgress > stage.threshold + 5;
-                  if (loadingProgress < stage.threshold - 8) return null;
+                  const isActive = loadingProgress > stage.threshold - 4 && loadingProgress <= stage.threshold + 3;
+                  const isDone = loadingProgress > stage.threshold + 3;
+                  if (loadingProgress < stage.threshold - 4) return null;
                   return (
                     <motion.div
                       key={i}
@@ -1767,7 +1799,8 @@ const ProfileAnalyzerPage = () => {
               </div>
             </div>
           </motion.div>
-        )}
+          );
+        })()}
 
         {/* ════════════════ PARTIAL RESULT (LOCKED) ════════════════ */}
         {step === 7 && result && (
