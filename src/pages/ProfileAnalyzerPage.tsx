@@ -499,7 +499,7 @@ const HowItWorksAnimated = () => {
 
 /* ──────────── BELL CURVE / PEER COMPARISON ──────────── */
 const PeerComparisonScale = ({ peerData, userScore }: { peerData: AnalysisResult["peer_comparison"]; userScore: number }) => {
-  if (!peerData) return null;
+  if (!peerData || !Array.isArray(peerData.score_distribution) || peerData.score_distribution.length === 0) return null;
 
   const maxCount = Math.max(...peerData.score_distribution.map(d => d.count));
 
@@ -2143,7 +2143,7 @@ const ProfileAnalyzerPage = () => {
             </Card>
 
             {/* Exam Strategy */}
-            {result.exam_strategy && result.exam_strategy.length > 0 && (
+            {Array.isArray(result.exam_strategy) && result.exam_strategy.length > 0 && (
               <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <Card className="overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
@@ -2301,7 +2301,7 @@ const ProfileAnalyzerPage = () => {
             </motion.div>
 
             {/* ─── ROI ANALYSIS ─── */}
-            {result.roi_analysis && result.roi_analysis.length > 0 && (
+            {Array.isArray(result.roi_analysis) && result.roi_analysis.length > 0 && (
               <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <Card className="border-2 border-primary/20 overflow-hidden">
                 <CardHeader>
@@ -2418,7 +2418,7 @@ const ProfileAnalyzerPage = () => {
             )}
 
             {/* ─── IMPROVEMENT ROADMAP ─── */}
-            {result.improvement_roadmap && result.improvement_roadmap.length > 0 && (
+            {Array.isArray(result.improvement_roadmap) && result.improvement_roadmap.length > 0 && (
               <Card className="border-2 border-primary/20">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2"><Rocket className="w-5 h-5 text-primary" /> Month-by-Month Improvement Roadmap</CardTitle>
