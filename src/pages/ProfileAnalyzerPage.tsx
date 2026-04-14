@@ -41,6 +41,48 @@ const LEADERSHIP_OPTIONS = [
   { label: "Founder/Co-founder", value: "founder" },
   { label: "Student Body President/Secretary", value: "student_leader" },
 ];
+const COLLEGE_OPTIONS = [
+  "IIM Ahmedabad", "IIM Bangalore", "IIM Calcutta", "IIM Lucknow", "IIM Kozhikode",
+  "IIM Indore", "IIM Shillong", "IIM Rohtak", "IIM Ranchi", "IIM Kashipur",
+  "IIM Trichy", "IIM Udaipur", "IIM Nagpur", "IIM Amritsar", "IIM Bodh Gaya",
+  "IIM Jammu", "IIM Sambalpur", "IIM Sirmaur", "IIM Visakhapatnam",
+  "FMS Delhi", "XLRI Jamshedpur", "IIFT Delhi", "MDI Gurgaon", "SPJIMR Mumbai",
+  "NMIMS Mumbai", "SIBM Pune", "SCMHRD Pune", "IIT Bombay (SJMSOM)",
+  "IIT Delhi (DMS)", "IIT Kharagpur (VGSoM)", "NITIE Mumbai", "JBIMS Mumbai",
+  "TISS Mumbai", "Great Lakes Chennai", "IMT Ghaziabad", "TAPMI Manipal",
+];
+const WORK_EXP_OPTIONS = [
+  { label: "Fresher (No Experience)", value: "0" },
+  { label: "0 - 6 Months", value: "3" },
+  { label: "6 - 12 Months", value: "9" },
+  { label: "12 - 18 Months", value: "15" },
+  { label: "18 - 24 Months", value: "21" },
+  { label: "24 - 30 Months", value: "27" },
+  { label: "30 - 36 Months", value: "33" },
+  { label: "36 - 42 Months", value: "39" },
+  { label: "42 - 48 Months", value: "45" },
+  { label: "48 - 54 Months", value: "51" },
+  { label: "54 - 60 Months", value: "57" },
+  { label: "60+ Months", value: "66" },
+];
+const FEE_BUDGET_OPTIONS = [
+  { label: "Under ₹5 Lakhs", value: "5" },
+  { label: "₹5 - 10 Lakhs", value: "10" },
+  { label: "₹10 - 15 Lakhs", value: "15" },
+  { label: "₹15 - 20 Lakhs", value: "20" },
+  { label: "₹20 - 25 Lakhs", value: "25" },
+  { label: "₹25 - 30 Lakhs", value: "30" },
+  { label: "₹30+ Lakhs / No constraint", value: "50" },
+];
+const SALARY_EXPECTATION_OPTIONS = [
+  { label: "₹8 - 12 LPA", value: "10" },
+  { label: "₹12 - 16 LPA", value: "14" },
+  { label: "₹16 - 20 LPA", value: "18" },
+  { label: "₹20 - 25 LPA", value: "22" },
+  { label: "₹25 - 30 LPA", value: "27" },
+  { label: "₹30 - 40 LPA", value: "35" },
+  { label: "₹40+ LPA", value: "45" },
+];
 const INDIAN_STATES = [
   "Pan India", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
   "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
