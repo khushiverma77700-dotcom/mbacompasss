@@ -2278,6 +2278,7 @@ const ProfileAnalyzerPage = () => {
                   </div>
                 </CardContent>
               </Card>
+              </motion.div>
             )}
 
             {/* ─── SALARY BENCHMARKING ─── */}
