@@ -1498,19 +1498,21 @@ const ProfileAnalyzerPage = () => {
                         </Select>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" /> Current Employer Type(s)</Label>
-                        <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-border rounded-lg p-3">
-                          {EMPLOYER_TYPES.map(t => (
-                            <label key={t} className={`flex items-center gap-2 text-sm cursor-pointer rounded-lg border p-2 transition-colors ${(form.current_employer_type as string[]).includes(t) ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
-                              <Checkbox checked={(form.current_employer_type as string[]).includes(t)} onCheckedChange={() => toggleArrayItem("current_employer_type" as any, t)} />
-                              {t}
-                            </label>
-                          ))}
-                        </div>
-                        <p className="text-xs text-muted-foreground">{(form.current_employer_type as string[]).length ? (form.current_employer_type as string[]).join(", ") : "Select your industry sectors"}</p>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" /> Current Employer Type(s)</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {EMPLOYER_TYPES.map(t => (
+                          <label key={t} className={`flex items-center gap-1.5 text-xs sm:text-sm cursor-pointer rounded-full border px-3 py-1.5 transition-colors ${(form.current_employer_type as string[]).includes(t) ? "border-primary bg-primary/10 text-primary font-medium" : "border-border hover:bg-muted/50"}`}>
+                            <Checkbox className="w-3.5 h-3.5" checked={(form.current_employer_type as string[]).includes(t)} onCheckedChange={() => toggleArrayItem("current_employer_type" as any, t)} />
+                            {t}
+                          </label>
+                        ))}
                       </div>
+                      {(form.current_employer_type as string[]).length > 0 && (
+                        <p className="text-xs text-muted-foreground">Selected: {(form.current_employer_type as string[]).join(", ")}</p>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
                         <Label className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Graduation Year</Label>
                         <Select value={form.graduation_year} onValueChange={v => updateField("graduation_year", v)}>
@@ -1522,7 +1524,6 @@ const ProfileAnalyzerPage = () => {
                           </SelectContent>
                         </Select>
                       </div>
-                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
                         <Label className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Current City</Label>
