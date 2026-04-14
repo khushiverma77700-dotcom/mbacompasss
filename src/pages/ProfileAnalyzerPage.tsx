@@ -1494,7 +1494,8 @@ const ProfileAnalyzerPage = () => {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5" /> Certifications</Label>
+                      <Label className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5" /> Certifications <Badge variant="secondary" className="text-[10px] ml-1">Optional</Badge></Label>
+                      <p className="text-xs text-muted-foreground">Select any professional certifications you hold. This boosts your profile diversity score.</p>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {CERTIFICATION_OPTIONS.map(cert => (
                           <label key={cert} className={`flex items-center gap-2 text-sm cursor-pointer rounded-lg border p-2 transition-colors ${form.has_certifications.includes(cert) ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
@@ -1503,6 +1504,12 @@ const ProfileAnalyzerPage = () => {
                           </label>
                         ))}
                       </div>
+                      {form.has_certifications.includes("Other") && (
+                        <div className="space-y-1.5 mt-2">
+                          <Label className="text-sm">Specify Certification Name</Label>
+                          <Input placeholder="e.g., Google Analytics, AWS Solutions Architect" value={form.other_certification} onChange={e => updateField("other_certification", e.target.value)} />
+                        </div>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label className="flex items-center gap-1.5"><Star className="w-3.5 h-3.5" /> Extracurriculars</Label>
