@@ -187,7 +187,8 @@ interface FormData {
   target_states: string[];
   fee_budget_lakhs: string;
   expected_salary_lakhs: string;
-  current_employer_type: string;
+  current_employer_type: string[];
+  other_certification: string;
   graduation_year: string;
   has_certifications: string[];
   extracurriculars: string[];
@@ -204,7 +205,8 @@ const initialForm: FormData = {
   is_pursuing_graduation: false,
   work_experience_months: "", category: "General", gender: "",
   target_exams: [], target_colleges: [], preferred_specialization: "", target_states: [],
-  fee_budget_lakhs: "", expected_salary_lakhs: "", current_employer_type: "",
+  fee_budget_lakhs: "", expected_salary_lakhs: "", current_employer_type: [],
+  other_certification: "",
   graduation_year: "", has_certifications: [], extracurriculars: [],
   leadership_roles: "", preparation_months_remaining: "", current_city: "",
   has_gap_years: false, gap_year_reason: "",
