@@ -30,29 +30,16 @@ const EXAM_OPTIONS = ["CAT", "XAT", "NMAT", "SNAP", "CMAT", "MAT", "GMAT", "IIFT
 const STREAM_OPTIONS = ["Engineering", "Commerce", "Science", "Arts", "Medical", "Law", "Other"];
 const SPECIALIZATIONS = ["Finance", "Marketing", "Operations", "HR", "IT & Analytics", "Strategy", "General Management", "Entrepreneurship"];
 const CATEGORY_OPTIONS = ["General", "OBC", "OBC-NCL", "SC", "ST", "EWS", "PwD"];
-const COLLEGE_OPTIONS = [
-  "IIM Ahmedabad", "IIM Bangalore", "IIM Calcutta", "IIM Lucknow", "IIM Kozhikode",
-  "IIM Indore", "IIM Shillong", "IIM Rohtak", "IIM Ranchi", "IIM Kashipur",
-  "IIM Trichy", "IIM Udaipur", "IIM Nagpur", "IIM Amritsar", "IIM Bodh Gaya",
-  "IIM Jammu", "IIM Sambalpur", "IIM Sirmaur", "IIM Visakhapatnam",
-  "FMS Delhi", "XLRI Jamshedpur", "IIFT Delhi", "MDI Gurgaon", "SPJIMR Mumbai",
-  "NMIMS Mumbai", "SIBM Pune", "SCMHRD Pune", "IIT Bombay (SJMSOM)",
-  "IIT Delhi (DMS)", "IIT Kharagpur (VGSoM)", "NITIE Mumbai", "JBIMS Mumbai",
-  "TISS Mumbai", "Great Lakes Chennai", "IMT Ghaziabad", "TAPMI Manipal",
-];
-const WORK_EXP_OPTIONS = [
-  { label: "Fresher (No Experience)", value: "0" },
-  { label: "0 - 6 Months", value: "3" },
-  { label: "6 - 12 Months", value: "9" },
-  { label: "12 - 18 Months", value: "15" },
-  { label: "18 - 24 Months", value: "21" },
-  { label: "24 - 30 Months", value: "27" },
-  { label: "30 - 36 Months", value: "33" },
-  { label: "36 - 42 Months", value: "39" },
-  { label: "42 - 48 Months", value: "45" },
-  { label: "48 - 54 Months", value: "51" },
-  { label: "54 - 60 Months", value: "57" },
-  { label: "60+ Months", value: "66" },
+const EMPLOYER_TYPES = ["IT/Software", "Consulting", "FMCG", "Banking/Finance", "Manufacturing", "Government/PSU", "Startup", "Healthcare", "E-commerce", "Education", "Other"];
+const CERTIFICATION_OPTIONS = ["CFA", "FRM", "Six Sigma", "PMP", "AWS/Cloud", "Data Science", "Digital Marketing", "CA/CS", "ACCA", "Other"];
+const EXTRACURRICULAR_OPTIONS = ["Sports (National/State)", "NGO/Social Work", "Entrepreneurship", "Cultural Activities", "Technical Competitions", "Student Body Leadership", "Publications/Research", "International Exposure", "Other"];
+const LEADERSHIP_OPTIONS = [
+  { label: "None", value: "none" },
+  { label: "Team Lead (2-5 people)", value: "team_lead" },
+  { label: "Manager (5-15 people)", value: "manager" },
+  { label: "Senior Manager (15+)", value: "senior_manager" },
+  { label: "Founder/Co-founder", value: "founder" },
+  { label: "Student Body President/Secretary", value: "student_leader" },
 ];
 const INDIAN_STATES = [
   "Pan India", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
