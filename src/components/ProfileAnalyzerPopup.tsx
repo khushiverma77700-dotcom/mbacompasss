@@ -67,7 +67,7 @@ const ProfileAnalyzerPopup = () => {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleDismiss(); }}>
-      <DialogContent className="max-w-[900px] w-[95vw] md:w-[90vw] p-0 overflow-hidden border-0 shadow-2xl rounded-2xl [&>button]:hidden gap-0">
+      <DialogContent className="max-w-[900px] w-[95vw] md:w-[90vw] p-0 overflow-hidden border-0 shadow-2xl rounded-2xl [&>button]:hidden gap-0 max-h-[90vh] overflow-y-auto">
         {/* Close button */}
         <button
           onClick={handleDismiss}

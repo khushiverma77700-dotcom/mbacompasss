@@ -39,9 +39,8 @@ const StateCitySelect = ({
     (value: string) => {
       const newState = value === "_none" ? "" : value;
       onStateChange(newState);
-      if (resetCityOnStateChange) onCityChange("");
     },
-    [onStateChange, onCityChange, resetCityOnStateChange]
+    [onStateChange]
   );
 
   const handleCityChange = useCallback(
