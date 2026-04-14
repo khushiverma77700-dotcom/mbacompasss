@@ -2098,7 +2098,160 @@ const ProfileAnalyzerPage = () => {
               </CardContent>
             </Card>
 
-            {/* CTA */}
+            {/* ─── ROI ANALYSIS ─── */}
+            {result.roi_analysis && result.roi_analysis.length > 0 && (
+              <Card className="border-2 border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><TrendingUp className="w-5 h-5 text-primary" /> ROI Analysis — College-wise Investment Returns</CardTitle>
+                  <CardDescription>Total investment vs expected returns for each recommended college</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto -mx-6 px-6">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="text-xs">
+                          <TableHead>College</TableHead>
+                          <TableHead>Total Investment</TableHead>
+                          <TableHead>Expected Salary</TableHead>
+                          <TableHead>Payback Period</TableHead>
+                          <TableHead>5-Year ROI</TableHead>
+                          <TableHead>ROI Rating</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {result.roi_analysis.map((r, i) => (
+                          <TableRow key={i} className="text-xs">
+                            <TableCell className="font-semibold">{r.college_name}</TableCell>
+                            <TableCell>₹{r.total_investment_lakhs}L</TableCell>
+                            <TableCell className="font-semibold text-primary">₹{r.expected_starting_salary_lakhs} LPA</TableCell>
+                            <TableCell>{r.payback_period_months} months</TableCell>
+                            <TableCell className="font-bold">{r.five_year_roi_percent}%</TableCell>
+                            <TableCell>
+                              <Badge className={`text-xs ${r.roi_rating === "Excellent" ? "bg-green-100 text-green-700" : r.roi_rating === "Very Good" ? "bg-blue-100 text-blue-700" : r.roi_rating === "Good" ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>
+                                {r.roi_rating}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* ─── SALARY BENCHMARKING ─── */}
+            {result.salary_benchmarking && (
+              <Card className="border-2 border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><DollarSign className="w-5 h-5 text-primary" /> Salary Benchmarking & Growth Trajectory</CardTitle>
+                  <CardDescription>Pre-MBA vs Post-MBA salary comparison across college tiers and sectors</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Salary Range by Tier */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="p-4 rounded-xl bg-muted/50 border border-border text-center">
+                      <p className="text-xs text-muted-foreground mb-1">Current (Est.)</p>
+                      <p className="text-2xl font-bold text-muted-foreground">₹{result.salary_benchmarking.current_estimated_salary_lakhs} LPA</p>
+                    </div>
+                    {[
+                      { label: "Tier 1 (IIMs)", min: result.salary_benchmarking.post_mba_salary_range.tier1_min, max: result.salary_benchmarking.post_mba_salary_range.tier1_max, color: "text-green-600" },
+                      { label: "Tier 2", min: result.salary_benchmarking.post_mba_salary_range.tier2_min, max: result.salary_benchmarking.post_mba_salary_range.tier2_max, color: "text-blue-600" },
+                      { label: "Tier 3", min: result.salary_benchmarking.post_mba_salary_range.tier3_min, max: result.salary_benchmarking.post_mba_salary_range.tier3_max, color: "text-amber-600" },
+                    ].map(t => (
+                      <div key={t.label} className="p-4 rounded-xl bg-muted/50 border border-border text-center">
+                        <p className="text-xs text-muted-foreground mb-1">{t.label}</p>
+                        <p className={`text-2xl font-bold ${t.color}`}>₹{t.min}-{t.max} LPA</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Sector-wise Table */}
+                  {result.salary_benchmarking.sector_wise_salary?.length > 0 && (
+                    <div>
+                      <p className="text-sm font-semibold mb-3">Sector-wise Post-MBA Salary</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        {result.salary_benchmarking.sector_wise_salary.map((s, i) => (
+                          <div key={i} className="p-3 rounded-lg border border-border bg-card">
+                            <p className="text-xs text-muted-foreground">{s.sector}</p>
+                            <p className="text-lg font-bold">₹{s.avg_salary_lakhs} LPA</p>
+                            <p className="text-xs text-muted-foreground">Top: ₹{s.top_salary_lakhs} LPA • Growth: {s.growth_rate_percent}%/yr</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Salary Growth Trajectory Chart */}
+                  {result.salary_benchmarking.salary_growth_trajectory?.length > 0 && (
+                    <div>
+                      <p className="text-sm font-semibold mb-3">10-Year Salary Growth: MBA vs No MBA</p>
+                      <div className="space-y-2">
+                        {result.salary_benchmarking.salary_growth_trajectory.map((pt, i) => (
+                          <div key={i} className="flex items-center gap-3">
+                            <span className="text-xs text-muted-foreground w-16 shrink-0">Year {pt.year}</span>
+                            <div className="flex-1 space-y-1">
+                              <div className="flex items-center gap-2">
+                                <div className="h-2 rounded-full bg-gradient-to-r from-primary to-primary/70" style={{ width: `${Math.min((pt.with_mba_lakhs / Math.max(...result.salary_benchmarking!.salary_growth_trajectory.map(p => p.with_mba_lakhs))) * 100, 100)}%` }} />
+                                <span className="text-xs font-bold text-primary whitespace-nowrap">₹{pt.with_mba_lakhs}L</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="h-2 rounded-full bg-muted-foreground/30" style={{ width: `${Math.min((pt.without_mba_lakhs / Math.max(...result.salary_benchmarking!.salary_growth_trajectory.map(p => p.with_mba_lakhs))) * 100, 100)}%` }} />
+                                <span className="text-xs text-muted-foreground whitespace-nowrap">₹{pt.without_mba_lakhs}L</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        <div className="flex items-center gap-4 mt-2 text-xs">
+                          <span className="flex items-center gap-1"><div className="w-3 h-2 rounded bg-primary" /> With MBA</span>
+                          <span className="flex items-center gap-1"><div className="w-3 h-2 rounded bg-muted-foreground/30" /> Without MBA</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* ─── IMPROVEMENT ROADMAP ─── */}
+            {result.improvement_roadmap && result.improvement_roadmap.length > 0 && (
+              <Card className="border-2 border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Rocket className="w-5 h-5 text-primary" /> Month-by-Month Improvement Roadmap</CardTitle>
+                  <CardDescription>Track your progress with specific milestones and score targets</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {result.improvement_roadmap.map((rm, i) => (
+                      <motion.div key={i} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
+                        className="flex gap-4 items-start p-4 rounded-xl border border-border bg-card hover:shadow-md transition-shadow">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">
+                          M{rm.month}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 mb-1 flex-wrap">
+                            <h4 className="font-semibold text-sm">{rm.milestone}</h4>
+                            {rm.target_percentile && <Badge variant="outline" className="text-xs">Target: {rm.target_percentile}</Badge>}
+                            {rm.mock_score_target && <Badge variant="secondary" className="text-xs">Mock: {rm.mock_score_target}</Badge>}
+                          </div>
+                          <div className="flex flex-wrap gap-1.5 mb-2">
+                            {rm.focus_areas.map((area, j) => <Badge key={j} variant="secondary" className="text-xs">{area}</Badge>)}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Profile Score Target:</span>
+                            <div className="flex-1 max-w-[200px] h-2 bg-muted rounded-full overflow-hidden">
+                              <div className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70" style={{ width: `${rm.profile_score_target * 10}%` }} />
+                            </div>
+                            <span className="text-xs font-bold">{rm.profile_score_target}/10</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0">
               <CardContent className="text-center py-10 space-y-4">
                 <h3 className="text-2xl font-bold">Ready to Start Your MBA Journey?</h3>
