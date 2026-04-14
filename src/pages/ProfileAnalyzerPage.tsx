@@ -113,36 +113,35 @@ interface CollegeTableRow {
 interface AnalysisResult {
   profile_id: string;
   profile_score: number;
-  strengths: Array<{ title: string; description: string; impact: string }>;
-  weaknesses: Array<{ title: string; description: string; severity: string; fix: string }>;
+  strengths: Array<{ title: string; description: string; impact: string; quantitative_impact?: string }>;
+  weaknesses: Array<{ title: string; description: string; severity: string; fix: string; improvement_potential?: string; timeline_to_fix?: string }>;
   college_predictions: {
     dream: Array<{ name: string; probability: number; cutoff_info: string; tip?: string }>;
     target: Array<{ name: string; probability: number; cutoff_info: string; tip?: string }>;
     safe: Array<{ name: string; probability: number; cutoff_info: string; tip?: string }>;
   };
   detailed_college_table: CollegeTableRow[];
-  recommendations: Array<{ title: string; description: string; priority: string; timeline?: string }>;
-  study_plan: Array<{ phase: string; duration: string; focus_areas: string[]; target_score?: string; daily_hours?: number }>;
+  recommendations: Array<{ title: string; description: string; priority: string; timeline?: string; expected_outcome?: string }>;
+  study_plan: Array<{ phase: string; duration: string; focus_areas: string[]; target_score?: string; daily_hours?: number; mock_test_target?: string; key_milestones?: string[] }>;
   score_breakdown: {
     academics_score: number;
     work_experience_score: number;
     diversity_score: number;
     profile_consistency_score: number;
     leadership_potential_score: number;
+    extracurricular_score?: number;
     overall_competitiveness: string;
     percentile_among_aspirants: number;
   };
   ai_summary: string;
-  exam_strategy: Array<{ exam_name: string; recommended_score: string; preparation_months: number; difficulty_for_student: string; roi_rating: string }>;
+  exam_strategy: Array<{ exam_name: string; recommended_score: string; preparation_months: number; difficulty_for_student: string; roi_rating: string; section_wise_strategy?: Array<{ section: string; target_score: string; current_estimate?: string; improvement_tips: string }> }>;
   peer_comparison: {
     total_students_analysed: number;
     average_score: number;
     your_rank_percentile: number;
     score_distribution: Array<{ range: string; count: number; is_yours: boolean }>;
   };
-}
-
-  roi_analysis: Array<{
+  roi_analysis?: Array<{
     college_name: string;
     total_investment_lakhs: number;
     expected_starting_salary_lakhs: number;
@@ -151,7 +150,7 @@ interface AnalysisResult {
     ten_year_earnings_advantage_lakhs?: number;
     roi_rating: string;
   }>;
-  salary_benchmarking: {
+  salary_benchmarking?: {
     current_estimated_salary_lakhs: number;
     post_mba_salary_range: {
       tier1_min: number; tier1_max: number;
@@ -161,7 +160,7 @@ interface AnalysisResult {
     sector_wise_salary: Array<{ sector: string; avg_salary_lakhs: number; top_salary_lakhs: number; growth_rate_percent: number }>;
     salary_growth_trajectory: Array<{ year: number; with_mba_lakhs: number; without_mba_lakhs: number }>;
   };
-  improvement_roadmap: Array<{
+  improvement_roadmap?: Array<{
     month: number;
     milestone: string;
     target_percentile?: string;
