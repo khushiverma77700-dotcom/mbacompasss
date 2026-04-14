@@ -1422,11 +1422,99 @@ const ProfileAnalyzerPage = () => {
                   </>
                 )}
 
+                {step === 5 && (
+                  <>
+                    <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 mb-2">
+                      <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                        <IndianRupee className="w-4 h-4 shrink-0" />
+                        These details help us provide ROI analysis, salary benchmarking, and personalised financial insights.
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="flex items-center gap-1.5"><Wallet className="w-3.5 h-3.5" /> Fee Budget</Label>
+                        <Select value={form.fee_budget_lakhs} onValueChange={v => updateField("fee_budget_lakhs", v)}>
+                          <SelectTrigger><SelectValue placeholder="Max fees you can afford" /></SelectTrigger>
+                          <SelectContent>{FEE_BUDGET_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="flex items-center gap-1.5"><DollarSign className="w-3.5 h-3.5" /> Expected Post-MBA Salary</Label>
+                        <Select value={form.expected_salary_lakhs} onValueChange={v => updateField("expected_salary_lakhs", v)}>
+                          <SelectTrigger><SelectValue placeholder="Your salary expectation" /></SelectTrigger>
+                          <SelectContent>{SALARY_EXPECTATION_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" /> Current Employer Type</Label>
+                        <Select value={form.current_employer_type} onValueChange={v => updateField("current_employer_type", v)}>
+                          <SelectTrigger><SelectValue placeholder="Industry / Sector" /></SelectTrigger>
+                          <SelectContent>{EMPLOYER_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Graduation Year</Label>
+                        <Input type="number" min="2010" max="2030" placeholder="e.g., 2023" value={form.graduation_year} onChange={e => updateField("graduation_year", e.target.value)} />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Current City</Label>
+                        <Input placeholder="e.g., Mumbai" value={form.current_city} onChange={e => updateField("current_city", e.target.value)} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="flex items-center gap-1.5"><Timer className="w-3.5 h-3.5" /> Months Until Exam</Label>
+                        <Input type="number" min="1" max="24" placeholder="e.g., 6" value={form.preparation_months_remaining} onChange={e => updateField("preparation_months_remaining", e.target.value)} />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="flex items-center gap-1.5"><Trophy className="w-3.5 h-3.5" /> Leadership Experience</Label>
+                      <Select value={form.leadership_roles} onValueChange={v => updateField("leadership_roles", v)}>
+                        <SelectTrigger><SelectValue placeholder="Select leadership level" /></SelectTrigger>
+                        <SelectContent>{LEADERSHIP_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5" /> Certifications</Label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {CERTIFICATION_OPTIONS.map(cert => (
+                          <label key={cert} className={`flex items-center gap-2 text-sm cursor-pointer rounded-lg border p-2 transition-colors ${form.has_certifications.includes(cert) ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
+                            <Checkbox checked={form.has_certifications.includes(cert)} onCheckedChange={() => toggleArrayItem("has_certifications", cert)} />
+                            {cert}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1.5"><Star className="w-3.5 h-3.5" /> Extracurriculars</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {EXTRACURRICULAR_OPTIONS.map(ext => (
+                          <label key={ext} className={`flex items-center gap-2 text-sm cursor-pointer rounded-lg border p-2 transition-colors ${form.extracurriculars.includes(ext) ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
+                            <Checkbox checked={form.extracurriculars.includes(ext)} onCheckedChange={() => toggleArrayItem("extracurriculars", ext)} />
+                            {ext}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox checked={form.has_gap_years} onCheckedChange={v => updateField("has_gap_years", !!v)} />
+                        I have gap year(s) in my academic/career journey
+                      </label>
+                      {form.has_gap_years && (
+                        <Input placeholder="Reason for gap (e.g., UPSC preparation, health, etc.)" value={form.gap_year_reason} onChange={e => updateField("gap_year_reason", e.target.value)} />
+                      )}
+                    </div>
+                  </>
+                )}
+
                 <div className="flex justify-between pt-4">
                   <Button variant="outline" onClick={() => setStep(step - 1)} disabled={step === 1}>
                     <ChevronLeft className="w-4 h-4 mr-1" /> Back
                   </Button>
-                  {step < 4 ? (
+                  {step < 5 ? (
                     <Button onClick={handleNext}>Next <ChevronRight className="w-4 h-4 ml-1" /></Button>
                   ) : (
                     <Button onClick={handleSubmit} className="bg-gradient-to-r from-primary to-primary/80">
