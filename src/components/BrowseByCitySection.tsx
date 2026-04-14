@@ -111,15 +111,25 @@ const BrowseByCitySection = () => {
                 </div>
 
                 <div>
-                  <div className="flex flex-wrap items-center gap-2.5 mb-5">
-                    <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md rounded-full px-4 py-2 text-white text-xs font-semibold border border-white/10">
+                  {featured.state && (
+                    <p className="text-white/70 text-xs font-medium mb-3 tracking-wide uppercase">
+                      {featured.state}, India
+                    </p>
+                  )}
+                  <div className="flex flex-wrap items-center gap-2 mb-4">
+                    <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md rounded-full px-3.5 py-1.5 text-white text-xs font-semibold border border-white/10">
                       <Building2 className="w-3.5 h-3.5" />
                       {featured.count} Colleges
                     </span>
-                    <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md rounded-full px-4 py-2 text-white text-xs font-semibold border border-white/10">
+                    <span className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md rounded-full px-3.5 py-1.5 text-white text-xs font-semibold border border-white/10">
                       <GraduationCap className="w-3.5 h-3.5" />
                       Top MBA Programs
                     </span>
+                    {featured.count >= 5 && (
+                      <span className="inline-flex items-center gap-1.5 bg-primary/60 backdrop-blur-md rounded-full px-3.5 py-1.5 text-white text-xs font-semibold border border-primary/30">
+                        🔥 Popular Hub
+                      </span>
+                    )}
                   </div>
                   <Link to={`/colleges/${featured.slug}`}>
                     <Button
