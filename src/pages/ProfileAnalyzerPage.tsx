@@ -1629,8 +1629,8 @@ const ProfileAnalyzerPage = () => {
           const factIndex = Math.floor(loadingProgress / 10) % funFacts.length;
           return (
           <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="min-h-[80vh] flex items-center justify-center px-4">
-            <div className="max-w-lg mx-auto text-center space-y-8">
+            className="min-h-[60vh] md:min-h-[80vh] flex items-start md:items-center justify-center px-4 py-8">
+            <div className="max-w-lg mx-auto text-center space-y-6 md:space-y-8 w-full">
               {/* Main animated logo with orbital rings */}
               <div className="relative w-40 h-40 mx-auto">
                 <motion.div
