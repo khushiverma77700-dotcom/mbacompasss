@@ -344,7 +344,7 @@ const CollegeDetailPage = () => {
                   {getSectionContent("why_join") ? (
                     <div className="text-muted-foreground leading-relaxed prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: getSectionContent("why_join") }} />
                   ) : (
-                    <p className="text-muted-foreground leading-relaxed">{college.description || `${college.name} is a premier ${college.type} institute in ${college.city}.`}</p>
+                    <div className="text-muted-foreground leading-relaxed prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: college.description || `${college.name} is a premier ${college.type} institute in ${college.city}.` }} />
                   )}
                   {highlights && (
                     <div className="mt-6">
@@ -425,7 +425,7 @@ const CollegeDetailPage = () => {
                   {getSectionContent("admission") ? (
                     <div className="text-muted-foreground leading-relaxed mb-6 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: getSectionContent("admission") }} />
                   ) : (
-                    <p className="text-muted-foreground leading-relaxed mb-6">{college.admission_process || `Admission to ${college.name} is based on entrance exams followed by GD/PI.`}</p>
+                    <div className="text-muted-foreground leading-relaxed mb-6 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: college.admission_process || `Admission to ${college.name} is based on entrance exams followed by GD/PI.` }} />
                   )}
                   <div className="space-y-4">
                     <h3 className="font-heading font-semibold text-foreground">Admission Steps</h3>
