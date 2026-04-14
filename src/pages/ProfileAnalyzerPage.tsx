@@ -1735,7 +1735,6 @@ const ProfileAnalyzerPage = () => {
                   );
                 })}
               </div>
-              </div>
             </div>
           </motion.div>
         )}
