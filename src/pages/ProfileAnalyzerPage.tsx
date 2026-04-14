@@ -2204,21 +2204,28 @@ const ProfileAnalyzerPage = () => {
             </motion.div>
 
             {/* Study Plan */}
-            <Card>
-              <CardHeader><CardTitle className="flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" /> Personalised Study Plan</CardTitle></CardHeader>
-              <CardContent>
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <Card className="overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+                <CardTitle className="flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" /> Personalised Study Plan</CardTitle>
+                <CardDescription>Your phase-wise preparation roadmap with daily targets</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
                 <div className="space-y-4">
                   {result.study_plan?.map((phase, i) => (
-                    <div key={i} className="flex gap-4">
+                    <motion.div key={i} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                      className="flex gap-4">
                       <div className="flex flex-col items-center">
-                        <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">{i + 1}</div>
-                        {i < (result.study_plan?.length || 0) - 1 && <div className="w-0.5 h-full bg-border mt-1" />}
+                        <motion.div whileHover={{ scale: 1.15 }} className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground flex items-center justify-center font-bold text-sm shadow-lg">{i + 1}</motion.div>
+                        {i < (result.study_plan?.length || 0) - 1 && (
+                          <motion.div initial={{ height: 0 }} whileInView={{ height: "100%" }} viewport={{ once: true }} transition={{ delay: i * 0.1 + 0.2 }} className="w-0.5 bg-gradient-to-b from-primary/30 to-transparent mt-1" />
+                        )}
                       </div>
-                      <div className="flex-1 pb-6">
-                        <div className="flex items-center gap-3 mb-2">
+                      <div className="flex-1 pb-6 p-4 rounded-2xl bg-muted/30 border border-border/50 hover:shadow-md transition-all">
+                        <div className="flex items-center gap-3 mb-2 flex-wrap">
                           <h4 className="font-bold">{phase.phase}</h4>
-                          <Badge variant="outline">{phase.duration}</Badge>
-                          {phase.daily_hours && <span className="text-xs text-muted-foreground">{phase.daily_hours} hrs/day</span>}
+                          <Badge variant="outline" className="text-xs">{phase.duration}</Badge>
+                          {phase.daily_hours && <Badge variant="secondary" className="text-xs">{phase.daily_hours} hrs/day</Badge>}
                         </div>
                         {phase.target_score && <p className="text-sm text-primary mb-2">Target: {phase.target_score}</p>}
                         <div className="flex flex-wrap gap-2">{phase.focus_areas?.map((area, j) => <Badge key={j} variant="secondary" className="text-xs">{area}</Badge>)}</div>
