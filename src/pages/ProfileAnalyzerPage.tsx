@@ -695,7 +695,7 @@ const ProfileAnalyzerPage = () => {
               roi_analysis: (analysisData.probability_scores as any)?.roi_analysis,
               salary_benchmarking: (analysisData.probability_scores as any)?.salary_benchmarking,
               improvement_roadmap: (analysisData.probability_scores as any)?.improvement_roadmap,
-              detailed_college_table: (analysisData.college_predictions as any)?.detailed_college_table || analysisData.college_predictions,
+              detailed_college_table: Array.isArray((analysisData.college_predictions as any)?.detailed_college_table) ? (analysisData.college_predictions as any).detailed_college_table : Array.isArray(analysisData.college_predictions) ? analysisData.college_predictions : [],
             };
             setResult(reconstructed);
             setUnlocked(!!profileData.report_unlocked);
