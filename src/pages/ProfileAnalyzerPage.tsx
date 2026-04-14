@@ -2121,50 +2121,87 @@ const ProfileAnalyzerPage = () => {
             )}
 
             {/* Strengths & Weaknesses */}
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader><CardTitle className="flex items-center gap-2 text-green-600"><CheckCircle2 className="w-5 h-5" /> Strengths</CardTitle></CardHeader>
-                <CardContent className="space-y-3">
+              <Card className="overflow-hidden border-green-200/50 dark:border-green-800/50">
+                <CardHeader className="bg-gradient-to-r from-green-50 to-transparent dark:from-green-950/20">
+                  <CardTitle className="flex items-center gap-2 text-green-600"><CheckCircle2 className="w-5 h-5" /> Your Strengths</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-4">
                   {result.strengths?.map((s, i) => (
-                    <div key={i} className="p-3 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
-                      <div className="flex items-center gap-2 mb-1"><Badge className="bg-green-500 text-white text-xs">{s.impact}</Badge><span className="font-semibold text-sm">{s.title}</span></div>
-                      <p className="text-sm text-muted-foreground">{s.description}</p>
-                    </div>
+                    <motion.div key={i} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                      className="p-4 rounded-xl bg-green-50/50 dark:bg-green-950/10 border border-green-200/50 dark:border-green-800/50 hover:shadow-md transition-all">
+                      <div className="flex items-center gap-2 mb-2">
+                        <motion.div whileHover={{ rotate: 10, scale: 1.1 }} className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center shrink-0">
+                          <CheckCircle2 className="w-4 h-4 text-white" />
+                        </motion.div>
+                        <div className="flex-1">
+                          <span className="font-semibold text-sm">{s.title}</span>
+                          <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[10px] ml-2">{s.impact} Impact</Badge>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground ml-10">{s.description}</p>
+                    </motion.div>
                   ))}
                 </CardContent>
               </Card>
-              <Card>
-                <CardHeader><CardTitle className="flex items-center gap-2 text-amber-600"><AlertTriangle className="w-5 h-5" /> Weaknesses & Fixes</CardTitle></CardHeader>
-                <CardContent className="space-y-3">
+              <Card className="overflow-hidden border-amber-200/50 dark:border-amber-800/50">
+                <CardHeader className="bg-gradient-to-r from-amber-50 to-transparent dark:from-amber-950/20">
+                  <CardTitle className="flex items-center gap-2 text-amber-600"><AlertTriangle className="w-5 h-5" /> Areas to Improve</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-4">
                   {result.weaknesses?.map((w, i) => (
-                    <div key={i} className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
-                      <div className="flex items-center gap-2 mb-1"><Badge className="bg-amber-500 text-white text-xs">{w.severity}</Badge><span className="font-semibold text-sm">{w.title}</span></div>
-                      <p className="text-sm text-muted-foreground">{w.description}</p>
-                      <p className="text-sm text-primary mt-1 font-medium flex items-center gap-1"><ArrowRight className="w-3 h-3" /> {w.fix}</p>
-                    </div>
+                    <motion.div key={i} initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                      className="p-4 rounded-xl bg-amber-50/50 dark:bg-amber-950/10 border border-amber-200/50 dark:border-amber-800/50 hover:shadow-md transition-all">
+                      <div className="flex items-center gap-2 mb-2">
+                        <motion.div whileHover={{ rotate: -10, scale: 1.1 }} className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center shrink-0">
+                          <AlertTriangle className="w-4 h-4 text-white" />
+                        </motion.div>
+                        <div className="flex-1">
+                          <span className="font-semibold text-sm">{w.title}</span>
+                          <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] ml-2">{w.severity}</Badge>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground ml-10 mb-2">{w.description}</p>
+                      <div className="ml-10 p-2 rounded-lg bg-primary/5 border border-primary/10">
+                        <p className="text-xs text-primary font-medium flex items-center gap-1"><Lightbulb className="w-3 h-3" /> Fix: {w.fix}</p>
+                      </div>
+                    </motion.div>
                   ))}
                 </CardContent>
               </Card>
             </div>
+            </motion.div>
 
             {/* AI Recommendations */}
-            <Card>
-              <CardHeader><CardTitle className="flex items-center gap-2"><Lightbulb className="w-5 h-5 text-primary" /> AI Recommendations</CardTitle></CardHeader>
-              <CardContent>
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <Card className="overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+                <CardTitle className="flex items-center gap-2"><Lightbulb className="w-5 h-5 text-primary" /> AI Action Plan</CardTitle>
+                <CardDescription>Prioritised steps to strengthen your MBA profile</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {result.recommendations?.map((r, i) => (
-                    <div key={i} className="p-4 rounded-xl border border-border bg-card hover:shadow-md transition-shadow">
-                      <div className="flex items-center gap-2 mb-2">
+                    <motion.div key={i} initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}
+                      className="p-5 rounded-2xl border border-border bg-gradient-to-br from-card to-muted/20 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                          r.priority === "critical" ? "bg-red-500" : r.priority === "high" ? "bg-primary" : "bg-muted-foreground/50"
+                        }`}>
+                          <span className="text-white text-xs font-bold">{i + 1}</span>
+                        </div>
                         <Badge variant={r.priority === "critical" ? "destructive" : r.priority === "high" ? "default" : "secondary"} className="text-xs">{r.priority}</Badge>
-                        {r.timeline && <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" /> {r.timeline}</span>}
+                        {r.timeline && <span className="text-[10px] text-muted-foreground flex items-center gap-1 ml-auto"><Clock className="w-3 h-3" /> {r.timeline}</span>}
                       </div>
-                      <h4 className="font-semibold text-sm mb-1">{r.title}</h4>
-                      <p className="text-sm text-muted-foreground">{r.description}</p>
-                    </div>
+                      <h4 className="font-semibold text-sm mb-1 group-hover:text-primary transition-colors">{r.title}</h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{r.description}</p>
+                    </motion.div>
                   ))}
                 </div>
               </CardContent>
             </Card>
+            </motion.div>
 
             {/* Study Plan */}
             <Card>
