@@ -791,7 +791,7 @@ const ProfileAnalyzerPage = () => {
       }
       setUnlocked(true);
       setShowLeadModal(false);
-      setStep(5);
+      setStep(8);
       toast({ title: "Report Unlocked", description: "Your personalised MBA roadmap is ready." });
     } catch {
       toast({ title: "Error", description: "Please try again.", variant: "destructive" });
@@ -1247,7 +1247,7 @@ const ProfileAnalyzerPage = () => {
         )}
 
         {/* ════════════════ FORM STEPS 1-4 ════════════════ */}
-        {step >= 1 && step <= 4 && (
+        {step >= 1 && step <= 5 && (
           <motion.div key={`step-${step}`} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} className="max-w-2xl mx-auto px-4 py-12">
             <div className="mb-8">
               <div className="flex justify-between items-center mb-3">
