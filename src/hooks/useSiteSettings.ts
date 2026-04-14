@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
 
 const SETTINGS_STALE = 10 * 60 * 1000;
 
@@ -8,50 +9,47 @@ const UI_SETTINGS_KEYS = [
   "faqs", "footer", "contact_page", "announcement",
 ];
 
-const UI_KEYS_SET = new Set(UI_SETTINGS_KEYS);
-
-const fetchAllSiteSettings = async () => {
-  const { data, error } = await supabase
-    .from("site_settings")
-    .select("key, value")
-    .in("key", UI_SETTINGS_KEYS);
-
-  if (error) throw error;
-
-  const map: Record<string, any> = {};
-  data?.forEach((row: any) => {
-    map[row.key] = row.value;
-  });
-
-  return map;
-};
-
 export const useAllSiteSettings = () => {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: ["site_settings_all"],
-    queryFn: fetchAllSiteSettings,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("site_settings")
+        .select("key, value")
+        .in("key", UI_SETTINGS_KEYS);
+
+      if (error) throw error;
+
+      const map: Record<string, any> = {};
+      data?.forEach((row: any) => {
+        map[row.key] = row.value;
+      });
+
+      return map;
+    },
     staleTime: SETTINGS_STALE,
     gcTime: 30 * 60 * 1000,
   });
+
+  // Seed individual caches from the batch result so useSiteSettings never fires its own request
+  useEffect(() => {
+    if (query.data) {
+      for (const key of UI_SETTINGS_KEYS) {
+        queryClient.setQueryData(["site_settings", key], query.data[key] ?? null);
+      }
+    }
+  }, [query.data, queryClient]);
+
+  return query;
 };
 
 export const useSiteSettings = (key: string) => {
-  const queryClient = useQueryClient();
-
   return useQuery({
     queryKey: ["site_settings", key],
     queryFn: async () => {
-      if (UI_KEYS_SET.has(key)) {
-        const allData = await queryClient.ensureQueryData({
-          queryKey: ["site_settings_all"],
-          queryFn: fetchAllSiteSettings,
-          staleTime: SETTINGS_STALE,
-          gcTime: 30 * 60 * 1000,
-        });
-
-        return allData[key] ?? null;
-      }
-
+      // This only fires if the batch hasn't seeded this key yet
       const { data, error } = await supabase
         .from("site_settings")
         .select("value")
@@ -63,6 +61,7 @@ export const useSiteSettings = (key: string) => {
     },
     staleTime: SETTINGS_STALE,
     gcTime: 30 * 60 * 1000,
+    // Render immediately with null so components show fallbacks without waiting
     placeholderData: null,
   });
 };
