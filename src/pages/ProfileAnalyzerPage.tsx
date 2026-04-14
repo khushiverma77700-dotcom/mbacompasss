@@ -1252,15 +1252,16 @@ const ProfileAnalyzerPage = () => {
             <div className="mb-8">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-sm font-medium text-muted-foreground">Step {step} of 4</span>
-                <span className="text-sm text-muted-foreground">{Math.round((step / 4) * 100)}%</span>
+                <span className="text-sm text-muted-foreground">{Math.round((step / 5) * 100)}%</span>
               </div>
-              <Progress value={(step / 4) * 100} className="h-2" />
+              <Progress value={(step / 5) * 100} className="h-2" />
               <div className="flex justify-between mt-2">
                 {[
                   { icon: User, label: "Basic Info" },
                   { icon: GraduationCap, label: "Academics" },
                   { icon: Briefcase, label: "Profile" },
                   { icon: Target, label: "Aspirations" },
+                  { icon: IndianRupee, label: "Financial & Extras" },
                 ].map((s, i) => (
                   <div key={s.label} className={`flex items-center gap-1.5 text-xs ${i + 1 <= step ? "text-primary font-semibold" : "text-muted-foreground"}`}>
                     <s.icon className="w-3.5 h-3.5" /> {s.label}
@@ -1276,6 +1277,7 @@ const ProfileAnalyzerPage = () => {
                   {step === 2 && <><GraduationCap className="w-5 h-5 text-primary" /> Academic Details</>}
                   {step === 3 && <><Briefcase className="w-5 h-5 text-primary" /> Profile Details</>}
                   {step === 4 && <><Target className="w-5 h-5 text-primary" /> Your Aspirations</>}
+                  {step === 5 && <><IndianRupee className="w-5 h-5 text-primary" /> Financial & Profile Extras</>}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
