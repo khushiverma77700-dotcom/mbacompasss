@@ -96,7 +96,7 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const body: ProfileInput = await req.json();
+    const body: ProfileInput & { user_id?: string } = await req.json();
 
     if (!body.tenth_score || !body.twelfth_score || !body.graduation_score || !body.graduation_stream || !body.target_exams?.length) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
