@@ -886,7 +886,7 @@ const ProfileAnalyzerPage = () => {
   };
 
   const sortedColleges = useMemo(() => {
-    if (!result?.detailed_college_table) return [];
+    if (!result?.detailed_college_table || !Array.isArray(result.detailed_college_table)) return [];
     let arr = [...result.detailed_college_table];
     if (collegeFilter !== "all") arr = arr.filter(c => c.tier === collegeFilter);
     arr.sort((a: any, b: any) => {
