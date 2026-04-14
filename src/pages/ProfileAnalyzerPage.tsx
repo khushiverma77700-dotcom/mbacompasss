@@ -734,7 +734,7 @@ const ProfileAnalyzerPage = () => {
       });
       return;
     }
-    setStep(5);
+    setStep(6);
     setLoadingProgress(0);
     const interval = setInterval(() => {
       setLoadingProgress(prev => { if (prev >= 90) { clearInterval(interval); return 90; } return prev + Math.random() * 10; });
