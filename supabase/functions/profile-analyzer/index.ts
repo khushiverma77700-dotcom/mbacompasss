@@ -96,7 +96,7 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const body: ProfileInput = await req.json();
+    const body: ProfileInput & { user_id?: string } = await req.json();
 
     if (!body.tenth_score || !body.twelfth_score || !body.graduation_score || !body.graduation_stream || !body.target_exams?.length) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
@@ -488,20 +488,36 @@ For improvement_roadmap, provide a month-by-month timeline with specific milesto
     const { data: profileData, error: profileError } = await supabase
       .from("profile_analyses")
       .insert({
+        user_id: body.user_id || null,
+        name: body.name,
         tenth_score: body.tenth_score,
         twelfth_score: body.twelfth_score,
         graduation_score: body.graduation_score,
         graduation_stream: body.graduation_stream,
+        is_pursuing_graduation: body.is_pursuing_graduation || false,
         work_experience_months: body.work_experience_months,
         category: body.category,
         gender: body.gender,
         target_exam: body.target_exams?.[0] || "CAT",
+        target_exams: body.target_exams || [],
         target_colleges: body.target_colleges || [],
+        target_states: body.target_states || [],
         preferred_specialization: body.preferred_specialization,
         phone: body.phone,
         email: body.email,
         profile_score: profileScore,
         report_unlocked: !!(body.phone || body.email),
+        fee_budget_lakhs: body.fee_budget_lakhs,
+        expected_salary_lakhs: body.expected_salary_lakhs,
+        current_employer_type: body.current_employer_type || [],
+        graduation_year: body.graduation_year,
+        has_certifications: body.has_certifications || [],
+        extracurriculars: body.extracurriculars || [],
+        leadership_roles: body.leadership_roles,
+        preparation_months_remaining: body.preparation_months_remaining,
+        current_city: body.current_city,
+        has_gap_years: body.has_gap_years || false,
+        gap_year_reason: body.gap_year_reason,
       })
       .select("id")
       .single();

@@ -652,28 +652,55 @@ const ProfileAnalyzerPage = () => {
   const { user } = useAuth();
   const reportRef = useRef<HTMLDivElement>(null);
 
-  // Check cooldown on mount & when user changes
+  // Check if user already has an analysis — if so, load full results and show report
   useEffect(() => {
-    const checkCooldown = async () => {
+    const checkExistingAnalysis = async () => {
       if (!user) { setCooldownDate(null); setExistingReport(null); return; }
       setCheckingCooldown(true);
       try {
-        const { data } = await supabase
+        const { data: profileData } = await supabase
           .from("profile_analyses")
-          .select("id, created_at, profile_score, target_exam, report_unlocked")
+          .select("*")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
 
-        if (data) {
-          const lastDate = new Date(data.created_at);
-          const nextAllowed = new Date(lastDate.getTime() + 60 * 24 * 60 * 60 * 1000);
-          setExistingReport(data);
-          if (nextAllowed > new Date()) {
-            setCooldownDate(nextAllowed);
-          } else {
-            setCooldownDate(null);
+        if (profileData) {
+          setExistingReport(profileData);
+          setCooldownDate(new Date(new Date(profileData.created_at).getTime() + 60 * 24 * 60 * 60 * 1000));
+
+          // Fetch full analysis results
+          const { data: analysisData } = await supabase
+            .from("analysis_results")
+            .select("*")
+            .eq("profile_analysis_id", profileData.id)
+            .maybeSingle();
+
+          if (analysisData) {
+            // Reconstruct the result object as it would have been returned by the edge function
+            const reconstructed: any = {
+              profile_id: profileData.id,
+              profile_score: profileData.profile_score,
+              strengths: analysisData.strengths,
+              weaknesses: analysisData.weaknesses,
+              college_predictions: analysisData.college_predictions,
+              recommendations: analysisData.recommendations,
+              study_plan: analysisData.study_plan,
+              ai_summary: analysisData.ai_summary,
+              // Extract nested fields from probability_scores
+              score_breakdown: analysisData.probability_scores,
+              exam_strategy: (analysisData.probability_scores as any)?.exam_strategy,
+              peer_comparison: (analysisData.probability_scores as any)?.peer_comparison,
+              roi_analysis: (analysisData.probability_scores as any)?.roi_analysis,
+              salary_benchmarking: (analysisData.probability_scores as any)?.salary_benchmarking,
+              improvement_roadmap: (analysisData.probability_scores as any)?.improvement_roadmap,
+              detailed_college_table: (analysisData.college_predictions as any)?.detailed_college_table || analysisData.college_predictions,
+            };
+            setResult(reconstructed);
+            setUnlocked(!!profileData.report_unlocked);
+            // Auto-show the report
+            setStep(profileData.report_unlocked ? 8 : 7);
           }
         } else {
           setCooldownDate(null);
@@ -682,7 +709,7 @@ const ProfileAnalyzerPage = () => {
       } catch { /* ignore */ }
       setCheckingCooldown(false);
     };
-    checkCooldown();
+    checkExistingAnalysis();
   }, [user]);
 
   useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(form)); }, [form]);
@@ -764,6 +791,7 @@ const ProfileAnalyzerPage = () => {
     try {
       const { data, error } = await supabase.functions.invoke("profile-analyzer", {
         body: {
+          user_id: user?.id || undefined,
           name: form.name, email: form.email,
           tenth_score: +form.tenth_score, twelfth_score: +form.twelfth_score,
           graduation_score: +form.graduation_score, graduation_stream: form.graduation_stream,

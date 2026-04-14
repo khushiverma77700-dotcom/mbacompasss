@@ -1361,17 +1361,32 @@ export type Database = {
         Row: {
           category: string
           created_at: string
+          current_city: string | null
+          current_employer_type: string[] | null
           email: string | null
+          expected_salary_lakhs: number | null
+          extracurriculars: string[] | null
+          fee_budget_lakhs: number | null
+          gap_year_reason: string | null
           gender: string | null
           graduation_score: number
           graduation_stream: string
+          graduation_year: number | null
+          has_certifications: string[] | null
+          has_gap_years: boolean | null
           id: string
+          is_pursuing_graduation: boolean | null
+          leadership_roles: string | null
+          name: string | null
           phone: string | null
           preferred_specialization: string | null
+          preparation_months_remaining: number | null
           profile_score: number | null
           report_unlocked: boolean | null
           target_colleges: string[] | null
           target_exam: string
+          target_exams: string[] | null
+          target_states: string[] | null
           tenth_score: number
           twelfth_score: number
           updated_at: string
@@ -1381,17 +1396,32 @@ export type Database = {
         Insert: {
           category?: string
           created_at?: string
+          current_city?: string | null
+          current_employer_type?: string[] | null
           email?: string | null
+          expected_salary_lakhs?: number | null
+          extracurriculars?: string[] | null
+          fee_budget_lakhs?: number | null
+          gap_year_reason?: string | null
           gender?: string | null
           graduation_score: number
           graduation_stream: string
+          graduation_year?: number | null
+          has_certifications?: string[] | null
+          has_gap_years?: boolean | null
           id?: string
+          is_pursuing_graduation?: boolean | null
+          leadership_roles?: string | null
+          name?: string | null
           phone?: string | null
           preferred_specialization?: string | null
+          preparation_months_remaining?: number | null
           profile_score?: number | null
           report_unlocked?: boolean | null
           target_colleges?: string[] | null
           target_exam: string
+          target_exams?: string[] | null
+          target_states?: string[] | null
           tenth_score: number
           twelfth_score: number
           updated_at?: string
@@ -1401,17 +1431,32 @@ export type Database = {
         Update: {
           category?: string
           created_at?: string
+          current_city?: string | null
+          current_employer_type?: string[] | null
           email?: string | null
+          expected_salary_lakhs?: number | null
+          extracurriculars?: string[] | null
+          fee_budget_lakhs?: number | null
+          gap_year_reason?: string | null
           gender?: string | null
           graduation_score?: number
           graduation_stream?: string
+          graduation_year?: number | null
+          has_certifications?: string[] | null
+          has_gap_years?: boolean | null
           id?: string
+          is_pursuing_graduation?: boolean | null
+          leadership_roles?: string | null
+          name?: string | null
           phone?: string | null
           preferred_specialization?: string | null
+          preparation_months_remaining?: number | null
           profile_score?: number | null
           report_unlocked?: boolean | null
           target_colleges?: string[] | null
           target_exam?: string
+          target_exams?: string[] | null
+          target_states?: string[] | null
           tenth_score?: number
           twelfth_score?: number
           updated_at?: string
