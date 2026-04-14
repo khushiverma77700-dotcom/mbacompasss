@@ -738,9 +738,28 @@ const ProfileAnalyzerPage = () => {
     }
     setStep(6);
     setLoadingProgress(0);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    const loadingStages = [
+      { target: 15, label: "Evaluating academic profile..." },
+      { target: 30, label: "Scoring work experience..." },
+      { target: 45, label: "Computing 5-dimension scores..." },
+      { target: 58, label: "Matching against 50+ colleges..." },
+      { target: 72, label: "Running peer comparison..." },
+      { target: 82, label: "Building personalised roadmap..." },
+      { target: 88, label: "Analysing more datasets..." },
+      { target: 92, label: "Cross-referencing your profile..." },
+      { target: 95, label: "Generating visual insights..." },
+      { target: 97, label: "Finalising your report..." },
+    ];
+    let stageIndex = 0;
     const interval = setInterval(() => {
-      setLoadingProgress(prev => { if (prev >= 90) { clearInterval(interval); return 90; } return prev + Math.random() * 10; });
-    }, 400);
+      setLoadingProgress(prev => {
+        if (stageIndex >= loadingStages.length) { clearInterval(interval); return prev; }
+        const target = loadingStages[stageIndex].target;
+        if (prev >= target - 1) { stageIndex++; }
+        return Math.min(prev + Math.random() * 3 + 0.5, stageIndex < loadingStages.length ? loadingStages[stageIndex].target : 98);
+      });
+    }, 350);
 
     try {
       const { data, error } = await supabase.functions.invoke("profile-analyzer", {
@@ -1253,7 +1272,7 @@ const ProfileAnalyzerPage = () => {
           <motion.div key={`step-${step}`} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} className="max-w-2xl mx-auto px-4 py-12">
             <div className="mb-8">
               <div className="flex justify-between items-center mb-3">
-                <span className="text-sm font-medium text-muted-foreground">Step {step} of 4</span>
+                <span className="text-sm font-medium text-muted-foreground">Step {step} of 5</span>
                 <span className="text-sm text-muted-foreground">{Math.round((step / 5) * 100)}%</span>
               </div>
               <Progress value={(step / 5) * 100} className="h-2" />
