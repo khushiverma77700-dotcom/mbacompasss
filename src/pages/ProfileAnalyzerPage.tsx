@@ -4,7 +4,8 @@ import {
   GraduationCap, Briefcase, Target, ChevronRight, ChevronLeft, Lock, Phone, Mail,
   TrendingUp, Shield, Zap, BookOpen, Calendar, Star, AlertTriangle, CheckCircle2, ArrowRight,
   Sparkles, BarChart3, Lightbulb, User, FileText, Download, Save, MapPin, ClipboardList,
-  Award, Users, Clock, ArrowUpRight, ChevronDown, Info, Search, Layers, Activity, Eye,
+  Award, Users, Clock, ArrowUpRight, ChevronDown, Info, Search, Layers, Activity, Eye, IndianRupee,
+  Trophy, Wallet, DollarSign, TrendingDown, Rocket, CircleCheck, Timer,
   Percent, Hash, Globe, Building2, Flame, CircleDot, Medal, PieChart, LineChart, Gauge
 } from "lucide-react";
 import bschoolLogo from "@/assets/bschoolbuzz-logo.png";
