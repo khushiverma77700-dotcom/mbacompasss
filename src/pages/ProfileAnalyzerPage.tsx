@@ -792,7 +792,7 @@ const ProfileAnalyzerPage = () => {
       if (data?.error) throw new Error(data.error);
       setResult(data);
       localStorage.removeItem(STORAGE_KEY);
-      setTimeout(() => setStep(7), 600);
+      setTimeout(() => { setStep(7); window.scrollTo({ top: 0, behavior: "smooth" }); }, 600);
     } catch (e: any) {
       clearInterval(interval);
       toast({ title: "Analysis Failed", description: e.message || "Please try again.", variant: "destructive" });
