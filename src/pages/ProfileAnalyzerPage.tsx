@@ -2239,7 +2239,8 @@ const ProfileAnalyzerPage = () => {
 
             {/* ─── ROI ANALYSIS ─── */}
             {result.roi_analysis && result.roi_analysis.length > 0 && (
-              <Card className="border-2 border-primary/20">
+              <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <Card className="border-2 border-primary/20 overflow-hidden">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2"><TrendingUp className="w-5 h-5 text-primary" /> ROI Analysis — College-wise Investment Returns</CardTitle>
                   <CardDescription>Total investment vs expected returns for each recommended college</CardDescription>
