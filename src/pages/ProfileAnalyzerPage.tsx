@@ -723,7 +723,7 @@ const ProfileAnalyzerPage = () => {
     return Object.keys(errs).length === 0;
   };
 
-  const handleNext = () => { if (validateStep(step)) setStep(step + 1); };
+  const handleNext = () => { if (validateStep(step)) { setStep(step + 1); window.scrollTo({ top: 0, behavior: "smooth" }); } };
 
   const handleSubmit = async () => {
     if (!validateStep(step)) return;
@@ -1048,7 +1048,7 @@ const ProfileAnalyzerPage = () => {
                 <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.7 }}>
                   <Button
                     size="lg"
-                    onClick={() => setStep(1)}
+                    onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
                     disabled={!!(user && cooldownDate)}
                     className="text-lg px-12 py-7 rounded-2xl shadow-2xl hover:shadow-3xl transition-all group relative overflow-hidden"
                   >
@@ -1197,7 +1197,7 @@ const ProfileAnalyzerPage = () => {
                 <img src={bschoolLogo} alt="B School Buzz" className="w-16 h-16 mx-auto rounded-2xl shadow-lg mb-6" />
                 <h2 className="text-3xl md:text-5xl font-bold mb-4">Ready to Know Your MBA Chances?</h2>
                 <p className="text-muted-foreground text-lg mb-8">Takes less than 2 minutes. No payment. No signup. Instant AI-powered results.</p>
-                <Button size="lg" onClick={() => setStep(1)} className="text-lg px-12 py-7 rounded-2xl shadow-2xl group">
+                <Button size="lg" onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="text-lg px-12 py-7 rounded-2xl shadow-2xl group">
                   Start Free Analysis <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </motion.div>
@@ -1555,7 +1555,7 @@ const ProfileAnalyzerPage = () => {
                 )}
 
                 <div className="flex justify-between pt-4">
-                  <Button variant="outline" onClick={() => setStep(step - 1)} disabled={step === 1}>
+                  <Button variant="outline" onClick={() => { setStep(step - 1); window.scrollTo({ top: 0, behavior: "smooth" }); }} disabled={step === 1}>
                     <ChevronLeft className="w-4 h-4 mr-1" /> Back
                   </Button>
                   {step < 5 ? (
