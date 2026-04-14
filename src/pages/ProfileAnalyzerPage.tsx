@@ -187,7 +187,8 @@ interface FormData {
   target_states: string[];
   fee_budget_lakhs: string;
   expected_salary_lakhs: string;
-  current_employer_type: string;
+  current_employer_type: string[];
+  other_certification: string;
   graduation_year: string;
   has_certifications: string[];
   extracurriculars: string[];
@@ -204,7 +205,8 @@ const initialForm: FormData = {
   is_pursuing_graduation: false,
   work_experience_months: "", category: "General", gender: "",
   target_exams: [], target_colleges: [], preferred_specialization: "", target_states: [],
-  fee_budget_lakhs: "", expected_salary_lakhs: "", current_employer_type: "",
+  fee_budget_lakhs: "", expected_salary_lakhs: "", current_employer_type: [],
+  other_certification: "",
   graduation_year: "", has_certifications: [], extracurriculars: [],
   leadership_roles: "", preparation_months_remaining: "", current_city: "",
   has_gap_years: false, gap_year_reason: "",
@@ -690,7 +692,7 @@ const ProfileAnalyzerPage = () => {
     setErrors(prev => { const n = { ...prev }; delete n[key]; return n; });
   };
 
-  const toggleArrayItem = (key: "target_exams" | "target_colleges" | "target_states" | "has_certifications" | "extracurriculars", item: string) => {
+  const toggleArrayItem = (key: "target_exams" | "target_colleges" | "target_states" | "has_certifications" | "extracurriculars" | "current_employer_type", item: string) => {
     setForm(prev => ({
       ...prev,
       [key]: (prev[key] as string[]).includes(item) ? (prev[key] as string[]).filter(c => c !== item) : [...(prev[key] as string[]), item],
@@ -736,9 +738,28 @@ const ProfileAnalyzerPage = () => {
     }
     setStep(6);
     setLoadingProgress(0);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    const loadingStages = [
+      { target: 15, label: "Evaluating academic profile..." },
+      { target: 30, label: "Scoring work experience..." },
+      { target: 45, label: "Computing 5-dimension scores..." },
+      { target: 58, label: "Matching against 50+ colleges..." },
+      { target: 72, label: "Running peer comparison..." },
+      { target: 82, label: "Building personalised roadmap..." },
+      { target: 88, label: "Analysing more datasets..." },
+      { target: 92, label: "Cross-referencing your profile..." },
+      { target: 95, label: "Generating visual insights..." },
+      { target: 97, label: "Finalising your report..." },
+    ];
+    let stageIndex = 0;
     const interval = setInterval(() => {
-      setLoadingProgress(prev => { if (prev >= 90) { clearInterval(interval); return 90; } return prev + Math.random() * 10; });
-    }, 400);
+      setLoadingProgress(prev => {
+        if (stageIndex >= loadingStages.length) { clearInterval(interval); return prev; }
+        const target = loadingStages[stageIndex].target;
+        if (prev >= target - 1) { stageIndex++; }
+        return Math.min(prev + Math.random() * 3 + 0.5, stageIndex < loadingStages.length ? loadingStages[stageIndex].target : 98);
+      });
+    }, 350);
 
     try {
       const { data, error } = await supabase.functions.invoke("profile-analyzer", {
@@ -754,7 +775,7 @@ const ProfileAnalyzerPage = () => {
           target_states: form.target_states,
           fee_budget_lakhs: form.fee_budget_lakhs ? +form.fee_budget_lakhs : undefined,
           expected_salary_lakhs: form.expected_salary_lakhs ? +form.expected_salary_lakhs : undefined,
-          current_employer_type: form.current_employer_type || undefined,
+          current_employer_type: (form.current_employer_type as string[]).length ? (form.current_employer_type as string[]) : undefined,
           graduation_year: form.graduation_year ? +form.graduation_year : undefined,
           has_certifications: form.has_certifications.length ? form.has_certifications : undefined,
           extracurriculars: form.extracurriculars.length ? form.extracurriculars : undefined,
@@ -771,7 +792,7 @@ const ProfileAnalyzerPage = () => {
       if (data?.error) throw new Error(data.error);
       setResult(data);
       localStorage.removeItem(STORAGE_KEY);
-      setTimeout(() => setStep(7), 600);
+      setTimeout(() => { setStep(7); window.scrollTo({ top: 0, behavior: "smooth" }); }, 600);
     } catch (e: any) {
       clearInterval(interval);
       toast({ title: "Analysis Failed", description: e.message || "Please try again.", variant: "destructive" });
@@ -792,6 +813,7 @@ const ProfileAnalyzerPage = () => {
       setUnlocked(true);
       setShowLeadModal(false);
       setStep(8);
+      window.scrollTo({ top: 0, behavior: "smooth" });
       toast({ title: "Report Unlocked", description: "Your personalised MBA roadmap is ready." });
     } catch {
       toast({ title: "Error", description: "Please try again.", variant: "destructive" });
@@ -1251,7 +1273,7 @@ const ProfileAnalyzerPage = () => {
           <motion.div key={`step-${step}`} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} className="max-w-2xl mx-auto px-4 py-12">
             <div className="mb-8">
               <div className="flex justify-between items-center mb-3">
-                <span className="text-sm font-medium text-muted-foreground">Step {step} of 4</span>
+                <span className="text-sm font-medium text-muted-foreground">Step {step} of 5</span>
                 <span className="text-sm text-muted-foreground">{Math.round((step / 5) * 100)}%</span>
               </div>
               <Progress value={(step / 5) * 100} className="h-2" />
@@ -1449,16 +1471,28 @@ const ProfileAnalyzerPage = () => {
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <Label className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" /> Current Employer Type</Label>
-                        <Select value={form.current_employer_type} onValueChange={v => updateField("current_employer_type", v)}>
-                          <SelectTrigger><SelectValue placeholder="Industry / Sector" /></SelectTrigger>
-                          <SelectContent>{EMPLOYER_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                        </Select>
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" /> Current Employer Type(s)</Label>
+                        <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto border border-border rounded-lg p-3">
+                          {EMPLOYER_TYPES.map(t => (
+                            <label key={t} className={`flex items-center gap-2 text-sm cursor-pointer rounded-lg border p-2 transition-colors ${(form.current_employer_type as string[]).includes(t) ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
+                              <Checkbox checked={(form.current_employer_type as string[]).includes(t)} onCheckedChange={() => toggleArrayItem("current_employer_type" as any, t)} />
+                              {t}
+                            </label>
+                          ))}
+                        </div>
+                        <p className="text-xs text-muted-foreground">{(form.current_employer_type as string[]).length ? (form.current_employer_type as string[]).join(", ") : "Select your industry sectors"}</p>
                       </div>
                       <div className="space-y-1.5">
                         <Label className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Graduation Year</Label>
-                        <Input type="number" min="2010" max="2030" placeholder="e.g., 2023" value={form.graduation_year} onChange={e => updateField("graduation_year", e.target.value)} />
+                        <Select value={form.graduation_year} onValueChange={v => updateField("graduation_year", v)}>
+                          <SelectTrigger><SelectValue placeholder="Select year" /></SelectTrigger>
+                          <SelectContent>
+                            {Array.from({ length: 22 }, (_, i) => String(2014 + i)).map(y => (
+                              <SelectItem key={y} value={y}>{y}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1469,6 +1503,7 @@ const ProfileAnalyzerPage = () => {
                       <div className="space-y-1.5">
                         <Label className="flex items-center gap-1.5"><Timer className="w-3.5 h-3.5" /> Months Until Exam</Label>
                         <Input type="number" min="1" max="24" placeholder="e.g., 6" value={form.preparation_months_remaining} onChange={e => updateField("preparation_months_remaining", e.target.value)} />
+                        <p className="text-xs text-muted-foreground flex items-center gap-1"><Info className="w-3 h-3 shrink-0" /> How many months are left before your target entrance exam (CAT/XAT/etc). This helps us plan your preparation roadmap.</p>
                       </div>
                     </div>
                     <div className="space-y-1.5">
@@ -1479,7 +1514,8 @@ const ProfileAnalyzerPage = () => {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5" /> Certifications</Label>
+                      <Label className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5" /> Certifications <Badge variant="secondary" className="text-[10px] ml-1">Optional</Badge></Label>
+                      <p className="text-xs text-muted-foreground">Select any professional certifications you hold. This boosts your profile diversity score.</p>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {CERTIFICATION_OPTIONS.map(cert => (
                           <label key={cert} className={`flex items-center gap-2 text-sm cursor-pointer rounded-lg border p-2 transition-colors ${form.has_certifications.includes(cert) ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
@@ -1488,6 +1524,12 @@ const ProfileAnalyzerPage = () => {
                           </label>
                         ))}
                       </div>
+                      {form.has_certifications.includes("Other") && (
+                        <div className="space-y-1.5 mt-2">
+                          <Label className="text-sm">Specify Certification Name</Label>
+                          <Input placeholder="e.g., Google Analytics, AWS Solutions Architect" value={form.other_certification} onChange={e => updateField("other_certification", e.target.value)} />
+                        </div>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label className="flex items-center gap-1.5"><Star className="w-3.5 h-3.5" /> Extracurriculars</Label>
@@ -1596,51 +1638,90 @@ const ProfileAnalyzerPage = () => {
 
               <div className="space-y-3">
                 <h2 className="text-2xl font-bold">AI is Analysing Your Profile</h2>
-                <p className="text-muted-foreground">Cross-referencing 10,000+ data points to generate personalised insights...</p>
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={Math.floor(loadingProgress / 10)}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="text-muted-foreground"
+                  >
+                    {loadingProgress < 15 ? "Evaluating your academic credentials..." :
+                     loadingProgress < 30 ? "Scoring work experience & profile diversity..." :
+                     loadingProgress < 45 ? "Computing 5-dimension profile scores..." :
+                     loadingProgress < 58 ? "Matching against 50+ MBA colleges..." :
+                     loadingProgress < 72 ? "Running peer comparison with 25,000+ students..." :
+                     loadingProgress < 82 ? "Building your personalised roadmap..." :
+                     loadingProgress < 88 ? "Analysing additional datasets & trends..." :
+                     loadingProgress < 92 ? "Cross-referencing your profile with admission data..." :
+                     loadingProgress < 95 ? "Generating visual insights & charts..." :
+                     "Finalising your comprehensive report..."}
+                  </motion.p>
+                </AnimatePresence>
               </div>
 
               {/* Animated progress with glowing effect */}
               <div className="relative">
-                <Progress value={loadingProgress} className="h-3" />
-                <motion.div
-                  animate={{ opacity: [0.5, 1, 0.5] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                  className="absolute top-0 h-3 rounded-full bg-primary/20 blur-sm"
-                  style={{ width: `${loadingProgress}%` }}
-                />
-                <p className="text-right text-xs text-muted-foreground mt-1 font-mono">{Math.round(loadingProgress)}%</p>
+                <div className="h-4 bg-muted rounded-full overflow-hidden relative">
+                  <motion.div
+                    className="h-full rounded-full bg-gradient-to-r from-primary via-primary/80 to-primary relative overflow-hidden"
+                    style={{ width: `${loadingProgress}%` }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <motion.div
+                      animate={{ x: ["-100%", "200%"] }}
+                      transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                    />
+                  </motion.div>
+                </div>
+                <div className="flex justify-between mt-2">
+                  <motion.span
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ repeat: Infinity, duration: 2 }}
+                    className="text-xs text-primary font-medium"
+                  >
+                    {loadingProgress < 50 ? "⚡ Processing..." : loadingProgress < 85 ? "🧠 Deep analysis in progress..." : "✨ Almost ready..."}
+                  </motion.span>
+                  <span className="text-xs text-muted-foreground font-mono font-bold">{Math.round(loadingProgress)}%</span>
+                </div>
               </div>
 
               {/* Step-by-step processing stages */}
-              <div className="space-y-3 text-sm">
+              <div className="space-y-2 text-sm">
                 {[
-                  { threshold: 10, icon: GraduationCap, label: "Evaluating academic profile...", done: "Academic profile evaluated" },
-                  { threshold: 25, icon: Briefcase, label: "Scoring work experience...", done: "Work experience scored" },
-                  { threshold: 40, icon: PieChart, label: "Computing 5-dimension scores...", done: "5-dimension scores computed" },
-                  { threshold: 55, icon: Building2, label: "Matching against 50+ colleges...", done: "College matching complete" },
-                  { threshold: 70, icon: Users, label: "Running peer comparison...", done: "Peer comparison ready" },
-                  { threshold: 85, icon: Sparkles, label: "Building personalised roadmap...", done: "Roadmap generated" },
+                  { threshold: 12, icon: GraduationCap, label: "Evaluating academic profile...", done: "Academic profile evaluated ✓" },
+                  { threshold: 28, icon: Briefcase, label: "Scoring work experience...", done: "Work experience scored ✓" },
+                  { threshold: 42, icon: PieChart, label: "Computing 5-dimension scores...", done: "5-dimension scores computed ✓" },
+                  { threshold: 55, icon: Building2, label: "Matching against 50+ colleges...", done: "College matching complete ✓" },
+                  { threshold: 70, icon: Users, label: "Running peer comparison...", done: "Peer comparison ready ✓" },
+                  { threshold: 80, icon: Sparkles, label: "Building personalised roadmap...", done: "Roadmap generated ✓" },
+                  { threshold: 87, icon: LineChart, label: "Analysing more datasets...", done: "Additional analysis complete ✓" },
+                  { threshold: 93, icon: Gauge, label: "Cross-referencing your profile...", done: "Profile cross-referenced ✓" },
+                  { threshold: 96, icon: BarChart3, label: "Generating visual insights...", done: "Insights generated ✓" },
                 ].map((stage, i) => {
-                  const isActive = loadingProgress > stage.threshold - 10 && loadingProgress <= stage.threshold + 10;
-                  const isDone = loadingProgress > stage.threshold;
-                  if (loadingProgress < stage.threshold - 10) return null;
+                  const isActive = loadingProgress > stage.threshold - 8 && loadingProgress <= stage.threshold + 5;
+                  const isDone = loadingProgress > stage.threshold + 5;
+                  if (loadingProgress < stage.threshold - 8) return null;
                   return (
                     <motion.div
                       key={i}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
-                      className={`flex items-center gap-3 px-4 py-2.5 rounded-lg border transition-all ${
+                      className={`flex items-center gap-3 px-4 py-2 rounded-lg border transition-all ${
                         isDone ? "bg-green-500/5 border-green-500/20" : "bg-primary/5 border-primary/20"
                       }`}
                     >
                       {isDone ? (
-                        <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                          <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                        </motion.div>
                       ) : (
                         <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
                           <stage.icon className="w-4 h-4 text-primary shrink-0" />
                         </motion.div>
                       )}
-                      <span className={isDone ? "text-green-600" : "text-foreground"}>
+                      <span className={isDone ? "text-green-600 dark:text-green-400" : "text-foreground"}>
                         {isDone ? stage.done : stage.label}
                       </span>
                       {isActive && (
@@ -2000,107 +2081,166 @@ const ProfileAnalyzerPage = () => {
 
             {/* Exam Strategy */}
             {result.exam_strategy && result.exam_strategy.length > 0 && (
-              <Card>
-                <CardHeader><CardTitle className="flex items-center gap-2"><Flame className="w-5 h-5 text-primary" /> Exam-wise Strategy</CardTitle></CardHeader>
-                <CardContent>
+              <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <Card className="overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+                  <CardTitle className="flex items-center gap-2"><Flame className="w-5 h-5 text-primary" /> Exam-wise Strategy</CardTitle>
+                  <CardDescription>Your personalised difficulty rating and target scores for each exam</CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {result.exam_strategy.map((ex, i) => (
-                      <div key={i} className="p-4 rounded-xl border border-border bg-card hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-bold text-lg">{ex.exam_name}</h4>
-                          <Badge className={`text-xs ${
-                            ex.difficulty_for_student === "Easy" ? "bg-green-100 text-green-700" :
-                            ex.difficulty_for_student === "Medium" ? "bg-amber-100 text-amber-700" :
-                            "bg-red-100 text-red-700"
+                      <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}
+                        className="p-5 rounded-2xl border border-border bg-gradient-to-br from-card to-muted/30 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="font-bold text-xl group-hover:text-primary transition-colors">{ex.exam_name}</h4>
+                          <Badge className={`text-xs px-3 py-1 ${
+                            ex.difficulty_for_student === "Easy" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" :
+                            ex.difficulty_for_student === "Medium" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" :
+                            "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                           }`}>{ex.difficulty_for_student}</Badge>
                         </div>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between"><span className="text-muted-foreground">Target Score</span><span className="font-semibold">{ex.recommended_score}</span></div>
-                          <div className="flex justify-between"><span className="text-muted-foreground">Prep Time</span><span className="font-semibold">{ex.preparation_months} months</span></div>
-                          <div className="flex justify-between"><span className="text-muted-foreground">ROI Rating</span><span className="font-semibold">{ex.roi_rating}</span></div>
+                        <div className="space-y-3">
+                          {[
+                            { label: "Target Score", value: ex.recommended_score, icon: Target },
+                            { label: "Prep Time", value: `${ex.preparation_months} months`, icon: Clock },
+                            { label: "ROI Rating", value: ex.roi_rating, icon: TrendingUp },
+                          ].map(item => (
+                            <div key={item.label} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                              <span className="text-xs text-muted-foreground flex items-center gap-1.5"><item.icon className="w-3 h-3" />{item.label}</span>
+                              <span className="text-sm font-bold">{item.value}</span>
+                            </div>
+                          ))}
                         </div>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 </CardContent>
               </Card>
+              </motion.div>
             )}
 
             {/* Strengths & Weaknesses */}
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader><CardTitle className="flex items-center gap-2 text-green-600"><CheckCircle2 className="w-5 h-5" /> Strengths</CardTitle></CardHeader>
-                <CardContent className="space-y-3">
+              <Card className="overflow-hidden border-green-200/50 dark:border-green-800/50">
+                <CardHeader className="bg-gradient-to-r from-green-50 to-transparent dark:from-green-950/20">
+                  <CardTitle className="flex items-center gap-2 text-green-600"><CheckCircle2 className="w-5 h-5" /> Your Strengths</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-4">
                   {result.strengths?.map((s, i) => (
-                    <div key={i} className="p-3 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800">
-                      <div className="flex items-center gap-2 mb-1"><Badge className="bg-green-500 text-white text-xs">{s.impact}</Badge><span className="font-semibold text-sm">{s.title}</span></div>
-                      <p className="text-sm text-muted-foreground">{s.description}</p>
-                    </div>
+                    <motion.div key={i} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                      className="p-4 rounded-xl bg-green-50/50 dark:bg-green-950/10 border border-green-200/50 dark:border-green-800/50 hover:shadow-md transition-all">
+                      <div className="flex items-center gap-2 mb-2">
+                        <motion.div whileHover={{ rotate: 10, scale: 1.1 }} className="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center shrink-0">
+                          <CheckCircle2 className="w-4 h-4 text-white" />
+                        </motion.div>
+                        <div className="flex-1">
+                          <span className="font-semibold text-sm">{s.title}</span>
+                          <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-[10px] ml-2">{s.impact} Impact</Badge>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground ml-10">{s.description}</p>
+                    </motion.div>
                   ))}
                 </CardContent>
               </Card>
-              <Card>
-                <CardHeader><CardTitle className="flex items-center gap-2 text-amber-600"><AlertTriangle className="w-5 h-5" /> Weaknesses & Fixes</CardTitle></CardHeader>
-                <CardContent className="space-y-3">
+              <Card className="overflow-hidden border-amber-200/50 dark:border-amber-800/50">
+                <CardHeader className="bg-gradient-to-r from-amber-50 to-transparent dark:from-amber-950/20">
+                  <CardTitle className="flex items-center gap-2 text-amber-600"><AlertTriangle className="w-5 h-5" /> Areas to Improve</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3 pt-4">
                   {result.weaknesses?.map((w, i) => (
-                    <div key={i} className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
-                      <div className="flex items-center gap-2 mb-1"><Badge className="bg-amber-500 text-white text-xs">{w.severity}</Badge><span className="font-semibold text-sm">{w.title}</span></div>
-                      <p className="text-sm text-muted-foreground">{w.description}</p>
-                      <p className="text-sm text-primary mt-1 font-medium flex items-center gap-1"><ArrowRight className="w-3 h-3" /> {w.fix}</p>
-                    </div>
+                    <motion.div key={i} initial={{ opacity: 0, x: 20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                      className="p-4 rounded-xl bg-amber-50/50 dark:bg-amber-950/10 border border-amber-200/50 dark:border-amber-800/50 hover:shadow-md transition-all">
+                      <div className="flex items-center gap-2 mb-2">
+                        <motion.div whileHover={{ rotate: -10, scale: 1.1 }} className="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center shrink-0">
+                          <AlertTriangle className="w-4 h-4 text-white" />
+                        </motion.div>
+                        <div className="flex-1">
+                          <span className="font-semibold text-sm">{w.title}</span>
+                          <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] ml-2">{w.severity}</Badge>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground ml-10 mb-2">{w.description}</p>
+                      <div className="ml-10 p-2 rounded-lg bg-primary/5 border border-primary/10">
+                        <p className="text-xs text-primary font-medium flex items-center gap-1"><Lightbulb className="w-3 h-3" /> Fix: {w.fix}</p>
+                      </div>
+                    </motion.div>
                   ))}
                 </CardContent>
               </Card>
             </div>
+            </motion.div>
 
             {/* AI Recommendations */}
-            <Card>
-              <CardHeader><CardTitle className="flex items-center gap-2"><Lightbulb className="w-5 h-5 text-primary" /> AI Recommendations</CardTitle></CardHeader>
-              <CardContent>
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <Card className="overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+                <CardTitle className="flex items-center gap-2"><Lightbulb className="w-5 h-5 text-primary" /> AI Action Plan</CardTitle>
+                <CardDescription>Prioritised steps to strengthen your MBA profile</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {result.recommendations?.map((r, i) => (
-                    <div key={i} className="p-4 rounded-xl border border-border bg-card hover:shadow-md transition-shadow">
-                      <div className="flex items-center gap-2 mb-2">
+                    <motion.div key={i} initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}
+                      className="p-5 rounded-2xl border border-border bg-gradient-to-br from-card to-muted/20 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 group">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                          r.priority === "critical" ? "bg-red-500" : r.priority === "high" ? "bg-primary" : "bg-muted-foreground/50"
+                        }`}>
+                          <span className="text-white text-xs font-bold">{i + 1}</span>
+                        </div>
                         <Badge variant={r.priority === "critical" ? "destructive" : r.priority === "high" ? "default" : "secondary"} className="text-xs">{r.priority}</Badge>
-                        {r.timeline && <span className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="w-3 h-3" /> {r.timeline}</span>}
+                        {r.timeline && <span className="text-[10px] text-muted-foreground flex items-center gap-1 ml-auto"><Clock className="w-3 h-3" /> {r.timeline}</span>}
                       </div>
-                      <h4 className="font-semibold text-sm mb-1">{r.title}</h4>
-                      <p className="text-sm text-muted-foreground">{r.description}</p>
-                    </div>
+                      <h4 className="font-semibold text-sm mb-1 group-hover:text-primary transition-colors">{r.title}</h4>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{r.description}</p>
+                    </motion.div>
                   ))}
                 </div>
               </CardContent>
             </Card>
+            </motion.div>
 
             {/* Study Plan */}
-            <Card>
-              <CardHeader><CardTitle className="flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" /> Personalised Study Plan</CardTitle></CardHeader>
-              <CardContent>
+            <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <Card className="overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+                <CardTitle className="flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" /> Personalised Study Plan</CardTitle>
+                <CardDescription>Your phase-wise preparation roadmap with daily targets</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-6">
                 <div className="space-y-4">
                   {result.study_plan?.map((phase, i) => (
-                    <div key={i} className="flex gap-4">
+                    <motion.div key={i} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                      className="flex gap-4">
                       <div className="flex flex-col items-center">
-                        <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">{i + 1}</div>
-                        {i < (result.study_plan?.length || 0) - 1 && <div className="w-0.5 h-full bg-border mt-1" />}
+                        <motion.div whileHover={{ scale: 1.15 }} className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/70 text-primary-foreground flex items-center justify-center font-bold text-sm shadow-lg">{i + 1}</motion.div>
+                        {i < (result.study_plan?.length || 0) - 1 && (
+                          <motion.div initial={{ height: 0 }} whileInView={{ height: "100%" }} viewport={{ once: true }} transition={{ delay: i * 0.1 + 0.2 }} className="w-0.5 bg-gradient-to-b from-primary/30 to-transparent mt-1" />
+                        )}
                       </div>
-                      <div className="flex-1 pb-6">
-                        <div className="flex items-center gap-3 mb-2">
+                      <div className="flex-1 pb-6 p-4 rounded-2xl bg-muted/30 border border-border/50 hover:shadow-md transition-all">
+                        <div className="flex items-center gap-3 mb-2 flex-wrap">
                           <h4 className="font-bold">{phase.phase}</h4>
-                          <Badge variant="outline">{phase.duration}</Badge>
-                          {phase.daily_hours && <span className="text-xs text-muted-foreground">{phase.daily_hours} hrs/day</span>}
+                          <Badge variant="outline" className="text-xs">{phase.duration}</Badge>
+                          {phase.daily_hours && <Badge variant="secondary" className="text-xs">{phase.daily_hours} hrs/day</Badge>}
                         </div>
                         {phase.target_score && <p className="text-sm text-primary mb-2">Target: {phase.target_score}</p>}
                         <div className="flex flex-wrap gap-2">{phase.focus_areas?.map((area, j) => <Badge key={j} variant="secondary" className="text-xs">{area}</Badge>)}</div>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </CardContent>
             </Card>
+            </motion.div>
 
             {/* ─── ROI ANALYSIS ─── */}
             {result.roi_analysis && result.roi_analysis.length > 0 && (
-              <Card className="border-2 border-primary/20">
+              <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <Card className="border-2 border-primary/20 overflow-hidden">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2"><TrendingUp className="w-5 h-5 text-primary" /> ROI Analysis — College-wise Investment Returns</CardTitle>
                   <CardDescription>Total investment vs expected returns for each recommended college</CardDescription>
@@ -2138,6 +2278,7 @@ const ProfileAnalyzerPage = () => {
                   </div>
                 </CardContent>
               </Card>
+              </motion.div>
             )}
 
             {/* ─── SALARY BENCHMARKING ─── */}
