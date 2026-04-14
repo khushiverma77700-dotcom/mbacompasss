@@ -2230,11 +2230,12 @@ const ProfileAnalyzerPage = () => {
                         {phase.target_score && <p className="text-sm text-primary mb-2">Target: {phase.target_score}</p>}
                         <div className="flex flex-wrap gap-2">{phase.focus_areas?.map((area, j) => <Badge key={j} variant="secondary" className="text-xs">{area}</Badge>)}</div>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </CardContent>
             </Card>
+            </motion.div>
 
             {/* ─── ROI ANALYSIS ─── */}
             {result.roi_analysis && result.roi_analysis.length > 0 && (
