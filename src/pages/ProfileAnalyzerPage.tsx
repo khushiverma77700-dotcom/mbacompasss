@@ -767,26 +767,37 @@ const ProfileAnalyzerPage = () => {
     setLoadingProgress(0);
     window.scrollTo({ top: 0, behavior: "smooth" });
     const loadingStages = [
-      { target: 15, label: "Evaluating academic profile..." },
-      { target: 30, label: "Scoring work experience..." },
-      { target: 45, label: "Computing 5-dimension scores..." },
-      { target: 58, label: "Matching against 50+ colleges..." },
-      { target: 72, label: "Running peer comparison..." },
-      { target: 82, label: "Building personalised roadmap..." },
-      { target: 88, label: "Analysing more datasets..." },
-      { target: 92, label: "Cross-referencing your profile..." },
-      { target: 95, label: "Generating visual insights..." },
-      { target: 97, label: "Finalising your report..." },
+      { target: 8, label: "Evaluating academic profile..." },
+      { target: 16, label: "Scoring work experience..." },
+      { target: 24, label: "Computing 5-dimension scores..." },
+      { target: 32, label: "Matching against 50+ colleges..." },
+      { target: 40, label: "Running peer comparison..." },
+      { target: 48, label: "Building personalised roadmap..." },
+      { target: 55, label: "Analysing additional datasets..." },
+      { target: 62, label: "Cross-referencing admission data..." },
+      { target: 68, label: "Generating ROI projections..." },
+      { target: 73, label: "Calculating salary benchmarks..." },
+      { target: 77, label: "Building improvement timeline..." },
+      { target: 80, label: "Ranking college fit scores..." },
+      { target: 83, label: "Comparing with peer cohorts..." },
+      { target: 85, label: "Generating visual insights..." },
+      { target: 87, label: "Polishing your report..." },
     ];
     let stageIndex = 0;
+    let slowTick = 0;
     const interval = setInterval(() => {
       setLoadingProgress(prev => {
-        if (stageIndex >= loadingStages.length) { clearInterval(interval); return prev; }
-        const target = loadingStages[stageIndex].target;
-        if (prev >= target - 1) { stageIndex++; }
-        return Math.min(prev + Math.random() * 3 + 0.5, stageIndex < loadingStages.length ? loadingStages[stageIndex].target : 98);
+        if (stageIndex < loadingStages.length) {
+          const target = loadingStages[stageIndex].target;
+          if (prev >= target - 0.5) { stageIndex++; }
+          return Math.min(prev + Math.random() * 1.2 + 0.3, stageIndex < loadingStages.length ? loadingStages[stageIndex].target : 87);
+        }
+        // After all stages, crawl very slowly — never exceed 95
+        slowTick++;
+        const crawl = 0.08 / (1 + slowTick * 0.05);
+        return Math.min(prev + crawl, 95);
       });
-    }, 350);
+    }, 600);
 
     try {
       const { data, error } = await supabase.functions.invoke("profile-analyzer", {
