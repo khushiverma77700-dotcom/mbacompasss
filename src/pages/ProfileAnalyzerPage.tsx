@@ -692,7 +692,7 @@ const ProfileAnalyzerPage = () => {
     setErrors(prev => { const n = { ...prev }; delete n[key]; return n; });
   };
 
-  const toggleArrayItem = (key: "target_exams" | "target_colleges" | "target_states" | "has_certifications" | "extracurriculars", item: string) => {
+  const toggleArrayItem = (key: "target_exams" | "target_colleges" | "target_states" | "has_certifications" | "extracurriculars" | "current_employer_type", item: string) => {
     setForm(prev => ({
       ...prev,
       [key]: (prev[key] as string[]).includes(item) ? (prev[key] as string[]).filter(c => c !== item) : [...(prev[key] as string[]), item],
@@ -756,7 +756,7 @@ const ProfileAnalyzerPage = () => {
           target_states: form.target_states,
           fee_budget_lakhs: form.fee_budget_lakhs ? +form.fee_budget_lakhs : undefined,
           expected_salary_lakhs: form.expected_salary_lakhs ? +form.expected_salary_lakhs : undefined,
-          current_employer_type: form.current_employer_type || undefined,
+          current_employer_type: (form.current_employer_type as string[]).length ? (form.current_employer_type as string[]) : undefined,
           graduation_year: form.graduation_year ? +form.graduation_year : undefined,
           has_certifications: form.has_certifications.length ? form.has_certifications : undefined,
           extracurriculars: form.extracurriculars.length ? form.extracurriculars : undefined,
