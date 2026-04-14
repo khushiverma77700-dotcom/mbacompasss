@@ -813,6 +813,7 @@ const ProfileAnalyzerPage = () => {
       setUnlocked(true);
       setShowLeadModal(false);
       setStep(8);
+      window.scrollTo({ top: 0, behavior: "smooth" });
       toast({ title: "Report Unlocked", description: "Your personalised MBA roadmap is ready." });
     } catch {
       toast({ title: "Error", description: "Please try again.", variant: "destructive" });
