@@ -67,7 +67,7 @@ const ProfileAnalyzerPopup = () => {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleDismiss(); }}>
-      <DialogContent className="max-w-[900px] w-[95vw] md:w-[90vw] p-0 overflow-hidden border-0 shadow-2xl rounded-2xl [&>button]:hidden gap-0">
+      <DialogContent className="max-w-[900px] w-[95vw] md:w-[90vw] p-0 overflow-hidden border-0 shadow-2xl rounded-2xl [&>button]:hidden gap-0 max-h-[90vh] overflow-y-auto">
         {/* Close button */}
         <button
           onClick={handleDismiss}
@@ -78,7 +78,7 @@ const ProfileAnalyzerPopup = () => {
 
         <div className="flex flex-col md:flex-row">
           {/* Left Panel — Info */}
-          <div className="relative md:w-[45%] p-6 md:p-8 overflow-hidden" style={{ background: "var(--hero-gradient)" }}>
+          <div className="relative md:w-[45%] p-4 md:p-8 overflow-hidden" style={{ background: "var(--hero-gradient)" }}>
             {/* Decorative circles */}
             <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-white/10 blur-sm" />
             <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white/10 blur-sm" />
@@ -127,7 +127,7 @@ const ProfileAnalyzerPopup = () => {
           </div>
 
           {/* Right Panel — CTA */}
-          <div className="md:w-[55%] p-6 md:p-8 flex flex-col justify-center bg-background">
+          <div className="md:w-[55%] p-4 md:p-8 flex flex-col justify-center bg-background">
             {/* Icon + headline */}
             <div className="flex items-center gap-3 mb-2">
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
