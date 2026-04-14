@@ -682,19 +682,19 @@ const ProfileAnalyzerPage = () => {
             const reconstructed: any = {
               profile_id: profileData.id,
               profile_score: profileData.profile_score,
-              strengths: analysisData.strengths,
-              weaknesses: analysisData.weaknesses,
+              strengths: Array.isArray(analysisData.strengths) ? analysisData.strengths : [],
+              weaknesses: Array.isArray(analysisData.weaknesses) ? analysisData.weaknesses : [],
               college_predictions: analysisData.college_predictions,
-              recommendations: analysisData.recommendations,
-              study_plan: analysisData.study_plan,
+              recommendations: Array.isArray(analysisData.recommendations) ? analysisData.recommendations : [],
+              study_plan: Array.isArray(analysisData.study_plan) ? analysisData.study_plan : [],
               ai_summary: analysisData.ai_summary,
               // Extract nested fields from probability_scores
               score_breakdown: analysisData.probability_scores,
-              exam_strategy: (analysisData.probability_scores as any)?.exam_strategy,
-              peer_comparison: (analysisData.probability_scores as any)?.peer_comparison,
-              roi_analysis: (analysisData.probability_scores as any)?.roi_analysis,
-              salary_benchmarking: (analysisData.probability_scores as any)?.salary_benchmarking,
-              improvement_roadmap: (analysisData.probability_scores as any)?.improvement_roadmap,
+              exam_strategy: Array.isArray((analysisData.probability_scores as any)?.exam_strategy) ? (analysisData.probability_scores as any).exam_strategy : [],
+              peer_comparison: (analysisData.probability_scores as any)?.peer_comparison || null,
+              roi_analysis: Array.isArray((analysisData.probability_scores as any)?.roi_analysis) ? (analysisData.probability_scores as any).roi_analysis : [],
+              salary_benchmarking: (analysisData.probability_scores as any)?.salary_benchmarking || null,
+              improvement_roadmap: Array.isArray((analysisData.probability_scores as any)?.improvement_roadmap) ? (analysisData.probability_scores as any).improvement_roadmap : [],
               detailed_college_table: Array.isArray((analysisData.college_predictions as any)?.detailed_college_table) ? (analysisData.college_predictions as any).detailed_college_table : Array.isArray(analysisData.college_predictions) ? analysisData.college_predictions : [],
             };
             setResult(reconstructed);
