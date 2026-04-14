@@ -72,25 +72,25 @@ export const contentTypeConfig: Record<
   institute: {
     label: "Institutes",
     table: "institutes",
-    supportsH1Column: false,
+    supportsH1Column: true,
     getPath: (item) => `/institute/${item.slug}`,
   },
   college: {
     label: "Colleges",
     table: "colleges",
-    supportsH1Column: false,
+    supportsH1Column: true,
     getPath: (item) => `/college/${item.slug}`,
   },
   exam: {
     label: "Exams",
     table: "exams",
-    supportsH1Column: false,
+    supportsH1Column: true,
     getPath: (item) => `/exam/${item.slug}`,
   },
   cityPage: {
     label: "City/State Pages",
     table: "city_pages",
-    supportsH1Column: false,
+    supportsH1Column: true,
     getPath: (item) => `/colleges/${item.slug}`,
   },
 };
