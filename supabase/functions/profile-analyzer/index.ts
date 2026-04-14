@@ -14,7 +14,6 @@ async function logAIUsage(feature: string, model: string, aiData: any, status = 
       status, error_message: errorMsg || null,
     });
     if (error) console.error("[ai-usage-log] Insert failed:", JSON.stringify(error));
-    else console.log("[ai-usage-log] Logged usage for", feature);
   } catch (e) { console.error("[ai-usage-log] Exception:", e); }
 }
 
@@ -39,6 +38,18 @@ interface ProfileInput {
   preferred_specialization?: string;
   target_states: string[];
   phone?: string;
+  // New fields
+  fee_budget_lakhs?: number;
+  expected_salary_lakhs?: number;
+  current_employer_type?: string;
+  graduation_year?: number;
+  has_certifications?: string[];
+  extracurriculars?: string[];
+  leadership_roles?: string;
+  preparation_months_remaining?: number;
+  current_city?: string;
+  has_gap_years?: boolean;
+  gap_year_reason?: string;
 }
 
 function calculateProfileScore(p: ProfileInput): number {
@@ -63,9 +74,15 @@ function calculateProfileScore(p: ProfileInput): number {
   };
   const extraScore = streamBonus[p.graduation_stream] || 0.5;
 
+  // Bonus for certifications & leadership
+  let bonusScore = 0;
+  if (p.has_certifications && p.has_certifications.length > 0) bonusScore += 0.05 * Math.min(p.has_certifications.length, 3);
+  if (p.leadership_roles && p.leadership_roles !== "none") bonusScore += 0.05;
+  if (p.extracurriculars && p.extracurriculars.length > 0) bonusScore += 0.03 * Math.min(p.extracurriculars.length, 3);
+
   const score =
-    tenthNorm * 0.15 + twelfthNorm * 0.15 + gradNorm * 0.2 +
-    workScore * 0.2 + catScore * 0.1 + extraScore * 0.2;
+    tenthNorm * 0.12 + twelfthNorm * 0.12 + gradNorm * 0.18 +
+    workScore * 0.2 + catScore * 0.08 + extraScore * 0.15 + Math.min(bonusScore, 0.15);
 
   return Math.round(score * 100) / 10;
 }
@@ -88,7 +105,6 @@ serve(async (req) => {
     }
 
     const profileScore = calculateProfileScore(body);
-
     const studentName = body.name || "Student";
     const workExpLabel = body.work_experience_months === 0 ? "Fresher" : `${body.work_experience_months} months`;
     
@@ -99,13 +115,23 @@ STUDENT PROFILE:
 - 10th Score: ${body.tenth_score}%
 - 12th Score: ${body.twelfth_score}%
 - Graduation Score: ${body.graduation_score}% in ${body.graduation_stream} ${body.is_pursuing_graduation ? "(Currently Pursuing)" : ""}
+- Graduation Year: ${body.graduation_year || "Not specified"}
 - Work Experience: ${workExpLabel}
+- Current Employer Type: ${body.current_employer_type || "Not specified"}
 - Category: ${body.category}
 - Gender: ${body.gender || "Not specified"}
+- Current City: ${body.current_city || "Not specified"}
 - Target Exams: ${body.target_exams?.join(", ")}
 - Target Colleges: ${body.target_colleges?.join(", ") || "Not specified"}
 - Preferred Specialization: ${body.preferred_specialization || "Not specified"}
 - Target States for MBA: ${body.target_states?.join(", ") || "Pan India"}
+- Fee Budget: ${body.fee_budget_lakhs ? `₹${body.fee_budget_lakhs} Lakhs` : "No budget constraint"}
+- Expected Post-MBA Salary: ${body.expected_salary_lakhs ? `₹${body.expected_salary_lakhs} LPA` : "Not specified"}
+- Certifications: ${body.has_certifications?.join(", ") || "None"}
+- Extracurriculars: ${body.extracurriculars?.join(", ") || "None"}
+- Leadership Experience: ${body.leadership_roles || "None specified"}
+- Months Until Exam: ${body.preparation_months_remaining || "Not specified"}
+- Gap Years: ${body.has_gap_years ? `Yes - ${body.gap_year_reason || "reason not specified"}` : "No"}
 - Calculated Profile Score: ${profileScore}/10
 
 PERSONALIZATION RULES:
@@ -115,17 +141,22 @@ PERSONALIZATION RULES:
 4. If they're a fresher, emphasize how to compensate through academics and extracurriculars
 5. If they have work experience, highlight how it benefits specific college applications
 6. Mention their ${body.graduation_stream} background specifically when discussing profile fit
-7. For strengths/weaknesses, tie each one back to their specific numbers (e.g., "Your ${body.tenth_score}% in 10th...")
+7. For strengths/weaknesses, tie each one back to their specific numbers
 8. For college predictions, use their actual target colleges and provide realistic probabilities
 9. Make study plan timeline specific to months remaining before their target exams
+10. If fee budget is specified, filter and prioritize colleges within that budget
+11. If expected salary is specified, calculate ROI for each college
+12. Factor in certifications, extracurriculars, and leadership in profile evaluation
 
-Provide a comprehensive, highly detailed analysis. Include specific percentile targets, cutoff scores, and difficulty ratings. For the detailed_college_table, include 15-25 colleges with precise data points. Be very specific and actionable.
+Provide a comprehensive, highly detailed analysis. Include specific percentile targets, cutoff scores, and difficulty ratings. For the detailed_college_table, include 15-25 colleges with precise data points.
 
 IMPORTANT: For peer_comparison, simulate realistic data showing where this student stands among MBA aspirants. Generate a bell curve distribution with 10 score ranges (1-2, 2-3, ... 9-10) with realistic student counts summing to the total. Mark the bucket that contains this student's score.
 
-For exam_strategy, provide specific recommendations for each target exam the student selected.
+For roi_analysis, calculate for each recommended college: total investment (fees + living costs), expected salary post-MBA, payback period, 5-year ROI percentage, and 10-year cumulative earnings advantage.
 
-For score_breakdown, provide 5 dimension scores: academics, work_experience, diversity, profile_consistency (how consistent are their scores across 10th/12th/grad), and leadership_potential. Also provide percentile_among_aspirants (0-100).`;
+For salary_benchmarking, provide current salary estimates for their profile (pre-MBA) vs post-MBA salary ranges for each tier of colleges. Include sector-wise salary data.
+
+For improvement_roadmap, provide a month-by-month timeline with specific milestones, mock test targets, and measurable goals.`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -136,7 +167,7 @@ For score_breakdown, provide 5 dimension scores: academics, work_experience, div
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: `You are an expert Indian MBA admissions counselor named "B School Buzz AI Counselor". You speak directly to the student by their first name. Every insight must reference their specific data points — never give generic advice. Be warm, encouraging, yet brutally honest about areas needing improvement. Use their actual scores, stream, work experience, and target colleges to make every sentence feel personally crafted for them.` },
+          { role: "system", content: `You are an expert Indian MBA admissions counselor named "B School Buzz AI Counselor". You speak directly to the student by their first name. Every insight must reference their specific data points — never give generic advice. Be warm, encouraging, yet brutally honest about areas needing improvement. Use their actual scores, stream, work experience, and target colleges to make every sentence feel personally crafted for them. Provide extremely quantitative, data-rich analysis with specific numbers, percentages, and benchmarks.` },
           { role: "user", content: prompt },
         ],
         tools: [
@@ -144,7 +175,7 @@ For score_breakdown, provide 5 dimension scores: academics, work_experience, div
             type: "function",
             function: {
               name: "generate_profile_analysis",
-              description: "Generate a comprehensive MBA profile analysis with detailed college comparison table, peer comparison, exam strategy, and 5-dimension scoring",
+              description: "Generate a comprehensive MBA profile analysis with detailed college comparison table, peer comparison, exam strategy, ROI analysis, salary benchmarking, and 5-dimension scoring",
               parameters: {
                 type: "object",
                 properties: {
@@ -156,10 +187,11 @@ For score_breakdown, provide 5 dimension scores: academics, work_experience, div
                         title: { type: "string" },
                         description: { type: "string" },
                         impact: { type: "string", enum: ["high", "medium", "low"] },
+                        quantitative_impact: { type: "string", description: "Specific quantitative impact e.g. 'Increases admission probability by 15% at IIM-L'" },
                       },
-                      required: ["title", "description", "impact"],
+                      required: ["title", "description", "impact", "quantitative_impact"],
                     },
-                    description: "4-6 specific strengths",
+                    description: "5-7 specific strengths with quantitative impacts",
                   },
                   weaknesses: {
                     type: "array",
@@ -170,10 +202,12 @@ For score_breakdown, provide 5 dimension scores: academics, work_experience, div
                         description: { type: "string" },
                         severity: { type: "string", enum: ["high", "medium", "low"] },
                         fix: { type: "string" },
+                        improvement_potential: { type: "string", description: "How much score improvement is possible if fixed e.g. '+0.8 to profile score'" },
+                        timeline_to_fix: { type: "string", description: "How long it takes to fix e.g. '2-3 months'" },
                       },
-                      required: ["title", "description", "severity", "fix"],
+                      required: ["title", "description", "severity", "fix", "improvement_potential", "timeline_to_fix"],
                     },
-                    description: "4-6 specific weaknesses with actionable fixes",
+                    description: "5-7 specific weaknesses with actionable fixes and timelines",
                   },
                   college_predictions: {
                     type: "object",
@@ -255,10 +289,11 @@ For score_breakdown, provide 5 dimension scores: academics, work_experience, div
                         description: { type: "string" },
                         priority: { type: "string", enum: ["critical", "high", "medium"] },
                         timeline: { type: "string" },
+                        expected_outcome: { type: "string", description: "What will improve if this recommendation is followed" },
                       },
-                      required: ["title", "description", "priority"],
+                      required: ["title", "description", "priority", "expected_outcome"],
                     },
-                    description: "6-8 specific actionable recommendations",
+                    description: "8-10 specific actionable recommendations",
                   },
                   study_plan: {
                     type: "array",
@@ -270,23 +305,26 @@ For score_breakdown, provide 5 dimension scores: academics, work_experience, div
                         focus_areas: { type: "array", items: { type: "string" } },
                         target_score: { type: "string" },
                         daily_hours: { type: "number" },
+                        mock_test_target: { type: "string", description: "Target score in mock tests for this phase" },
+                        key_milestones: { type: "array", items: { type: "string" }, description: "2-3 specific milestones to hit" },
                       },
-                      required: ["phase", "duration", "focus_areas"],
+                      required: ["phase", "duration", "focus_areas", "key_milestones"],
                     },
-                    description: "4-5 phase study plan",
+                    description: "5-6 phase study plan with specific milestones",
                   },
                   score_breakdown: {
                     type: "object",
                     properties: {
-                      academics_score: { type: "number", description: "Score out of 10 for academics" },
-                      work_experience_score: { type: "number", description: "Score out of 10 for work experience" },
-                      diversity_score: { type: "number", description: "Score out of 10 for profile diversity/uniqueness" },
-                      profile_consistency_score: { type: "number", description: "Score out of 10 for consistency across 10th/12th/graduation scores" },
-                      leadership_potential_score: { type: "number", description: "Score out of 10 for leadership potential based on experience and profile" },
+                      academics_score: { type: "number" },
+                      work_experience_score: { type: "number" },
+                      diversity_score: { type: "number" },
+                      profile_consistency_score: { type: "number" },
+                      leadership_potential_score: { type: "number" },
+                      extracurricular_score: { type: "number", description: "Score out of 10 for extracurriculars and certifications" },
                       overall_competitiveness: { type: "string", enum: ["Very Strong", "Strong", "Moderate", "Needs Improvement", "Weak"] },
-                      percentile_among_aspirants: { type: "number", description: "Percentile rank among all MBA aspirants 0-100" },
+                      percentile_among_aspirants: { type: "number" },
                     },
-                    required: ["academics_score", "work_experience_score", "diversity_score", "profile_consistency_score", "leadership_potential_score", "overall_competitiveness", "percentile_among_aspirants"],
+                    required: ["academics_score", "work_experience_score", "diversity_score", "profile_consistency_score", "leadership_potential_score", "extracurricular_score", "overall_competitiveness", "percentile_among_aspirants"],
                   },
                   exam_strategy: {
                     type: "array",
@@ -294,43 +332,118 @@ For score_breakdown, provide 5 dimension scores: academics, work_experience, div
                       type: "object",
                       properties: {
                         exam_name: { type: "string" },
-                        recommended_score: { type: "string", description: "Target score or percentile for this exam" },
+                        recommended_score: { type: "string" },
                         preparation_months: { type: "number" },
                         difficulty_for_student: { type: "string", enum: ["Easy", "Medium", "Hard", "Very Hard"] },
                         roi_rating: { type: "string", enum: ["Very High", "High", "Medium", "Low"] },
+                        section_wise_strategy: { type: "array", items: { type: "object", properties: { section: { type: "string" }, target_score: { type: "string" }, current_estimate: { type: "string" }, improvement_tips: { type: "string" } }, required: ["section", "target_score", "improvement_tips"] }, description: "Section-wise breakdown for this exam" },
                       },
                       required: ["exam_name", "recommended_score", "preparation_months", "difficulty_for_student", "roi_rating"],
                     },
-                    description: "Strategy for each target exam the student selected",
                   },
                   peer_comparison: {
                     type: "object",
                     properties: {
-                      total_students_analysed: { type: "number", description: "Total students in the comparison pool, use 25000+" },
-                      average_score: { type: "number", description: "Average profile score of all students" },
-                      your_rank_percentile: { type: "number", description: "This student's percentile rank 0-100" },
+                      total_students_analysed: { type: "number" },
+                      average_score: { type: "number" },
+                      your_rank_percentile: { type: "number" },
                       score_distribution: {
                         type: "array",
                         items: {
                           type: "object",
                           properties: {
-                            range: { type: "string", description: "Score range e.g. '1-2', '2-3', '3-4', '4-5', '5-6', '6-7', '7-8', '8-9', '9-10'" },
-                            count: { type: "number", description: "Number of students in this range" },
-                            is_yours: { type: "boolean", description: "True if this student's score falls in this range" },
+                            range: { type: "string" },
+                            count: { type: "number" },
+                            is_yours: { type: "boolean" },
                           },
                           required: ["range", "count", "is_yours"],
                         },
-                        description: "Bell curve distribution with 9 buckets. Counts should form a realistic bell curve shape.",
                       },
                     },
                     required: ["total_students_analysed", "average_score", "your_rank_percentile", "score_distribution"],
                   },
+                  roi_analysis: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        college_name: { type: "string" },
+                        total_investment_lakhs: { type: "number", description: "Total fees + living costs for full programme" },
+                        expected_starting_salary_lakhs: { type: "number" },
+                        payback_period_months: { type: "number", description: "Months to recover investment" },
+                        five_year_roi_percent: { type: "number", description: "5-year ROI as percentage" },
+                        ten_year_earnings_advantage_lakhs: { type: "number", description: "Extra earnings over 10 years vs no MBA" },
+                        roi_rating: { type: "string", enum: ["Excellent", "Very Good", "Good", "Average", "Below Average"] },
+                      },
+                      required: ["college_name", "total_investment_lakhs", "expected_starting_salary_lakhs", "payback_period_months", "five_year_roi_percent", "roi_rating"],
+                    },
+                    description: "ROI analysis for top 8-12 colleges",
+                  },
+                  salary_benchmarking: {
+                    type: "object",
+                    properties: {
+                      current_estimated_salary_lakhs: { type: "number", description: "Estimated current salary without MBA" },
+                      post_mba_salary_range: {
+                        type: "object",
+                        properties: {
+                          tier1_min: { type: "number" }, tier1_max: { type: "number" },
+                          tier2_min: { type: "number" }, tier2_max: { type: "number" },
+                          tier3_min: { type: "number" }, tier3_max: { type: "number" },
+                        },
+                        required: ["tier1_min", "tier1_max", "tier2_min", "tier2_max", "tier3_min", "tier3_max"],
+                      },
+                      sector_wise_salary: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            sector: { type: "string" },
+                            avg_salary_lakhs: { type: "number" },
+                            top_salary_lakhs: { type: "number" },
+                            growth_rate_percent: { type: "number", description: "Annual salary growth rate" },
+                          },
+                          required: ["sector", "avg_salary_lakhs", "top_salary_lakhs", "growth_rate_percent"],
+                        },
+                        description: "Salary data for 6-8 key sectors",
+                      },
+                      salary_growth_trajectory: {
+                        type: "array",
+                        items: {
+                          type: "object",
+                          properties: {
+                            year: { type: "number", description: "Years after MBA (0, 1, 2, 3, 5, 7, 10)" },
+                            with_mba_lakhs: { type: "number" },
+                            without_mba_lakhs: { type: "number" },
+                          },
+                          required: ["year", "with_mba_lakhs", "without_mba_lakhs"],
+                        },
+                        description: "Salary trajectory comparison with and without MBA over 10 years",
+                      },
+                    },
+                    required: ["current_estimated_salary_lakhs", "post_mba_salary_range", "sector_wise_salary", "salary_growth_trajectory"],
+                  },
+                  improvement_roadmap: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        month: { type: "number", description: "Month number (1, 2, 3, etc.)" },
+                        milestone: { type: "string" },
+                        target_percentile: { type: "string" },
+                        focus_areas: { type: "array", items: { type: "string" } },
+                        mock_score_target: { type: "string" },
+                        profile_score_target: { type: "number", description: "Expected profile score by this month" },
+                      },
+                      required: ["month", "milestone", "focus_areas", "profile_score_target"],
+                    },
+                    description: "Month-by-month improvement roadmap for 6-12 months",
+                  },
                   ai_summary: {
                     type: "string",
-                    description: "A 5-6 sentence deeply personalized summary. Address the student by their first name. Reference their exact scores, stream, work experience, and target colleges. Give specific advice like 'With your 85% in Engineering and 24 months at TCS, you have a strong shot at IIM Lucknow'. Be encouraging but honest.",
+                    description: "A 6-8 sentence deeply personalized summary. Address the student by their first name. Reference their exact scores, stream, work experience, budget, salary expectations, and target colleges. Give specific advice. Be encouraging but honest. Include a key quantitative insight.",
                   },
                 },
-                required: ["strengths", "weaknesses", "college_predictions", "detailed_college_table", "recommendations", "study_plan", "score_breakdown", "exam_strategy", "peer_comparison", "ai_summary"],
+                required: ["strengths", "weaknesses", "college_predictions", "detailed_college_table", "recommendations", "study_plan", "score_breakdown", "exam_strategy", "peer_comparison", "roi_analysis", "salary_benchmarking", "improvement_roadmap", "ai_summary"],
               },
             },
           },
@@ -409,6 +522,9 @@ For score_breakdown, provide 5 dimension scores: academics, work_experience, div
           ...analysis.score_breakdown,
           exam_strategy: analysis.exam_strategy,
           peer_comparison: analysis.peer_comparison,
+          roi_analysis: analysis.roi_analysis,
+          salary_benchmarking: analysis.salary_benchmarking,
+          improvement_roadmap: analysis.improvement_roadmap,
         },
         recommendations: analysis.recommendations,
         study_plan: analysis.study_plan,

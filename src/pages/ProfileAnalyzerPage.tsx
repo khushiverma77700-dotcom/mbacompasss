@@ -4,7 +4,8 @@ import {
   GraduationCap, Briefcase, Target, ChevronRight, ChevronLeft, Lock, Phone, Mail,
   TrendingUp, Shield, Zap, BookOpen, Calendar, Star, AlertTriangle, CheckCircle2, ArrowRight,
   Sparkles, BarChart3, Lightbulb, User, FileText, Download, Save, MapPin, ClipboardList,
-  Award, Users, Clock, ArrowUpRight, ChevronDown, Info, Search, Layers, Activity, Eye,
+  Award, Users, Clock, ArrowUpRight, ChevronDown, Info, Search, Layers, Activity, Eye, IndianRupee,
+  Trophy, Wallet, DollarSign, TrendingDown, Rocket, CircleCheck, Timer,
   Percent, Hash, Globe, Building2, Flame, CircleDot, Medal, PieChart, LineChart, Gauge
 } from "lucide-react";
 import bschoolLogo from "@/assets/bschoolbuzz-logo.png";
@@ -29,6 +30,17 @@ const EXAM_OPTIONS = ["CAT", "XAT", "NMAT", "SNAP", "CMAT", "MAT", "GMAT", "IIFT
 const STREAM_OPTIONS = ["Engineering", "Commerce", "Science", "Arts", "Medical", "Law", "Other"];
 const SPECIALIZATIONS = ["Finance", "Marketing", "Operations", "HR", "IT & Analytics", "Strategy", "General Management", "Entrepreneurship"];
 const CATEGORY_OPTIONS = ["General", "OBC", "OBC-NCL", "SC", "ST", "EWS", "PwD"];
+const EMPLOYER_TYPES = ["IT/Software", "Consulting", "FMCG", "Banking/Finance", "Manufacturing", "Government/PSU", "Startup", "Healthcare", "E-commerce", "Education", "Other"];
+const CERTIFICATION_OPTIONS = ["CFA", "FRM", "Six Sigma", "PMP", "AWS/Cloud", "Data Science", "Digital Marketing", "CA/CS", "ACCA", "Other"];
+const EXTRACURRICULAR_OPTIONS = ["Sports (National/State)", "NGO/Social Work", "Entrepreneurship", "Cultural Activities", "Technical Competitions", "Student Body Leadership", "Publications/Research", "International Exposure", "Other"];
+const LEADERSHIP_OPTIONS = [
+  { label: "None", value: "none" },
+  { label: "Team Lead (2-5 people)", value: "team_lead" },
+  { label: "Manager (5-15 people)", value: "manager" },
+  { label: "Senior Manager (15+)", value: "senior_manager" },
+  { label: "Founder/Co-founder", value: "founder" },
+  { label: "Student Body President/Secretary", value: "student_leader" },
+];
 const COLLEGE_OPTIONS = [
   "IIM Ahmedabad", "IIM Bangalore", "IIM Calcutta", "IIM Lucknow", "IIM Kozhikode",
   "IIM Indore", "IIM Shillong", "IIM Rohtak", "IIM Ranchi", "IIM Kashipur",
@@ -52,6 +64,24 @@ const WORK_EXP_OPTIONS = [
   { label: "48 - 54 Months", value: "51" },
   { label: "54 - 60 Months", value: "57" },
   { label: "60+ Months", value: "66" },
+];
+const FEE_BUDGET_OPTIONS = [
+  { label: "Under ₹5 Lakhs", value: "5" },
+  { label: "₹5 - 10 Lakhs", value: "10" },
+  { label: "₹10 - 15 Lakhs", value: "15" },
+  { label: "₹15 - 20 Lakhs", value: "20" },
+  { label: "₹20 - 25 Lakhs", value: "25" },
+  { label: "₹25 - 30 Lakhs", value: "30" },
+  { label: "₹30+ Lakhs / No constraint", value: "50" },
+];
+const SALARY_EXPECTATION_OPTIONS = [
+  { label: "₹8 - 12 LPA", value: "10" },
+  { label: "₹12 - 16 LPA", value: "14" },
+  { label: "₹16 - 20 LPA", value: "18" },
+  { label: "₹20 - 25 LPA", value: "22" },
+  { label: "₹25 - 30 LPA", value: "27" },
+  { label: "₹30 - 40 LPA", value: "35" },
+  { label: "₹40+ LPA", value: "45" },
 ];
 const INDIAN_STATES = [
   "Pan India", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
@@ -83,33 +113,61 @@ interface CollegeTableRow {
 interface AnalysisResult {
   profile_id: string;
   profile_score: number;
-  strengths: Array<{ title: string; description: string; impact: string }>;
-  weaknesses: Array<{ title: string; description: string; severity: string; fix: string }>;
+  strengths: Array<{ title: string; description: string; impact: string; quantitative_impact?: string }>;
+  weaknesses: Array<{ title: string; description: string; severity: string; fix: string; improvement_potential?: string; timeline_to_fix?: string }>;
   college_predictions: {
     dream: Array<{ name: string; probability: number; cutoff_info: string; tip?: string }>;
     target: Array<{ name: string; probability: number; cutoff_info: string; tip?: string }>;
     safe: Array<{ name: string; probability: number; cutoff_info: string; tip?: string }>;
   };
   detailed_college_table: CollegeTableRow[];
-  recommendations: Array<{ title: string; description: string; priority: string; timeline?: string }>;
-  study_plan: Array<{ phase: string; duration: string; focus_areas: string[]; target_score?: string; daily_hours?: number }>;
+  recommendations: Array<{ title: string; description: string; priority: string; timeline?: string; expected_outcome?: string }>;
+  study_plan: Array<{ phase: string; duration: string; focus_areas: string[]; target_score?: string; daily_hours?: number; mock_test_target?: string; key_milestones?: string[] }>;
   score_breakdown: {
     academics_score: number;
     work_experience_score: number;
     diversity_score: number;
     profile_consistency_score: number;
     leadership_potential_score: number;
+    extracurricular_score?: number;
     overall_competitiveness: string;
     percentile_among_aspirants: number;
   };
   ai_summary: string;
-  exam_strategy: Array<{ exam_name: string; recommended_score: string; preparation_months: number; difficulty_for_student: string; roi_rating: string }>;
+  exam_strategy: Array<{ exam_name: string; recommended_score: string; preparation_months: number; difficulty_for_student: string; roi_rating: string; section_wise_strategy?: Array<{ section: string; target_score: string; current_estimate?: string; improvement_tips: string }> }>;
   peer_comparison: {
     total_students_analysed: number;
     average_score: number;
     your_rank_percentile: number;
     score_distribution: Array<{ range: string; count: number; is_yours: boolean }>;
   };
+  roi_analysis?: Array<{
+    college_name: string;
+    total_investment_lakhs: number;
+    expected_starting_salary_lakhs: number;
+    payback_period_months: number;
+    five_year_roi_percent: number;
+    ten_year_earnings_advantage_lakhs?: number;
+    roi_rating: string;
+  }>;
+  salary_benchmarking?: {
+    current_estimated_salary_lakhs: number;
+    post_mba_salary_range: {
+      tier1_min: number; tier1_max: number;
+      tier2_min: number; tier2_max: number;
+      tier3_min: number; tier3_max: number;
+    };
+    sector_wise_salary: Array<{ sector: string; avg_salary_lakhs: number; top_salary_lakhs: number; growth_rate_percent: number }>;
+    salary_growth_trajectory: Array<{ year: number; with_mba_lakhs: number; without_mba_lakhs: number }>;
+  };
+  improvement_roadmap?: Array<{
+    month: number;
+    milestone: string;
+    target_percentile?: string;
+    focus_areas: string[];
+    mock_score_target?: string;
+    profile_score_target: number;
+  }>;
 }
 
 interface FormData {
@@ -127,6 +185,17 @@ interface FormData {
   target_colleges: string[];
   preferred_specialization: string;
   target_states: string[];
+  fee_budget_lakhs: string;
+  expected_salary_lakhs: string;
+  current_employer_type: string;
+  graduation_year: string;
+  has_certifications: string[];
+  extracurriculars: string[];
+  leadership_roles: string;
+  preparation_months_remaining: string;
+  current_city: string;
+  has_gap_years: boolean;
+  gap_year_reason: string;
 }
 
 const initialForm: FormData = {
@@ -135,6 +204,10 @@ const initialForm: FormData = {
   is_pursuing_graduation: false,
   work_experience_months: "", category: "General", gender: "",
   target_exams: [], target_colleges: [], preferred_specialization: "", target_states: [],
+  fee_budget_lakhs: "", expected_salary_lakhs: "", current_employer_type: "",
+  graduation_year: "", has_certifications: [], extracurriculars: [],
+  leadership_roles: "", preparation_months_remaining: "", current_city: "",
+  has_gap_years: false, gap_year_reason: "",
 };
 
 /* ──────────── 3D FLOATING ELEMENTS ──────────── */
@@ -617,10 +690,10 @@ const ProfileAnalyzerPage = () => {
     setErrors(prev => { const n = { ...prev }; delete n[key]; return n; });
   };
 
-  const toggleArrayItem = (key: "target_exams" | "target_colleges" | "target_states", item: string) => {
+  const toggleArrayItem = (key: "target_exams" | "target_colleges" | "target_states" | "has_certifications" | "extracurriculars", item: string) => {
     setForm(prev => ({
       ...prev,
-      [key]: prev[key].includes(item) ? prev[key].filter(c => c !== item) : [...prev[key], item],
+      [key]: (prev[key] as string[]).includes(item) ? (prev[key] as string[]).filter(c => c !== item) : [...(prev[key] as string[]), item],
     }));
   };
   const toggleAllExams = () => {
@@ -661,7 +734,7 @@ const ProfileAnalyzerPage = () => {
       });
       return;
     }
-    setStep(5);
+    setStep(6);
     setLoadingProgress(0);
     const interval = setInterval(() => {
       setLoadingProgress(prev => { if (prev >= 90) { clearInterval(interval); return 90; } return prev + Math.random() * 10; });
@@ -679,6 +752,17 @@ const ProfileAnalyzerPage = () => {
           target_exams: form.target_exams, target_colleges: form.target_colleges,
           preferred_specialization: form.preferred_specialization || undefined,
           target_states: form.target_states,
+          fee_budget_lakhs: form.fee_budget_lakhs ? +form.fee_budget_lakhs : undefined,
+          expected_salary_lakhs: form.expected_salary_lakhs ? +form.expected_salary_lakhs : undefined,
+          current_employer_type: form.current_employer_type || undefined,
+          graduation_year: form.graduation_year ? +form.graduation_year : undefined,
+          has_certifications: form.has_certifications.length ? form.has_certifications : undefined,
+          extracurriculars: form.extracurriculars.length ? form.extracurriculars : undefined,
+          leadership_roles: form.leadership_roles || undefined,
+          preparation_months_remaining: form.preparation_months_remaining ? +form.preparation_months_remaining : undefined,
+          current_city: form.current_city || undefined,
+          has_gap_years: form.has_gap_years,
+          gap_year_reason: form.has_gap_years ? form.gap_year_reason : undefined,
         },
       });
       clearInterval(interval);
@@ -687,7 +771,7 @@ const ProfileAnalyzerPage = () => {
       if (data?.error) throw new Error(data.error);
       setResult(data);
       localStorage.removeItem(STORAGE_KEY);
-      setTimeout(() => setStep(6), 600);
+      setTimeout(() => setStep(7), 600);
     } catch (e: any) {
       clearInterval(interval);
       toast({ title: "Analysis Failed", description: e.message || "Please try again.", variant: "destructive" });
@@ -707,7 +791,7 @@ const ProfileAnalyzerPage = () => {
       }
       setUnlocked(true);
       setShowLeadModal(false);
-      setStep(7);
+      setStep(8);
       toast({ title: "Report Unlocked", description: "Your personalised MBA roadmap is ready." });
     } catch {
       toast({ title: "Error", description: "Please try again.", variant: "destructive" });
@@ -1163,20 +1247,21 @@ const ProfileAnalyzerPage = () => {
         )}
 
         {/* ════════════════ FORM STEPS 1-4 ════════════════ */}
-        {step >= 1 && step <= 4 && (
+        {step >= 1 && step <= 5 && (
           <motion.div key={`step-${step}`} initial={{ opacity: 0, x: 40 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -40 }} className="max-w-2xl mx-auto px-4 py-12">
             <div className="mb-8">
               <div className="flex justify-between items-center mb-3">
                 <span className="text-sm font-medium text-muted-foreground">Step {step} of 4</span>
-                <span className="text-sm text-muted-foreground">{Math.round((step / 4) * 100)}%</span>
+                <span className="text-sm text-muted-foreground">{Math.round((step / 5) * 100)}%</span>
               </div>
-              <Progress value={(step / 4) * 100} className="h-2" />
+              <Progress value={(step / 5) * 100} className="h-2" />
               <div className="flex justify-between mt-2">
                 {[
                   { icon: User, label: "Basic Info" },
                   { icon: GraduationCap, label: "Academics" },
                   { icon: Briefcase, label: "Profile" },
                   { icon: Target, label: "Aspirations" },
+                  { icon: IndianRupee, label: "Financial & Extras" },
                 ].map((s, i) => (
                   <div key={s.label} className={`flex items-center gap-1.5 text-xs ${i + 1 <= step ? "text-primary font-semibold" : "text-muted-foreground"}`}>
                     <s.icon className="w-3.5 h-3.5" /> {s.label}
@@ -1192,6 +1277,7 @@ const ProfileAnalyzerPage = () => {
                   {step === 2 && <><GraduationCap className="w-5 h-5 text-primary" /> Academic Details</>}
                   {step === 3 && <><Briefcase className="w-5 h-5 text-primary" /> Profile Details</>}
                   {step === 4 && <><Target className="w-5 h-5 text-primary" /> Your Aspirations</>}
+                  {step === 5 && <><IndianRupee className="w-5 h-5 text-primary" /> Financial & Profile Extras</>}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-5">
@@ -1338,11 +1424,99 @@ const ProfileAnalyzerPage = () => {
                   </>
                 )}
 
+                {step === 5 && (
+                  <>
+                    <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 mb-2">
+                      <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                        <IndianRupee className="w-4 h-4 shrink-0" />
+                        These details help us provide ROI analysis, salary benchmarking, and personalised financial insights.
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="flex items-center gap-1.5"><Wallet className="w-3.5 h-3.5" /> Fee Budget</Label>
+                        <Select value={form.fee_budget_lakhs} onValueChange={v => updateField("fee_budget_lakhs", v)}>
+                          <SelectTrigger><SelectValue placeholder="Max fees you can afford" /></SelectTrigger>
+                          <SelectContent>{FEE_BUDGET_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="flex items-center gap-1.5"><DollarSign className="w-3.5 h-3.5" /> Expected Post-MBA Salary</Label>
+                        <Select value={form.expected_salary_lakhs} onValueChange={v => updateField("expected_salary_lakhs", v)}>
+                          <SelectTrigger><SelectValue placeholder="Your salary expectation" /></SelectTrigger>
+                          <SelectContent>{SALARY_EXPECTATION_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="flex items-center gap-1.5"><Briefcase className="w-3.5 h-3.5" /> Current Employer Type</Label>
+                        <Select value={form.current_employer_type} onValueChange={v => updateField("current_employer_type", v)}>
+                          <SelectTrigger><SelectValue placeholder="Industry / Sector" /></SelectTrigger>
+                          <SelectContent>{EMPLOYER_TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> Graduation Year</Label>
+                        <Input type="number" min="2010" max="2030" placeholder="e.g., 2023" value={form.graduation_year} onChange={e => updateField("graduation_year", e.target.value)} />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5" /> Current City</Label>
+                        <Input placeholder="e.g., Mumbai" value={form.current_city} onChange={e => updateField("current_city", e.target.value)} />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="flex items-center gap-1.5"><Timer className="w-3.5 h-3.5" /> Months Until Exam</Label>
+                        <Input type="number" min="1" max="24" placeholder="e.g., 6" value={form.preparation_months_remaining} onChange={e => updateField("preparation_months_remaining", e.target.value)} />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="flex items-center gap-1.5"><Trophy className="w-3.5 h-3.5" /> Leadership Experience</Label>
+                      <Select value={form.leadership_roles} onValueChange={v => updateField("leadership_roles", v)}>
+                        <SelectTrigger><SelectValue placeholder="Select leadership level" /></SelectTrigger>
+                        <SelectContent>{LEADERSHIP_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1.5"><Award className="w-3.5 h-3.5" /> Certifications</Label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {CERTIFICATION_OPTIONS.map(cert => (
+                          <label key={cert} className={`flex items-center gap-2 text-sm cursor-pointer rounded-lg border p-2 transition-colors ${form.has_certifications.includes(cert) ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
+                            <Checkbox checked={form.has_certifications.includes(cert)} onCheckedChange={() => toggleArrayItem("has_certifications", cert)} />
+                            {cert}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1.5"><Star className="w-3.5 h-3.5" /> Extracurriculars</Label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {EXTRACURRICULAR_OPTIONS.map(ext => (
+                          <label key={ext} className={`flex items-center gap-2 text-sm cursor-pointer rounded-lg border p-2 transition-colors ${form.extracurriculars.includes(ext) ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}>
+                            <Checkbox checked={form.extracurriculars.includes(ext)} onCheckedChange={() => toggleArrayItem("extracurriculars", ext)} />
+                            {ext}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox checked={form.has_gap_years} onCheckedChange={v => updateField("has_gap_years", !!v)} />
+                        I have gap year(s) in my academic/career journey
+                      </label>
+                      {form.has_gap_years && (
+                        <Input placeholder="Reason for gap (e.g., UPSC preparation, health, etc.)" value={form.gap_year_reason} onChange={e => updateField("gap_year_reason", e.target.value)} />
+                      )}
+                    </div>
+                  </>
+                )}
+
                 <div className="flex justify-between pt-4">
                   <Button variant="outline" onClick={() => setStep(step - 1)} disabled={step === 1}>
                     <ChevronLeft className="w-4 h-4 mr-1" /> Back
                   </Button>
-                  {step < 4 ? (
+                  {step < 5 ? (
                     <Button onClick={handleNext}>Next <ChevronRight className="w-4 h-4 ml-1" /></Button>
                   ) : (
                     <Button onClick={handleSubmit} className="bg-gradient-to-r from-primary to-primary/80">
@@ -1356,7 +1530,7 @@ const ProfileAnalyzerPage = () => {
         )}
 
         {/* ════════════════ LOADING ════════════════ */}
-        {step === 5 && (
+        {step === 6 && (
           <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="min-h-[80vh] flex items-center justify-center px-4">
             <div className="max-w-lg mx-auto text-center space-y-8">
@@ -1485,7 +1659,7 @@ const ProfileAnalyzerPage = () => {
         )}
 
         {/* ════════════════ PARTIAL RESULT (LOCKED) ════════════════ */}
-        {step === 6 && result && (
+        {step === 7 && result && (
           <motion.div key="partial" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className="max-w-4xl mx-auto px-4 py-10 space-y-8">
             
@@ -1591,7 +1765,7 @@ const ProfileAnalyzerPage = () => {
         )}
 
         {/* ════════════════ FULL DASHBOARD (UNLOCKED) ════════════════ */}
-        {step === 7 && result && unlocked && (
+        {step === 8 && result && unlocked && (
           <motion.div key="full" initial={{ opacity: 0 }} animate={{ opacity: 1 }} ref={reportRef}
             className="max-w-7xl mx-auto px-4 py-10 space-y-8">
             {/* Header */}
@@ -1924,7 +2098,160 @@ const ProfileAnalyzerPage = () => {
               </CardContent>
             </Card>
 
-            {/* CTA */}
+            {/* ─── ROI ANALYSIS ─── */}
+            {result.roi_analysis && result.roi_analysis.length > 0 && (
+              <Card className="border-2 border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><TrendingUp className="w-5 h-5 text-primary" /> ROI Analysis — College-wise Investment Returns</CardTitle>
+                  <CardDescription>Total investment vs expected returns for each recommended college</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto -mx-6 px-6">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="text-xs">
+                          <TableHead>College</TableHead>
+                          <TableHead>Total Investment</TableHead>
+                          <TableHead>Expected Salary</TableHead>
+                          <TableHead>Payback Period</TableHead>
+                          <TableHead>5-Year ROI</TableHead>
+                          <TableHead>ROI Rating</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {result.roi_analysis.map((r, i) => (
+                          <TableRow key={i} className="text-xs">
+                            <TableCell className="font-semibold">{r.college_name}</TableCell>
+                            <TableCell>₹{r.total_investment_lakhs}L</TableCell>
+                            <TableCell className="font-semibold text-primary">₹{r.expected_starting_salary_lakhs} LPA</TableCell>
+                            <TableCell>{r.payback_period_months} months</TableCell>
+                            <TableCell className="font-bold">{r.five_year_roi_percent}%</TableCell>
+                            <TableCell>
+                              <Badge className={`text-xs ${r.roi_rating === "Excellent" ? "bg-green-100 text-green-700" : r.roi_rating === "Very Good" ? "bg-blue-100 text-blue-700" : r.roi_rating === "Good" ? "bg-amber-100 text-amber-700" : "bg-muted text-muted-foreground"}`}>
+                                {r.roi_rating}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* ─── SALARY BENCHMARKING ─── */}
+            {result.salary_benchmarking && (
+              <Card className="border-2 border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><DollarSign className="w-5 h-5 text-primary" /> Salary Benchmarking & Growth Trajectory</CardTitle>
+                  <CardDescription>Pre-MBA vs Post-MBA salary comparison across college tiers and sectors</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Salary Range by Tier */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="p-4 rounded-xl bg-muted/50 border border-border text-center">
+                      <p className="text-xs text-muted-foreground mb-1">Current (Est.)</p>
+                      <p className="text-2xl font-bold text-muted-foreground">₹{result.salary_benchmarking.current_estimated_salary_lakhs} LPA</p>
+                    </div>
+                    {[
+                      { label: "Tier 1 (IIMs)", min: result.salary_benchmarking.post_mba_salary_range.tier1_min, max: result.salary_benchmarking.post_mba_salary_range.tier1_max, color: "text-green-600" },
+                      { label: "Tier 2", min: result.salary_benchmarking.post_mba_salary_range.tier2_min, max: result.salary_benchmarking.post_mba_salary_range.tier2_max, color: "text-blue-600" },
+                      { label: "Tier 3", min: result.salary_benchmarking.post_mba_salary_range.tier3_min, max: result.salary_benchmarking.post_mba_salary_range.tier3_max, color: "text-amber-600" },
+                    ].map(t => (
+                      <div key={t.label} className="p-4 rounded-xl bg-muted/50 border border-border text-center">
+                        <p className="text-xs text-muted-foreground mb-1">{t.label}</p>
+                        <p className={`text-2xl font-bold ${t.color}`}>₹{t.min}-{t.max} LPA</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Sector-wise Table */}
+                  {result.salary_benchmarking.sector_wise_salary?.length > 0 && (
+                    <div>
+                      <p className="text-sm font-semibold mb-3">Sector-wise Post-MBA Salary</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                        {result.salary_benchmarking.sector_wise_salary.map((s, i) => (
+                          <div key={i} className="p-3 rounded-lg border border-border bg-card">
+                            <p className="text-xs text-muted-foreground">{s.sector}</p>
+                            <p className="text-lg font-bold">₹{s.avg_salary_lakhs} LPA</p>
+                            <p className="text-xs text-muted-foreground">Top: ₹{s.top_salary_lakhs} LPA • Growth: {s.growth_rate_percent}%/yr</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Salary Growth Trajectory Chart */}
+                  {result.salary_benchmarking.salary_growth_trajectory?.length > 0 && (
+                    <div>
+                      <p className="text-sm font-semibold mb-3">10-Year Salary Growth: MBA vs No MBA</p>
+                      <div className="space-y-2">
+                        {result.salary_benchmarking.salary_growth_trajectory.map((pt, i) => (
+                          <div key={i} className="flex items-center gap-3">
+                            <span className="text-xs text-muted-foreground w-16 shrink-0">Year {pt.year}</span>
+                            <div className="flex-1 space-y-1">
+                              <div className="flex items-center gap-2">
+                                <div className="h-2 rounded-full bg-gradient-to-r from-primary to-primary/70" style={{ width: `${Math.min((pt.with_mba_lakhs / Math.max(...result.salary_benchmarking!.salary_growth_trajectory.map(p => p.with_mba_lakhs))) * 100, 100)}%` }} />
+                                <span className="text-xs font-bold text-primary whitespace-nowrap">₹{pt.with_mba_lakhs}L</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <div className="h-2 rounded-full bg-muted-foreground/30" style={{ width: `${Math.min((pt.without_mba_lakhs / Math.max(...result.salary_benchmarking!.salary_growth_trajectory.map(p => p.with_mba_lakhs))) * 100, 100)}%` }} />
+                                <span className="text-xs text-muted-foreground whitespace-nowrap">₹{pt.without_mba_lakhs}L</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        <div className="flex items-center gap-4 mt-2 text-xs">
+                          <span className="flex items-center gap-1"><div className="w-3 h-2 rounded bg-primary" /> With MBA</span>
+                          <span className="flex items-center gap-1"><div className="w-3 h-2 rounded bg-muted-foreground/30" /> Without MBA</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* ─── IMPROVEMENT ROADMAP ─── */}
+            {result.improvement_roadmap && result.improvement_roadmap.length > 0 && (
+              <Card className="border-2 border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2"><Rocket className="w-5 h-5 text-primary" /> Month-by-Month Improvement Roadmap</CardTitle>
+                  <CardDescription>Track your progress with specific milestones and score targets</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {result.improvement_roadmap.map((rm, i) => (
+                      <motion.div key={i} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
+                        className="flex gap-4 items-start p-4 rounded-xl border border-border bg-card hover:shadow-md transition-shadow">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground font-bold text-sm shrink-0">
+                          M{rm.month}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 mb-1 flex-wrap">
+                            <h4 className="font-semibold text-sm">{rm.milestone}</h4>
+                            {rm.target_percentile && <Badge variant="outline" className="text-xs">Target: {rm.target_percentile}</Badge>}
+                            {rm.mock_score_target && <Badge variant="secondary" className="text-xs">Mock: {rm.mock_score_target}</Badge>}
+                          </div>
+                          <div className="flex flex-wrap gap-1.5 mb-2">
+                            {rm.focus_areas.map((area, j) => <Badge key={j} variant="secondary" className="text-xs">{area}</Badge>)}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Profile Score Target:</span>
+                            <div className="flex-1 max-w-[200px] h-2 bg-muted rounded-full overflow-hidden">
+                              <div className="h-full rounded-full bg-gradient-to-r from-primary to-primary/70" style={{ width: `${rm.profile_score_target * 10}%` }} />
+                            </div>
+                            <span className="text-xs font-bold">{rm.profile_score_target}/10</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground border-0">
               <CardContent className="text-center py-10 space-y-4">
                 <h3 className="text-2xl font-bold">Ready to Start Your MBA Journey?</h3>
