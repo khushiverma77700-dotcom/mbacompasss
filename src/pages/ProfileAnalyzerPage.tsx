@@ -752,6 +752,17 @@ const ProfileAnalyzerPage = () => {
           target_exams: form.target_exams, target_colleges: form.target_colleges,
           preferred_specialization: form.preferred_specialization || undefined,
           target_states: form.target_states,
+          fee_budget_lakhs: form.fee_budget_lakhs ? +form.fee_budget_lakhs : undefined,
+          expected_salary_lakhs: form.expected_salary_lakhs ? +form.expected_salary_lakhs : undefined,
+          current_employer_type: form.current_employer_type || undefined,
+          graduation_year: form.graduation_year ? +form.graduation_year : undefined,
+          has_certifications: form.has_certifications.length ? form.has_certifications : undefined,
+          extracurriculars: form.extracurriculars.length ? form.extracurriculars : undefined,
+          leadership_roles: form.leadership_roles || undefined,
+          preparation_months_remaining: form.preparation_months_remaining ? +form.preparation_months_remaining : undefined,
+          current_city: form.current_city || undefined,
+          has_gap_years: form.has_gap_years,
+          gap_year_reason: form.has_gap_years ? form.gap_year_reason : undefined,
         },
       });
       clearInterval(interval);
