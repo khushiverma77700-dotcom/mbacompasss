@@ -12,7 +12,6 @@ async function logAIUsage(feature: string, model: string, aiData: any, status = 
       status, error_message: errorMsg || null,
     });
     if (error) console.error("[ai-usage-log] Insert failed:", JSON.stringify(error));
-    else console.log("[ai-usage-log] Logged usage for", feature);
   } catch (e) { console.error("[ai-usage-log] Exception:", e); }
 }
 
@@ -21,135 +20,99 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// ── Robust JSON extraction with truncation detection ──
-
 function extractJsonFromResponse(response: string): unknown {
-  let cleaned = response
-    .replace(/```json\s*/gi, "")
-    .replace(/```\s*/g, "")
-    .trim();
-
+  let cleaned = response.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
   const jsonStart = cleaned.search(/[\{\[]/);
-  const jsonEnd = cleaned.lastIndexOf(
-    jsonStart !== -1 && cleaned[jsonStart] === "[" ? "]" : "}"
-  );
-
+  const jsonEnd = cleaned.lastIndexOf(jsonStart !== -1 && cleaned[jsonStart] === "[" ? "]" : "}");
   if (jsonStart === -1 || jsonEnd === -1) throw new Error("No JSON found in response");
   cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
-
-  try {
-    return JSON.parse(cleaned);
-  } catch {
-    // Fix common LLM JSON issues
-    cleaned = cleaned
-      .replace(/,\s*}/g, "}")
-      .replace(/,\s*]/g, "]")
-      .replace(/[\x00-\x1F\x7F]/g, "")
-      .replace(/\\'/g, "'");
+  try { return JSON.parse(cleaned); } catch {
+    cleaned = cleaned.replace(/,\s*}/g, "}").replace(/,\s*]/g, "]").replace(/[\x00-\x1F\x7F]/g, "").replace(/\\'/g, "'");
     return JSON.parse(cleaned);
   }
 }
 
 function detectTruncation(response: string): boolean {
   const text = response.trim();
-  const openBraces = (text.match(/{/g) || []).length;
-  const closeBraces = (text.match(/}/g) || []).length;
-  const openBrackets = (text.match(/\[/g) || []).length;
-  const closeBrackets = (text.match(/\]/g) || []).length;
-  if (openBraces !== closeBraces || openBrackets !== closeBrackets) return true;
+  const ob = (text.match(/{/g) || []).length;
+  const cb = (text.match(/}/g) || []).length;
+  const obr = (text.match(/\[/g) || []).length;
+  const cbr = (text.match(/\]/g) || []).length;
+  if (ob !== cb || obr !== cbr) return true;
   return /\.\.\.$/m.test(text) || /\u2026$/m.test(text) || /\[truncated\]/i.test(text);
 }
 
-// ── Schema markup generator (separate focused call) ──
-
+// ── Schema markup generator (AI-powered) ──
 async function generateSchemaMarkup(
-  LOVABLE_API_KEY: string,
-  contentType: string,
-  data: Record<string, any>,
-  siteUrl: string
+  LOVABLE_API_KEY: string, contentType: string, data: Record<string, any>, siteUrl: string
 ): Promise<any[]> {
-  const schemaPrompts: Record<string, string> = {
-    article: `Generate JSON-LD schemas for an article page:
-1. Article schema with headline, author, datePublished, dateModified, image, publisher
-2. BreadcrumbList with Home > Blog > Article Name
-3. FAQPage if any FAQ content exists in the data
-4. Organization for the publisher
+  const contentTypePaths: Record<string, string> = {
+    article: "article", institute: "institute", college: "college", exam: "exam", cityPage: "colleges",
+  };
+  const basePath = contentTypePaths[contentType] || contentType;
+  const pageUrl = `${siteUrl}/${basePath}/${data.slug || ""}`;
 
-Article data: title="${data.title || data.name}", slug="${data.slug}", author="${data.author || 'MBAHub Team'}", category="${data.category || ''}", content length=${(data.content || data.description || '').length} chars`,
+  const schemaContext: Record<string, string> = {
+    article: `Article page. Title: "${data.title || data.name}". Author: "${data.author || 'MBAHub Team'}". Category: "${data.category || ''}". Published: ${data.created_at || 'N/A'}. Updated: ${data.updated_at || 'N/A'}. Image: "${data.banner_url || data.image_url || ''}". Content excerpt: "${(data.content || data.description || '').replace(/<[^>]*>/g, ' ').slice(0, 500)}".
+Generate: Article, BreadcrumbList (Home > Blog > ${data.title || data.name}), Organization (publisher), FAQPage (generate 3-5 relevant FAQ Q&As about this article topic).`,
 
-    institute: `Generate JSON-LD schemas for an educational coaching institute page:
-1. EducationalOrganization with name, description, address (city: ${data.city || 'India'}, state: ${data.state || ''}), telephone, url, aggregateRating (rating: ${data.rating || 4.0}, reviewCount: ${data.total_reviews || 10}), courses offered
-2. BreadcrumbList with Home > Coaching Institutes > ${data.name}
-3. LocalBusiness with geo coordinates if available (lat: ${data.latitude || ''}, lng: ${data.longitude || ''})
-4. FAQPage with common questions about this institute
+    institute: `MBA Coaching Institute page. Name: "${data.name}". City: "${data.city || ''}". State: "${data.state || ''}". Rating: ${data.rating || 'N/A'}/5 (${data.total_reviews || 0} reviews). Phone: "${data.phone || ''}". Website: "${data.website || ''}". Mode: "${data.mode || 'Offline'}". Address: "${data.address || ''}". Lat: ${data.latitude || 'N/A'}, Lng: ${data.longitude || 'N/A'}. Features: ${(data.features || []).join(', ') || 'N/A'}. Success rate: ${data.success_rate || 'N/A'}%.
+Generate: EducationalOrganization (with aggregateRating, address, courses offered), LocalBusiness (with geo if available), BreadcrumbList (Home > Coaching Institutes > ${data.name}), FAQPage (5 Q&As about this institute's fees, results, batches, faculty, location).`,
 
-Institute: name="${data.name}", slug="${data.slug}", mode="${data.mode || 'Offline'}", city="${data.city || ''}"`,
+    college: `MBA College page. Name: "${data.name}". City: "${data.city || ''}". State: "${data.state || ''}". Ranking: #${data.ranking || 'N/A'}. Established: ${data.established || 'N/A'}. Type: "${data.type || ''}". Tier: "${data.tier || ''}". Courses: ${(data.courses || []).join(', ') || 'N/A'}. Exams accepted: ${(data.exams_accepted || []).join(', ') || 'N/A'}. Fees: "${data.fees || 'N/A'}". Avg placement: "${data.placement_avg || 'N/A'}". Highest placement: "${data.placement_highest || 'N/A'}". Median: "${data.placement_median || 'N/A'}". Top recruiters: ${(data.top_recruiters || []).slice(0, 10).join(', ') || 'N/A'}. Accreditations: ${(data.accreditations || []).join(', ') || 'N/A'}. Campus size: "${data.campus_size || ''}".
+Generate: CollegeOrUniversity (with ranking, fees, placements), EducationalOrganization, BreadcrumbList (Home > MBA Colleges > ${data.name}), FAQPage (5-7 Q&As about admission, fees, placements, cutoff, eligibility, campus life), AggregateRating.`,
 
-    college: `Generate JSON-LD schemas for an MBA college page:
-1. EducationalOrganization with name, description, address, ranking (#${data.ranking || 'N/A'}), accreditations, courses (${(data.courses || []).join(', ')}), fees (${data.fees || 'N/A'})
-2. BreadcrumbList with Home > MBA Colleges > ${data.name}
-3. AggregateRating (if placement data exists: avg=${data.placement_avg || 'N/A'}, highest=${data.placement_highest || 'N/A'})
-4. FAQPage with admission, fees, placement FAQs
-5. CollegeOrUniversity type
+    exam: `Entrance Exam page. Name: "${data.full_name || data.name}". Conducting body: "${data.conducting_body || ''}". Exam date: "${data.exam_date || ''}". Registration deadline: "${data.registration_deadline || ''}". Eligibility: "${data.eligibility || ''}". Frequency: "${data.frequency || ''}". Syllabus: ${(data.syllabus || []).slice(0, 10).join(', ') || 'N/A'}. Pattern: ${JSON.stringify(data.pattern || {}).slice(0, 300)}.
+Generate: Course (educational), Event (exam event with dates), BreadcrumbList (Home > Exams > ${data.name}), FAQPage (5-7 Q&As about eligibility, syllabus, exam pattern, important dates, preparation tips), HowTo (registration process).`,
 
-College: name="${data.name}", slug="${data.slug}", city="${data.city || ''}", established=${data.established || 'N/A'}`,
-
-    exam: `Generate JSON-LD schemas for an entrance exam page:
-1. Course/Event with name, description, provider (conducting body: ${data.conducting_body || 'N/A'}), dates
-2. BreadcrumbList with Home > Exams > ${data.name}
-3. FAQPage with eligibility, syllabus, exam pattern FAQs
-4. HowTo for registration process
-
-Exam: name="${data.name || data.full_name}", slug="${data.slug}", exam_date="${data.exam_date || ''}", registration_deadline="${data.registration_deadline || ''}"`,
-
-    cityPage: `Generate JSON-LD schemas for a city/state landing page about MBA coaching:
-1. WebPage with name, description, about
-2. ItemList with MBA coaching institutes in this city
-3. BreadcrumbList with Home > MBA Coaching > ${data.name}
-4. FAQPage with city-specific MBA coaching FAQs
-5. LocalBusiness aggregate for the city
-
-City: name="${data.name}", slug="${data.slug}", state="${data.state || ''}", type="${data.type || 'city'}"`,
+    cityPage: `City/State MBA Coaching landing page. City: "${data.name}". State: "${data.state || ''}". Type: "${data.type || 'city'}". Content: "${(data.intro_content || data.detailed_content || '').replace(/<[^>]*>/g, ' ').slice(0, 500)}".
+Generate: WebPage, ItemList (MBA coaching institutes in ${data.name}), BreadcrumbList (Home > MBA Coaching > ${data.name}), FAQPage (5 Q&As about MBA coaching in ${data.name}), LocalBusiness aggregate.`,
   };
 
-  const prompt = schemaPrompts[contentType] || schemaPrompts.article;
-
-  const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "google/gemini-2.5-flash",
-      messages: [
-        {
-          role: "system",
-          content: `You are a schema markup expert. Generate ONLY a valid JSON array of JSON-LD objects. Each object MUST have "@context": "https://schema.org" and "@type". Use real data from the provided info. Site URL: ${siteUrl}. Do NOT wrap in markdown. Return ONLY the JSON array.`,
-        },
-        { role: "user", content: prompt },
-      ],
-      generationConfig: { maxOutputTokens: 4096 },
-    }),
-  });
-
-  if (!response.ok) {
-    console.error("Schema generation failed:", response.status);
-    return getDefaultSchemas(contentType, data, siteUrl);
-  }
-
-  const aiData = await response.json();
-  await logAIUsage("seo-enhance", "google/gemini-2.5-flash", aiData);
-  const content = aiData.choices?.[0]?.message?.content || "";
+  const prompt = schemaContext[contentType] || schemaContext.article;
 
   try {
-    if (detectTruncation(content)) {
-      console.warn("Schema output truncated, using defaults");
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          {
+            role: "system",
+            content: `You are a Google Rich Results expert. Generate a JSON array of complete, valid JSON-LD schemas for search engine rich results.
+
+RULES:
+- Each schema MUST have "@context": "https://schema.org" and a valid "@type"
+- Use REAL data from the page — never use placeholder text
+- All URLs must use base: ${siteUrl}
+- Page URL: ${pageUrl}
+- Organization name: "MBAHub by B School Buzz", logo: "${siteUrl}/logo.png"
+- FAQPage schemas must have real, useful Q&As that students would actually search for
+- Include ALL relevant schema types for the page (aim for 4-6 schemas)
+- Return ONLY the JSON array, no markdown, no explanation`,
+          },
+          { role: "user", content: prompt },
+        ],
+      }),
+    });
+
+    if (!response.ok) {
+      console.error("Schema generation failed:", response.status);
       return getDefaultSchemas(contentType, data, siteUrl);
     }
+
+    const aiData = await response.json();
+    await logAIUsage("seo-schema", "google/gemini-2.5-flash", aiData);
+    const content = aiData.choices?.[0]?.message?.content || "";
+
+    if (detectTruncation(content)) return getDefaultSchemas(contentType, data, siteUrl);
     const parsed = extractJsonFromResponse(content);
     if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.["@type"]) return parsed;
     if (typeof parsed === "object" && (parsed as any)["@type"]) return [parsed];
     return getDefaultSchemas(contentType, data, siteUrl);
-  } catch {
-    console.error("Failed to parse schema JSON, using defaults");
+  } catch (e) {
+    console.error("Schema generation error:", e);
     return getDefaultSchemas(contentType, data, siteUrl);
   }
 }
@@ -160,63 +123,40 @@ function getDefaultSchemas(contentType: string, data: Record<string, any>, siteU
   const description = (data.meta_description || data.description || "").slice(0, 200);
   const city = data.city || "";
   const state = data.state || "";
+  const pathMap: Record<string, string> = { article: "article", institute: "institute", college: "college", exam: "exam", cityPage: "colleges" };
+  const parentMap: Record<string, [string, string]> = { article: ["Blog", "blog"], institute: ["Coaching", "category/cat"], college: ["Colleges", "colleges"], exam: ["Exams", "exams"], cityPage: ["Cities", "colleges"] };
+  const [parentName, parentPath] = parentMap[contentType] || ["Pages", ""];
+  const basePath = pathMap[contentType] || contentType;
 
   const breadcrumb = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
+    "@context": "https://schema.org", "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: siteUrl },
-      { "@type": "ListItem", position: 2, name: contentType === "article" ? "Blog" : contentType === "institute" ? "Coaching" : contentType === "college" ? "Colleges" : contentType === "exam" ? "Exams" : "Cities", item: `${siteUrl}/${contentType === "article" ? "blog" : contentType === "institute" ? "category/cat" : contentType === "college" ? "colleges" : contentType === "exam" ? "exams" : "colleges"}` },
-      { "@type": "ListItem", position: 3, name, item: `${siteUrl}/${contentType === "article" ? "article" : contentType === "institute" ? "institute" : contentType === "college" ? "college" : contentType === "exam" ? "exam" : "colleges"}/${slug}` },
+      { "@type": "ListItem", position: 2, name: parentName, item: `${siteUrl}/${parentPath}` },
+      { "@type": "ListItem", position: 3, name, item: `${siteUrl}/${basePath}/${slug}` },
     ],
   };
-
   const org = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "MBAHub by B School Buzz",
-    url: siteUrl,
-    logo: `${siteUrl}/placeholder.svg`,
-    sameAs: [],
+    "@context": "https://schema.org", "@type": "Organization",
+    name: "MBAHub by B School Buzz", url: siteUrl, logo: `${siteUrl}/logo.png`, sameAs: [],
   };
 
   if (contentType === "article") {
-    return [
-      { "@context": "https://schema.org", "@type": "Article", headline: name, description, author: { "@type": "Person", name: data.author || "MBAHub Team" }, publisher: { "@type": "Organization", name: "MBAHub", logo: { "@type": "ImageObject", url: `${siteUrl}/placeholder.svg` } }, datePublished: data.created_at, dateModified: data.updated_at, mainEntityOfPage: { "@type": "WebPage", "@id": `${siteUrl}/article/${slug}` }, image: data.banner_url || data.image_url || `${siteUrl}/placeholder.svg` },
-      breadcrumb, org,
-    ];
+    return [{ "@context": "https://schema.org", "@type": "Article", headline: name, description, author: { "@type": "Person", name: data.author || "MBAHub Team" }, publisher: { "@type": "Organization", name: "MBAHub by B School Buzz", logo: { "@type": "ImageObject", url: `${siteUrl}/logo.png` } }, datePublished: data.created_at, dateModified: data.updated_at, mainEntityOfPage: { "@type": "WebPage", "@id": `${siteUrl}/article/${slug}` }, image: data.banner_url || data.image_url }, breadcrumb, org];
   }
-
   if (contentType === "institute") {
-    return [
-      { "@context": "https://schema.org", "@type": "EducationalOrganization", name, description, url: data.website || `${siteUrl}/institute/${slug}`, address: { "@type": "PostalAddress", addressLocality: city, addressRegion: state, addressCountry: "IN" }, telephone: data.phone || "", aggregateRating: data.rating ? { "@type": "AggregateRating", ratingValue: data.rating, bestRating: 5, ratingCount: data.total_reviews || 1 } : undefined },
-      breadcrumb, org,
-    ];
+    return [{ "@context": "https://schema.org", "@type": "EducationalOrganization", name, description, url: data.website || `${siteUrl}/institute/${slug}`, address: { "@type": "PostalAddress", addressLocality: city, addressRegion: state, addressCountry: "IN" }, telephone: data.phone || "", aggregateRating: data.rating ? { "@type": "AggregateRating", ratingValue: data.rating, bestRating: 5, ratingCount: data.total_reviews || 1 } : undefined }, breadcrumb, org];
   }
-
   if (contentType === "college") {
-    return [
-      { "@context": "https://schema.org", "@type": "CollegeOrUniversity", name, description, url: data.website || `${siteUrl}/college/${slug}`, address: { "@type": "PostalAddress", addressLocality: city, addressRegion: state, addressCountry: "IN" }, foundingDate: data.established ? String(data.established) : undefined },
-      breadcrumb, org,
-    ];
+    return [{ "@context": "https://schema.org", "@type": "CollegeOrUniversity", name, description, url: data.website || `${siteUrl}/college/${slug}`, address: { "@type": "PostalAddress", addressLocality: city, addressRegion: state, addressCountry: "IN" }, foundingDate: data.established ? String(data.established) : undefined }, breadcrumb, org];
   }
-
   if (contentType === "exam") {
-    return [
-      { "@context": "https://schema.org", "@type": "Course", name: data.full_name || name, description, provider: { "@type": "Organization", name: data.conducting_body || "Various" } },
-      breadcrumb, org,
-    ];
+    return [{ "@context": "https://schema.org", "@type": "Course", name: data.full_name || name, description, provider: { "@type": "Organization", name: data.conducting_body || "Various" } }, breadcrumb, org];
   }
-
-  // cityPage
-  return [
-    { "@context": "https://schema.org", "@type": "WebPage", name: `MBA Coaching in ${name}`, description, url: `${siteUrl}/colleges/${slug}` },
-    breadcrumb, org,
-  ];
+  return [{ "@context": "https://schema.org", "@type": "WebPage", name: `MBA Coaching in ${name}`, description, url: `${siteUrl}/colleges/${slug}` }, breadcrumb, org];
 }
 
 // ── Main handler ──
-
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -226,7 +166,7 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const { contentType, data, pageUrl } = await req.json();
-    console.log(`[ai-seo-enhance] Starting analysis for ${contentType}: ${data?.name || data?.title || 'unknown'}`);
+    console.log(`[ai-seo-enhance] Starting deep analysis for ${contentType}: ${data?.name || data?.title || 'unknown'}`);
 
     if (!contentType || !data) {
       return new Response(JSON.stringify({ error: "contentType and data are required" }), {
@@ -236,92 +176,181 @@ serve(async (req) => {
 
     const siteUrl = "https://bschoolbuzz.com";
 
-    // Generate deterministic schema markup (no AI call needed - faster & more reliable)
-    const schemaMarkup = getDefaultSchemas(contentType, data, siteUrl);
-    console.log(`[ai-seo-enhance] Schema generated deterministically (${schemaMarkup.length} items) in ${Date.now() - startTime}ms`);
+    // Generate AI-powered schema markup in parallel with main analysis
+    const schemaPromise = generateSchemaMarkup(LOVABLE_API_KEY, contentType, data, siteUrl);
 
-    // Step 2: Main SEO analysis
-    const systemPrompt = `You are an elite SEO consultant for Indian MBA education (CAT, GMAT, XAT, SNAP, GRE, NMAT, CMAT, IIFT, TISSNET).
+    // Extract and analyze ALL content deeply
+    const allContent = [
+      data.description, data.content, data.intro_content, data.detailed_content,
+      data.admission_process, data.eligibility, data.faq_content,
+    ].filter(Boolean).join("\n\n");
 
-CRITICAL RULES:
-- meta_title: UNDER 60 chars, primary keyword near start
-- meta_description: 150-160 chars, primary+secondary keywords, clear CTA
-- h1_tag: Unique, keyword-rich, different from meta_title
-- Score the CURRENT page honestly (0-100) BEFORE your suggestions
-- If meta_title missing → metaTags score 0-20
-- If no keywords → keywords score 0
-- DO NOT inflate scores
-- Generate detailed, page-specific keywords (not generic)
-- Internal links must be real paths on the site (/college/*, /institute/*, /exam/*, /article/*, /blog, /compare)
-
-Return ONLY valid JSON matching the tool schema. No markdown.`;
-
-    const contentText = (data.description || data.content || data.intro_content || data.detailed_content || data.admission_process || data.eligibility || "")
-      .replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+    const contentText = allContent.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
     const wordCount = contentText.split(/\s+/).filter(Boolean).length;
 
-    const userPrompt = `Content Type: ${contentType}
-Page Name: ${data.title || data.name || data.full_name || "Untitled"}
-Slug: ${data.slug || ""}
-City: ${data.city || "N/A"}
-State: ${data.state || "N/A"}
-Current Meta Title: ${data.meta_title || "MISSING"}
-Current Meta Description: ${data.meta_description || "MISSING"}
-Current Keywords: ${(data.keywords || []).join(", ") || "NONE"}
-Current H1: ${data.h1_tag || "MISSING"}
+    // Extract existing images from content for alt-tag analysis
+    const imgMatches = allContent.match(/<img[^>]*>/gi) || [];
+    const existingImages = imgMatches.map(img => {
+      const src = img.match(/src="([^"]*)"/)?.[1] || "";
+      const alt = img.match(/alt="([^"]*)"/)?.[1] || "";
+      return { src, alt, hasAlt: alt.length > 0 };
+    });
+
+    // Extract existing headers from content
+    const headerMatches = allContent.match(/<h[1-6][^>]*>.*?<\/h[1-6]>/gi) || [];
+    const existingHeaders = headerMatches.map(h => h.replace(/<[^>]*>/g, "").trim());
+
+    // Determine current SEO state for honest scoring
+    const currentState = {
+      hasMetaTitle: Boolean(data.meta_title && data.meta_title.length > 5),
+      metaTitleLength: (data.meta_title || "").length,
+      hasMetaDesc: Boolean(data.meta_description && data.meta_description.length > 20),
+      metaDescLength: (data.meta_description || "").length,
+      hasH1: Boolean(data.h1_tag && data.h1_tag.length > 3),
+      hasKeywords: Boolean(data.keywords && data.keywords.length > 0),
+      keywordCount: (data.keywords || []).length,
+      wordCount,
+      imageCount: imgMatches.length,
+      imagesWithoutAlt: existingImages.filter(i => !i.hasAlt).length,
+      headerCount: headerMatches.length,
+      existingHeaders,
+    };
+
+    const systemPrompt = `You are a world-class SEO analyst specializing in Indian MBA education (CAT, GMAT, XAT, SNAP, GRE, NMAT, CMAT, IIFT, TISSNET, MAT, ATMA, KMAT).
+
+YOUR MISSION: Perform an exhaustive SEO audit of this page. Read EVERY word of the content. Identify EVERY SEO issue. Provide SPECIFIC, actionable fixes.
+
+CRITICAL SCORING RULES (score the CURRENT state BEFORE your fixes):
+- Meta title missing or <10 chars → metaTags: 0-15
+- Meta title exists but poor (no keywords, wrong length) → metaTags: 20-40
+- Meta title optimized → metaTags: 70-100
+- No keywords at all → keywords: 0
+- Few generic keywords → keywords: 10-30
+- Rich, page-specific keywords → keywords: 60-100
+- No schema markup → schema: 0
+- Basic schema only → schema: 20-40
+- No social meta → socialMeta: 0
+- Content <500 words → contentStructure: 10-30
+- No proper header hierarchy → contentStructure reduced by 20
+- Technical issues (no canonical, no alt tags, etc.) → technicalSEO: 20-40
+
+KEYWORD RESEARCH GUIDELINES:
+- primary: 2-3 exact-match high-volume keywords specific to THIS page
+- shortTail: 8-10 2-3 word competitive keywords students actually search
+- longTail: 12-15 specific 4-7 word phrases with search intent (e.g., "best MBA coaching in Mumbai for working professionals 2025")
+- faq: 10-12 question-format keywords starting with What/How/Which/Is/Can/Does (e.g., "What is the fee structure of IIM Ahmedabad MBA?")
+- trending: 8-10 current year keywords with "2025", "2026", "latest", "new" (e.g., "CAT 2025 preparation strategy")
+- lsi: 10-12 semantically related terms and synonyms (e.g., for "MBA coaching" → "management entrance preparation", "B-school test prep")
+
+META TITLE RULES: Under 60 chars. Primary keyword at/near start. Include brand or location qualifier. Power words: Best, Top, Guide, Review, Compare.
+META DESCRIPTION RULES: 150-160 chars. Include primary + secondary keyword. End with CTA (Apply Now, Check Details, Compare, etc.).
+H1 TAG: Must be unique from meta_title. Include primary keyword naturally. Should be the main heading a student sees.
+
+TECHNICAL SEO — analyze deeply:
+- canonicalUrl: exact canonical URL for this page
+- urlSlugSuggestion: improved slug if current one can be better
+- imageAltTags: specific alt text for EACH image found on the page
+- contentLengthAnalysis: honest assessment with specific recommendation
+- headerStructure: suggest full H1 > H2 > H3 hierarchy for the page
+- pagespeedTips: specific tips (lazy load images, minimize CSS, defer JS, etc.)
+- mobileTips: touch targets, font sizes, viewport, scroll behavior
+- securityChecks: HTTPS, mixed content, CSP headers
+- crawlabilityTips: robots.txt, sitemap inclusion, internal linking depth
+- backlinkIdeas: 5+ specific websites/directories to get backlinks from
+- engagementTips: reduce bounce rate, increase time on page
+- freshnessTips: content update schedule, date display
+- keywordPlacementTips: where exactly to place keywords (first 100 words, headers, alt tags, URL)
+
+INTERNAL LINKS: Suggest 5-8 real internal link paths from these available routes: /college/[slug], /institute/[slug], /exam/[slug], /article/[slug], /blog, /compare, /colleges, /cat-score-calculator, /profile-analyzer, /college-shortlister, /college-finder
+For each link, provide the exact anchor text to use.
+
+COMPETITOR INSIGHTS: What are the top 3-5 ranking pages doing differently? What content gaps exist?
+CONTENT SUGGESTIONS: 5-8 specific sections/paragraphs to add for better rankings.
+
+Return ONLY valid JSON. No markdown wrapping.`;
+
+    const userPrompt = `=== DEEP SEO AUDIT REQUEST ===
+
+Content Type: ${contentType}
+Page: ${data.title || data.name || data.full_name || "Untitled"}
+Slug: /${contentType === "cityPage" ? "colleges" : contentType === "article" ? "article" : contentType}/${data.slug || ""}
+City: ${data.city || "N/A"} | State: ${data.state || "N/A"}
+
+=== CURRENT SEO STATE (score THIS honestly) ===
+Meta Title: ${data.meta_title ? `"${data.meta_title}" (${data.meta_title.length} chars)` : "❌ MISSING"}
+Meta Description: ${data.meta_description ? `"${data.meta_description}" (${data.meta_description.length} chars)` : "❌ MISSING"}
+H1 Tag: ${data.h1_tag ? `"${data.h1_tag}"` : "❌ MISSING"}
+Current Keywords: ${(data.keywords || []).length > 0 ? (data.keywords || []).join(", ") : "❌ NONE"}
 Word Count: ${wordCount}
-${pageUrl ? `Live Page URL: ${pageUrl}` : ""}
+Images Found: ${imgMatches.length} (${existingImages.filter(i => !i.hasAlt).length} missing alt tags)
+Headers Found: ${existingHeaders.length > 0 ? existingHeaders.join(" | ") : "None"}
+${pageUrl ? `Live URL: ${pageUrl}` : ""}
 
-Content Preview (first 3000 chars):
-${contentText.slice(0, 3000)}
+=== FULL PAGE CONTENT (analyze thoroughly) ===
+${contentText.slice(0, 6000)}
 
-${data.courses ? `Courses: ${(data.courses || []).join(", ")}` : ""}
+=== ADDITIONAL DATA ===
+${data.courses ? `Courses Offered: ${(data.courses || []).join(", ")}` : ""}
 ${data.exams_accepted ? `Exams Accepted: ${(data.exams_accepted || []).join(", ")}` : ""}
 ${data.fees ? `Fees: ${data.fees}` : ""}
 ${data.ranking ? `Ranking: #${data.ranking}` : ""}
 ${data.rating ? `Rating: ${data.rating}/5 (${data.total_reviews || 0} reviews)` : ""}
 ${data.placement_avg ? `Avg Placement: ${data.placement_avg}` : ""}
+${data.placement_highest ? `Highest Placement: ${data.placement_highest}` : ""}
+${data.placement_median ? `Median Placement: ${data.placement_median}` : ""}
 ${data.conducting_body ? `Conducting Body: ${data.conducting_body}` : ""}
 ${data.exam_date ? `Exam Date: ${data.exam_date}` : ""}
+${data.registration_deadline ? `Registration Deadline: ${data.registration_deadline}` : ""}
+${data.established ? `Established: ${data.established}` : ""}
+${data.accreditations ? `Accreditations: ${(data.accreditations || []).join(", ")}` : ""}
+${data.top_recruiters ? `Top Recruiters: ${(data.top_recruiters || []).slice(0, 15).join(", ")}` : ""}
+${data.campus_size ? `Campus: ${data.campus_size}` : ""}
+${data.success_rate ? `Success Rate: ${data.success_rate}%` : ""}
+${data.mode ? `Mode: ${data.mode}` : ""}
+${data.features ? `Features: ${(data.features || []).join(", ")}` : ""}
+${data.category ? `Category: ${data.category}` : ""}
+${data.author ? `Author: ${data.author}` : ""}
+${data.tier ? `Tier: ${data.tier}` : ""}
+${data.type ? `Type: ${data.type}` : ""}
+${data.college_category ? `College Category: ${data.college_category}` : ""}
 
-Perform DEEP, page-specific SEO analysis. Be brutally honest about current state.`;
+Perform COMPREHENSIVE, DEEP SEO analysis. Score the CURRENT state honestly. Show what's wrong and provide the BEST possible suggestions.`;
 
-    console.log(`[ai-seo-enhance] Calling AI gateway...`);
+    console.log(`[ai-seo-enhance] Calling AI with deep analysis prompt...`);
     const aiStartTime = Date.now();
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-2.5-pro",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        generationConfig: { maxOutputTokens: 8192 },
         tools: [{
           type: "function",
           function: {
             name: "seo_suggestions",
-            description: "Return comprehensive SEO analysis and suggestions",
+            description: "Return comprehensive deep SEO analysis with before/after comparisons",
             parameters: {
               type: "object",
               properties: {
-                meta_title: { type: "string", description: "SEO title UNDER 60 chars" },
-                meta_description: { type: "string", description: "Meta description 150-160 chars with CTA" },
-                h1_tag: { type: "string", description: "Unique H1, different from meta_title" },
+                meta_title: { type: "string", description: "Optimized SEO title UNDER 60 chars with primary keyword" },
+                meta_description: { type: "string", description: "Meta description 150-160 chars with keywords and CTA" },
+                h1_tag: { type: "string", description: "Unique H1 tag, different from meta_title, keyword-rich" },
                 keywords: {
                   type: "object",
                   properties: {
-                    primary: { type: "array", items: { type: "string" }, description: "1-2 high-volume primary keywords" },
-                    shortTail: { type: "array", items: { type: "string" }, description: "5-7 short-tail keywords" },
-                    longTail: { type: "array", items: { type: "string" }, description: "8-10 long-tail keywords students search" },
-                    faq: { type: "array", items: { type: "string" }, description: "7-10 question-format keywords" },
-                    trending: { type: "array", items: { type: "string" }, description: "5 trending keywords" },
-                    lsi: { type: "array", items: { type: "string" }, description: "5-8 LSI related terms" },
+                    primary: { type: "array", items: { type: "string" }, description: "2-3 high-volume primary keywords" },
+                    shortTail: { type: "array", items: { type: "string" }, description: "8-10 short-tail keywords" },
+                    longTail: { type: "array", items: { type: "string" }, description: "12-15 long-tail keywords students search" },
+                    faq: { type: "array", items: { type: "string" }, description: "10-12 question-format keywords" },
+                    trending: { type: "array", items: { type: "string" }, description: "8-10 trending 2025/2026 keywords" },
+                    lsi: { type: "array", items: { type: "string" }, description: "10-12 LSI semantically related terms" },
                   },
                   required: ["primary", "shortTail", "longTail", "faq", "trending", "lsi"],
                 },
-                onPageTips: { type: "array", items: { type: "string" }, description: "Specific actionable SEO tips" },
+                onPageTips: { type: "array", items: { type: "string" }, description: "8-12 specific actionable on-page SEO tips" },
                 technicalSEO: {
                   type: "object",
                   properties: {
@@ -354,12 +383,12 @@ Perform DEEP, page-specific SEO analysis. Be brutally honest about current state
                     anchorTexts: { type: "array", items: { type: "string" } },
                   },
                 },
-                contentSuggestions: { type: "array", items: { type: "string" } },
-                competitorInsights: { type: "array", items: { type: "string" } },
+                contentSuggestions: { type: "array", items: { type: "string" }, description: "5-8 specific content sections to add" },
+                competitorInsights: { type: "array", items: { type: "string" }, description: "5 competitor analysis insights" },
                 seoScore: {
                   type: "object",
                   properties: {
-                    overall: { type: "number" },
+                    overall: { type: "number", description: "Honest 0-100 score of CURRENT page state" },
                     breakdown: {
                       type: "object",
                       properties: {
@@ -368,9 +397,10 @@ Perform DEEP, page-specific SEO analysis. Be brutally honest about current state
                         contentStructure: { type: "number" }, socialMeta: { type: "number" },
                       },
                     },
-                    criticalIssues: { type: "array", items: { type: "string" } },
-                    warnings: { type: "array", items: { type: "string" } },
-                    passed: { type: "array", items: { type: "string" } },
+                    projectedScore: { type: "number", description: "Estimated score AFTER applying all suggestions" },
+                    criticalIssues: { type: "array", items: { type: "string" }, description: "Issues that MUST be fixed immediately" },
+                    warnings: { type: "array", items: { type: "string" }, description: "Issues that should be fixed soon" },
+                    passed: { type: "array", items: { type: "string" }, description: "Things that are already good" },
                   },
                 },
               },
@@ -399,24 +429,27 @@ Perform DEEP, page-specific SEO analysis. Be brutally honest about current state
     }
 
     const aiData = await response.json();
-    await logAIUsage("seo-enhance", "google/gemini-2.5-flash", aiData);
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+    await logAIUsage("seo-enhance", "google/gemini-2.5-pro", aiData);
+    console.log(`[ai-seo-enhance] AI analysis completed in ${Date.now() - aiStartTime}ms`);
 
+    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     let suggestions: any;
     if (toolCall?.function?.arguments) {
       const args = toolCall.function.arguments;
       suggestions = typeof args === "string" ? JSON.parse(args) : args;
     } else {
       const content = aiData.choices?.[0]?.message?.content || "";
-      if (detectTruncation(content)) {
-        console.warn("AI response appears truncated, attempting partial parse");
-      }
+      if (detectTruncation(content)) console.warn("AI response appears truncated");
       suggestions = extractJsonFromResponse(content);
     }
 
-    // Use deterministic schema (already generated above)
+    // Wait for schema markup
+    const schemaMarkup = await schemaPromise;
     suggestions.schemaMarkup = schemaMarkup;
-    console.log(`[ai-seo-enhance] AI call completed in ${Date.now() - aiStartTime}ms`);
+    console.log(`[ai-seo-enhance] Schema generated (${schemaMarkup.length} items)`);
+
+    // Include current state for before/after comparison
+    suggestions.currentState = currentState;
 
     // Ensure all fields have defaults
     suggestions.keywords = {
@@ -446,11 +479,11 @@ Perform DEEP, page-specific SEO analysis. Be brutally honest about current state
       keywordPlacementTips: suggestions.technicalSEO?.keywordPlacementTips || [],
     };
     suggestions.socialMeta = suggestions.socialMeta || {};
-    suggestions.internalLinks = {
-      suggested: suggestions.internalLinks?.suggested || [],
-      anchorTexts: suggestions.internalLinks?.anchorTexts || [],
-    };
+    suggestions.internalLinks = { suggested: suggestions.internalLinks?.suggested || [], anchorTexts: suggestions.internalLinks?.anchorTexts || [] };
     suggestions.seoScore = suggestions.seoScore || { overall: 0, breakdown: {}, criticalIssues: [], warnings: [], passed: [] };
+    suggestions.seoScore.projectedScore = suggestions.seoScore.projectedScore || Math.min(95, (suggestions.seoScore.overall || 0) + 30);
+
+    console.log(`[ai-seo-enhance] Total time: ${Date.now() - startTime}ms. Score: ${suggestions.seoScore.overall}/100 → projected ${suggestions.seoScore.projectedScore}/100`);
 
     return new Response(JSON.stringify({ success: true, suggestions }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
