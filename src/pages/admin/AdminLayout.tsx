@@ -49,7 +49,7 @@ const adminNavGroups = [
       { label: "Callback Requests", path: "/admin/callbacks", icon: PhoneCall, showDot: true },
       { label: "Inquiries", path: "/admin/inquiries", icon: MessageSquare },
       { label: "Student Leads", path: "/admin/leads", icon: Users },
-      { label: "All Leads (Unified)", path: "/admin/all-leads-unified", icon: BarChart3 },
+      { label: "Master Data", path: "/admin/all-leads-unified", icon: Database },
       { label: "Subscribers", path: "/admin/subscribers", icon: Mail },
       { label: "Business Inquiries", path: "/admin/business-inquiries", icon: Briefcase },
     ],
