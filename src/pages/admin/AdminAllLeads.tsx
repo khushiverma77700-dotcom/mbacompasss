@@ -343,51 +343,65 @@ const AdminAllLeads = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 pt-0">
-          <div className="relative h-[180px] flex items-end gap-[2px]">
-            {graphData.map((d, i) => {
-              const barHeight = Math.max(2, (d.daily / maxDaily) * 140);
-              const lineY = maxCumulative > 0 ? 180 - (d.cumulative / maxCumulative) * 160 : 180;
-              return (
-                <div key={d.date} className="flex-1 relative group flex flex-col items-center justify-end h-full">
-                  {/* Bar */}
-                  <div
-                    className="w-full bg-primary/30 hover:bg-primary/50 rounded-t transition-colors"
-                    style={{ height: `${barHeight}px` }}
-                  />
-                  {/* Tooltip */}
-                  <div className="absolute bottom-full mb-2 hidden group-hover:block z-10 bg-popover border border-border rounded-lg px-2 py-1 text-xs shadow-lg whitespace-nowrap">
-                    <div className="font-medium">{d.label}</div>
-                    <div>Daily: {d.daily}</div>
-                    <div>Total: {d.cumulative}</div>
-                  </div>
-                  {/* X-axis label every 5 days */}
-                  {i % 5 === 0 && (
-                    <div className="absolute -bottom-5 text-[9px] text-muted-foreground whitespace-nowrap">
-                      {d.label}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-            {/* Cumulative line overlay */}
-            <svg className="absolute inset-0 pointer-events-none" viewBox={`0 0 ${graphData.length * 10} 180`} preserveAspectRatio="none">
-              <polyline
-                fill="none"
-                stroke="hsl(var(--primary))"
-                strokeWidth="2"
-                points={graphData.map((d, i) => {
-                  const x = i * 10 + 5;
-                  const y = maxCumulative > 0 ? 180 - (d.cumulative / maxCumulative) * 160 : 180;
-                  return `${x},${y}`;
-                }).join(" ")}
+          <ResponsiveContainer width="100%" height={220}>
+            <ComposedChart data={graphData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis
+                dataKey="label"
+                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                interval={4}
+                axisLine={{ stroke: "hsl(var(--border))" }}
+                tickLine={false}
               />
-            </svg>
-          </div>
-          <div className="h-5" /> {/* spacer for x-axis labels */}
-          <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground mt-2">
-            <span className="flex items-center gap-1"><span className="w-3 h-3 bg-primary/30 rounded-sm inline-block" /> Daily Leads</span>
-            <span className="flex items-center gap-1"><span className="w-6 h-0.5 bg-primary inline-block" /> Cumulative</span>
-          </div>
+              <YAxis
+                yAxisId="left"
+                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                axisLine={false}
+                tickLine={false}
+                allowDecimals={false}
+              />
+              <YAxis
+                yAxisId="right"
+                orientation="right"
+                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                axisLine={false}
+                tickLine={false}
+                allowDecimals={false}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: "hsl(var(--popover))",
+                  border: "1px solid hsl(var(--border))",
+                  borderRadius: "8px",
+                  fontSize: "12px",
+                  color: "hsl(var(--popover-foreground))",
+                }}
+                labelStyle={{ fontWeight: 600 }}
+              />
+              <Legend
+                iconSize={10}
+                wrapperStyle={{ fontSize: "12px", color: "hsl(var(--muted-foreground))" }}
+              />
+              <Bar
+                yAxisId="left"
+                dataKey="daily"
+                name="Daily Leads"
+                fill="hsl(var(--primary) / 0.3)"
+                radius={[4, 4, 0, 0]}
+                barSize={12}
+              />
+              <Line
+                yAxisId="right"
+                type="monotone"
+                dataKey="cumulative"
+                name="Cumulative"
+                stroke="hsl(var(--primary))"
+                strokeWidth={2.5}
+                dot={false}
+                activeDot={{ r: 4, fill: "hsl(var(--primary))" }}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
         </CardContent>
       </Card>
 
