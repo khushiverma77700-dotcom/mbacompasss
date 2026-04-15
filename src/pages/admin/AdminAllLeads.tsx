@@ -272,8 +272,6 @@ const AdminAllLeads = () => {
     });
   }, [uniqueLeads]);
 
-  const maxCumulative = graphData.length > 0 ? graphData[graphData.length - 1].cumulative : 1;
-  const maxDaily = Math.max(1, ...graphData.map(d => d.daily));
 
   const downloadCSV = () => {
     const headers = ["Name", "Email", "Mobile", "Source", "Page Link", "Lead Date", "Extra Details"];
