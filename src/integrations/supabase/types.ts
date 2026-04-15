@@ -138,6 +138,7 @@ export type Database = {
           author: string | null
           banner_url: string | null
           category: string | null
+          comparison_id: string | null
           content: string | null
           created_at: string
           excerpt: string | null
@@ -161,6 +162,7 @@ export type Database = {
           author?: string | null
           banner_url?: string | null
           category?: string | null
+          comparison_id?: string | null
           content?: string | null
           created_at?: string
           excerpt?: string | null
@@ -184,6 +186,7 @@ export type Database = {
           author?: string | null
           banner_url?: string | null
           category?: string | null
+          comparison_id?: string | null
           content?: string | null
           created_at?: string
           excerpt?: string | null
@@ -203,7 +206,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "articles_comparison_id_fkey"
+            columns: ["comparison_id"]
+            isOneToOne: false
+            referencedRelation: "comparisons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       banners: {
         Row: {

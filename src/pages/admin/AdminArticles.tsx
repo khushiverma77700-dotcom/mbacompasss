@@ -29,11 +29,12 @@ const emptyForm = {
   title: "", slug: "", excerpt: "", content: "", category: "news", author: "",
   published: false, meta_title: "", meta_description: "", keywords: [] as string[],
   priority: 0, featured: false, status: "draft", intro: "", banner_url: "",
-  image_url: "", h1_tag: "", is_comparison: false,
+  image_url: "", h1_tag: "", is_comparison: false, comparison_id: "" as string,
 };
 
 const AdminArticles = () => {
   const [articles, setArticles] = useState<any[]>([]);
+  const [comparisons, setComparisons] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
@@ -42,12 +43,17 @@ const AdminArticles = () => {
   const [filterStatus, setFilterStatus] = useState("all");
   const { toast } = useToast();
 
+  const fetchComparisons = async () => {
+    const { data } = await supabase.from("comparisons").select("id, title").eq("active", true).order("sort_order");
+    if (data) setComparisons(data);
+  };
+
   const fetchArticles = async () => {
     const { data } = await supabase.from("articles").select("*").order("created_at", { ascending: false });
     if (data) setArticles(data);
   };
 
-  useEffect(() => { fetchArticles(); }, []);
+  useEffect(() => { fetchArticles(); fetchComparisons(); }, []);
 
   const generateSlug = (title: string) => {
     return title.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 75);
@@ -88,6 +94,7 @@ const AdminArticles = () => {
       intro: form.intro || null, banner_url: form.banner_url || null,
       image_url: form.image_url || null, h1_tag: form.h1_tag || null,
       is_comparison: form.is_comparison,
+      comparison_id: form.is_comparison && form.comparison_id ? form.comparison_id : null,
     };
 
     if (editId) {
@@ -115,6 +122,7 @@ const AdminArticles = () => {
       intro: article.intro || "", banner_url: article.banner_url || "",
       image_url: article.image_url || "", h1_tag: article.h1_tag || "",
       is_comparison: article.is_comparison || false,
+      comparison_id: article.comparison_id || "",
     });
     setEditId(article.id);
     setDialogOpen(true);
@@ -276,10 +284,26 @@ const AdminArticles = () => {
                   <Switch checked={form.featured} onCheckedChange={(v) => setForm({ ...form, featured: v })} />
                   <Label>Featured on Homepage</Label>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Switch checked={form.is_comparison} onCheckedChange={(v) => setForm({ ...form, is_comparison: v })} />
-                  <Label>Show in Popular Comparisons</Label>
-                  <span className="text-xs text-muted-foreground">(Optional — article will appear in the Comparisons section on homepage)</span>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <Switch checked={form.is_comparison} onCheckedChange={(v) => setForm({ ...form, is_comparison: v, comparison_id: v ? form.comparison_id : "" })} />
+                    <Label>Show in Popular Comparisons</Label>
+                    <span className="text-xs text-muted-foreground">(Optional)</span>
+                  </div>
+                  {form.is_comparison && (
+                    <div className="ml-12">
+                      <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Select Comparison Category</Label>
+                      <Select value={form.comparison_id} onValueChange={(v) => setForm({ ...form, comparison_id: v })}>
+                        <SelectTrigger><SelectValue placeholder="Choose a comparison..." /></SelectTrigger>
+                        <SelectContent>
+                          {comparisons.map(c => (
+                            <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground mt-1">Article will appear under this comparison on the homepage</p>
+                    </div>
+                  )}
                 </div>
                 <ResponsiveImageUpload
                   bucket="uploads"

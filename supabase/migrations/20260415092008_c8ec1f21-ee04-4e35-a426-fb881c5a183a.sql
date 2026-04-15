@@ -1,0 +1,1 @@
+ALTER TABLE public.articles ADD COLUMN comparison_id uuid REFERENCES public.comparisons(id) ON DELETE SET NULL;
