@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download, Users, Search, Mail, Phone, UserCheck, Sparkles, MessageSquare, Briefcase, Calculator, Ticket, ChevronLeft, ChevronRight, TrendingUp, CalendarCheck } from "lucide-react";
-import { format, subDays, isToday, startOfDay, eachDayOfInterval, parseISO } from "date-fns";
+import { format, subDays, isToday, startOfDay, eachDayOfInterval } from "date-fns";
+import { ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 
 interface MasterLead {
   id: string;
