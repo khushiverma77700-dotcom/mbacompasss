@@ -106,6 +106,21 @@ const LoginRequiredDialog = ({ open, onOpenChange, message }: LoginRequiredDialo
         toast({ title: "Welcome back!", description: "You've been signed in successfully." });
         onOpenChange(false);
       } else {
+        // Check for duplicate phone/email before signup
+        const { data: dupCheck } = await supabase.functions.invoke("check-duplicate", {
+          body: { phone, email },
+        });
+        if (dupCheck?.phoneExists) {
+          toast({ title: "Already Registered", description: "This mobile number is already registered. Please sign in instead.", variant: "destructive" });
+          setLoading(false);
+          return;
+        }
+        if (dupCheck?.emailExists) {
+          toast({ title: "Already Registered", description: "This email is already registered. Please sign in instead.", variant: "destructive" });
+          setLoading(false);
+          return;
+        }
+
         await signUp(email, password, displayName, phone);
         toast({ title: "Account created!", description: "Please check your email to verify your account." });
         onOpenChange(false);
