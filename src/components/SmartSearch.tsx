@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 
 type Suggestion = {
-  type: "institute" | "exam" | "city" | "category" | "college";
+  type: "institute" | "exam" | "city" | "category" | "college" | "article";
   label: string;
   sub: string;
   link: string;
@@ -17,6 +17,7 @@ const iconMap = {
   city: MapPin,
   category: Tag,
   college: Building2,
+  article: BookOpen,
 };
 
 const SmartSearch = ({ className = "", onClose }: { className?: string; onClose?: () => void }) => {
@@ -36,11 +37,12 @@ const SmartSearch = ({ className = "", onClose }: { className?: string; onClose?
     const fetchResults = async () => {
       const suggestions: Suggestion[] = [];
 
-      const [instRes, examRes, catRes, collegeRes] = await Promise.all([
+      const [instRes, examRes, catRes, collegeRes, articleRes] = await Promise.all([
         supabase.from("institutes").select("name, slug, city, rating").ilike("name", `%${q}%`).limit(5),
         supabase.from("exams").select("name, slug, full_name, conducting_body").ilike("name", `%${q}%`).limit(5),
         supabase.from("categories").select("name, slug, description").ilike("name", `%${q}%`).limit(4),
         supabase.from("colleges").select("name, slug, city, ranking, fees").ilike("name", `%${q}%`).limit(5),
+        supabase.from("articles").select("title, slug, category, excerpt").eq("published", true).ilike("title", `%${q}%`).limit(4),
       ]);
 
       instRes.data?.forEach((i) =>
@@ -54,6 +56,9 @@ const SmartSearch = ({ className = "", onClose }: { className?: string; onClose?
       );
       collegeRes.data?.forEach((c) =>
         suggestions.push({ type: "college", label: c.name, sub: `${c.city || ""} · Rank #${c.ranking || "—"} · ${c.fees || ""}`, link: `/college/${c.slug}` })
+      );
+      articleRes.data?.forEach((a) =>
+        suggestions.push({ type: "article", label: a.title, sub: a.category || "Blog", link: `/article/${a.slug}` })
       );
 
       if (!controller.signal.aborted) {
