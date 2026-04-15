@@ -2,15 +2,14 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, X, Star, MapPin } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Star, ArrowLeft } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
 import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
@@ -39,7 +38,7 @@ const emptyForm = {
 const AdminInstitutes = () => {
   const [institutes, setInstitutes] = useState<Institute[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState({ keywords: "", features: "" });
@@ -71,7 +70,6 @@ const AdminInstitutes = () => {
   const handleSave = async () => {
     if (!form.name) { toast({ title: "Error", description: "Name is required", variant: "destructive" }); return; }
     const slug = form.slug || form.name.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
-    // Auto-generate banner if city & state are set and no banner exists
     let bannerUrl = form.banner_url;
     if (!bannerUrl && form.city && form.state) {
       bannerUrl = await generateAndUploadLocationBanner(form.city, form.state, "institute-banners") || "";
@@ -103,7 +101,7 @@ const AdminInstitutes = () => {
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       toast({ title: "Institute added" });
     }
-    setDialogOpen(false); setForm(emptyForm); setEditId(null); fetchData();
+    setShowForm(false); setForm(emptyForm); setEditId(null); fetchData();
   };
 
   const handleEdit = async (id: string) => {
@@ -127,7 +125,7 @@ const AdminInstitutes = () => {
         latitude: data.latitude ? String(data.latitude) : "",
         longitude: data.longitude ? String(data.longitude) : "",
       });
-      setEditId(id); setDialogOpen(true);
+      setEditId(id); setShowForm(true);
     }
   };
 
@@ -161,7 +159,6 @@ const AdminInstitutes = () => {
     </div>
   );
 
-  // Auto-generate schema markup preview
   const schemaPreview = {
     "@context": "https://schema.org",
     "@type": "EducationalOrganization",
@@ -172,33 +169,30 @@ const AdminInstitutes = () => {
     ...(form.rating ? { aggregateRating: { "@type": "AggregateRating", ratingValue: String(form.rating), bestRating: "5", ratingCount: String(form.total_reviews || 10) } } : {}),
   };
 
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="font-heading text-2xl font-bold text-foreground">Manage Institutes</h1>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => { setForm(emptyForm); setEditId(null); setTagInput({ keywords: "", features: "" }); }}>
-              <Plus className="w-4 h-4 mr-2" /> Add Institute
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <div className="flex items-center justify-between">
-                <DialogTitle>{editId ? "Edit" : "Add"} Institute</DialogTitle>
-                <AISEOButton
-                  contentType="institute"
-                  recordId={editId || undefined}
-                  data={{ name: form.name, description: form.description, city: form.city, state: form.state, slug: form.slug, features: form.features }}
-                  onApply={(s) => setForm((f: any) => ({
-                    ...f,
-                    ...(s.meta_title && { meta_title: s.meta_title }),
-                    ...(s.meta_description && { meta_description: s.meta_description }),
-                    ...(s.keywords && { keywords: s.keywords }),
-                  }))}
-                />
-              </div>
-            </DialogHeader>
+  if (showForm) {
+    return (
+      <div>
+        <Button variant="ghost" className="mb-4" onClick={() => { setShowForm(false); setForm(emptyForm); setEditId(null); }}>
+          <ArrowLeft className="w-4 h-4 mr-2" /> Back to Institutes
+        </Button>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>{editId ? "Edit" : "Add"} Institute</CardTitle>
+              <AISEOButton
+                contentType="institute"
+                recordId={editId || undefined}
+                data={{ name: form.name, description: form.description, city: form.city, state: form.state, slug: form.slug, features: form.features }}
+                onApply={(s) => setForm((f: any) => ({
+                  ...f,
+                  ...(s.meta_title && { meta_title: s.meta_title }),
+                  ...(s.meta_description && { meta_description: s.meta_description }),
+                  ...(s.keywords && { keywords: s.keywords }),
+                }))}
+              />
+            </div>
+          </CardHeader>
+          <CardContent>
             <Tabs defaultValue="basic" className="space-y-4">
               <TabsList className="grid grid-cols-5 w-full">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
@@ -210,171 +204,72 @@ const AdminInstitutes = () => {
 
               <TabsContent value="basic" className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Institute Name *</Label>
-                    <Input placeholder="e.g. IMS Learning Resources" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">URL Slug</Label>
-                    <Input placeholder="auto-generated from name" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} />
-                  </div>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Institute Name *</Label><Input placeholder="e.g. IMS Learning Resources" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">URL Slug</Label><Input placeholder="auto-generated from name" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} /></div>
                 </div>
-                <div>
-                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Category</Label>
+                <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Category</Label>
                   <Select value={form.category_id} onValueChange={(v) => setForm({ ...form, category_id: v })}>
                     <SelectTrigger><SelectValue placeholder="Select Category" /></SelectTrigger>
-                    <SelectContent>
-                      {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                    </SelectContent>
+                    <SelectContent>{categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Description</Label>
-                  <RichTextEditor content={form.description} onChange={(html) => setForm({ ...form, description: html })} placeholder="Detailed institute description..." />
-                </div>
-                <StateCitySelect
-                  state={form.state}
-                  city={form.city}
-                  onStateChange={(s) => setForm({ ...form, state: s, city: "" })}
-                  onCityChange={(c) => setForm({ ...form, city: c })}
-                />
-                <div>
-                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Full Address</Label>
-                  <Input placeholder="Street address..." value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+                <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Description</Label><RichTextEditor content={form.description} onChange={(html) => setForm({ ...form, description: html })} placeholder="Detailed institute description..." /></div>
+                <StateCitySelect state={form.state} city={form.city} onStateChange={(s) => setForm({ ...form, state: s, city: "" })} onCityChange={(c) => setForm({ ...form, city: c })} />
+                <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Full Address</Label><Input placeholder="Street address..." value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Phone</Label><Input placeholder="+91..." value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">WhatsApp</Label><Input placeholder="+91..." value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Phone</Label>
-                    <Input placeholder="+91..." value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">WhatsApp</Label>
-                    <Input placeholder="+91..." value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
-                  </div>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Email</Label><Input placeholder="info@institute.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Website</Label><Input placeholder="https://..." value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} /></div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Email</Label>
-                    <Input placeholder="info@institute.com" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Website</Label>
-                    <Input placeholder="https://..." value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Teaching Mode</Label>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Teaching Mode</Label>
                     <Select value={form.mode} onValueChange={(v) => setForm({ ...form, mode: v })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Online">Online</SelectItem>
-                        <SelectItem value="Offline">Offline</SelectItem>
-                        <SelectItem value="Hybrid">Hybrid</SelectItem>
-                      </SelectContent>
+                      <SelectContent><SelectItem value="Online">Online</SelectItem><SelectItem value="Offline">Offline</SelectItem><SelectItem value="Hybrid">Hybrid</SelectItem></SelectContent>
                     </Select>
                   </div>
-                  <div className="flex items-end pb-1">
-                    <label className="flex items-center gap-2 text-sm">
-                      <input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} />
-                      Featured Institute
-                    </label>
-                  </div>
+                  <div className="flex items-end pb-1"><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.featured} onChange={(e) => setForm({ ...form, featured: e.target.checked })} />Featured Institute</label></div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Latitude</Label>
-                    <Input placeholder="19.0760" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Longitude</Label>
-                    <Input placeholder="72.8777" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} />
-                  </div>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Latitude</Label><Input placeholder="19.0760" value={form.latitude} onChange={(e) => setForm({ ...form, latitude: e.target.value })} /></div>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Longitude</Label><Input placeholder="72.8777" value={form.longitude} onChange={(e) => setForm({ ...form, longitude: e.target.value })} /></div>
                 </div>
               </TabsContent>
 
               <TabsContent value="stats" className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Rating (0-5)</Label>
-                    <Input type="number" step="0.1" min="0" max="5" value={form.rating} onChange={(e) => setForm({ ...form, rating: parseFloat(e.target.value) || 0 })} />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Total Reviews</Label>
-                    <Input type="number" value={form.total_reviews} onChange={(e) => setForm({ ...form, total_reviews: parseInt(e.target.value) || 0 })} />
-                  </div>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Rating (0-5)</Label><Input type="number" step="0.1" min="0" max="5" value={form.rating} onChange={(e) => setForm({ ...form, rating: parseFloat(e.target.value) || 0 })} /></div>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Total Reviews</Label><Input type="number" value={form.total_reviews} onChange={(e) => setForm({ ...form, total_reviews: parseInt(e.target.value) || 0 })} /></div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Students Count</Label>
-                    <Input type="number" value={form.students_count} onChange={(e) => setForm({ ...form, students_count: parseInt(e.target.value) || 0 })} />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Success Rate (%)</Label>
-                    <Input type="number" step="0.1" min="0" max="100" value={form.success_rate} onChange={(e) => setForm({ ...form, success_rate: parseFloat(e.target.value) || 0 })} />
-                  </div>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Students Count</Label><Input type="number" value={form.students_count} onChange={(e) => setForm({ ...form, students_count: parseInt(e.target.value) || 0 })} /></div>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Success Rate (%)</Label><Input type="number" step="0.1" min="0" max="100" value={form.success_rate} onChange={(e) => setForm({ ...form, success_rate: parseFloat(e.target.value) || 0 })} /></div>
                 </div>
-                <div>
-                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Key Features / USPs</Label>
-                  <TagInput field="features" placeholder="e.g. 50+ Mock Tests, Personal Mentoring" />
-                </div>
+                <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Key Features / USPs</Label><TagInput field="features" placeholder="e.g. 50+ Mock Tests, Personal Mentoring" /></div>
               </TabsContent>
 
               <TabsContent value="media" className="space-y-3">
                 <FileUpload bucket="uploads" folder="institutes/logos" value={form.logo_url} onChange={(url) => setForm({ ...form, logo_url: url })} accept="image/*" label="Institute Logo" sizeHint="200×200 px (square, PNG) • Max 100 KB" />
-                <ResponsiveImageUpload
-                  bucket="uploads"
-                  folder="institutes/banners"
-                  label="Banner Image"
-                  desktopValue={form.banner_url}
-                  mobileValue={(form as any).mobile_banner_url || ""}
-                  onDesktopChange={(url) => setForm({ ...form, banner_url: url })}
-                  onMobileChange={(url) => setForm({ ...form, mobile_banner_url: url } as any)}
-                  desktopSpec={{ dimensions: "1200×400 px", ratio: "3:1, landscape", maxSize: "250 KB" }}
-                  mobileSpec={{ dimensions: "600×300 px", ratio: "2:1", maxSize: "120 KB" }}
-                />
+                <ResponsiveImageUpload bucket="uploads" folder="institutes/banners" label="Banner Image" desktopValue={form.banner_url} mobileValue={(form as any).mobile_banner_url || ""} onDesktopChange={(url) => setForm({ ...form, banner_url: url })} onMobileChange={(url) => setForm({ ...form, mobile_banner_url: url } as any)} desktopSpec={{ dimensions: "1200×400 px", ratio: "3:1, landscape", maxSize: "250 KB" }} mobileSpec={{ dimensions: "600×300 px", ratio: "2:1", maxSize: "120 KB" }} />
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Discount Text</Label>
-                    <Input placeholder="e.g. 10% off on early enrollment" value={form.discount} onChange={(e) => setForm({ ...form, discount: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Offer Text</Label>
-                    <Input placeholder="e.g. Free mock tests included" value={form.offer} onChange={(e) => setForm({ ...form, offer: e.target.value })} />
-                  </div>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Discount Text</Label><Input placeholder="e.g. 10% off on early enrollment" value={form.discount} onChange={(e) => setForm({ ...form, discount: e.target.value })} /></div>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Offer Text</Label><Input placeholder="e.g. Free mock tests included" value={form.offer} onChange={(e) => setForm({ ...form, offer: e.target.value })} /></div>
                 </div>
               </TabsContent>
 
               <TabsContent value="seo" className="space-y-3">
-                <div>
-                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Title</Label>
-                  <Input value={form.meta_title} onChange={(e) => setForm({ ...form, meta_title: e.target.value })} maxLength={70} placeholder="Best MBA Coaching in Mumbai | Institute Name" />
-                  <span className="text-xs text-muted-foreground">{form.meta_title.length}/60 chars</span>
-                </div>
-                <div>
-                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Description</Label>
-                  <Input value={form.meta_description} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} maxLength={170} placeholder="Join the best MBA coaching in Mumbai..." />
-                  <span className="text-xs text-muted-foreground">{form.meta_description.length}/160 chars</span>
-                </div>
-                <div>
-                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">SEO Keywords</Label>
-                  <TagInput field="keywords" placeholder="e.g. MBA coaching Mumbai, CAT prep" />
-                </div>
-                <SEOChecklist data={{
-                  title: form.name, slug: form.slug, meta_title: form.meta_title,
-                  meta_description: form.meta_description, keywords: form.keywords,
-                  content: form.description, image_url: form.logo_url, banner_url: form.banner_url,
-                  schemaType: "institute",
-                }} contentType="institute" recordId={editId || undefined} />
+                <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Title</Label><Input value={form.meta_title} onChange={(e) => setForm({ ...form, meta_title: e.target.value })} maxLength={70} placeholder="Best MBA Coaching in Mumbai | Institute Name" /><span className="text-xs text-muted-foreground">{form.meta_title.length}/60 chars</span></div>
+                <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Description</Label><Input value={form.meta_description} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} maxLength={170} placeholder="Join the best MBA coaching in Mumbai..." /><span className="text-xs text-muted-foreground">{form.meta_description.length}/160 chars</span></div>
+                <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">SEO Keywords</Label><TagInput field="keywords" placeholder="e.g. MBA coaching Mumbai, CAT prep" /></div>
+                <SEOChecklist data={{ title: form.name, slug: form.slug, meta_title: form.meta_title, meta_description: form.meta_description, keywords: form.keywords, content: form.description, image_url: form.logo_url, banner_url: form.banner_url, schemaType: "institute" }} contentType="institute" recordId={editId || undefined} />
               </TabsContent>
 
               <TabsContent value="schema" className="space-y-3">
-                <div>
-                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Auto-Generated Schema Markup (JSON-LD)</Label>
-                  <p className="text-xs text-muted-foreground mb-2">This schema is automatically generated from the data you enter and injected into the institute's page for search engines.</p>
-                  <pre className="bg-muted rounded-lg p-4 text-xs overflow-x-auto max-h-64 text-foreground">
-                    {JSON.stringify(schemaPreview, null, 2)}
-                  </pre>
+                <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Auto-Generated Schema Markup (JSON-LD)</Label><p className="text-xs text-muted-foreground mb-2">This schema is automatically generated from the data you enter and injected into the institute's page for search engines.</p>
+                  <pre className="bg-muted rounded-lg p-4 text-xs overflow-x-auto max-h-64 text-foreground">{JSON.stringify(schemaPreview, null, 2)}</pre>
                 </div>
                 <div className="bg-secondary/50 rounded-lg p-4 border border-border">
                   <h4 className="font-heading font-semibold text-foreground text-sm mb-2">Schema Checklist</h4>
@@ -397,8 +292,19 @@ const AdminInstitutes = () => {
               </TabsContent>
             </Tabs>
             <Button onClick={handleSave} className="w-full mt-4">{editId ? "Update" : "Create"} Institute</Button>
-          </DialogContent>
-        </Dialog>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="font-heading text-2xl font-bold text-foreground">Manage Institutes</h1>
+        <Button onClick={() => { setForm(emptyForm); setEditId(null); setTagInput({ keywords: "", features: "" }); setShowForm(true); }}>
+          <Plus className="w-4 h-4 mr-2" /> Add Institute
+        </Button>
       </div>
 
       <Card>
