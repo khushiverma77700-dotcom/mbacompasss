@@ -2,17 +2,14 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { Plus, Pencil, Trash2, X, ArrowLeft } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
-import FileUpload from "@/components/admin/FileUpload";
 import SEOChecklist from "@/components/admin/SEOChecklist";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 
@@ -25,7 +22,7 @@ const emptyForm = {
 
 const AdminExams = () => {
   const [exams, setExams] = useState<any[]>([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const [syllabusInput, setSyllabusInput] = useState("");
@@ -62,7 +59,7 @@ const AdminExams = () => {
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     }
     toast({ title: editId ? "Exam updated" : "Exam created" });
-    setDialogOpen(false); setForm(emptyForm); setEditId(null); fetchExams();
+    setShowForm(false); setForm(emptyForm); setEditId(null); fetchExams();
   };
 
   const handleEdit = (exam: any) => {
@@ -74,7 +71,7 @@ const AdminExams = () => {
       syllabus: exam.syllabus ?? [], keywords: exam.keywords ?? [],
       meta_title: exam.meta_title ?? "", meta_description: exam.meta_description ?? "",
     });
-    setEditId(exam.id); setDialogOpen(true);
+    setEditId(exam.id); setShowForm(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -96,31 +93,30 @@ const AdminExams = () => {
     setInput("");
   };
 
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="font-heading text-2xl font-bold text-foreground">Manage Exams</h1>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => { setForm(emptyForm); setEditId(null); }}><Plus className="w-4 h-4 mr-2" /> Add Exam</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <div className="flex items-center justify-between">
-                <DialogTitle>{editId ? "Edit" : "Add"} Exam</DialogTitle>
-                <AISEOButton
-                  contentType="exam"
-                  recordId={editId || undefined}
-                  data={{ name: form.name, full_name: form.full_name, description: form.description, conducting_body: form.conducting_body, slug: form.slug }}
-                  onApply={(s) => setForm(f => ({
-                    ...f,
-                    ...(s.meta_title && { meta_title: s.meta_title }),
-                    ...(s.meta_description && { meta_description: s.meta_description }),
-                    ...(s.keywords && { keywords: s.keywords }),
-                  }))}
-                />
-              </div>
-            </DialogHeader>
+  if (showForm) {
+    return (
+      <div>
+        <Button variant="ghost" className="mb-4" onClick={() => { setShowForm(false); setForm(emptyForm); setEditId(null); }}>
+          <ArrowLeft className="w-4 h-4 mr-2" /> Back to Exams
+        </Button>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>{editId ? "Edit" : "Add"} Exam</CardTitle>
+              <AISEOButton
+                contentType="exam"
+                recordId={editId || undefined}
+                data={{ name: form.name, full_name: form.full_name, description: form.description, conducting_body: form.conducting_body, slug: form.slug }}
+                onApply={(s) => setForm(f => ({
+                  ...f,
+                  ...(s.meta_title && { meta_title: s.meta_title }),
+                  ...(s.meta_description && { meta_description: s.meta_description }),
+                  ...(s.keywords && { keywords: s.keywords }),
+                }))}
+              />
+            </div>
+          </CardHeader>
+          <CardContent>
             <Tabs defaultValue="basic" className="space-y-4">
               <TabsList className="grid grid-cols-3 w-full">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
@@ -130,34 +126,16 @@ const AdminExams = () => {
 
               <TabsContent value="basic" className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Short Name *</Label>
-                    <Input placeholder="e.g. CAT" value={form.name} onChange={(e) => {
-                      const name = e.target.value;
-                      setForm({ ...form, name, slug: editId ? form.slug : generateSlug(name) });
-                    }} />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Slug</Label>
-                    <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="font-mono text-sm" />
-                  </div>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Short Name *</Label><Input placeholder="e.g. CAT" value={form.name} onChange={(e) => { const name = e.target.value; setForm({ ...form, name, slug: editId ? form.slug : generateSlug(name) }); }} /></div>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Slug</Label><Input value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="font-mono text-sm" /></div>
                 </div>
-                <div>
-                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Full Name</Label>
-                  <Input placeholder="e.g. Common Admission Test" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
-                </div>
-                <div>
-                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Description</Label>
-                  <RichTextEditor content={form.description} onChange={(html) => setForm({ ...form, description: html })} placeholder="Exam description..." />
-                </div>
+                <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Full Name</Label><Input placeholder="e.g. Common Admission Test" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></div>
+                <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Description</Label><RichTextEditor content={form.description} onChange={(html) => setForm({ ...form, description: html })} placeholder="Exam description..." /></div>
                 <Input placeholder="Conducting Body" value={form.conducting_body} onChange={(e) => setForm({ ...form, conducting_body: e.target.value })} />
               </TabsContent>
 
               <TabsContent value="details" className="space-y-3">
-                <div>
-                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Eligibility Criteria</Label>
-                  <RichTextEditor content={form.eligibility} onChange={(html) => setForm({ ...form, eligibility: html })} placeholder="Eligibility criteria..." />
-                </div>
+                <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Eligibility Criteria</Label><RichTextEditor content={form.eligibility} onChange={(html) => setForm({ ...form, eligibility: html })} placeholder="Eligibility criteria..." /></div>
                 <div className="grid grid-cols-2 gap-3">
                   <Input placeholder="Exam Date" value={form.exam_date} onChange={(e) => setForm({ ...form, exam_date: e.target.value })} />
                   <Input placeholder="Registration Deadline" value={form.registration_deadline} onChange={(e) => setForm({ ...form, registration_deadline: e.target.value })} />
@@ -166,59 +144,47 @@ const AdminExams = () => {
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Syllabus Topics</Label>
                   <div className="flex gap-2 mb-2">
-                    <Input placeholder="Add topic" value={syllabusInput} onChange={(e) => setSyllabusInput(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(form.syllabus, setSyllabusInput, syllabusInput, "syllabus"); } }} />
+                    <Input placeholder="Add topic" value={syllabusInput} onChange={(e) => setSyllabusInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(form.syllabus, setSyllabusInput, syllabusInput, "syllabus"); } }} />
                     <Button type="button" variant="outline" size="sm" onClick={() => addTag(form.syllabus, setSyllabusInput, syllabusInput, "syllabus")}>Add</Button>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {form.syllabus.map(s => (
-                      <Badge key={s} variant="secondary" className="gap-1 text-xs">
-                        {s}
-                        <button onClick={() => setForm({ ...form, syllabus: form.syllabus.filter(x => x !== s) })}><X className="w-3 h-3" /></button>
-                      </Badge>
+                      <Badge key={s} variant="secondary" className="gap-1 text-xs">{s}<button onClick={() => setForm({ ...form, syllabus: form.syllabus.filter(x => x !== s) })}><X className="w-3 h-3" /></button></Badge>
                     ))}
                   </div>
                 </div>
               </TabsContent>
 
               <TabsContent value="seo" className="space-y-3">
-                <SEOChecklist data={{
-                  title: form.name, slug: form.slug, meta_title: form.meta_title,
-                  meta_description: form.meta_description, keywords: form.keywords,
-                  description: form.description,
-                  schemaType: "exam",
-                }} contentType="exam" recordId={editId || undefined} showPublishWarning />
-                <div>
-                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Title</Label>
-                  <Input value={form.meta_title} onChange={(e) => setForm({ ...form, meta_title: e.target.value })} maxLength={70} />
-                  <span className="text-xs text-muted-foreground">{form.meta_title.length}/60</span>
-                </div>
-                <div>
-                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Description</Label>
-                  <Input value={form.meta_description} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} maxLength={170} />
-                  <span className="text-xs text-muted-foreground">{form.meta_description.length}/160</span>
-                </div>
+                <SEOChecklist data={{ title: form.name, slug: form.slug, meta_title: form.meta_title, meta_description: form.meta_description, keywords: form.keywords, description: form.description, schemaType: "exam" }} contentType="exam" recordId={editId || undefined} showPublishWarning />
+                <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Title</Label><Input value={form.meta_title} onChange={(e) => setForm({ ...form, meta_title: e.target.value })} maxLength={70} /><span className="text-xs text-muted-foreground">{form.meta_title.length}/60</span></div>
+                <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Description</Label><Input value={form.meta_description} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} maxLength={170} /><span className="text-xs text-muted-foreground">{form.meta_description.length}/160</span></div>
                 <div>
                   <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Keywords</Label>
                   <div className="flex gap-2 mb-2">
-                    <Input placeholder="Add keyword" value={keywordInput} onChange={(e) => setKeywordInput(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(form.keywords, setKeywordInput, keywordInput, "keywords"); } }} />
+                    <Input placeholder="Add keyword" value={keywordInput} onChange={(e) => setKeywordInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(form.keywords, setKeywordInput, keywordInput, "keywords"); } }} />
                     <Button type="button" variant="outline" size="sm" onClick={() => addTag(form.keywords, setKeywordInput, keywordInput, "keywords")}>Add</Button>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
                     {form.keywords.map(kw => (
-                      <Badge key={kw} variant="secondary" className="gap-1 text-xs">
-                        {kw}
-                        <button onClick={() => setForm({ ...form, keywords: form.keywords.filter(x => x !== kw) })}><X className="w-3 h-3" /></button>
-                      </Badge>
+                      <Badge key={kw} variant="secondary" className="gap-1 text-xs">{kw}<button onClick={() => setForm({ ...form, keywords: form.keywords.filter(x => x !== kw) })}><X className="w-3 h-3" /></button></Badge>
                     ))}
                   </div>
                 </div>
               </TabsContent>
             </Tabs>
             <Button onClick={handleSave} className="w-full mt-4">{editId ? "Update" : "Create"} Exam</Button>
-          </DialogContent>
-        </Dialog>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="font-heading text-2xl font-bold text-foreground">Manage Exams</h1>
+        <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Exam</Button>
       </div>
 
       <Card>

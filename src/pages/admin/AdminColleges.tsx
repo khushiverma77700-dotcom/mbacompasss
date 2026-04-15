@@ -2,15 +2,14 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, X } from "lucide-react";
+import { Plus, Pencil, Trash2, X, ArrowLeft } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import StateCitySelect from "@/components/admin/StateCitySelect";
 import { generateAndUploadLocationBanner } from "@/lib/locationBanner";
@@ -36,7 +35,7 @@ const emptyForm = {
 
 const AdminColleges = () => {
   const [colleges, setColleges] = useState<any[]>([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const [tagInputs, setTagInputs] = useState({ courses: "", accreditations: "", exams_accepted: "", top_recruiters: "", keywords: "" });
@@ -66,7 +65,6 @@ const AdminColleges = () => {
   const handleSave = async () => {
     if (!form.name) { toast({ title: "Error", description: "Name is required", variant: "destructive" }); return; }
     const slug = form.slug || generateSlug(form.name);
-    // Auto-generate banner if city & state are set and no banner exists
     let bannerUrl = form.banner_url;
     if (!bannerUrl && form.city && form.state) {
       bannerUrl = await generateAndUploadLocationBanner(form.city, form.state, "college-banners") || "";
@@ -97,7 +95,7 @@ const AdminColleges = () => {
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     }
     toast({ title: editId ? "College updated" : "College created" });
-    setDialogOpen(false); setForm(emptyForm); setEditId(null); fetchColleges();
+    setShowForm(false); setForm(emptyForm); setEditId(null); fetchColleges();
   };
 
   const handleEdit = async (id: string) => {
@@ -118,7 +116,7 @@ const AdminColleges = () => {
       meta_title: data.meta_title ?? "", meta_description: data.meta_description ?? "",
       keywords: data.keywords ?? [],
     });
-    setEditId(id); setDialogOpen(true);
+    setEditId(id); setShowForm(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -152,31 +150,30 @@ const AdminColleges = () => {
     </div>
   );
 
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="font-heading text-2xl font-bold text-foreground">Manage Colleges</h1>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => { setForm(emptyForm); setEditId(null); }}><Plus className="w-4 h-4 mr-2" /> Add College</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <div className="flex items-center justify-between">
-                <DialogTitle>{editId ? "Edit" : "Add"} College</DialogTitle>
-                <AISEOButton
-                  contentType="college"
-                  recordId={editId || undefined}
-                  data={{ name: form.name, description: form.description, city: form.city, state: form.state, slug: form.slug, courses: form.courses, fees: form.fees }}
-                  onApply={(s) => setForm(f => ({
-                    ...f,
-                    ...(s.meta_title && { meta_title: s.meta_title }),
-                    ...(s.meta_description && { meta_description: s.meta_description }),
-                    ...(s.keywords && { keywords: s.keywords }),
-                  }))}
-                />
-              </div>
-            </DialogHeader>
+  if (showForm) {
+    return (
+      <div>
+        <Button variant="ghost" className="mb-4" onClick={() => { setShowForm(false); setForm(emptyForm); setEditId(null); }}>
+          <ArrowLeft className="w-4 h-4 mr-2" /> Back to Colleges
+        </Button>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>{editId ? "Edit" : "Add"} College</CardTitle>
+              <AISEOButton
+                contentType="college"
+                recordId={editId || undefined}
+                data={{ name: form.name, description: form.description, city: form.city, state: form.state, slug: form.slug, courses: form.courses, fees: form.fees }}
+                onApply={(s) => setForm(f => ({
+                  ...f,
+                  ...(s.meta_title && { meta_title: s.meta_title }),
+                  ...(s.meta_description && { meta_description: s.meta_description }),
+                  ...(s.keywords && { keywords: s.keywords }),
+                }))}
+              />
+            </div>
+          </CardHeader>
+          <CardContent>
             <Tabs defaultValue="basic" className="space-y-4">
               <TabsList className="grid grid-cols-4 w-full">
                 <TabsTrigger value="basic">Basic Info</TabsTrigger>
@@ -196,13 +193,7 @@ const AdminColleges = () => {
                   <RichTextEditor content={form.description} onChange={(html) => setForm({ ...form, description: html })} placeholder="College description..." />
                 </div>
                 <div className="grid grid-cols-3 gap-3">
-                  <StateCitySelect
-                    state={form.state}
-                    city={form.city}
-                    onStateChange={(s) => setForm({ ...form, state: s, city: "" })}
-                    onCityChange={(c) => setForm({ ...form, city: c })}
-                    showLabels={false}
-                  />
+                  <StateCitySelect state={form.state} city={form.city} onStateChange={(s) => setForm({ ...form, state: s, city: "" })} onCityChange={(c) => setForm({ ...form, city: c })} showLabels={false} />
                   <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -217,18 +208,14 @@ const AdminColleges = () => {
                     <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Category *</Label>
                     <Select value={form.college_category} onValueChange={(v) => setForm({ ...form, college_category: v })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {CATEGORY_OPTIONS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                      </SelectContent>
+                      <SelectContent>{CATEGORY_OPTIONS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                   <div>
                     <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Tier *</Label>
                     <Select value={form.tier} onValueChange={(v) => setForm({ ...form, tier: v })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {TIER_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                      </SelectContent>
+                      <SelectContent>{TIER_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                 </div>
@@ -238,34 +225,15 @@ const AdminColleges = () => {
                   <Input placeholder="Fees (e.g. ₹20L)" value={form.fees} onChange={(e) => setForm({ ...form, fees: e.target.value })} />
                 </div>
                 <FileUpload bucket="uploads" folder="colleges/logos" value={form.logo_url} onChange={(url) => setForm({ ...form, logo_url: url })} accept="image/*" label="College Logo" sizeHint="200×200 px (square, PNG) • Max 100 KB" />
-                <ResponsiveImageUpload
-                  bucket="uploads"
-                  folder="colleges/banners"
-                  label="Banner Image"
-                  desktopValue={form.banner_url}
-                  mobileValue={(form as any).mobile_banner_url || ""}
-                  onDesktopChange={(url) => setForm({ ...form, banner_url: url })}
-                  onMobileChange={(url) => setForm({ ...form, mobile_banner_url: url } as any)}
-                  desktopSpec={{ dimensions: "1200×400 px", ratio: "3:1, landscape", maxSize: "250 KB" }}
-                  mobileSpec={{ dimensions: "600×300 px", ratio: "2:1", maxSize: "120 KB" }}
-                />
+                <ResponsiveImageUpload bucket="uploads" folder="colleges/banners" label="Banner Image" desktopValue={form.banner_url} mobileValue={(form as any).mobile_banner_url || ""} onDesktopChange={(url) => setForm({ ...form, banner_url: url })} onMobileChange={(url) => setForm({ ...form, mobile_banner_url: url } as any)} desktopSpec={{ dimensions: "1200×400 px", ratio: "3:1, landscape", maxSize: "250 KB" }} mobileSpec={{ dimensions: "600×300 px", ratio: "2:1", maxSize: "120 KB" }} />
                 <Input placeholder="Website URL" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
               </TabsContent>
 
               <TabsContent value="placements" className="space-y-3">
                 <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Avg Package</Label>
-                    <Input placeholder="e.g. ₹25 LPA" value={form.placement_avg} onChange={(e) => setForm({ ...form, placement_avg: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Highest Package</Label>
-                    <Input placeholder="e.g. ₹80 LPA" value={form.placement_highest} onChange={(e) => setForm({ ...form, placement_highest: e.target.value })} />
-                  </div>
-                  <div>
-                    <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Median Package</Label>
-                    <Input placeholder="e.g. ₹22 LPA" value={form.placement_median} onChange={(e) => setForm({ ...form, placement_median: e.target.value })} />
-                  </div>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Avg Package</Label><Input placeholder="e.g. ₹25 LPA" value={form.placement_avg} onChange={(e) => setForm({ ...form, placement_avg: e.target.value })} /></div>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Highest Package</Label><Input placeholder="e.g. ₹80 LPA" value={form.placement_highest} onChange={(e) => setForm({ ...form, placement_highest: e.target.value })} /></div>
+                  <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Median Package</Label><Input placeholder="e.g. ₹22 LPA" value={form.placement_median} onChange={(e) => setForm({ ...form, placement_median: e.target.value })} /></div>
                 </div>
                 <TagInput field="top_recruiters" label="Top Recruiters" />
               </TabsContent>
@@ -285,28 +253,24 @@ const AdminColleges = () => {
               </TabsContent>
 
               <TabsContent value="seo" className="space-y-3">
-                <SEOChecklist data={{
-                  title: form.name, slug: form.slug, meta_title: form.meta_title,
-                  meta_description: form.meta_description, keywords: form.keywords,
-                  description: form.description, banner_url: form.banner_url,
-                  schemaType: "college",
-                }} contentType="college" recordId={editId || undefined} showPublishWarning />
-                <div>
-                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Title</Label>
-                  <Input value={form.meta_title} onChange={(e) => setForm({ ...form, meta_title: e.target.value })} maxLength={70} />
-                  <span className="text-xs text-muted-foreground">{form.meta_title.length}/60</span>
-                </div>
-                <div>
-                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Description</Label>
-                  <Input value={form.meta_description} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} maxLength={170} />
-                  <span className="text-xs text-muted-foreground">{form.meta_description.length}/160</span>
-                </div>
+                <SEOChecklist data={{ title: form.name, slug: form.slug, meta_title: form.meta_title, meta_description: form.meta_description, keywords: form.keywords, description: form.description, banner_url: form.banner_url, schemaType: "college" }} contentType="college" recordId={editId || undefined} showPublishWarning />
+                <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Title</Label><Input value={form.meta_title} onChange={(e) => setForm({ ...form, meta_title: e.target.value })} maxLength={70} /><span className="text-xs text-muted-foreground">{form.meta_title.length}/60</span></div>
+                <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Description</Label><Input value={form.meta_description} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} maxLength={170} /><span className="text-xs text-muted-foreground">{form.meta_description.length}/160</span></div>
                 <TagInput field="keywords" label="Target Keywords" />
               </TabsContent>
             </Tabs>
             <Button onClick={handleSave} className="w-full mt-4">{editId ? "Update" : "Create"} College</Button>
-          </DialogContent>
-        </Dialog>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="font-heading text-2xl font-bold text-foreground">Manage Colleges</h1>
+        <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add College</Button>
       </div>
 
       <Card>
