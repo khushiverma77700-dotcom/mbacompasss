@@ -29,7 +29,7 @@ const emptyForm = {
   title: "", slug: "", excerpt: "", content: "", category: "news", author: "",
   published: false, meta_title: "", meta_description: "", keywords: [] as string[],
   priority: 0, featured: false, status: "draft", intro: "", banner_url: "",
-  image_url: "", h1_tag: "", is_comparison: false,
+  image_url: "", h1_tag: "", is_comparison: false, comparison_id: "" as string,
 };
 
 const AdminArticles = () => {
