@@ -284,10 +284,26 @@ const AdminArticles = () => {
                   <Switch checked={form.featured} onCheckedChange={(v) => setForm({ ...form, featured: v })} />
                   <Label>Featured on Homepage</Label>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Switch checked={form.is_comparison} onCheckedChange={(v) => setForm({ ...form, is_comparison: v })} />
-                  <Label>Show in Popular Comparisons</Label>
-                  <span className="text-xs text-muted-foreground">(Optional — article will appear in the Comparisons section on homepage)</span>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <Switch checked={form.is_comparison} onCheckedChange={(v) => setForm({ ...form, is_comparison: v, comparison_id: v ? form.comparison_id : "" })} />
+                    <Label>Show in Popular Comparisons</Label>
+                    <span className="text-xs text-muted-foreground">(Optional)</span>
+                  </div>
+                  {form.is_comparison && (
+                    <div className="ml-12">
+                      <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Select Comparison Category</Label>
+                      <Select value={form.comparison_id} onValueChange={(v) => setForm({ ...form, comparison_id: v })}>
+                        <SelectTrigger><SelectValue placeholder="Choose a comparison..." /></SelectTrigger>
+                        <SelectContent>
+                          {comparisons.map(c => (
+                            <SelectItem key={c.id} value={c.id}>{c.title}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <p className="text-xs text-muted-foreground mt-1">Article will appear under this comparison on the homepage</p>
+                    </div>
+                  )}
                 </div>
                 <ResponsiveImageUpload
                   bucket="uploads"
