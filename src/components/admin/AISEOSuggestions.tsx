@@ -62,8 +62,23 @@ interface SEOSuggestions {
   };
   contentSuggestions: string[];
   competitorInsights: string[];
+  currentState?: {
+    hasMetaTitle: boolean;
+    metaTitleLength: number;
+    hasMetaDesc: boolean;
+    metaDescLength: number;
+    hasH1: boolean;
+    hasKeywords: boolean;
+    keywordCount: number;
+    wordCount: number;
+    imageCount: number;
+    imagesWithoutAlt: number;
+    headerCount: number;
+    existingHeaders: string[];
+  };
   seoScore: {
     overall: number;
+    projectedScore?: number;
     breakdown: {
       metaTags: number;
       keywords: number;
@@ -350,10 +365,21 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <h3 className="font-semibold text-sm">Current Page SEO Health</h3>
-                    <p className="text-xs text-muted-foreground">Score after AI optimization</p>
+                    <p className="text-xs text-muted-foreground">Score of current page state</p>
                   </div>
-                  <div className={`text-3xl font-bold ${scoreColor(suggestions.seoScore.overall)}`}>
-                    {suggestions.seoScore.overall}<span className="text-lg">/100</span>
+                  <div className="flex items-center gap-3">
+                    <div className={`text-3xl font-bold ${scoreColor(suggestions.seoScore.overall)}`}>
+                      {suggestions.seoScore.overall}<span className="text-lg">/100</span>
+                    </div>
+                    {suggestions.seoScore.projectedScore && (
+                      <div className="flex items-center gap-1">
+                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                        <div className={`text-2xl font-bold ${scoreColor(suggestions.seoScore.projectedScore)}`}>
+                          {suggestions.seoScore.projectedScore}<span className="text-sm">/100</span>
+                        </div>
+                        <Badge className="bg-green-500 text-white text-[9px] ml-1">After Fix</Badge>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="grid grid-cols-6 gap-2">
@@ -365,6 +391,45 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                   ))}
                 </div>
               </div>
+
+              {/* Current State Before/After Summary */}
+              {suggestions.currentState && (
+                <div className="border rounded-lg p-3 mb-4 bg-muted/30">
+                  <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                    <Eye className="h-4 w-4" /> Before → After Comparison
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="space-y-1">
+                      <p className="font-medium text-muted-foreground">Current State</p>
+                      <p className={suggestions.currentState.hasMetaTitle ? "text-green-600" : "text-red-600"}>
+                        Meta Title: {suggestions.currentState.hasMetaTitle ? `✓ ${suggestions.currentState.metaTitleLength} chars` : "❌ Missing"}
+                      </p>
+                      <p className={suggestions.currentState.hasMetaDesc ? "text-green-600" : "text-red-600"}>
+                        Meta Desc: {suggestions.currentState.hasMetaDesc ? `✓ ${suggestions.currentState.metaDescLength} chars` : "❌ Missing"}
+                      </p>
+                      <p className={suggestions.currentState.hasH1 ? "text-green-600" : "text-red-600"}>
+                        H1 Tag: {suggestions.currentState.hasH1 ? "✓ Present" : "❌ Missing"}
+                      </p>
+                      <p className={suggestions.currentState.hasKeywords ? "text-green-600" : "text-red-600"}>
+                        Keywords: {suggestions.currentState.keywordCount > 0 ? `✓ ${suggestions.currentState.keywordCount} keywords` : "❌ None"}
+                      </p>
+                      <p className="text-muted-foreground">Content: {suggestions.currentState.wordCount} words</p>
+                      <p className={suggestions.currentState.imagesWithoutAlt > 0 ? "text-amber-600" : "text-green-600"}>
+                        Images: {suggestions.currentState.imageCount} ({suggestions.currentState.imagesWithoutAlt} missing alt)
+                      </p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-medium text-muted-foreground">After AI Fix</p>
+                      <p className="text-green-600">Meta Title: ✓ {suggestions.meta_title.length} chars</p>
+                      <p className="text-green-600">Meta Desc: ✓ {suggestions.meta_description.length} chars</p>
+                      <p className="text-green-600">H1 Tag: ✓ Optimized</p>
+                      <p className="text-green-600">Keywords: ✓ {Object.values(suggestions.keywords).flat().length} keywords</p>
+                      <p className="text-green-600">Schema: ✓ {Array.isArray(suggestions.schemaMarkup) ? suggestions.schemaMarkup.length : 1} schemas</p>
+                      <p className="text-green-600">Social Meta: ✓ OG + Twitter</p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Non-AI-fixable items that need manual edit */}
               {(suggestions.seoScore.warnings.length > 0 || suggestions.seoScore.criticalIssues.length > 0) && (
