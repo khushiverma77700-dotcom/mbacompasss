@@ -29,7 +29,7 @@ const emptyForm = {
   title: "", slug: "", excerpt: "", content: "", category: "news", author: "",
   published: false, meta_title: "", meta_description: "", keywords: [] as string[],
   priority: 0, featured: false, status: "draft", intro: "", banner_url: "",
-  image_url: "", h1_tag: "",
+  image_url: "", h1_tag: "", is_comparison: false,
 };
 
 const AdminArticles = () => {
@@ -87,6 +87,7 @@ const AdminArticles = () => {
       priority: form.priority, featured: form.featured, status: form.status,
       intro: form.intro || null, banner_url: form.banner_url || null,
       image_url: form.image_url || null, h1_tag: form.h1_tag || null,
+      is_comparison: form.is_comparison,
     };
 
     if (editId) {
@@ -113,6 +114,7 @@ const AdminArticles = () => {
       featured: article.featured || false, status: article.status || "draft",
       intro: article.intro || "", banner_url: article.banner_url || "",
       image_url: article.image_url || "", h1_tag: article.h1_tag || "",
+      is_comparison: article.is_comparison || false,
     });
     setEditId(article.id);
     setDialogOpen(true);
@@ -273,6 +275,11 @@ const AdminArticles = () => {
                 <div className="flex items-center gap-3">
                   <Switch checked={form.featured} onCheckedChange={(v) => setForm({ ...form, featured: v })} />
                   <Label>Featured on Homepage</Label>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Switch checked={form.is_comparison} onCheckedChange={(v) => setForm({ ...form, is_comparison: v })} />
+                  <Label>Show in Popular Comparisons</Label>
+                  <span className="text-xs text-muted-foreground">(Optional — article will appear in the Comparisons section on homepage)</span>
                 </div>
                 <ResponsiveImageUpload
                   bucket="uploads"

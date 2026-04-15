@@ -14,20 +14,22 @@ const fallbackComparisons = [
 ];
 
 const TopExamComparisonSection = () => {
-  const { data: comparisons } = useQuery({
-    queryKey: ["comparisons"],
+  const { data: comparisonArticles } = useQuery({
+    queryKey: ["comparison-articles"],
     queryFn: async () => {
       const { data } = await supabase
-        .from("comparisons")
-        .select("*")
-        .eq("active", true)
-        .order("sort_order", { ascending: true });
+        .from("articles")
+        .select("title, slug, excerpt")
+        .eq("published", true)
+        .eq("is_comparison", true)
+        .order("created_at", { ascending: false })
+        .limit(6);
       return data;
     },
   });
 
-  const items = comparisons && comparisons.length > 0
-    ? comparisons.map((c: any) => ({ title: c.title, description: c.description, link: c.link || "/blog" }))
+  const items = comparisonArticles && comparisonArticles.length > 0
+    ? comparisonArticles.map((a: any) => ({ title: a.title, description: a.excerpt || "", link: `/article/${a.slug}` }))
     : fallbackComparisons;
 
   return (
