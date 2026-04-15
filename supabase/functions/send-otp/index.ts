@@ -22,14 +22,10 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const msg91AuthKey = Deno.env.get("MSG91_AUTH_KEY");
-    const msg91TemplateId = Deno.env.get("MSG91_TEMPLATE_ID");
+    const fast2smsKey = Deno.env.get("FAST2SMS_API_KEY");
 
-    if (!msg91AuthKey) {
-      throw new Error("MSG91_AUTH_KEY is not configured");
-    }
-    if (!msg91TemplateId) {
-      throw new Error("MSG91_TEMPLATE_ID is not configured");
+    if (!fast2smsKey) {
+      throw new Error("FAST2SMS_API_KEY is not configured");
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -64,26 +60,29 @@ Deno.serve(async (req) => {
       throw new Error("Failed to store OTP");
     }
 
-    // Send OTP via MSG91 Send OTP API
-    const smsResponse = await fetch(
-      `https://control.msg91.com/api/v5/otp?template_id=${msg91TemplateId}&mobile=91${phone}&otp=${otp}`,
-      {
-        method: "POST",
-        headers: {
-          authkey: msg91AuthKey,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    // Send OTP via Fast2SMS DLT route
+    const smsResponse = await fetch("https://www.fast2sms.com/dev/bulkV2", {
+      method: "POST",
+      headers: {
+        authorization: fast2smsKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        route: "otp",
+        variables_values: otp,
+        numbers: phone,
+        flash: "0",
+      }),
+    });
 
     const smsResult = await smsResponse.json();
 
-    if (!smsResponse.ok || smsResult.type === "error") {
-      console.error("MSG91 error:", JSON.stringify(smsResult));
-      throw new Error(`SMS send failed: ${smsResult.message || "Unknown error"}`);
+    if (!smsResponse.ok || smsResult.return === false) {
+      console.error("Fast2SMS error:", JSON.stringify(smsResult));
+      throw new Error(`SMS send failed: ${smsResult.message?.[0] || "Unknown error"}`);
     }
 
-    console.log("OTP sent successfully via MSG91 to", phone);
+    console.log("OTP sent successfully via Fast2SMS to", phone);
 
     return new Response(
       JSON.stringify({ success: true, message: "OTP sent successfully" }),
