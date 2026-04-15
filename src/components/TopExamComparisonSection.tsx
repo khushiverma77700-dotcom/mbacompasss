@@ -14,23 +14,40 @@ const fallbackComparisons = [
 ];
 
 const TopExamComparisonSection = () => {
-  const { data: comparisonArticles } = useQuery({
-    queryKey: ["comparison-articles"],
+  // Fetch comparisons with their linked articles
+  const { data: comparisons } = useQuery({
+    queryKey: ["comparisons-with-articles"],
     queryFn: async () => {
-      const { data } = await supabase
+      // Get active comparisons
+      const { data: comps } = await supabase
+        .from("comparisons")
+        .select("id, title, description, link")
+        .eq("active", true)
+        .order("sort_order", { ascending: true });
+
+      if (!comps || comps.length === 0) return null;
+
+      // Get articles linked to comparisons
+      const { data: articles } = await supabase
         .from("articles")
-        .select("title, slug, excerpt")
+        .select("title, slug, excerpt, comparison_id")
         .eq("published", true)
         .eq("is_comparison", true)
-        .order("created_at", { ascending: false })
-        .limit(6);
-      return data;
+        .not("comparison_id", "is", null);
+
+      // Build items: for each comparison, use its linked article if available, otherwise use comparison's own link
+      return comps.map((comp: any) => {
+        const linkedArticle = articles?.find((a: any) => a.comparison_id === comp.id);
+        return {
+          title: comp.title,
+          description: linkedArticle?.excerpt || comp.description || "",
+          link: linkedArticle ? `/article/${linkedArticle.slug}` : (comp.link || "/blog"),
+        };
+      });
     },
   });
 
-  const items = comparisonArticles && comparisonArticles.length > 0
-    ? comparisonArticles.map((a: any) => ({ title: a.title, description: a.excerpt || "", link: `/article/${a.slug}` }))
-    : fallbackComparisons;
+  const items = comparisons && comparisons.length > 0 ? comparisons : fallbackComparisons;
 
   return (
     <section className="py-14 bg-muted/30">
