@@ -46,12 +46,12 @@ const adminNavGroups = [
   {
     label: "Leads & Inquiries",
     items: [
-      { label: "Callback Requests", path: "/admin/callbacks", icon: PhoneCall, showDot: true },
-      { label: "Inquiries", path: "/admin/inquiries", icon: MessageSquare },
-      { label: "Student Leads", path: "/admin/leads", icon: Users },
-      { label: "Master Data", path: "/admin/all-leads-unified", icon: Database },
-      { label: "Subscribers", path: "/admin/subscribers", icon: Mail },
-      { label: "Business Inquiries", path: "/admin/business-inquiries", icon: Briefcase },
+      { label: "Callback Requests", path: "/admin/callbacks", icon: PhoneCall, dotKey: "callbacks" },
+      { label: "Inquiries", path: "/admin/inquiries", icon: MessageSquare, dotKey: "inquiries" },
+      { label: "Student Leads", path: "/admin/leads", icon: Users, dotKey: "leads" },
+      { label: "Master Data", path: "/admin/all-leads-unified", icon: Database, dotKey: "master" },
+      { label: "Subscribers", path: "/admin/subscribers", icon: Mail, dotKey: "subscribers" },
+      { label: "Business Inquiries", path: "/admin/business-inquiries", icon: Briefcase, dotKey: "business" },
     ],
   },
   {
@@ -84,8 +84,10 @@ const AdminLayout = () => {
   const { user, isAdmin, allowedSections, loading } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [unreadCallbacks, setUnreadCallbacks] = useState(0);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+
+  // Notification dots state
+  const [dots, setDots] = useState<Record<string, boolean>>({});
 
   const toggleGroup = (label: string) => {
     setCollapsedGroups(prev => ({ ...prev, [label]: !prev[label] }));
@@ -93,19 +95,72 @@ const AdminLayout = () => {
 
   useEffect(() => {
     if (!user || !isAdmin) return;
-    const fetchUnread = async () => {
-      const { count } = await supabase.from("inquiries").select("*", { count: "exact", head: true }).eq("type", "general").eq("read", false);
-      setUnreadCallbacks(count || 0);
-    };
-    fetchUnread();
 
+    const checkNewLeads = async () => {
+      // Use last visited timestamp from localStorage, default to 24h ago
+      const lastSeen = localStorage.getItem("admin_leads_last_seen");
+      const since = lastSeen || new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+      const [
+        { count: callbackCount },
+        { count: inquiryCount },
+        { count: profileCount },
+        { count: subCount },
+        { count: bizCount },
+      ] = await Promise.all([
+        supabase.from("inquiries").select("*", { count: "exact", head: true }).eq("read", false),
+        supabase.from("inquiries").select("*", { count: "exact", head: true }).gte("created_at", since),
+        supabase.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", since),
+        supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }).gte("created_at", since),
+        supabase.from("business_inquiries").select("*", { count: "exact", head: true }).gte("created_at", since),
+      ]);
+
+      const hasNew = (callbackCount || 0) + (inquiryCount || 0) + (profileCount || 0) + (subCount || 0) + (bizCount || 0) > 0;
+
+      setDots({
+        callbacks: (callbackCount || 0) > 0,
+        inquiries: (inquiryCount || 0) > 0,
+        leads: (profileCount || 0) > 0,
+        master: hasNew,
+        subscribers: (subCount || 0) > 0,
+        business: (bizCount || 0) > 0,
+      });
+    };
+
+    checkNewLeads();
+
+    // Realtime listener for new entries
     const channel = supabase
-      .channel("callback-unread")
-      .on("postgres_changes", { event: "*", schema: "public", table: "inquiries" }, () => { fetchUnread(); })
+      .channel("admin-lead-dots")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "inquiries" }, () => checkNewLeads())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "profiles" }, () => checkNewLeads())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "newsletter_subscribers" }, () => checkNewLeads())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "business_inquiries" }, () => checkNewLeads())
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
   }, [user, isAdmin]);
+
+  // Mark as seen when visiting a lead page
+  useEffect(() => {
+    const leadPaths = ["/admin/callbacks", "/admin/inquiries", "/admin/leads", "/admin/all-leads-unified", "/admin/subscribers", "/admin/business-inquiries"];
+    if (leadPaths.includes(location.pathname)) {
+      localStorage.setItem("admin_leads_last_seen", new Date().toISOString());
+      // Clear the dot for the visited section
+      const pathToDotKey: Record<string, string> = {
+        "/admin/callbacks": "callbacks",
+        "/admin/inquiries": "inquiries",
+        "/admin/leads": "leads",
+        "/admin/all-leads-unified": "master",
+        "/admin/subscribers": "subscribers",
+        "/admin/business-inquiries": "business",
+      };
+      const key = pathToDotKey[location.pathname];
+      if (key) {
+        setDots(prev => ({ ...prev, [key]: false }));
+      }
+    }
+  }, [location.pathname]);
 
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
   if (!user || !isAdmin) return <Navigate to="/auth" replace />;
@@ -128,6 +183,7 @@ const AdminLayout = () => {
           if (visibleItems.length === 0) return null;
           const isCollapsed = collapsedGroups[group.label];
           const groupHasActive = visibleItems.some(item => isActive(item.path));
+          const groupHasDot = visibleItems.some(item => (item as any).dotKey && dots[(item as any).dotKey]);
 
           return (
             <div key={group.label}>
@@ -137,7 +193,15 @@ const AdminLayout = () => {
                   groupHasActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {group.label}
+                <span className="flex items-center gap-1.5">
+                  {group.label}
+                  {isCollapsed && groupHasDot && (
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-destructive" />
+                    </span>
+                  )}
+                </span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isCollapsed ? "-rotate-90" : ""}`} />
               </button>
               {!isCollapsed && (
@@ -155,7 +219,7 @@ const AdminLayout = () => {
                     >
                       <item.icon className="w-4 h-4 shrink-0" />
                       <span className="flex-1">{item.label}</span>
-                      {(item as any).showDot && unreadCallbacks > 0 && (
+                      {(item as any).dotKey && dots[(item as any).dotKey] && (
                         <span className="relative flex h-2.5 w-2.5">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
                           <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-destructive" />
