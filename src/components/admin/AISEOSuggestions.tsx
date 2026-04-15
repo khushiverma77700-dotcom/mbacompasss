@@ -62,8 +62,23 @@ interface SEOSuggestions {
   };
   contentSuggestions: string[];
   competitorInsights: string[];
+  currentState?: {
+    hasMetaTitle: boolean;
+    metaTitleLength: number;
+    hasMetaDesc: boolean;
+    metaDescLength: number;
+    hasH1: boolean;
+    hasKeywords: boolean;
+    keywordCount: number;
+    wordCount: number;
+    imageCount: number;
+    imagesWithoutAlt: number;
+    headerCount: number;
+    existingHeaders: string[];
+  };
   seoScore: {
     overall: number;
+    projectedScore?: number;
     breakdown: {
       metaTags: number;
       keywords: number;
