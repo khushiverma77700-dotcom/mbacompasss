@@ -7,7 +7,7 @@ import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { supabase } from "@/integrations/supabase/client";
 
 type HeroSuggestion = {
-  type: "institute" | "exam" | "city" | "category" | "college";
+  type: "institute" | "exam" | "city" | "category" | "college" | "article";
   label: string;
   sub: string;
   link: string;
@@ -19,6 +19,7 @@ const suggestionIcons = {
   city: MapPin,
   category: Tag,
   college: Building2,
+  article: BookOpen,
 };
 
 const iconMap: Record<string, any> = { BookOpen, Users, Award, GraduationCap, TrendingUp, Shield, BarChart3, Star, Headphones, Target };
@@ -53,16 +54,18 @@ const HeroSection = () => {
     const timer = setTimeout(async () => {
       const q = query.toLowerCase();
       const results: HeroSuggestion[] = [];
-      const [instRes, examRes, catRes, collegeRes] = await Promise.all([
+      const [instRes, examRes, catRes, collegeRes, articleRes] = await Promise.all([
         supabase.from("institutes").select("name, slug, city, rating").ilike("name", `%${q}%`).limit(4),
         supabase.from("exams").select("name, slug, full_name, conducting_body").ilike("name", `%${q}%`).limit(3),
         supabase.from("categories").select("name, slug, description").ilike("name", `%${q}%`).limit(3),
         supabase.from("colleges").select("name, slug, city, ranking, fees").ilike("name", `%${q}%`).limit(4),
+        supabase.from("articles").select("title, slug, category, excerpt").eq("published", true).ilike("title", `%${q}%`).limit(4),
       ]);
       instRes.data?.forEach((i) => results.push({ type: "institute", label: i.name, sub: `${i.city || ""} · ${i.rating || 0}★`, link: `/institute/${i.slug}` }));
       examRes.data?.forEach((e) => results.push({ type: "exam", label: `${e.name}${e.full_name ? ` — ${e.full_name}` : ""}`, sub: e.conducting_body || "", link: `/exam/${e.slug}` }));
       catRes.data?.forEach((c) => results.push({ type: "category", label: c.name, sub: c.description || "", link: `/category/${c.slug}` }));
       collegeRes.data?.forEach((c) => results.push({ type: "college", label: c.name, sub: `${c.city || ""} · Rank #${c.ranking || "—"}`, link: `/college/${c.slug}` }));
+      articleRes.data?.forEach((a) => results.push({ type: "article" as any, label: a.title, sub: a.category || "Blog", link: `/article/${a.slug}` }));
       if (!controller.signal.aborted) {
         setSuggestions(results.slice(0, 8));
         setShowSuggestions(results.length > 0);
