@@ -2,20 +2,19 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowLeft } from "lucide-react";
 
 const emptyForm = { title: "", description: "", link: "/blog", sort_order: 0, active: true };
 
 const AdminComparisons = () => {
   const [items, setItems] = useState<any[]>([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const { toast } = useToast();
@@ -39,12 +38,12 @@ const AdminComparisons = () => {
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       toast({ title: "Created" });
     }
-    setDialogOpen(false); setForm(emptyForm); setEditId(null); fetch();
+    setShowForm(false); setForm(emptyForm); setEditId(null); fetch();
   };
 
   const handleEdit = (item: any) => {
     setForm({ title: item.title, description: item.description ?? "", link: item.link ?? "/blog", sort_order: item.sort_order ?? 0, active: item.active ?? true });
-    setEditId(item.id); setDialogOpen(true);
+    setEditId(item.id); setShowForm(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -53,32 +52,41 @@ const AdminComparisons = () => {
     fetch(); toast({ title: "Deleted" });
   };
 
+  if (showForm) {
+    return (
+      <div>
+        <Button variant="ghost" className="mb-4" onClick={() => { setShowForm(false); setForm(emptyForm); setEditId(null); }}>
+          <ArrowLeft className="w-4 h-4 mr-2" /> Back to Comparisons
+        </Button>
+        <Card>
+          <CardHeader><CardTitle>{editId ? "Edit" : "Add"} Comparison</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div><Label className="text-xs font-semibold text-muted-foreground mb-1 block">Title *</Label>
+              <Input placeholder="CAT vs XAT" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+            <div><Label className="text-xs font-semibold text-muted-foreground mb-1 block">Description</Label>
+              <Textarea placeholder="Brief description..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+            <div><Label className="text-xs font-semibold text-muted-foreground mb-1 block">Link (article/blog URL)</Label>
+              <Input placeholder="/article/cat-vs-xat" value={form.link} onChange={(e) => setForm({ ...form, link: e.target.value })} /></div>
+            <div><Label className="text-xs font-semibold text-muted-foreground mb-1 block">Sort Order</Label>
+              <Input type="number" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} /></div>
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} /> Active
+            </label>
+            <div className="flex gap-3">
+              <Button onClick={handleSave} className="flex-1">{editId ? "Update" : "Create"}</Button>
+              <Button variant="outline" onClick={() => { setShowForm(false); setForm(emptyForm); setEditId(null); }}>Cancel</Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-heading text-2xl font-bold text-foreground">Popular Comparisons</h1>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => { setForm(emptyForm); setEditId(null); }}><Plus className="w-4 h-4 mr-2" /> Add Comparison</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader><DialogTitle>{editId ? "Edit" : "Add"} Comparison</DialogTitle></DialogHeader>
-            <div className="space-y-3">
-              <div><Label className="text-xs font-semibold text-muted-foreground mb-1 block">Title *</Label>
-                <Input placeholder="CAT vs XAT" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-              <div><Label className="text-xs font-semibold text-muted-foreground mb-1 block">Description</Label>
-                <Textarea placeholder="Brief description..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-              <div><Label className="text-xs font-semibold text-muted-foreground mb-1 block">Link (article/blog URL)</Label>
-                <Input placeholder="/article/cat-vs-xat" value={form.link} onChange={(e) => setForm({ ...form, link: e.target.value })} /></div>
-              <div><Label className="text-xs font-semibold text-muted-foreground mb-1 block">Sort Order</Label>
-                <Input type="number" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })} /></div>
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} /> Active
-              </label>
-              <Button onClick={handleSave} className="w-full">{editId ? "Update" : "Create"}</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Comparison</Button>
       </div>
       <Card><CardContent className="p-0">
         <Table>
