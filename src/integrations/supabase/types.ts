@@ -146,6 +146,7 @@ export type Database = {
           id: string
           image_url: string | null
           intro: string | null
+          is_comparison: boolean | null
           keywords: string[] | null
           meta_description: string | null
           meta_title: string | null
@@ -168,6 +169,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           intro?: string | null
+          is_comparison?: boolean | null
           keywords?: string[] | null
           meta_description?: string | null
           meta_title?: string | null
@@ -190,6 +192,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           intro?: string | null
+          is_comparison?: boolean | null
           keywords?: string[] | null
           meta_description?: string | null
           meta_title?: string | null

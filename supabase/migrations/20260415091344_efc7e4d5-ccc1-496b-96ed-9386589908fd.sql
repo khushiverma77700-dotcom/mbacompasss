@@ -1,0 +1,1 @@
+ALTER TABLE public.articles ADD COLUMN is_comparison boolean DEFAULT false;
