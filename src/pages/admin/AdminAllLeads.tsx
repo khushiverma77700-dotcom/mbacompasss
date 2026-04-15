@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, Users, Search, Calendar, Mail, Phone, UserCheck, BarChart3, Sparkles, MessageSquare, Briefcase, Calculator, Ticket, ChevronLeft, ChevronRight } from "lucide-react";
-import { format } from "date-fns";
+import { Download, Users, Search, Mail, Phone, UserCheck, Sparkles, MessageSquare, Briefcase, Calculator, Ticket, ChevronLeft, ChevronRight, TrendingUp, CalendarCheck } from "lucide-react";
+import { format, subDays, isToday, startOfDay, eachDayOfInterval, parseISO } from "date-fns";
 
 interface MasterLead {
   id: string;
@@ -175,14 +175,40 @@ const AdminAllLeads = () => {
 
   useEffect(() => { fetchAllLeads(); }, []);
 
-  const sourceCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: leads.length };
-    leads.forEach(l => { counts[l.source] = (counts[l.source] || 0) + 1; });
-    return counts;
+  // Deduplicate by phone and email — keep earliest entry per unique contact
+  const uniqueLeads = useMemo(() => {
+    const seenPhones = new Set<string>();
+    const seenEmails = new Set<string>();
+    const deduped: MasterLead[] = [];
+
+    for (const lead of leads) {
+      const phone = lead.phone !== "—" ? lead.phone : null;
+      const email = lead.email !== "—" ? lead.email.toLowerCase() : null;
+
+      const phoneDup = phone ? seenPhones.has(phone) : false;
+      const emailDup = email ? seenEmails.has(email) : false;
+
+      if (phoneDup || emailDup) continue;
+
+      if (phone) seenPhones.add(phone);
+      if (email) seenEmails.add(email);
+      deduped.push(lead);
+    }
+    return deduped;
   }, [leads]);
 
+  const todaysLeads = useMemo(() => {
+    return uniqueLeads.filter(l => isToday(new Date(l.created_at))).length;
+  }, [uniqueLeads]);
+
+  const sourceCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: uniqueLeads.length };
+    uniqueLeads.forEach(l => { counts[l.source] = (counts[l.source] || 0) + 1; });
+    return counts;
+  }, [uniqueLeads]);
+
   const filtered = useMemo(() => {
-    let result = leads;
+    let result = uniqueLeads;
     if (sourceFilter !== "all") result = result.filter(l => l.source === sourceFilter);
     if (search) {
       const q = search.toLowerCase();
@@ -195,7 +221,7 @@ const AdminAllLeads = () => {
     if (dateFrom) result = result.filter(l => l.created_at >= dateFrom);
     if (dateTo) result = result.filter(l => l.created_at <= dateTo + "T23:59:59");
     return result;
-  }, [leads, search, dateFrom, dateTo, sourceFilter]);
+  }, [uniqueLeads, search, dateFrom, dateTo, sourceFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / ROWS_PER_PAGE));
   const paginated = filtered.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
@@ -203,11 +229,50 @@ const AdminAllLeads = () => {
   useEffect(() => { setPage(1); }, [search, dateFrom, dateTo, sourceFilter]);
 
   const stats = useMemo(() => {
-    const withEmail = leads.filter(l => l.email !== "—").length;
-    const withPhone = leads.filter(l => l.phone !== "—").length;
-    const withBoth = leads.filter(l => l.email !== "—" && l.phone !== "—").length;
-    return { total: leads.length, withEmail, withPhone, withBoth };
-  }, [leads]);
+    const withEmail = uniqueLeads.filter(l => l.email !== "—").length;
+    const withPhone = uniqueLeads.filter(l => l.phone !== "—").length;
+    const withBoth = uniqueLeads.filter(l => l.email !== "—" && l.phone !== "—").length;
+    return { total: uniqueLeads.length, withEmail, withPhone, withBoth };
+  }, [uniqueLeads]);
+
+  // Daily cumulative graph data (last 30 days)
+  const graphData = useMemo(() => {
+    const today = new Date();
+    const thirtyDaysAgo = subDays(today, 29);
+    const days = eachDayOfInterval({ start: thirtyDaysAgo, end: today });
+
+    const dailyCounts: Record<string, number> = {};
+    for (const d of days) {
+      dailyCounts[format(d, "yyyy-MM-dd")] = 0;
+    }
+
+    for (const lead of uniqueLeads) {
+      const day = format(new Date(lead.created_at), "yyyy-MM-dd");
+      if (dailyCounts[day] !== undefined) {
+        dailyCounts[day]++;
+      }
+    }
+
+    const entries = days.map(d => ({
+      date: format(d, "yyyy-MM-dd"),
+      label: format(d, "dd MMM"),
+      daily: dailyCounts[format(d, "yyyy-MM-dd")] || 0,
+    }));
+
+    // Cumulative
+    let cumulative = 0;
+    // Count all leads before the 30 day window
+    const beforeWindow = uniqueLeads.filter(l => new Date(l.created_at) < startOfDay(thirtyDaysAgo)).length;
+    cumulative = beforeWindow;
+
+    return entries.map(e => {
+      cumulative += e.daily;
+      return { ...e, cumulative };
+    });
+  }, [uniqueLeads]);
+
+  const maxCumulative = graphData.length > 0 ? graphData[graphData.length - 1].cumulative : 1;
+  const maxDaily = Math.max(1, ...graphData.map(d => d.daily));
 
   const downloadCSV = () => {
     const headers = ["Name", "Email", "Mobile", "Source", "Page Link", "Lead Date", "Extra Details"];
@@ -231,23 +296,29 @@ const AdminAllLeads = () => {
           <h1 className="font-heading text-2xl font-bold text-foreground flex items-center gap-2">
             <Users className="w-6 h-6" /> Master Data
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">All leads from every source — unified view with all fields</p>
+          <p className="text-sm text-muted-foreground mt-1">All unique leads — deduplicated by mobile & email</p>
         </div>
         <div className="flex gap-2">
           <Button onClick={fetchAllLeads} variant="outline" size="sm" disabled={loading}>
             Refresh
           </Button>
           <Button onClick={downloadCSV} variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-1" /> Export CSV
+            <Download className="w-4 h-4 mr-1" /> Download CSV
           </Button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
         <Card><CardContent className="p-4 text-center">
           <div className="text-2xl font-bold text-foreground">{stats.total}</div>
-          <div className="text-xs text-muted-foreground">Total Leads</div>
+          <div className="text-xs text-muted-foreground">Total Unique Leads</div>
+        </CardContent></Card>
+        <Card className="border-primary/30 bg-primary/5"><CardContent className="p-4 text-center">
+          <div className="text-2xl font-bold text-primary flex items-center justify-center gap-1">
+            <CalendarCheck className="w-5 h-5" /> {todaysLeads}
+          </div>
+          <div className="text-xs text-muted-foreground font-medium">Today's Leads</div>
         </CardContent></Card>
         <Card><CardContent className="p-4 text-center">
           <div className="text-2xl font-bold text-primary">{stats.withEmail}</div>
@@ -262,6 +333,62 @@ const AdminAllLeads = () => {
           <div className="text-xs text-muted-foreground">Email + Phone</div>
         </CardContent></Card>
       </div>
+
+      {/* Daily Cumulative Graph */}
+      <Card className="mb-4">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-primary" /> Daily Leads (Last 30 Days) — Cumulative Growth
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 pt-0">
+          <div className="relative h-[180px] flex items-end gap-[2px]">
+            {graphData.map((d, i) => {
+              const barHeight = Math.max(2, (d.daily / maxDaily) * 140);
+              const lineY = maxCumulative > 0 ? 180 - (d.cumulative / maxCumulative) * 160 : 180;
+              return (
+                <div key={d.date} className="flex-1 relative group flex flex-col items-center justify-end h-full">
+                  {/* Bar */}
+                  <div
+                    className="w-full bg-primary/30 hover:bg-primary/50 rounded-t transition-colors"
+                    style={{ height: `${barHeight}px` }}
+                  />
+                  {/* Tooltip */}
+                  <div className="absolute bottom-full mb-2 hidden group-hover:block z-10 bg-popover border border-border rounded-lg px-2 py-1 text-xs shadow-lg whitespace-nowrap">
+                    <div className="font-medium">{d.label}</div>
+                    <div>Daily: {d.daily}</div>
+                    <div>Total: {d.cumulative}</div>
+                  </div>
+                  {/* X-axis label every 5 days */}
+                  {i % 5 === 0 && (
+                    <div className="absolute -bottom-5 text-[9px] text-muted-foreground whitespace-nowrap">
+                      {d.label}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {/* Cumulative line overlay */}
+            <svg className="absolute inset-0 pointer-events-none" viewBox={`0 0 ${graphData.length * 10} 180`} preserveAspectRatio="none">
+              <polyline
+                fill="none"
+                stroke="hsl(var(--primary))"
+                strokeWidth="2"
+                points={graphData.map((d, i) => {
+                  const x = i * 10 + 5;
+                  const y = maxCumulative > 0 ? 180 - (d.cumulative / maxCumulative) * 160 : 180;
+                  return `${x},${y}`;
+                }).join(" ")}
+              />
+            </svg>
+          </div>
+          <div className="h-5" /> {/* spacer for x-axis labels */}
+          <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground mt-2">
+            <span className="flex items-center gap-1"><span className="w-3 h-3 bg-primary/30 rounded-sm inline-block" /> Daily Leads</span>
+            <span className="flex items-center gap-1"><span className="w-6 h-0.5 bg-primary inline-block" /> Cumulative</span>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Filters */}
       <Card className="mb-4">
@@ -307,7 +434,7 @@ const AdminAllLeads = () => {
       <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-sm text-muted-foreground">
-            Showing {paginated.length} of {filtered.length} leads (Page {page}/{totalPages})
+            Showing {paginated.length} of {filtered.length} unique leads (Page {page}/{totalPages})
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
