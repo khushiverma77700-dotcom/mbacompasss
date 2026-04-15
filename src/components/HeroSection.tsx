@@ -1,9 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, BookOpen, Users, Award, GraduationCap, TrendingUp, Shield, BarChart3, Star, Headphones, Target, ChevronRight } from "lucide-react";
+import { Search, BookOpen, Users, Award, GraduationCap, TrendingUp, Shield, BarChart3, Star, Headphones, Target, ChevronRight, MapPin, Tag, Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { supabase } from "@/integrations/supabase/client";
+
+type HeroSuggestion = {
+  type: "institute" | "exam" | "city" | "category" | "college";
+  label: string;
+  sub: string;
+  link: string;
+};
+
+const suggestionIcons = {
+  institute: GraduationCap,
+  exam: BookOpen,
+  city: MapPin,
+  category: Tag,
+  college: Building2,
+};
 
 const iconMap: Record<string, any> = { BookOpen, Users, Award, GraduationCap, TrendingUp, Shield, BarChart3, Star, Headphones, Target };
 
@@ -18,6 +34,10 @@ const fallbackSearches = ["CAT Coaching Delhi", "Best GMAT Prep", "Online MBA Co
 
 const HeroSection = () => {
   const [query, setQuery] = useState("");
+  const [suggestions, setSuggestions] = useState<HeroSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedIdx, setSelectedIdx] = useState(-1);
+  const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { data: heroSettings } = useSiteSettings("hero");
   const { data: statsSettings } = useSiteSettings("stats");
@@ -27,11 +47,60 @@ const HeroSection = () => {
   const popularSearches = heroSettings?.popular_searches || fallbackSearches;
   const stats = statsSettings?.items || fallbackStats;
 
+  useEffect(() => {
+    if (query.length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
+    const controller = new AbortController();
+    const timer = setTimeout(async () => {
+      const q = query.toLowerCase();
+      const results: HeroSuggestion[] = [];
+      const [instRes, examRes, catRes, collegeRes] = await Promise.all([
+        supabase.from("institutes").select("name, slug, city, rating").ilike("name", `%${q}%`).limit(4),
+        supabase.from("exams").select("name, slug, full_name, conducting_body").ilike("name", `%${q}%`).limit(3),
+        supabase.from("categories").select("name, slug, description").ilike("name", `%${q}%`).limit(3),
+        supabase.from("colleges").select("name, slug, city, ranking, fees").ilike("name", `%${q}%`).limit(4),
+      ]);
+      instRes.data?.forEach((i) => results.push({ type: "institute", label: i.name, sub: `${i.city || ""} · ${i.rating || 0}★`, link: `/institute/${i.slug}` }));
+      examRes.data?.forEach((e) => results.push({ type: "exam", label: `${e.name}${e.full_name ? ` — ${e.full_name}` : ""}`, sub: e.conducting_body || "", link: `/exam/${e.slug}` }));
+      catRes.data?.forEach((c) => results.push({ type: "category", label: c.name, sub: c.description || "", link: `/category/${c.slug}` }));
+      collegeRes.data?.forEach((c) => results.push({ type: "college", label: c.name, sub: `${c.city || ""} · Rank #${c.ranking || "—"}`, link: `/college/${c.slug}` }));
+      if (!controller.signal.aborted) {
+        setSuggestions(results.slice(0, 8));
+        setShowSuggestions(results.length > 0);
+        setSelectedIdx(-1);
+      }
+    }, 200);
+    return () => { clearTimeout(timer); controller.abort(); };
+  }, [query]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setShowSuggestions(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const handleSelect = (s: HeroSuggestion) => {
+    navigate(s.link);
+    setQuery("");
+    setShowSuggestions(false);
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    if (selectedIdx >= 0 && suggestions[selectedIdx]) {
+      handleSelect(suggestions[selectedIdx]);
+      return;
+    }
     if (query.trim()) {
       navigate(`/category/cat?q=${encodeURIComponent(query)}`);
     }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowDown") { e.preventDefault(); setSelectedIdx((p) => Math.min(p + 1, suggestions.length - 1)); }
+    if (e.key === "ArrowUp") { e.preventDefault(); setSelectedIdx((p) => Math.max(p - 1, 0)); }
+    if (e.key === "Escape") setShowSuggestions(false);
   };
 
   return (
