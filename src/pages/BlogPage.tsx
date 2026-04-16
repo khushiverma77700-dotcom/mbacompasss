@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowRight, Calendar, Clock, TrendingUp, BookOpen, User, Search, ChevronRight, Flame, Eye, Bookmark } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, Calendar, Clock, TrendingUp, BookOpen, User, Search, ChevronRight, Flame, Eye, Bookmark, ArrowLeft, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";

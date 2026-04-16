@@ -157,40 +157,69 @@ const CoachingPage = () => {
 
 
       {/* Hero */}
-      <div className="hero-gradient py-14 md:py-20 mt-2 relative overflow-hidden">
+      <div className="hero-gradient py-10 md:py-16 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iMS41IiBmaWxsPSJ3aGl0ZSIgb3BhY2l0eT0iMC4wNSIvPjwvc3ZnPg==')] opacity-60" />
+          <div className="absolute top-10 right-10 w-32 h-32 border border-white/10 rounded-full" />
+          <div className="absolute bottom-10 left-10 w-20 h-20 border border-white/10 rounded-full" />
         </div>
-        <div className="container mx-auto px-4 text-center relative z-10">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-5 border border-white/10">
-              <Award className="w-3.5 h-3.5 text-primary-foreground" />
-              <span className="text-sm font-medium text-primary-foreground">Updated for 2026 Season</span>
-            </div>
-            <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-extrabold text-primary-foreground mb-4 tracking-tight leading-tight">
-              {dynamicH1}
-            </h1>
-            <p className="text-primary-foreground/75 mb-8 max-w-2xl mx-auto text-base md:text-lg">
-              Compare {totalInstitutes}+ coaching institutes — ratings, fees, success rates & student reviews
-            </p>
-          </motion.div>
 
-          {/* Quick Stats */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto mb-8">
-            {[
-              { label: "Total Institutes", value: `${totalInstitutes}+`, icon: Building2, color: "from-blue-500/20 to-blue-600/20" },
-              { label: "Categories", value: String(categories.length), icon: Award, color: "from-amber-500/20 to-amber-600/20" },
-              { label: "Cities", value: `${allCities.length}+`, icon: MapPin, color: "from-emerald-500/20 to-emerald-600/20" },
-              { label: "States", value: `${states.length}+`, icon: GraduationCap, color: "from-purple-500/20 to-purple-600/20" },
-            ].map((stat) => (
-              <div key={stat.label} className={`bg-gradient-to-br ${stat.color} backdrop-blur-md rounded-2xl p-4 text-center border border-white/10`}>
-                <stat.icon className="w-5 h-5 text-primary-foreground/80 mx-auto mb-2" />
-                <p className="font-heading font-extrabold text-primary-foreground text-2xl">{stat.value}</p>
-                <p className="text-primary-foreground/60 text-xs">{stat.label}</p>
+        <div className="container mx-auto px-4 relative z-10">
+          {/* Top bar: Back + Share */}
+          <div className="flex items-center justify-between mb-8">
+            <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-primary-foreground/80 hover:text-primary-foreground text-sm font-medium transition-colors">
+              <ArrowLeft className="w-4 h-4" /> Back
+            </button>
+            <button onClick={() => navigator.clipboard.writeText(window.location.href)} className="flex items-center gap-1.5 text-primary-foreground/80 hover:text-primary-foreground text-sm font-medium transition-colors bg-white/10 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/10">
+              <Share2 className="w-3.5 h-3.5" /> Share
+            </button>
+          </div>
+
+          <div className="text-center">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-5 border border-white/10">
+                <Award className="w-3.5 h-3.5 text-primary-foreground" />
+                <span className="text-sm font-medium text-primary-foreground">Updated for 2026 Season</span>
               </div>
-            ))}
-          </motion.div>
+              <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-extrabold text-primary-foreground mb-4 tracking-tight leading-tight">
+                {dynamicH1}
+              </h1>
+              <p className="text-primary-foreground/75 mb-6 max-w-2xl mx-auto text-base md:text-lg">
+                Compare {totalInstitutes}+ coaching institutes — ratings, fees, success rates & student reviews
+              </p>
+            </motion.div>
+
+            {/* Search bar in hero */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="max-w-2xl mx-auto mb-8">
+              <div className="relative group">
+                <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  placeholder="Search coaching by name, city, state..."
+                  value={search}
+                  onChange={(e) => setFilter("q", e.target.value)}
+                  className="pl-13 pr-4 py-3 h-14 rounded-2xl bg-white/95 backdrop-blur-sm border-0 text-foreground shadow-2xl text-base focus:ring-2 focus:ring-white/30"
+                />
+              </div>
+            </motion.div>
+
+            {/* Quick Stats */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto">
+              {[
+                { label: "Total Institutes", value: `${totalInstitutes}+`, icon: Building2, color: "from-blue-500/20 to-blue-600/20" },
+                { label: "Categories", value: String(categories.length), icon: Award, color: "from-amber-500/20 to-amber-600/20" },
+                { label: "Cities", value: `${allCities.length}+`, icon: MapPin, color: "from-emerald-500/20 to-emerald-600/20" },
+                { label: "States", value: `${states.length}+`, icon: GraduationCap, color: "from-purple-500/20 to-purple-600/20" },
+              ].map((stat) => (
+                <div key={stat.label} className={`bg-gradient-to-br ${stat.color} backdrop-blur-md rounded-2xl p-4 text-center border border-white/10`}>
+                  <stat.icon className="w-5 h-5 text-primary-foreground/80 mx-auto mb-2" />
+                  <p className="font-heading font-extrabold text-primary-foreground text-2xl">{stat.value}</p>
+                  <p className="text-primary-foreground/60 text-xs">{stat.label}</p>
+                </div>
+              ))}
+            </motion.div>
+          </div>
         </div>
       </div>
 
