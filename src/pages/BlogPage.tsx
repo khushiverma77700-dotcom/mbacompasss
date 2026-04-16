@@ -75,14 +75,14 @@ const BlogPage = () => {
 
 
       {/* Hero */}
-      <div className="hero-gradient py-10 md:py-16 relative overflow-hidden">
+      <div className="relative py-10 md:py-16 overflow-hidden" style={{ background: 'hsl(207 90% 54%)' }}>
         <div className="absolute inset-0 pointer-events-none">
           <img
             src="https://images.unsplash.com/photo-1562979314-bee7453e911c?w=1200&h=600&fit=crop&q=80"
             alt=""
-className="absolute inset-0 w-full h-full object-cover blur-sm scale-105 opacity-70"
+            className="absolute inset-0 w-full h-full object-cover scale-105 opacity-80"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/40 via-primary/30 to-primary/50" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/50" />
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl" />
           <div className="absolute top-10 right-10 w-32 h-32 border border-white/10 rounded-full" />
