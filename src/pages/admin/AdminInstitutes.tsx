@@ -22,6 +22,7 @@ type Institute = {
   id: string; name: string; slug: string; city: string | null;
   rating: number | null; featured: boolean | null; mode: string | null;
   students_count: number | null; success_rate: number | null;
+  created_at: string;
 };
 
 const emptyForm = {
