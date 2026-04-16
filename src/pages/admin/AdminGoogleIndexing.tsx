@@ -675,6 +675,9 @@ const AdminGoogleIndexing = () => {
     return true;
   });
 
+  const { sortedItems: sortedFiltered, sortConfig: urlSortConfig, handleSort: handleUrlSort } = useTableSort(filtered);
+  const { sortedItems: sortedLogs, sortConfig: logSortConfig, handleSort: handleLogSort } = useTableSort(logs);
+
   const chartConfig = {
     cumulative: { label: "Total Indexed", color: "hsl(var(--primary))" },
     daily: { label: "Daily Indexed", color: "hsl(142 71% 45%)" },
