@@ -27,6 +27,7 @@ const AdminTestimonials = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { sortedItems: sortedTestimonials, sortConfig, handleSort } = useTableSort(testimonials);
 
   const fetchData = async () => { const { data } = await supabase.from("testimonials").select("*").order("sort_order"); if (data) setTestimonials(data); };
   const fetchInstitutes = async () => { const { data } = await supabase.from("institutes").select("id, name").order("name"); if (data) setInstitutes(data); };

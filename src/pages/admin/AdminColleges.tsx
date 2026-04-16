@@ -42,6 +42,7 @@ const AdminColleges = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [tagInputs, setTagInputs] = useState({ courses: "", accreditations: "", exams_accepted: "", top_recruiters: "", keywords: "" });
   const { toast } = useToast();
+  const { sortedItems: sortedColleges, sortConfig, handleSort } = useTableSort(colleges);
 
   const fetchColleges = async () => {
     const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, tier, college_category, ranking, established, created_at").order("ranking", { ascending: true });

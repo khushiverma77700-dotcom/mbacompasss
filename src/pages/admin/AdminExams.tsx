@@ -30,6 +30,7 @@ const AdminExams = () => {
   const [syllabusInput, setSyllabusInput] = useState("");
   const [keywordInput, setKeywordInput] = useState("");
   const { toast } = useToast();
+  const { sortedItems: sortedExams, sortConfig, handleSort } = useTableSort(exams);
 
   const fetchExams = async () => {
     const { data } = await supabase.from("exams").select("*").order("name");

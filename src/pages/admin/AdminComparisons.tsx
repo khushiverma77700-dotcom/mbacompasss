@@ -20,6 +20,7 @@ const AdminComparisons = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { sortedItems: sortedItems, sortConfig, handleSort } = useTableSort(items);
 
   const fetch = async () => {
     const { data } = await supabase.from("comparisons").select("*").order("sort_order");

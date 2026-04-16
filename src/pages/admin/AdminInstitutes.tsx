@@ -46,6 +46,7 @@ const AdminInstitutes = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState({ keywords: "", features: "" });
   const { toast } = useToast();
+  const { sortedItems: sortedInstitutes, sortConfig, handleSort } = useTableSort(institutes);
 
   const fetchData = async () => {
     const [i, c] = await Promise.all([

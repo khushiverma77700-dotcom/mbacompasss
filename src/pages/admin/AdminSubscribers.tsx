@@ -12,6 +12,7 @@ import { format } from "date-fns";
 const AdminSubscribers = () => {
   const [subscribers, setSubscribers] = useState<any[]>([]);
   const { toast } = useToast();
+  const { sortedItems: sortedSubscribers, sortConfig, handleSort } = useTableSort(subscribers);
 
   const fetchSubscribers = async () => {
     const { data } = await supabase.from("newsletter_subscribers").select("*").order("created_at", { ascending: false });

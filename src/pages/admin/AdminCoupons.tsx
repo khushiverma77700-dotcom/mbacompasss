@@ -40,6 +40,7 @@ const AdminCoupons = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { sortedItems: sortedCoupons, sortConfig, handleSort } = useTableSort(coupons);
 
   const fetchCoupons = async () => { const { data } = await supabase.from("coupons").select("*").order("created_at", { ascending: false }); if (data) setCoupons(data); };
   const fetchInstitutes = async () => { const { data } = await supabase.from("institutes").select("id, name").order("name"); if (data) setInstitutes(data); };

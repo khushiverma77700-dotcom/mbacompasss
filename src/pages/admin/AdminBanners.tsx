@@ -18,6 +18,7 @@ const AdminBanners = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { sortedItems: sortedBanners, sortConfig, handleSort } = useTableSort(banners);
 
   const fetchBanners = async () => {
     const { data } = await supabase.from("banners").select("*").order("sort_order");

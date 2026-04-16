@@ -19,6 +19,7 @@ const AdminCategories = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { sortedItems: sortedCategories, sortConfig, handleSort } = useTableSort(categories);
 
   const fetchCategories = async () => {
     const { data } = await supabase.from("categories").select("*").order("name");
