@@ -1174,6 +1174,7 @@ export type Database = {
           created_at: string
           error_message: string | null
           id: string
+          indexed_at: string | null
           last_response: Json | null
           last_submitted_at: string | null
           page_type: string
@@ -1187,6 +1188,7 @@ export type Database = {
           created_at?: string
           error_message?: string | null
           id?: string
+          indexed_at?: string | null
           last_response?: Json | null
           last_submitted_at?: string | null
           page_type?: string
@@ -1200,6 +1202,7 @@ export type Database = {
           created_at?: string
           error_message?: string | null
           id?: string
+          indexed_at?: string | null
           last_response?: Json | null
           last_submitted_at?: string | null
           page_type?: string
