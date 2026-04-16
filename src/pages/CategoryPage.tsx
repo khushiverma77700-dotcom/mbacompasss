@@ -172,15 +172,6 @@ const CategoryPage = () => {
           <div className="absolute top-0 right-1/3 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
         </div>
         <div className="container mx-auto px-4 relative z-10">
-          <div className="flex items-center justify-between mb-8">
-            <Link to="/category/cat" className="flex items-center gap-1.5 text-primary-foreground/80 hover:text-primary-foreground text-sm font-medium transition-colors">
-              <ArrowLeft className="w-4 h-4" /> All Coaching
-            </Link>
-            <button onClick={() => navigator.clipboard.writeText(window.location.href)} className="flex items-center gap-1.5 text-primary-foreground/80 hover:text-primary-foreground text-sm font-medium transition-colors bg-white/10 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/10">
-              <Share2 className="w-3.5 h-3.5" /> Share
-            </button>
-          </div>
-
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4 border border-white/10">
               <MapPin className="w-3.5 h-3.5 text-primary-foreground" />
@@ -275,18 +266,6 @@ const CategoryPage = () => {
                 <SelectItem value="success">Success Rate</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          {/* Category quick filter pills */}
-          <div className="flex gap-2 flex-wrap mt-4 pt-4 border-t border-border">
-            {categories.map((cat: any) => (
-              <Link
-                key={cat.slug}
-                to={`/category/${cat.slug}${queryCity !== "all" ? `?city=${encodeURIComponent(queryCity)}` : queryState !== "all" ? `?state=${encodeURIComponent(queryState)}` : ""}`}
-              >
-                <Badge variant={slug === cat.slug ? "default" : "secondary"} className="cursor-pointer">{cat.name}</Badge>
-              </Link>
-            ))}
           </div>
         </div>
 
