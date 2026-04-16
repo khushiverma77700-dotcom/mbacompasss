@@ -977,24 +977,20 @@ const AdminGoogleIndexing = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="min-w-[240px]">URL</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Submission Time</TableHead>
-                      <TableHead>Last Checked</TableHead>
-                      <TableHead>
-                        <span className="flex items-center gap-1">
-                          <Timer className="w-3 h-3" /> Indexing Time
-                        </span>
-                      </TableHead>
-                      <TableHead>Retries</TableHead>
+                      <TableHead className="w-12">S.No</TableHead>
+                      <SortableTableHead label="URL" sortKey="url" sortConfig={urlSortConfig} onSort={handleUrlSort} className="min-w-[240px]" />
+                      <SortableTableHead label="Type" sortKey="page_type" sortConfig={urlSortConfig} onSort={handleUrlSort} />
+                      <SortableTableHead label="Status" sortKey="status" sortConfig={urlSortConfig} onSort={handleUrlSort} />
+                      <SortableTableHead label="Submission Time" sortKey="last_submitted_at" sortConfig={urlSortConfig} onSort={handleUrlSort} />
+                      <SortableTableHead label="Last Checked" sortKey="updated_at" sortConfig={urlSortConfig} onSort={handleUrlSort} />
+                      <SortableTableHead label="Retries" sortKey="retry_count" sortConfig={urlSortConfig} onSort={handleUrlSort} />
                       <TableHead className="min-w-[220px]">Error / Reason</TableHead>
                       <TableHead className="min-w-[220px]">Google Response</TableHead>
                       <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filtered.map((row) => (
+                    {sortedFiltered.map((row, idx) => (
                       <TableRow key={row.id} className="group align-top">
                         <TableCell className="max-w-[300px]">
                           <a
