@@ -223,25 +223,25 @@ const CollegesPage = () => {
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Search by college name or city..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 rounded-xl" />
+              <Input placeholder="Search by college name or city..." value={search} onChange={(e) => setFilter("q", e.target.value)} className="pl-9 rounded-xl" />
             </div>
-            <Select value={selectedState} onValueChange={(v) => { setSelectedState(v); setSelectedCity("all"); }}>
+            <Select value={selectedState} onValueChange={(v) => setFilter("state", v)}>
               <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="State" /></SelectTrigger>
               <SelectContent><SelectItem value="all">All States</SelectItem>{collegeStates.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
             </Select>
-            <Select value={selectedCity} onValueChange={setSelectedCity}>
+            <Select value={selectedCity} onValueChange={(v) => setFilter("city", v)}>
               <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="City" /></SelectTrigger>
               <SelectContent><SelectItem value="all">All Cities</SelectItem>{collegeCitiesForState.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
             </Select>
-            <Select value={selectedExam} onValueChange={setSelectedExam}>
+            <Select value={selectedExam} onValueChange={(v) => setFilter("exam", v)}>
               <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="Exam" /></SelectTrigger>
               <SelectContent><SelectItem value="all">All Exams</SelectItem>{allExams.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
             </Select>
-            <Select value={sortBy} onValueChange={setSortBy}>
+            <Select value={sortBy} onValueChange={(v) => setFilter("sort", v)}>
               <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="Sort" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="ranking">By Ranking</SelectItem>
-                <SelectItem value="fees">By Fees (Low→High)</SelectItem>
+                <SelectItem value="fees">By Fees (Low to High)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -253,7 +253,7 @@ const CollegesPage = () => {
               return (
                 <button
                   key={tab.type}
-                  onClick={() => setActiveTab(tab.type)}
+                  onClick={() => setFilter("type", tab.type)}
                   className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                     activeTab === tab.type
                       ? "bg-primary text-primary-foreground shadow-md scale-[1.02]"
@@ -266,7 +266,29 @@ const CollegesPage = () => {
               );
             })}
           </div>
-        </div>
+
+          {/* Active Filters Bar */}
+          {activeFilters.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-border">
+              <span className="text-xs font-semibold text-muted-foreground">Active:</span>
+              {activeFilters.map((f) => (
+                <button
+                  key={f.key}
+                  onClick={() => removeFilter(f.key)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+                >
+                  {f.label}
+                  <X className="w-3 h-3" />
+                </button>
+              ))}
+              <button
+                onClick={clearAllFilters}
+                className="text-xs text-muted-foreground hover:text-foreground underline ml-1"
+              >
+                Clear All
+              </button>
+            </div>
+          )}
 
         {/* College Cards */}
         <div className="space-y-4">
