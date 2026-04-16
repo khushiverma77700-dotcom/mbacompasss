@@ -1,64 +1,73 @@
-import { Link, useSearchParams } from "react-router-dom";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import { useState, useMemo, useEffect } from "react";
-import { INDIAN_STATES, getCitiesForState } from "@/data/indianLocations";
-import { Star, MapPin, Users, TrendingUp, SlidersHorizontal, X, Monitor, Building, Wifi } from "lucide-react";
+import { getLocationImage, isGeneratedBanner } from "@/data/cityImages";
+import { MapPin, ArrowRight, GraduationCap, TrendingUp, Search, Filter, Star, Award, Building2, Users, Monitor, Building, Wifi, ArrowLeft, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInstitutes, useCategories } from "@/hooks/useInstitutes";
-import { useParams } from "react-router-dom";
+import { useCityPages } from "@/hooks/useCityPages";
+import SEOHead, { generateListingSchema } from "@/components/SEOHead";
+import { useResolvedSeo } from "@/hooks/useResolvedSeo";
+import PageKeywords from "@/components/PageKeywords";
+import AIGistSection from "@/components/AIGistSection";
 
 const modes = ["Online", "Offline", "Hybrid"];
+
+const slugify = (s: string) => s.toLowerCase().trim().replace(/\s+/g, "-");
 
 const CategoryPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams] = useSearchParams();
-  const querySearch = searchParams.get("q") || "";
   const queryCity = searchParams.get("city") || "all";
   const queryState = searchParams.get("state") || "all";
   const queryMode = searchParams.get("mode") || "all";
+  const querySearch = searchParams.get("q") || "";
 
   const [search, setSearch] = useState(querySearch);
   const [sortBy, setSortBy] = useState("rating");
   const [selectedCity, setSelectedCity] = useState(queryCity);
   const [selectedState, setSelectedState] = useState(queryState);
   const [selectedMode, setSelectedMode] = useState(queryMode);
-  const [feeRange, setFeeRange] = useState([0, 200000]);
-  const [showFilters, setShowFilters] = useState(queryCity !== "all" || queryState !== "all" || queryMode !== "all");
 
-  const { data: institutes = [], isLoading } = useInstitutes(slug);
+  const { data: institutes = [], isLoading: institutesLoading } = useInstitutes(slug);
   const { data: categories = [] } = useCategories();
+  const { data: allCityPages } = useCityPages();
 
+  const isLoading = institutesLoading;
   const category = categories.find((c: any) => c.slug === slug);
 
-  const cities = useMemo(
-    () =>
-      selectedState !== "all"
-        ? getCitiesForState(selectedState).filter((c) => institutes.some((i: any) => i.city === c))
-        : ([...new Set(institutes.map((i: any) => i.city).filter(Boolean))].sort() as string[]),
-    [institutes, selectedState]
-  );
-  const states = useMemo(() => INDIAN_STATES.filter((s) => institutes.some((i: any) => i.state === s)), [institutes]);
-
+  // Sync state when URL params change
   useEffect(() => {
     setSearch(querySearch);
     setSelectedCity(queryCity);
     setSelectedState(queryState);
     setSelectedMode(queryMode);
-    setFeeRange([0, 200000]);
-    setShowFilters(queryCity !== "all" || queryState !== "all" || queryMode !== "all");
   }, [slug, querySearch, queryCity, queryState, queryMode]);
 
-  useEffect(() => {
-    const title = category
-      ? `Best ${category.name} Institutes in India | MBAHub`
-      : "All MBA Coaching Institutes in India | MBAHub";
-    document.title = title;
-  }, [category]);
+  // Find matching city_page for hero image (by city or state)
+  const cityPage = useMemo(() => {
+    if (!allCityPages) return null;
+    if (queryCity !== "all") {
+      return allCityPages.find((p: any) =>
+        p.name?.toLowerCase().trim() === queryCity.toLowerCase().trim() ||
+        p.slug === slugify(queryCity) ||
+        (p.city_aliases || []).some((a: string) => a.toLowerCase().trim() === queryCity.toLowerCase().trim())
+      ) || null;
+    }
+    if (queryState !== "all") {
+      return allCityPages.find((p: any) =>
+        p.type === "state" && p.name?.toLowerCase().trim() === queryState.toLowerCase().trim()
+      ) || null;
+    }
+    return null;
+  }, [allCityPages, queryCity, queryState]);
+
+  const hasLocationFilter = queryCity !== "all" || queryState !== "all";
+  const locationName = queryCity !== "all" ? queryCity : queryState !== "all" ? queryState : "";
+  const displayName = cityPage?.name || locationName;
 
   const filtered = useMemo(() => {
     let list = [...institutes] as any[];
@@ -83,164 +92,322 @@ const CategoryPage = () => {
       const modeFilter = selectedMode.trim().toLowerCase();
       list = list.filter((i) => (i.mode || "").trim().toLowerCase() === modeFilter);
     }
-    // Fee filtering based on lowest course fee
-    list = list.filter((i) => {
-      const minFee = Math.min(...(i.courses || []).map((c: any) => Number(c.fees) || 0), Infinity);
-      return minFee === Infinity || (minFee >= feeRange[0] && minFee <= feeRange[1]);
-    });
     if (sortBy === "rating") list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    if (sortBy === "fees-low") {
-      list.sort((a, b) => {
-        const aFee = Math.min(...(a.courses || []).map((c: any) => Number(c.fees) || 0), Infinity);
-        const bFee = Math.min(...(b.courses || []).map((c: any) => Number(c.fees) || 0), Infinity);
-        return aFee - bFee;
-      });
-    }
-    if (sortBy === "fees-high") {
-      list.sort((a, b) => {
-        const aFee = Math.min(...(a.courses || []).map((c: any) => Number(c.fees) || 0), Infinity);
-        const bFee = Math.min(...(b.courses || []).map((c: any) => Number(c.fees) || 0), Infinity);
-        return bFee - aFee;
-      });
-    }
     if (sortBy === "reviews") list.sort((a, b) => (b.total_reviews || 0) - (a.total_reviews || 0));
     if (sortBy === "success") list.sort((a, b) => (b.success_rate || 0) - (a.success_rate || 0));
     return list;
-  }, [institutes, search, sortBy, selectedCity, selectedState, selectedMode, feeRange]);
+  }, [institutes, search, sortBy, selectedCity, selectedState, selectedMode]);
 
-  const clearFilters = () => {
-    setSearch(""); setSelectedCity("all"); setSelectedState("all"); setSelectedMode("all"); setFeeRange([0, 200000]);
-  };
+  // Cities and states actually present in the institutes data
+  const availableCities = useMemo(
+    () => [...new Set(institutes.map((i: any) => i.city).filter(Boolean))].sort() as string[],
+    [institutes]
+  );
+  const availableStates = useMemo(
+    () => [...new Set(institutes.map((i: any) => i.state).filter(Boolean))].sort() as string[],
+    [institutes]
+  );
+
+  const heroTitle = hasLocationFilter
+    ? `${category ? `Best ${category.name} Coaching` : "Best MBA Coaching"} in ${displayName}`
+    : category
+    ? `Best ${category.name} Coaching Institutes`
+    : "All MBA Coaching Institutes in India";
+
+  const metaTitle = cityPage?.meta_title ||
+    (hasLocationFilter
+      ? `Best ${category?.name || "MBA"} Coaching in ${displayName} 2026 — Fees, Reviews`
+      : `${category?.name || "All MBA"} Coaching Institutes in India | MBAHub`);
+  const metaDesc = cityPage?.meta_description ||
+    (hasLocationFilter
+      ? `Explore top ${category?.name || "MBA"} coaching institutes in ${displayName} with fees, ratings, success rates, and student reviews.`
+      : category?.description || "Find the best MBA coaching institutes across India");
+  const keywords = cityPage?.keywords || category?.keywords || [];
+  const jsonLd = generateListingSchema(metaTitle, filtered, "institute");
+  const { seo: resolvedSeo } = useResolvedSeo(
+    cityPage ? "cityPage" : "category",
+    cityPage?.id || category?.id,
+    {
+      title: metaTitle,
+      description: metaDesc,
+      keywords,
+      canonical: typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}${window.location.search}` : undefined,
+      jsonLd,
+      ogImage: cityPage?.hero_image_url || undefined,
+    }
+  );
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="hero-gradient py-14"><div className="container mx-auto px-4 text-center"><Skeleton className="h-12 w-96 mx-auto bg-white/20" /></div></div>
+        <div className="container mx-auto px-4 py-8 space-y-4">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-36 rounded-2xl" />)}</div>
+      </div>
+    );
+  }
+
+  const otherPages = (allCityPages || []).filter((p: any) => p.slug !== cityPage?.slug);
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="hero-gradient py-10 md:py-14">
-        <div className="container mx-auto px-4 text-center">
-          <h1 className="font-heading text-2xl md:text-4xl font-bold text-primary-foreground mb-2">
-            {category ? `Best ${category.name} Institutes` : "All MBA Coaching"} in India
-          </h1>
-          <p className="text-primary-foreground/70">{category?.description || "Find the best MBA coaching institutes across India"}</p>
-          <p className="text-primary-foreground/60 text-sm mt-2">{filtered.length} institutes found</p>
+      <SEOHead {...resolvedSeo} />
+
+      {/* Hero with location image */}
+      <div
+        className="py-14 md:py-20 relative overflow-hidden"
+        style={{
+          backgroundImage: (() => {
+            const adminImg = cityPage?.hero_image_url && !isGeneratedBanner(cityPage.hero_image_url) ? cityPage.hero_image_url : null;
+            const img = adminImg || getLocationImage(
+              queryCity !== "all" ? queryCity : cityPage?.name,
+              queryState !== "all" ? queryState : cityPage?.state
+            );
+            return `linear-gradient(to bottom, rgba(44,24,16,0.6), rgba(61,35,23,0.75)), url(${img})`;
+          })(),
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div className="absolute inset-0">
+          <div className="absolute top-0 right-1/3 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="flex items-center justify-between mb-8">
+            <Link to="/category/cat" className="flex items-center gap-1.5 text-primary-foreground/80 hover:text-primary-foreground text-sm font-medium transition-colors">
+              <ArrowLeft className="w-4 h-4" /> All Coaching
+            </Link>
+            <button onClick={() => navigator.clipboard.writeText(window.location.href)} className="flex items-center gap-1.5 text-primary-foreground/80 hover:text-primary-foreground text-sm font-medium transition-colors bg-white/10 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/10">
+              <Share2 className="w-3.5 h-3.5" /> Share
+            </button>
+          </div>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4 border border-white/10">
+              <MapPin className="w-3.5 h-3.5 text-primary-foreground" />
+              <span className="text-sm font-medium text-primary-foreground">
+                {filtered.length} Coaching Institute{filtered.length !== 1 ? "s" : ""}{hasLocationFilter ? ` in ${displayName}` : ""}
+              </span>
+            </div>
+            <h1 className="font-heading text-2xl md:text-4xl lg:text-5xl font-extrabold text-primary-foreground mb-4 leading-tight">
+              {heroTitle}
+            </h1>
+            {cityPage?.intro_content ? (
+              <div className="text-primary-foreground/75 text-sm max-w-3xl prose-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: cityPage.intro_content }} />
+            ) : (
+              <p className="text-primary-foreground/75 max-w-2xl text-sm leading-relaxed">{metaDesc}</p>
+            )}
+          </motion.div>
+
+          {keywords.length > 0 && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="flex flex-wrap gap-2 mt-5">
+              {keywords.slice(0, 6).map((kw: string) => (
+                <Badge key={kw} className="bg-white/10 text-primary-foreground border-white/15 text-xs backdrop-blur-sm">{kw}</Badge>
+              ))}
+            </motion.div>
+          )}
+
+          {/* Quick Stats */}
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="grid grid-cols-3 gap-3 max-w-md mt-6">
+            {[
+              { label: "Institutes", value: filtered.length, icon: Building2 },
+              { label: "Categories", value: categories.length, icon: Award },
+              { label: "Avg Rated", value: filtered.filter((i: any) => i.rating).length, icon: Star },
+            ].map(s => (
+              <div key={s.label} className="bg-white/10 backdrop-blur-sm rounded-xl p-3 text-center border border-white/10">
+                <s.icon className="w-4 h-4 text-primary-foreground/70 mx-auto mb-1" />
+                <p className="font-heading font-extrabold text-primary-foreground text-xl">{s.value}</p>
+                <p className="text-primary-foreground/60 text-[10px] uppercase tracking-wider">{s.label}</p>
+              </div>
+            ))}
+          </motion.div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="flex flex-col gap-4 mb-8">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Input placeholder="Search by name, city, state, or course..." value={search} onChange={(e) => setSearch(e.target.value)} className="sm:max-w-sm" />
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="Sort by" /></SelectTrigger>
+        {/* AI Gist */}
+        <AIGistSection
+          content={`${displayName || "India"} ${category?.name || "MBA"} Coaching Institutes. ${cityPage?.intro_content || ""} ${cityPage?.detailed_content || ""} ${filtered.map((i: any) => `${i.name}: Rating ${i.rating}, Success Rate ${i.success_rate}%`).join(". ")}`}
+          pageType={cityPage ? "city" : "category"}
+          pageId={cityPage?.id || category?.id}
+          onScrollToContent={() => document.getElementById("institute-list")?.scrollIntoView({ behavior: "smooth" })}
+        />
+
+        {/* Filter Bar */}
+        <div className="bg-card rounded-2xl border border-border p-5 mb-8 shadow-lg -mt-8 relative z-10">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Filter className="w-4 h-4 text-primary" />
+            </div>
+            <span className="text-sm font-bold text-foreground">Refine Results</span>
+            <span className="ml-auto text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full font-medium">{filtered.length} found</span>
+          </div>
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="relative flex-1 min-w-[200px] max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input placeholder="Search coaching institutes..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 rounded-xl" />
+            </div>
+            <Select value={selectedState} onValueChange={(v) => { setSelectedState(v); setSelectedCity("all"); }}>
+              <SelectTrigger className="w-40 rounded-xl"><SelectValue placeholder="State" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="rating">Highest Rated</SelectItem>
-                <SelectItem value="fees-low">Fees: Low to High</SelectItem>
-                <SelectItem value="fees-high">Fees: High to Low</SelectItem>
+                <SelectItem value="all">All States</SelectItem>
+                {availableStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={selectedCity} onValueChange={setSelectedCity}>
+              <SelectTrigger className="w-40 rounded-xl"><SelectValue placeholder="City" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Cities</SelectItem>
+                {availableCities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={selectedMode} onValueChange={setSelectedMode}>
+              <SelectTrigger className="w-40 rounded-xl"><SelectValue placeholder="Mode" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Modes</SelectItem>
+                {modes.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-44 rounded-xl"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rating">Sort by Rating</SelectItem>
                 <SelectItem value="reviews">Most Reviews</SelectItem>
                 <SelectItem value="success">Success Rate</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" className="gap-2 sm:w-auto w-full" onClick={() => setShowFilters(!showFilters)}>
-              <SlidersHorizontal className="w-4 h-4" /> {showFilters ? "Hide Filters" : "Filters"}
-            </Button>
           </div>
 
-          {showFilters && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="bg-card rounded-xl p-5 border border-border space-y-4">
-              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">State</label>
-                  <Select value={selectedState} onValueChange={(v) => { setSelectedState(v); setSelectedCity("all"); }}>
-                    <SelectTrigger><SelectValue placeholder="All States" /></SelectTrigger>
-                    <SelectContent><SelectItem value="all">All States</SelectItem>{states.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">City</label>
-                  <Select value={selectedCity} onValueChange={setSelectedCity}>
-                    <SelectTrigger><SelectValue placeholder="All Cities" /></SelectTrigger>
-                    <SelectContent><SelectItem value="all">All Cities</SelectItem>{cities.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">Mode</label>
-                  <Select value={selectedMode} onValueChange={setSelectedMode}>
-                    <SelectTrigger><SelectValue placeholder="All Modes" /></SelectTrigger>
-                    <SelectContent><SelectItem value="all">All Modes</SelectItem>{modes.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-2 block">Fees: ₹{feeRange[0].toLocaleString()} — ₹{feeRange[1].toLocaleString()}</label>
-                  <Slider value={feeRange} onValueChange={setFeeRange} min={0} max={200000} step={5000} className="mt-3" />
-                </div>
-              </div>
-              <Button variant="ghost" size="sm" onClick={clearFilters}><X className="w-3 h-3 mr-1" /> Clear All Filters</Button>
-            </motion.div>
-          )}
-
-          <div className="flex gap-2 flex-wrap">
+          {/* Category quick filter pills */}
+          <div className="flex gap-2 flex-wrap mt-4 pt-4 border-t border-border">
             {categories.map((cat: any) => (
-              <Link key={cat.slug} to={`/category/${cat.slug}`}>
+              <Link
+                key={cat.slug}
+                to={`/category/${cat.slug}${queryCity !== "all" ? `?city=${encodeURIComponent(queryCity)}` : queryState !== "all" ? `?state=${encodeURIComponent(queryState)}` : ""}`}
+              >
                 <Badge variant={slug === cat.slug ? "default" : "secondary"} className="cursor-pointer">{cat.name}</Badge>
               </Link>
             ))}
           </div>
         </div>
 
-        {isLoading ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-64 rounded-xl" />)}
-          </div>
-        ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {/* Institute Cards */}
+        {filtered.length > 0 ? (
+          <div id="institute-list" className="space-y-4">
             {filtered.map((inst: any, i: number) => (
-              <motion.div key={inst.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
-                <Link
-                  to={`/institute/${inst.slug}`}
-                  className="group block bg-card rounded-xl overflow-hidden card-shadow hover:card-shadow-hover transition-all duration-300 hover:-translate-y-1 border border-border"
-                >
-                  <div className="h-28 hero-gradient relative flex items-center justify-center">
-                    <span className="font-heading font-bold text-primary-foreground text-2xl opacity-30">{inst.name.charAt(0)}</span>
-                    {inst.featured && <Badge className="absolute top-3 left-3 bg-primary-foreground/20 text-primary-foreground border-none text-xs">Featured</Badge>}
-                    {inst.discount && <Badge className="absolute top-3 right-3 bg-green-500 text-primary-foreground border-none text-xs">{inst.discount.split(" ")[0]} OFF</Badge>}
-                    <Badge className="absolute bottom-3 right-3 bg-primary-foreground/15 text-primary-foreground border-none text-xs">
-                      {inst.mode === "Online" ? <Monitor className="w-3 h-3 mr-1" /> : inst.mode === "Hybrid" ? <Wifi className="w-3 h-3 mr-1" /> : <Building className="w-3 h-3 mr-1" />}
-                      {inst.mode}
-                    </Badge>
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-heading font-semibold text-foreground text-lg mb-1 group-hover:text-primary transition-colors line-clamp-1">{inst.name}</h3>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
-                      <MapPin className="w-3.5 h-3.5" />{inst.city}, {inst.state}
-                    </div>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                        <span className="font-semibold text-foreground">{inst.rating}</span>
-                        <span className="text-xs text-muted-foreground">({inst.total_reviews})</span>
+              <motion.div key={inst.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.03, 0.3) }}>
+                <Link to={`/institute/${inst.slug}`} className="group block bg-card rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-border hover:border-primary/20 overflow-hidden">
+                  <div className="flex flex-col sm:flex-row">
+                    {/* Left: Identity */}
+                    <div className="flex items-center gap-4 p-5 sm:w-80 flex-shrink-0">
+                      <div className="w-14 h-14 rounded-2xl hero-gradient flex items-center justify-center text-primary-foreground flex-shrink-0 shadow-lg">
+                        {inst.logo_url ? (
+                          <img src={inst.logo_url} alt={inst.name} className="w-10 h-10 rounded-xl object-contain" />
+                        ) : (
+                          <span className="font-bold text-lg">{inst.name?.charAt(0)}</span>
+                        )}
                       </div>
-                      {inst.courses?.[0] && <span className="font-heading font-bold text-primary">₹{Number(inst.courses[0].fees).toLocaleString()}</span>}
+                      <div className="min-w-0">
+                        <h2 className="font-heading font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1 text-base">
+                          {inst.name}
+                        </h2>
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                          <MapPin className="w-3 h-3" /> {inst.city}{inst.state ? `, ${inst.state}` : ""}
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-5">
+                            {inst.mode === "Online" ? <Monitor className="w-2.5 h-2.5 mr-0.5" /> : inst.mode === "Hybrid" ? <Wifi className="w-2.5 h-2.5 mr-0.5" /> : <Building className="w-2.5 h-2.5 mr-0.5" />}
+                            {inst.mode}
+                          </Badge>
+                          {inst.featured && <Badge className="text-[10px] py-0 px-1.5 h-5 bg-amber-100 text-amber-800 border-amber-200">Featured</Badge>}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                      <span className="flex items-center gap-1"><Users className="w-3 h-3" /> {inst.students_count}+</span>
-                      <span className="flex items-center gap-1"><TrendingUp className="w-3 h-3" /> {inst.success_rate}%</span>
+
+                    {/* Center: Key Metrics */}
+                    <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4 p-5 sm:border-l border-t sm:border-t-0 border-border bg-muted/20">
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 uppercase tracking-wider font-semibold"><Star className="w-3 h-3" /> Rating</span>
+                        <div className="flex items-center gap-1">
+                          <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                          <p className="text-sm font-bold text-foreground">{inst.rating || "—"}</p>
+                          <span className="text-[10px] text-muted-foreground">({inst.total_reviews || 0})</span>
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 uppercase tracking-wider font-semibold"><TrendingUp className="w-3 h-3" /> Success Rate</span>
+                        <p className="text-sm font-bold text-primary">{inst.success_rate ? `${inst.success_rate}%` : "—"}</p>
+                      </div>
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 uppercase tracking-wider font-semibold"><Users className="w-3 h-3" /> Students</span>
+                        <p className="text-sm font-bold text-foreground">{inst.students_count ? `${inst.students_count}+` : "—"}</p>
+                      </div>
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] text-muted-foreground flex items-center gap-1 uppercase tracking-wider font-semibold"><GraduationCap className="w-3 h-3" /> Courses</span>
+                        <div className="flex flex-wrap gap-1">
+                          {(inst.courses || []).slice(0, 2).map((c: any) => (
+                            <Badge key={c.id} variant="secondary" className="text-[10px] font-medium py-0">{c.name}</Badge>
+                          ))}
+                          {(inst.courses || []).length > 2 && (
+                            <Badge variant="secondary" className="text-[10px] font-medium py-0">+{inst.courses.length - 2}</Badge>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex gap-2 flex-wrap">
-                      {(inst.courses || []).slice(0, 2).map((c: any) => (
-                        <Badge key={c.id} variant="secondary" className="text-xs">{c.name}</Badge>
-                      ))}
-                      {(inst.courses || []).length > 2 && <Badge variant="secondary" className="text-xs">+{inst.courses.length - 2} more</Badge>}
+
+                    {/* Right: CTA */}
+                    <div className="flex items-center justify-center p-5 sm:border-l border-t sm:border-t-0 border-border sm:w-36 flex-shrink-0 bg-muted/10">
+                      <div className="flex flex-col items-center gap-2 text-center">
+                        {inst.courses?.[0]?.fees && (
+                          <span className="font-heading font-bold text-primary text-sm">
+                            Starting {Number(inst.courses[0].fees).toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })}
+                          </span>
+                        )}
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                          <ArrowRight className="w-5 h-5 text-primary group-hover:text-primary-foreground transition-colors" />
+                        </div>
+                        <span className="text-xs text-primary font-bold">View Details</span>
+                      </div>
                     </div>
                   </div>
                 </Link>
               </motion.div>
             ))}
           </div>
+        ) : (
+          <div className="text-center py-20 bg-card rounded-2xl border border-border">
+            <Building2 className="w-16 h-16 text-muted-foreground/15 mx-auto mb-4" />
+            <h3 className="font-heading font-bold text-foreground text-lg mb-2">No coaching institutes found</h3>
+            <p className="text-muted-foreground text-sm">No coaching institutes match your filters{hasLocationFilter ? ` for ${displayName}` : ""}. Try adjusting your selection.</p>
+          </div>
         )}
 
-        {!isLoading && filtered.length === 0 && (
-          <div className="text-center py-16">
-            <p className="text-muted-foreground text-lg">No institutes found matching your criteria.</p>
-            <Button variant="outline" className="mt-4" onClick={clearFilters}>Clear All Filters</Button>
+        {/* Admin content */}
+        {cityPage?.detailed_content && (
+          <div className="mt-12 bg-card rounded-2xl border border-border p-8 shadow-sm prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: cityPage.detailed_content }} />
+        )}
+        {cityPage?.faq_content && (
+          <div className="mt-8 bg-card rounded-2xl border border-border p-8 shadow-sm prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: cityPage.faq_content }} />
+        )}
+
+        {/* Related pages */}
+        {hasLocationFilter && otherPages.length > 0 && (
+          <div className="mt-10 bg-card rounded-2xl border border-border p-8 shadow-sm">
+            <h3 className="font-heading font-bold text-foreground text-lg mb-2">Explore Other Regions</h3>
+            <p className="text-sm text-muted-foreground mb-5">Find MBA coaching institutes in other cities and states across India</p>
+            <div className="flex flex-wrap gap-2">
+              {otherPages.slice(0, 30).map((p: any) => (
+                <Link key={p.slug} to={`/category/${slug || "cat"}?${p.state ? `state=${encodeURIComponent(p.state)}&` : ""}city=${encodeURIComponent(p.name)}`}>
+                  <Badge variant="outline" className="hover:bg-primary hover:text-primary-foreground transition-all duration-200 cursor-pointer py-1.5 px-3 text-xs">
+                    <MapPin className="w-3 h-3 mr-1" /> {p.name}
+                  </Badge>
+                </Link>
+              ))}
+            </div>
           </div>
+        )}
+
+        {(cityPage?.id || category?.id) && (
+          <PageKeywords contentType={cityPage ? "cityPage" : "category"} recordId={cityPage?.id || category?.id} fallbackKeywords={keywords} />
         )}
       </div>
     </div>
