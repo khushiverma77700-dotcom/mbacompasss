@@ -12,6 +12,7 @@ import { useSpecializations } from "@/hooks/useSpecializations";
 import { Skeleton } from "@/components/ui/skeleton";
 import SEOHead, { generateListingSchema } from "@/components/SEOHead";
 import PageKeywords from "@/components/PageKeywords";
+import CollegeListingCard from "@/components/CollegeListingCard";
 import { getLocationImage } from "@/data/cityImages";
 import { FEE_BUCKETS, FEE_BUCKET_LABELS, matchesFeeBucket, getEffectiveFeesLakhs, specMatches } from "@/lib/filterHelpers";
 
@@ -344,105 +345,9 @@ const CollegesPage = () => {
 
         {/* College Cards */}
         <div className="space-y-5">
-          {filtered.map((college: any, i: number) => {
-            const heroImg = college.banner_url || getLocationImage(college.city, college.state);
-            return (
-              <motion.div
-                key={college.id}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: Math.min(i * 0.03, 0.3) }}
-              >
-                <Link
-                  to={`/college/${college.slug}`}
-                  className="group block bg-card rounded-3xl shadow-md hover:shadow-2xl transition-all duration-500 border border-border hover:border-primary/30 overflow-hidden hover:-translate-y-0.5"
-                >
-                  <div className="flex flex-col md:flex-row">
-                    {/* Visual Banner */}
-                    <div className="relative md:w-72 h-48 md:h-auto flex-shrink-0 overflow-hidden">
-                      <img src={heroImg} alt={college.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
-
-                      <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
-                        <div className="flex flex-col gap-1.5">
-                          {college.ranking && (
-                            <span className="inline-flex items-center gap-1 bg-amber-400 text-amber-950 text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-lg uppercase tracking-wider">
-                              <Award className="w-3 h-3 fill-current" /> Rank #{college.ranking}
-                            </span>
-                          )}
-                          {college.type && (
-                            <span className="inline-flex items-center gap-1 bg-white/95 backdrop-blur text-foreground text-[10px] font-bold px-2.5 py-1 rounded-full shadow">
-                              <Building2 className="w-2.5 h-2.5" /> {college.type}
-                            </span>
-                          )}
-                        </div>
-                        {college.established && (
-                          <span className="inline-flex items-center gap-1 bg-black/50 backdrop-blur text-white text-[10px] font-bold px-2.5 py-1 rounded-full">
-                            Est. {college.established}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-white shadow-xl flex items-center justify-center flex-shrink-0 ring-2 ring-white/40">
-                          {college.logo_url ? (
-                            <img src={college.logo_url} alt="" className="w-9 h-9 object-contain" />
-                          ) : (
-                            <GraduationCap className="w-6 h-6 text-primary" />
-                          )}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="font-heading font-extrabold text-white line-clamp-1 text-base drop-shadow-lg">{college.name}</h3>
-                          <div className="flex items-center gap-1 text-xs text-white/90 mt-0.5">
-                            <MapPin className="w-3 h-3" /> {college.city}{college.state ? `, ${college.state}` : ""}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Stat Pills */}
-                    <div className="flex-1 p-5 grid grid-cols-2 lg:grid-cols-4 gap-3 bg-gradient-to-br from-background to-muted/30">
-                      <div className="rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900/40 p-3">
-                        <div className="flex items-center gap-1.5 text-[10px] text-rose-700 dark:text-rose-400 uppercase tracking-wider font-bold mb-1"><IndianRupee className="w-3 h-3" /> Total Fees</div>
-                        <p className="text-sm font-extrabold text-foreground leading-tight">{college.fees || "—"}</p>
-                      </div>
-                      <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 p-3">
-                        <div className="flex items-center gap-1.5 text-[10px] text-emerald-700 dark:text-emerald-400 uppercase tracking-wider font-bold mb-1"><TrendingUp className="w-3 h-3" /> Avg CTC</div>
-                        <p className="text-sm font-extrabold text-foreground leading-tight">{college.placement_avg || "—"}</p>
-                      </div>
-                      <div className="rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/40 p-3">
-                        <div className="flex items-center gap-1.5 text-[10px] text-amber-700 dark:text-amber-400 uppercase tracking-wider font-bold mb-1"><Star className="w-3 h-3" /> Highest CTC</div>
-                        <p className="text-sm font-extrabold text-foreground leading-tight">{college.placement_highest || "—"}</p>
-                      </div>
-                      <div className="rounded-xl bg-violet-50 dark:bg-violet-950/30 border border-violet-100 dark:border-violet-900/40 p-3">
-                        <div className="flex items-center gap-1.5 text-[10px] text-violet-700 dark:text-violet-400 uppercase tracking-wider font-bold mb-1"><Briefcase className="w-3 h-3" /> Exams</div>
-                        <div className="flex flex-wrap gap-1 mt-0.5">
-                          {(college.exams_accepted || []).slice(0, 2).map((exam: string) => (
-                            <Badge key={exam} variant="secondary" className="text-[10px] font-medium py-0 px-1.5">{exam}</Badge>
-                          ))}
-                          {(college.exams_accepted || []).length > 2 && (
-                            <Badge variant="secondary" className="text-[10px] font-medium py-0 px-1.5">+{(college.exams_accepted || []).length - 2}</Badge>
-                          )}
-                          {(!college.exams_accepted || college.exams_accepted.length === 0) && <span className="text-sm font-bold text-foreground">—</span>}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* CTA */}
-                    <div className="flex md:flex-col items-center justify-between md:justify-center gap-3 p-5 md:w-44 flex-shrink-0 bg-gradient-to-b from-primary/5 to-primary/10 border-t md:border-t-0 md:border-l border-border">
-                      <div className="text-center">
-                        <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold block">Compare</span>
-                        <span className="font-heading font-extrabold text-primary text-lg">Now</span>
-                      </div>
-                      <div className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-primary text-primary-foreground font-bold text-xs group-hover:gap-3 transition-all shadow-md">
-                        Explore <ArrowRight className="w-3.5 h-3.5" />
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            );
-          })}
+          {filtered.map((college: any, i: number) => (
+            <CollegeListingCard key={college.id} college={college} index={i} rank={i + 1} />
+          ))}
         </div>
 
         {filtered.length === 0 && (
