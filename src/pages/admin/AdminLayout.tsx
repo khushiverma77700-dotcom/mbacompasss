@@ -69,6 +69,7 @@ const adminNavGroups = [
   {
     label: "System & Admin",
     items: [
+      { label: "Mega Menu", path: "/admin/mega-menu", icon: Menu },
       { label: "Manage Admins", path: "/admin/manage-admins", icon: ShieldCheck },
       { label: "Database Backup", path: "/admin/database-backup", icon: Database },
       { label: "AI & Cloud Usage", path: "/admin/ai-usage", icon: Activity },
