@@ -27,7 +27,7 @@ import defaultCampusImg from "@/assets/cities/default-campus.jpg";
 const UNSPLASH_MUMBAI = "https://images.unsplash.com/photo-1529253355930-ddbe423a2ac7?w=1200&h=600&fit=crop&q=80"; // Gateway of India
 const UNSPLASH_CHENNAI = "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=1200&h=600&fit=crop&q=80"; // Marina Beach Temple
 const UNSPLASH_KOLKATA = "https://images.unsplash.com/photo-1536421469767-80559bb6f5e1?w=1200&h=600&fit=crop&q=80"; // Victoria Memorial
-const UNSPLASH_HYDERABAD = "https://images.unsplash.com/photo-1572695157366-5e585ab2b69f?w=1200&h=600&fit=crop&q=80"; // Charminar
+
 const UNSPLASH_JAIPUR = "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=1200&h=600&fit=crop&q=80"; // Hawa Mahal
 const UNSPLASH_LUCKNOW = "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1200&h=600&fit=crop&q=80"; // Bara Imambara
 const UNSPLASH_CHANDIGARH = "https://images.unsplash.com/photo-1614082242765-7c98ca0f3df3?w=1200&h=600&fit=crop&q=80"; // Rock Garden
