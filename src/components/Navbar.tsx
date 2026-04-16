@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, LogIn, LogOut, Shield, LayoutDashboard, ChevronDown, ChevronRight } from "lucide-react";
+import { Menu, X, LogIn, LogOut, Shield, LayoutDashboard, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import SmartSearch from "@/components/SmartSearch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
-import NavMegaMenu, { collegeMenuColumns, coachingMenuColumns } from "@/components/NavMegaMenu";
+import NavMegaMenu, { MobileMegaMenu } from "@/components/NavMegaMenu";
 import mbahubLogo from "@/assets/mbahub-logo-sm.png";
 
 const Navbar = () => {
@@ -25,7 +25,6 @@ const Navbar = () => {
     setIsSigningOut(true);
     setShowSignOutDialog(false);
     setMobileOpen(false);
-
     signOut().finally(() => {
       setIsSigningOut(false);
       navigate("/auth", { replace: true });
@@ -66,8 +65,8 @@ const Navbar = () => {
             Home
           </Link>
 
-          <NavMegaMenu label="Colleges" columns={collegeMenuColumns} />
-          <NavMegaMenu label="Coaching" columns={coachingMenuColumns} />
+          <NavMegaMenu label="Colleges" menuType="college" />
+          <NavMegaMenu label="Coaching" menuType="coaching" />
 
           <Link
             to="/blog"
@@ -129,7 +128,6 @@ const Navbar = () => {
               Home
             </Link>
 
-            {/* Mobile College Dropdown */}
             <button
               onClick={() => setMobileCollegeOpen(!mobileCollegeOpen)}
               className="flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground"
@@ -137,22 +135,8 @@ const Navbar = () => {
               Colleges
               <ChevronDown className={`w-4 h-4 transition-transform ${mobileCollegeOpen ? "rotate-180" : ""}`} />
             </button>
-            {mobileCollegeOpen && (
-              <div className="ml-3 pl-3 border-l-2 border-primary/20 space-y-3 py-2">
-                {collegeMenuColumns.map((col) => (
-                  <div key={col.title}>
-                    <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">{col.title}</p>
-                    {col.links.map((link) => (
-                      <Link key={link.path} to={link.path} onClick={closeMobile} className="block px-2 py-1.5 text-sm text-muted-foreground hover:text-primary">
-                        {link.label}
-                      </Link>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )}
+            {mobileCollegeOpen && <MobileMegaMenu menuType="college" onNavigate={closeMobile} />}
 
-            {/* Mobile Coaching Dropdown */}
             <button
               onClick={() => setMobileCoachingOpen(!mobileCoachingOpen)}
               className="flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground"
@@ -160,20 +144,7 @@ const Navbar = () => {
               Coaching
               <ChevronDown className={`w-4 h-4 transition-transform ${mobileCoachingOpen ? "rotate-180" : ""}`} />
             </button>
-            {mobileCoachingOpen && (
-              <div className="ml-3 pl-3 border-l-2 border-primary/20 space-y-3 py-2">
-                {coachingMenuColumns.map((col) => (
-                  <div key={col.title}>
-                    <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">{col.title}</p>
-                    {col.links.map((link) => (
-                      <Link key={link.path} to={link.path} onClick={closeMobile} className="block px-2 py-1.5 text-sm text-muted-foreground hover:text-primary">
-                        {link.label}
-                      </Link>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )}
+            {mobileCoachingOpen && <MobileMegaMenu menuType="coaching" onNavigate={closeMobile} />}
 
             <Link to="/blog" onClick={closeMobile} className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground">
               Blogs
