@@ -1,0 +1,390 @@
+import { useMemo, useCallback } from "react";
+import { INDIAN_STATES, getCitiesForState } from "@/data/indianLocations";
+import { Link, useSearchParams } from "react-router-dom";
+import { MapPin, Search, Users, TrendingUp, GraduationCap, Award, ChevronRight, ArrowRight, Building2, Filter, Star, Monitor, Building, Wifi, X } from "lucide-react";
+import { motion } from "framer-motion";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useInstitutes, useCategories } from "@/hooks/useInstitutes";
+import { Skeleton } from "@/components/ui/skeleton";
+import SEOHead from "@/components/SEOHead";
+import PageKeywords from "@/components/PageKeywords";
+
+const modes = ["Online", "Offline", "Hybrid"];
+
+const CoachingPage = () => {
+  const { data: allInstitutes = [], isLoading } = useInstitutes();
+  const { data: categories = [] } = useCategories();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Read filters from URL
+  const search = searchParams.get("q") || "";
+  const selectedState = searchParams.get("state") || "all";
+  const selectedCity = searchParams.get("city") || "all";
+  const selectedMode = searchParams.get("mode") || "all";
+  const selectedCategory = searchParams.get("category") || "all";
+  const sortBy = searchParams.get("sort") || "rating";
+
+  const setFilter = useCallback((key: string, value: string) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (value === "all" || value === "" || value === "rating") {
+        next.delete(key);
+      } else {
+        next.set(key, value);
+      }
+      if (key === "state") next.delete("city");
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const removeFilter = useCallback((key: string) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.delete(key);
+      if (key === "state") next.delete("city");
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const clearAllFilters = useCallback(() => {
+    setSearchParams({}, { replace: true });
+  }, [setSearchParams]);
+
+  const states = useMemo(() => INDIAN_STATES.filter(s => allInstitutes.some((i: any) => i.state === s)), [allInstitutes]);
+  const citiesForState = useMemo(() =>
+    selectedState !== "all"
+      ? getCitiesForState(selectedState).filter(c => allInstitutes.some((i: any) => i.city === c))
+      : [...new Set(allInstitutes.map((i: any) => i.city).filter(Boolean))].sort() as string[],
+    [allInstitutes, selectedState]
+  );
+  const allCities = useMemo(() => [...new Set(allInstitutes.map((i: any) => i.city).filter(Boolean))].sort() as string[], [allInstitutes]);
+
+  const filtered = useMemo(() => {
+    let list = [...allInstitutes] as any[];
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter((i) =>
+        i.name.toLowerCase().includes(q) ||
+        (i.city || "").toLowerCase().includes(q) ||
+        (i.state || "").toLowerCase().includes(q)
+      );
+    }
+    if (selectedCity !== "all") list = list.filter((i) => i.city === selectedCity);
+    if (selectedState !== "all") list = list.filter((i) => i.state === selectedState);
+    if (selectedMode !== "all") list = list.filter((i) => i.mode === selectedMode);
+    if (selectedCategory !== "all") {
+      const cat = categories.find((c: any) => c.slug === selectedCategory);
+      if (cat) list = list.filter((i: any) => i.category_id === cat.id);
+    }
+    if (sortBy === "rating") list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    if (sortBy === "reviews") list.sort((a, b) => (b.total_reviews || 0) - (a.total_reviews || 0));
+    if (sortBy === "success") list.sort((a, b) => (b.success_rate || 0) - (a.success_rate || 0));
+    if (sortBy === "fees-low") {
+      list.sort((a, b) => {
+        const aFee = Math.min(...(a.courses || []).map((c: any) => Number(c.fees) || 0), Infinity);
+        const bFee = Math.min(...(b.courses || []).map((c: any) => Number(c.fees) || 0), Infinity);
+        return aFee - bFee;
+      });
+    }
+    return list;
+  }, [allInstitutes, search, selectedCity, selectedState, selectedMode, selectedCategory, sortBy, categories]);
+
+  // Active filters chips
+  const activeFilters = useMemo(() => {
+    const chips: { key: string; label: string }[] = [];
+    if (selectedState !== "all") chips.push({ key: "state", label: selectedState });
+    if (selectedCity !== "all") chips.push({ key: "city", label: selectedCity });
+    if (selectedMode !== "all") chips.push({ key: "mode", label: selectedMode });
+    if (selectedCategory !== "all") {
+      const cat = categories.find((c: any) => c.slug === selectedCategory);
+      chips.push({ key: "category", label: cat?.name || selectedCategory });
+    }
+    if (search) chips.push({ key: "q", label: `"${search}"` });
+    return chips;
+  }, [selectedState, selectedCity, selectedMode, selectedCategory, search, categories]);
+
+  // Dynamic SEO
+  const dynamicH1 = useMemo(() => {
+    const parts = ["Best MBA Coaching Institutes"];
+    if (selectedCity !== "all") parts.push(`in ${selectedCity}`);
+    else if (selectedState !== "all") parts.push(`in ${selectedState}`);
+    else parts.push("in India");
+    return parts.join(" ");
+  }, [selectedState, selectedCity]);
+
+  const dynamicTitle = useMemo(() => {
+    const cat = selectedCategory !== "all" ? (categories.find((c: any) => c.slug === selectedCategory)?.name + " " || "") : "";
+    const location = selectedCity !== "all" ? selectedCity : selectedState !== "all" ? selectedState : "India";
+    const mode = selectedMode !== "all" ? ` (${selectedMode})` : "";
+    return `Best ${cat}MBA Coaching Institutes in ${location}${mode} 2026 | BSchoolBuzz.com`;
+  }, [selectedState, selectedCity, selectedMode, selectedCategory, categories]);
+
+  const dynamicDescription = useMemo(() => {
+    const location = selectedCity !== "all" ? selectedCity : selectedState !== "all" ? selectedState : "India";
+    return `Compare ${filtered.length} MBA coaching institutes in ${location}. Ratings, fees, success rates, and reviews.`;
+  }, [selectedState, selectedCity, filtered.length]);
+
+  const totalInstitutes = allInstitutes.length;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="hero-gradient py-14 md:py-20"><div className="container mx-auto px-4 text-center"><Skeleton className="h-12 w-96 mx-auto bg-white/20" /></div></div>
+        <div className="container mx-auto px-4 py-8 space-y-4">
+          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-36 rounded-2xl" />)}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SEOHead
+        title={dynamicTitle}
+        description={dynamicDescription}
+        keywords={["MBA coaching India", "best MBA coaching institutes", "CAT coaching", "MBA preparation"]}
+        canonical="https://bschoolbuzz.com/coaching"
+      />
+
+      {/* Breadcrumb */}
+      <nav className="container mx-auto px-4 pt-4" aria-label="Breadcrumb">
+        <ol className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <li><Link to="/" className="hover:text-primary transition-colors">Home</Link></li>
+          <li className="flex items-center gap-1.5"><ChevronRight className="w-3 h-3" /><span className="text-foreground font-medium">Coaching</span></li>
+        </ol>
+      </nav>
+
+      {/* Hero */}
+      <div className="hero-gradient py-14 md:py-20 mt-2 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
+        </div>
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-5 border border-white/10">
+              <Award className="w-3.5 h-3.5 text-primary-foreground" />
+              <span className="text-sm font-medium text-primary-foreground">Updated for 2026 Season</span>
+            </div>
+            <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-extrabold text-primary-foreground mb-4 tracking-tight leading-tight">
+              {dynamicH1}
+            </h1>
+            <p className="text-primary-foreground/75 mb-8 max-w-2xl mx-auto text-base md:text-lg">
+              Compare {totalInstitutes}+ coaching institutes — ratings, fees, success rates & student reviews
+            </p>
+          </motion.div>
+
+          {/* Quick Stats */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-3xl mx-auto mb-8">
+            {[
+              { label: "Total Institutes", value: `${totalInstitutes}+`, icon: Building2, color: "from-blue-500/20 to-blue-600/20" },
+              { label: "Categories", value: String(categories.length), icon: Award, color: "from-amber-500/20 to-amber-600/20" },
+              { label: "Cities", value: `${allCities.length}+`, icon: MapPin, color: "from-emerald-500/20 to-emerald-600/20" },
+              { label: "States", value: `${states.length}+`, icon: GraduationCap, color: "from-purple-500/20 to-purple-600/20" },
+            ].map((stat) => (
+              <div key={stat.label} className={`bg-gradient-to-br ${stat.color} backdrop-blur-md rounded-2xl p-4 text-center border border-white/10`}>
+                <stat.icon className="w-5 h-5 text-primary-foreground/80 mx-auto mb-2" />
+                <p className="font-heading font-extrabold text-primary-foreground text-2xl">{stat.value}</p>
+                <p className="text-primary-foreground/60 text-xs">{stat.label}</p>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-8">
+        {/* Filters Card */}
+        <div className="bg-card rounded-2xl border border-border p-5 mb-8 shadow-lg -mt-8 relative z-10">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Filter className="w-4 h-4 text-primary" />
+            </div>
+            <span className="text-sm font-bold text-foreground">Filter & Search</span>
+            <span className="ml-auto text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full font-medium">{filtered.length} results</span>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input placeholder="Search by name, city, or state..." value={search} onChange={(e) => setFilter("q", e.target.value)} className="pl-9 rounded-xl" />
+            </div>
+            <Select value={selectedState} onValueChange={(v) => setFilter("state", v)}>
+              <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="State" /></SelectTrigger>
+              <SelectContent><SelectItem value="all">All States</SelectItem>{states.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+            </Select>
+            <Select value={selectedCity} onValueChange={(v) => setFilter("city", v)}>
+              <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="City" /></SelectTrigger>
+              <SelectContent><SelectItem value="all">All Cities</SelectItem>{citiesForState.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+            </Select>
+            <Select value={selectedMode} onValueChange={(v) => setFilter("mode", v)}>
+              <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="Mode" /></SelectTrigger>
+              <SelectContent><SelectItem value="all">All Modes</SelectItem>{modes.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={(v) => setFilter("sort", v)}>
+              <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="Sort" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rating">Highest Rated</SelectItem>
+                <SelectItem value="fees-low">Fees: Low to High</SelectItem>
+                <SelectItem value="reviews">Most Reviews</SelectItem>
+                <SelectItem value="success">Success Rate</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Category Tabs */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setFilter("category", "all")}
+              className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                selectedCategory === "all"
+                  ? "bg-primary text-primary-foreground shadow-md scale-[1.02]"
+                  : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              <Building2 className="w-3.5 h-3.5" /> All Coaching
+            </button>
+            {categories.map((cat: any) => (
+              <button
+                key={cat.slug}
+                onClick={() => setFilter("category", cat.slug)}
+                className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                  selectedCategory === cat.slug
+                    ? "bg-primary text-primary-foreground shadow-md scale-[1.02]"
+                    : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Active Filters Bar */}
+          {activeFilters.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-border">
+              <span className="text-xs font-semibold text-muted-foreground">Active:</span>
+              {activeFilters.map((f) => (
+                <button
+                  key={f.key}
+                  onClick={() => removeFilter(f.key)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+                >
+                  {f.label}
+                  <X className="w-3 h-3" />
+                </button>
+              ))}
+              <button onClick={clearAllFilters} className="text-xs text-muted-foreground hover:text-foreground underline ml-1">
+                Clear All
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Institute Cards */}
+        <div className="space-y-4">
+          {filtered.map((inst: any, i: number) => (
+            <motion.div
+              key={inst.id}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: Math.min(i * 0.03, 0.3) }}
+            >
+              <Link
+                to={`/institute/${inst.slug}`}
+                className="group block bg-card rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-border hover:border-primary/20 overflow-hidden"
+              >
+                <div className="flex flex-col sm:flex-row">
+                  {/* Left: Identity */}
+                  <div className="flex items-center gap-4 p-5 sm:w-80 flex-shrink-0">
+                    <div className="w-14 h-14 rounded-2xl hero-gradient flex items-center justify-center text-primary-foreground flex-shrink-0 shadow-lg">
+                      {inst.logo_url ? (
+                        <img src={inst.logo_url} alt={inst.name} className="w-10 h-10 rounded-xl object-contain" />
+                      ) : (
+                        <span className="font-bold text-lg">{inst.name?.charAt(0)}</span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-heading font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1 text-base">
+                        {inst.name}
+                      </h3>
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                        <MapPin className="w-3 h-3" /> {inst.city}{inst.state ? `, ${inst.state}` : ""}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <Badge variant="outline" className="text-[10px] py-0 px-1.5 h-5">
+                          {inst.mode === "Online" ? <Monitor className="w-2.5 h-2.5 mr-0.5" /> : inst.mode === "Hybrid" ? <Wifi className="w-2.5 h-2.5 mr-0.5" /> : <Building className="w-2.5 h-2.5 mr-0.5" />}
+                          {inst.mode}
+                        </Badge>
+                        {inst.featured && <Badge className="text-[10px] py-0 px-1.5 h-5 bg-amber-100 text-amber-800 border-amber-200">Featured</Badge>}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Center: Key Metrics */}
+                  <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-4 p-5 sm:border-l border-t sm:border-t-0 border-border bg-muted/20">
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-1 uppercase tracking-wider font-semibold"><Star className="w-3 h-3" /> Rating</span>
+                      <div className="flex items-center gap-1">
+                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        <p className="text-sm font-bold text-foreground">{inst.rating || "—"}</p>
+                        <span className="text-[10px] text-muted-foreground">({inst.total_reviews || 0})</span>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-1 uppercase tracking-wider font-semibold"><TrendingUp className="w-3 h-3" /> Success Rate</span>
+                      <p className="text-sm font-bold text-primary">{inst.success_rate ? `${inst.success_rate}%` : "—"}</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-1 uppercase tracking-wider font-semibold"><Users className="w-3 h-3" /> Students</span>
+                      <p className="text-sm font-bold text-foreground">{inst.students_count ? `${inst.students_count}+` : "—"}</p>
+                    </div>
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-1 uppercase tracking-wider font-semibold"><GraduationCap className="w-3 h-3" /> Courses</span>
+                      <div className="flex flex-wrap gap-1">
+                        {(inst.courses || []).slice(0, 2).map((c: any) => (
+                          <Badge key={c.id} variant="secondary" className="text-[10px] font-medium py-0">{c.name}</Badge>
+                        ))}
+                        {(inst.courses || []).length > 2 && (
+                          <Badge variant="secondary" className="text-[10px] font-medium py-0">+{inst.courses.length - 2}</Badge>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right: CTA */}
+                  <div className="flex items-center justify-center p-5 sm:border-l border-t sm:border-t-0 border-border sm:w-36 flex-shrink-0 bg-muted/10">
+                    <div className="flex flex-col items-center gap-2 text-center">
+                      {inst.courses?.[0]?.fees && (
+                        <span className="font-heading font-bold text-primary text-sm">
+                          Starting {Number(inst.courses[0].fees).toLocaleString("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 })}
+                        </span>
+                      )}
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                        <ArrowRight className="w-5 h-5 text-primary group-hover:text-primary-foreground transition-colors" />
+                      </div>
+                      <span className="text-xs text-primary font-bold">View Details</span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+
+        {filtered.length === 0 && (
+          <div className="text-center py-24 bg-card rounded-2xl border border-border">
+            <Building2 className="w-16 h-16 text-muted-foreground/15 mx-auto mb-4" />
+            <h3 className="font-heading font-bold text-foreground text-lg mb-2">No institutes found</h3>
+            <p className="text-sm text-muted-foreground">Try adjusting your filters or search criteria</p>
+            <button onClick={clearAllFilters} className="mt-4 text-sm text-primary font-medium hover:underline">Clear All Filters</button>
+          </div>
+        )}
+
+        <PageKeywords contentType="static" recordId="coaching" fallbackKeywords={["MBA coaching India", "CAT coaching institutes", "best MBA coaching"]} />
+      </div>
+    </div>
+  );
+};
+
+export default CoachingPage;
