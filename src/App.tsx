@@ -30,6 +30,7 @@ const ContactPage = lazy(() => import("./pages/ContactPage"));
 const DashboardPage = lazy(() => import("./pages/DashboardPage"));
 const CollegeDetailPage = lazy(() => import("./pages/CollegeDetailPage"));
 const CollegeFilterPage = lazy(() => import("./pages/CollegeFilterPage"));
+const CoachingFilterPage = lazy(() => import("./pages/CoachingFilterPage"));
 const ProfileAnalyzerPage = lazy(() => import("./pages/ProfileAnalyzerPage"));
 const CollegeFinderPage = lazy(() => import("./pages/CollegeFinderPage"));
 const CollegeShortlisterPage = lazy(() => import("./pages/CollegeShortlisterPage"));
