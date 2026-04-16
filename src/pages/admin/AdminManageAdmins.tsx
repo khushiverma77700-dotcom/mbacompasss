@@ -167,7 +167,46 @@ const AdminManageAdmins = () => {
           {loading ? (<div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
           ) : admins.length === 0 ? (<p className="text-sm text-muted-foreground text-center py-8">No admin permission records yet. All admins currently have full access.</p>
           ) : (
-             <AdminsTable admins={admins} onEdit={openEdit} onDelete={handleDelete} />
+             (() => {
+               const { sortedItems, sortConfig, handleSort } = useTableSort(admins);
+               return (
+                 <Table>
+                   <TableHeader><TableRow>
+                     <SortableTableHead label="Name" sortKey="display_name" sortConfig={sortConfig} onSort={handleSort} />
+                     <SortableTableHead label="Email" sortKey="email" sortConfig={sortConfig} onSort={handleSort} />
+                     <TableHead>Sections Access</TableHead>
+                     <SortableTableHead label="Created" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} />
+                     <TableHead className="w-[100px]">Actions</TableHead>
+                   </TableRow></TableHeader>
+                   <TableBody>
+                     {sortedItems.map(admin => (
+                       <TableRow key={admin.id}>
+                         <TableCell className="font-medium">{admin.display_name}</TableCell>
+                         <TableCell className="text-muted-foreground">{admin.email}</TableCell>
+                         <TableCell>
+                           <div className="flex flex-wrap gap-1 max-w-[300px]">
+                             {admin.allowed_sections.length === ADMIN_SECTIONS.length ? (
+                               <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"><Unlock className="w-3 h-3 mr-1" /> Full Access</Badge>
+                             ) : (<>
+                               <Badge variant="secondary" className="text-xs">{admin.allowed_sections.length}/{ADMIN_SECTIONS.length} sections</Badge>
+                               {admin.allowed_sections.slice(0, 3).map(path => { const section = ADMIN_SECTIONS.find(s => s.path === path); return section ? <Badge key={path} variant="outline" className="text-[10px]">{section.label}</Badge> : null; })}
+                               {admin.allowed_sections.length > 3 && <Badge variant="outline" className="text-[10px]">+{admin.allowed_sections.length - 3} more</Badge>}
+                             </>)}
+                           </div>
+                         </TableCell>
+                         <TableCell className="text-muted-foreground text-xs">{new Date(admin.created_at).toLocaleDateString()}</TableCell>
+                         <TableCell>
+                           <div className="flex gap-1">
+                             <Button size="sm" variant="ghost" onClick={() => openEdit(admin)}><Pencil className="w-3.5 h-3.5" /></Button>
+                             <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDelete(admin)}><Trash2 className="w-3.5 h-3.5" /></Button>
+                           </div>
+                         </TableCell>
+                       </TableRow>
+                     ))}
+                   </TableBody>
+                 </Table>
+               );
+             })()
           )}
         </CardContent>
       </Card>
