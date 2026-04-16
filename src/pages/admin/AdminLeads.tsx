@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Download, Users, Search, Calendar } from "lucide-react";
 import { format } from "date-fns";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 
 interface Lead {
   id: string;
