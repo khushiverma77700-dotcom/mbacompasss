@@ -42,7 +42,7 @@ const AdminColleges = () => {
   const { toast } = useToast();
 
   const fetchColleges = async () => {
-    const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, tier, college_category, ranking, established").order("ranking", { ascending: true });
+    const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, tier, college_category, ranking, established, created_at").order("ranking", { ascending: true });
     if (data) setColleges(data);
   };
 
