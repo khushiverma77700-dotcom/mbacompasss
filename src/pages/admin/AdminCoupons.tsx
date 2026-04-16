@@ -15,6 +15,7 @@ type Coupon = {
   id: string; code: string; description: string | null; discount_text: string | null;
   institute_id: string | null; active: boolean | null; max_uses: number | null;
   current_uses: number | null; valid_from: string | null; valid_until: string | null;
+  created_at: string;
 };
 
 type CouponClaim = {
