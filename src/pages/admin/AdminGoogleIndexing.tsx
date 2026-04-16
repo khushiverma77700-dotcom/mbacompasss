@@ -992,6 +992,7 @@ const AdminGoogleIndexing = () => {
                   <TableBody>
                     {sortedFiltered.map((row, idx) => (
                       <TableRow key={row.id} className="group align-top">
+                        <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                         <TableCell className="max-w-[300px]">
                           <a
                             href={row.url}
@@ -1013,9 +1014,6 @@ const AdminGoogleIndexing = () => {
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                           {formatTime(row.updated_at || row.last_submitted_at || row.created_at)}
-                        </TableCell>
-                        <TableCell className="text-xs font-medium whitespace-nowrap">
-                          {formatDuration(row.last_submitted_at, row.indexed_at)}
                         </TableCell>
                         <TableCell className="text-xs text-center">{row.retry_count}</TableCell>
                         <TableCell className="max-w-[240px]">
