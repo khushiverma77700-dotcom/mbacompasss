@@ -7,19 +7,23 @@ import PageKeywords from "@/components/PageKeywords";
 const AboutPage = () => (
   <div className="min-h-screen bg-background">
     <SEOHead
-      title="About BSchoolBuzz.com — India's #1 MBA Coaching Comparison Platform"
-      description="Learn about BSchoolBuzz.com, India's leading platform to find, compare & review the best MBA coaching institutes for CAT, GMAT, XAT, SNAP & GRE preparation."
-      keywords={["about best MBA coaching", "MBA coaching platform", "MBA coaching comparison India", "best MBA coaching website"]}
+      title="About BSchoolBuzz — India's Leading MBA Admissions & Coaching Platform"
+      description="Learn about BSchoolBuzz.com, India's leading platform connecting MBA aspirants to top B-schools and coaching institutes. Our mission to simplify management education."
+      keywords={[
+        "about B-School Buzz", "MBA portal mission", "MBA education vision", "B-school buzz story",
+        "India's leading platform for MBA aspirants", "connecting students to top MBA colleges in India",
+        "our approach to MBA counseling and data", "professional mission of B-School Buzz team",
+      ]}
       canonical="https://bschoolbuzz.com/about"
       jsonLd={{
         "@context": "https://schema.org",
         "@type": "AboutPage",
         name: "About BSchoolBuzz.com",
         url: "https://bschoolbuzz.com/about",
-        description: "India's leading platform to find and compare the best MBA coaching institutes",
+        description: "India's leading platform to find, compare MBA coaching institutes and top B-schools",
         mainEntity: {
           "@type": "Organization",
-          name: "Best MBA Coaching",
+          name: "BSchoolBuzz",
           url: "https://bschoolbuzz.com",
         },
       }}

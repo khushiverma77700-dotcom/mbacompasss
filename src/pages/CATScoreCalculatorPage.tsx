@@ -287,8 +287,16 @@ const CATScoreCalculatorPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="CAT Score Calculator 2025 - Free Instant Percentile & Score Analysis"
-        description="Free CAT 2025 Score Calculator — paste your response sheet HTML for instant score, section-wise VARC DILR QA analysis, accuracy metrics, percentile prediction, AI insights, peer comparison. Trusted by 17,000+ MBA aspirants."
+        title="CAT Score Calculator 2026 — Free Instant Percentile & Score Analysis | BSchoolBuzz"
+        description="Free CAT 2026 Score Calculator. Paste your response sheet for instant score, section-wise VARC DILR QA analysis, accuracy metrics, percentile prediction, AI insights. Trusted by 17,000+ MBA aspirants."
+        keywords={[
+          "CAT score calculator", "percentile predictor", "CAT 2026 score", "exam score tool", "CAT marks vs percentile",
+          "expected CAT percentile for 90 marks", "CAT score to percentile converter",
+          "how to calculate CAT score from response sheet", "IIM call predictor based on CAT score",
+          "CAT score vs percentile analysis last 5 years", "predict your IIM calls after CAT",
+          "calculate sectional percentile for CAT exam",
+        ]}
+        canonical="https://bschoolbuzz.com/cat-score-calculator"
       />
       <LoginRequiredDialog open={showLoginDialog} onOpenChange={setShowLoginDialog}
         message="Sign in to calculate your CAT score. Your name, email, and phone number are required." />
