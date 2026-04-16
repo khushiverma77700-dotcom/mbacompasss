@@ -400,10 +400,14 @@ const AdminGoogleIndexing = () => {
     return data as T;
   };
 
+  const pushLog = (msg: string) => setActionLog(prev => [`[${new Date().toLocaleTimeString("en-IN")}] ${msg}`, ...prev].slice(0, 30));
+
   const handleDiscover = async () => {
     setActionLoading("discover");
+    pushLog("Scanning database for new URLs...");
     try {
       const result = await callFunction<{ discovered: number }>({ action: "discover" });
+      pushLog(`Discovery complete: ${result.discovered} new URLs found`);
       toast({
         title: "Discovery complete",
         description: `${result.discovered} new URLs found`,
@@ -411,6 +415,7 @@ const AdminGoogleIndexing = () => {
       await fetchData(false);
     } catch (error: any) {
       const { message } = extractRequestError(error);
+      pushLog(`Discovery failed: ${message}`);
       toast({ title: "Error", description: message, variant: "destructive" });
     }
     setActionLoading(null);
