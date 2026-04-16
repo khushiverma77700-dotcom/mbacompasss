@@ -53,6 +53,7 @@ const AdminManageAdmins = () => {
   const [formEmail, setFormEmail] = useState("");
   const [formSections, setFormSections] = useState<string[]>([]);
   const { toast } = useToast();
+  const { sortedItems: sortedAdmins, sortConfig, handleSort } = useTableSort(admins);
 
   const fetchAdmins = async () => {
     setLoading(true);
@@ -167,10 +168,7 @@ const AdminManageAdmins = () => {
           {loading ? (<div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
           ) : admins.length === 0 ? (<p className="text-sm text-muted-foreground text-center py-8">No admin permission records yet. All admins currently have full access.</p>
           ) : (
-             (() => {
-               const { sortedItems, sortConfig, handleSort } = useTableSort(admins);
-               return (
-                 <Table>
+             <Table>
                    <TableHeader><TableRow>
                      <SortableTableHead label="Name" sortKey="display_name" sortConfig={sortConfig} onSort={handleSort} />
                      <SortableTableHead label="Email" sortKey="email" sortConfig={sortConfig} onSort={handleSort} />
@@ -179,7 +177,7 @@ const AdminManageAdmins = () => {
                      <TableHead className="w-[100px]">Actions</TableHead>
                    </TableRow></TableHeader>
                    <TableBody>
-                     {sortedItems.map(admin => (
+                     {sortedAdmins.map(admin => (
                        <TableRow key={admin.id}>
                          <TableCell className="font-medium">{admin.display_name}</TableCell>
                          <TableCell className="text-muted-foreground">{admin.email}</TableCell>
@@ -205,8 +203,6 @@ const AdminManageAdmins = () => {
                      ))}
                    </TableBody>
                  </Table>
-               );
-             })()
           )}
         </CardContent>
       </Card>
