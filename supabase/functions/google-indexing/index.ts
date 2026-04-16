@@ -701,6 +701,19 @@ Deno.serve(async (req) => {
         sharedError = error;
       }
 
+      if (!accessToken && sharedError) {
+        return respond({
+          ok: false,
+          error: sharedError?.message || "Google Indexing authentication failed",
+          diagnostics: {
+            action,
+            error_stage: sharedError?.stage || "auth_issue",
+            processing_time_ms: Date.now() - startedAt,
+            ...(sharedError?.details || {}),
+          },
+        });
+      }
+
       const results: any[] = [];
       let successCount = 0;
 
@@ -800,6 +813,19 @@ Deno.serve(async (req) => {
         accessToken = await getToken();
       } catch (tokenError: any) {
         sharedError = tokenError;
+      }
+
+      if (!accessToken && sharedError) {
+        return respond({
+          ok: false,
+          error: sharedError?.message || "Google Indexing authentication failed",
+          diagnostics: {
+            action,
+            error_stage: sharedError?.stage || "auth_issue",
+            processing_time_ms: Date.now() - startedAt,
+            ...(sharedError?.details || {}),
+          },
+        });
       }
 
       const results: any[] = [];
