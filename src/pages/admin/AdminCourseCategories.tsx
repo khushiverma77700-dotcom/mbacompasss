@@ -94,6 +94,8 @@ const AdminCourseCategories = () => {
     );
   }
 
+  const { sortedItems: sortedCategories, sortConfig, handleSort } = useTableSort(categories);
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -106,10 +108,14 @@ const AdminCourseCategories = () => {
       <Card><CardContent className="p-0">
         <Table>
           <TableHeader><TableRow>
-            <TableHead className="w-12">#</TableHead><TableHead>Name</TableHead><TableHead>Slug</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead>
+            <TableHead className="w-12">#</TableHead>
+            <SortableTableHead label="Name" sortKey="name" sortConfig={sortConfig} onSort={handleSort} />
+            <SortableTableHead label="Slug" sortKey="slug" sortConfig={sortConfig} onSort={handleSort} />
+            <SortableTableHead label="Status" sortKey="active" sortConfig={sortConfig} onSort={handleSort} />
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {categories.map((c, idx) => (
+            {sortedCategories.map((c, idx) => (
               <TableRow key={c.id}>
                 <TableCell className="text-muted-foreground"><div className="flex items-center gap-1"><GripVertical className="w-3.5 h-3.5 text-muted-foreground/50" />{idx + 1}</div></TableCell>
                 <TableCell className="font-medium text-foreground">{c.name}</TableCell>

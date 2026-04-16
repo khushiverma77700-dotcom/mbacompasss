@@ -116,6 +116,8 @@ const AdminCoachingOfWeek = () => {
     );
   }
 
+  const { sortedItems: sortedItems, sortConfig, handleSort } = useTableSort(items);
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -125,23 +127,30 @@ const AdminCoachingOfWeek = () => {
       <Card><CardContent className="p-0">
         <Table>
           <TableHeader><TableRow>
-            <TableHead>Institute</TableHead><TableHead>Headline</TableHead><TableHead>Coupon</TableHead><TableHead>Offer</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead>
+            <SortableTableHead label="Institute" sortKey="institute_id" sortConfig={sortConfig} onSort={handleSort} />
+            <SortableTableHead label="Headline" sortKey="headline" sortConfig={sortConfig} onSort={handleSort} />
+            <TableHead>Coupon</TableHead>
+            <TableHead>Offer</TableHead>
+            <SortableTableHead label="Status" sortKey="active" sortConfig={sortConfig} onSort={handleSort} />
+            <SortableTableHead label="Created" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} />
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {items.map((item) => (
+            {sortedItems.map((item) => (
               <TableRow key={item.id}>
                 <TableCell className="font-medium">{(item as any).institutes?.name || "—"}</TableCell>
                 <TableCell>{item.headline}</TableCell>
                 <TableCell>{(item as any).coupon_code ? <Badge variant="outline" className="font-mono">{(item as any).coupon_code}</Badge> : "—"}</TableCell>
                 <TableCell>{item.offer_text || "—"}</TableCell>
                 <TableCell><Badge variant={item.active ? "default" : "secondary"}>{item.active ? "Active" : "Inactive"}</Badge></TableCell>
+                <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(item.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</TableCell>
                 <TableCell className="text-right space-x-1">
                   <Button variant="ghost" size="sm" onClick={() => handleEdit(item.id)}><Pencil className="w-4 h-4" /></Button>
                   <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                 </TableCell>
               </TableRow>
             ))}
-            {items.length === 0 && (<TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No entries yet</TableCell></TableRow>)}
+            {items.length === 0 && (<TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No entries yet</TableCell></TableRow>)}
           </TableBody>
         </Table>
       </CardContent></Card>

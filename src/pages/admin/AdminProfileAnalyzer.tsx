@@ -92,6 +92,8 @@ const AdminProfileAnalyzer = () => {
     });
   }, [leads, search, examFilter, dateFrom, dateTo, activeTab]);
 
+  const { sortedItems: sortedFiltered, sortConfig, handleSort } = useTableSort(filtered);
+
   const stats = useMemo(() => {
     const total = leads.length;
     const unlocked = leads.filter((l) => l.report_unlocked).length;
@@ -225,22 +227,22 @@ const AdminProfileAnalyzer = () => {
             <div className="border rounded-lg overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Score</TableHead>
-                    <TableHead>Exam</TableHead>
-                    <TableHead>Stream</TableHead>
-                    <TableHead>City</TableHead>
-                    <TableHead>Experience</TableHead>
-                    <TableHead>Budget</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
+                   <TableRow>
+                     <SortableTableHead label="Date" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} />
+                     <SortableTableHead label="Name" sortKey="name" sortConfig={sortConfig} onSort={handleSort} />
+                     <TableHead>Contact</TableHead>
+                     <SortableTableHead label="Score" sortKey="profile_score" sortConfig={sortConfig} onSort={handleSort} />
+                     <SortableTableHead label="Exam" sortKey="target_exam" sortConfig={sortConfig} onSort={handleSort} />
+                     <SortableTableHead label="Stream" sortKey="graduation_stream" sortConfig={sortConfig} onSort={handleSort} />
+                     <SortableTableHead label="City" sortKey="current_city" sortConfig={sortConfig} onSort={handleSort} />
+                     <SortableTableHead label="Experience" sortKey="work_experience_months" sortConfig={sortConfig} onSort={handleSort} />
+                     <SortableTableHead label="Budget" sortKey="fee_budget_lakhs" sortConfig={sortConfig} onSort={handleSort} />
+                     <SortableTableHead label="Status" sortKey="report_unlocked" sortConfig={sortConfig} onSort={handleSort} />
+                     <TableHead>Actions</TableHead>
+                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filtered.map((lead) => (
+                  {sortedFiltered.map((lead) => (
                     <TableRow key={lead.id}>
                       <TableCell className="text-xs whitespace-nowrap">
                         {format(new Date(lead.created_at), "dd MMM yyyy")}
