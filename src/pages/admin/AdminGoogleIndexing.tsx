@@ -571,6 +571,7 @@ const AdminGoogleIndexing = () => {
     if (!url) return;
 
     setActionLoading("manual");
+    pushLog(`Submitting URL: ${shortUrl(url)}...`);
     try {
       const result = await callFunction<SubmitUrlResponse>({
         action: "submit_url",
@@ -580,10 +581,13 @@ const AdminGoogleIndexing = () => {
 
       upsertUrlRecord(result, { url, page_type: "manual" });
       setManualUrl("");
+      pushLog(`URL ${result.success ? "submitted successfully" : "submission failed"}: ${shortUrl(url)}`);
 
       toast({
-        title: result.success ? "URL submitted" : "Submission failed",
-        description: result.success ? getResponseSummary(result.google) : result.error || "Submission failed",
+        title: result.success ? "URL submitted to Google" : "Submission failed",
+        description: result.success
+          ? "Google has been notified to crawl this URL. Status: Submitted (not yet indexed)."
+          : result.error || "Submission failed",
         variant: result.success ? "default" : "destructive",
       });
 
@@ -591,6 +595,7 @@ const AdminGoogleIndexing = () => {
     } catch (error: any) {
       const { message, details } = extractRequestError(error);
       upsertUrlRecord(details?.data, { url, page_type: "manual" }, message);
+      pushLog(`Error submitting ${shortUrl(url)}: ${message}`);
       toast({ title: "Error", description: message, variant: "destructive" });
     }
     setActionLoading(null);
