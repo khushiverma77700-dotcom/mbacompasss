@@ -8,6 +8,7 @@ const corsHeaders = {
 
 const INDEXING_API_URL = "https://indexing.googleapis.com/v3/urlNotifications";
 const SITE_URL = "https://bschoolbuzz.com";
+const GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token";
 const MAX_BATCH_SIZE = 100;
 const BATCH_DELAY_MS = 150;
 
@@ -152,8 +153,17 @@ function maybeUnwrapQuotedJson(raw: string) {
 
 function maybeDecodeBase64(raw: string) {
   try {
-    const decoded = atob(raw).trim();
+    const decoded = atob(raw.replace(/\s+/g, "")).trim();
     return decoded.startsWith("{") ? decoded : null;
+  } catch {
+    return null;
+  }
+}
+
+function maybeDecodeBase64Text(raw: string) {
+  try {
+    const decoded = atob(raw.replace(/\s+/g, "")).trim();
+    return decoded || null;
   } catch {
     return null;
   }
@@ -173,6 +183,59 @@ function isServiceAccount(value: unknown): value is ServiceAccount {
     typeof (value as ServiceAccount).client_email === "string" &&
     typeof (value as ServiceAccount).private_key === "string"
   );
+}
+
+function isLikelyEmail(value: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
+function normalizePrivateKeySecret(raw: string) {
+  const trimmed = raw.trim();
+  const unwrapped = maybeUnwrapQuotedJson(trimmed) ?? trimmed;
+  const decoded = maybeDecodeBase64Text(trimmed);
+  const decodedUnwrapped = maybeDecodeBase64Text(unwrapped);
+
+  const candidates = [trimmed, unwrapped, decoded, decodedUnwrapped].filter(
+    (value): value is string => Boolean(value && value.trim())
+  );
+
+  const preferred =
+    candidates.find((value) => value.includes("BEGIN PRIVATE KEY")) ?? candidates[0] ?? trimmed;
+
+  return preferred.replace(/\\n/g, "\n").trim();
+}
+
+function extractClientEmailCandidate(rawSecret: string | null) {
+  if (!rawSecret) return null;
+
+  const trimmed = rawSecret.trim();
+  const unwrapped = maybeUnwrapQuotedJson(trimmed) ?? trimmed;
+  const candidates = [trimmed, unwrapped].filter((value) => Boolean(value.trim()));
+
+  for (const candidate of candidates) {
+    if (isLikelyEmail(candidate)) {
+      return candidate.trim();
+    }
+  }
+
+  return null;
+}
+
+function buildServiceAccountFromParts(parts: {
+  clientEmail?: string | null;
+  privateKey?: string | null;
+  tokenUri?: string | null;
+}): ServiceAccount | null {
+  const clientEmail = parts.clientEmail?.trim();
+  const privateKey = parts.privateKey?.trim();
+
+  if (!clientEmail || !privateKey) return null;
+
+  return {
+    client_email: clientEmail,
+    private_key: normalizePrivateKeySecret(privateKey),
+    token_uri: parts.tokenUri?.trim() || GOOGLE_TOKEN_URI,
+  };
 }
 
 function parseServiceAccountSecret(rawSecret: string): ServiceAccount {
@@ -205,7 +268,7 @@ function parseServiceAccountSecret(rawSecret: string): ServiceAccount {
         return {
           client_email: resolved.client_email,
           private_key: resolved.private_key.replace(/\\n/g, "\n"),
-          token_uri: resolved.token_uri || "https://oauth2.googleapis.com/token",
+          token_uri: resolved.token_uri || GOOGLE_TOKEN_URI,
         };
       }
     } catch {
@@ -217,6 +280,58 @@ function parseServiceAccountSecret(rawSecret: string): ServiceAccount {
     "auth_issue",
     "GOOGLE_INDEXING_SERVICE_ACCOUNT is not valid JSON. Re-save the full Google service-account JSON in Lovable Cloud.",
     { response_preview: trimmed.slice(0, 160) }
+  );
+}
+
+function resolveServiceAccountFromEnv(): ServiceAccount {
+  const rawServiceAccount = Deno.env.get("GOOGLE_INDEXING_SERVICE_ACCOUNT") ?? null;
+  const directClientEmail = Deno.env.get("GOOGLE_INDEXING_CLIENT_EMAIL") ?? null;
+  const directPrivateKey = Deno.env.get("GOOGLE_INDEXING_PRIVATE_KEY") ?? null;
+  const directTokenUri = Deno.env.get("GOOGLE_INDEXING_TOKEN_URI") ?? null;
+
+  const fallbackAccount = buildServiceAccountFromParts({
+    clientEmail: directClientEmail || extractClientEmailCandidate(rawServiceAccount),
+    privateKey: directPrivateKey,
+    tokenUri: directTokenUri,
+  });
+
+  if (rawServiceAccount?.trim()) {
+    try {
+      const parsed = parseServiceAccountSecret(rawServiceAccount);
+      return {
+        ...parsed,
+        token_uri: directTokenUri?.trim() || parsed.token_uri || GOOGLE_TOKEN_URI,
+      };
+    } catch (error: any) {
+      if (fallbackAccount) {
+        return fallbackAccount;
+      }
+
+      throw createStageError(
+        "auth_issue",
+        "Google indexing credentials are incomplete. Save a valid service-account JSON or use separate client email and private key secrets.",
+        {
+          ...(error?.details || {}),
+          has_service_account_secret: Boolean(rawServiceAccount?.trim()),
+          has_client_email_secret: Boolean(directClientEmail?.trim()),
+          has_private_key_secret: Boolean(directPrivateKey?.trim()),
+        }
+      );
+    }
+  }
+
+  if (fallbackAccount) {
+    return fallbackAccount;
+  }
+
+  throw createStageError(
+    "auth_issue",
+    "Google indexing credentials are missing. Save a valid service-account JSON or use separate client email and private key secrets.",
+    {
+      has_service_account_secret: false,
+      has_client_email_secret: Boolean(directClientEmail?.trim()),
+      has_private_key_secret: Boolean(directPrivateKey?.trim()),
+    }
   );
 }
 
@@ -477,28 +592,38 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const getToken = async () => {
-      const rawSecret = Deno.env.get("GOOGLE_INDEXING_SERVICE_ACCOUNT");
-
-      if (!rawSecret) {
-        throw createStageError(
-          "auth_issue",
-          "GOOGLE_INDEXING_SERVICE_ACCOUNT is not configured."
-        );
-      }
-
-      const serviceAccount = parseServiceAccountSecret(rawSecret);
+      const serviceAccount = resolveServiceAccountFromEnv();
       return getAccessToken(serviceAccount);
     };
 
     if (action === "debug_secret") {
       const rawSecret = Deno.env.get("GOOGLE_INDEXING_SERVICE_ACCOUNT") || "";
+      const unwrapped = rawSecret ? maybeUnwrapQuotedJson(rawSecret.trim()) ?? rawSecret.trim() : "";
+      const secretShape = !rawSecret.trim()
+        ? "missing"
+        : rawSecret.trimStart().startsWith("{")
+          ? "json"
+          : isLikelyEmail(unwrapped)
+            ? "email_only"
+            : "other";
+
       return respond({
         ok: true,
         data: {
           length: rawSecret.length,
-          first100: rawSecret.slice(0, 100),
-          last50: rawSecret.slice(-50),
           startsWithBrace: rawSecret.trimStart().startsWith("{"),
+          secretShape,
+          hasSeparateClientEmail: Boolean(Deno.env.get("GOOGLE_INDEXING_CLIENT_EMAIL")?.trim()),
+          hasSeparatePrivateKey: Boolean(Deno.env.get("GOOGLE_INDEXING_PRIVATE_KEY")?.trim()),
+          hasSeparateTokenUri: Boolean(Deno.env.get("GOOGLE_INDEXING_TOKEN_URI")?.trim()),
+          canResolveCredentials: (() => {
+            try {
+              resolveServiceAccountFromEnv();
+              return true;
+            } catch {
+              return false;
+            }
+          })(),
         },
       });
     }
