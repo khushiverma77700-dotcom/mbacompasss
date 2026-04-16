@@ -1,7 +1,7 @@
 import { useMemo, useCallback } from "react";
 import { INDIAN_STATES, getCitiesForState } from "@/data/indianLocations";
-import { Link, useSearchParams } from "react-router-dom";
-import { MapPin, Search, Users, TrendingUp, GraduationCap, Award, ChevronRight, ArrowRight, Building2, Filter, Star, Monitor, Building, Wifi, X } from "lucide-react";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
+import { MapPin, Search, Users, TrendingUp, GraduationCap, Award, ChevronRight, ArrowRight, Building2, Filter, Star, Monitor, Building, Wifi, X, ArrowLeft, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
