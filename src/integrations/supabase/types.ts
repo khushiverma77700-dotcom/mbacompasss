@@ -1323,6 +1323,51 @@ export type Database = {
           },
         ]
       }
+      mega_menu_items: {
+        Row: {
+          active: boolean | null
+          column_sort_order: number | null
+          column_title: string
+          created_at: string | null
+          id: string
+          link_label: string
+          link_sort_order: number | null
+          link_url: string
+          menu_type: string
+          tab_label: string
+          tab_sort_order: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          column_sort_order?: number | null
+          column_title: string
+          created_at?: string | null
+          id?: string
+          link_label: string
+          link_sort_order?: number | null
+          link_url: string
+          menu_type?: string
+          tab_label: string
+          tab_sort_order?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          column_sort_order?: number | null
+          column_title?: string
+          created_at?: string | null
+          id?: string
+          link_label?: string
+          link_sort_order?: number | null
+          link_url?: string
+          menu_type?: string
+          tab_label?: string
+          tab_sort_order?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           created_at: string
