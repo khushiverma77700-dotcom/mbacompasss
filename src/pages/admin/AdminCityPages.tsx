@@ -59,6 +59,7 @@ const AdminCityPages = () => {
   const [allColleges, setAllColleges] = useState<any[]>([]);
   const [selectedCollegeIds, setSelectedCollegeIds] = useState<Set<string>>(new Set());
   const [collegeSearch, setCollegeSearch] = useState("");
+  const { sortedItems: sortedPages, sortConfig, handleSort } = useTableSort(pages);
 
   const fetchPages = async () => { const { data } = await supabase.from("city_pages").select("*").order("sort_order"); if (data) setPages(data as any); };
   const fetchAllColleges = async () => { const { data } = await supabase.from("colleges").select("id, name, city, state, tier, college_category").order("name"); if (data) setAllColleges(data); };

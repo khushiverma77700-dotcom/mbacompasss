@@ -34,6 +34,8 @@ const AdminCourses = () => {
   const [highlightInput, setHighlightInput] = useState("");
   const [search, setSearch] = useState("");
   const { toast } = useToast();
+  const filtered = search ? courses.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.institutes?.name?.toLowerCase().includes(search.toLowerCase())) : courses;
+  const { sortedItems: sortedCourses, sortConfig, handleSort } = useTableSort(filtered);
 
   const fetchData = async () => {
     const [c, i, cc] = await Promise.all([
