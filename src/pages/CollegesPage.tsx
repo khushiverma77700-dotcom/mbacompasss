@@ -94,13 +94,43 @@ const CollegesPage = () => {
     );
   }
 
-  const jsonLd = generateListingSchema("Top MBA Colleges in India 2026", filtered, "college");
+  // Active filters for chips display
+  const activeFilters = useMemo(() => {
+    const chips: { key: string; label: string; value: string }[] = [];
+    if (activeTab !== "all") chips.push({ key: "type", label: tabs.find(t => t.type === activeTab)?.label || activeTab, value: activeTab });
+    if (selectedState !== "all") chips.push({ key: "state", label: selectedState, value: selectedState });
+    if (selectedCity !== "all") chips.push({ key: "city", label: selectedCity, value: selectedCity });
+    if (selectedExam !== "all") chips.push({ key: "exam", label: selectedExam, value: selectedExam });
+    if (search) chips.push({ key: "q", label: `"${search}"`, value: search });
+    return chips;
+  }, [activeTab, selectedState, selectedCity, selectedExam, search]);
+
+  // Dynamic SEO based on filters
+  const dynamicTitle = useMemo(() => {
+    const parts = ["Top"];
+    if (activeTab !== "all") parts.push(tabs.find(t => t.type === activeTab)?.label || "");
+    parts.push("MBA Colleges");
+    if (selectedCity !== "all") parts.push(`in ${selectedCity}`);
+    else if (selectedState !== "all") parts.push(`in ${selectedState}`);
+    else parts.push("in India");
+    if (selectedExam !== "all") parts.push(`accepting ${selectedExam}`);
+    return `${parts.join(" ")} 2026 — Fees, Rankings, Placements | BSchoolBuzz.com`;
+  }, [activeTab, selectedState, selectedCity, selectedExam]);
+
+  const dynamicDescription = useMemo(() => {
+    const location = selectedCity !== "all" ? selectedCity : selectedState !== "all" ? selectedState : "India";
+    const type = activeTab !== "all" ? (tabs.find(t => t.type === activeTab)?.label || "") + " " : "";
+    const exam = selectedExam !== "all" ? ` accepting ${selectedExam}` : "";
+    return `Explore ${filtered.length} ${type}MBA colleges in ${location}${exam} with rankings, fees, placements, and admission details.`;
+  }, [activeTab, selectedState, selectedCity, selectedExam, filtered.length]);
+
+  const jsonLd = generateListingSchema(dynamicTitle, filtered, "college");
 
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Top MBA Colleges in India 2026 — Rankings, Fees, Placements | BSchoolBuzz.com"
-        description="Explore top MBA colleges in India with rankings, fees, placements, and admission details. Compare IIMs, top management institutes, PGDM colleges across all cities."
+        title={dynamicTitle}
+        description={dynamicDescription}
         keywords={["top MBA colleges India", "best B-schools India", "MBA college rankings", "IIM fees placements"]}
         canonical="https://bschoolbuzz.com/colleges"
         jsonLd={jsonLd}
