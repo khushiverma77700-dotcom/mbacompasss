@@ -14,6 +14,7 @@ import PageKeywords from "@/components/PageKeywords";
 const modes = ["Online", "Offline", "Hybrid"];
 
 const CoachingPage = () => {
+  const navigate = useNavigate();
   const { data: allInstitutes = [], isLoading } = useInstitutes();
   const { data: categories = [] } = useCategories();
   const [searchParams, setSearchParams] = useSearchParams();

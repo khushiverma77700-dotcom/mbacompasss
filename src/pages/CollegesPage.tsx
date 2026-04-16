@@ -21,6 +21,7 @@ const tabs = [
 ];
 
 const CollegesPage = () => {
+  const navigate = useNavigate();
   const { data: colleges = [], isLoading } = useColleges();
   const { data: cityPages } = useCityPages();
   const [searchParams, setSearchParams] = useSearchParams();
