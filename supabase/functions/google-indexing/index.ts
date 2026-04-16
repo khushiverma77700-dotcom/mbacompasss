@@ -3,11 +3,13 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 const INDEXING_API_URL = "https://indexing.googleapis.com/v3/urlNotifications";
 const SITE_URL = "https://bschoolbuzz.com";
+const MAX_BATCH_SIZE = 100;
+const BATCH_DELAY_MS = 150;
 
 interface ServiceAccount {
   client_email: string;
@@ -15,7 +17,229 @@ interface ServiceAccount {
   token_uri: string;
 }
 
-// Generate JWT for Google service account auth
+interface ApiDiagnostics {
+  action?: string;
+  requested_url?: string;
+  error_stage?: string;
+  google_status?: number;
+  processing_time_ms?: number;
+  retry_count?: number;
+  response_preview?: string;
+}
+
+interface ApiResponse<T = unknown> {
+  ok: boolean;
+  data?: T;
+  error?: string;
+  diagnostics?: ApiDiagnostics & Record<string, unknown>;
+}
+
+interface GoogleSubmissionResult {
+  ok: boolean;
+  status: number;
+  data: unknown;
+  errorMessage: string | null;
+  diagnostics: ApiDiagnostics;
+}
+
+interface BatchEntry {
+  url: string;
+  page_type?: string;
+  record_id?: string | null;
+}
+
+interface StoredIndexingUrl {
+  id: string;
+  url: string;
+  page_type: string;
+  record_id: string | null;
+  status: string;
+  last_submitted_at: string | null;
+  indexed_at: string | null;
+  last_response: unknown;
+  error_message: string | null;
+  retry_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+function respond<T>(payload: ApiResponse<T>) {
+  return new Response(JSON.stringify(payload), {
+    status: 200,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function createStageError(
+  stage: string,
+  message: string,
+  details: Record<string, unknown> = {}
+) {
+  const error = new Error(message) as Error & {
+    stage: string;
+    details: Record<string, unknown>;
+  };
+
+  error.stage = stage;
+  error.details = details;
+  return error;
+}
+
+async function readResponseBody(response: Response): Promise<unknown> {
+  const text = await response.text();
+
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
+function stringifyValue(value: unknown) {
+  if (value == null) return "";
+  if (typeof value === "string") return value;
+
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
+function getGoogleErrorMessage(value: unknown): string {
+  if (!value) return "Google Indexing API request failed";
+  if (typeof value === "string") return value;
+
+  const record = value as Record<string, any>;
+
+  if (typeof record.error === "string") return record.error;
+  if (record.error?.message) return String(record.error.message);
+  if (record.message) return String(record.message);
+
+  return stringifyValue(value);
+}
+
+function classifyGoogleErrorStage(status: number, data: unknown) {
+  const message = getGoogleErrorMessage(data).toLowerCase();
+
+  if (status === 401) return "auth_issue";
+  if (status === 403 && message.includes("quota")) return "quota_exceeded";
+  if (
+    status === 403 &&
+    (message.includes("permission") ||
+      message.includes("owner") ||
+      message.includes("verified"))
+  ) {
+    return "permission_denied";
+  }
+  if (status === 429) return "quota_exceeded";
+  if (status === 400 && message.includes("url")) return "invalid_url";
+  if (status >= 500) return "google_server_error";
+
+  return "google_request_failed";
+}
+
+function maybeUnwrapQuotedJson(raw: string) {
+  try {
+    const parsed = JSON.parse(raw);
+    return typeof parsed === "string" ? parsed.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+function maybeDecodeBase64(raw: string) {
+  try {
+    const decoded = atob(raw).trim();
+    return decoded.startsWith("{") ? decoded : null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeMultilinePrivateKey(raw: string) {
+  return raw.replace(
+    /"private_key"\s*:\s*"([\s\S]*?)"\s*,\s*"client_email"/m,
+    (_, key: string) => `"private_key": ${JSON.stringify(key)}, "client_email"`
+  );
+}
+
+function isServiceAccount(value: unknown): value is ServiceAccount {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as ServiceAccount).client_email === "string" &&
+    typeof (value as ServiceAccount).private_key === "string"
+  );
+}
+
+function parseServiceAccountSecret(rawSecret: string): ServiceAccount {
+  const trimmed = rawSecret.trim();
+  const unwrapped = maybeUnwrapQuotedJson(trimmed) ?? trimmed;
+  const decoded = maybeDecodeBase64(trimmed);
+  const decodedUnwrapped = maybeDecodeBase64(unwrapped);
+
+  const candidates = Array.from(
+    new Set(
+      [
+        trimmed,
+        unwrapped,
+        normalizeMultilinePrivateKey(trimmed),
+        normalizeMultilinePrivateKey(unwrapped),
+        decoded,
+        decoded ? normalizeMultilinePrivateKey(decoded) : null,
+        decodedUnwrapped,
+        decodedUnwrapped ? normalizeMultilinePrivateKey(decodedUnwrapped) : null,
+      ].filter((value): value is string => Boolean(value && value.trim()))
+    )
+  );
+
+  for (const candidate of candidates) {
+    try {
+      const parsed = JSON.parse(candidate);
+      const resolved = typeof parsed === "string" ? JSON.parse(parsed) : parsed;
+
+      if (isServiceAccount(resolved)) {
+        return {
+          client_email: resolved.client_email,
+          private_key: resolved.private_key.replace(/\n/g, "
+"),
+          token_uri: resolved.token_uri || "https://oauth2.googleapis.com/token",
+        };
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  throw createStageError(
+    "auth_issue",
+    "GOOGLE_INDEXING_SERVICE_ACCOUNT is not valid JSON. Re-save the full Google service-account JSON in Lovable Cloud.",
+    { response_preview: trimmed.slice(0, 160) }
+  );
+}
+
+function createFailedSubmission(
+  url: string,
+  message: string,
+  stage: string,
+  details: Record<string, unknown> = {}
+): GoogleSubmissionResult {
+  return {
+    ok: false,
+    status: typeof details.google_status === "number" ? Number(details.google_status) : 0,
+    data: { error: { message }, diagnostics: details },
+    errorMessage: message,
+    diagnostics: {
+      requested_url: url,
+      error_stage: stage,
+      ...details,
+    },
+  };
+}
+
 async function getAccessToken(sa: ServiceAccount): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   const header = { alg: "RS256", typ: "JWT" };
@@ -27,7 +251,7 @@ async function getAccessToken(sa: ServiceAccount): Promise<string> {
     exp: now + 3600,
   };
 
-  const enc = (obj: any) =>
+  const enc = (obj: unknown) =>
     btoa(JSON.stringify(obj))
       .replace(/\+/g, "-")
       .replace(/\//g, "_")
@@ -35,13 +259,15 @@ async function getAccessToken(sa: ServiceAccount): Promise<string> {
 
   const signingInput = `${enc(header)}.${enc(payload)}`;
 
-  // Import the private key
   const pemContent = sa.private_key
     .replace(/-----BEGIN PRIVATE KEY-----/, "")
     .replace(/-----END PRIVATE KEY-----/, "")
-    .replace(/\n/g, "");
+    .replace(/
+/g, "");
 
-  const binaryKey = Uint8Array.from(atob(pemContent), (c) => c.charCodeAt(0));
+  const binaryKey = Uint8Array.from(atob(pemContent), (character) =>
+    character.charCodeAt(0)
+  );
 
   const cryptoKey = await crypto.subtle.importKey(
     "pkcs8",
@@ -64,28 +290,41 @@ async function getAccessToken(sa: ServiceAccount): Promise<string> {
 
   const jwt = `${signingInput}.${sig}`;
 
-  // Exchange JWT for access token
-  const res = await fetch(sa.token_uri, {
+  const response = await fetch(sa.token_uri, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
+    body: new URLSearchParams({
+      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+      assertion: jwt,
+    }).toString(),
   });
 
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Token exchange failed: ${res.status} ${errText}`);
+  const data = await readResponseBody(response);
+
+  if (!response.ok) {
+    throw createStageError("auth_issue", `Google token exchange failed: ${getGoogleErrorMessage(data)}`, {
+      google_status: response.status,
+      response_preview: stringifyValue(data).slice(0, 500),
+    });
   }
 
-  const data = await res.json();
-  return data.access_token;
+  if (!data || typeof data !== "object" || typeof (data as any).access_token !== "string") {
+    throw createStageError(
+      "auth_issue",
+      "Google token exchange succeeded but no access token was returned.",
+      { response_preview: stringifyValue(data).slice(0, 500) }
+    );
+  }
+
+  return (data as any).access_token;
 }
 
 async function submitUrl(
   accessToken: string,
   url: string,
   type: "URL_UPDATED" | "URL_DELETED" = "URL_UPDATED"
-) {
-  const res = await fetch(`${INDEXING_API_URL}:publish`, {
+): Promise<GoogleSubmissionResult> {
+  const response = await fetch(`${INDEXING_API_URL}:publish`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -94,8 +333,121 @@ async function submitUrl(
     body: JSON.stringify({ url, type }),
   });
 
-  const data = await res.json();
-  return { ok: res.ok, status: res.status, data };
+  const data = await readResponseBody(response);
+  const ok = response.ok;
+
+  return {
+    ok,
+    status: response.status,
+    data,
+    errorMessage: ok ? null : getGoogleErrorMessage(data),
+    diagnostics: {
+      requested_url: url,
+      google_status: response.status,
+      error_stage: ok ? "submitted" : classifyGoogleErrorStage(response.status, data),
+      response_preview: stringifyValue(data).slice(0, 500),
+    },
+  };
+}
+
+async function persistSubmissionResult(
+  supabase: ReturnType<typeof createClient>,
+  options: {
+    url: string;
+    pageType?: string;
+    recordId?: string | null;
+    action: string;
+    retryCount: number;
+    submission: GoogleSubmissionResult;
+  }
+): Promise<StoredIndexingUrl> {
+  const now = new Date().toISOString();
+  const status = options.submission.ok ? "submitted" : "failed";
+  const storedResponse = {
+    google: options.submission.data,
+    diagnostics: options.submission.diagnostics,
+  };
+
+  const payload: Record<string, unknown> = {
+    url: options.url,
+    page_type: options.pageType || "other",
+    record_id: options.recordId || null,
+    status,
+    last_submitted_at: now,
+    last_response: storedResponse,
+    error_message: options.submission.ok ? null : options.submission.errorMessage,
+    retry_count: options.retryCount,
+    updated_at: now,
+  };
+
+  if (options.submission.ok) {
+    payload.indexed_at = now;
+  }
+
+  const { data: record, error } = await supabase
+    .from("indexing_urls")
+    .upsert(payload, { onConflict: "url" })
+    .select("*")
+    .single();
+
+  if (error || !record) {
+    throw createStageError(
+      "database_error",
+      `Failed to save indexing result for ${options.url}`,
+      {
+        requested_url: options.url,
+        response_preview: error?.message,
+      }
+    );
+  }
+
+  const { error: logError } = await supabase.from("indexing_logs").insert({
+    indexing_url_id: record.id,
+    action: options.action,
+    status,
+    response: storedResponse,
+    error_message: options.submission.ok ? null : options.submission.errorMessage,
+  });
+
+  if (logError) {
+    console.error("Failed to insert indexing log:", logError);
+  }
+
+  return record as StoredIndexingUrl;
+}
+
+function normalizeBatchEntries(rawEntries: unknown[]): BatchEntry[] {
+  return rawEntries
+    .map((entry) => {
+      if (typeof entry === "string") {
+        const url = entry.trim();
+        return url ? { url } : null;
+      }
+
+      if (entry && typeof entry === "object" && typeof (entry as any).url === "string") {
+        const url = String((entry as any).url).trim();
+        if (!url) return null;
+
+        return {
+          url,
+          page_type:
+            typeof (entry as any).page_type === "string"
+              ? String((entry as any).page_type)
+              : undefined,
+          record_id:
+            typeof (entry as any).record_id === "string"
+              ? String((entry as any).record_id)
+              : null,
+        };
+      }
+
+      return null;
+    })
+    .filter((entry): entry is BatchEntry => Boolean(entry));
+}
+
+async function delay(ms: number) {
+  await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 Deno.serve(async (req) => {
@@ -103,196 +455,345 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  const startedAt = Date.now();
+  let action = "unknown";
+
   try {
     const body = await req.json();
-    const action = body.action as string;
+    action = typeof body?.action === "string" ? body.action : "";
 
-    // Stats action doesn't need Google credentials
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    if (!action) {
+      throw createStageError("validation_error", "action is required");
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw createStageError(
+        "configuration_error",
+        "Backend credentials are missing for Google indexing."
+      );
+    }
+
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Helper to get SA + access token only when needed
     const getToken = async () => {
-      const saJson = Deno.env.get("GOOGLE_INDEXING_SERVICE_ACCOUNT");
-      if (!saJson) throw new Error("GOOGLE_INDEXING_SERVICE_ACCOUNT not configured");
-      let sa: ServiceAccount;
-      try {
-        sa = JSON.parse(saJson);
-      } catch {
-        throw new Error("GOOGLE_INDEXING_SERVICE_ACCOUNT is not valid JSON. Please re-enter the full JSON credentials.");
+      const rawSecret = Deno.env.get("GOOGLE_INDEXING_SERVICE_ACCOUNT");
+
+      if (!rawSecret) {
+        throw createStageError(
+          "auth_issue",
+          "GOOGLE_INDEXING_SERVICE_ACCOUNT is not configured."
+        );
       }
-      return getAccessToken(sa);
+
+      const serviceAccount = parseServiceAccountSecret(rawSecret);
+      return getAccessToken(serviceAccount);
     };
 
-    // === ACTION: submit_url — submit a single URL ===
     if (action === "submit_url") {
-      const { url, page_type, record_id } = body;
-      if (!url) throw new Error("url is required");
+      const url = typeof body?.url === "string" ? body.url.trim() : "";
+      const pageType = typeof body?.page_type === "string" ? body.page_type : "other";
+      const recordId = typeof body?.record_id === "string" ? body.record_id : null;
 
-      const accessToken = await getToken();
-      const result = await submitUrl(accessToken, url);
+      if (!url) {
+        throw createStageError("validation_error", "url is required");
+      }
 
-      const status = result.ok ? "submitted" : "failed";
-      const errorMessage = result.ok ? null : JSON.stringify(result.data);
+      let submission: GoogleSubmissionResult;
 
-      // Upsert into indexing_urls
-      const now = new Date().toISOString();
-      await supabase.from("indexing_urls").upsert(
-        {
+      try {
+        const accessToken = await getToken();
+        submission = await submitUrl(accessToken, url);
+      } catch (error: any) {
+        submission = createFailedSubmission(
           url,
-          page_type: page_type || "other",
-          record_id: record_id || null,
-          status,
-          last_submitted_at: now,
-          indexed_at: result.ok ? now : null,
-          last_response: result.data,
-          error_message: errorMessage,
-          retry_count: 0,
+          error?.message || "Google Indexing authentication failed",
+          error?.stage || "auth_issue",
+          error?.details || {}
+        );
+      }
+
+      const record = await persistSubmissionResult(supabase, {
+        url,
+        pageType,
+        recordId,
+        action: "submit",
+        retryCount: 0,
+        submission,
+      });
+
+      const diagnostics = {
+        ...submission.diagnostics,
+        action,
+        processing_time_ms: Date.now() - startedAt,
+      };
+
+      return respond({
+        ok: submission.ok,
+        data: {
+          success: submission.ok,
+          url,
+          status: record.status,
+          error: record.error_message,
+          google: submission.data,
+          diagnostics,
+          record,
         },
-        { onConflict: "url" }
+        error: submission.ok ? undefined : record.error_message || submission.errorMessage || "Submission failed",
+        diagnostics,
+      });
+    }
+
+    if (action === "batch_submit") {
+      const entries = normalizeBatchEntries(Array.isArray(body?.urls) ? body.urls : []).slice(
+        0,
+        MAX_BATCH_SIZE
       );
 
-      // Log
-      const { data: urlRow } = await supabase
-        .from("indexing_urls")
-        .select("id")
-        .eq("url", url)
-        .single();
-
-      if (urlRow) {
-        await supabase.from("indexing_logs").insert({
-          indexing_url_id: urlRow.id,
-          action: "submit",
-          status,
-          response: result.data,
-          error_message: errorMessage,
-        });
+      if (!entries.length) {
+        throw createStageError("validation_error", "urls array is required");
       }
 
-      return new Response(JSON.stringify({ success: result.ok, result: result.data }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+      let accessToken: string | null = null;
+      let sharedError: any = null;
 
-    // === ACTION: batch_submit — submit multiple URLs ===
-    if (action === "batch_submit") {
-      const urls: string[] = body.urls || [];
-      if (!urls.length) throw new Error("urls array is required");
+      try {
+        accessToken = await getToken();
+      } catch (error: any) {
+        sharedError = error;
+      }
 
-      const accessToken = await getToken();
       const results: any[] = [];
+      let successCount = 0;
 
-      for (const url of urls.slice(0, 100)) {
+      for (const entry of entries) {
         try {
-          const result = await submitUrl(accessToken, url);
-          const status = result.ok ? "submitted" : "failed";
-          const errorMessage = result.ok ? null : JSON.stringify(result.data);
+          const submission = accessToken
+            ? await submitUrl(accessToken, entry.url)
+            : createFailedSubmission(
+                entry.url,
+                sharedError?.message || "Google Indexing authentication failed",
+                sharedError?.stage || "auth_issue",
+                sharedError?.details || {}
+              );
 
-          await supabase.from("indexing_urls").upsert(
-            {
-              url,
-              page_type: "other",
-              status,
-              last_submitted_at: new Date().toISOString(),
-              last_response: result.data,
-              error_message: errorMessage,
+          const record = await persistSubmissionResult(supabase, {
+            url: entry.url,
+            pageType: entry.page_type,
+            recordId: entry.record_id,
+            action: "batch_submit",
+            retryCount: 0,
+            submission,
+          });
+
+          if (submission.ok) successCount += 1;
+
+          results.push({
+            url: entry.url,
+            success: submission.ok,
+            status: record.status,
+            error: record.error_message,
+            google: submission.data,
+            diagnostics: submission.diagnostics,
+            record,
+          });
+        } catch (error: any) {
+          results.push({
+            url: entry.url,
+            success: false,
+            error: error?.message || "Unexpected batch submission failure",
+            diagnostics: {
+              requested_url: entry.url,
+              error_stage: error?.stage || "unexpected_error",
+              ...(error?.details || {}),
             },
-            { onConflict: "url" }
-          );
-
-          results.push({ url, success: result.ok, data: result.data });
-        } catch (e: any) {
-          results.push({ url, success: false, error: e.message });
+          });
         }
+
+        await delay(BATCH_DELAY_MS);
       }
 
-      return new Response(JSON.stringify({ results }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return respond({
+        ok: true,
+        data: {
+          total: entries.length,
+          processed: results.length,
+          success: successCount,
+          failed: results.length - successCount,
+          results,
+        },
+        diagnostics: {
+          action,
+          processing_time_ms: Date.now() - startedAt,
+        },
       });
     }
 
-    // === ACTION: refresh — retry pending/failed URLs ===
     if (action === "refresh") {
-      const { data: pendingUrls } = await supabase
+      const { data: pendingRows, error } = await supabase
         .from("indexing_urls")
-        .select("*")
+        .select("id, url, page_type, record_id, retry_count")
         .in("status", ["pending", "failed"])
         .lt("retry_count", 5)
         .order("created_at", { ascending: true })
         .limit(50);
 
-      if (!pendingUrls?.length) {
-        return new Response(JSON.stringify({ message: "No URLs to retry", count: 0 }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+      if (error) {
+        throw createStageError("database_error", "Failed to load pending URLs", {
+          response_preview: error.message,
         });
       }
 
-      const accessToken = await getToken();
-      let successCount = 0;
-
-      for (const row of pendingUrls) {
-        try {
-          const result = await submitUrl(accessToken, row.url);
-          const status = result.ok ? "submitted" : "failed";
-          const errorMessage = result.ok ? null : JSON.stringify(result.data);
-
-          const now = new Date().toISOString();
-          await supabase
-            .from("indexing_urls")
-            .update({
-              status,
-              last_submitted_at: now,
-              indexed_at: result.ok ? now : undefined,
-              last_response: result.data,
-              error_message: errorMessage,
-              retry_count: row.retry_count + 1,
-            })
-            .eq("id", row.id);
-
-          await supabase.from("indexing_logs").insert({
-            indexing_url_id: row.id,
-            action: "retry",
-            status,
-            response: result.data,
-            error_message: errorMessage,
-          });
-
-          if (result.ok) successCount++;
-        } catch (e: any) {
-          await supabase
-            .from("indexing_urls")
-            .update({
-              error_message: e.message,
-              retry_count: row.retry_count + 1,
-            })
-            .eq("id", row.id);
-        }
+      if (!pendingRows?.length) {
+        return respond({
+          ok: true,
+          data: { message: "No URLs to retry", total: 0, success: 0, failed: 0, results: [] },
+          diagnostics: {
+            action,
+            processing_time_ms: Date.now() - startedAt,
+          },
+        });
       }
 
-      return new Response(
-        JSON.stringify({ total: pendingUrls.length, success: successCount }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      let accessToken: string | null = null;
+      let sharedError: any = null;
+
+      try {
+        accessToken = await getToken();
+      } catch (tokenError: any) {
+        sharedError = tokenError;
+      }
+
+      const results: any[] = [];
+      let successCount = 0;
+
+      for (const row of pendingRows) {
+        try {
+          const submission = accessToken
+            ? await submitUrl(accessToken, row.url)
+            : createFailedSubmission(
+                row.url,
+                sharedError?.message || "Google Indexing authentication failed",
+                sharedError?.stage || "auth_issue",
+                sharedError?.details || {}
+              );
+
+          const record = await persistSubmissionResult(supabase, {
+            url: row.url,
+            pageType: row.page_type,
+            recordId: row.record_id,
+            action: "retry",
+            retryCount: row.retry_count + 1,
+            submission,
+          });
+
+          if (submission.ok) successCount += 1;
+
+          results.push({
+            url: row.url,
+            success: submission.ok,
+            status: record.status,
+            error: record.error_message,
+            google: submission.data,
+            diagnostics: {
+              ...submission.diagnostics,
+              retry_count: row.retry_count + 1,
+            },
+            record,
+          });
+        } catch (rowError: any) {
+          const message = rowError?.message || "Unexpected retry failure";
+          const fallbackSubmission = createFailedSubmission(
+            row.url,
+            message,
+            rowError?.stage || "unexpected_error",
+            rowError?.details || {}
+          );
+
+          try {
+            const record = await persistSubmissionResult(supabase, {
+              url: row.url,
+              pageType: row.page_type,
+              recordId: row.record_id,
+              action: "retry",
+              retryCount: row.retry_count + 1,
+              submission: fallbackSubmission,
+            });
+
+            results.push({
+              url: row.url,
+              success: false,
+              status: record.status,
+              error: record.error_message,
+              google: fallbackSubmission.data,
+              diagnostics: {
+                ...fallbackSubmission.diagnostics,
+                retry_count: row.retry_count + 1,
+              },
+              record,
+            });
+          } catch (persistError: any) {
+            results.push({
+              url: row.url,
+              success: false,
+              error: persistError?.message || message,
+              diagnostics: {
+                requested_url: row.url,
+                error_stage: persistError?.stage || rowError?.stage || "unexpected_error",
+                ...(persistError?.details || rowError?.details || {}),
+              },
+            });
+          }
+        }
+
+        await delay(BATCH_DELAY_MS);
+      }
+
+      return respond({
+        ok: true,
+        data: {
+          total: pendingRows.length,
+          success: successCount,
+          failed: results.length - successCount,
+          results,
+        },
+        diagnostics: {
+          action,
+          processing_time_ms: Date.now() - startedAt,
+        },
+      });
     }
 
-    // === ACTION: discover — scan all content tables, register any new URLs ===
     if (action === "discover") {
       const tables = [
-        { table: "articles", type: "article", pathFn: (r: any) => `/article/${r.slug}`, filter: { published: true } },
-        { table: "institutes", type: "institute", pathFn: (r: any) => `/institute/${r.slug}` },
-        { table: "colleges", type: "college", pathFn: (r: any) => `/college/${r.slug}` },
-        { table: "exams", type: "exam", pathFn: (r: any) => `/exam/${r.slug}` },
-        { table: "city_pages", type: "city_page", pathFn: (r: any) => `/colleges/${r.slug}`, filter: { active: true } },
+        {
+          table: "articles",
+          type: "article",
+          pathFn: (row: any) => `/article/${row.slug}`,
+          filter: { published: true },
+        },
+        { table: "institutes", type: "institute", pathFn: (row: any) => `/institute/${row.slug}` },
+        { table: "colleges", type: "college", pathFn: (row: any) => `/college/${row.slug}` },
+        { table: "exams", type: "exam", pathFn: (row: any) => `/exam/${row.slug}` },
+        {
+          table: "city_pages",
+          type: "city_page",
+          pathFn: (row: any) => `/colleges/${row.slug}`,
+          filter: { active: true },
+        },
       ];
 
       let newCount = 0;
+      const now = new Date().toISOString();
 
-      for (const t of tables) {
-        let query = supabase.from(t.table).select("id, slug, name");
-        if (t.filter) {
-          for (const [k, v] of Object.entries(t.filter)) {
-            query = query.eq(k, v);
+      for (const table of tables) {
+        let query = supabase.from(table.table).select("id, slug, name");
+
+        if (table.filter) {
+          for (const [key, value] of Object.entries(table.filter)) {
+            query = query.eq(key, value);
           }
         }
 
@@ -301,8 +802,8 @@ Deno.serve(async (req) => {
 
         for (const row of rows) {
           if (!row.slug) continue;
-          const url = `${SITE_URL}${t.pathFn(row)}`;
 
+          const url = `${SITE_URL}${table.pathFn(row)}`;
           const { data: existing } = await supabase
             .from("indexing_urls")
             .select("id")
@@ -312,44 +813,83 @@ Deno.serve(async (req) => {
           if (!existing) {
             await supabase.from("indexing_urls").insert({
               url,
-              page_type: t.type,
+              page_type: table.type,
               record_id: row.id,
               status: "pending",
+              updated_at: now,
             });
-            newCount++;
+            newCount += 1;
           }
         }
       }
 
-      return new Response(JSON.stringify({ discovered: newCount }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return respond({
+        ok: true,
+        data: { discovered: newCount },
+        diagnostics: {
+          action,
+          processing_time_ms: Date.now() - startedAt,
+        },
       });
     }
 
-    // === ACTION: stats — get summary counts ===
     if (action === "stats") {
-      const { data: all } = await supabase.from("indexing_urls").select("status");
+      const { data: all, error } = await supabase
+        .from("indexing_urls")
+        .select("status, indexed_at");
+
+      if (error) {
+        throw createStageError("database_error", "Failed to load indexing stats", {
+          response_preview: error.message,
+        });
+      }
+
       const stats = { total: 0, submitted: 0, indexed: 0, failed: 0, pending: 0 };
+
       if (all) {
         stats.total = all.length;
-        for (const r of all) {
-          if (r.status === "submitted") stats.submitted++;
-          else if (r.status === "indexed") stats.indexed++;
-          else if (r.status === "failed") stats.failed++;
-          else if (r.status === "pending") stats.pending++;
+
+        for (const row of all) {
+          const isIndexed = Boolean(row.indexed_at || row.status === "indexed");
+
+          if (isIndexed) stats.indexed += 1;
+          if (!isIndexed && row.status !== "failed") stats.pending += 1;
+          if (row.status === "submitted" && !isIndexed) stats.submitted += 1;
+          if (row.status === "failed") stats.failed += 1;
         }
       }
-      return new Response(JSON.stringify(stats), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+
+      return respond({
+        ok: true,
+        data: stats,
+        diagnostics: {
+          action,
+          processing_time_ms: Date.now() - startedAt,
+        },
       });
     }
 
-    throw new Error(`Unknown action: ${action}`);
+    return respond({
+      ok: false,
+      error: `Unknown action: ${action}`,
+      diagnostics: {
+        action,
+        error_stage: "validation_error",
+        processing_time_ms: Date.now() - startedAt,
+      },
+    });
   } catch (error: any) {
     console.error("Google Indexing error:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+
+    return respond({
+      ok: false,
+      error: error?.message || "Unexpected Google indexing error",
+      diagnostics: {
+        action,
+        error_stage: error?.stage || "unexpected_error",
+        processing_time_ms: Date.now() - startedAt,
+        ...(error?.details || {}),
+      },
     });
   }
 });
