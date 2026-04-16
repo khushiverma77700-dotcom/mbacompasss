@@ -229,13 +229,22 @@ className="absolute inset-0 w-full h-full object-cover blur-sm scale-105 opacity
             {/* Region badges */}
             {regions.length > 0 && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} className="flex flex-wrap justify-center gap-2">
-                {regions.map(r => (
-                  <Link key={r.slug} to={`/colleges/${r.slug}`}>
-                    <Badge className="bg-white/10 text-primary-foreground border-white/15 hover:bg-white/20 cursor-pointer px-3 py-1.5 transition-all duration-200 backdrop-blur-sm">
-                      <MapPin className="w-3 h-3 mr-1" /> {r.name}
-                    </Badge>
-                  </Link>
-                ))}
+                {regions.map(r => {
+                  const aliases = r.city_aliases || [r.name.toLowerCase()];
+                  const regionCount = colleges.filter((c: any) =>
+                    aliases.some((a: string) =>
+                      (c.city || "").toLowerCase().includes(a.toLowerCase()) ||
+                      (c.state || "").toLowerCase().includes(a.toLowerCase())
+                    )
+                  ).length;
+                  return (
+                    <Link key={r.slug} to={`/colleges/${r.slug}`}>
+                      <Badge className="bg-white/10 text-primary-foreground border-white/15 hover:bg-white/20 cursor-pointer px-3 py-1.5 transition-all duration-200 backdrop-blur-sm">
+                        <MapPin className="w-3 h-3 mr-1" /> {r.name} {regionCount > 0 && `(${regionCount})`}
+                      </Badge>
+                    </Link>
+                  );
+                })}
               </motion.div>
             )}
           </div>
@@ -283,6 +292,9 @@ className="absolute inset-0 w-full h-full object-cover blur-sm scale-105 opacity
           <div className="flex flex-wrap gap-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;
+              const tabCount = tab.type === "all"
+                ? colleges.length
+                : colleges.filter((c: any) => c.type === tab.type).length;
               return (
                 <button
                   key={tab.type}
@@ -294,7 +306,7 @@ className="absolute inset-0 w-full h-full object-cover blur-sm scale-105 opacity
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
-                  {tab.label}
+                  {tab.label} ({tabCount})
                 </button>
               );
             })}
