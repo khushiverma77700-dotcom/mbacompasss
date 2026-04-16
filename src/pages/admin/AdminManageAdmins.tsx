@@ -33,7 +33,6 @@ export const ADMIN_SECTIONS = [
   { path: "/admin/institute-results", label: "Institute Results" },
   { path: "/admin/sitemap", label: "Sitemap" },
   { path: "/admin/leads", label: "Student Leads" },
-  { path: "/admin/city-pages", label: "City/State Pages" },
   { path: "/admin/all-links", label: "All Site Links" },
   { path: "/admin/clear-cache", label: "Clear Caches" },
   { path: "/admin/seo-dashboard", label: "AI SEO Dashboard" },

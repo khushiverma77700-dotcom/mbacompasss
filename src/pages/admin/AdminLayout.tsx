@@ -63,7 +63,6 @@ const adminNavGroups = [
       { label: "Google Indexing", path: "/admin/google-indexing", icon: Globe },
       { label: "Sitemap", path: "/admin/sitemap", icon: MapPin },
       { label: "All Site Links", path: "/admin/all-links", icon: Link2 },
-      { label: "City/State Pages", path: "/admin/city-pages", icon: Globe },
       { label: "Profile Analyzer", path: "/admin/profile-analyzer", icon: BarChart3 },
       { label: "CAT Score Submissions", path: "/admin/cat-scores", icon: Calculator },
     ],
