@@ -1131,6 +1131,86 @@ export type Database = {
           },
         ]
       }
+      indexing_logs: {
+        Row: {
+          action: string
+          created_at: string
+          error_message: string | null
+          id: string
+          indexing_url_id: string | null
+          response: Json | null
+          status: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          indexing_url_id?: string | null
+          response?: Json | null
+          status: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          indexing_url_id?: string | null
+          response?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "indexing_logs_indexing_url_id_fkey"
+            columns: ["indexing_url_id"]
+            isOneToOne: false
+            referencedRelation: "indexing_urls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      indexing_urls: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          last_response: Json | null
+          last_submitted_at: string | null
+          page_type: string
+          record_id: string | null
+          retry_count: number
+          status: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          last_response?: Json | null
+          last_submitted_at?: string | null
+          page_type?: string
+          record_id?: string | null
+          retry_count?: number
+          status?: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          last_response?: Json | null
+          last_submitted_at?: string | null
+          page_type?: string
+          record_id?: string | null
+          retry_count?: number
+          status?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       inquiries: {
         Row: {
           created_at: string
