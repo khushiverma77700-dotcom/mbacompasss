@@ -163,9 +163,9 @@ const CollegesPage = () => {
           <img
             src={getLocationImage(selectedCity !== "all" ? selectedCity : null, selectedState !== "all" ? selectedState : null)}
             alt=""
-            className="absolute inset-0 w-full h-full object-cover blur-sm scale-105 opacity-40 transition-all duration-700"
+className="absolute inset-0 w-full h-full object-cover blur-sm scale-105 opacity-50 transition-all duration-700"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/60 via-primary/50 to-primary/70" />
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/55 via-primary/45 to-primary/65" />
           <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
           <div className="absolute top-10 right-10 w-32 h-32 border border-white/10 rounded-full" />
