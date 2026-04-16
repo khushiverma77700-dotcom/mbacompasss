@@ -490,6 +490,19 @@ Deno.serve(async (req) => {
       return getAccessToken(serviceAccount);
     };
 
+    if (action === "debug_secret") {
+      const rawSecret = Deno.env.get("GOOGLE_INDEXING_SERVICE_ACCOUNT") || "";
+      return respond({
+        ok: true,
+        data: {
+          length: rawSecret.length,
+          first100: rawSecret.slice(0, 100),
+          last50: rawSecret.slice(-50),
+          startsWithBrace: rawSecret.trimStart().startsWith("{"),
+        },
+      });
+    }
+
     if (action === "submit_url") {
       const url = typeof body?.url === "string" ? body.url.trim() : "";
       const pageType = typeof body?.page_type === "string" ? body.page_type : "other";
