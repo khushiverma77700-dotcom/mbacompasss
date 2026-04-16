@@ -158,26 +158,28 @@ const AdminLeads = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Phone</TableHead>
+                  <TableHead className="w-12">S.No</TableHead>
+                  <SortableTableHead label="Name" sortKey="display_name" sortConfig={sortConfig} onSort={onSort} />
+                  <SortableTableHead label="Phone" sortKey="phone" sortConfig={sortConfig} onSort={onSort} />
                   <TableHead>Target Exams</TableHead>
-                  <TableHead>Experience</TableHead>
-                  <TableHead>Signup Page</TableHead>
-                  <TableHead>Registered</TableHead>
+                  <SortableTableHead label="Experience" sortKey="work_experience" sortConfig={sortConfig} onSort={onSort} />
+                  <SortableTableHead label="Signup Page" sortKey="signup_page_name" sortConfig={sortConfig} onSort={onSort} />
+                  <SortableTableHead label="Registered" sortKey="created_at" sortConfig={sortConfig} onSort={onSort} />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Loading...</TableCell>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading...</TableCell>
                   </TableRow>
-                ) : filtered.length === 0 ? (
+                ) : sortedFiltered.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No leads found</TableCell>
+                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No leads found</TableCell>
                   </TableRow>
                 ) : (
-                  filtered.map((lead) => (
+                  sortedFiltered.map((lead, idx) => (
                     <TableRow key={lead.id}>
+                      <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                       <TableCell className="font-medium">
                         <div>{lead.display_name || "—"}</div>
                         {lead.city && <div className="text-xs text-muted-foreground">{lead.city}</div>}
@@ -209,6 +211,7 @@ const AdminLeads = () => {
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                         {format(new Date(lead.created_at), "dd MMM yyyy")}
+                        <br/><span className="text-[10px]">{format(new Date(lead.created_at), "hh:mm a")}</span>
                       </TableCell>
                     </TableRow>
                   ))
