@@ -147,13 +147,6 @@ const CollegesPage = () => {
         jsonLd={jsonLd}
       />
 
-      {/* Breadcrumb */}
-      <nav className="container mx-auto px-4 pt-4" aria-label="Breadcrumb">
-        <ol className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <li><Link to="/" className="hover:text-primary transition-colors">Home</Link></li>
-          <li className="flex items-center gap-1.5"><ChevronRight className="w-3 h-3" /><span className="text-foreground font-medium">Colleges</span></li>
-        </ol>
-      </nav>
 
       {/* Hero */}
       <div className="hero-gradient py-14 md:py-20 mt-2 relative overflow-hidden">

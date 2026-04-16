@@ -50,12 +50,6 @@ const ContactPage = () => {
         }}
       />
 
-      <nav className="container mx-auto px-4 pt-4" aria-label="Breadcrumb">
-        <ol className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <li><Link to="/" className="hover:text-primary transition-colors">Home</Link></li>
-          <li className="flex items-center gap-1.5"><span>/</span><span className="text-foreground font-medium">Contact Us</span></li>
-        </ol>
-      </nav>
 
       <div className="container mx-auto px-4 py-12 max-w-4xl">
         <h1 className="font-heading text-3xl font-bold text-foreground mb-8">{heading}</h1>
