@@ -9,10 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInstitutes, useCategories } from "@/hooks/useInstitutes";
 import { useCityPages } from "@/hooks/useCityPages";
+import { useSpecializations } from "@/hooks/useSpecializations";
 import SEOHead, { generateListingSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import PageKeywords from "@/components/PageKeywords";
 import AIGistSection from "@/components/AIGistSection";
+import { FEE_BUCKETS, matchesFeeBucket, getEffectiveFeesLakhs, specMatches } from "@/lib/filterHelpers";
 
 const modes = ["Online", "Offline", "Hybrid"];
 
@@ -20,32 +22,31 @@ const slugify = (s: string) => s.toLowerCase().trim().replace(/\s+/g, "-");
 
 const CategoryPage = () => {
   const { slug } = useParams<{ slug: string }>();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryCity = searchParams.get("city") || "all";
   const queryState = searchParams.get("state") || "all";
   const queryMode = searchParams.get("mode") || "all";
   const querySearch = searchParams.get("q") || "";
-
-  const [search, setSearch] = useState(querySearch);
-  const [sortBy, setSortBy] = useState("rating");
-  const [selectedCity, setSelectedCity] = useState(queryCity);
-  const [selectedState, setSelectedState] = useState(queryState);
-  const [selectedMode, setSelectedMode] = useState(queryMode);
+  const queryFee = searchParams.get("fee") || "all";
+  const querySpec = searchParams.get("specialization") || "all";
+  const querySort = searchParams.get("sort") || "rating";
 
   const { data: institutes = [], isLoading: institutesLoading } = useInstitutes(slug);
   const { data: categories = [] } = useCategories();
   const { data: allCityPages } = useCityPages();
+  const { data: specOptions = [] } = useSpecializations("coaching");
 
   const isLoading = institutesLoading;
   const category = categories.find((c: any) => c.slug === slug);
 
-  // Sync state when URL params change
-  useEffect(() => {
-    setSearch(querySearch);
-    setSelectedCity(queryCity);
-    setSelectedState(queryState);
-    setSelectedMode(queryMode);
-  }, [slug, querySearch, queryCity, queryState, queryMode]);
+  const setFilter = (key: string, value: string) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (value === "all" || value === "" || value === "rating") next.delete(key); else next.set(key, value);
+      if (key === "state") next.delete("city");
+      return next;
+    }, { replace: true });
+  };
 
   // Find matching city_page for hero image (by city or state)
   const cityPage = useMemo(() => {
@@ -71,8 +72,8 @@ const CategoryPage = () => {
 
   const filtered = useMemo(() => {
     let list = [...institutes] as any[];
-    if (search) {
-      const q = search.toLowerCase();
+    if (querySearch) {
+      const q = querySearch.toLowerCase();
       list = list.filter((i) =>
         i.name.toLowerCase().includes(q) ||
         (i.city || "").toLowerCase().includes(q) ||
@@ -80,23 +81,26 @@ const CategoryPage = () => {
         (i.courses || []).some((c: any) => c.name.toLowerCase().includes(q))
       );
     }
-    if (selectedCity !== "all") {
-      const cityFilter = selectedCity.trim().toLowerCase();
+    if (queryCity !== "all") {
+      const cityFilter = queryCity.trim().toLowerCase();
       list = list.filter((i) => (i.city || "").trim().toLowerCase() === cityFilter);
     }
-    if (selectedState !== "all") {
-      const stateFilter = selectedState.trim().toLowerCase();
+    if (queryState !== "all") {
+      const stateFilter = queryState.trim().toLowerCase();
       list = list.filter((i) => (i.state || "").trim().toLowerCase() === stateFilter);
     }
-    if (selectedMode !== "all") {
-      const modeFilter = selectedMode.trim().toLowerCase();
+    if (queryMode !== "all") {
+      const modeFilter = queryMode.trim().toLowerCase();
       list = list.filter((i) => (i.mode || "").trim().toLowerCase() === modeFilter);
     }
-    if (sortBy === "rating") list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    if (sortBy === "reviews") list.sort((a, b) => (b.total_reviews || 0) - (a.total_reviews || 0));
-    if (sortBy === "success") list.sort((a, b) => (b.success_rate || 0) - (a.success_rate || 0));
+    if (queryFee !== "all") list = list.filter((i: any) => matchesFeeBucket(getEffectiveFeesLakhs(i), queryFee));
+    if (querySpec !== "all") list = list.filter((i: any) => specMatches(i.specializations, querySpec));
+    if (querySort === "rating") list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    if (querySort === "reviews") list.sort((a, b) => (b.total_reviews || 0) - (a.total_reviews || 0));
+    if (querySort === "success") list.sort((a, b) => (b.success_rate || 0) - (a.success_rate || 0));
+    if (querySort === "fees-low") list.sort((a, b) => (getEffectiveFeesLakhs(a) ?? Infinity) - (getEffectiveFeesLakhs(b) ?? Infinity));
     return list;
-  }, [institutes, search, sortBy, selectedCity, selectedState, selectedMode]);
+  }, [institutes, querySearch, querySort, queryCity, queryState, queryMode, queryFee, querySpec]);
 
   // Cities and states actually present in the institutes data
   const availableCities = useMemo(
@@ -235,33 +239,47 @@ const CategoryPage = () => {
           <div className="flex flex-wrap gap-3 items-center">
             <div className="relative flex-1 min-w-[200px] max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Search coaching institutes..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 rounded-xl" />
+              <Input placeholder="Search coaching institutes..." value={querySearch} onChange={e => setFilter("q", e.target.value)} className="pl-9 rounded-xl" />
             </div>
-            <Select value={selectedState} onValueChange={(v) => { setSelectedState(v); setSelectedCity("all"); }}>
+            <Select value={queryState} onValueChange={(v) => setFilter("state", v)}>
               <SelectTrigger className="w-40 rounded-xl"><SelectValue placeholder="State" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All States</SelectItem>
                 {availableStates.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={selectedCity} onValueChange={setSelectedCity}>
+            <Select value={queryCity} onValueChange={(v) => setFilter("city", v)}>
               <SelectTrigger className="w-40 rounded-xl"><SelectValue placeholder="City" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Cities</SelectItem>
                 {availableCities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={selectedMode} onValueChange={setSelectedMode}>
+            <Select value={queryMode} onValueChange={(v) => setFilter("mode", v)}>
               <SelectTrigger className="w-40 rounded-xl"><SelectValue placeholder="Mode" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Modes</SelectItem>
                 {modes.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={sortBy} onValueChange={setSortBy}>
+            <Select value={queryFee} onValueChange={(v) => setFilter("fee", v)}>
+              <SelectTrigger className="w-40 rounded-xl"><SelectValue placeholder="Fees" /></SelectTrigger>
+              <SelectContent>{FEE_BUCKETS.map(b => <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>)}</SelectContent>
+            </Select>
+            {specOptions.length > 0 && (
+              <Select value={querySpec} onValueChange={(v) => setFilter("specialization", v)}>
+                <SelectTrigger className="w-44 rounded-xl"><SelectValue placeholder="Specialization" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Specializations</SelectItem>
+                  {specOptions.map(s => <SelectItem key={s.slug} value={s.slug}>{s.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
+            <Select value={querySort} onValueChange={(v) => setFilter("sort", v)}>
               <SelectTrigger className="w-44 rounded-xl"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="rating">Sort by Rating</SelectItem>
+                <SelectItem value="fees-low">Fees: Low to High</SelectItem>
                 <SelectItem value="reviews">Most Reviews</SelectItem>
                 <SelectItem value="success">Success Rate</SelectItem>
               </SelectContent>
