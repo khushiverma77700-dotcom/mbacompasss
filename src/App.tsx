@@ -58,7 +58,7 @@ const AdminInstituteResults = lazy(() => import("./pages/admin/AdminInstituteRes
 const AdminSitemap = lazy(() => import("./pages/admin/AdminSitemap"));
 const AdminClearCache = lazy(() => import("./pages/admin/AdminClearCache"));
 const AdminLeads = lazy(() => import("./pages/admin/AdminLeads"));
-const AdminCityPages = lazy(() => import("./pages/admin/AdminCityPages"));
+
 const AdminAllLinks = lazy(() => import("./pages/admin/AdminAllLinks"));
 const AdminComparisons = lazy(() => import("./pages/admin/AdminComparisons"));
 const AdminCoachingResults = lazy(() => import("./pages/admin/AdminCoachingResults"));
@@ -211,7 +211,7 @@ const App = () => (
               <Route path="sitemap" element={<LazyPage><AdminSitemap /></LazyPage>} />
               <Route path="clear-cache" element={<LazyPage><AdminClearCache /></LazyPage>} />
               <Route path="leads" element={<LazyPage><AdminLeads /></LazyPage>} />
-              <Route path="city-pages" element={<LazyPage><AdminCityPages /></LazyPage>} />
+              
               <Route path="all-links" element={<LazyPage><AdminAllLinks /></LazyPage>} />
               <Route path="comparisons" element={<LazyPage><AdminComparisons /></LazyPage>} />
               <Route path="coaching-results" element={<LazyPage><AdminCoachingResults /></LazyPage>} />
