@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useInstitutes, useCategories } from "@/hooks/useInstitutes";
+import InstituteListingCard from "@/components/InstituteListingCard";
 import { useCityPages } from "@/hooks/useCityPages";
 import { useSpecializations } from "@/hooks/useSpecializations";
 import SEOHead, { generateListingSchema } from "@/components/SEOHead";
@@ -334,98 +335,9 @@ const CategoryPage = () => {
 
         {filtered.length > 0 ? (
           <div id="institute-list" className="space-y-5">
-            {filtered.map((inst: any, i: number) => {
-              const heroImg = inst.banner_url || getLocationImage(inst.city, inst.state);
-              return (
-                <motion.div key={inst.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: Math.min(i * 0.03, 0.3) }}>
-                  <Link to={`/institute/${inst.slug}`} className="group block bg-card rounded-3xl shadow-md hover:shadow-2xl transition-all duration-500 border border-border hover:border-primary/30 overflow-hidden hover:-translate-y-0.5">
-                    <div className="flex flex-col md:flex-row">
-                      <div className="relative md:w-72 h-48 md:h-auto flex-shrink-0 overflow-hidden">
-                        <img src={heroImg} alt={inst.name} loading="lazy" className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
-                        <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
-                          <div className="flex flex-col gap-1.5">
-                            {inst.featured && (
-                              <span className="inline-flex items-center gap-1 bg-amber-400 text-amber-950 text-[10px] font-extrabold px-2.5 py-1 rounded-full shadow-lg uppercase tracking-wider">
-                                <Star className="w-3 h-3 fill-current" /> Featured
-                              </span>
-                            )}
-                            <span className="inline-flex items-center gap-1 bg-white/95 backdrop-blur text-foreground text-[10px] font-bold px-2.5 py-1 rounded-full shadow">
-                              {inst.mode === "Online" ? <Monitor className="w-2.5 h-2.5" /> : inst.mode === "Hybrid" ? <Wifi className="w-2.5 h-2.5" /> : <Building className="w-2.5 h-2.5" />}
-                              {inst.mode || "Offline"}
-                            </span>
-                          </div>
-                          {inst.rating > 0 && (
-                            <span className="inline-flex items-center gap-1 bg-black/50 backdrop-blur text-white text-xs font-bold px-2.5 py-1 rounded-full">
-                              <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {inst.rating}
-                            </span>
-                          )}
-                        </div>
-                        <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end gap-3">
-                          <div className="w-12 h-12 rounded-xl bg-white shadow-xl flex items-center justify-center flex-shrink-0 ring-2 ring-white/40">
-                            {inst.logo_url ? (
-                              <img src={inst.logo_url} alt="" className="w-9 h-9 object-contain" />
-                            ) : (
-                              <span className="font-extrabold text-primary text-lg">{inst.name?.charAt(0)}</span>
-                            )}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <h2 className="font-heading font-extrabold text-white line-clamp-1 text-base drop-shadow-lg">{inst.name}</h2>
-                            <div className="flex items-center gap-1 text-xs text-white/90 mt-0.5">
-                              <MapPin className="w-3 h-3" /> {inst.city}{inst.state ? `, ${inst.state}` : ""}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex-1 p-5 grid grid-cols-2 lg:grid-cols-4 gap-3 bg-gradient-to-br from-background to-muted/30">
-                        <div className="rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900/40 p-3">
-                          <div className="flex items-center gap-1.5 text-[10px] text-amber-700 dark:text-amber-400 uppercase tracking-wider font-bold mb-1"><Star className="w-3 h-3" /> Rating</div>
-                          <p className="text-lg font-extrabold text-foreground leading-none">{inst.rating || "—"}<span className="text-xs text-muted-foreground font-normal ml-1">({inst.total_reviews || 0})</span></p>
-                        </div>
-                        <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 p-3">
-                          <div className="flex items-center gap-1.5 text-[10px] text-emerald-700 dark:text-emerald-400 uppercase tracking-wider font-bold mb-1"><TrendingUp className="w-3 h-3" /> Success</div>
-                          <p className="text-lg font-extrabold text-foreground leading-none">{inst.success_rate ? `${inst.success_rate}%` : "—"}</p>
-                        </div>
-                        <div className="rounded-xl bg-sky-50 dark:bg-sky-950/30 border border-sky-100 dark:border-sky-900/40 p-3">
-                          <div className="flex items-center gap-1.5 text-[10px] text-sky-700 dark:text-sky-400 uppercase tracking-wider font-bold mb-1"><Users className="w-3 h-3" /> Students</div>
-                          <p className="text-lg font-extrabold text-foreground leading-none">{inst.students_count ? `${inst.students_count}+` : "—"}</p>
-                        </div>
-                        <div className="rounded-xl bg-violet-50 dark:bg-violet-950/30 border border-violet-100 dark:border-violet-900/40 p-3">
-                          <div className="flex items-center gap-1.5 text-[10px] text-violet-700 dark:text-violet-400 uppercase tracking-wider font-bold mb-1"><GraduationCap className="w-3 h-3" /> Courses</div>
-                          <div className="flex flex-wrap gap-1 mt-0.5">
-                            {(inst.courses || []).slice(0, 2).map((c: any) => (
-                              <Badge key={c.id} variant="secondary" className="text-[10px] font-medium py-0 px-1.5">{c.name}</Badge>
-                            ))}
-                            {(inst.courses || []).length > 2 && (
-                              <Badge variant="secondary" className="text-[10px] font-medium py-0 px-1.5">+{inst.courses.length - 2}</Badge>
-                            )}
-                            {(!inst.courses || inst.courses.length === 0) && <span className="text-sm font-bold text-foreground">—</span>}
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex md:flex-col items-center justify-between md:justify-center gap-3 p-5 md:w-44 flex-shrink-0 bg-gradient-to-b from-primary/5 to-primary/10 border-t md:border-t-0 md:border-l border-border">
-                        {inst.courses?.[0]?.fees ? (
-                          <div className="text-center">
-                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold block">Starting</span>
-                            <span className="font-heading font-extrabold text-primary text-lg">₹{(Number(inst.courses[0].fees) / 1000).toFixed(0)}K</span>
-                          </div>
-                        ) : (
-                          <div className="text-center">
-                            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold block">View</span>
-                            <span className="font-heading font-extrabold text-primary text-lg">Details</span>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-primary text-primary-foreground font-bold text-xs group-hover:gap-3 transition-all shadow-md">
-                          Explore <ArrowRight className="w-3.5 h-3.5" />
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
-              );
-            })}
+            {filtered.map((inst: any, i: number) => (
+              <InstituteListingCard key={inst.id} inst={inst} index={i} rank={i + 1} />
+            ))}
           </div>
         ) : (
           <div className="text-center py-20 bg-card rounded-2xl border border-border">
