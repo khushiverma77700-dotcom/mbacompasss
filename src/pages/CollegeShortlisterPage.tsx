@@ -339,8 +339,6 @@ const CollegeShortlisterPage = () => {
             "management institute shortlist for CAT 95 percentile", "tools for MBA college shortlisting and tracking",
           ]}
           canonical="https://bschoolbuzz.com/college-shortlister"
-          keywords={["MBA college shortlisting", "AI college finder", "CAT college predictor", "MBA admission chances"]}
-          canonical="https://bschoolbuzz.com/college-shortlister"
         />
 
         {/* ══ HERO ══ */}
