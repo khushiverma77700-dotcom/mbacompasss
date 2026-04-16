@@ -122,11 +122,11 @@ const CategoryPage = () => {
     (hasLocationFilter
       ? `Explore top ${category?.name || "MBA"} coaching institutes in ${displayName} with fees, ratings, success rates, and student reviews.`
       : category?.description || "Find the best MBA coaching institutes across India");
-  const keywords = cityPage?.keywords || category?.keywords || [];
+  const keywords: string[] = cityPage?.keywords || [];
   const jsonLd = generateListingSchema(metaTitle, filtered, "institute");
   const { seo: resolvedSeo } = useResolvedSeo(
-    cityPage ? "cityPage" : "category",
-    cityPage?.id || category?.id,
+    cityPage ? "cityPage" : undefined,
+    cityPage?.id,
     {
       title: metaTitle,
       description: metaDesc,
@@ -227,8 +227,8 @@ const CategoryPage = () => {
         {/* AI Gist */}
         <AIGistSection
           content={`${displayName || "India"} ${category?.name || "MBA"} Coaching Institutes. ${cityPage?.intro_content || ""} ${cityPage?.detailed_content || ""} ${filtered.map((i: any) => `${i.name}: Rating ${i.rating}, Success Rate ${i.success_rate}%`).join(". ")}`}
-          pageType={cityPage ? "city" : "category"}
-          pageId={cityPage?.id || category?.id}
+          pageType="city"
+          pageId={cityPage?.id}
           onScrollToContent={() => document.getElementById("institute-list")?.scrollIntoView({ behavior: "smooth" })}
         />
 
@@ -406,8 +406,8 @@ const CategoryPage = () => {
           </div>
         )}
 
-        {(cityPage?.id || category?.id) && (
-          <PageKeywords contentType={cityPage ? "cityPage" : "category"} recordId={cityPage?.id || category?.id} fallbackKeywords={keywords} />
+        {cityPage?.id && (
+          <PageKeywords contentType="cityPage" recordId={cityPage.id} fallbackKeywords={keywords} />
         )}
       </div>
     </div>
