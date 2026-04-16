@@ -17,23 +17,41 @@ const modes = ["Online", "Offline", "Hybrid"];
 const CategoryPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams] = useSearchParams();
-  const [search, setSearch] = useState(searchParams.get("q") || "");
+  const querySearch = searchParams.get("q") || "";
+  const queryCity = searchParams.get("city") || "all";
+  const queryState = searchParams.get("state") || "all";
+  const queryMode = searchParams.get("mode") || "all";
+
+  const [search, setSearch] = useState(querySearch);
   const [sortBy, setSortBy] = useState("rating");
-  const [selectedCity, setSelectedCity] = useState(searchParams.get("city") || "all");
-  const [selectedState, setSelectedState] = useState(searchParams.get("state") || "all");
-  const [selectedMode, setSelectedMode] = useState(searchParams.get("mode") || "all");
+  const [selectedCity, setSelectedCity] = useState(queryCity);
+  const [selectedState, setSelectedState] = useState(queryState);
+  const [selectedMode, setSelectedMode] = useState(queryMode);
   const [feeRange, setFeeRange] = useState([0, 200000]);
-  const [showFilters, setShowFilters] = useState(
-    !!(searchParams.get("city") || searchParams.get("state") || searchParams.get("mode"))
-  );
+  const [showFilters, setShowFilters] = useState(queryCity !== "all" || queryState !== "all" || queryMode !== "all");
 
   const { data: institutes = [], isLoading } = useInstitutes(slug);
   const { data: categories = [] } = useCategories();
 
   const category = categories.find((c: any) => c.slug === slug);
 
-  const cities = useMemo(() => selectedState !== "all" ? getCitiesForState(selectedState).filter(c => institutes.some((i: any) => i.city === c)) : [...new Set(institutes.map((i: any) => i.city).filter(Boolean))].sort() as string[], [institutes, selectedState]);
-  const states = useMemo(() => INDIAN_STATES.filter(s => institutes.some((i: any) => i.state === s)), [institutes]);
+  const cities = useMemo(
+    () =>
+      selectedState !== "all"
+        ? getCitiesForState(selectedState).filter((c) => institutes.some((i: any) => i.city === c))
+        : ([...new Set(institutes.map((i: any) => i.city).filter(Boolean))].sort() as string[]),
+    [institutes, selectedState]
+  );
+  const states = useMemo(() => INDIAN_STATES.filter((s) => institutes.some((i: any) => i.state === s)), [institutes]);
+
+  useEffect(() => {
+    setSearch(querySearch);
+    setSelectedCity(queryCity);
+    setSelectedState(queryState);
+    setSelectedMode(queryMode);
+    setFeeRange([0, 200000]);
+    setShowFilters(queryCity !== "all" || queryState !== "all" || queryMode !== "all");
+  }, [slug, querySearch, queryCity, queryState, queryMode]);
 
   useEffect(() => {
     const title = category
@@ -53,9 +71,18 @@ const CategoryPage = () => {
         (i.courses || []).some((c: any) => c.name.toLowerCase().includes(q))
       );
     }
-    if (selectedCity !== "all") list = list.filter((i) => i.city === selectedCity);
-    if (selectedState !== "all") list = list.filter((i) => i.state === selectedState);
-    if (selectedMode !== "all") list = list.filter((i) => i.mode === selectedMode);
+    if (selectedCity !== "all") {
+      const cityFilter = selectedCity.trim().toLowerCase();
+      list = list.filter((i) => (i.city || "").trim().toLowerCase() === cityFilter);
+    }
+    if (selectedState !== "all") {
+      const stateFilter = selectedState.trim().toLowerCase();
+      list = list.filter((i) => (i.state || "").trim().toLowerCase() === stateFilter);
+    }
+    if (selectedMode !== "all") {
+      const modeFilter = selectedMode.trim().toLowerCase();
+      list = list.filter((i) => (i.mode || "").trim().toLowerCase() === modeFilter);
+    }
     // Fee filtering based on lowest course fee
     list = list.filter((i) => {
       const minFee = Math.min(...(i.courses || []).map((c: any) => Number(c.fees) || 0), Infinity);
