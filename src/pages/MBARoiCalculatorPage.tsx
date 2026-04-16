@@ -1736,9 +1736,111 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
               )}
             </div>
           )}
-        </TabsContent>
 
-        {/* FINANCIAL TAB */}
+          {ai?.profile_score_breakdown && (
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="font-bold text-foreground mb-4 flex items-center gap-2"><Gauge className="w-4 h-4 text-primary" /> 5-Dimension Profile Score</h3>
+                <div className="grid md:grid-cols-2 gap-5 items-center">
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart data={[
+                        { k: "Academic", v: ai.profile_score_breakdown.academic || 0 },
+                        { k: "Work Exp", v: ai.profile_score_breakdown.work_experience || 0 },
+                        { k: "Exam Ready", v: ai.profile_score_breakdown.exam_readiness || 0 },
+                        { k: "Financial", v: ai.profile_score_breakdown.financial_readiness || 0 },
+                        { k: "Career Clarity", v: ai.profile_score_breakdown.career_clarity || 0 },
+                      ]}>
+                        <PolarGrid stroke="hsl(var(--border))" />
+                        <PolarAngleAxis dataKey="k" tick={{ fontSize: 11 }} />
+                        <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 9 }} />
+                        <Radar dataKey="v" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.4} strokeWidth={2} />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <div className="space-y-2">
+                    {[
+                      { l: "Academic", v: ai.profile_score_breakdown.academic },
+                      { l: "Work Experience", v: ai.profile_score_breakdown.work_experience },
+                      { l: "Exam Readiness", v: ai.profile_score_breakdown.exam_readiness },
+                      { l: "Financial Readiness", v: ai.profile_score_breakdown.financial_readiness },
+                      { l: "Career Clarity", v: ai.profile_score_breakdown.career_clarity },
+                    ].map((s, i) => (
+                      <div key={i}>
+                        <div className="flex justify-between text-xs mb-1"><span className="text-foreground font-medium">{s.l}</span><span className="font-bold text-foreground">{s.v}/100</span></div>
+                        <div className="h-2 bg-muted rounded-full overflow-hidden"><div className="h-full bg-primary rounded-full" style={{ width: `${s.v}%` }} /></div>
+                      </div>
+                    ))}
+                    <div className="pt-3 mt-3 border-t border-border text-center">
+                      <p className="text-xs text-muted-foreground">Overall</p>
+                      <p className="text-3xl font-bold text-primary">{ai.profile_score_breakdown.overall}/100</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {ai?.competitive_advantage?.length > 0 && (
+            <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-blue-50/40">
+              <CardContent className="p-6">
+                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><Award className="w-4 h-4 text-primary" /> Your Competitive Edge</h3>
+                <div className="grid md:grid-cols-2 gap-2">
+                  {ai.competitive_advantage.map((c: string, i: number) => (
+                    <div key={i} className="flex gap-2 p-3 rounded-lg bg-card border border-border text-sm">
+                      <Sparkles className="w-4 h-4 text-primary mt-0.5 shrink-0" /><span className="text-foreground/80">{c}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {ai?.key_metrics_explained?.length > 0 && (
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><Lightbulb className="w-4 h-4 text-primary" /> Your Numbers, Decoded</h3>
+                <Table>
+                  <TableHeader><TableRow><TableHead>Metric</TableHead><TableHead>Value</TableHead><TableHead>What It Means</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {ai.key_metrics_explained.map((m: any, i: number) => (
+                      <TableRow key={i}><TableCell className="font-semibold">{m.metric}</TableCell><TableCell className="text-primary font-bold">{m.value}</TableCell><TableCell className="text-xs text-muted-foreground">{m.what_it_means}</TableCell></TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+
+          {ai?.comparable_alumni_stories?.length > 0 && (
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="font-bold text-foreground mb-4 flex items-center gap-2"><Users className="w-4 h-4 text-primary" /> Students Like You — Where They Are Now</h3>
+                <div className="grid md:grid-cols-3 gap-3">
+                  {ai.comparable_alumni_stories.map((a: any, i: number) => (
+                    <div key={i} className="p-4 rounded-lg border border-border bg-gradient-to-br from-card to-blue-50/30">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-blue-500 text-white flex items-center justify-center text-xs font-bold">{a.name.split(" ").map((n: string) => n[0]).join("")}</div>
+                        <div><p className="text-sm font-bold text-foreground">{a.name}</p><p className="text-[10px] text-muted-foreground">{a.college}</p></div>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-2"><span className="font-semibold text-foreground">Background:</span> {a.background}</p>
+                      <p className="text-xs text-foreground/80 italic">"{a.outcome}"</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {ai?.tier_recommendation && (
+            <Card className="border-amber-200/60 bg-amber-50/30">
+              <CardContent className="p-6">
+                <h3 className="font-bold text-foreground mb-2 flex items-center gap-2"><Target className="w-4 h-4 text-amber-600" /> Advisor's Tier Recommendation</h3>
+                <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">{ai.tier_recommendation}</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
         <TabsContent value="financial" className="space-y-5 mt-5">
           {ai?.financial_analysis && (
             <Card>
