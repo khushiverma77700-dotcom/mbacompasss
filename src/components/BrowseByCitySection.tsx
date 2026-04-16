@@ -171,7 +171,7 @@ const BrowseByCitySection = () => {
                         </span>
                       )}
                     </div>
-                    <Link to={`/colleges/${featured.slug}`}>
+                    <Link to={`/colleges?${featured.state ? `state=${encodeURIComponent(featured.state)}&` : ""}city=${encodeURIComponent(featured.name)}`}>
                       <Button
                         size="sm"
                         className="rounded-full text-xs font-bold bg-white text-foreground hover:bg-white/90 shadow-lg gap-1.5 px-4 py-2"
@@ -330,7 +330,7 @@ const BrowseByCitySection = () => {
                       </span>
                     )}
                   </div>
-                  <Link to={`/colleges/${featured.slug}`}>
+                  <Link to={`/colleges?${featured.state ? `state=${encodeURIComponent(featured.state)}&` : ""}city=${encodeURIComponent(featured.name)}`}>
                     <Button
                       size="sm"
                       className="rounded-full text-sm font-bold bg-white text-foreground hover:bg-white/90 shadow-xl gap-2 px-6 py-2.5 transition-all hover:scale-105 hover:shadow-2xl"
@@ -382,7 +382,7 @@ const BrowseByCitySection = () => {
                   onMouseEnter={() => setActiveIndex(i)}
                 >
                   <Link
-                    to={`/colleges/${city.slug}`}
+                    to={`/colleges?${city.state ? `state=${encodeURIComponent(city.state)}&` : ""}city=${encodeURIComponent(city.name)}`}
                     className={`relative block rounded-2xl overflow-hidden cursor-pointer group/card
                       w-[150px] md:w-[170px] h-[230px] md:h-[330px]
                       transition-all duration-500 ease-out
