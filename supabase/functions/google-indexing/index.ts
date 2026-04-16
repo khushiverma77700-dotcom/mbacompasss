@@ -204,8 +204,7 @@ function parseServiceAccountSecret(rawSecret: string): ServiceAccount {
       if (isServiceAccount(resolved)) {
         return {
           client_email: resolved.client_email,
-          private_key: resolved.private_key.replace(/\n/g, "
-"),
+          private_key: resolved.private_key.replace(/\\n/g, "\n"),
           token_uri: resolved.token_uri || "https://oauth2.googleapis.com/token",
         };
       }
