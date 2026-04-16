@@ -32,6 +32,7 @@ const adminNavGroups = [
       { label: "Shortlister Colleges", path: "/admin/shortlister-colleges", icon: Target },
       { label: "Exams", path: "/admin/exams", icon: FileText },
       { label: "Categories", path: "/admin/categories", icon: Tag },
+      { label: "Specializations", path: "/admin/specializations", icon: Tag },
     ],
   },
   {
