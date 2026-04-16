@@ -1,5 +1,5 @@
 import { useParams, Link, useSearchParams } from "react-router-dom";
-import { useState, useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import { getLocationImage, isGeneratedBanner } from "@/data/cityImages";
 import { MapPin, ArrowRight, GraduationCap, TrendingUp, Search, Filter, Star, Award, Building2, Users, Monitor, Building, Wifi, ArrowLeft, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
