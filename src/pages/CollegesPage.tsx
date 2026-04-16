@@ -242,27 +242,6 @@ const CollegesPage = () => {
               ))}
             </motion.div>
 
-            {/* Region badges */}
-            {regions.length > 0 && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} className="flex flex-wrap justify-center gap-2">
-                {regions.map(r => {
-                  const aliases = r.city_aliases || [r.name.toLowerCase()];
-                  const regionCount = colleges.filter((c: any) =>
-                    aliases.some((a: string) =>
-                      (c.city || "").toLowerCase().includes(a.toLowerCase()) ||
-                      (c.state || "").toLowerCase().includes(a.toLowerCase())
-                    )
-                  ).length;
-                  return (
-                    <Link key={r.slug} to={`/colleges/${r.slug}`}>
-                      <Badge className="bg-white/10 text-primary-foreground border-white/15 hover:bg-white/20 cursor-pointer px-3 py-1.5 transition-all duration-200 backdrop-blur-sm">
-                        <MapPin className="w-3 h-3 mr-1" /> {r.name} {regionCount > 0 && `(${regionCount})`}
-                      </Badge>
-                    </Link>
-                  );
-                })}
-              </motion.div>
-            )}
           </div>
         </div>
       </div>
