@@ -766,6 +766,37 @@ const AdminGoogleIndexing = () => {
         })}
       </div>
 
+      {/* Status explanation */}
+      <Card className="border-blue-200 bg-blue-50/50">
+        <CardContent className="py-3 px-4">
+          <div className="flex items-start gap-2">
+            <Info className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+            <div className="text-xs text-blue-800 space-y-1">
+              <p className="font-medium">How Google Indexing works:</p>
+              <p><strong>Pending</strong> = URL discovered, not yet sent to Google. <strong>Submitted</strong> = Google notified to crawl (does NOT mean indexed yet). <strong>Indexed</strong> = Confirmed indexed by Google. <strong>Failed</strong> = API error, will retry.</p>
+              <p>"Submitted" status means Google received our request — actual indexing can take hours to days.</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Action Log */}
+      {actionLog.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Activity className="w-4 h-4 text-primary" /> Action Log
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="bg-muted/40 rounded-md p-3 max-h-32 overflow-y-auto font-mono text-xs space-y-0.5">
+              {actionLog.map((msg, i) => (
+                <p key={i} className="text-muted-foreground">{msg}</p>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
       {(batchProgress || liveBatchItems.length > 0) && (
         <div className="grid gap-4 lg:grid-cols-[1.15fr,0.85fr]">
           <Card>
