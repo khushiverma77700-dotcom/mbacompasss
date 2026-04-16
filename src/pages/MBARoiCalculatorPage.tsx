@@ -120,6 +120,7 @@ const FUN_FACTS = [
 ];
 
 const TOTAL_FORM_STEPS = 5;
+const TEMP_DISABLE_PHONE_OTP = true;
 
 const MBARoiCalculatorPage = () => {
   const { user } = useAuth();
@@ -211,6 +212,19 @@ const MBARoiCalculatorPage = () => {
       toast({ title: "Invalid phone", description: "Enter a 10-digit phone number.", variant: "destructive" });
       return;
     }
+
+    if (TEMP_DISABLE_PHONE_OTP) {
+      setForm((f) => ({ ...f, phoneVerified: true }));
+      setOtpStep(false);
+      setOtpValue("");
+      setResendTimer(0);
+      toast({
+        title: "Phone accepted",
+        description: "OTP verification is temporarily disabled. You can continue.",
+      });
+      return;
+    }
+
     setOtpSending(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-otp", { body: { phone: form.phone } });

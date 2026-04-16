@@ -14,6 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { getAuthRedirectUri, normalizeRedirectPath, storePostAuthRedirect } from "@/lib/authRedirect";
 import mbahubLogo from "@/assets/mbahub-logo.png";
 
+const TEMP_DISABLE_PHONE_OTP = true;
+
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -50,6 +52,19 @@ const AuthPage = () => {
       toast({ title: "Invalid Phone", description: "Enter a valid 10-digit phone number.", variant: "destructive" });
       return;
     }
+
+    if (TEMP_DISABLE_PHONE_OTP) {
+      setPhoneVerified(true);
+      setOtpStep(false);
+      setOtpValue("");
+      setResendTimer(0);
+      toast({
+        title: "Phone accepted",
+        description: "OTP verification is temporarily disabled. You can continue.",
+      });
+      return;
+    }
+
     setOtpSending(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-otp", {

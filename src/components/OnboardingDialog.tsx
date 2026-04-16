@@ -18,6 +18,8 @@ interface OnboardingDialogProps {
   userId: string;
 }
 
+const TEMP_DISABLE_PHONE_OTP = true;
+
 const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) => {
   const [selectedExams, setSelectedExams] = useState<string[]>([]);
   const [workExperience, setWorkExperience] = useState("");
@@ -70,6 +72,21 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
       setPhoneTouched(true);
       return;
     }
+
+    if (TEMP_DISABLE_PHONE_OTP) {
+      setPhoneTouched(true);
+      setPhoneError("");
+      setPhoneVerified(true);
+      setOtpStep(false);
+      setOtpValue("");
+      setResendTimer(0);
+      toast({
+        title: "Phone accepted",
+        description: "OTP verification is temporarily disabled. You can continue.",
+      });
+      return;
+    }
+
     setOtpSending(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-otp", {
