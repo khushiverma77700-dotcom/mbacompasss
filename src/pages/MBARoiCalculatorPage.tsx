@@ -547,6 +547,9 @@ const Landing = ({ onStart }: { onStart: () => void }) => {
         </div>
       </section>
 
+      {/* ========== ANIMATED SAMPLE REPORT — LIVE FEEL ========== */}
+      <SampleReportShowcase onStart={onStart} />
+
       {/* HOW IT WORKS — DETAILED */}
       <section id="how" className="container mx-auto px-4 py-14 md:py-20">
         <div className="text-center max-w-2xl mx-auto mb-12">
