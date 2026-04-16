@@ -109,15 +109,17 @@ const AdminCategories = () => {
       <Card><CardContent className="p-0">
         <Table>
           <TableHeader><TableRow>
-            <TableHead>Name</TableHead><TableHead>Slug</TableHead><TableHead>Exam Type</TableHead><TableHead>Icon</TableHead><TableHead className="text-right">Actions</TableHead>
+            <TableHead className="w-12">S.No</TableHead><TableHead>Name</TableHead><TableHead>Slug</TableHead><TableHead>Exam Type</TableHead><TableHead>Icon</TableHead><TableHead>Created</TableHead><TableHead className="text-right">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {categories.map((c) => (
+            {categories.map((c, idx) => (
               <TableRow key={c.id}>
+                <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                 <TableCell className="font-medium">{c.name}</TableCell>
                 <TableCell className="font-mono text-sm text-muted-foreground">{c.slug}</TableCell>
                 <TableCell>{c.exam_type ?? "—"}</TableCell>
                 <TableCell>{c.icon ?? "—"}</TableCell>
+                <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(c.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}<br/><span className="text-[10px]">{new Date(c.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></TableCell>
                 <TableCell className="text-right space-x-2">
                   <Button variant="ghost" size="sm" onClick={() => handleEdit(c)}><Pencil className="w-4 h-4" /></Button>
                   <Button variant="ghost" size="sm" onClick={() => handleDelete(c.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
@@ -125,7 +127,7 @@ const AdminCategories = () => {
               </TableRow>
             ))}
             {categories.length === 0 && (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No categories yet</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No categories yet</TableCell></TableRow>
             )}
           </TableBody>
         </Table>

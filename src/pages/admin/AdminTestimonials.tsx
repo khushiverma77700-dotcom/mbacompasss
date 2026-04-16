@@ -142,23 +142,25 @@ const AdminTestimonials = () => {
       <Card><CardContent className="p-0">
         <Table>
           <TableHeader><TableRow>
-            <TableHead>Name</TableHead><TableHead>Type</TableHead><TableHead>Institute</TableHead><TableHead>Rating</TableHead><TableHead>Active</TableHead><TableHead className="text-right">Actions</TableHead>
+            <TableHead className="w-12">S.No</TableHead><TableHead>Name</TableHead><TableHead>Type</TableHead><TableHead>Institute</TableHead><TableHead>Rating</TableHead><TableHead>Active</TableHead><TableHead>Created</TableHead><TableHead className="text-right">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {testimonials.map((t) => (
+            {testimonials.map((t, idx) => (
               <TableRow key={t.id}>
+                <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                 <TableCell className="font-medium">{t.name}</TableCell>
                 <TableCell>{typeBadge(t.type)}</TableCell>
                 <TableCell>{t.institute || "—"}</TableCell>
                 <TableCell><div className="flex items-center gap-1">{Array.from({ length: t.rating || 0 }).map((_, i) => (<Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />))}</div></TableCell>
                 <TableCell>{t.active ? "Yes" : "No"}</TableCell>
+                <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(t.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}<br/><span className="text-[10px]">{new Date(t.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></TableCell>
                 <TableCell className="text-right space-x-2">
                   <Button variant="ghost" size="sm" onClick={() => handleEdit(t)}><Pencil className="w-4 h-4" /></Button>
                   <Button variant="ghost" size="sm" onClick={() => handleDelete(t.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                 </TableCell>
               </TableRow>
             ))}
-            {testimonials.length === 0 && (<TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No testimonials yet</TableCell></TableRow>)}
+            {testimonials.length === 0 && (<TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No testimonials yet</TableCell></TableRow>)}
           </TableBody>
         </Table>
       </CardContent></Card>

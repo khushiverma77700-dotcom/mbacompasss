@@ -239,16 +239,18 @@ const AdminCityPages = () => {
         <CardHeader><CardTitle>All City/State Pages ({pages.length})</CardTitle></CardHeader>
         <CardContent>
           <Table>
-            <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Type</TableHead><TableHead>Slug</TableHead><TableHead>Aliases</TableHead><TableHead>Keywords</TableHead><TableHead>Status</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead className="w-12">S.No</TableHead><TableHead>Name</TableHead><TableHead>Type</TableHead><TableHead>Slug</TableHead><TableHead>Aliases</TableHead><TableHead>Keywords</TableHead><TableHead>Status</TableHead><TableHead>Created</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
             <TableBody>
-              {pages.map(page => (
+              {pages.map((page, idx) => (
                 <TableRow key={page.id}>
+                  <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell className="font-medium">{page.name}</TableCell>
                   <TableCell><Badge variant="outline">{page.type}</Badge></TableCell>
                   <TableCell className="text-xs text-muted-foreground">/colleges/{page.slug}</TableCell>
                   <TableCell><div className="flex flex-wrap gap-1">{(page.city_aliases || []).map((a, i) => <Badge key={i} variant="secondary" className="text-xs">{a}</Badge>)}</div></TableCell>
                   <TableCell className="text-xs">{(page.keywords || []).length} tags</TableCell>
                   <TableCell><Badge variant={page.active ? "default" : "secondary"}>{page.active ? "Active" : "Draft"}</Badge></TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(page.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}<br/><span className="text-[10px]">{new Date(page.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></TableCell>
                   <TableCell>
                     <div className="flex gap-1">
                       <Button size="sm" variant="ghost" onClick={() => handleEdit(page)}><Pencil className="w-4 h-4" /></Button>
@@ -258,7 +260,7 @@ const AdminCityPages = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {pages.length === 0 && (<TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No city/state pages yet. Click "Add Page" to create one.</TableCell></TableRow>)}
+              {pages.length === 0 && (<TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No city/state pages yet. Click "Add Page" to create one.</TableCell></TableRow>)}
             </TableBody>
           </Table>
         </CardContent>

@@ -91,22 +91,24 @@ const AdminComparisons = () => {
       <Card><CardContent className="p-0">
         <Table>
           <TableHeader><TableRow>
-            <TableHead>Title</TableHead><TableHead>Description</TableHead><TableHead>Link</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead>
+            <TableHead className="w-12">S.No</TableHead><TableHead>Title</TableHead><TableHead>Description</TableHead><TableHead>Link</TableHead><TableHead>Status</TableHead><TableHead>Created</TableHead><TableHead className="text-right">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {items.map((item) => (
+            {items.map((item, idx) => (
               <TableRow key={item.id}>
+                <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                 <TableCell className="font-medium">{item.title}</TableCell>
                 <TableCell className="text-muted-foreground text-sm max-w-[200px] truncate">{item.description || "—"}</TableCell>
                 <TableCell className="text-sm">{item.link}</TableCell>
                 <TableCell><Badge variant={item.active ? "default" : "secondary"}>{item.active ? "Active" : "Inactive"}</Badge></TableCell>
+                <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(item.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}<br/><span className="text-[10px]">{new Date(item.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></TableCell>
                 <TableCell className="text-right space-x-1">
                   <Button variant="ghost" size="sm" onClick={() => handleEdit(item)}><Pencil className="w-4 h-4" /></Button>
                   <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                 </TableCell>
               </TableRow>
             ))}
-            {items.length === 0 && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No comparisons yet. Fallback data will show on frontend.</TableCell></TableRow>}
+            {items.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No comparisons yet. Fallback data will show on frontend.</TableCell></TableRow>}
           </TableBody>
         </Table>
       </CardContent></Card>
