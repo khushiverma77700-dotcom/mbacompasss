@@ -261,8 +261,7 @@ async function getAccessToken(sa: ServiceAccount): Promise<string> {
   const pemContent = sa.private_key
     .replace(/-----BEGIN PRIVATE KEY-----/, "")
     .replace(/-----END PRIVATE KEY-----/, "")
-    .replace(/
-/g, "");
+    .replace(/\n/g, "");
 
   const binaryKey = Uint8Array.from(atob(pemContent), (character) =>
     character.charCodeAt(0)
