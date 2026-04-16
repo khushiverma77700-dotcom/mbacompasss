@@ -107,13 +107,6 @@ const AdminMegaMenu = () => {
   const [editing, setEditing] = useState<MenuRow | null>(null);
   const [form, setForm] = useState<Omit<MenuRow, "id">>(emptyRow);
 
-  // Compute existing unique tab labels and column titles for dropdowns
-  const { existingTabs, existingColumns } = useMemo(() => {
-    const tabs = [...new Set(items.map((i) => i.tab_label).filter(Boolean))];
-    const columns = [...new Set(items.map((i) => i.column_title).filter(Boolean))];
-    return { existingTabs: tabs, existingColumns: columns };
-  }, [items]);
-
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["admin-mega-menu", filterType],
     queryFn: async () => {
@@ -128,6 +121,13 @@ const AdminMegaMenu = () => {
       return data as MenuRow[];
     },
   });
+
+  // Compute existing unique tab labels and column titles for dropdowns
+  const { existingTabs, existingColumns } = useMemo(() => {
+    const tabs = [...new Set(items.map((i: MenuRow) => i.tab_label).filter(Boolean))];
+    const columns = [...new Set(items.map((i: MenuRow) => i.column_title).filter(Boolean))];
+    return { existingTabs: tabs, existingColumns: columns };
+  }, [items]);
 
   const saveMut = useMutation({
     mutationFn: async (row: Omit<MenuRow, "id"> & { id?: string }) => {
