@@ -423,6 +423,7 @@ const AdminGoogleIndexing = () => {
 
   const handleRefresh = async () => {
     setActionLoading("refresh");
+    pushLog("Retrying failed URLs...");
     try {
       const result = await callFunction<BulkActionResponse>({ action: "refresh" });
 
@@ -432,6 +433,7 @@ const AdminGoogleIndexing = () => {
         }
       });
 
+      pushLog(`Retry finished: ${result.success}/${result.total} succeeded`);
       toast({
         title: "Retry finished",
         description: `${result.success}/${result.total} URLs processed successfully`,
@@ -439,6 +441,7 @@ const AdminGoogleIndexing = () => {
       await fetchData(false);
     } catch (error: any) {
       const { message } = extractRequestError(error);
+      pushLog(`Retry failed: ${message}`);
       toast({ title: "Error", description: message, variant: "destructive" });
     }
     setActionLoading(null);
