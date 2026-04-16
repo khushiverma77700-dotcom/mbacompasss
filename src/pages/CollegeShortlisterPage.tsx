@@ -331,8 +331,14 @@ const CollegeShortlisterPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <SEOHead
-          title="AI College Shortlister — Dream, Target & Safe MBA Colleges"
+          title="AI College Shortlister — Dream, Target & Safe MBA Colleges | BSchoolBuzz"
           description="Get AI-powered MBA college recommendations in 30 seconds. Our simulator analyzes your profile against 100+ colleges to find Dream, Target, and Safe picks."
+          keywords={[
+            "college shortlisting", "MBA list maker", "B-school selector", "admission tracker",
+            "how to shortlist MBA colleges for applications", "shortlist MBA colleges based on budget and location",
+            "management institute shortlist for CAT 95 percentile", "tools for MBA college shortlisting and tracking",
+          ]}
+          canonical="https://bschoolbuzz.com/college-shortlister"
           keywords={["MBA college shortlisting", "AI college finder", "CAT college predictor", "MBA admission chances"]}
           canonical="https://bschoolbuzz.com/college-shortlister"
         />
