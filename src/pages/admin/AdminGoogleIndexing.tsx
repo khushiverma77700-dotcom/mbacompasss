@@ -465,90 +465,91 @@ const AdminGoogleIndexing = () => {
     let successCount = 0;
     let failedCount = 0;
 
-    for (const entry of pendingEntries) {
-      setBatchProgress((prev) =>
-        prev
-          ? {
-              ...prev,
-              currentUrl: entry.url,
-            }
-          : prev
-      );
-
-      pushLiveBatchItem({
-        url: entry.url,
-        status: "sending",
-        message: "Sending request to Google…",
-        response: "",
-        updatedAt: new Date().toISOString(),
-      });
-
-      try {
-        const result = await callFunction<SubmitUrlResponse>({
-          action: "submit_url",
-          url: entry.url,
-          page_type: entry.page_type,
-          record_id: entry.record_id || undefined,
-        });
-
-        successCount += 1;
-        upsertUrlRecord(result, entry);
-
-        pushLiveBatchItem({
-          url: entry.url,
-          status: "success",
-          message: getResponseSummary(result.google),
-          response: formatJson(result.google),
-          updatedAt: new Date().toISOString(),
-        });
-      } catch (error: any) {
-        failedCount += 1;
-        const { message, details } = extractRequestError(error);
-        upsertUrlRecord(details?.data, entry, message);
-
-        pushLiveBatchItem({
-          url: entry.url,
-          status: "failed",
-          message,
-          response: formatJson(details?.data?.google ?? details?.data?.record?.last_response ?? details),
-          updatedAt: new Date().toISOString(),
-        });
-      }
-
-      const processed = successCount + failedCount;
-      setBatchProgress((prev) =>
-        prev
-          ? {
-              ...prev,
-              processed,
-              success: successCount,
-              failed: failedCount,
-              remaining: pendingEntries.length - processed,
-            }
-          : prev
-      );
-    }
-
     setBatchProgress((prev) =>
       prev
         ? {
             ...prev,
-            currentUrl: null,
-            finishedAt: new Date().toISOString(),
-            isRunning: false,
+            currentUrl: "Submitting batch to Google…",
           }
         : prev
     );
 
-    await fetchData(false);
+    try {
+      const result = await callFunction<BulkActionResponse>({
+        action: "batch_submit",
+        urls: pendingEntries.map((entry) => ({
+          url: entry.url,
+          page_type: entry.page_type,
+          record_id: entry.record_id || undefined,
+        })),
+      });
 
-    toast({
-      title: "Batch submission finished",
-      description: `${successCount}/${pendingEntries.length} URLs processed successfully${
-        failedCount ? `, ${failedCount} failed.` : "."
-      }`,
-      variant: failedCount ? "destructive" : "default",
-    });
+      successCount = result.success || 0;
+      failedCount = result.failed || 0;
+
+      (result.results || []).forEach((entry) => {
+        if (!entry.url) return;
+
+        const fallbackEntry = pendingEntries.find((row) => row.url === entry.url) || {
+          url: entry.url,
+          page_type: "other",
+          record_id: null,
+        };
+
+        upsertUrlRecord(entry, fallbackEntry, entry.error || null);
+
+        pushLiveBatchItem({
+          url: entry.url,
+          status: entry.success ? "success" : "failed",
+          message: entry.success
+            ? getResponseSummary(entry.google)
+            : entry.error || getResponseSummary(entry.google),
+          response: formatJson(entry.google ?? entry.diagnostics ?? entry),
+          updatedAt: new Date().toISOString(),
+        });
+      });
+
+      setBatchProgress((prev) =>
+        prev
+          ? {
+              ...prev,
+              processed: result.processed ?? result.total ?? pendingEntries.length,
+              success: successCount,
+              failed: failedCount,
+              remaining:
+                pendingEntries.length - (result.processed ?? result.total ?? pendingEntries.length),
+              currentUrl: null,
+              finishedAt: new Date().toISOString(),
+              isRunning: false,
+            }
+          : prev
+      );
+
+      await fetchData(false);
+
+      toast({
+        title: "Batch submission finished",
+        description: `${successCount}/${pendingEntries.length} URLs processed successfully${
+          failedCount ? `, ${failedCount} failed.` : "."
+        }`,
+        variant: failedCount ? "destructive" : "default",
+      });
+    } catch (error: any) {
+      const { message } = extractRequestError(error);
+
+      setBatchProgress((prev) =>
+        prev
+          ? {
+              ...prev,
+              currentUrl: null,
+              finishedAt: new Date().toISOString(),
+              isRunning: false,
+            }
+          : prev
+      );
+
+      toast({ title: "Error", description: message, variant: "destructive" });
+    }
 
     setActionLoading(null);
   };
