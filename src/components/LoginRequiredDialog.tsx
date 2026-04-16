@@ -19,6 +19,8 @@ interface LoginRequiredDialogProps {
   message?: string;
 }
 
+const TEMP_DISABLE_PHONE_OTP = true;
+
 const LoginRequiredDialog = ({ open, onOpenChange, message }: LoginRequiredDialogProps) => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
@@ -50,6 +52,19 @@ const LoginRequiredDialog = ({ open, onOpenChange, message }: LoginRequiredDialo
       toast({ title: "Invalid Phone", description: "Enter a valid 10-digit phone number.", variant: "destructive" });
       return;
     }
+
+    if (TEMP_DISABLE_PHONE_OTP) {
+      setPhoneVerified(true);
+      setOtpStep(false);
+      setOtpValue("");
+      setResendTimer(0);
+      toast({
+        title: "Phone accepted",
+        description: "OTP verification is temporarily disabled. You can continue.",
+      });
+      return;
+    }
+
     setOtpSending(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-otp", {
@@ -91,11 +106,13 @@ const LoginRequiredDialog = ({ open, onOpenChange, message }: LoginRequiredDialo
     }
   };
 
+  const isPhoneAccepted = isLogin || (TEMP_DISABLE_PHONE_OTP ? /^\d{10}$/.test(phone) : phoneVerified);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isLogin && !phoneVerified) {
-      toast({ title: "Phone not verified", description: "Please verify your phone number first.", variant: "destructive" });
+    if (!isPhoneAccepted) {
+      toast({ title: "Invalid phone", description: "Please enter a valid 10-digit phone number.", variant: "destructive" });
       return;
     }
 
@@ -217,7 +234,7 @@ const LoginRequiredDialog = ({ open, onOpenChange, message }: LoginRequiredDialo
                   />
                   {phoneVerified ? (
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium flex items-center gap-1 text-emerald-600">
-                      <ShieldCheck className="w-4 h-4" /> Verified
+                      <ShieldCheck className="w-4 h-4" /> Accepted
                     </span>
                   ) : (
                     <Button
@@ -226,40 +243,15 @@ const LoginRequiredDialog = ({ open, onOpenChange, message }: LoginRequiredDialo
                       variant="secondary"
                       className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 text-xs"
                       onClick={handleSendOtp}
-                      disabled={otpSending || phone.length !== 10 || resendTimer > 0}
+                      disabled={phone.length !== 10}
                     >
-                      {otpSending ? "Sending..." : resendTimer > 0 ? `Resend (${resendTimer}s)` : otpStep ? "Resend OTP" : "Send OTP"}
+                      Continue
                     </Button>
                   )}
                 </div>
 
-                {otpStep && !phoneVerified && (
-                  <div className="space-y-2 p-3 rounded-lg border border-border bg-muted/30">
-                    <p className="text-xs text-muted-foreground">
-                      Enter the 6-digit OTP sent to <span className="font-medium text-foreground">{phone}</span>
-                    </p>
-                    <div className="flex justify-center">
-                      <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
-                        <InputOTPGroup>
-                          <InputOTPSlot index={0} />
-                          <InputOTPSlot index={1} />
-                          <InputOTPSlot index={2} />
-                          <InputOTPSlot index={3} />
-                          <InputOTPSlot index={4} />
-                          <InputOTPSlot index={5} />
-                        </InputOTPGroup>
-                      </InputOTP>
-                    </div>
-                    <Button
-                      type="button"
-                      className="w-full"
-                      size="sm"
-                      onClick={handleVerifyOtp}
-                      disabled={otpVerifying || otpValue.length !== 6}
-                    >
-                      {otpVerifying ? "Verifying..." : "Verify OTP"}
-                    </Button>
-                  </div>
+                {TEMP_DISABLE_PHONE_OTP && (
+                  <p className="text-xs text-muted-foreground">OTP verification is temporarily disabled.</p>
                 )}
               </div>
 
@@ -283,7 +275,7 @@ const LoginRequiredDialog = ({ open, onOpenChange, message }: LoginRequiredDialo
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10" required minLength={6} />
           </div>
-          <Button type="submit" className="w-full" disabled={loading || (!isLogin && !phoneVerified)}>
+          <Button type="submit" className="w-full" disabled={loading || !isPhoneAccepted}>
             {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
           </Button>
           {isLogin && (
