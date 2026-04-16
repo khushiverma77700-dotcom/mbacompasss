@@ -83,17 +83,6 @@ const CollegesPage = () => {
   const totalColleges = colleges.length;
   const iimCount = colleges.filter((c: any) => c.type === "IIM").length;
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <div className="hero-gradient py-14 md:py-20"><div className="container mx-auto px-4 text-center"><Skeleton className="h-12 w-96 mx-auto bg-white/20" /></div></div>
-        <div className="container mx-auto px-4 py-8 space-y-4">
-          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-36 rounded-2xl" />)}
-        </div>
-      </div>
-    );
-  }
-
   // Active filters for chips display
   const activeFilters = useMemo(() => {
     const chips: { key: string; label: string; value: string }[] = [];
@@ -125,6 +114,28 @@ const CollegesPage = () => {
   }, [activeTab, selectedState, selectedCity, selectedExam, filtered.length]);
 
   const jsonLd = generateListingSchema(dynamicTitle, filtered, "college");
+
+  // Dynamic H1
+  const dynamicH1 = useMemo(() => {
+    const parts = ["Top"];
+    if (activeTab !== "all") parts.push(tabs.find(t => t.type === activeTab)?.label || "");
+    parts.push("MBA Colleges");
+    if (selectedCity !== "all") parts.push(`in ${selectedCity}`);
+    else if (selectedState !== "all") parts.push(`in ${selectedState}`);
+    else parts.push("in India");
+    return parts.join(" ");
+  }, [activeTab, selectedState, selectedCity]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="hero-gradient py-14 md:py-20"><div className="container mx-auto px-4 text-center"><Skeleton className="h-12 w-96 mx-auto bg-white/20" /></div></div>
+        <div className="container mx-auto px-4 py-8 space-y-4">
+          {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-36 rounded-2xl" />)}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
