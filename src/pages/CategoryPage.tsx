@@ -367,6 +367,15 @@ const CategoryPage = () => {
         {cityPage?.faq_content && (
           <div className="mt-8 bg-card rounded-2xl border border-border p-8 shadow-sm prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: cityPage.faq_content }} />
         )}
+        {hasLocationFilter && !cityPage?.detailed_content && !cityPage?.faq_content && (
+          <div className="mt-12 bg-card rounded-2xl border border-border p-8 shadow-sm">
+            <h2 className="font-heading font-bold text-foreground text-xl mb-3">About {category?.name || "MBA"} Coaching in {displayName}</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              {metaDesc} Our comprehensive listing covers fees, batch information, success rates, and student reviews.
+              Use our filters to find the perfect coaching institute matching your budget and learning preferences.
+            </p>
+          </div>
+        )}
 
         {/* Related pages */}
         {hasLocationFilter && otherPages.length > 0 && (
