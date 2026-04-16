@@ -109,7 +109,7 @@ const AdminCourses = () => {
     fetchData(); toast({ title: "Course deleted" });
   };
 
-  const filtered = search ? courses.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.institutes?.name?.toLowerCase().includes(search.toLowerCase())) : courses;
+  // filtered moved up to line 37 for hook ordering
 
   if (showForm) {
     return (
