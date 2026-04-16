@@ -312,6 +312,7 @@ const AdminInstitutes = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">S.No</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>City</TableHead>
                 <TableHead>Mode</TableHead>
@@ -319,12 +320,14 @@ const AdminInstitutes = () => {
                 <TableHead>Students</TableHead>
                 <TableHead>Success Rate</TableHead>
                 <TableHead>Featured</TableHead>
+                <TableHead>Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {institutes.map(inst => (
+              {institutes.map((inst, idx) => (
                 <TableRow key={inst.id}>
+                  <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell className="font-medium">{inst.name}</TableCell>
                   <TableCell>{inst.city || "—"}</TableCell>
                   <TableCell><Badge variant="secondary" className="text-xs">{inst.mode}</Badge></TableCell>
@@ -332,6 +335,7 @@ const AdminInstitutes = () => {
                   <TableCell>{inst.students_count || 0}</TableCell>
                   <TableCell>{inst.success_rate || 0}%</TableCell>
                   <TableCell>{inst.featured ? <Badge className="bg-primary text-primary-foreground text-xs">Yes</Badge> : "No"}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{inst.created_at ? new Date(inst.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}<br/><span className="text-[10px]">{inst.created_at ? new Date(inst.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : ""}</span></TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(inst.id)}><Pencil className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(inst.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
@@ -339,7 +343,7 @@ const AdminInstitutes = () => {
                 </TableRow>
               ))}
               {institutes.length === 0 && (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No institutes yet</TableCell></TableRow>
+                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">No institutes yet</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
