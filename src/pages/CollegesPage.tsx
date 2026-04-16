@@ -289,6 +289,7 @@ const CollegesPage = () => {
               </button>
             </div>
           )}
+        </div>
 
         {/* College Cards */}
         <div className="space-y-4">
