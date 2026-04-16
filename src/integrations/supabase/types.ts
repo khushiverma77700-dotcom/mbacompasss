@@ -687,6 +687,7 @@ export type Database = {
           established: number | null
           exams_accepted: string[] | null
           fees: string | null
+          fees_lakhs: number | null
           h1_tag: string | null
           highlights: Json | null
           id: string
@@ -700,6 +701,7 @@ export type Database = {
           placement_median: string | null
           ranking: number | null
           slug: string
+          specializations: string[] | null
           state: string | null
           tier: string | null
           top_recruiters: string[] | null
@@ -722,6 +724,7 @@ export type Database = {
           established?: number | null
           exams_accepted?: string[] | null
           fees?: string | null
+          fees_lakhs?: number | null
           h1_tag?: string | null
           highlights?: Json | null
           id?: string
@@ -735,6 +738,7 @@ export type Database = {
           placement_median?: string | null
           ranking?: number | null
           slug: string
+          specializations?: string[] | null
           state?: string | null
           tier?: string | null
           top_recruiters?: string[] | null
@@ -757,6 +761,7 @@ export type Database = {
           established?: number | null
           exams_accepted?: string[] | null
           fees?: string | null
+          fees_lakhs?: number | null
           h1_tag?: string | null
           highlights?: Json | null
           id?: string
@@ -770,6 +775,7 @@ export type Database = {
           placement_median?: string | null
           ranking?: number | null
           slug?: string
+          specializations?: string[] | null
           state?: string | null
           tier?: string | null
           top_recruiters?: string[] | null
@@ -1308,6 +1314,7 @@ export type Database = {
           email: string | null
           featured: boolean | null
           features: string[] | null
+          fees_lakhs: number | null
           h1_tag: string | null
           id: string
           keywords: string[] | null
@@ -1322,6 +1329,7 @@ export type Database = {
           phone: string | null
           rating: number | null
           slug: string
+          specializations: string[] | null
           state: string | null
           students_count: number | null
           success_rate: number | null
@@ -1341,6 +1349,7 @@ export type Database = {
           email?: string | null
           featured?: boolean | null
           features?: string[] | null
+          fees_lakhs?: number | null
           h1_tag?: string | null
           id?: string
           keywords?: string[] | null
@@ -1355,6 +1364,7 @@ export type Database = {
           phone?: string | null
           rating?: number | null
           slug: string
+          specializations?: string[] | null
           state?: string | null
           students_count?: number | null
           success_rate?: number | null
@@ -1374,6 +1384,7 @@ export type Database = {
           email?: string | null
           featured?: boolean | null
           features?: string[] | null
+          fees_lakhs?: number | null
           h1_tag?: string | null
           id?: string
           keywords?: string[] | null
@@ -1388,6 +1399,7 @@ export type Database = {
           phone?: string | null
           rating?: number | null
           slug?: string
+          specializations?: string[] | null
           state?: string | null
           students_count?: number | null
           success_rate?: number | null
@@ -1752,6 +1764,39 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: Json
+        }
+        Relationships: []
+      }
+      specializations: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          name: string
+          slug: string
+          sort_order: number
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+          sort_order?: number
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+          sort_order?: number
+          type?: string
+          updated_at?: string
         }
         Relationships: []
       }
