@@ -77,7 +77,7 @@ const AdminLeads = () => {
     }
 
     return result;
-  }, [leads, search, dateFrom, dateTo, activeTab]);
+  const { sortedItems: sortedFiltered, sortConfig, handleSort: onSort } = useTableSort(filtered);
 
   const downloadCSV = () => {
     const headers = ["Name", "Phone", "City", "Target Exams", "Work Experience", "Signup Page", "Signup URL", "Registered At"];
