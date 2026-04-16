@@ -107,7 +107,6 @@ const SettingsPrefetcher = () => {
 const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   <>
     <Navbar />
-    <BackButton />
     {children}
     <Footer />
     <Suspense fallback={null}>
