@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Star, ArrowLeft } from "lucide-react";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
 
@@ -142,7 +144,7 @@ const AdminTestimonials = () => {
       <Card><CardContent className="p-0">
         <Table>
           <TableHeader><TableRow>
-            <TableHead className="w-12">S.No</TableHead><TableHead>Name</TableHead><TableHead>Type</TableHead><TableHead>Institute</TableHead><TableHead>Rating</TableHead><TableHead>Active</TableHead><TableHead>Created</TableHead><TableHead className="text-right">Actions</TableHead>
+            <TableHead className="w-12">S.No</TableHead><SortableTableHead label="Name" sortKey="name" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Type" sortKey="type" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Institute" sortKey="institute" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Rating" sortKey="rating" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Active" sortKey="active" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Created" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} /><TableHead className="text-right">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {testimonials.map((t, idx) => (

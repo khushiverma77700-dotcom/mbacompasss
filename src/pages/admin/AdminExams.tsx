@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X, ArrowLeft } from "lucide-react";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import SEOChecklist from "@/components/admin/SEOChecklist";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
@@ -193,11 +195,11 @@ const AdminExams = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">S.No</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Full Name</TableHead>
-                <TableHead>Conducting Body</TableHead>
-                <TableHead>Exam Date</TableHead>
-                <TableHead>Created</TableHead>
+                <SortableTableHead label="Name" sortKey="name" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Full Name" sortKey="full_name" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Conducting Body" sortKey="conducting_body" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Exam Date" sortKey="exam_date" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Created" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} />
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>

@@ -13,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Eye, Search, GraduationCap, ArrowLeft } from "lucide-react";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import SEOChecklist from "@/components/admin/SEOChecklist";
 import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
@@ -239,7 +241,7 @@ const AdminCityPages = () => {
         <CardHeader><CardTitle>All City/State Pages ({pages.length})</CardTitle></CardHeader>
         <CardContent>
           <Table>
-            <TableHeader><TableRow><TableHead className="w-12">S.No</TableHead><TableHead>Name</TableHead><TableHead>Type</TableHead><TableHead>Slug</TableHead><TableHead>Aliases</TableHead><TableHead>Keywords</TableHead><TableHead>Status</TableHead><TableHead>Created</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead className="w-12">S.No</TableHead><SortableTableHead label="Name" sortKey="name" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Type" sortKey="type" sortConfig={sortConfig} onSort={handleSort} /><TableHead>Slug</TableHead><TableHead>Aliases</TableHead><TableHead>Keywords</TableHead><SortableTableHead label="Status" sortKey="active" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Created" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} /><TableHead>Actions</TableHead></TableRow></TableHeader>
             <TableBody>
               {pages.map((page, idx) => (
                 <TableRow key={page.id}>

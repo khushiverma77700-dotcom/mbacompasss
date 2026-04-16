@@ -8,6 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, ArrowLeft } from "lucide-react";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 
 const emptyForm = { name: "", slug: "", description: "", icon: "BookOpen", exam_type: "" };
 
@@ -109,7 +111,7 @@ const AdminCategories = () => {
       <Card><CardContent className="p-0">
         <Table>
           <TableHeader><TableRow>
-            <TableHead className="w-12">S.No</TableHead><TableHead>Name</TableHead><TableHead>Slug</TableHead><TableHead>Exam Type</TableHead><TableHead>Icon</TableHead><TableHead>Created</TableHead><TableHead className="text-right">Actions</TableHead>
+            <TableHead className="w-12">S.No</TableHead><SortableTableHead label="Name" sortKey="name" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Slug" sortKey="slug" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Exam Type" sortKey="exam_type" sortConfig={sortConfig} onSort={handleSort} /><TableHead>Icon</TableHead><SortableTableHead label="Created" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} /><TableHead className="text-right">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {categories.map((c, idx) => (

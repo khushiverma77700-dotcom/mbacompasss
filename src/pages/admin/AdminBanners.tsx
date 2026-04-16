@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, ArrowLeft } from "lucide-react";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 
 const emptyForm = { title: "", subtitle: "", image_url: "", mobile_image_url: "", link_url: "", cta_text: "Learn More", active: true, sort_order: 0 };
@@ -95,8 +97,8 @@ const AdminBanners = () => {
       </div>
       <Card><CardContent className="p-0">
         <Table>
-          <TableHeader><TableRow>
-            <TableHead className="w-12">S.No</TableHead><TableHead>Title</TableHead><TableHead>CTA</TableHead><TableHead>Active</TableHead><TableHead>Order</TableHead><TableHead>Created</TableHead><TableHead className="text-right">Actions</TableHead>
+           <TableHeader><TableRow>
+            <TableHead className="w-12">S.No</TableHead><SortableTableHead label="Title" sortKey="title" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="CTA" sortKey="cta_text" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Active" sortKey="active" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Order" sortKey="sort_order" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Created" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} /><TableHead className="text-right">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
             {banners.map((b, idx) => (

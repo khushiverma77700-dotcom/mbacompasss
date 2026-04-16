@@ -5,6 +5,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Download, Trash2 } from "lucide-react";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 import { format } from "date-fns";
 
 const AdminSubscribers = () => {
@@ -50,8 +52,8 @@ const AdminSubscribers = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Subscribed At</TableHead>
+                <SortableTableHead label="Email" sortKey="email" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Subscribed At" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} />
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
