@@ -174,11 +174,8 @@ const CollegesPage = () => {
               <span className="text-sm font-medium text-primary-foreground">Updated for 2026 Admissions</span>
             </div>
             <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-extrabold text-primary-foreground mb-4 tracking-tight leading-tight">
-              Top MBA Colleges <br className="hidden md:block" />in India
+              {dynamicH1}
             </h1>
-            <p className="text-primary-foreground/75 mb-8 max-w-2xl mx-auto text-base md:text-lg">
-              Compare {totalColleges}+ colleges including {iimCount} IIMs — rankings, fees, placements & admission details
-            </p>
           </motion.div>
 
           {/* Quick Stats */}
