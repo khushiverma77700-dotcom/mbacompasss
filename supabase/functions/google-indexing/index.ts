@@ -951,7 +951,7 @@ Deno.serve(async (req) => {
       const now = new Date().toISOString();
 
       for (const table of tables) {
-        let query = supabase.from(table.table).select("id, slug, name");
+        let query = supabase.from(table.table).select("id, slug");
 
         if (table.filter) {
           for (const [key, value] of Object.entries(table.filter)) {
