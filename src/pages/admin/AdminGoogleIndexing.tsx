@@ -44,7 +44,10 @@ import {
   Activity,
   Timer,
   Zap,
+  Info,
 } from "lucide-react";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 
 interface IndexingUrl {
   id: string;
