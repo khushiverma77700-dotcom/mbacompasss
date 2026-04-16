@@ -10,6 +10,7 @@ import { useInstitutes, useCategories } from "@/hooks/useInstitutes";
 import { Skeleton } from "@/components/ui/skeleton";
 import SEOHead from "@/components/SEOHead";
 import PageKeywords from "@/components/PageKeywords";
+import { getLocationImage } from "@/data/cityImages";
 
 const modes = ["Online", "Offline", "Hybrid"];
 

@@ -11,6 +11,7 @@ import { useCityPages } from "@/hooks/useCityPages";
 import { Skeleton } from "@/components/ui/skeleton";
 import SEOHead, { generateListingSchema } from "@/components/SEOHead";
 import PageKeywords from "@/components/PageKeywords";
+import { getLocationImage } from "@/data/cityImages";
 
 const tabs = [
   { label: "All Colleges", type: "all", icon: Building2 },
