@@ -1,7 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { INDIAN_STATES, getCitiesForState } from "@/data/indianLocations";
-import { Link } from "react-router-dom";
-import { MapPin, Search, Users, IndianRupee, TrendingUp, GraduationCap, Award, ChevronRight, ArrowRight, Building2, Filter, Star, Briefcase, CheckCircle2 } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { MapPin, Search, Users, IndianRupee, TrendingUp, GraduationCap, Award, ChevronRight, ArrowRight, Building2, Filter, Star, Briefcase, CheckCircle2, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -23,12 +23,43 @@ const tabs = [
 const CollegesPage = () => {
   const { data: colleges = [], isLoading } = useColleges();
   const { data: cityPages } = useCityPages();
-  const [activeTab, setActiveTab] = useState("all");
-  const [search, setSearch] = useState("");
-  const [selectedCity, setSelectedCity] = useState("all");
-  const [selectedState, setSelectedState] = useState("all");
-  const [selectedExam, setSelectedExam] = useState("all");
-  const [sortBy, setSortBy] = useState("ranking");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Read filters from URL params (single source of truth)
+  const activeTab = searchParams.get("type") || "all";
+  const search = searchParams.get("q") || "";
+  const selectedCity = searchParams.get("city") || "all";
+  const selectedState = searchParams.get("state") || "all";
+  const selectedExam = searchParams.get("exam") || "all";
+  const sortBy = searchParams.get("sort") || "ranking";
+
+  // Helper to update URL params without full reload
+  const setFilter = useCallback((key: string, value: string) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (value === "all" || value === "" || value === "ranking") {
+        next.delete(key);
+      } else {
+        next.set(key, value);
+      }
+      // Reset city when state changes
+      if (key === "state") next.delete("city");
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const removeFilter = useCallback((key: string) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.delete(key);
+      if (key === "state") next.delete("city");
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const clearAllFilters = useCallback(() => {
+    setSearchParams({}, { replace: true });
+  }, [setSearchParams]);
 
   const collegeCities = useMemo(() => [...new Set(colleges.map((c: any) => c.city).filter(Boolean))].sort() as string[], [colleges]);
   const collegeStates = useMemo(() => INDIAN_STATES.filter(s => colleges.some((c: any) => c.state === s)), [colleges]);
