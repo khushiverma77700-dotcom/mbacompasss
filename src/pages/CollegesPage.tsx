@@ -35,6 +35,22 @@ const CollegesPage = () => {
   const selectedExam = searchParams.get("exam") || "all";
   const sortBy = searchParams.get("sort") || "ranking";
 
+  // Redirect ?city=X to /colleges/{slug} if a matching city page exists
+  useEffect(() => {
+    if (selectedCity !== "all" && cityPages && cityPages.length > 0) {
+      const matchedPage = cityPages.find(
+        (p) => p.name.toLowerCase() === selectedCity.toLowerCase() ||
+               (p.city_aliases || []).some((a: string) => a.toLowerCase() === selectedCity.toLowerCase())
+      );
+      if (matchedPage) {
+        const otherParams = new URLSearchParams(searchParams);
+        otherParams.delete("city");
+        const extraParams = otherParams.toString();
+        navigate(`/colleges/${matchedPage.slug}${extraParams ? `?${extraParams}` : ""}`, { replace: true });
+      }
+    }
+  }, [selectedCity, cityPages, navigate, searchParams]);
+
   // Helper to update URL params without full reload
   const setFilter = useCallback((key: string, value: string) => {
     setSearchParams(prev => {
