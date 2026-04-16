@@ -78,7 +78,7 @@ const BlogPage = () => {
       <div className="hero-gradient py-10 md:py-16 relative overflow-hidden">
         <div className="absolute inset-0 pointer-events-none">
           <img
-            src="https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=800&h=500&fit=crop&q=80"
+            src="https://images.unsplash.com/photo-1562979314-bee7453e911c?w=1200&h=600&fit=crop&q=80"
             alt=""
 className="absolute inset-0 w-full h-full object-cover blur-sm scale-105 opacity-50"
           />
