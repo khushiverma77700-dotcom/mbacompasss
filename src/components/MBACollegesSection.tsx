@@ -67,7 +67,7 @@ const MBACollegesSection = () => {
             </h2>
             <p className="text-muted-foreground">Category-wise, city-wise & course-wise directory</p>
           </div>
-          <Link to="/colleges">
+          <Link to={`/colleges?type=${activeTab}${activeCity !== "All" ? `&city=${activeCity}` : ""}`}>
             <Button variant="outline" size="sm" className="gap-1">View All <ArrowRight className="w-4 h-4" /></Button>
           </Link>
         </div>

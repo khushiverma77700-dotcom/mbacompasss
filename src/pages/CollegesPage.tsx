@@ -1,7 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { INDIAN_STATES, getCitiesForState } from "@/data/indianLocations";
-import { Link } from "react-router-dom";
-import { MapPin, Search, Users, IndianRupee, TrendingUp, GraduationCap, Award, ChevronRight, ArrowRight, Building2, Filter, Star, Briefcase, CheckCircle2 } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { MapPin, Search, Users, IndianRupee, TrendingUp, GraduationCap, Award, ChevronRight, ArrowRight, Building2, Filter, Star, Briefcase, CheckCircle2, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -23,12 +23,43 @@ const tabs = [
 const CollegesPage = () => {
   const { data: colleges = [], isLoading } = useColleges();
   const { data: cityPages } = useCityPages();
-  const [activeTab, setActiveTab] = useState("all");
-  const [search, setSearch] = useState("");
-  const [selectedCity, setSelectedCity] = useState("all");
-  const [selectedState, setSelectedState] = useState("all");
-  const [selectedExam, setSelectedExam] = useState("all");
-  const [sortBy, setSortBy] = useState("ranking");
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Read filters from URL params (single source of truth)
+  const activeTab = searchParams.get("type") || "all";
+  const search = searchParams.get("q") || "";
+  const selectedCity = searchParams.get("city") || "all";
+  const selectedState = searchParams.get("state") || "all";
+  const selectedExam = searchParams.get("exam") || "all";
+  const sortBy = searchParams.get("sort") || "ranking";
+
+  // Helper to update URL params without full reload
+  const setFilter = useCallback((key: string, value: string) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      if (value === "all" || value === "" || value === "ranking") {
+        next.delete(key);
+      } else {
+        next.set(key, value);
+      }
+      // Reset city when state changes
+      if (key === "state") next.delete("city");
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const removeFilter = useCallback((key: string) => {
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.delete(key);
+      if (key === "state") next.delete("city");
+      return next;
+    }, { replace: true });
+  }, [setSearchParams]);
+
+  const clearAllFilters = useCallback(() => {
+    setSearchParams({}, { replace: true });
+  }, [setSearchParams]);
 
   const collegeCities = useMemo(() => [...new Set(colleges.map((c: any) => c.city).filter(Boolean))].sort() as string[], [colleges]);
   const collegeStates = useMemo(() => INDIAN_STATES.filter(s => colleges.some((c: any) => c.state === s)), [colleges]);
@@ -52,6 +83,49 @@ const CollegesPage = () => {
   const totalColleges = colleges.length;
   const iimCount = colleges.filter((c: any) => c.type === "IIM").length;
 
+  // Active filters for chips display
+  const activeFilters = useMemo(() => {
+    const chips: { key: string; label: string; value: string }[] = [];
+    if (activeTab !== "all") chips.push({ key: "type", label: tabs.find(t => t.type === activeTab)?.label || activeTab, value: activeTab });
+    if (selectedState !== "all") chips.push({ key: "state", label: selectedState, value: selectedState });
+    if (selectedCity !== "all") chips.push({ key: "city", label: selectedCity, value: selectedCity });
+    if (selectedExam !== "all") chips.push({ key: "exam", label: selectedExam, value: selectedExam });
+    if (search) chips.push({ key: "q", label: `"${search}"`, value: search });
+    return chips;
+  }, [activeTab, selectedState, selectedCity, selectedExam, search]);
+
+  // Dynamic SEO based on filters
+  const dynamicTitle = useMemo(() => {
+    const parts = ["Top"];
+    if (activeTab !== "all") parts.push(tabs.find(t => t.type === activeTab)?.label || "");
+    parts.push("MBA Colleges");
+    if (selectedCity !== "all") parts.push(`in ${selectedCity}`);
+    else if (selectedState !== "all") parts.push(`in ${selectedState}`);
+    else parts.push("in India");
+    if (selectedExam !== "all") parts.push(`accepting ${selectedExam}`);
+    return `${parts.join(" ")} 2026 — Fees, Rankings, Placements | BSchoolBuzz.com`;
+  }, [activeTab, selectedState, selectedCity, selectedExam]);
+
+  const dynamicDescription = useMemo(() => {
+    const location = selectedCity !== "all" ? selectedCity : selectedState !== "all" ? selectedState : "India";
+    const type = activeTab !== "all" ? (tabs.find(t => t.type === activeTab)?.label || "") + " " : "";
+    const exam = selectedExam !== "all" ? ` accepting ${selectedExam}` : "";
+    return `Explore ${filtered.length} ${type}MBA colleges in ${location}${exam} with rankings, fees, placements, and admission details.`;
+  }, [activeTab, selectedState, selectedCity, selectedExam, filtered.length]);
+
+  const jsonLd = generateListingSchema(dynamicTitle, filtered, "college");
+
+  // Dynamic H1
+  const dynamicH1 = useMemo(() => {
+    const parts = ["Top"];
+    if (activeTab !== "all") parts.push(tabs.find(t => t.type === activeTab)?.label || "");
+    parts.push("MBA Colleges");
+    if (selectedCity !== "all") parts.push(`in ${selectedCity}`);
+    else if (selectedState !== "all") parts.push(`in ${selectedState}`);
+    else parts.push("in India");
+    return parts.join(" ");
+  }, [activeTab, selectedState, selectedCity]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -63,13 +137,11 @@ const CollegesPage = () => {
     );
   }
 
-  const jsonLd = generateListingSchema("Top MBA Colleges in India 2026", filtered, "college");
-
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Top MBA Colleges in India 2026 — Rankings, Fees, Placements | BSchoolBuzz.com"
-        description="Explore top MBA colleges in India with rankings, fees, placements, and admission details. Compare IIMs, top management institutes, PGDM colleges across all cities."
+        title={dynamicTitle}
+        description={dynamicDescription}
         keywords={["top MBA colleges India", "best B-schools India", "MBA college rankings", "IIM fees placements"]}
         canonical="https://bschoolbuzz.com/colleges"
         jsonLd={jsonLd}
@@ -102,7 +174,7 @@ const CollegesPage = () => {
               <span className="text-sm font-medium text-primary-foreground">Updated for 2026 Admissions</span>
             </div>
             <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-extrabold text-primary-foreground mb-4 tracking-tight leading-tight">
-              Top MBA Colleges <br className="hidden md:block" />in India
+              {dynamicH1}
             </h1>
             <p className="text-primary-foreground/75 mb-8 max-w-2xl mx-auto text-base md:text-lg">
               Compare {totalColleges}+ colleges including {iimCount} IIMs — rankings, fees, placements & admission details
@@ -154,25 +226,25 @@ const CollegesPage = () => {
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Search by college name or city..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9 rounded-xl" />
+              <Input placeholder="Search by college name or city..." value={search} onChange={(e) => setFilter("q", e.target.value)} className="pl-9 rounded-xl" />
             </div>
-            <Select value={selectedState} onValueChange={(v) => { setSelectedState(v); setSelectedCity("all"); }}>
+            <Select value={selectedState} onValueChange={(v) => setFilter("state", v)}>
               <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="State" /></SelectTrigger>
               <SelectContent><SelectItem value="all">All States</SelectItem>{collegeStates.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
             </Select>
-            <Select value={selectedCity} onValueChange={setSelectedCity}>
+            <Select value={selectedCity} onValueChange={(v) => setFilter("city", v)}>
               <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="City" /></SelectTrigger>
               <SelectContent><SelectItem value="all">All Cities</SelectItem>{collegeCitiesForState.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
             </Select>
-            <Select value={selectedExam} onValueChange={setSelectedExam}>
+            <Select value={selectedExam} onValueChange={(v) => setFilter("exam", v)}>
               <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="Exam" /></SelectTrigger>
               <SelectContent><SelectItem value="all">All Exams</SelectItem>{allExams.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
             </Select>
-            <Select value={sortBy} onValueChange={setSortBy}>
+            <Select value={sortBy} onValueChange={(v) => setFilter("sort", v)}>
               <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="Sort" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="ranking">By Ranking</SelectItem>
-                <SelectItem value="fees">By Fees (Low→High)</SelectItem>
+                <SelectItem value="fees">By Fees (Low to High)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -184,7 +256,7 @@ const CollegesPage = () => {
               return (
                 <button
                   key={tab.type}
-                  onClick={() => setActiveTab(tab.type)}
+                  onClick={() => setFilter("type", tab.type)}
                   className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                     activeTab === tab.type
                       ? "bg-primary text-primary-foreground shadow-md scale-[1.02]"
@@ -197,6 +269,29 @@ const CollegesPage = () => {
               );
             })}
           </div>
+
+          {/* Active Filters Bar */}
+          {activeFilters.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t border-border">
+              <span className="text-xs font-semibold text-muted-foreground">Active:</span>
+              {activeFilters.map((f) => (
+                <button
+                  key={f.key}
+                  onClick={() => removeFilter(f.key)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+                >
+                  {f.label}
+                  <X className="w-3 h-3" />
+                </button>
+              ))}
+              <button
+                onClick={clearAllFilters}
+                className="text-xs text-muted-foreground hover:text-foreground underline ml-1"
+              >
+                Clear All
+              </button>
+            </div>
+          )}
         </div>
 
         {/* College Cards */}
