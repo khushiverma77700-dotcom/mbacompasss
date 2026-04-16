@@ -97,7 +97,7 @@ const AdminComparisons = () => {
             <TableHead className="w-12">S.No</TableHead><SortableTableHead label="Title" sortKey="title" sortConfig={sortConfig} onSort={handleSort} /><TableHead>Description</TableHead><TableHead>Link</TableHead><SortableTableHead label="Status" sortKey="active" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Created" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} /><TableHead className="text-right">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {items.map((item, idx) => (
+            {sortedItems.map((item, idx) => (
               <TableRow key={item.id}>
                 <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                 <TableCell className="font-medium">{item.title}</TableCell>

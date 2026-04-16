@@ -134,7 +134,7 @@ const AdminCoupons = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {coupons.map((c, idx) => (
+              {sortedCoupons.map((c, idx) => (
                 <TableRow key={c.id}>
                   <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell className="font-mono font-bold">{c.code}</TableCell>

@@ -270,7 +270,7 @@ const AdminCourses = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((c, idx) => (
+              {sortedCourses.map((c, idx) => (
                 <TableRow key={c.id}>
                   <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell>

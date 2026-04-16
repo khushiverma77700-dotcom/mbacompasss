@@ -115,7 +115,7 @@ const AdminCategories = () => {
             <TableHead className="w-12">S.No</TableHead><SortableTableHead label="Name" sortKey="name" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Slug" sortKey="slug" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Exam Type" sortKey="exam_type" sortConfig={sortConfig} onSort={handleSort} /><TableHead>Icon</TableHead><SortableTableHead label="Created" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} /><TableHead className="text-right">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {categories.map((c, idx) => (
+            {sortedCategories.map((c, idx) => (
               <TableRow key={c.id}>
                 <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                 <TableCell className="font-medium">{c.name}</TableCell>

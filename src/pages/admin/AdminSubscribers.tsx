@@ -59,7 +59,7 @@ const AdminSubscribers = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {subscribers.map((s) => (
+              {sortedSubscribers.map((s) => (
                 <TableRow key={s.id}>
                   <TableCell className="font-medium">{s.email}</TableCell>
                   <TableCell>{format(new Date(s.created_at), "dd MMM yyyy, HH:mm")}</TableCell>

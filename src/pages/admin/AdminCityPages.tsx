@@ -244,7 +244,7 @@ const AdminCityPages = () => {
           <Table>
             <TableHeader><TableRow><TableHead className="w-12">S.No</TableHead><SortableTableHead label="Name" sortKey="name" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Type" sortKey="type" sortConfig={sortConfig} onSort={handleSort} /><TableHead>Slug</TableHead><TableHead>Aliases</TableHead><TableHead>Keywords</TableHead><SortableTableHead label="Status" sortKey="active" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Created" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} /><TableHead>Actions</TableHead></TableRow></TableHeader>
             <TableBody>
-              {pages.map((page, idx) => (
+              {sortedPages.map((page, idx) => (
                 <TableRow key={page.id}>
                   <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell className="font-medium">{page.name}</TableCell>

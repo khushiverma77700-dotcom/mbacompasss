@@ -148,7 +148,7 @@ const AdminTestimonials = () => {
             <TableHead className="w-12">S.No</TableHead><SortableTableHead label="Name" sortKey="name" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Type" sortKey="type" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Institute" sortKey="institute" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Rating" sortKey="rating" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Active" sortKey="active" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Created" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} /><TableHead className="text-right">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {testimonials.map((t, idx) => (
+            {sortedTestimonials.map((t, idx) => (
               <TableRow key={t.id}>
                 <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                 <TableCell className="font-medium">{t.name}</TableCell>

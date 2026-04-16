@@ -293,7 +293,7 @@ const AdminColleges = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {colleges.map((c, idx) => (
+              {sortedColleges.map((c, idx) => (
                 <TableRow key={c.id}>
                   <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell>{c.ranking ?? "—"}</TableCell>

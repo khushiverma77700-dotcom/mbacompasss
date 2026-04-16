@@ -102,7 +102,7 @@ const AdminBanners = () => {
             <TableHead className="w-12">S.No</TableHead><SortableTableHead label="Title" sortKey="title" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="CTA" sortKey="cta_text" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Active" sortKey="active" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Order" sortKey="sort_order" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Created" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} /><TableHead className="text-right">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {banners.map((b, idx) => (
+            {sortedBanners.map((b, idx) => (
               <TableRow key={b.id}>
                 <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                 <TableCell className="font-medium">{b.title}</TableCell>

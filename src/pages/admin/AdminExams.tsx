@@ -205,7 +205,7 @@ const AdminExams = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {exams.map((e, idx) => (
+              {sortedExams.map((e, idx) => (
                 <TableRow key={e.id}>
                   <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell className="font-medium">{e.name}</TableCell>

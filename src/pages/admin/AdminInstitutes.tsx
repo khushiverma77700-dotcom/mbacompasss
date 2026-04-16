@@ -329,7 +329,7 @@ const AdminInstitutes = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {institutes.map((inst, idx) => (
+              {sortedInstitutes.map((inst, idx) => (
                 <TableRow key={inst.id}>
                   <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell className="font-medium">{inst.name}</TableCell>
