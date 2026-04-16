@@ -107,7 +107,7 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="relative overflow-hidden min-h-[85vh] flex items-center">
+    <section className="relative overflow-hidden min-h-[55vh] md:min-h-[60vh] flex items-center">
       {/* Multi-layer gradient background */}
       <div className="absolute inset-0 hero-gradient pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10 pointer-events-none" />
@@ -131,10 +131,10 @@ const HeroSection = () => {
       <div className="absolute w-96 h-96 -bottom-32 -right-32 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '6s', animationDelay: '2s' }} />
 
       {/* Main content */}
-      <div className="relative container mx-auto px-4 py-10 md:py-16 z-10">
+      <div className="relative container mx-auto px-4 py-6 md:py-10 z-10">
         <div className="text-center max-w-3xl mx-auto animate-fade-in">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md rounded-full px-5 py-2 mb-5 border border-white/20 shadow-lg shadow-black/5">
+          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md rounded-full px-5 py-1.5 mb-3 border border-white/20 shadow-lg shadow-black/5">
             <Award className="w-4 h-4 text-yellow-300" />
             <span className="text-sm font-semibold text-primary-foreground tracking-wide">
               India's #1 MBA Coaching Discovery Platform
@@ -143,20 +143,20 @@ const HeroSection = () => {
           </div>
 
           {/* Heading */}
-          <h1 className="font-heading text-4xl md:text-6xl lg:text-7xl font-extrabold text-primary-foreground mb-3 leading-[1.1] tracking-tight">
+          <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-extrabold text-primary-foreground mb-2 leading-[1.1] tracking-tight">
             {heading}
           </h1>
 
-          <p className="font-heading text-2xl md:text-4xl lg:text-5xl font-bold text-primary-foreground/85 mb-4 leading-tight">
+          <p className="font-heading text-xl md:text-3xl lg:text-4xl font-bold text-primary-foreground/85 mb-3 leading-tight">
             for Your Dream B-School
           </p>
 
-          <p className="text-primary-foreground/75 text-base md:text-lg mb-6 max-w-xl mx-auto leading-relaxed">
+          <p className="text-primary-foreground/75 text-sm md:text-base mb-5 max-w-xl mx-auto leading-relaxed">
             {subheading}
           </p>
 
           {/* Search bar */}
-          <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-8">
+          <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-5">
             <div className="relative" ref={searchRef}>
               <div className="absolute -inset-1 rounded-2xl bg-white/20 blur-md opacity-20 pointer-events-none" />
               <div className="relative">
@@ -167,7 +167,7 @@ const HeroSection = () => {
                   onKeyDown={handleKeyDown}
                   onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                   placeholder="Search by coaching name, city, or exam..."
-                  className="h-16 pl-14 pr-36 rounded-2xl bg-card text-foreground text-base md:text-lg border-none shadow-2xl shadow-black/10 focus-visible:ring-0"
+                  className="h-13 pl-14 pr-36 rounded-2xl bg-card text-foreground text-base md:text-lg border-none shadow-2xl shadow-black/10 focus-visible:ring-0"
                 />
                 <Button
                   type="submit"
@@ -209,7 +209,7 @@ const HeroSection = () => {
           </form>
 
           {/* Popular searches */}
-          <div className="flex flex-wrap justify-center gap-2.5 mb-8 text-sm">
+          <div className="flex flex-wrap justify-center gap-2 mb-5 text-sm">
             <span className="text-primary-foreground/50 font-medium self-center">Popular:</span>
             {popularSearches.map((term: string) => (
               <button
@@ -224,7 +224,7 @@ const HeroSection = () => {
         </div>
 
         {/* Stats cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5 max-w-3xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 md:gap-4 max-w-3xl mx-auto">
           {stats.map((stat: any, i: number) => {
             const Icon = iconMap[stat.icon] || BookOpen;
             return (
@@ -233,12 +233,12 @@ const HeroSection = () => {
                 className="group cursor-default animate-fade-in"
                 style={{ animationDelay: `${0.3 + i * 0.1}s` }}
               >
-                <div className="relative text-center bg-white/10 backdrop-blur-md rounded-2xl p-5 md:p-6 border border-white/15 overflow-hidden transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/25 group-hover:shadow-xl group-hover:-translate-y-1">
+                <div className="relative text-center bg-white/10 backdrop-blur-md rounded-2xl p-4 md:p-5 border border-white/15 overflow-hidden transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/25 group-hover:shadow-xl group-hover:-translate-y-1">
                   <div className="relative z-10">
-                    <div className="w-10 h-10 md:w-12 md:h-12 mx-auto rounded-xl bg-white/15 flex items-center justify-center mb-3 group-hover:bg-white/20 transition-colors">
+                    <div className="w-9 h-9 md:w-10 md:h-10 mx-auto rounded-xl bg-white/15 flex items-center justify-center mb-2 group-hover:bg-white/20 transition-colors">
                       <Icon className="w-5 h-5 md:w-6 md:h-6 text-primary-foreground" />
                     </div>
-                    <div className="text-2xl md:text-3xl font-heading font-extrabold text-primary-foreground mb-0.5 tracking-tight">
+                    <div className="text-xl md:text-2xl font-heading font-extrabold text-primary-foreground mb-0.5 tracking-tight">
                       {stat.value}
                     </div>
                     <div className="text-xs md:text-sm text-primary-foreground/65 font-medium">
