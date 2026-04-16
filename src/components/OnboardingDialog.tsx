@@ -135,13 +135,15 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
     setSelectedExams(allSelected ? [] : [...EXAMS]);
   };
 
+  const isPhoneAccepted = TEMP_DISABLE_PHONE_OTP ? !validatePhone(phone) : phoneVerified;
+
   const handleSubmit = async () => {
     setPhoneTouched(true);
     const phoneErr = validatePhone(phone);
     setPhoneError(phoneErr);
 
-    if (!phoneVerified) {
-      toast({ title: "Phone not verified", description: "Please verify your phone number with OTP first.", variant: "destructive" });
+    if (!isPhoneAccepted) {
+      toast({ title: "Invalid phone", description: "Please enter a valid mobile number.", variant: "destructive" });
       return;
     }
     if (selectedExams.length === 0) {
@@ -319,7 +321,7 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
             </Select>
           </div>
 
-          <Button onClick={handleSubmit} className="w-full" disabled={loading || !phoneVerified}>
+          <Button onClick={handleSubmit} className="w-full" disabled={loading || !isPhoneAccepted}>
             {loading ? "Saving..." : "Continue"}
           </Button>
         </div>

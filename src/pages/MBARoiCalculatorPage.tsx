@@ -68,7 +68,7 @@ const TESTIMONIALS = [
 const FAQS = [
   { q: "Is this MBA ROI Calculator really free?", a: "Yes, completely free. We do not charge for the analysis, report, or recommendations. We monetize through coaching partner referrals if you choose to enroll." },
   { q: "How accurate is the ROI calculation?", a: "We use real placement data from 200+ B-schools and apply deterministic financial logic — opportunity cost, fees, expected salary jump, and 10-year compounded earnings. AI is used only to personalize the narrative." },
-  { q: "Why do I need to verify my mobile and email?", a: "OTP verification ensures genuine reports, prevents abuse, and lets us send your detailed PDF report and follow-up insights to the right person." },
+  { q: "Why do you ask for my mobile and email?", a: "We use your contact details to save your report, prevent abuse, and help you revisit your MBA ROI analysis later. Your information stays private and is used only for your experience on the platform." },
   { q: "Can I generate multiple reports?", a: "Each user gets one detailed report. You can revisit your saved report anytime from your dashboard. To generate a fresh one, contact support." },
   { q: "How is payback period calculated?", a: "Payback = (Fees + Living Cost + 2 years opportunity cost) ÷ (Expected Post-MBA Salary − Current Salary). It tells you how many years it takes to recover your total MBA investment." },
   { q: "What if I don't get into my dream college?", a: "Our report includes Dream, Target, and Safe college buckets, plus backup strategies and alternative career paths if MBA doesn't work out." },
@@ -258,7 +258,8 @@ const MBARoiCalculatorPage = () => {
   const toggleArr = (arr: string[], v: string) => arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v];
 
   const canProceedStep = (s: number) => {
-    if (s === 1) return form.name.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email) && form.phoneVerified && form.age >= 18;
+    const isPhoneAccepted = TEMP_DISABLE_PHONE_OTP ? /^\d{10}$/.test(form.phone) : form.phoneVerified;
+    if (s === 1) return form.name.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email) && isPhoneAccepted && form.age >= 18;
     if (s === 2) return form.graduation_stream && form.graduation_score > 0;
     if (s === 3) return form.target_exams.length > 0 && form.expected_tier;
     if (s === 4) return form.preferred_specialization && form.budget_lakhs > 0;

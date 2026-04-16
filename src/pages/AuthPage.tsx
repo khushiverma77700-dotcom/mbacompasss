@@ -106,12 +106,13 @@ const AuthPage = () => {
     }
   };
 
+  const isPhoneAccepted = isLogin || (TEMP_DISABLE_PHONE_OTP ? /^\d{10}$/.test(phone) : phoneVerified);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // For sign up, require phone verification
-    if (!isLogin && !phoneVerified) {
-      toast({ title: "Phone not verified", description: "Please verify your phone number first.", variant: "destructive" });
+    if (!isPhoneAccepted) {
+      toast({ title: "Invalid phone", description: "Please enter a valid 10-digit phone number.", variant: "destructive" });
       return;
     }
 
@@ -302,7 +303,7 @@ const AuthPage = () => {
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10" required minLength={6} />
             </div>
-            <Button type="submit" className="w-full" disabled={loading || (!isLogin && !phoneVerified)}>
+            <Button type="submit" className="w-full" disabled={loading || !isPhoneAccepted}>
               {loading ? "Please wait..." : isLogin ? "Sign In" : "Create Account"}
             </Button>
             {isLogin && (
