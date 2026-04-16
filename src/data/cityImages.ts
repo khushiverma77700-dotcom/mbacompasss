@@ -3,6 +3,7 @@
 // All images are bundled locally for reliability
 
 import delhiImg from "@/assets/cities/delhi.jpg";
+import hyderabadImg from "@/assets/cities/hyderabad.jpg";
 import bangaloreImg from "@/assets/cities/bangalore.jpg";
 import puneImg from "@/assets/cities/pune.jpg";
 import ahmedabadImg from "@/assets/cities/ahmedabad.jpg";
@@ -26,7 +27,7 @@ import defaultCampusImg from "@/assets/cities/default-campus.jpg";
 const UNSPLASH_MUMBAI = "https://images.unsplash.com/photo-1529253355930-ddbe423a2ac7?w=1200&h=600&fit=crop&q=80"; // Gateway of India
 const UNSPLASH_CHENNAI = "https://images.unsplash.com/photo-1582510003544-4d00b7f74220?w=1200&h=600&fit=crop&q=80"; // Marina Beach Temple
 const UNSPLASH_KOLKATA = "https://images.unsplash.com/photo-1536421469767-80559bb6f5e1?w=1200&h=600&fit=crop&q=80"; // Victoria Memorial
-const UNSPLASH_HYDERABAD = "https://images.unsplash.com/photo-1572695157366-5e585ab2b69f?w=1200&h=600&fit=crop&q=80"; // Charminar
+
 const UNSPLASH_JAIPUR = "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=1200&h=600&fit=crop&q=80"; // Hawa Mahal
 const UNSPLASH_LUCKNOW = "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1200&h=600&fit=crop&q=80"; // Bara Imambara
 const UNSPLASH_CHANDIGARH = "https://images.unsplash.com/photo-1614082242765-7c98ca0f3df3?w=1200&h=600&fit=crop&q=80"; // Rock Garden
@@ -48,7 +49,7 @@ const CITY_IMAGES: Record<string, string> = {
   bengaluru: bangaloreImg,
   chennai: UNSPLASH_CHENNAI,
   kolkata: UNSPLASH_KOLKATA,
-  hyderabad: UNSPLASH_HYDERABAD,
+  hyderabad: hyderabadImg,
   pune: puneImg,
   ahmedabad: ahmedabadImg,
 
@@ -94,7 +95,7 @@ const STATE_IMAGES: Record<string, string> = {
   karnataka: bangaloreImg,
   "tamil nadu": UNSPLASH_CHENNAI,
   "west bengal": UNSPLASH_KOLKATA,
-  telangana: UNSPLASH_HYDERABAD,
+  telangana: hyderabadImg,
   gujarat: ahmedabadImg,
   rajasthan: UNSPLASH_JAIPUR,
   "uttar pradesh": UNSPLASH_AGRA,
@@ -106,7 +107,7 @@ const STATE_IMAGES: Record<string, string> = {
   uttarakhand: dehradunImg,
   haryana: gurgaonImg,
   odisha: bhubaneswarImg,
-  "andhra pradesh": UNSPLASH_HYDERABAD,
+  "andhra pradesh": hyderabadImg,
   goa: UNSPLASH_GOA,
   bihar: patnaImg,
   jharkhand: ranchiImg,
