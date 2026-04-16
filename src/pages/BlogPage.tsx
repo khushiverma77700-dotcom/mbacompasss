@@ -128,6 +128,7 @@ const BlogPage = () => {
               </button>
             ))}
           </motion.div>
+          </div>
         </div>
       </div>
 
