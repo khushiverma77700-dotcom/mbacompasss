@@ -64,7 +64,7 @@ const CollegeFilterPage = () => {
     title: metaTitle,
     description: metaDesc,
     keywords,
-    canonical: region ? `${window.location.origin}/colleges/${region}` : undefined,
+    canonical: region ? `${window.location.origin}/colleges?city=${encodeURIComponent(displayName)}` : undefined,
     jsonLd,
     ogImage: cityPage?.hero_image_url || undefined,
   });
@@ -344,7 +344,7 @@ const CollegeFilterPage = () => {
             <p className="text-sm text-muted-foreground mb-5">Find MBA colleges in other cities and states across India</p>
             <div className="flex flex-wrap gap-2">
               {otherPages.map(p => (
-                <Link key={p.slug} to={`/colleges/${p.slug}`}>
+                <Link key={p.slug} to={`/colleges?${p.state ? `state=${encodeURIComponent(p.state)}&` : ""}city=${encodeURIComponent(p.name)}`}>
                   <Badge variant="outline" className="hover:bg-primary hover:text-primary-foreground transition-all duration-200 cursor-pointer py-1.5 px-3 text-xs">
                     <MapPin className="w-3 h-3 mr-1" /> {p.name}
                   </Badge>

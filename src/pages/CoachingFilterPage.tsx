@@ -71,7 +71,7 @@ const CoachingFilterPage = () => {
     title: metaTitle,
     description: metaDesc,
     keywords,
-    canonical: region ? `${window.location.origin}/coaching/${region}` : undefined,
+    canonical: region ? `${window.location.origin}/coaching?city=${encodeURIComponent(displayName)}` : undefined,
     jsonLd,
     ogImage: cityPage?.hero_image_url || undefined,
   });
@@ -318,7 +318,7 @@ const CoachingFilterPage = () => {
             <p className="text-sm text-muted-foreground mb-5">Find MBA coaching institutes in other cities and states across India</p>
             <div className="flex flex-wrap gap-2">
               {otherPages.map(p => (
-                <Link key={p.slug} to={`/coaching/${p.slug}`}>
+                <Link key={p.slug} to={`/coaching?${p.state ? `state=${encodeURIComponent(p.state)}&` : ""}city=${encodeURIComponent(p.name)}`}>
                   <Badge variant="outline" className="hover:bg-primary hover:text-primary-foreground transition-all duration-200 cursor-pointer py-1.5 px-3 text-xs">
                     <MapPin className="w-3 h-3 mr-1" /> {p.name}
                   </Badge>

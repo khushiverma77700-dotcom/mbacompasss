@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { INDIAN_STATES, getCitiesForState } from "@/data/indianLocations";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { MapPin, Search, Users, IndianRupee, TrendingUp, GraduationCap, Award, ChevronRight, ArrowRight, Building2, Filter, Star, Briefcase, CheckCircle2, X, ArrowLeft, Share2 } from "lucide-react";
@@ -35,21 +35,7 @@ const CollegesPage = () => {
   const selectedExam = searchParams.get("exam") || "all";
   const sortBy = searchParams.get("sort") || "ranking";
 
-  // Redirect ?city=X to /colleges/{slug} if a matching city page exists
-  useEffect(() => {
-    if (selectedCity !== "all" && cityPages && cityPages.length > 0) {
-      const matchedPage = cityPages.find(
-        (p) => p.name.toLowerCase() === selectedCity.toLowerCase() ||
-               (p.city_aliases || []).some((a: string) => a.toLowerCase() === selectedCity.toLowerCase())
-      );
-      if (matchedPage) {
-        const otherParams = new URLSearchParams(searchParams);
-        otherParams.delete("city");
-        const extraParams = otherParams.toString();
-        navigate(`/colleges/${matchedPage.slug}${extraParams ? `?${extraParams}` : ""}`, { replace: true });
-      }
-    }
-  }, [selectedCity, cityPages, navigate, searchParams]);
+  // No redirect needed — city/state filtering stays on this page via query params
 
   // Helper to update URL params without full reload
   const setFilter = useCallback((key: string, value: string) => {
@@ -439,7 +425,7 @@ const CollegesPage = () => {
               {regions.map(r => (
                 <Link
                   key={r.slug}
-                  to={`/colleges/${r.slug}`}
+                  to={`/colleges?${r.state ? `state=${encodeURIComponent(r.state)}&` : ""}city=${encodeURIComponent(r.name)}`}
                   className="flex items-center gap-2 px-4 py-3.5 rounded-xl bg-muted/50 hover:bg-primary/10 hover:text-primary transition-all duration-200 text-sm font-medium text-foreground group border border-transparent hover:border-primary/20"
                 >
                   <MapPin className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary flex-shrink-0" />
