@@ -96,82 +96,71 @@ const AIToolsSection = () => {
           </p>
         </motion.div>
 
-        {/* Cards grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6">
+        {/* Single-row cards */}
+        <div className="flex gap-3 md:gap-4 overflow-x-auto pb-2 scrollbar-hide">
           {tools.map((tool, i) => (
             <motion.div
               key={tool.title}
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-30px" }}
-              transition={{ delay: i * 0.12, duration: 0.5, ease: "easeOut" }}
+              transition={{ delay: i * 0.08, duration: 0.4, ease: "easeOut" }}
+              className="flex-shrink-0 w-[200px] md:w-[1fr]"
+              style={{ flex: '1 1 0', minWidth: '180px' }}
             >
               <Link
                 to={tool.path}
-                className="group relative block h-full rounded-2xl bg-card border border-border/60 overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-black/[0.04] hover:-translate-y-1.5"
+                className="group relative block h-full rounded-xl bg-card border border-border/60 overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-black/[0.04] hover:-translate-y-1"
               >
-                {/* Top colored accent bar */}
+                {/* Top accent */}
                 <div
-                  className="h-1 w-full"
+                  className="h-0.5 w-full"
                   style={{ background: `linear-gradient(90deg, rgba(${tool.color}, 0.7), rgba(${tool.color}, 0.3))` }}
                 />
 
-                {/* Tag badge */}
-                <div className="absolute top-3 right-3">
+                {/* Tag */}
+                <div className="absolute top-2 right-2">
                   <span
-                    className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full text-white"
+                    className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full text-white"
                     style={{ background: `rgba(${tool.color}, 0.85)` }}
                   >
                     {tool.tag}
                   </span>
                 </div>
 
-                <div className="p-5 pt-5">
+                <div className="p-3 pt-3">
                   {/* Icon */}
                   <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
+                    className="w-9 h-9 rounded-lg flex items-center justify-center mb-2.5 transition-transform duration-300 group-hover:scale-110"
                     style={{
                       background: `linear-gradient(135deg, rgba(${tool.color}, 0.15), rgba(${tool.color}, 0.05))`,
                       border: `1px solid rgba(${tool.color}, 0.15)`,
                     }}
                   >
-                    <tool.icon className="w-5.5 h-5.5" style={{ color: `rgba(${tool.color}, 1)` }} />
+                    <tool.icon className="w-4 h-4" style={{ color: `rgba(${tool.color}, 1)` }} />
                   </div>
 
                   {/* Title */}
-                  <h3 className="font-bold text-foreground text-[15px] mb-2">{tool.title}</h3>
+                  <h3 className="font-bold text-foreground text-[13px] mb-1.5 leading-tight">{tool.title}</h3>
 
                   {/* Description */}
-                  <p className="text-muted-foreground text-xs leading-relaxed mb-4 min-h-[48px]">
+                  <p className="text-muted-foreground text-[10px] leading-relaxed mb-3 line-clamp-2">
                     {tool.description}
                   </p>
 
-                  {/* Mini stats */}
-                  <div className="flex items-center gap-3 mb-4">
-                    {tool.stats.map((stat) => (
-                      <div
-                        key={stat.label}
-                        className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground"
-                      >
-                        <stat.icon className="w-3 h-3" style={{ color: `rgba(${tool.color}, 0.7)` }} />
-                        {stat.label}
-                      </div>
-                    ))}
-                  </div>
-
                   {/* CTA */}
                   <div
-                    className="flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-300 group-hover:px-4"
+                    className="flex items-center justify-between px-2.5 py-1.5 rounded-lg transition-all duration-300 group-hover:px-3"
                     style={{ background: `rgba(${tool.color}, 0.06)` }}
                   >
                     <span
-                      className="text-xs font-semibold"
+                      className="text-[10px] font-semibold"
                       style={{ color: `rgba(${tool.color}, 1)` }}
                     >
-                      Try Now — Free
+                      Try Free
                     </span>
                     <ArrowRight
-                      className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1"
+                      className="w-3 h-3 transition-transform duration-300 group-hover:translate-x-1"
                       style={{ color: `rgba(${tool.color}, 1)` }}
                     />
                   </div>
