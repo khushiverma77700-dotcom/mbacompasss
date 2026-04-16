@@ -65,3 +65,23 @@ export function specMatches(entitySpecs: string[] | null | undefined, slug: stri
   const target = slug.trim().toLowerCase();
   return entitySpecs.some(s => s?.toLowerCase().trim() === target);
 }
+
+const normalizeLocationValue = (value: string | null | undefined) =>
+  value?.trim().toLowerCase() ?? "";
+
+export function locationMatches(
+  value: string | null | undefined,
+  target: string | null | undefined,
+  aliases: string[] | null | undefined = [],
+): boolean {
+  if (!target || target === "all") return true;
+
+  const normalizedValue = normalizeLocationValue(value);
+  if (!normalizedValue) return false;
+
+  const candidates = [target, ...(aliases || [])]
+    .map(normalizeLocationValue)
+    .filter(Boolean);
+
+  return candidates.includes(normalizedValue);
+}

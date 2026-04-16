@@ -24,7 +24,7 @@ const PageKeywords = ({ contentType, recordId, fallbackKeywords = [] }: PageKeyw
     queryFn: async () => {
       const key = `seo_page__${contentType}__${recordId}`;
       const { data } = await supabase.from("site_settings").select("value").eq("key", key).maybeSingle();
-      return data?.value as Record<string, any> | null;
+      return (data?.value as Record<string, any> | null) ?? null;
     },
     staleTime: 10 * 60 * 1000,
   });

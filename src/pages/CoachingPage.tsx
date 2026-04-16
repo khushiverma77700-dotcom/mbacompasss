@@ -7,19 +7,22 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useInstitutes, useCategories } from "@/hooks/useInstitutes";
+import { useCityPages } from "@/hooks/useCityPages";
 import { useSpecializations } from "@/hooks/useSpecializations";
 import { Skeleton } from "@/components/ui/skeleton";
 import SEOHead from "@/components/SEOHead";
 import PageKeywords from "@/components/PageKeywords";
 import { getLocationImage } from "@/data/cityImages";
-import { FEE_BUCKETS, FEE_BUCKET_LABELS, matchesFeeBucket, getEffectiveFeesLakhs, specMatches } from "@/lib/filterHelpers";
+import { FEE_BUCKETS, FEE_BUCKET_LABELS, matchesFeeBucket, getEffectiveFeesLakhs, specMatches, locationMatches } from "@/lib/filterHelpers";
 
 const modes = ["Online", "Offline", "Hybrid"];
+const toSlug = (value: string) => value.toLowerCase().trim().replace(/\s+/g, "-");
 
 const CoachingPage = () => {
   const navigate = useNavigate();
   const { data: allInstitutes = [], isLoading } = useInstitutes();
   const { data: categories = [] } = useCategories();
+  const { data: cityPages = [] } = useCityPages();
   const { data: specOptions = [] } = useSpecializations("coaching");
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -59,14 +62,42 @@ const CoachingPage = () => {
     setSearchParams({}, { replace: true });
   }, [setSearchParams]);
 
-  const states = useMemo(() => INDIAN_STATES.filter(s => allInstitutes.some((i: any) => i.state === s)), [allInstitutes]);
-  const citiesForState = useMemo(() =>
-    selectedState !== "all"
-      ? getCitiesForState(selectedState).filter(c => allInstitutes.some((i: any) => i.city === c))
-      : [...new Set(allInstitutes.map((i: any) => i.city).filter(Boolean))].sort() as string[],
-    [allInstitutes, selectedState]
-  );
-  const allCities = useMemo(() => [...new Set(allInstitutes.map((i: any) => i.city).filter(Boolean))].sort() as string[], [allInstitutes]);
+  const currentCityPage = useMemo(() => {
+    if (selectedCity === "all") return null;
+    const normalizedCity = selectedCity.trim().toLowerCase();
+
+    return cityPages.find((page: any) =>
+      page.name?.toLowerCase().trim() === normalizedCity ||
+      page.slug === toSlug(selectedCity) ||
+      (page.city_aliases || []).some((alias: string) => alias?.toLowerCase().trim() === normalizedCity)
+    ) || null;
+  }, [cityPages, selectedCity]);
+
+  const states = useMemo(() => {
+    const stateOptions = INDIAN_STATES.filter(s => allInstitutes.some((i: any) => i.state === s));
+    return selectedState !== "all" && !stateOptions.includes(selectedState)
+      ? [selectedState, ...stateOptions]
+      : stateOptions;
+  }, [allInstitutes, selectedState]);
+
+  const citiesForState = useMemo(() => {
+    const cityOptions = (
+      selectedState !== "all"
+        ? getCitiesForState(selectedState).filter(c => allInstitutes.some((i: any) => i.city === c))
+        : [...new Set(allInstitutes.map((i: any) => i.city).filter(Boolean))].sort() as string[]
+    );
+
+    return selectedCity !== "all" && !cityOptions.includes(selectedCity)
+      ? [selectedCity, ...cityOptions]
+      : cityOptions;
+  }, [allInstitutes, selectedState, selectedCity]);
+
+  const allCities = useMemo(() => {
+    const cityOptions = [...new Set(allInstitutes.map((i: any) => i.city).filter(Boolean))].sort() as string[];
+    return selectedCity !== "all" && !cityOptions.includes(selectedCity)
+      ? [selectedCity, ...cityOptions]
+      : cityOptions;
+  }, [allInstitutes, selectedCity]);
 
   const filtered = useMemo(() => {
     let list = [...allInstitutes] as any[];
@@ -78,9 +109,17 @@ const CoachingPage = () => {
         (i.state || "").toLowerCase().includes(q)
       );
     }
-    if (selectedCity !== "all") list = list.filter((i) => i.city === selectedCity);
-    if (selectedState !== "all") list = list.filter((i) => i.state === selectedState);
-    if (selectedMode !== "all") list = list.filter((i) => i.mode === selectedMode);
+    if (selectedCity !== "all") {
+      list = list.filter((i) => locationMatches(i.city, selectedCity, currentCityPage?.city_aliases));
+    }
+    if (selectedState !== "all") {
+      const normalizedState = selectedState.trim().toLowerCase();
+      list = list.filter((i) => (i.state || "").trim().toLowerCase() === normalizedState);
+    }
+    if (selectedMode !== "all") {
+      const normalizedMode = selectedMode.trim().toLowerCase();
+      list = list.filter((i) => (i.mode || "").trim().toLowerCase() === normalizedMode);
+    }
     if (selectedCategory !== "all") {
       const cat = categories.find((c: any) => c.slug === selectedCategory);
       if (cat) list = list.filter((i: any) => i.category_id === cat.id);
@@ -94,7 +133,7 @@ const CoachingPage = () => {
       list.sort((a, b) => (getEffectiveFeesLakhs(a) ?? Infinity) - (getEffectiveFeesLakhs(b) ?? Infinity));
     }
     return list;
-  }, [allInstitutes, search, selectedCity, selectedState, selectedMode, selectedCategory, selectedFee, selectedSpec, sortBy, categories]);
+  }, [allInstitutes, search, selectedCity, selectedState, selectedMode, selectedCategory, selectedFee, selectedSpec, sortBy, categories, currentCityPage]);
 
   // Active filters chips
   const activeFilters = useMemo(() => {
