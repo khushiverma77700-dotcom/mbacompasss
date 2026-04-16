@@ -237,11 +237,13 @@ Deno.serve(async (req) => {
           const status = result.ok ? "submitted" : "failed";
           const errorMessage = result.ok ? null : JSON.stringify(result.data);
 
+          const now = new Date().toISOString();
           await supabase
             .from("indexing_urls")
             .update({
               status,
-              last_submitted_at: new Date().toISOString(),
+              last_submitted_at: now,
+              indexed_at: result.ok ? now : undefined,
               last_response: result.data,
               error_message: errorMessage,
               retry_count: row.retry_count + 1,
