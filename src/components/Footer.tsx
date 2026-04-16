@@ -46,6 +46,7 @@ const Footer = () => {
               ))}
               <li><Link to="/profile-analyzer" className="hover:text-primary-foreground transition-colors">AI Profile Analyser</Link></li>
               <li><Link to="/cat-score-calculator" className="hover:text-primary-foreground transition-colors">CAT Score Calculator</Link></li>
+              <li><Link to="/roi-calculator" className="hover:text-primary-foreground transition-colors">MBA ROI Calculator</Link></li>
               <li><Link to="/business-inquiries" className="hover:text-primary-foreground transition-colors">Business Inquiries</Link></li>
             </ul>
           </div>
