@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import {
   Table,
@@ -18,7 +19,16 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, BarChart, Bar } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+} from "recharts";
 import {
   Globe,
   RefreshCw,
@@ -40,9 +50,11 @@ interface IndexingUrl {
   id: string;
   url: string;
   page_type: string;
+  record_id?: string | null;
   status: string;
   last_submitted_at: string | null;
   indexed_at: string | null;
+  last_response?: unknown;
   error_message: string | null;
   retry_count: number;
   created_at: string;
@@ -55,7 +67,50 @@ interface IndexingLog {
   status: string;
   created_at: string;
   error_message: string | null;
+  response?: unknown;
+  indexing_urls?: { url: string } | Array<{ url: string }> | null;
 }
+
+interface SubmitUrlResponse {
+  success: boolean;
+  url: string;
+  status: string;
+  error?: string | null;
+  google?: unknown;
+  diagnostics?: Record<string, unknown>;
+  record?: Partial<IndexingUrl>;
+}
+
+interface BulkActionResponse {
+  total: number;
+  success: number;
+  failed: number;
+  processed?: number;
+  results?: Array<Partial<SubmitUrlResponse>>;
+  message?: string;
+}
+
+interface BatchProgressState {
+  total: number;
+  processed: number;
+  success: number;
+  failed: number;
+  remaining: number;
+  currentUrl: string | null;
+  startedAt: string;
+  finishedAt: string | null;
+  isRunning: boolean;
+}
+
+interface LiveBatchItem {
+  url: string;
+  status: "sending" | "success" | "failed";
+  message: string;
+  response: string;
+  updatedAt: string;
+}
+
+const SITE_URL = "https://bschoolbuzz.com";
 
 const AdminGoogleIndexing = () => {
   const { toast } = useToast();
@@ -67,50 +122,95 @@ const AdminGoogleIndexing = () => {
   const [filter, setFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<"urls" | "logs" | "charts">("urls");
+  const [batchProgress, setBatchProgress] = useState<BatchProgressState | null>(null);
+  const [liveBatchItems, setLiveBatchItems] = useState<LiveBatchItem[]>([]);
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    const [urlsRes, logsRes] = await Promise.all([
-      supabase
-        .from("indexing_urls")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(500),
-      supabase
-        .from("indexing_logs")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(200),
-    ]);
-    setUrls((urlsRes.data as IndexingUrl[]) || []);
-    setLogs((logsRes.data as IndexingLog[]) || []);
-    setLoading(false);
+  const fetchData = useCallback(
+    async (showLoader = true) => {
+      if (showLoader) setLoading(true);
+
+      const [urlsRes, logsRes] = await Promise.all([
+        supabase
+          .from("indexing_urls")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(500),
+        supabase
+          .from("indexing_logs")
+          .select("id, action, status, created_at, error_message, response, indexing_urls(url)")
+          .order("created_at", { ascending: false })
+          .limit(200),
+      ]);
+
+      if (urlsRes.error) {
+        if (showLoader) {
+          toast({
+            title: "Error loading URLs",
+            description: urlsRes.error.message,
+            variant: "destructive",
+          });
+        }
+      } else {
+        setUrls((urlsRes.data as IndexingUrl[]) || []);
+      }
+
+      if (logsRes.error) {
+        if (showLoader) {
+          toast({
+            title: "Error loading logs",
+            description: logsRes.error.message,
+            variant: "destructive",
+          });
+        }
+      } else {
+        setLogs((logsRes.data as unknown as IndexingLog[]) || []);
+      }
+
+      setLoading(false);
+    },
+    [toast]
+  );
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      fetchData(false);
+    }, 15000);
+
+    return () => window.clearInterval(interval);
+  }, [fetchData]);
+
+  const getDisplayStatus = useCallback((row: Pick<IndexingUrl, "status" | "indexed_at">) => {
+    if (row.indexed_at || row.status === "indexed") return "indexed";
+    return row.status;
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
-
-  // === Stats ===
   const stats = useMemo(() => {
-    const s = { total: urls.length, submitted: 0, indexed: 0, failed: 0, pending: 0 };
-    for (const r of urls) {
-      if (r.status === "submitted") s.submitted++;
-      else if (r.status === "indexed") s.indexed++;
-      else if (r.status === "failed") s.failed++;
-      else if (r.status === "pending") s.pending++;
+    const summary = { total: urls.length, submitted: 0, indexed: 0, failed: 0, pending: 0 };
+
+    for (const row of urls) {
+      const isIndexed = Boolean(row.indexed_at || row.status === "indexed");
+
+      if (isIndexed) summary.indexed += 1;
+      if (!isIndexed && row.status !== "failed") summary.pending += 1;
+      if (row.status === "submitted" && !isIndexed) summary.submitted += 1;
+      if (row.status === "failed") summary.failed += 1;
     }
-    return s;
+
+    return summary;
   }, [urls]);
 
-  // === Chart data ===
   const chartData = useMemo(() => {
-    // Cumulative indexed over time
     const indexedUrls = urls
-      .filter((u) => u.indexed_at || u.status === "submitted" || u.status === "indexed")
-      .map((u) => ({ date: (u.indexed_at || u.last_submitted_at || u.created_at).slice(0, 10) }));
+      .filter((row) => row.indexed_at)
+      .map((row) => ({ date: (row.indexed_at || row.last_submitted_at || row.created_at).slice(0, 10) }));
 
     const dateCounts: Record<string, number> = {};
-    for (const u of indexedUrls) {
-      dateCounts[u.date] = (dateCounts[u.date] || 0) + 1;
+    for (const row of indexedUrls) {
+      dateCounts[row.date] = (dateCounts[row.date] || 0) + 1;
     }
 
     const sortedDates = Object.keys(dateCounts).sort();
@@ -120,7 +220,6 @@ const AdminGoogleIndexing = () => {
       return { date, daily: dateCounts[date], cumulative };
     });
 
-    // If no data, show at least today
     if (cumulativeData.length === 0) {
       const today = new Date().toISOString().slice(0, 10);
       cumulativeData.push({ date: today, daily: 0, cumulative: 0 });
@@ -129,11 +228,50 @@ const AdminGoogleIndexing = () => {
     return cumulativeData;
   }, [urls]);
 
-  // === Helpers ===
-  const callFunction = async (body: any) => {
-    const { data, error } = await supabase.functions.invoke("google-indexing", { body });
-    if (error) throw error;
-    return data;
+  const formatJson = (value: unknown) => {
+    if (value == null) return "—";
+    if (typeof value === "string") return value;
+
+    try {
+      return JSON.stringify(value, null, 2);
+    } catch {
+      return String(value);
+    }
+  };
+
+  const getResponseSummary = (value: unknown): string => {
+    if (!value) return "—";
+    if (typeof value === "string") return value;
+
+    const record = value as Record<string, any>;
+
+    if (record.google) return getResponseSummary(record.google);
+    if (record.error?.message) return String(record.error.message);
+    if (record.message) return String(record.message);
+    if (record.urlNotificationMetadata) return "Accepted by Google Indexing API";
+    if (record.diagnostics?.error_stage) {
+      return String(record.diagnostics.error_stage).replace(/_/g, " ");
+    }
+
+    return formatJson(value);
+  };
+
+  const getErrorSummary = (response: unknown, explicitError?: string | null) => {
+    if (explicitError) return explicitError;
+    const summary = getResponseSummary(response);
+    return summary === "—" ? "—" : summary;
+  };
+
+  const shortUrl = (url: string) => url.replace(SITE_URL, "") || url;
+
+  const formatTime = (dateStr: string | null) => {
+    if (!dateStr) return "—";
+    return new Date(dateStr).toLocaleString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   const formatDuration = (startDate: string | null, endDate: string | null) => {
@@ -147,25 +285,129 @@ const AdminGoogleIndexing = () => {
     return `${hrs}h ${remainMins}m`;
   };
 
-  const formatTime = (dateStr: string | null) => {
-    if (!dateStr) return "—";
-    return new Date(dateStr).toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      hour: "2-digit",
-      minute: "2-digit",
+  const getLogUrl = (log: IndexingLog) => {
+    if (Array.isArray(log.indexing_urls)) {
+      return log.indexing_urls[0]?.url || "—";
+    }
+    return log.indexing_urls?.url || "—";
+  };
+
+  const pushLiveBatchItem = (item: LiveBatchItem) => {
+    setLiveBatchItems((prev) => [item, ...prev.filter((entry) => entry.url !== item.url)].slice(0, 12));
+  };
+
+  const upsertUrlRecord = (
+    payload: Partial<SubmitUrlResponse> | undefined,
+    fallback: { id?: string; url: string; page_type?: string },
+    overrideError?: string | null
+  ) => {
+    const record = (payload?.record || {}) as Partial<IndexingUrl>;
+    const targetUrl = payload?.url || fallback.url;
+
+    if (!targetUrl) return;
+
+    setUrls((prev) => {
+      const next = [...prev];
+      const existingIndex = next.findIndex(
+        (row) => row.url === targetUrl || (record.id ? row.id === record.id : false)
+      );
+
+      const merged = {
+        id: record.id || fallback.id || targetUrl,
+        url: targetUrl,
+        page_type: (record.page_type as string) || fallback.page_type || "other",
+        record_id: (record.record_id as string | null | undefined) ?? null,
+        status: payload?.status || (record.status as string) || "pending",
+        last_submitted_at:
+          (record.last_submitted_at as string | null | undefined) ?? null,
+        indexed_at: (record.indexed_at as string | null | undefined) ?? null,
+        last_response: payload?.google ?? record.last_response ?? null,
+        error_message:
+          overrideError ?? payload?.error ?? (record.error_message as string | null | undefined) ?? null,
+        retry_count:
+          typeof record.retry_count === "number" ? record.retry_count : existingIndex >= 0 ? next[existingIndex].retry_count : 0,
+        created_at:
+          (record.created_at as string | undefined) ||
+          (existingIndex >= 0 ? next[existingIndex].created_at : new Date().toISOString()),
+        updated_at:
+          (record.updated_at as string | undefined) || new Date().toISOString(),
+      } as IndexingUrl;
+
+      if (existingIndex >= 0) {
+        next[existingIndex] = { ...next[existingIndex], ...merged };
+      } else {
+        next.unshift(merged);
+      }
+
+      return next;
     });
   };
 
-  // === Actions ===
+  const extractRequestError = (error: any) => {
+    const details = error?.details;
+    const message =
+      details?.error ||
+      details?.data?.error ||
+      details?.data?.record?.error_message ||
+      error?.message ||
+      "Request failed";
+
+    return { message, details };
+  };
+
+  const callFunction = async <T,>(body: Record<string, unknown>): Promise<T> => {
+    const { data, error } = await supabase.functions.invoke("google-indexing", { body });
+
+    if (error) {
+      let details: any = null;
+      const context = (error as any).context;
+
+      if (context) {
+        try {
+          details = await context.clone().json();
+        } catch {
+          try {
+            details = await context.text();
+          } catch {
+            details = null;
+          }
+        }
+      }
+
+      const enrichedError = new Error(
+        (details && typeof details === "object" && "error" in details ? String((details as any).error) : "") ||
+          error.message ||
+          "Edge Function request failed"
+      );
+      (enrichedError as any).details = details;
+      throw enrichedError;
+    }
+
+    if (data && typeof data === "object" && "ok" in data) {
+      const payload = data as { ok: boolean; data?: T; error?: string };
+      if (!payload.ok) {
+        const enrichedError = new Error(payload.error || "Request failed");
+        (enrichedError as any).details = data;
+        throw enrichedError;
+      }
+      return (payload.data ?? data) as T;
+    }
+
+    return data as T;
+  };
+
   const handleDiscover = async () => {
     setActionLoading("discover");
     try {
-      const result = await callFunction({ action: "discover" });
-      toast({ title: "Discovery Complete", description: `${result.discovered} new URLs found` });
-      fetchData();
-    } catch (e: any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
+      const result = await callFunction<{ discovered: number }>({ action: "discover" });
+      toast({
+        title: "Discovery complete",
+        description: `${result.discovered} new URLs found`,
+      });
+      await fetchData(false);
+    } catch (error: any) {
+      const { message } = extractRequestError(error);
+      toast({ title: "Error", description: message, variant: "destructive" });
     }
     setActionLoading(null);
   };
@@ -173,79 +415,258 @@ const AdminGoogleIndexing = () => {
   const handleRefresh = async () => {
     setActionLoading("refresh");
     try {
-      const result = await callFunction({ action: "refresh" });
-      toast({ title: "Refresh Complete", description: `${result.success}/${result.total} URLs retried successfully` });
-      fetchData();
-    } catch (e: any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
+      const result = await callFunction<BulkActionResponse>({ action: "refresh" });
+
+      (result.results || []).forEach((entry) => {
+        if (entry.url) {
+          upsertUrlRecord(entry, { url: entry.url, page_type: "other" }, entry.error || null);
+        }
+      });
+
+      toast({
+        title: "Retry finished",
+        description: `${result.success}/${result.total} URLs processed successfully`,
+      });
+      await fetchData(false);
+    } catch (error: any) {
+      const { message } = extractRequestError(error);
+      toast({ title: "Error", description: message, variant: "destructive" });
     }
     setActionLoading(null);
   };
 
   const handleSubmitAll = async () => {
-    setActionLoading("submit-all");
-    try {
-      const pendingUrls = urls.filter((u) => u.status === "pending").map((u) => u.url);
-      if (!pendingUrls.length) {
-        toast({ title: "No Pending URLs", description: "All URLs have been submitted" });
-        setActionLoading(null);
-        return;
-      }
-      const result = await callFunction({ action: "batch_submit", urls: pendingUrls.slice(0, 100) });
-      const successCount = result.results?.filter((r: any) => r.success).length || 0;
-      toast({ title: "Batch Submit Complete", description: `${successCount}/${pendingUrls.length} URLs submitted` });
-      fetchData();
-    } catch (e: any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
+    const pendingEntries = urls
+      .filter((row) => getDisplayStatus(row) === "pending")
+      .slice(0, 100);
+
+    if (!pendingEntries.length) {
+      toast({
+        title: "No pending URLs",
+        description: "All URLs are already processed.",
+      });
+      return;
     }
+
+    setActionLoading("submit-all");
+    setLiveBatchItems([]);
+    setBatchProgress({
+      total: pendingEntries.length,
+      processed: 0,
+      success: 0,
+      failed: 0,
+      remaining: pendingEntries.length,
+      currentUrl: null,
+      startedAt: new Date().toISOString(),
+      finishedAt: null,
+      isRunning: true,
+    });
+
+    let successCount = 0;
+    let failedCount = 0;
+
+    for (const entry of pendingEntries) {
+      setBatchProgress((prev) =>
+        prev
+          ? {
+              ...prev,
+              currentUrl: entry.url,
+            }
+          : prev
+      );
+
+      pushLiveBatchItem({
+        url: entry.url,
+        status: "sending",
+        message: "Sending request to Google…",
+        response: "",
+        updatedAt: new Date().toISOString(),
+      });
+
+      try {
+        const result = await callFunction<SubmitUrlResponse>({
+          action: "submit_url",
+          url: entry.url,
+          page_type: entry.page_type,
+          record_id: entry.record_id || undefined,
+        });
+
+        successCount += 1;
+        upsertUrlRecord(result, entry);
+
+        pushLiveBatchItem({
+          url: entry.url,
+          status: "success",
+          message: getResponseSummary(result.google),
+          response: formatJson(result.google),
+          updatedAt: new Date().toISOString(),
+        });
+      } catch (error: any) {
+        failedCount += 1;
+        const { message, details } = extractRequestError(error);
+        upsertUrlRecord(details?.data, entry, message);
+
+        pushLiveBatchItem({
+          url: entry.url,
+          status: "failed",
+          message,
+          response: formatJson(details?.data?.google ?? details?.data?.record?.last_response ?? details),
+          updatedAt: new Date().toISOString(),
+        });
+      }
+
+      const processed = successCount + failedCount;
+      setBatchProgress((prev) =>
+        prev
+          ? {
+              ...prev,
+              processed,
+              success: successCount,
+              failed: failedCount,
+              remaining: pendingEntries.length - processed,
+            }
+          : prev
+      );
+    }
+
+    setBatchProgress((prev) =>
+      prev
+        ? {
+            ...prev,
+            currentUrl: null,
+            finishedAt: new Date().toISOString(),
+            isRunning: false,
+          }
+        : prev
+    );
+
+    await fetchData(false);
+
+    toast({
+      title: "Batch submission finished",
+      description: `${successCount}/${pendingEntries.length} URLs processed successfully${
+        failedCount ? `, ${failedCount} failed.` : "."
+      }`,
+      variant: failedCount ? "destructive" : "default",
+    });
+
     setActionLoading(null);
   };
 
   const handleManualSubmit = async () => {
-    if (!manualUrl.trim()) return;
+    const url = manualUrl.trim();
+    if (!url) return;
+
     setActionLoading("manual");
     try {
-      const result = await callFunction({ action: "submit_url", url: manualUrl.trim(), page_type: "manual" });
+      const result = await callFunction<SubmitUrlResponse>({
+        action: "submit_url",
+        url,
+        page_type: "manual",
+      });
+
+      upsertUrlRecord(result, { url, page_type: "manual" });
+      setManualUrl("");
+
       toast({
-        title: result.success ? "URL Submitted" : "Submission Failed",
-        description: result.success ? "URL sent to Google Indexing API" : JSON.stringify(result.result),
+        title: result.success ? "URL submitted" : "Submission failed",
+        description: result.success ? getResponseSummary(result.google) : result.error || "Submission failed",
         variant: result.success ? "default" : "destructive",
       });
-      setManualUrl("");
-      fetchData();
-    } catch (e: any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
+
+      await fetchData(false);
+    } catch (error: any) {
+      const { message, details } = extractRequestError(error);
+      upsertUrlRecord(details?.data, { url, page_type: "manual" }, message);
+      toast({ title: "Error", description: message, variant: "destructive" });
     }
     setActionLoading(null);
   };
 
-  const handleResubmit = async (url: string) => {
-    setActionLoading(url);
+  const handleResubmit = async (row: IndexingUrl) => {
+    setActionLoading(row.id);
     try {
-      await callFunction({ action: "submit_url", url });
-      toast({ title: "Re-submitted", description: url });
-      fetchData();
-    } catch (e: any) {
-      toast({ title: "Error", description: e.message, variant: "destructive" });
+      const result = await callFunction<SubmitUrlResponse>({
+        action: "submit_url",
+        url: row.url,
+        page_type: row.page_type,
+        record_id: row.record_id || undefined,
+      });
+
+      upsertUrlRecord(result, row);
+      toast({
+        title: "URL re-submitted",
+        description: getResponseSummary(result.google),
+      });
+      await fetchData(false);
+    } catch (error: any) {
+      const { message, details } = extractRequestError(error);
+      upsertUrlRecord(details?.data, row, message);
+      toast({ title: "Error", description: message, variant: "destructive" });
     }
     setActionLoading(null);
   };
 
   const statusBadge = (status: string) => {
     const map: Record<string, { cls: string; icon: any; label: string }> = {
-      submitted: { cls: "bg-blue-50 text-blue-700 border-blue-200", icon: ArrowUpCircle, label: "Submitted" },
-      indexed: { cls: "bg-emerald-50 text-emerald-700 border-emerald-200", icon: CheckCircle, label: "Indexed" },
-      failed: { cls: "bg-red-50 text-red-700 border-red-200", icon: XCircle, label: "Failed" },
-      pending: { cls: "bg-amber-50 text-amber-700 border-amber-200", icon: Clock, label: "Pending" },
+      submitted: {
+        cls: "bg-blue-50 text-blue-700 border-blue-200",
+        icon: ArrowUpCircle,
+        label: "Submitted",
+      },
+      indexed: {
+        cls: "bg-emerald-50 text-emerald-700 border-emerald-200",
+        icon: CheckCircle,
+        label: "Indexed",
+      },
+      failed: {
+        cls: "bg-red-50 text-red-700 border-red-200",
+        icon: XCircle,
+        label: "Failed",
+      },
+      pending: {
+        cls: "bg-amber-50 text-amber-700 border-amber-200",
+        icon: Clock,
+        label: "Pending",
+      },
     };
-    const s = map[status] || map.pending;
-    const Icon = s.icon;
-    return <Badge variant="outline" className={`gap-1 ${s.cls}`}><Icon className="w-3 h-3" />{s.label}</Badge>;
+
+    const resolved = map[status] || map.pending;
+    const Icon = resolved.icon;
+
+    return (
+      <Badge variant="outline" className={`gap-1 ${resolved.cls}`}>
+        <Icon className="w-3 h-3" />
+        {resolved.label}
+      </Badge>
+    );
   };
 
-  const filtered = urls.filter((u) => {
-    if (filter !== "all" && u.status !== filter) return false;
-    if (searchTerm && !u.url.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+  const activityBadge = (status: LiveBatchItem["status"]) => {
+    if (status === "sending") {
+      return (
+        <Badge variant="outline" className="gap-1 bg-amber-50 text-amber-700 border-amber-200">
+          <Loader2 className="w-3 h-3 animate-spin" /> Sending
+        </Badge>
+      );
+    }
+
+    return statusBadge(status === "success" ? "indexed" : "failed");
+  };
+
+  const filtered = urls.filter((row) => {
+    const displayStatus = getDisplayStatus(row);
+    const matchesStatus =
+      filter === "all"
+        ? true
+        : filter === "pending"
+          ? !row.indexed_at && row.status !== "failed"
+          : filter === "indexed"
+            ? displayStatus === "indexed"
+            : displayStatus === filter;
+
+    if (!matchesStatus) return false;
+    if (searchTerm && !row.url.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     return true;
   });
 
@@ -254,35 +675,51 @@ const AdminGoogleIndexing = () => {
     daily: { label: "Daily Indexed", color: "hsl(142 71% 45%)" },
   };
 
+  const progressValue = batchProgress
+    ? Math.round((batchProgress.processed / Math.max(batchProgress.total, 1)) * 100)
+    : 0;
+
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
             <Globe className="w-6 h-6 text-primary" /> Google Indexing
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Automated URL submission & tracking — refreshes every hour
+            Automated URL submission, retry tracking, and detailed Google response visibility.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={handleDiscover} disabled={!!actionLoading}>
-            {actionLoading === "discover" ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Search className="w-4 h-4 mr-1" />}
+            {actionLoading === "discover" ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-1" />
+            ) : (
+              <Search className="w-4 h-4 mr-1" />
+            )}
             Discover New
           </Button>
           <Button variant="outline" size="sm" onClick={handleSubmitAll} disabled={!!actionLoading}>
-            {actionLoading === "submit-all" ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Zap className="w-4 h-4 mr-1" />}
-            Submit All Pending
+            {actionLoading === "submit-all" ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-1" />
+            ) : (
+              <Zap className="w-4 h-4 mr-1" />
+            )}
+            {actionLoading === "submit-all" && batchProgress
+              ? `Submitting ${batchProgress.processed}/${batchProgress.total}`
+              : "Submit All Pending"}
           </Button>
           <Button size="sm" onClick={handleRefresh} disabled={!!actionLoading}>
-            {actionLoading === "refresh" ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <RefreshCw className="w-4 h-4 mr-1" />}
+            {actionLoading === "refresh" ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-1" />
+            ) : (
+              <RefreshCw className="w-4 h-4 mr-1" />
+            )}
             Retry Failed
           </Button>
         </div>
       </div>
 
-      {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {[
           { key: "all", label: "Total URLs", value: stats.total, icon: BarChart3, color: "text-muted-foreground" },
@@ -308,7 +745,100 @@ const AdminGoogleIndexing = () => {
         })}
       </div>
 
-      {/* Tab Switcher */}
+      {(batchProgress || liveBatchItems.length > 0) && (
+        <div className="grid gap-4 lg:grid-cols-[1.15fr,0.85fr]">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Zap className="w-4 h-4 text-primary" /> Bulk Submission Progress
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {batchProgress ? (
+                <>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="font-medium">
+                        {batchProgress.processed}/{batchProgress.total} URLs processed
+                      </span>
+                      <span className="text-muted-foreground">{batchProgress.remaining} remaining</span>
+                    </div>
+                    <Progress value={progressValue} className="h-2" />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3 text-center">
+                    <div className="rounded-lg border border-border/60 bg-background/70 p-3">
+                      <p className="text-xs text-muted-foreground">Completed</p>
+                      <p className="text-xl font-semibold">{batchProgress.processed}</p>
+                    </div>
+                    <div className="rounded-lg border border-border/60 bg-background/70 p-3">
+                      <p className="text-xs text-muted-foreground">Success</p>
+                      <p className="text-xl font-semibold text-emerald-600">{batchProgress.success}</p>
+                    </div>
+                    <div className="rounded-lg border border-border/60 bg-background/70 p-3">
+                      <p className="text-xs text-muted-foreground">Failed</p>
+                      <p className="text-xl font-semibold text-red-600">{batchProgress.failed}</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border border-border/60 bg-muted/30 p-3 text-sm space-y-1">
+                    <p>
+                      <span className="text-muted-foreground">Started:</span> {formatTime(batchProgress.startedAt)}
+                    </p>
+                    <p>
+                      <span className="text-muted-foreground">Current:</span>{" "}
+                      {batchProgress.currentUrl ? shortUrl(batchProgress.currentUrl) : batchProgress.isRunning ? "Waiting…" : "Completed"}
+                    </p>
+                    <p>
+                      <span className="text-muted-foreground">Finished:</span>{" "}
+                      {batchProgress.finishedAt ? formatTime(batchProgress.finishedAt) : "Still running"}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">Run “Submit All Pending” to see live batch progress here.</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <Activity className="w-4 h-4 text-primary" /> Live Activity
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {liveBatchItems.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Live request updates will appear here while URLs are being processed.</p>
+              ) : (
+                <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
+                  {liveBatchItems.map((item) => (
+                    <div key={item.url} className="rounded-lg border border-border/60 bg-background/80 p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-xs font-mono text-primary truncate">{shortUrl(item.url)}</p>
+                          <p className="mt-1 text-xs text-muted-foreground break-words">{item.message}</p>
+                        </div>
+                        {activityBadge(item.status)}
+                      </div>
+                      {item.response && item.response !== "—" && (
+                        <details className="mt-2 text-[11px] text-muted-foreground">
+                          <summary className="cursor-pointer text-primary">View API response</summary>
+                          <pre className="mt-2 whitespace-pre-wrap break-words rounded-md bg-muted/40 p-2 font-mono text-[10px]">
+                            {item.response}
+                          </pre>
+                        </details>
+                      )}
+                      <p className="mt-2 text-[10px] text-muted-foreground">{formatTime(item.updatedAt)}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <div className="flex gap-1 bg-muted p-1 rounded-lg w-fit">
         {[
           { id: "urls" as const, label: "URLs", icon: Globe },
@@ -332,7 +862,6 @@ const AdminGoogleIndexing = () => {
         })}
       </div>
 
-      {/* Manual Submit */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
@@ -344,18 +873,21 @@ const AdminGoogleIndexing = () => {
             <Input
               placeholder="https://bschoolbuzz.com/article/..."
               value={manualUrl}
-              onChange={(e) => setManualUrl(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleManualSubmit()}
+              onChange={(event) => setManualUrl(event.target.value)}
+              onKeyDown={(event) => event.key === "Enter" && handleManualSubmit()}
               className="flex-1"
             />
             <Button onClick={handleManualSubmit} disabled={!!actionLoading || !manualUrl.trim()}>
-              {actionLoading === "manual" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {actionLoading === "manual" ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* URLs Tab */}
       {activeTab === "urls" && (
         <Card>
           <CardHeader>
@@ -368,85 +900,110 @@ const AdminGoogleIndexing = () => {
                   placeholder="Search URLs..."
                   className="w-52 h-8 text-sm"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(event) => setSearchTerm(event.target.value)}
                 />
                 {filter !== "all" && (
-                  <Button variant="ghost" size="sm" onClick={() => setFilter("all")}>Clear</Button>
+                  <Button variant="ghost" size="sm" onClick={() => setFilter("all")}>
+                    Clear
+                  </Button>
                 )}
               </div>
             </div>
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground" /></div>
+              <div className="flex justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
             ) : filtered.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Globe className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                <p>No URLs found. Click "Discover New" to scan your content.</p>
+                <p>No URLs found. Click “Discover New” to scan your content.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="min-w-[250px]">URL</TableHead>
+                      <TableHead className="min-w-[240px]">URL</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Submitted</TableHead>
-                      <TableHead>Indexed</TableHead>
+                      <TableHead>Submission Time</TableHead>
+                      <TableHead>Last Checked</TableHead>
                       <TableHead>
-                        <span className="flex items-center gap-1"><Timer className="w-3 h-3" /> Duration</span>
+                        <span className="flex items-center gap-1">
+                          <Timer className="w-3 h-3" /> Indexing Time
+                        </span>
                       </TableHead>
                       <TableHead>Retries</TableHead>
-                      <TableHead>Error</TableHead>
+                      <TableHead className="min-w-[220px]">Error / Reason</TableHead>
+                      <TableHead className="min-w-[220px]">Google Response</TableHead>
                       <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filtered.map((row) => (
-                      <TableRow key={row.id} className="group">
+                      <TableRow key={row.id} className="group align-top">
                         <TableCell className="max-w-[300px]">
                           <a
                             href={row.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs font-mono text-primary hover:underline truncate block"
+                            className="text-xs font-mono text-primary hover:underline break-all"
                           >
-                            {row.url.replace("https://bschoolbuzz.com", "")}
+                            {shortUrl(row.url)}
                           </a>
                         </TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="text-[10px] px-1.5">{row.page_type}</Badge>
+                          <Badge variant="outline" className="text-[10px] px-1.5">
+                            {row.page_type}
+                          </Badge>
                         </TableCell>
-                        <TableCell>{statusBadge(row.status)}</TableCell>
+                        <TableCell>{statusBadge(getDisplayStatus(row))}</TableCell>
                         <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                           {formatTime(row.last_submitted_at)}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
-                          {formatTime(row.indexed_at)}
+                          {formatTime(row.updated_at || row.last_submitted_at || row.created_at)}
                         </TableCell>
                         <TableCell className="text-xs font-medium whitespace-nowrap">
                           {formatDuration(row.last_submitted_at, row.indexed_at)}
                         </TableCell>
                         <TableCell className="text-xs text-center">{row.retry_count}</TableCell>
-                        <TableCell className="max-w-[180px]">
-                          {row.error_message && (
-                            <span className="text-[10px] text-red-500 line-clamp-2" title={row.error_message}>
-                              {row.error_message.slice(0, 80)}
-                            </span>
+                        <TableCell className="max-w-[240px]">
+                          <div className="text-[11px] text-red-600 break-words whitespace-pre-wrap">
+                            {getErrorSummary(row.last_response, row.error_message)}
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-[260px]">
+                          {row.last_response ? (
+                            <details className="text-[11px] text-muted-foreground">
+                              <summary className="cursor-pointer text-primary">
+                                {getResponseSummary(row.last_response)}
+                              </summary>
+                              <pre className="mt-2 whitespace-pre-wrap break-words rounded-md bg-muted/40 p-2 font-mono text-[10px]">
+                                {formatJson(row.last_response)}
+                              </pre>
+                            </details>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
                           )}
                         </TableCell>
                         <TableCell>
-                          {(row.status === "failed" || row.status === "pending") && (
+                          {(getDisplayStatus(row) === "failed" || getDisplayStatus(row) === "pending") && (
                             <Button
                               variant="ghost"
                               size="icon"
                               className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={() => handleResubmit(row.url)}
-                              disabled={actionLoading === row.url}
+                              onClick={() => handleResubmit(row)}
+                              disabled={actionLoading === row.id}
                               title="Re-submit"
                             >
-                              {actionLoading === row.url ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                              {actionLoading === row.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <RefreshCw className="w-3.5 h-3.5" />
+                              )}
                             </Button>
                           )}
                         </TableCell>
@@ -460,7 +1017,6 @@ const AdminGoogleIndexing = () => {
         </Card>
       )}
 
-      {/* Charts Tab */}
       {activeTab === "charts" && (
         <div className="grid md:grid-cols-2 gap-6">
           <Card>
@@ -471,24 +1027,22 @@ const AdminGoogleIndexing = () => {
             </CardHeader>
             <CardContent>
               <ChartContainer config={chartConfig} className="h-[280px] w-full">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis
-                    dataKey="date"
-                    tickFormatter={(v) => v.slice(5)}
-                    className="text-xs"
-                  />
-                  <YAxis className="text-xs" />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Line
-                    type="monotone"
-                    dataKey="cumulative"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                    name="Total Indexed"
-                  />
-                </LineChart>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="date" tickFormatter={(value) => value.slice(5)} className="text-xs" />
+                    <YAxis className="text-xs" />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line
+                      type="monotone"
+                      dataKey="cumulative"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                      name="Total Indexed"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
               </ChartContainer>
             </CardContent>
           </Card>
@@ -501,29 +1055,21 @@ const AdminGoogleIndexing = () => {
             </CardHeader>
             <CardContent>
               <ChartContainer config={chartConfig} className="h-[280px] w-full">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis
-                    dataKey="date"
-                    tickFormatter={(v) => v.slice(5)}
-                    className="text-xs"
-                  />
-                  <YAxis className="text-xs" />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar
-                    dataKey="daily"
-                    fill="hsl(142 71% 45%)"
-                    radius={[4, 4, 0, 0]}
-                    name="Daily Indexed"
-                  />
-                </BarChart>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="date" tickFormatter={(value) => value.slice(5)} className="text-xs" />
+                    <YAxis className="text-xs" />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="daily" fill="hsl(142 71% 45%)" radius={[4, 4, 0, 0]} name="Daily Indexed" />
+                  </BarChart>
+                </ResponsiveContainer>
               </ChartContainer>
             </CardContent>
           </Card>
         </div>
       )}
 
-      {/* Logs Tab */}
       {activeTab === "logs" && (
         <Card>
           <CardHeader>
@@ -543,22 +1089,43 @@ const AdminGoogleIndexing = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Time</TableHead>
+                      <TableHead>URL</TableHead>
                       <TableHead>Action</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Error</TableHead>
+                      <TableHead className="min-w-[220px]">API Response</TableHead>
+                      <TableHead className="min-w-[220px]">Error</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {logs.map((log) => (
-                      <TableRow key={log.id}>
+                      <TableRow key={log.id} className="align-top">
                         <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                           {formatTime(log.created_at)}
                         </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="text-[10px]">{log.action}</Badge>
+                        <TableCell className="max-w-[260px]">
+                          <span className="text-xs font-mono text-primary break-all">{shortUrl(getLogUrl(log))}</span>
                         </TableCell>
-                        <TableCell>{statusBadge(log.status)}</TableCell>
-                        <TableCell className="text-[10px] text-red-500 max-w-[300px] truncate">
+                        <TableCell>
+                          <Badge variant="outline" className="text-[10px]">
+                            {log.action}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{statusBadge(log.status === "submitted" ? "submitted" : log.status)}</TableCell>
+                        <TableCell className="max-w-[260px]">
+                          {log.response ? (
+                            <details className="text-[11px] text-muted-foreground">
+                              <summary className="cursor-pointer text-primary">
+                                {getResponseSummary(log.response)}
+                              </summary>
+                              <pre className="mt-2 whitespace-pre-wrap break-words rounded-md bg-muted/40 p-2 font-mono text-[10px]">
+                                {formatJson(log.response)}
+                              </pre>
+                            </details>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-[11px] text-red-600 break-words whitespace-pre-wrap max-w-[260px]">
                           {log.error_message || "—"}
                         </TableCell>
                       </TableRow>
