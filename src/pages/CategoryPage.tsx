@@ -335,7 +335,6 @@ const CategoryPage = () => {
 
         {filtered.length > 0 ? (
           <div id="institute-list" className="space-y-5">
-          <div id="institute-list" className="space-y-5">
             {filtered.map((inst: any, i: number) => (
               <InstituteListingCard key={inst.id} inst={inst} index={i} rank={i + 1} />
             ))}
