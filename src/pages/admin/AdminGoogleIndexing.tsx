@@ -44,7 +44,10 @@ import {
   Activity,
   Timer,
   Zap,
+  Info,
 } from "lucide-react";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 
 interface IndexingUrl {
   id: string;
@@ -124,6 +127,7 @@ const AdminGoogleIndexing = () => {
   const [activeTab, setActiveTab] = useState<"urls" | "logs" | "charts">("urls");
   const [batchProgress, setBatchProgress] = useState<BatchProgressState | null>(null);
   const [liveBatchItems, setLiveBatchItems] = useState<LiveBatchItem[]>([]);
+  const [actionLog, setActionLog] = useState<string[]>([]);
 
   const fetchData = useCallback(
     async (showLoader = true) => {
@@ -396,10 +400,14 @@ const AdminGoogleIndexing = () => {
     return data as T;
   };
 
+  const pushLog = (msg: string) => setActionLog(prev => [`[${new Date().toLocaleTimeString("en-IN")}] ${msg}`, ...prev].slice(0, 30));
+
   const handleDiscover = async () => {
     setActionLoading("discover");
+    pushLog("Scanning database for new URLs...");
     try {
       const result = await callFunction<{ discovered: number }>({ action: "discover" });
+      pushLog(`Discovery complete: ${result.discovered} new URLs found`);
       toast({
         title: "Discovery complete",
         description: `${result.discovered} new URLs found`,
@@ -407,6 +415,7 @@ const AdminGoogleIndexing = () => {
       await fetchData(false);
     } catch (error: any) {
       const { message } = extractRequestError(error);
+      pushLog(`Discovery failed: ${message}`);
       toast({ title: "Error", description: message, variant: "destructive" });
     }
     setActionLoading(null);
@@ -414,6 +423,7 @@ const AdminGoogleIndexing = () => {
 
   const handleRefresh = async () => {
     setActionLoading("refresh");
+    pushLog("Retrying failed URLs...");
     try {
       const result = await callFunction<BulkActionResponse>({ action: "refresh" });
 
@@ -423,6 +433,7 @@ const AdminGoogleIndexing = () => {
         }
       });
 
+      pushLog(`Retry finished: ${result.success}/${result.total} succeeded`);
       toast({
         title: "Retry finished",
         description: `${result.success}/${result.total} URLs processed successfully`,
@@ -430,6 +441,7 @@ const AdminGoogleIndexing = () => {
       await fetchData(false);
     } catch (error: any) {
       const { message } = extractRequestError(error);
+      pushLog(`Retry failed: ${message}`);
       toast({ title: "Error", description: message, variant: "destructive" });
     }
     setActionLoading(null);
@@ -559,6 +571,7 @@ const AdminGoogleIndexing = () => {
     if (!url) return;
 
     setActionLoading("manual");
+    pushLog(`Submitting URL: ${shortUrl(url)}...`);
     try {
       const result = await callFunction<SubmitUrlResponse>({
         action: "submit_url",
@@ -568,10 +581,13 @@ const AdminGoogleIndexing = () => {
 
       upsertUrlRecord(result, { url, page_type: "manual" });
       setManualUrl("");
+      pushLog(`URL ${result.success ? "submitted successfully" : "submission failed"}: ${shortUrl(url)}`);
 
       toast({
-        title: result.success ? "URL submitted" : "Submission failed",
-        description: result.success ? getResponseSummary(result.google) : result.error || "Submission failed",
+        title: result.success ? "URL submitted to Google" : "Submission failed",
+        description: result.success
+          ? "Google has been notified to crawl this URL. Status: Submitted (not yet indexed)."
+          : result.error || "Submission failed",
         variant: result.success ? "default" : "destructive",
       });
 
@@ -579,6 +595,7 @@ const AdminGoogleIndexing = () => {
     } catch (error: any) {
       const { message, details } = extractRequestError(error);
       upsertUrlRecord(details?.data, { url, page_type: "manual" }, message);
+      pushLog(`Error submitting ${shortUrl(url)}: ${message}`);
       toast({ title: "Error", description: message, variant: "destructive" });
     }
     setActionLoading(null);
@@ -671,6 +688,9 @@ const AdminGoogleIndexing = () => {
     return true;
   });
 
+  const { sortedItems: sortedFiltered, sortConfig: urlSortConfig, handleSort: handleUrlSort } = useTableSort(filtered);
+  const { sortedItems: sortedLogs, sortConfig: logSortConfig, handleSort: handleLogSort } = useTableSort(logs);
+
   const chartConfig = {
     cumulative: { label: "Total Indexed", color: "hsl(var(--primary))" },
     daily: { label: "Daily Indexed", color: "hsl(142 71% 45%)" },
@@ -746,6 +766,37 @@ const AdminGoogleIndexing = () => {
         })}
       </div>
 
+      {/* Status explanation */}
+      <Card className="border-blue-200 bg-blue-50/50">
+        <CardContent className="py-3 px-4">
+          <div className="flex items-start gap-2">
+            <Info className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+            <div className="text-xs text-blue-800 space-y-1">
+              <p className="font-medium">How Google Indexing works:</p>
+              <p><strong>Pending</strong> = URL discovered, not yet sent to Google. <strong>Submitted</strong> = Google notified to crawl (does NOT mean indexed yet). <strong>Indexed</strong> = Confirmed indexed by Google. <strong>Failed</strong> = API error, will retry.</p>
+              <p>"Submitted" status means Google received our request — actual indexing can take hours to days.</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Action Log */}
+      {actionLog.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Activity className="w-4 h-4 text-primary" /> Action Log
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="bg-muted/40 rounded-md p-3 max-h-32 overflow-y-auto font-mono text-xs space-y-0.5">
+              {actionLog.map((msg, i) => (
+                <p key={i} className="text-muted-foreground">{msg}</p>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
       {(batchProgress || liveBatchItems.length > 0) && (
         <div className="grid gap-4 lg:grid-cols-[1.15fr,0.85fr]">
           <Card>
@@ -926,25 +977,22 @@ const AdminGoogleIndexing = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="min-w-[240px]">URL</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Submission Time</TableHead>
-                      <TableHead>Last Checked</TableHead>
-                      <TableHead>
-                        <span className="flex items-center gap-1">
-                          <Timer className="w-3 h-3" /> Indexing Time
-                        </span>
-                      </TableHead>
-                      <TableHead>Retries</TableHead>
+                      <TableHead className="w-12">S.No</TableHead>
+                      <SortableTableHead label="URL" sortKey="url" sortConfig={urlSortConfig} onSort={handleUrlSort} className="min-w-[240px]" />
+                      <SortableTableHead label="Type" sortKey="page_type" sortConfig={urlSortConfig} onSort={handleUrlSort} />
+                      <SortableTableHead label="Status" sortKey="status" sortConfig={urlSortConfig} onSort={handleUrlSort} />
+                      <SortableTableHead label="Submission Time" sortKey="last_submitted_at" sortConfig={urlSortConfig} onSort={handleUrlSort} />
+                      <SortableTableHead label="Last Checked" sortKey="updated_at" sortConfig={urlSortConfig} onSort={handleUrlSort} />
+                      <SortableTableHead label="Retries" sortKey="retry_count" sortConfig={urlSortConfig} onSort={handleUrlSort} />
                       <TableHead className="min-w-[220px]">Error / Reason</TableHead>
                       <TableHead className="min-w-[220px]">Google Response</TableHead>
                       <TableHead className="w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filtered.map((row) => (
+                    {sortedFiltered.map((row, idx) => (
                       <TableRow key={row.id} className="group align-top">
+                        <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                         <TableCell className="max-w-[300px]">
                           <a
                             href={row.url}
@@ -966,9 +1014,6 @@ const AdminGoogleIndexing = () => {
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                           {formatTime(row.updated_at || row.last_submitted_at || row.created_at)}
-                        </TableCell>
-                        <TableCell className="text-xs font-medium whitespace-nowrap">
-                          {formatDuration(row.last_submitted_at, row.indexed_at)}
                         </TableCell>
                         <TableCell className="text-xs text-center">{row.retry_count}</TableCell>
                         <TableCell className="max-w-[240px]">
@@ -1089,17 +1134,19 @@ const AdminGoogleIndexing = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Time</TableHead>
-                      <TableHead>URL</TableHead>
-                      <TableHead>Action</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead className="w-12">S.No</TableHead>
+                      <SortableTableHead label="Time" sortKey="created_at" sortConfig={logSortConfig} onSort={handleLogSort} />
+                      <SortableTableHead label="URL" sortKey="url" sortConfig={logSortConfig} onSort={handleLogSort} />
+                      <SortableTableHead label="Action" sortKey="action" sortConfig={logSortConfig} onSort={handleLogSort} />
+                      <SortableTableHead label="Status" sortKey="status" sortConfig={logSortConfig} onSort={handleLogSort} />
                       <TableHead className="min-w-[220px]">API Response</TableHead>
                       <TableHead className="min-w-[220px]">Error</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {logs.map((log) => (
+                    {sortedLogs.map((log, idx) => (
                       <TableRow key={log.id} className="align-top">
+                        <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                         <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                           {formatTime(log.created_at)}
                         </TableCell>
