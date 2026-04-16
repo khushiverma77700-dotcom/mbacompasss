@@ -7,11 +7,14 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { Eye, EyeOff, CheckCheck, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 
 const AdminCallbacks = () => {
   const [callbacks, setCallbacks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { sortedItems, sortConfig, handleSort } = useTableSort(callbacks);
 
   const fetchCallbacks = async () => {
     const { data } = await supabase
@@ -73,18 +76,20 @@ const AdminCallbacks = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">S.No</TableHead>
                 <TableHead className="w-10">Status</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
+                <SortableTableHead label="Name" sortKey="name" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Email" sortKey="email" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Phone" sortKey="phone" sortConfig={sortConfig} onSort={handleSort} />
                 <TableHead>Message</TableHead>
-                <TableHead>Date</TableHead>
+                <SortableTableHead label="Date" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} />
                 <TableHead className="w-20">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {callbacks.map((cb) => (
+              {sortedItems.map((cb, idx) => (
                 <TableRow key={cb.id} className={!cb.read ? "bg-blue-50/50 dark:bg-blue-950/20" : ""}>
+                  <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell>
                     {!cb.read ? (
                       <span className="relative flex h-3 w-3">
@@ -99,7 +104,9 @@ const AdminCallbacks = () => {
                   <TableCell>{cb.email}</TableCell>
                   <TableCell>{cb.phone || "—"}</TableCell>
                   <TableCell className="max-w-xs truncate">{cb.message || "—"}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{format(new Date(cb.created_at), "dd MMM yyyy, hh:mm a")}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                    {format(new Date(cb.created_at), "dd MMM yyyy, hh:mm a")}
+                  </TableCell>
                   <TableCell>
                     {!cb.read && (
                       <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1" onClick={() => markAsRead(cb.id)}>
@@ -111,7 +118,7 @@ const AdminCallbacks = () => {
               ))}
               {!loading && callbacks.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-12">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-12">
                     No callback requests yet. They'll appear here when visitors submit the contact form.
                   </TableCell>
                 </TableRow>

@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 
 interface BusinessInquiry {
   id: string;
@@ -64,6 +66,8 @@ const AdminBusinessInquiries = () => {
     return true;
   });
 
+  const { sortedItems, sortConfig, handleSort } = useTableSort(filtered);
+
   const exportCSV = () => {
     const headers = ["Institute Name", "Type", "POC Name", "Contact", "WhatsApp", "Email", "Website", "Status", "Date"];
     const rows = filtered.map(r => [
@@ -93,7 +97,6 @@ const AdminBusinessInquiries = () => {
         </Button>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap gap-3 items-center">
         <Filter className="w-4 h-4 text-muted-foreground" />
         <Select value={typeFilter} onValueChange={setTypeFilter}>
@@ -117,30 +120,31 @@ const AdminBusinessInquiries = () => {
         <span className="text-xs text-muted-foreground ml-auto">{filtered.length} results</span>
       </div>
 
-      {/* Table */}
       <div className="border border-border rounded-lg overflow-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Institute Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>POC Name</TableHead>
+              <TableHead className="w-12">S.No</TableHead>
+              <SortableTableHead label="Institute Name" sortKey="institute_name" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableTableHead label="Type" sortKey="institute_type" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableTableHead label="POC Name" sortKey="poc_name" sortConfig={sortConfig} onSort={handleSort} />
               <TableHead>Contact</TableHead>
               <TableHead>WhatsApp</TableHead>
-              <TableHead>Email</TableHead>
+              <SortableTableHead label="Email" sortKey="poc_email" sortConfig={sortConfig} onSort={handleSort} />
               <TableHead>Website</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Status</TableHead>
+              <SortableTableHead label="Date" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} />
+              <SortableTableHead label="Status" sortKey="status" sortConfig={sortConfig} onSort={handleSort} />
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
-            ) : filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No inquiries found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+            ) : sortedItems.length === 0 ? (
+              <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">No inquiries found</TableCell></TableRow>
             ) : (
-              filtered.map(r => (
+              sortedItems.map((r, idx) => (
                 <TableRow key={r.id}>
+                  <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell className="font-medium">{r.institute_name}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="text-xs">{r.institute_type}</Badge>
@@ -152,7 +156,10 @@ const AdminBusinessInquiries = () => {
                   <TableCell className="text-xs max-w-[120px] truncate">
                     {r.website_url ? <a href={r.website_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{r.website_url}</a> : "—"}
                   </TableCell>
-                  <TableCell className="text-xs">{new Date(r.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                    {new Date(r.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                    <br/><span className="text-[10px]">{new Date(r.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span>
+                  </TableCell>
                   <TableCell>
                     <Select value={r.status} onValueChange={(v) => updateStatus(r.id, v)}>
                       <SelectTrigger className={`h-7 text-xs border ${statusColors[r.status] || ""}`}>
