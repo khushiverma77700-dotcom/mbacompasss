@@ -1717,6 +1717,87 @@ export type Database = {
           },
         ]
       }
+      roi_analyses: {
+        Row: {
+          ai_insights: Json | null
+          budget_lakhs: number
+          college_recommendations: Json | null
+          created_at: string
+          current_salary_lakhs: number
+          email: string | null
+          expected_salary_lakhs: number | null
+          expected_tier: string
+          graduation_stream: string
+          id: string
+          name: string | null
+          payback_years: number | null
+          phone: string | null
+          preferred_location: string | null
+          preferred_specialization: string | null
+          report_unlocked: boolean | null
+          roi_category: string | null
+          roi_score: number | null
+          target_exams: string[]
+          target_states: string[] | null
+          total_investment_lakhs: number | null
+          updated_at: string
+          user_id: string | null
+          work_experience_years: number
+        }
+        Insert: {
+          ai_insights?: Json | null
+          budget_lakhs?: number
+          college_recommendations?: Json | null
+          created_at?: string
+          current_salary_lakhs?: number
+          email?: string | null
+          expected_salary_lakhs?: number | null
+          expected_tier?: string
+          graduation_stream: string
+          id?: string
+          name?: string | null
+          payback_years?: number | null
+          phone?: string | null
+          preferred_location?: string | null
+          preferred_specialization?: string | null
+          report_unlocked?: boolean | null
+          roi_category?: string | null
+          roi_score?: number | null
+          target_exams?: string[]
+          target_states?: string[] | null
+          total_investment_lakhs?: number | null
+          updated_at?: string
+          user_id?: string | null
+          work_experience_years?: number
+        }
+        Update: {
+          ai_insights?: Json | null
+          budget_lakhs?: number
+          college_recommendations?: Json | null
+          created_at?: string
+          current_salary_lakhs?: number
+          email?: string | null
+          expected_salary_lakhs?: number | null
+          expected_tier?: string
+          graduation_stream?: string
+          id?: string
+          name?: string | null
+          payback_years?: number | null
+          phone?: string | null
+          preferred_location?: string | null
+          preferred_specialization?: string | null
+          report_unlocked?: boolean | null
+          roi_category?: string | null
+          roi_score?: number | null
+          target_exams?: string[]
+          target_states?: string[] | null
+          total_investment_lakhs?: number | null
+          updated_at?: string
+          user_id?: string | null
+          work_experience_years?: number
+        }
+        Relationships: []
+      }
       saved_institutes: {
         Row: {
           created_at: string

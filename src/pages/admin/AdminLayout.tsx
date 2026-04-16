@@ -65,6 +65,7 @@ const adminNavGroups = [
       { label: "All Site Links", path: "/admin/all-links", icon: Link2 },
       { label: "Profile Analyzer", path: "/admin/profile-analyzer", icon: BarChart3 },
       { label: "CAT Score Submissions", path: "/admin/cat-scores", icon: Calculator },
+      { label: "MBA ROI Analyses", path: "/admin/roi-analyses", icon: TrendingUp },
     ],
   },
   {
