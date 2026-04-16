@@ -80,9 +80,9 @@ const BlogPage = () => {
           <img
             src="https://images.unsplash.com/photo-1562979314-bee7453e911c?w=1200&h=600&fit=crop&q=80"
             alt=""
-className="absolute inset-0 w-full h-full object-cover blur-sm scale-105 opacity-50"
+className="absolute inset-0 w-full h-full object-cover blur-sm scale-105 opacity-70"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/55 via-primary/45 to-primary/65" />
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/40 via-primary/30 to-primary/50" />
           <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl" />
           <div className="absolute top-10 right-10 w-32 h-32 border border-white/10 rounded-full" />
