@@ -19,6 +19,7 @@ import Index from "./pages/Index";
 import CategoryPage from "./pages/CategoryPage";
 import BlogPage from "./pages/BlogPage";
 import CollegesPage from "./pages/CollegesPage";
+import CoachingPage from "./pages/CoachingPage";
 import AuthPage from "./pages/AuthPage";
 import InstitutePage from "./pages/InstitutePage";
 import ComparePage from "./pages/ComparePage";
