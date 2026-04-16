@@ -74,6 +74,7 @@ const AdminAIUsage = lazy(() => import("./pages/admin/AdminAIUsage"));
 const AdminCourseCategories = lazy(() => import("./pages/admin/AdminCourseCategories"));
 const AdminCATScores = lazy(() => import("./pages/admin/AdminCATScores"));
 const AdminMegaMenu = lazy(() => import("./pages/admin/AdminMegaMenu"));
+const AdminGoogleIndexing = lazy(() => import("./pages/admin/AdminGoogleIndexing"));
 const CATScoreCalculatorPage = lazy(() => import("./pages/CATScoreCalculatorPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
@@ -225,6 +226,7 @@ const App = () => (
               <Route path="course-categories" element={<LazyPage><AdminCourseCategories /></LazyPage>} />
               <Route path="cat-scores" element={<LazyPage><AdminCATScores /></LazyPage>} />
               <Route path="mega-menu" element={<LazyPage><AdminMegaMenu /></LazyPage>} />
+              <Route path="google-indexing" element={<LazyPage><AdminGoogleIndexing /></LazyPage>} />
             </Route>
 
             {/* Eagerly loaded — no spinner */}
