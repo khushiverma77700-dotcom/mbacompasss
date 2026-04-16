@@ -5,11 +5,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Download, Trash2 } from "lucide-react";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 import { format } from "date-fns";
 
 const AdminSubscribers = () => {
   const [subscribers, setSubscribers] = useState<any[]>([]);
   const { toast } = useToast();
+  const { sortedItems: sortedSubscribers, sortConfig, handleSort } = useTableSort(subscribers);
 
   const fetchSubscribers = async () => {
     const { data } = await supabase.from("newsletter_subscribers").select("*").order("created_at", { ascending: false });
@@ -50,13 +53,13 @@ const AdminSubscribers = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Subscribed At</TableHead>
+                <SortableTableHead label="Email" sortKey="email" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Subscribed At" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} />
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {subscribers.map((s) => (
+              {sortedSubscribers.map((s) => (
                 <TableRow key={s.id}>
                   <TableCell className="font-medium">{s.email}</TableCell>
                   <TableCell>{format(new Date(s.created_at), "dd MMM yyyy, HH:mm")}</TableCell>

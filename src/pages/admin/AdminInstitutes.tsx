@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X, Star, ArrowLeft } from "lucide-react";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
 import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
@@ -44,6 +46,7 @@ const AdminInstitutes = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState({ keywords: "", features: "" });
   const { toast } = useToast();
+  const { sortedItems: sortedInstitutes, sortConfig, handleSort } = useTableSort(institutes);
 
   const fetchData = async () => {
     const [i, c] = await Promise.all([
@@ -314,19 +317,19 @@ const AdminInstitutes = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">S.No</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>City</TableHead>
-                <TableHead>Mode</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead>Students</TableHead>
-                <TableHead>Success Rate</TableHead>
-                <TableHead>Featured</TableHead>
-                <TableHead>Created</TableHead>
+                <SortableTableHead label="Name" sortKey="name" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="City" sortKey="city" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Mode" sortKey="mode" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Rating" sortKey="rating" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Students" sortKey="students_count" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Success Rate" sortKey="success_rate" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Featured" sortKey="featured" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Created" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} />
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {institutes.map((inst, idx) => (
+              {sortedInstitutes.map((inst, idx) => (
                 <TableRow key={inst.id}>
                   <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell className="font-medium">{inst.name}</TableCell>

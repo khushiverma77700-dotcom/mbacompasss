@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, ArrowLeft } from "lucide-react";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 
 const emptyForm = { title: "", description: "", link: "/blog", sort_order: 0, active: true };
 
@@ -18,6 +20,7 @@ const AdminComparisons = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { sortedItems: sortedItems, sortConfig, handleSort } = useTableSort(items);
 
   const fetch = async () => {
     const { data } = await supabase.from("comparisons").select("*").order("sort_order");
@@ -91,10 +94,10 @@ const AdminComparisons = () => {
       <Card><CardContent className="p-0">
         <Table>
           <TableHeader><TableRow>
-            <TableHead className="w-12">S.No</TableHead><TableHead>Title</TableHead><TableHead>Description</TableHead><TableHead>Link</TableHead><TableHead>Status</TableHead><TableHead>Created</TableHead><TableHead className="text-right">Actions</TableHead>
+            <TableHead className="w-12">S.No</TableHead><SortableTableHead label="Title" sortKey="title" sortConfig={sortConfig} onSort={handleSort} /><TableHead>Description</TableHead><TableHead>Link</TableHead><SortableTableHead label="Status" sortKey="active" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Created" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} /><TableHead className="text-right">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {items.map((item, idx) => (
+            {sortedItems.map((item, idx) => (
               <TableRow key={item.id}>
                 <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                 <TableCell className="font-medium">{item.title}</TableCell>

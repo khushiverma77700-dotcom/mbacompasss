@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Eye, ArrowLeft } from "lucide-react";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 
 type Coupon = {
@@ -38,6 +40,7 @@ const AdminCoupons = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const { toast } = useToast();
+  const { sortedItems: sortedCoupons, sortConfig, handleSort } = useTableSort(coupons);
 
   const fetchCoupons = async () => { const { data } = await supabase.from("coupons").select("*").order("created_at", { ascending: false }); if (data) setCoupons(data); };
   const fetchInstitutes = async () => { const { data } = await supabase.from("institutes").select("id, name").order("name"); if (data) setInstitutes(data); };
@@ -124,14 +127,14 @@ const AdminCoupons = () => {
       <Card>
         <CardContent className="p-0">
           <Table>
-            <TableHeader>
+             <TableHeader>
               <TableRow>
-                <TableHead className="w-12">S.No</TableHead><TableHead>Code</TableHead><TableHead>Discount</TableHead><TableHead>Uses</TableHead>
-                <TableHead>Status</TableHead><TableHead>Valid Until</TableHead><TableHead>Created</TableHead><TableHead className="text-right">Actions</TableHead>
+                <TableHead className="w-12">S.No</TableHead><SortableTableHead label="Code" sortKey="code" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Discount" sortKey="discount_text" sortConfig={sortConfig} onSort={handleSort} /><TableHead>Uses</TableHead>
+                <SortableTableHead label="Status" sortKey="active" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Valid Until" sortKey="valid_until" sortConfig={sortConfig} onSort={handleSort} /><SortableTableHead label="Created" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} /><TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {coupons.map((c, idx) => (
+              {sortedCoupons.map((c, idx) => (
                 <TableRow key={c.id}>
                   <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell className="font-mono font-bold">{c.code}</TableCell>

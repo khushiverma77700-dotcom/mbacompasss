@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X, Clock, Star, Users, ArrowLeft } from "lucide-react";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
 
@@ -32,6 +34,8 @@ const AdminCourses = () => {
   const [highlightInput, setHighlightInput] = useState("");
   const [search, setSearch] = useState("");
   const { toast } = useToast();
+  const filtered = search ? courses.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.institutes?.name?.toLowerCase().includes(search.toLowerCase())) : courses;
+  const { sortedItems: sortedCourses, sortConfig, handleSort } = useTableSort(filtered);
 
   const fetchData = async () => {
     const [c, i, cc] = await Promise.all([
@@ -105,7 +109,7 @@ const AdminCourses = () => {
     fetchData(); toast({ title: "Course deleted" });
   };
 
-  const filtered = search ? courses.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.institutes?.name?.toLowerCase().includes(search.toLowerCase())) : courses;
+  // filtered moved up to line 37 for hook ordering
 
   if (showForm) {
     return (
@@ -254,19 +258,19 @@ const AdminCourses = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">S.No</TableHead>
-                <TableHead>Course Name</TableHead>
+                <SortableTableHead label="Course Name" sortKey="name" sortConfig={sortConfig} onSort={handleSort} />
                 <TableHead>Institute</TableHead>
-                <TableHead>Mode</TableHead>
-                <TableHead>Duration</TableHead>
-                <TableHead>Fees</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead>Enrolled</TableHead>
-                <TableHead>Created</TableHead>
+                <SortableTableHead label="Mode" sortKey="mode" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Duration" sortKey="duration" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Fees" sortKey="fees" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Rating" sortKey="rating" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Enrolled" sortKey="enrolled_count" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Created" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} />
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((c, idx) => (
+              {sortedCourses.map((c, idx) => (
                 <TableRow key={c.id}>
                   <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell>
@@ -294,7 +298,7 @@ const AdminCourses = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {filtered.length === 0 && (
+              {sortedCourses.length === 0 && (
                 <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">No courses found</TableCell></TableRow>
               )}
             </TableBody>

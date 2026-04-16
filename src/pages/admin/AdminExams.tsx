@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X, ArrowLeft } from "lucide-react";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import SEOChecklist from "@/components/admin/SEOChecklist";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
@@ -28,6 +30,7 @@ const AdminExams = () => {
   const [syllabusInput, setSyllabusInput] = useState("");
   const [keywordInput, setKeywordInput] = useState("");
   const { toast } = useToast();
+  const { sortedItems: sortedExams, sortConfig, handleSort } = useTableSort(exams);
 
   const fetchExams = async () => {
     const { data } = await supabase.from("exams").select("*").order("name");
@@ -193,16 +196,16 @@ const AdminExams = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">S.No</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Full Name</TableHead>
-                <TableHead>Conducting Body</TableHead>
-                <TableHead>Exam Date</TableHead>
-                <TableHead>Created</TableHead>
+                <SortableTableHead label="Name" sortKey="name" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Full Name" sortKey="full_name" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Conducting Body" sortKey="conducting_body" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Exam Date" sortKey="exam_date" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Created" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} />
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {exams.map((e, idx) => (
+              {sortedExams.map((e, idx) => (
                 <TableRow key={e.id}>
                   <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell className="font-medium">{e.name}</TableCell>

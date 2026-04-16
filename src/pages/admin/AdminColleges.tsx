@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X, ArrowLeft } from "lucide-react";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import StateCitySelect from "@/components/admin/StateCitySelect";
 import { generateAndUploadLocationBanner } from "@/lib/locationBanner";
@@ -40,6 +42,7 @@ const AdminColleges = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [tagInputs, setTagInputs] = useState({ courses: "", accreditations: "", exams_accepted: "", top_recruiters: "", keywords: "" });
   const { toast } = useToast();
+  const { sortedItems: sortedColleges, sortConfig, handleSort } = useTableSort(colleges);
 
   const fetchColleges = async () => {
     const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, tier, college_category, ranking, established, created_at").order("ranking", { ascending: true });
@@ -279,18 +282,18 @@ const AdminColleges = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">S.No</TableHead>
-                <TableHead>Rank</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Tier</TableHead>
-                <TableHead>City</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Created</TableHead>
+                <SortableTableHead label="Rank" sortKey="ranking" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Name" sortKey="name" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Category" sortKey="college_category" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Tier" sortKey="tier" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="City" sortKey="city" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Type" sortKey="type" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Created" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} />
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {colleges.map((c, idx) => (
+              {sortedColleges.map((c, idx) => (
                 <TableRow key={c.id}>
                   <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell>{c.ranking ?? "—"}</TableCell>

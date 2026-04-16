@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Eye, Search, X, ArrowLeft } from "lucide-react";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 import SEOChecklist from "@/components/admin/SEOChecklist";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import RichTextEditor from "@/components/admin/RichTextEditor";
@@ -128,6 +130,8 @@ const AdminArticles = () => {
     if (searchQuery && !a.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     return true;
   });
+
+  const { sortedItems: sortedArticles, sortConfig, handleSort } = useTableSort(filteredArticles);
 
   const getStatusBadge = (status: string) => {
     const s = statusOptions.find(o => o.value === status) || statusOptions[0];
@@ -278,17 +282,17 @@ const AdminArticles = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">S.No</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Status</TableHead>
+                <SortableTableHead label="Title" sortKey="title" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Category" sortKey="category" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Status" sortKey="status" sortConfig={sortConfig} onSort={handleSort} />
                 <TableHead>SEO</TableHead>
-                <TableHead>Featured</TableHead>
-                <TableHead>Created</TableHead>
+                <SortableTableHead label="Featured" sortKey="featured" sortConfig={sortConfig} onSort={handleSort} />
+                <SortableTableHead label="Created" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} />
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredArticles.map((a, idx) => {
+              {sortedArticles.map((a, idx) => {
                 const seoScore = [a.meta_title, a.meta_description, a.h1_tag, (a.keywords || []).length > 0].filter(Boolean).length;
                 return (
                   <TableRow key={a.id}>
@@ -309,7 +313,7 @@ const AdminArticles = () => {
                   </TableRow>
                 );
               })}
-              {filteredArticles.length === 0 && (
+              {sortedArticles.length === 0 && (
                 <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No articles found</TableCell></TableRow>
               )}
             </TableBody>
