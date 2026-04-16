@@ -11,6 +11,7 @@ import SEOHead from "@/components/SEOHead";
 import PageKeywords from "@/components/PageKeywords";
 
 const BlogPage = () => {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
