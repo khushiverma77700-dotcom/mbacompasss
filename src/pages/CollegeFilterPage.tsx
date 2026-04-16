@@ -64,7 +64,7 @@ const CollegeFilterPage = () => {
     title: metaTitle,
     description: metaDesc,
     keywords,
-    canonical: region ? `${window.location.origin}/colleges/${region}` : undefined,
+    canonical: region ? `${window.location.origin}/colleges?city=${encodeURIComponent(displayName)}` : undefined,
     jsonLd,
     ogImage: cityPage?.hero_image_url || undefined,
   });
