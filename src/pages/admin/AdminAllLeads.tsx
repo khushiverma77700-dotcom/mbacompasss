@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download, Users, Search, Mail, Phone, UserCheck, Sparkles, MessageSquare, Briefcase, Calculator, Ticket, ChevronLeft, ChevronRight, TrendingUp, CalendarCheck } from "lucide-react";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 import { format, subDays, isToday, startOfDay, eachDayOfInterval } from "date-fns";
 import { ResponsiveContainer, ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 
@@ -224,8 +226,9 @@ const AdminAllLeads = () => {
     return result;
   }, [uniqueLeads, search, dateFrom, dateTo, sourceFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / ROWS_PER_PAGE));
-  const paginated = filtered.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
+  const { sortedItems: sortedFiltered, sortConfig, handleSort } = useTableSort(filtered);
+  const totalPages = Math.max(1, Math.ceil(sortedFiltered.length / ROWS_PER_PAGE));
+  const paginated = sortedFiltered.slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE);
 
   useEffect(() => { setPage(1); }, [search, dateFrom, dateTo, sourceFilter]);
 
@@ -455,13 +458,13 @@ const AdminAllLeads = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="whitespace-nowrap">Name</TableHead>
-                  <TableHead className="whitespace-nowrap">Email</TableHead>
-                  <TableHead className="whitespace-nowrap">Mobile</TableHead>
-                  <TableHead className="whitespace-nowrap">Lead Date</TableHead>
-                  <TableHead className="whitespace-nowrap">Page / Source</TableHead>
-                  <TableHead className="whitespace-nowrap">Category</TableHead>
-                  <TableHead className="whitespace-nowrap min-w-[250px]">Extra Details</TableHead>
+                   <SortableTableHead label="Name" sortKey="name" sortConfig={sortConfig} onSort={handleSort} className="whitespace-nowrap" />
+                   <SortableTableHead label="Email" sortKey="email" sortConfig={sortConfig} onSort={handleSort} className="whitespace-nowrap" />
+                   <SortableTableHead label="Mobile" sortKey="phone" sortConfig={sortConfig} onSort={handleSort} className="whitespace-nowrap" />
+                   <SortableTableHead label="Lead Date" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} className="whitespace-nowrap" />
+                   <SortableTableHead label="Page / Source" sortKey="source_page" sortConfig={sortConfig} onSort={handleSort} className="whitespace-nowrap" />
+                   <SortableTableHead label="Category" sortKey="source" sortConfig={sortConfig} onSort={handleSort} className="whitespace-nowrap" />
+                   <TableHead className="whitespace-nowrap min-w-[250px]">Extra Details</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

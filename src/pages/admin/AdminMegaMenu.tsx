@@ -11,6 +11,8 @@ import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, ChevronsUpDown } from "lucide-react";
+import { useTableSort } from "@/hooks/useTableSort";
+import SortableTableHead from "@/components/admin/SortableTableHead";
 
 interface MenuRow {
   id: string;
@@ -129,6 +131,8 @@ const AdminMegaMenu = () => {
     return { existingTabs: tabs, existingColumns: columns };
   }, [items]);
 
+  const { sortedItems: sortedMenuItems, sortConfig: menuSortConfig, handleSort: handleMenuSort } = useTableSort(items);
+
   const saveMut = useMutation({
     mutationFn: async (row: Omit<MenuRow, "id"> & { id?: string }) => {
       if (row.id) {
@@ -182,7 +186,7 @@ const AdminMegaMenu = () => {
   };
 
   // Group items by tab for better visual
-  const grouped = items.reduce<Record<string, MenuRow[]>>((acc, item) => {
+  const grouped = (menuSortConfig.direction ? sortedMenuItems : items).reduce<Record<string, MenuRow[]>>((acc, item) => {
     const key = item.tab_label;
     if (!acc[key]) acc[key] = [];
     acc[key].push(item);
@@ -219,14 +223,14 @@ const AdminMegaMenu = () => {
               </div>
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-36">Column</TableHead>
-                    <TableHead>Link Label</TableHead>
-                    <TableHead>URL</TableHead>
-                    <TableHead className="w-16">Order</TableHead>
-                    <TableHead className="w-16">Active</TableHead>
-                    <TableHead className="w-24">Actions</TableHead>
-                  </TableRow>
+                   <TableRow>
+                     <SortableTableHead label="Column" sortKey="column_title" sortConfig={menuSortConfig} onSort={handleMenuSort} className="w-36" />
+                     <SortableTableHead label="Link Label" sortKey="link_label" sortConfig={menuSortConfig} onSort={handleMenuSort} />
+                     <SortableTableHead label="URL" sortKey="link_url" sortConfig={menuSortConfig} onSort={handleMenuSort} />
+                     <SortableTableHead label="Order" sortKey="link_sort_order" sortConfig={menuSortConfig} onSort={handleMenuSort} className="w-16" />
+                     <SortableTableHead label="Active" sortKey="active" sortConfig={menuSortConfig} onSort={handleMenuSort} className="w-16" />
+                     <TableHead className="w-24">Actions</TableHead>
+                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {rows.map((row) => (
