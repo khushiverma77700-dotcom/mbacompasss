@@ -279,21 +279,24 @@ className="absolute inset-0 w-full h-full object-cover blur-sm scale-105 opacity
                   : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}
             >
-              <Building2 className="w-3.5 h-3.5" /> All Coaching
+              <Building2 className="w-3.5 h-3.5" /> All Coaching ({allInstitutes.length})
             </button>
-            {categories.map((cat: any) => (
-              <button
-                key={cat.slug}
-                onClick={() => setFilter("category", cat.slug)}
-                className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                  selectedCategory === cat.slug
-                    ? "bg-primary text-primary-foreground shadow-md scale-[1.02]"
-                    : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-              >
-                {cat.name}
-              </button>
-            ))}
+            {categories.map((cat: any) => {
+              const catCount = allInstitutes.filter((i: any) => i.category_id === cat.id).length;
+              return (
+                <button
+                  key={cat.slug}
+                  onClick={() => setFilter("category", cat.slug)}
+                  className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    selectedCategory === cat.slug
+                      ? "bg-primary text-primary-foreground shadow-md scale-[1.02]"
+                      : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                >
+                  {cat.name} ({catCount})
+                </button>
+              );
+            })}
           </div>
 
           {/* Active Filters Bar */}
