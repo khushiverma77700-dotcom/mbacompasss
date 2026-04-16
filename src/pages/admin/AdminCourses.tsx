@@ -298,7 +298,7 @@ const AdminCourses = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {filtered.length === 0 && (
+              {sortedCourses.length === 0 && (
                 <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">No courses found</TableCell></TableRow>
               )}
             </TableBody>
