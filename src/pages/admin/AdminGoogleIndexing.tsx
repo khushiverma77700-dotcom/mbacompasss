@@ -127,6 +127,7 @@ const AdminGoogleIndexing = () => {
   const [activeTab, setActiveTab] = useState<"urls" | "logs" | "charts">("urls");
   const [batchProgress, setBatchProgress] = useState<BatchProgressState | null>(null);
   const [liveBatchItems, setLiveBatchItems] = useState<LiveBatchItem[]>([]);
+  const [actionLog, setActionLog] = useState<string[]>([]);
 
   const fetchData = useCallback(
     async (showLoader = true) => {
