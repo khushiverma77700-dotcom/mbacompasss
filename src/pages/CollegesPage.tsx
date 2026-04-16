@@ -8,10 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useColleges } from "@/hooks/useInstitutes";
 import { useCityPages } from "@/hooks/useCityPages";
+import { useSpecializations } from "@/hooks/useSpecializations";
 import { Skeleton } from "@/components/ui/skeleton";
 import SEOHead, { generateListingSchema } from "@/components/SEOHead";
 import PageKeywords from "@/components/PageKeywords";
 import { getLocationImage } from "@/data/cityImages";
+import { FEE_BUCKETS, FEE_BUCKET_LABELS, matchesFeeBucket, getEffectiveFeesLakhs, specMatches } from "@/lib/filterHelpers";
 
 const tabs = [
   { label: "All Colleges", type: "all", icon: Building2 },
@@ -25,6 +27,7 @@ const CollegesPage = () => {
   const navigate = useNavigate();
   const { data: colleges = [], isLoading } = useColleges();
   const { data: cityPages } = useCityPages();
+  const { data: specOptions = [] } = useSpecializations("college");
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Read filters from URL params (single source of truth)
@@ -33,6 +36,8 @@ const CollegesPage = () => {
   const selectedCity = searchParams.get("city") || "all";
   const selectedState = searchParams.get("state") || "all";
   const selectedExam = searchParams.get("exam") || "all";
+  const selectedFee = searchParams.get("fee") || "all";
+  const selectedSpec = searchParams.get("specialization") || "all";
   const sortBy = searchParams.get("sort") || "ranking";
 
   // No redirect needed — city/state filtering stays on this page via query params
@@ -76,12 +81,14 @@ const CollegesPage = () => {
       if (selectedCity !== "all" && c.city !== selectedCity) return false;
       if (selectedState !== "all" && c.state !== selectedState) return false;
       if (selectedExam !== "all" && !(c.exams_accepted || []).includes(selectedExam)) return false;
+      if (selectedFee !== "all" && !matchesFeeBucket(getEffectiveFeesLakhs(c), selectedFee)) return false;
+      if (selectedSpec !== "all" && !specMatches((c as any).specializations, selectedSpec)) return false;
       if (search) { const q = search.toLowerCase(); return c.name.toLowerCase().includes(q) || (c.city || "").toLowerCase().includes(q); }
       return true;
     });
-    if (sortBy === "fees") result = [...result].sort((a: any, b: any) => parseInt((a.fees || "0").replace(/[^\d]/g, "")) - parseInt((b.fees || "0").replace(/[^\d]/g, "")));
+    if (sortBy === "fees") result = [...result].sort((a: any, b: any) => (getEffectiveFeesLakhs(a) ?? Infinity) - (getEffectiveFeesLakhs(b) ?? Infinity));
     return result;
-  }, [colleges, activeTab, search, selectedCity, selectedState, selectedExam, sortBy]);
+  }, [colleges, activeTab, search, selectedCity, selectedState, selectedExam, selectedFee, selectedSpec, sortBy]);
 
   const regions = (cityPages || []).slice(0, 12);
   const totalColleges = colleges.length;
@@ -94,9 +101,14 @@ const CollegesPage = () => {
     if (selectedState !== "all") chips.push({ key: "state", label: selectedState, value: selectedState });
     if (selectedCity !== "all") chips.push({ key: "city", label: selectedCity, value: selectedCity });
     if (selectedExam !== "all") chips.push({ key: "exam", label: selectedExam, value: selectedExam });
+    if (selectedFee !== "all") chips.push({ key: "fee", label: FEE_BUCKET_LABELS[selectedFee] || selectedFee, value: selectedFee });
+    if (selectedSpec !== "all") {
+      const sp = specOptions.find(s => s.slug === selectedSpec);
+      chips.push({ key: "specialization", label: sp?.name || selectedSpec, value: selectedSpec });
+    }
     if (search) chips.push({ key: "q", label: `"${search}"`, value: search });
     return chips;
-  }, [activeTab, selectedState, selectedCity, selectedExam, search]);
+  }, [activeTab, selectedState, selectedCity, selectedExam, selectedFee, selectedSpec, search, specOptions]);
 
   // Dynamic SEO based on filters
   const dynamicTitle = useMemo(() => {
@@ -260,6 +272,19 @@ const CollegesPage = () => {
               <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="Exam" /></SelectTrigger>
               <SelectContent><SelectItem value="all">All Exams</SelectItem>{allExams.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
             </Select>
+            <Select value={selectedFee} onValueChange={(v) => setFilter("fee", v)}>
+              <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="Fees" /></SelectTrigger>
+              <SelectContent>{FEE_BUCKETS.map((b) => <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>)}</SelectContent>
+            </Select>
+            {specOptions.length > 0 && (
+              <Select value={selectedSpec} onValueChange={(v) => setFilter("specialization", v)}>
+                <SelectTrigger className="w-full sm:w-44 rounded-xl"><SelectValue placeholder="Specialization" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Specializations</SelectItem>
+                  {specOptions.map((s) => <SelectItem key={s.slug} value={s.slug}>{s.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
             <Select value={sortBy} onValueChange={(v) => setFilter("sort", v)}>
               <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="Sort" /></SelectTrigger>
               <SelectContent>

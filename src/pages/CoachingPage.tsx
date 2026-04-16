@@ -7,10 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useInstitutes, useCategories } from "@/hooks/useInstitutes";
+import { useSpecializations } from "@/hooks/useSpecializations";
 import { Skeleton } from "@/components/ui/skeleton";
 import SEOHead from "@/components/SEOHead";
 import PageKeywords from "@/components/PageKeywords";
 import { getLocationImage } from "@/data/cityImages";
+import { FEE_BUCKETS, FEE_BUCKET_LABELS, matchesFeeBucket, getEffectiveFeesLakhs, specMatches } from "@/lib/filterHelpers";
 
 const modes = ["Online", "Offline", "Hybrid"];
 
@@ -18,6 +20,7 @@ const CoachingPage = () => {
   const navigate = useNavigate();
   const { data: allInstitutes = [], isLoading } = useInstitutes();
   const { data: categories = [] } = useCategories();
+  const { data: specOptions = [] } = useSpecializations("coaching");
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Read filters from URL
@@ -26,6 +29,8 @@ const CoachingPage = () => {
   const selectedCity = searchParams.get("city") || "all";
   const selectedMode = searchParams.get("mode") || "all";
   const selectedCategory = searchParams.get("category") || "all";
+  const selectedFee = searchParams.get("fee") || "all";
+  const selectedSpec = searchParams.get("specialization") || "all";
   const sortBy = searchParams.get("sort") || "rating";
 
   const setFilter = useCallback((key: string, value: string) => {
@@ -80,18 +85,16 @@ const CoachingPage = () => {
       const cat = categories.find((c: any) => c.slug === selectedCategory);
       if (cat) list = list.filter((i: any) => i.category_id === cat.id);
     }
+    if (selectedFee !== "all") list = list.filter((i: any) => matchesFeeBucket(getEffectiveFeesLakhs(i), selectedFee));
+    if (selectedSpec !== "all") list = list.filter((i: any) => specMatches(i.specializations, selectedSpec));
     if (sortBy === "rating") list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     if (sortBy === "reviews") list.sort((a, b) => (b.total_reviews || 0) - (a.total_reviews || 0));
     if (sortBy === "success") list.sort((a, b) => (b.success_rate || 0) - (a.success_rate || 0));
     if (sortBy === "fees-low") {
-      list.sort((a, b) => {
-        const aFee = Math.min(...(a.courses || []).map((c: any) => Number(c.fees) || 0), Infinity);
-        const bFee = Math.min(...(b.courses || []).map((c: any) => Number(c.fees) || 0), Infinity);
-        return aFee - bFee;
-      });
+      list.sort((a, b) => (getEffectiveFeesLakhs(a) ?? Infinity) - (getEffectiveFeesLakhs(b) ?? Infinity));
     }
     return list;
-  }, [allInstitutes, search, selectedCity, selectedState, selectedMode, selectedCategory, sortBy, categories]);
+  }, [allInstitutes, search, selectedCity, selectedState, selectedMode, selectedCategory, selectedFee, selectedSpec, sortBy, categories]);
 
   // Active filters chips
   const activeFilters = useMemo(() => {
@@ -103,9 +106,14 @@ const CoachingPage = () => {
       const cat = categories.find((c: any) => c.slug === selectedCategory);
       chips.push({ key: "category", label: cat?.name || selectedCategory });
     }
+    if (selectedFee !== "all") chips.push({ key: "fee", label: FEE_BUCKET_LABELS[selectedFee] || selectedFee });
+    if (selectedSpec !== "all") {
+      const sp = specOptions.find(s => s.slug === selectedSpec);
+      chips.push({ key: "specialization", label: sp?.name || selectedSpec });
+    }
     if (search) chips.push({ key: "q", label: `"${search}"` });
     return chips;
-  }, [selectedState, selectedCity, selectedMode, selectedCategory, search, categories]);
+  }, [selectedState, selectedCity, selectedMode, selectedCategory, selectedFee, selectedSpec, search, categories, specOptions]);
 
   // Dynamic SEO
   const dynamicH1 = useMemo(() => {
@@ -258,6 +266,19 @@ const CoachingPage = () => {
               <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="Mode" /></SelectTrigger>
               <SelectContent><SelectItem value="all">All Modes</SelectItem>{modes.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
             </Select>
+            <Select value={selectedFee} onValueChange={(v) => setFilter("fee", v)}>
+              <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="Fees" /></SelectTrigger>
+              <SelectContent>{FEE_BUCKETS.map((b) => <SelectItem key={b.value} value={b.value}>{b.label}</SelectItem>)}</SelectContent>
+            </Select>
+            {specOptions.length > 0 && (
+              <Select value={selectedSpec} onValueChange={(v) => setFilter("specialization", v)}>
+                <SelectTrigger className="w-full sm:w-44 rounded-xl"><SelectValue placeholder="Specialization" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Specializations</SelectItem>
+                  {specOptions.map((s) => <SelectItem key={s.slug} value={s.slug}>{s.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            )}
             <Select value={sortBy} onValueChange={(v) => setFilter("sort", v)}>
               <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="Sort" /></SelectTrigger>
               <SelectContent>
