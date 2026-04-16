@@ -218,7 +218,12 @@ const AdminMegaMenu = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Tab Label</Label>
-                <Input value={form.tab_label} onChange={(e) => setForm({ ...form, tab_label: e.target.value })} placeholder="e.g. IIMs" />
+                <ComboInput
+                  value={form.tab_label}
+                  onChange={(v) => setForm({ ...form, tab_label: v })}
+                  options={existingTabs}
+                  placeholder="e.g. IIMs"
+                />
               </div>
               <div>
                 <Label>Tab Sort Order</Label>
@@ -229,7 +234,12 @@ const AdminMegaMenu = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Column Title</Label>
-                <Input value={form.column_title} onChange={(e) => setForm({ ...form, column_title: e.target.value })} placeholder="e.g. Top IIMs" />
+                <ComboInput
+                  value={form.column_title}
+                  onChange={(v) => setForm({ ...form, column_title: v })}
+                  options={existingColumns}
+                  placeholder="e.g. Top IIMs"
+                />
               </div>
               <div>
                 <Label>Column Sort Order</Label>
