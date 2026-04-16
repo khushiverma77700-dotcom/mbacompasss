@@ -1,26 +1,20 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Menu, X, LogIn, LogOut, Shield, LayoutDashboard } from "lucide-react";
+import { Menu, X, LogIn, LogOut, Shield, LayoutDashboard, ChevronDown, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import SmartSearch from "@/components/SmartSearch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
+import NavMegaMenu, { collegeMenuColumns, coachingMenuColumns } from "@/components/NavMegaMenu";
 import mbahubLogo from "@/assets/mbahub-logo-sm.png";
-
-const fallbackLinks = [
-  { label: "Home", path: "/" },
-  { label: "CAT Coaching", path: "/category/cat" },
-  { label: "GMAT Prep", path: "/category/gmat" },
-  { label: "Compare", path: "/compare" },
-  { label: "Colleges", path: "/colleges" },
-  { label: "Blog", path: "/blog" },
-];
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showSignOutDialog, setShowSignOutDialog] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [mobileCollegeOpen, setMobileCollegeOpen] = useState(false);
+  const [mobileCoachingOpen, setMobileCoachingOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAdmin, signOut } = useAuth();
@@ -38,8 +32,13 @@ const Navbar = () => {
     });
   };
 
-  const navLinks = header?.nav_links || fallbackLinks;
   const brandName = header?.brand_name || "MBAHub";
+
+  const closeMobile = () => {
+    setMobileOpen(false);
+    setMobileCollegeOpen(false);
+    setMobileCoachingOpen(false);
+  };
 
   return (
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
@@ -56,22 +55,40 @@ const Navbar = () => {
           </div>
         </Link>
 
+        {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-1">
-          {navLinks.map((link: any) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                location.pathname === link.path
-                  ? "bg-secondary text-secondary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
+          <Link
+            to="/"
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              location.pathname === "/" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            }`}
+          >
+            Home
+          </Link>
+
+          <NavMegaMenu label="Colleges" columns={collegeMenuColumns} />
+          <NavMegaMenu label="Coaching" columns={coachingMenuColumns} />
+
+          <Link
+            to="/blog"
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              location.pathname === "/blog" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            }`}
+          >
+            Blogs
+          </Link>
+
+          <Link
+            to="/compare"
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              location.pathname === "/compare" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            }`}
+          >
+            Compare
+          </Link>
         </nav>
 
+        {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-3">
           <SmartSearch className="w-56" />
           {user ? (
@@ -104,32 +121,76 @@ const Navbar = () => {
         </button>
       </div>
 
+      {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="lg:hidden bg-card border-b border-border px-4 pb-4">
+        <div className="lg:hidden bg-card border-b border-border px-4 pb-4 max-h-[80vh] overflow-y-auto">
           <nav className="flex flex-col gap-1">
-            {navLinks.map((link: any) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                onClick={() => setMobileOpen(false)}
-                className={`px-3 py-2 rounded-md text-sm font-medium ${
-                  location.pathname === link.path
-                    ? "bg-secondary text-secondary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            <Link to="/" onClick={closeMobile} className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground">
+              Home
+            </Link>
+
+            {/* Mobile College Dropdown */}
+            <button
+              onClick={() => setMobileCollegeOpen(!mobileCollegeOpen)}
+              className="flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              Colleges
+              <ChevronDown className={`w-4 h-4 transition-transform ${mobileCollegeOpen ? "rotate-180" : ""}`} />
+            </button>
+            {mobileCollegeOpen && (
+              <div className="ml-3 pl-3 border-l-2 border-primary/20 space-y-3 py-2">
+                {collegeMenuColumns.map((col) => (
+                  <div key={col.title}>
+                    <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">{col.title}</p>
+                    {col.links.map((link) => (
+                      <Link key={link.path} to={link.path} onClick={closeMobile} className="block px-2 py-1.5 text-sm text-muted-foreground hover:text-primary">
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Mobile Coaching Dropdown */}
+            <button
+              onClick={() => setMobileCoachingOpen(!mobileCoachingOpen)}
+              className="flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              Coaching
+              <ChevronDown className={`w-4 h-4 transition-transform ${mobileCoachingOpen ? "rotate-180" : ""}`} />
+            </button>
+            {mobileCoachingOpen && (
+              <div className="ml-3 pl-3 border-l-2 border-primary/20 space-y-3 py-2">
+                {coachingMenuColumns.map((col) => (
+                  <div key={col.title}>
+                    <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">{col.title}</p>
+                    {col.links.map((link) => (
+                      <Link key={link.path} to={link.path} onClick={closeMobile} className="block px-2 py-1.5 text-sm text-muted-foreground hover:text-primary">
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <Link to="/blog" onClick={closeMobile} className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground">
+              Blogs
+            </Link>
+            <Link to="/compare" onClick={closeMobile} className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground">
+              Compare
+            </Link>
           </nav>
+
           {user ? (
             <div className="mt-3 space-y-2">
               <Button variant="outline" className="w-full" size="sm" asChild>
-                <Link to="/dashboard" onClick={() => setMobileOpen(false)}><LayoutDashboard className="w-4 h-4 mr-1" /> Dashboard</Link>
+                <Link to="/dashboard" onClick={closeMobile}><LayoutDashboard className="w-4 h-4 mr-1" /> Dashboard</Link>
               </Button>
               {isAdmin && (
                 <Button variant="outline" className="w-full" size="sm" asChild>
-                  <Link to="/admin" onClick={() => setMobileOpen(false)}><Shield className="w-4 h-4 mr-1" /> Admin Panel</Link>
+                  <Link to="/admin" onClick={closeMobile}><Shield className="w-4 h-4 mr-1" /> Admin Panel</Link>
                 </Button>
               )}
               <Button variant="ghost" className="w-full" size="sm" onClick={() => setShowSignOutDialog(true)}>
@@ -138,7 +199,7 @@ const Navbar = () => {
             </div>
           ) : (
             <Button className="w-full mt-3" size="sm" asChild>
-              <Link to="/auth" onClick={() => setMobileOpen(false)}>Sign In</Link>
+              <Link to="/auth" onClick={closeMobile}>Sign In</Link>
             </Button>
           )}
         </div>
