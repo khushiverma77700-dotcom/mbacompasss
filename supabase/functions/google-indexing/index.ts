@@ -104,16 +104,26 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const saJson = Deno.env.get("GOOGLE_INDEXING_SERVICE_ACCOUNT");
-    if (!saJson) throw new Error("GOOGLE_INDEXING_SERVICE_ACCOUNT not configured");
+    const body = await req.json();
+    const action = body.action as string;
 
-    const sa: ServiceAccount = JSON.parse(saJson);
+    // Stats action doesn't need Google credentials
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const body = await req.json();
-    const action = body.action as string;
+    // Helper to get SA + access token only when needed
+    const getToken = async () => {
+      const saJson = Deno.env.get("GOOGLE_INDEXING_SERVICE_ACCOUNT");
+      if (!saJson) throw new Error("GOOGLE_INDEXING_SERVICE_ACCOUNT not configured");
+      let sa: ServiceAccount;
+      try {
+        sa = JSON.parse(saJson);
+      } catch {
+        throw new Error("GOOGLE_INDEXING_SERVICE_ACCOUNT is not valid JSON. Please re-enter the full JSON credentials.");
+      }
+      return getAccessToken(sa);
+    };
 
     // === ACTION: submit_url — submit a single URL ===
     if (action === "submit_url") {
