@@ -42,7 +42,7 @@ const AdminColleges = () => {
   const { toast } = useToast();
 
   const fetchColleges = async () => {
-    const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, tier, college_category, ranking, established").order("ranking", { ascending: true });
+    const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, tier, college_category, ranking, established, created_at").order("ranking", { ascending: true });
     if (data) setColleges(data);
   };
 
@@ -278,24 +278,28 @@ const AdminColleges = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">S.No</TableHead>
                 <TableHead>Rank</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Tier</TableHead>
                 <TableHead>City</TableHead>
                 <TableHead>Type</TableHead>
+                <TableHead>Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {colleges.map((c) => (
+              {colleges.map((c, idx) => (
                 <TableRow key={c.id}>
+                  <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell>{c.ranking ?? "—"}</TableCell>
                   <TableCell className="font-medium">{c.name}</TableCell>
                   <TableCell><Badge variant={c.college_category === "IIM" ? "default" : "secondary"}>{c.college_category ?? "—"}</Badge></TableCell>
                   <TableCell><Badge variant="outline">{c.tier ?? "—"}</Badge></TableCell>
                   <TableCell>{c.city ?? "—"}</TableCell>
                   <TableCell><Badge variant="secondary">{c.type ?? "—"}</Badge></TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{c.created_at ? new Date(c.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}<br/><span className="text-[10px]">{c.created_at ? new Date(c.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : ""}</span></TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(c.id)}><Pencil className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(c.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
@@ -303,7 +307,7 @@ const AdminColleges = () => {
                 </TableRow>
               ))}
               {colleges.length === 0 && (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No colleges yet</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No colleges yet</TableCell></TableRow>
               )}
             </TableBody>
           </Table>

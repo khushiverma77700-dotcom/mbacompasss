@@ -1105,19 +1105,22 @@ const AdminSEODashboard = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-10"></TableHead>
+                        <TableHead className="w-10">S.No</TableHead>
                         <TableHead>Page</TableHead>
                         <TableHead>Type</TableHead>
                         <TableHead>Words</TableHead>
                         <TableHead>Coverage</TableHead>
                         <TableHead>Issues</TableHead>
                         <TableHead>Score</TableHead>
+                        <TableHead>Created</TableHead>
                         <TableHead className="text-right">Action</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredRows.map(row => (
+                      {filteredRows.map((row, idx) => (
                         <TableRow key={row.key}>
                           <TableCell><Checkbox checked={selectedKeys.includes(row.key)} onCheckedChange={(c) => toggleRow(row.key, Boolean(c))} /></TableCell>
+                          <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                           <TableCell>
                             <p className="font-medium leading-none">{row.name}</p>
                             <p className="text-xs text-muted-foreground">/{row.slug || "—"}</p>
@@ -1147,6 +1150,7 @@ const AdminSEODashboard = () => {
                               <span className="text-sm font-medium">{row.audit.score}%</span>
                             </div>
                           </TableCell>
+                          <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{row.item?.created_at ? new Date(row.item.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</TableCell>
                           <TableCell className="text-right">
                             <AISEOButton contentType={row.contentType} recordId={row.id} data={row.item} onApply={(s) => applySEOFields(row, s)} />
                           </TableCell>

@@ -253,6 +253,7 @@ const AdminCourses = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">S.No</TableHead>
                 <TableHead>Course Name</TableHead>
                 <TableHead>Institute</TableHead>
                 <TableHead>Mode</TableHead>
@@ -260,12 +261,14 @@ const AdminCourses = () => {
                 <TableHead>Fees</TableHead>
                 <TableHead>Rating</TableHead>
                 <TableHead>Enrolled</TableHead>
+                <TableHead>Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((c) => (
+              {filtered.map((c, idx) => (
                 <TableRow key={c.id}>
+                  <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell>
                     <div>
                       <div className="font-medium text-foreground">{c.name}</div>
@@ -284,6 +287,7 @@ const AdminCourses = () => {
                   <TableCell><span className="font-heading font-semibold text-primary">{c.fees ? `₹${Number(c.fees).toLocaleString()}` : "—"}</span></TableCell>
                   <TableCell>{c.rating ? <span className="flex items-center gap-1 text-sm"><Star className="w-3 h-3 text-amber-500 fill-amber-500" /> {Number(c.rating).toFixed(1)}</span> : "—"}</TableCell>
                   <TableCell>{c.enrolled_count ? <span className="flex items-center gap-1 text-sm"><Users className="w-3 h-3" /> {c.enrolled_count}</span> : "—"}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(c.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}<br/><span className="text-[10px]">{new Date(c.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(c)}><Pencil className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(c.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
@@ -291,7 +295,7 @@ const AdminCourses = () => {
                 </TableRow>
               ))}
               {filtered.length === 0 && (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No courses found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">No courses found</TableCell></TableRow>
               )}
             </TableBody>
           </Table>

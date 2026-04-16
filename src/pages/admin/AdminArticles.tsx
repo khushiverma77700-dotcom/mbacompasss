@@ -277,19 +277,22 @@ const AdminArticles = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">S.No</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>SEO</TableHead>
                 <TableHead>Featured</TableHead>
+                <TableHead>Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredArticles.map((a) => {
+              {filteredArticles.map((a, idx) => {
                 const seoScore = [a.meta_title, a.meta_description, a.h1_tag, (a.keywords || []).length > 0].filter(Boolean).length;
                 return (
                   <TableRow key={a.id}>
+                    <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                     <TableCell className="font-medium max-w-[200px] truncate">{a.title}</TableCell>
                     <TableCell><Badge variant="secondary" className="text-xs">{a.category}</Badge></TableCell>
                     <TableCell>{getStatusBadge(a.status || "draft")}</TableCell>
@@ -297,6 +300,7 @@ const AdminArticles = () => {
                       <Badge className={`border-none text-xs ${seoScore >= 3 ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" : seoScore >= 2 ? "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200" : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"}`}>{seoScore}/4</Badge>
                     </TableCell>
                     <TableCell>{a.featured ? "⭐" : "—"}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(a.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}<br/><span className="text-[10px]">{new Date(a.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></TableCell>
                     <TableCell className="text-right space-x-1">
                       <Button variant="ghost" size="sm" asChild><a href={`/article/${a.slug}`} target="_blank"><Eye className="w-4 h-4" /></a></Button>
                       <Button variant="ghost" size="sm" onClick={() => handleEdit(a)}><Pencil className="w-4 h-4" /></Button>
@@ -306,7 +310,7 @@ const AdminArticles = () => {
                 );
               })}
               {filteredArticles.length === 0 && (
-                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No articles found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No articles found</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
