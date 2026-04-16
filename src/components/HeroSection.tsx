@@ -131,10 +131,10 @@ const HeroSection = () => {
       <div className="absolute w-96 h-96 -bottom-32 -right-32 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '6s', animationDelay: '2s' }} />
 
       {/* Main content */}
-      <div className="relative container mx-auto px-4 py-16 md:py-24 z-10">
+      <div className="relative container mx-auto px-4 py-10 md:py-16 z-10">
         <div className="text-center max-w-3xl mx-auto animate-fade-in">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md rounded-full px-5 py-2 mb-8 border border-white/20 shadow-lg shadow-black/5">
+          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md rounded-full px-5 py-2 mb-5 border border-white/20 shadow-lg shadow-black/5">
             <Award className="w-4 h-4 text-yellow-300" />
             <span className="text-sm font-semibold text-primary-foreground tracking-wide">
               India's #1 MBA Coaching Discovery Platform
@@ -147,11 +147,11 @@ const HeroSection = () => {
             {heading}
           </h1>
 
-          <p className="font-heading text-2xl md:text-4xl lg:text-5xl font-bold text-primary-foreground/85 mb-6 leading-tight">
+          <p className="font-heading text-2xl md:text-4xl lg:text-5xl font-bold text-primary-foreground/85 mb-4 leading-tight">
             for Your Dream B-School
           </p>
 
-          <p className="text-primary-foreground/75 text-base md:text-lg mb-10 max-w-xl mx-auto leading-relaxed">
+          <p className="text-primary-foreground/75 text-base md:text-lg mb-6 max-w-xl mx-auto leading-relaxed">
             {subheading}
           </p>
 
@@ -209,7 +209,7 @@ const HeroSection = () => {
           </form>
 
           {/* Popular searches */}
-          <div className="flex flex-wrap justify-center gap-2.5 mb-14 text-sm">
+          <div className="flex flex-wrap justify-center gap-2.5 mb-8 text-sm">
             <span className="text-primary-foreground/50 font-medium self-center">Popular:</span>
             {popularSearches.map((term: string) => (
               <button
