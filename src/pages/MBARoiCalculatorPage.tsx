@@ -574,7 +574,7 @@ const Landing = ({ onStart }: { onStart: () => void }) => {
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5 max-w-6xl mx-auto">
           {[
-            { num: "01", icon: ShieldCheck, title: "Verify Yourself", desc: "Email + Mobile OTP. Takes 30 seconds. Ensures genuine, personalized reports.", color: "from-blue-50 to-blue-100/30" },
+            { num: "01", icon: ShieldCheck, title: "Enter Your Details", desc: "Share your salary, budget, work experience, and phone number so we can personalize your report.", color: "from-blue-50 to-blue-100/30" },
             { num: "02", icon: User, title: "Tell Us Your Story", desc: "5 quick steps — current salary, exams, budget, career goals, family income, loan plan.", color: "from-violet-50 to-violet-100/30" },
             { num: "03", icon: Brain, title: "AI Crunches 200+ B-Schools", desc: "Real placement data, deterministic ROI math, plus AI-generated personalized narrative.", color: "from-emerald-50 to-emerald-100/30" },
             { num: "04", icon: FileText, title: "Get 30-Page Report", desc: "Verdict, charts, college buckets, lifetime earnings, exam strategy, 6-month roadmap.", color: "from-amber-50 to-amber-100/30" },
@@ -1246,15 +1246,15 @@ const FormShell = ({ step, form, setForm, otpStep, otpValue, setOtpValue, otpSen
           {step === 1 && (
             <>
               <div>
-                <h2 className="text-xl md:text-2xl font-bold text-foreground">Let's verify you first</h2>
-                <p className="text-sm text-muted-foreground mt-1">Your details are private. We use them only to send your report.</p>
+                <h2 className="text-xl md:text-2xl font-bold text-foreground">Let's get your details first</h2>
+                <p className="text-sm text-muted-foreground mt-1">Your details stay private and help us personalize your report.</p>
               </div>
 
               <FieldText label="Full Name *" icon={User} value={form.name} onChange={(v: string) => setForm({ ...form, name: v })} placeholder="e.g. Aditya Sharma" />
               <FieldText label="Email Address *" icon={Mail} type="email" value={form.email} onChange={(v: string) => setForm({ ...form, email: v })} placeholder="you@example.com" />
 
               <div className="space-y-2">
-                <Label>Mobile Number * <span className="text-xs text-muted-foreground">(OTP verification required)</span></Label>
+                <Label>Mobile Number *</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -1266,28 +1266,16 @@ const FormShell = ({ step, form, setForm, otpStep, otpValue, setOtpValue, otpSen
                   />
                   {form.phoneVerified ? (
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium flex items-center gap-1 text-emerald-600">
-                      <ShieldCheck className="w-4 h-4" /> Verified
+                      <ShieldCheck className="w-4 h-4" /> Accepted
                     </span>
                   ) : (
                     <Button type="button" size="sm" variant="secondary" className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 text-xs"
-                      onClick={handleSendOtp} disabled={otpSending || form.phone.length !== 10 || resendTimer > 0}>
-                      {otpSending ? "Sending..." : resendTimer > 0 ? `Resend (${resendTimer}s)` : otpStep ? "Resend OTP" : "Send OTP"}
+                      onClick={handleSendOtp} disabled={form.phone.length !== 10}>
+                      Continue
                     </Button>
                   )}
                 </div>
-                {otpStep && !form.phoneVerified && (
-                  <div className="p-4 rounded-lg border border-blue-200 bg-blue-50/50 space-y-3">
-                    <p className="text-xs text-muted-foreground">Enter the 6-digit OTP sent to <span className="font-medium text-foreground">{form.phone}</span></p>
-                    <div className="flex justify-center">
-                      <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
-                        <InputOTPGroup>{[0, 1, 2, 3, 4, 5].map(i => <InputOTPSlot key={i} index={i} />)}</InputOTPGroup>
-                      </InputOTP>
-                    </div>
-                    <Button size="sm" className="w-full" onClick={handleVerifyOtp} disabled={otpVerifying || otpValue.length !== 6}>
-                      {otpVerifying ? "Verifying..." : "Verify OTP"}
-                    </Button>
-                  </div>
-                )}
+                {TEMP_DISABLE_PHONE_OTP && <p className="text-xs text-muted-foreground">OTP verification is temporarily disabled.</p>}
               </div>
 
               <div className="space-y-2">

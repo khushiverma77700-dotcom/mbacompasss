@@ -234,7 +234,7 @@ const LoginRequiredDialog = ({ open, onOpenChange, message }: LoginRequiredDialo
                   />
                   {phoneVerified ? (
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium flex items-center gap-1 text-emerald-600">
-                      <ShieldCheck className="w-4 h-4" /> Verified
+                      <ShieldCheck className="w-4 h-4" /> Accepted
                     </span>
                   ) : (
                     <Button
@@ -243,40 +243,15 @@ const LoginRequiredDialog = ({ open, onOpenChange, message }: LoginRequiredDialo
                       variant="secondary"
                       className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 text-xs"
                       onClick={handleSendOtp}
-                      disabled={otpSending || phone.length !== 10 || resendTimer > 0}
+                      disabled={phone.length !== 10}
                     >
-                      {otpSending ? "Sending..." : resendTimer > 0 ? `Resend (${resendTimer}s)` : otpStep ? "Resend OTP" : "Send OTP"}
+                      Continue
                     </Button>
                   )}
                 </div>
 
-                {otpStep && !phoneVerified && (
-                  <div className="space-y-2 p-3 rounded-lg border border-border bg-muted/30">
-                    <p className="text-xs text-muted-foreground">
-                      Enter the 6-digit OTP sent to <span className="font-medium text-foreground">{phone}</span>
-                    </p>
-                    <div className="flex justify-center">
-                      <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
-                        <InputOTPGroup>
-                          <InputOTPSlot index={0} />
-                          <InputOTPSlot index={1} />
-                          <InputOTPSlot index={2} />
-                          <InputOTPSlot index={3} />
-                          <InputOTPSlot index={4} />
-                          <InputOTPSlot index={5} />
-                        </InputOTPGroup>
-                      </InputOTP>
-                    </div>
-                    <Button
-                      type="button"
-                      className="w-full"
-                      size="sm"
-                      onClick={handleVerifyOtp}
-                      disabled={otpVerifying || otpValue.length !== 6}
-                    >
-                      {otpVerifying ? "Verifying..." : "Verify OTP"}
-                    </Button>
-                  </div>
+                {TEMP_DISABLE_PHONE_OTP && (
+                  <p className="text-xs text-muted-foreground">OTP verification is temporarily disabled.</p>
                 )}
               </div>
 
