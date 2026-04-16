@@ -125,18 +125,20 @@ const AdminCoupons = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Code</TableHead><TableHead>Discount</TableHead><TableHead>Uses</TableHead>
-                <TableHead>Status</TableHead><TableHead>Valid Until</TableHead><TableHead className="text-right">Actions</TableHead>
+                <TableHead className="w-12">S.No</TableHead><TableHead>Code</TableHead><TableHead>Discount</TableHead><TableHead>Uses</TableHead>
+                <TableHead>Status</TableHead><TableHead>Valid Until</TableHead><TableHead>Created</TableHead><TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {coupons.map((c) => (
+              {coupons.map((c, idx) => (
                 <TableRow key={c.id}>
+                  <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell className="font-mono font-bold">{c.code}</TableCell>
                   <TableCell>{c.discount_text}</TableCell>
                   <TableCell>{c.current_uses}/{c.max_uses || "∞"}</TableCell>
                   <TableCell><Badge variant={c.active ? "default" : "secondary"}>{c.active ? "Active" : "Inactive"}</Badge></TableCell>
                   <TableCell>{c.valid_until ? new Date(c.valid_until).toLocaleDateString() : "—"}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(c.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}<br/><span className="text-[10px]">{new Date(c.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button variant="ghost" size="sm" onClick={() => viewClaims(c.id)}><Eye className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(c.id)}><Pencil className="w-4 h-4" /></Button>
@@ -144,7 +146,7 @@ const AdminCoupons = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {coupons.length === 0 && (<TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No coupons yet</TableCell></TableRow>)}
+              {coupons.length === 0 && (<TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No coupons yet</TableCell></TableRow>)}
             </TableBody>
           </Table>
         </CardContent>

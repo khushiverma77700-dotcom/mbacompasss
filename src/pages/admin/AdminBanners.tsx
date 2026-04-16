@@ -96,15 +96,17 @@ const AdminBanners = () => {
       <Card><CardContent className="p-0">
         <Table>
           <TableHeader><TableRow>
-            <TableHead>Title</TableHead><TableHead>CTA</TableHead><TableHead>Active</TableHead><TableHead>Order</TableHead><TableHead className="text-right">Actions</TableHead>
+            <TableHead className="w-12">S.No</TableHead><TableHead>Title</TableHead><TableHead>CTA</TableHead><TableHead>Active</TableHead><TableHead>Order</TableHead><TableHead>Created</TableHead><TableHead className="text-right">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {banners.map((b) => (
+            {banners.map((b, idx) => (
               <TableRow key={b.id}>
+                <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                 <TableCell className="font-medium">{b.title}</TableCell>
                 <TableCell>{b.cta_text}</TableCell>
                 <TableCell>{b.active ? "Yes" : "No"}</TableCell>
                 <TableCell>{b.sort_order}</TableCell>
+                <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(b.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}<br/><span className="text-[10px]">{new Date(b.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></TableCell>
                 <TableCell className="text-right space-x-2">
                   <Button variant="ghost" size="sm" onClick={() => handleEdit(b)}><Pencil className="w-4 h-4" /></Button>
                   <Button variant="ghost" size="sm" onClick={() => handleDelete(b.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
@@ -112,7 +114,7 @@ const AdminBanners = () => {
               </TableRow>
             ))}
             {banners.length === 0 && (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No banners yet</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No banners yet</TableCell></TableRow>
             )}
           </TableBody>
         </Table>

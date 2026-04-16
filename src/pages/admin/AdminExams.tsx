@@ -192,20 +192,24 @@ const AdminExams = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">S.No</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Full Name</TableHead>
                 <TableHead>Conducting Body</TableHead>
                 <TableHead>Exam Date</TableHead>
+                <TableHead>Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {exams.map((e) => (
+              {exams.map((e, idx) => (
                 <TableRow key={e.id}>
+                  <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell className="font-medium">{e.name}</TableCell>
                   <TableCell>{e.full_name ?? "—"}</TableCell>
                   <TableCell>{e.conducting_body ?? "—"}</TableCell>
                   <TableCell>{e.exam_date ?? "—"}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(e.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}<br/><span className="text-[10px]">{new Date(e.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(e)}><Pencil className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(e.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
@@ -213,7 +217,7 @@ const AdminExams = () => {
                 </TableRow>
               ))}
               {exams.length === 0 && (
-                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No exams yet</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No exams yet</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
