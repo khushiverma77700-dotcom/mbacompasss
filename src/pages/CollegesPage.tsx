@@ -12,6 +12,7 @@ import { useSpecializations } from "@/hooks/useSpecializations";
 import { Skeleton } from "@/components/ui/skeleton";
 import SEOHead, { generateListingSchema } from "@/components/SEOHead";
 import PageKeywords from "@/components/PageKeywords";
+import CollegeListingCard from "@/components/CollegeListingCard";
 import { getLocationImage } from "@/data/cityImages";
 import { FEE_BUCKETS, FEE_BUCKET_LABELS, matchesFeeBucket, getEffectiveFeesLakhs, specMatches } from "@/lib/filterHelpers";
 
