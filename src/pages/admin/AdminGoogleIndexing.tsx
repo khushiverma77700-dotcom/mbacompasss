@@ -1134,17 +1134,19 @@ const AdminGoogleIndexing = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Time</TableHead>
-                      <TableHead>URL</TableHead>
-                      <TableHead>Action</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead className="w-12">S.No</TableHead>
+                      <SortableTableHead label="Time" sortKey="created_at" sortConfig={logSortConfig} onSort={handleLogSort} />
+                      <SortableTableHead label="URL" sortKey="url" sortConfig={logSortConfig} onSort={handleLogSort} />
+                      <SortableTableHead label="Action" sortKey="action" sortConfig={logSortConfig} onSort={handleLogSort} />
+                      <SortableTableHead label="Status" sortKey="status" sortConfig={logSortConfig} onSort={handleLogSort} />
                       <TableHead className="min-w-[220px]">API Response</TableHead>
                       <TableHead className="min-w-[220px]">Error</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {logs.map((log) => (
+                    {sortedLogs.map((log, idx) => (
                       <TableRow key={log.id} className="align-top">
+                        <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                         <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                           {formatTime(log.created_at)}
                         </TableCell>
