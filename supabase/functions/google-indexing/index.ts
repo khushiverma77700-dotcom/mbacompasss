@@ -493,9 +493,9 @@ async function persistSubmissionResult(
     updated_at: now,
   };
 
-  if (options.submission.ok) {
-    payload.indexed_at = now;
-  }
+  // NOTE: A successful Google Indexing API response means Google received
+  // the crawl notification, NOT that the URL is indexed. Do not set indexed_at here.
+  // indexed_at should only be set when confirmed via Search Console or status check.
 
   const { data: record, error } = await supabase
     .from("indexing_urls")

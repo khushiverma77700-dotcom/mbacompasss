@@ -1,0 +1,1 @@
+UPDATE public.indexing_urls SET indexed_at = NULL WHERE status = 'submitted';
