@@ -39,7 +39,7 @@ const NavMegaMenu = ({ label, columns, onNavigate }: MegaMenuProps) => {
     >
       <button
         className="flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-        onClick={() => setOpen(!open)}
+        onFocus={enter}
       >
         {label}
         <ChevronDown

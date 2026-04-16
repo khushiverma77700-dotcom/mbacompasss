@@ -56,7 +56,7 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden lg:flex items-center gap-1">
+        <nav className="hidden md:flex items-center gap-1">
           <Link
             to="/"
             className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
@@ -114,7 +114,7 @@ const Navbar = () => {
 
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="lg:hidden p-2 text-foreground"
+          className="md:hidden p-2 text-foreground"
           aria-label="Toggle mobile menu"
         >
           {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -123,7 +123,7 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="lg:hidden bg-card border-b border-border px-4 pb-4 max-h-[80vh] overflow-y-auto">
+        <div className="md:hidden bg-card border-b border-border px-4 pb-4 max-h-[80vh] overflow-y-auto">
           <nav className="flex flex-col gap-1">
             <Link to="/" onClick={closeMobile} className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground">
               Home
