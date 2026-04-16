@@ -233,6 +233,7 @@ const App = () => (
             <Route path="/category/:slug" element={<PublicLayout><CategoryPage /></PublicLayout>} />
             <Route path="/blog" element={<PublicLayout><BlogPage /></PublicLayout>} />
             <Route path="/colleges" element={<PublicLayout><CollegesPage /></PublicLayout>} />
+            <Route path="/coaching" element={<PublicLayout><CoachingPage /></PublicLayout>} />
             <Route path="/auth" element={<PublicLayout><AuthPage /></PublicLayout>} />
 
             {/* Lazy loaded — invisible fallback */}
