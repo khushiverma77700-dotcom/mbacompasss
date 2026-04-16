@@ -77,6 +77,8 @@ const AdminLeads = () => {
     }
 
     return result;
+  }, [leads, search, dateFrom, dateTo, activeTab]);
+
   const { sortedItems: sortedFiltered, sortConfig, handleSort: onSort } = useTableSort(filtered);
 
   const downloadCSV = () => {
