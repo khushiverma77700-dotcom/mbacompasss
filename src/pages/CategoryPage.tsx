@@ -19,11 +19,13 @@ const CategoryPage = () => {
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState(searchParams.get("q") || "");
   const [sortBy, setSortBy] = useState("rating");
-  const [selectedCity, setSelectedCity] = useState("all");
-  const [selectedState, setSelectedState] = useState("all");
-  const [selectedMode, setSelectedMode] = useState("all");
+  const [selectedCity, setSelectedCity] = useState(searchParams.get("city") || "all");
+  const [selectedState, setSelectedState] = useState(searchParams.get("state") || "all");
+  const [selectedMode, setSelectedMode] = useState(searchParams.get("mode") || "all");
   const [feeRange, setFeeRange] = useState([0, 200000]);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(
+    !!(searchParams.get("city") || searchParams.get("state") || searchParams.get("mode"))
+  );
 
   const { data: institutes = [], isLoading } = useInstitutes(slug);
   const { data: categories = [] } = useCategories();
