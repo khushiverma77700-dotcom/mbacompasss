@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
       const { url, page_type, record_id } = body;
       if (!url) throw new Error("url is required");
 
-      const accessToken = await getAccessToken(sa);
+      const accessToken = await getToken();
       const result = await submitUrl(accessToken, url);
 
       const status = result.ok ? "submitted" : "failed";
@@ -178,7 +178,7 @@ Deno.serve(async (req) => {
       const urls: string[] = body.urls || [];
       if (!urls.length) throw new Error("urls array is required");
 
-      const accessToken = await getAccessToken(sa);
+      const accessToken = await getToken();
       const results: any[] = [];
 
       for (const url of urls.slice(0, 100)) {
@@ -226,7 +226,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      const accessToken = await getAccessToken(sa);
+      const accessToken = await getToken();
       let successCount = 0;
 
       for (const row of pendingUrls) {
