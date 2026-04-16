@@ -283,6 +283,9 @@ className="absolute inset-0 w-full h-full object-cover blur-sm scale-105 opacity
           <div className="flex flex-wrap gap-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;
+              const tabCount = tab.type === "all"
+                ? colleges.length
+                : colleges.filter((c: any) => c.type === tab.type).length;
               return (
                 <button
                   key={tab.type}
@@ -294,7 +297,7 @@ className="absolute inset-0 w-full h-full object-cover blur-sm scale-105 opacity
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
-                  {tab.label}
+                  {tab.label} ({tabCount})
                 </button>
               );
             })}

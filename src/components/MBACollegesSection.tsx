@@ -91,19 +91,24 @@ const MBACollegesSection = () => {
 
         {/* City filter */}
         <div className="flex flex-wrap gap-1.5 mb-6">
-          {cityTabs.map((city) => (
-            <button
-              key={city}
-              onClick={() => setActiveCity(city)}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
-                activeCity === city
-                  ? "bg-secondary text-secondary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {city}
-            </button>
-          ))}
+          {cityTabs.map((city) => {
+            const cityCount = city === "All"
+              ? colleges.filter((c) => c.type === activeTab).length
+              : colleges.filter((c) => c.type === activeTab && c.city === city).length;
+            return (
+              <button
+                key={city}
+                onClick={() => setActiveCity(city)}
+                className={`px-3 py-1 rounded-full text-xs font-medium transition-all ${
+                  activeCity === city
+                    ? "bg-secondary text-secondary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {city} ({cityCount})
+              </button>
+            );
+          })}
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">

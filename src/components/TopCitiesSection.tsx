@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Building2, Landmark, Cpu, BookOpen, Building, Church, Warehouse, BrickWall } from "lucide-react";
 import { motion } from "framer-motion";
 import { useCityPages } from "@/hooks/useCityPages";
+import { useColleges } from "@/hooks/useInstitutes";
 
 const iconMap: Record<string, any> = {
   Delhi: Landmark, Mumbai: Building2, Bangalore: Cpu, Pune: BookOpen,
@@ -15,14 +16,24 @@ const colorCycle = [
 
 const TopCitiesSection = () => {
   const { data: cityPages } = useCityPages();
+  const { data: colleges } = useColleges();
 
-  const cities = (cityPages || []).filter(p => p.type === "city").slice(0, 8).map((p, i) => ({
-    name: p.name,
-    slug: p.slug,
-    icon: iconMap[p.name] || Building,
-    count: "View Colleges",
-    color: colorCycle[i % 3],
-  }));
+  const cities = (cityPages || []).filter(p => p.type === "city").slice(0, 8).map((p, i) => {
+    const aliases = p.city_aliases || [p.name.toLowerCase()];
+    const count = (colleges || []).filter((c) =>
+      aliases.some((a) =>
+        (c.city || "").toLowerCase().includes(a.toLowerCase()) ||
+        (c.state || "").toLowerCase().includes(a.toLowerCase())
+      )
+    ).length;
+    return {
+      name: p.name,
+      slug: p.slug,
+      icon: iconMap[p.name] || Building,
+      count,
+      color: colorCycle[i % 3],
+    };
+  });
 
   if (cities.length === 0) return null;
 
@@ -46,7 +57,7 @@ const TopCitiesSection = () => {
                     <Icon className="w-7 h-7" />
                   </div>
                   <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">{city.name}</h3>
-                  <p className="text-xs text-muted-foreground">{city.count}</p>
+                  <p className="text-xs text-muted-foreground">{city.count > 0 ? `${city.count} Colleges` : "View Colleges"}</p>
                 </Link>
               </motion.div>
             );
