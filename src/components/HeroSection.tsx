@@ -107,7 +107,7 @@ const HeroSection = () => {
   };
 
   return (
-    <section className="relative overflow-hidden min-h-[55vh] md:min-h-[60vh] flex items-center">
+    <section className="relative overflow-hidden">
       {/* Multi-layer gradient background */}
       <div className="absolute inset-0 hero-gradient pointer-events-none" />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/10 pointer-events-none" />
@@ -115,63 +115,63 @@ const HeroSection = () => {
       {/* Dot pattern overlay */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiLz48L3N2Zz4=')] opacity-40 pointer-events-none" />
 
-      {/* Floating decorative elements — CSS only, no JS animation overhead */}
-      <div className="absolute w-16 h-16 md:w-24 md:h-24 top-[8%] left-[5%] opacity-10 animate-bounce pointer-events-none" style={{ animationDuration: '7s' }}>
+      {/* Floating decorative elements */}
+      <div className="absolute w-12 h-12 md:w-20 md:h-20 top-[8%] left-[5%] opacity-10 animate-bounce pointer-events-none" style={{ animationDuration: '7s' }}>
         <GraduationCap className="w-full h-full text-primary-foreground" />
       </div>
-      <div className="absolute w-10 h-10 md:w-14 md:h-14 top-[15%] right-[8%] opacity-10 animate-bounce pointer-events-none" style={{ animationDuration: '5.5s', animationDelay: '1s' }}>
+      <div className="absolute w-8 h-8 md:w-12 md:h-12 top-[12%] right-[8%] opacity-10 animate-bounce pointer-events-none" style={{ animationDuration: '5.5s', animationDelay: '1s' }}>
         <GraduationCap className="w-full h-full text-primary-foreground" />
       </div>
-      <div className="absolute w-12 h-12 md:w-16 md:h-16 bottom-[20%] right-[20%] opacity-10 animate-bounce pointer-events-none" style={{ animationDuration: '6s', animationDelay: '2s' }}>
+      <div className="absolute w-10 h-10 md:w-14 md:h-14 bottom-[25%] right-[15%] opacity-10 animate-bounce pointer-events-none" style={{ animationDuration: '6s', animationDelay: '2s' }}>
         <BookOpen className="w-full h-full text-primary-foreground" />
       </div>
 
-      {/* Glowing orbs — CSS only */}
-      <div className="absolute w-64 h-64 -top-20 -left-20 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '4s' }} />
-      <div className="absolute w-96 h-96 -bottom-32 -right-32 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '6s', animationDelay: '2s' }} />
+      {/* Glowing orbs */}
+      <div className="absolute w-48 h-48 -top-16 -left-16 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '4s' }} />
+      <div className="absolute w-72 h-72 -bottom-24 -right-24 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '6s', animationDelay: '2s' }} />
 
       {/* Main content */}
-      <div className="relative container mx-auto px-4 py-6 md:py-10 z-10">
+      <div className="relative container mx-auto px-4 pt-6 pb-10 md:pt-8 md:pb-14 z-10">
         <div className="text-center max-w-3xl mx-auto animate-fade-in">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md rounded-full px-5 py-1.5 mb-3 border border-white/20 shadow-lg shadow-black/5">
-            <Award className="w-4 h-4 text-yellow-300" />
-            <span className="text-sm font-semibold text-primary-foreground tracking-wide">
+          <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md rounded-full px-4 py-1 mb-3 border border-white/20 shadow-lg shadow-black/5">
+            <Award className="w-3.5 h-3.5 text-yellow-300" />
+            <span className="text-xs md:text-sm font-semibold text-primary-foreground tracking-wide">
               India's #1 MBA Coaching Discovery Platform
             </span>
-            <ChevronRight className="w-3.5 h-3.5 text-primary-foreground/60" />
+            <ChevronRight className="w-3 h-3 text-primary-foreground/60" />
           </div>
 
           {/* Heading */}
-          <h1 className="font-heading text-3xl md:text-5xl lg:text-6xl font-extrabold text-primary-foreground mb-2 leading-[1.1] tracking-tight">
+          <h1 className="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-primary-foreground mb-1.5 leading-[1.15] tracking-tight">
             {heading}
           </h1>
 
-          <p className="font-heading text-xl md:text-3xl lg:text-4xl font-bold text-primary-foreground/85 mb-3 leading-tight">
+          <p className="font-heading text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-primary-foreground/85 mb-2 leading-tight">
             for Your Dream B-School
           </p>
 
-          <p className="text-primary-foreground/75 text-sm md:text-base mb-5 max-w-xl mx-auto leading-relaxed">
+          <p className="text-primary-foreground/75 text-xs md:text-sm mb-4 max-w-xl mx-auto leading-relaxed">
             {subheading}
           </p>
 
           {/* Search bar */}
-          <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-5">
+          <form onSubmit={handleSearch} className="max-w-xl mx-auto mb-4">
             <div className="relative" ref={searchRef}>
-              <div className="absolute -inset-1 rounded-2xl bg-white/20 blur-md opacity-20 pointer-events-none" />
-              <div className="relative">
-                <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
+              <div className="absolute -inset-1 rounded-xl bg-white/20 blur-md opacity-20 pointer-events-none" />
+              <div className="relative flex items-center bg-card rounded-xl shadow-2xl shadow-black/10 overflow-hidden">
+                <Search className="absolute left-4 w-4 h-4 text-muted-foreground z-10" />
                 <Input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
                   onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
                   placeholder="Search by coaching name, city, or exam..."
-                  className="h-13 pl-14 pr-36 rounded-2xl bg-card text-foreground text-base md:text-lg border-none shadow-2xl shadow-black/10 focus-visible:ring-0"
+                  className="h-11 md:h-12 pl-11 pr-28 md:pr-32 rounded-xl bg-transparent text-foreground text-sm md:text-base border-none shadow-none focus-visible:ring-0"
                 />
                 <Button
                   type="submit"
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 h-11 px-7 rounded-xl text-base font-semibold shadow-lg"
+                  className="absolute right-2 h-8 md:h-9 px-5 md:px-6 rounded-lg text-sm font-semibold shadow-md"
                 >
                   Search
                 </Button>
@@ -179,8 +179,8 @@ const HeroSection = () => {
 
               {/* Live suggestions dropdown */}
               {showSuggestions && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-2xl shadow-2xl z-50 overflow-hidden max-h-[360px] overflow-y-auto animate-fade-in">
-                  <div className="px-4 py-2.5 border-b border-border/50">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-2xl z-50 overflow-hidden max-h-[320px] overflow-y-auto animate-fade-in">
+                  <div className="px-3 py-2 border-b border-border/50">
                     <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Suggestions</span>
                   </div>
                   {suggestions.map((s, i) => {
@@ -190,10 +190,10 @@ const HeroSection = () => {
                         key={`${s.type}-${s.label}-${i}`}
                         type="button"
                         onClick={() => handleSelect(s)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors border-b border-border/30 last:border-b-0 ${selectedIdx === i ? "bg-primary/10" : "hover:bg-muted/60"}`}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors border-b border-border/30 last:border-b-0 ${selectedIdx === i ? "bg-primary/10" : "hover:bg-muted/60"}`}
                       >
-                        <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <Icon className="w-4.5 h-4.5 text-primary" />
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <Icon className="w-4 h-4 text-primary" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="text-sm font-semibold text-foreground truncate">{s.label}</div>
@@ -209,13 +209,13 @@ const HeroSection = () => {
           </form>
 
           {/* Popular searches */}
-          <div className="flex flex-wrap justify-center gap-2 mb-5 text-sm">
+          <div className="flex flex-wrap justify-center gap-1.5 md:gap-2 mb-4 text-xs md:text-sm">
             <span className="text-primary-foreground/50 font-medium self-center">Popular:</span>
             {popularSearches.map((term: string) => (
               <button
                 key={term}
                 onClick={() => { setQuery(term); }}
-                className="text-primary-foreground/90 hover:text-primary-foreground bg-white/10 hover:bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-full transition-all duration-200 border border-white/10 hover:border-white/25 font-medium"
+                className="text-primary-foreground/90 hover:text-primary-foreground bg-white/10 hover:bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full transition-all duration-200 border border-white/10 hover:border-white/25 font-medium"
               >
                 {term}
               </button>
@@ -224,7 +224,7 @@ const HeroSection = () => {
         </div>
 
         {/* Stats cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 md:gap-4 max-w-3xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 max-w-2xl mx-auto">
           {stats.map((stat: any, i: number) => {
             const Icon = iconMap[stat.icon] || BookOpen;
             return (
@@ -233,15 +233,15 @@ const HeroSection = () => {
                 className="group cursor-default animate-fade-in"
                 style={{ animationDelay: `${0.3 + i * 0.1}s` }}
               >
-                <div className="relative text-center bg-white/10 backdrop-blur-md rounded-2xl p-4 md:p-5 border border-white/15 overflow-hidden transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/25 group-hover:shadow-xl group-hover:-translate-y-1">
+                <div className="relative text-center bg-white/10 backdrop-blur-md rounded-xl p-3 md:p-4 border border-white/15 overflow-hidden transition-all duration-300 group-hover:bg-white/15 group-hover:border-white/25 group-hover:shadow-lg group-hover:-translate-y-0.5">
                   <div className="relative z-10">
-                    <div className="w-9 h-9 md:w-10 md:h-10 mx-auto rounded-xl bg-white/15 flex items-center justify-center mb-2 group-hover:bg-white/20 transition-colors">
-                      <Icon className="w-5 h-5 md:w-6 md:h-6 text-primary-foreground" />
+                    <div className="w-8 h-8 mx-auto rounded-lg bg-white/15 flex items-center justify-center mb-1.5 group-hover:bg-white/20 transition-colors">
+                      <Icon className="w-4 h-4 md:w-5 md:h-5 text-primary-foreground" />
                     </div>
-                    <div className="text-xl md:text-2xl font-heading font-extrabold text-primary-foreground mb-0.5 tracking-tight">
+                    <div className="text-lg md:text-xl font-heading font-extrabold text-primary-foreground mb-0.5 tracking-tight">
                       {stat.value}
                     </div>
-                    <div className="text-xs md:text-sm text-primary-foreground/65 font-medium">
+                    <div className="text-[10px] md:text-xs text-primary-foreground/65 font-medium">
                       {stat.label}
                     </div>
                   </div>
@@ -250,16 +250,16 @@ const HeroSection = () => {
             );
           })}
         </div>
+      </div>
 
-        {/* Bottom wave decoration */}
-        <div className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none">
-          <svg viewBox="0 0 1440 60" fill="none" className="w-full h-full" preserveAspectRatio="none">
-            <path
-              d="M0,30 C240,60 480,0 720,30 C960,60 1200,0 1440,30 L1440,60 L0,60 Z"
-              fill="hsl(var(--background))"
-            />
-          </svg>
-        </div>
+      {/* Bottom wave decoration */}
+      <div className="absolute bottom-0 left-0 right-0 h-10 pointer-events-none">
+        <svg viewBox="0 0 1440 40" fill="none" className="w-full h-full" preserveAspectRatio="none">
+          <path
+            d="M0,20 C240,40 480,0 720,20 C960,40 1200,0 1440,20 L1440,40 L0,40 Z"
+            fill="hsl(var(--background))"
+          />
+        </svg>
       </div>
     </section>
   );
