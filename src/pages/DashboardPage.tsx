@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { User, Heart, Star, Settings, MapPin, Trash2, Save } from "lucide-react";
+import { User, Heart, Star, Settings, MapPin, Trash2, Save, Calculator, TrendingUp, Eye } from "lucide-react";
 import { motion } from "framer-motion";
 
 const DashboardPage = () => {
