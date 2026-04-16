@@ -718,6 +718,491 @@ const PreviewCell = ({ label, value, icon: Icon, accent }: any) => (
   </div>
 );
 
+// ========== ANIMATED LIVE SAMPLE REPORT SHOWCASE ==========
+const SAMPLE_PROFILES = [
+  {
+    name: "Aditya Kumar", age: 25, role: "Software Engineer @ TCS", exp: "3 yrs",
+    college: "IIM Bangalore", tier: "Tier 1", verdict: "Strong Yes", verdictColor: "emerald",
+    investment: 32, salary: 33, payback: 1.9, roi: 91, riskLevel: "Low",
+    cashflow: [
+      { y: 1, with: -32, without: 0 }, { y: 2, with: -32, without: 9 },
+      { y: 3, with: 1, without: 18 }, { y: 4, with: 38, without: 28 },
+      { y: 5, with: 80, without: 39 }, { y: 6, with: 127, without: 51 },
+      { y: 7, with: 181, without: 64 }, { y: 8, with: 242, without: 78 },
+      { y: 9, with: 311, without: 93 }, { y: 10, with: 389, without: 109 },
+    ],
+    radar: [
+      { k: "Salary Jump", v: 95 }, { k: "Brand", v: 100 }, { k: "Network", v: 96 },
+      { k: "ROI Speed", v: 88 }, { k: "Risk", v: 90 }, { k: "Career Switch", v: 85 },
+    ],
+    sectorMix: [
+      { name: "Consulting", value: 35, color: "#3b82f6" },
+      { name: "Finance", value: 25, color: "#8b5cf6" },
+      { name: "Product", value: 20, color: "#10b981" },
+      { name: "Tech", value: 15, color: "#f59e0b" },
+      { name: "Other", value: 5, color: "#94a3b8" },
+    ],
+  },
+  {
+    name: "Priya Sharma", age: 27, role: "Marketing Lead @ HUL", exp: "5 yrs",
+    college: "MDI Gurgaon", tier: "Tier 2", verdict: "Yes — With Caveats", verdictColor: "blue",
+    investment: 24, salary: 24, payback: 2.6, roi: 78, riskLevel: "Moderate",
+    cashflow: [
+      { y: 1, with: -24, without: 0 }, { y: 2, with: -24, without: 12 },
+      { y: 3, with: 0, without: 25 }, { y: 4, with: 27, without: 39 },
+      { y: 5, with: 57, without: 54 }, { y: 6, with: 91, without: 70 },
+      { y: 7, with: 130, without: 87 }, { y: 8, with: 173, without: 105 },
+      { y: 9, with: 222, without: 124 }, { y: 10, with: 277, without: 144 },
+    ],
+    radar: [
+      { k: "Salary Jump", v: 70 }, { k: "Brand", v: 80 }, { k: "Network", v: 78 },
+      { k: "ROI Speed", v: 72 }, { k: "Risk", v: 75 }, { k: "Career Switch", v: 82 },
+    ],
+    sectorMix: [
+      { name: "FMCG", value: 30, color: "#3b82f6" },
+      { name: "Consulting", value: 25, color: "#8b5cf6" },
+      { name: "Marketing", value: 22, color: "#10b981" },
+      { name: "Finance", value: 15, color: "#f59e0b" },
+      { name: "Other", value: 8, color: "#94a3b8" },
+    ],
+  },
+  {
+    name: "Rahul Verma", age: 24, role: "Analyst @ Deloitte", exp: "2 yrs",
+    college: "TAPMI Manipal", tier: "Tier 3", verdict: "Wait & Strengthen", verdictColor: "amber",
+    investment: 18, salary: 13, payback: 4.1, roi: 52, riskLevel: "High",
+    cashflow: [
+      { y: 1, with: -18, without: 0 }, { y: 2, with: -18, without: 7 },
+      { y: 3, with: -5, without: 14 }, { y: 4, with: 9, without: 22 },
+      { y: 5, with: 25, without: 30 }, { y: 6, with: 43, without: 39 },
+      { y: 7, with: 64, without: 48 }, { y: 8, with: 87, without: 58 },
+      { y: 9, with: 113, without: 69 }, { y: 10, with: 142, without: 80 },
+    ],
+    radar: [
+      { k: "Salary Jump", v: 52 }, { k: "Brand", v: 55 }, { k: "Network", v: 60 },
+      { k: "ROI Speed", v: 45 }, { k: "Risk", v: 50 }, { k: "Career Switch", v: 65 },
+    ],
+    sectorMix: [
+      { name: "BFSI", value: 30, color: "#3b82f6" },
+      { name: "IT", value: 28, color: "#8b5cf6" },
+      { name: "Sales", value: 20, color: "#10b981" },
+      { name: "Operations", value: 15, color: "#f59e0b" },
+      { name: "Other", value: 7, color: "#94a3b8" },
+    ],
+  },
+];
+
+const TypewriterText = ({ text }: { text: string }) => {
+  const [shown, setShown] = useState("");
+  useEffect(() => {
+    setShown("");
+    let i = 0;
+    const t = setInterval(() => {
+      i++;
+      setShown(text.slice(0, i));
+      if (i >= text.length) clearInterval(t);
+    }, 12);
+    return () => clearInterval(t);
+  }, [text]);
+  return <p className="text-sm text-foreground leading-relaxed">{shown}<span className="inline-block w-0.5 h-4 bg-primary/70 ml-0.5 animate-pulse align-middle" /></p>;
+};
+
+const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
+  const [idx, setIdx] = useState(0);
+  const [tab, setTab] = useState("overview");
+  const [generatedAt, setGeneratedAt] = useState(new Date());
+
+  useEffect(() => {
+    const t = setInterval(() => {
+      setIdx(i => (i + 1) % SAMPLE_PROFILES.length);
+      setTab("overview");
+      setGeneratedAt(new Date());
+    }, 9000);
+    return () => clearInterval(t);
+  }, []);
+
+  const p = SAMPLE_PROFILES[idx];
+  const verdictColors: Record<string, string> = {
+    emerald: "bg-emerald-100 text-emerald-700 border-emerald-200",
+    blue: "bg-blue-100 text-blue-700 border-blue-200",
+    amber: "bg-amber-100 text-amber-700 border-amber-200",
+  };
+  const tenYearLead = p.cashflow[9].with - p.cashflow[9].without;
+
+  const aiLines: Record<string, string> = {
+    "Aditya Kumar": "Aditya, your engineering profile + 3 yrs at TCS + ₹9L base puts you in the sweet spot for IIM-A/B/C. With a projected jump to ₹33 LPA and 1.9-yr payback, the math is overwhelmingly in your favor. Aim for CAT 99.5+ — you have a real shot at a ₹2.8 Cr 10-year salary lead.",
+    "Priya Sharma": "Priya, with 5 yrs at HUL and a strong marketing track record, an MBA is a solid leverage play — but only at MDI/SPJIMR or above. At ₹14 LPA today, the jump to ₹24 LPA is real but the 2.6-yr payback means timing matters. Don't drop below Tier 2.",
+    "Rahul Verma": "Rahul, the numbers are honest with you — at 2 yrs of experience and Tier 3 colleges in play, your payback stretches past 4 years and 10-yr lead is only ₹62L. Strongly recommend: take CAT seriously next year, target Tier 2 minimum.",
+  };
+
+  return (
+    <section id="sample-report" className="bg-gradient-to-b from-blue-50/30 via-background to-blue-50/20 py-14 md:py-20 border-y border-blue-100/50">
+      <div className="container mx-auto px-4 max-w-6xl">
+        <div className="text-center mb-10">
+          <Badge variant="outline" className="mb-3 border-primary/30 text-primary">
+            <Activity className="w-3 h-3 mr-1.5 animate-pulse" /> Live Sample Reports
+          </Badge>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+            See what your <span className="text-primary">30-page report</span> looks like
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            3 real student profiles. 3 different verdicts. Watch the report regenerate live every 9 seconds — this is exactly what you'll get.
+          </p>
+        </div>
+
+        <div className="flex justify-center gap-2 mb-6 flex-wrap">
+          {SAMPLE_PROFILES.map((sp, i) => (
+            <button
+              key={i}
+              onClick={() => { setIdx(i); setGeneratedAt(new Date()); }}
+              className={`px-4 py-2 rounded-full text-xs font-semibold border transition-all ${
+                i === idx ? "bg-primary text-primary-foreground border-primary shadow-md scale-105" : "bg-card text-muted-foreground border-border hover:border-primary/40"
+              }`}
+            >
+              {sp.name.split(" ")[0]} • {sp.tier}
+            </button>
+          ))}
+        </div>
+
+        <Card className="border-border shadow-2xl shadow-primary/10 overflow-hidden">
+          <div className="bg-muted/40 border-b border-border px-4 py-2.5 flex items-center gap-2">
+            <div className="flex gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-rose-400" />
+              <div className="w-3 h-3 rounded-full bg-amber-400" />
+              <div className="w-3 h-3 rounded-full bg-emerald-400" />
+            </div>
+            <div className="flex-1 mx-4">
+              <div className="bg-background border border-border rounded-md px-3 py-1 text-[11px] text-muted-foreground flex items-center gap-2">
+                <Lock className="w-3 h-3 text-emerald-600" />
+                <span className="truncate">bschoolbuzz.com/roi-calculator/report/{p.name.toLowerCase().replace(" ", "-")}</span>
+              </div>
+            </div>
+            <Badge variant="outline" className="text-[10px] border-emerald-300 text-emerald-700 bg-emerald-50">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse" /> LIVE
+            </Badge>
+          </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`header-${idx}`}
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.4 }}
+              className="bg-gradient-to-r from-primary/8 via-blue-50 to-primary/5 px-6 py-5 border-b border-border"
+            >
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-blue-500 text-white flex items-center justify-center font-bold shadow-md">
+                    {p.name.split(" ").map(n => n[0]).join("")}
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">MBA ROI Report</p>
+                    <p className="text-base font-bold text-foreground">{p.name} <span className="text-xs font-normal text-muted-foreground">• {p.age} yrs • {p.role}</span></p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className={`${verdictColors[p.verdictColor]} font-semibold text-xs px-3 py-1`}>
+                    <Trophy className="w-3 h-3 mr-1" /> {p.verdict}
+                  </Badge>
+                  <Badge variant="outline" className="text-[10px]">
+                    <Clock className="w-2.5 h-2.5 mr-1" /> {generatedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  </Badge>
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+
+          <div className="bg-card border-b border-border px-6 flex gap-1 overflow-x-auto">
+            {[
+              { v: "overview", l: "Overview", icon: Activity },
+              { v: "financial", l: "Financial", icon: Wallet },
+              { v: "career", l: "Career Map", icon: Compass },
+              { v: "risk", l: "Risk", icon: AlertTriangle },
+            ].map(t => (
+              <button
+                key={t.v}
+                onClick={() => setTab(t.v)}
+                className={`px-4 py-3 text-xs font-semibold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                  tab === t.v ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <t.icon className="w-3.5 h-3.5" /> {t.l}
+              </button>
+            ))}
+          </div>
+
+          <CardContent className="p-6 min-h-[480px] bg-gradient-to-br from-background via-background to-blue-50/20">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`${idx}-${tab}`}
+                initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.35 }}
+              >
+                {tab === "overview" && (
+                  <div className="space-y-5">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {[
+                        { l: "Investment", v: `₹${p.investment}L`, icon: Wallet },
+                        { l: "Post-MBA Salary", v: `₹${p.salary} LPA`, icon: TrendingUp },
+                        { l: "Payback", v: `${p.payback} yrs`, icon: Timer },
+                        { l: "ROI Score", v: `${p.roi}/100`, icon: Gauge },
+                      ].map((m, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                          transition={{ delay: i * 0.08 }}
+                          className="p-3 rounded-lg bg-card border border-border"
+                        >
+                          <div className="flex items-center justify-between mb-1.5">
+                            <m.icon className="w-4 h-4 text-primary" />
+                            <span className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">{m.l}</span>
+                          </div>
+                          <p className="text-xl font-bold text-foreground">{m.v}</p>
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    <div className="p-4 rounded-lg bg-primary/5 border border-primary/15">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Brain className="w-4 h-4 text-primary" />
+                        <p className="text-xs font-bold uppercase tracking-wider text-primary">AI Advisor Verdict</p>
+                      </div>
+                      <TypewriterText key={`${idx}-typer`} text={aiLines[p.name]} />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs font-bold text-foreground">10-Year Cumulative Earnings (₹L)</p>
+                        <p className="text-xs font-semibold text-emerald-700">+₹{tenYearLead}L lead with MBA</p>
+                      </div>
+                      <div className="h-44">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={p.cashflow}>
+                            <defs>
+                              <linearGradient id={`sw-${idx}`} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                              </linearGradient>
+                              <linearGradient id={`swo-${idx}`} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.25} />
+                                <stop offset="95%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0} />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+                            <XAxis dataKey="y" tick={{ fontSize: 10 }} />
+                            <YAxis tick={{ fontSize: 10 }} />
+                            <RechartsTooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+                            <Area type="monotone" dataKey="without" name="Without MBA" stroke="hsl(var(--muted-foreground))" strokeWidth={2} fill={`url(#swo-${idx})`} strokeDasharray="4 4" />
+                            <Area type="monotone" dataKey="with" name="With MBA" stroke="hsl(var(--primary))" strokeWidth={2.5} fill={`url(#sw-${idx})`} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {tab === "financial" && (
+                  <div className="grid md:grid-cols-2 gap-5">
+                    <div className="space-y-3">
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Cost Breakdown</p>
+                      {[
+                        { l: "MBA Fees", v: p.investment - 10, color: "bg-blue-500" },
+                        { l: "Living Expenses (2yr)", v: 4, color: "bg-violet-500" },
+                        { l: "Opportunity Cost", v: 6, color: "bg-amber-500" },
+                      ].map((b, i) => (
+                        <div key={i}>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span className="text-foreground font-medium">{b.l}</span>
+                            <span className="font-bold text-foreground">₹{b.v}L</span>
+                          </div>
+                          <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${(b.v / p.investment) * 100}%` }}
+                              transition={{ duration: 1, delay: i * 0.15 }}
+                              className={`h-full ${b.color} rounded-full`}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                      <div className="pt-3 mt-3 border-t border-border flex justify-between">
+                        <span className="text-sm font-bold text-foreground">Total Investment</span>
+                        <span className="text-lg font-bold text-primary">₹{p.investment}L</span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Sector Placement Mix</p>
+                      <div className="h-44">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie data={p.sectorMix} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={35} outerRadius={70} paddingAngle={2}>
+                              {p.sectorMix.map((s, i) => <Cell key={i} fill={s.color} />)}
+                            </Pie>
+                            <RechartsTooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5 mt-2">
+                        {p.sectorMix.map((s, i) => (
+                          <div key={i} className="flex items-center gap-1.5 text-[10px]">
+                            <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: s.color }} />
+                            <span className="text-muted-foreground">{s.name}</span>
+                            <span className="ml-auto font-semibold text-foreground">{s.value}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {tab === "career" && (
+                  <div className="grid md:grid-cols-2 gap-5">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">Profile Strength Radar</p>
+                      <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <RadarChart data={p.radar}>
+                            <PolarGrid stroke="hsl(var(--border))" />
+                            <PolarAngleAxis dataKey="k" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                            <PolarRadiusAxis tick={{ fontSize: 9 }} angle={90} domain={[0, 100]} />
+                            <Radar name={p.name} dataKey="v" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.35} strokeWidth={2} />
+                            <RechartsTooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+                          </RadarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Best-Fit College</p>
+                      <Card className="border-primary/20 bg-primary/5">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <p className="font-bold text-foreground">{p.college}</p>
+                              <p className="text-xs text-muted-foreground">{p.tier} • Best ROI Match</p>
+                            </div>
+                            <Trophy className="w-5 h-5 text-amber-500" />
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 mt-3 text-center">
+                            <div className="p-2 rounded bg-card">
+                              <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Fees</p>
+                              <p className="text-sm font-bold text-foreground">₹{p.investment - 10}L</p>
+                            </div>
+                            <div className="p-2 rounded bg-card">
+                              <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Avg CTC</p>
+                              <p className="text-sm font-bold text-emerald-700">₹{p.salary}L</p>
+                            </div>
+                            <div className="p-2 rounded bg-card">
+                              <p className="text-[9px] uppercase tracking-wider text-muted-foreground">ROI</p>
+                              <p className="text-sm font-bold text-primary">{p.roi}</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                      <div className="space-y-2 text-xs">
+                        <p className="font-bold text-foreground">Why this fits {p.name.split(" ")[0]}:</p>
+                        {[
+                          "Strong placement record in target sector",
+                          `Payback in ${p.payback} years aligns with budget`,
+                          `Salary multiple of ${(p.salary / 8).toFixed(1)}x is competitive`,
+                          "Top recruiters match career aspirations",
+                        ].map((r, i) => (
+                          <div key={i} className="flex items-start gap-2 text-muted-foreground">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" />
+                            <span>{r}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {tab === "risk" && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 rounded-lg bg-card border border-border">
+                      <div>
+                        <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Overall Risk Level</p>
+                        <p className={`text-2xl font-bold mt-1 ${
+                          p.riskLevel === "Low" ? "text-emerald-700" :
+                          p.riskLevel === "Moderate" ? "text-amber-700" : "text-rose-700"
+                        }`}>{p.riskLevel}</p>
+                      </div>
+                      <div className="w-20 h-20 relative">
+                        <svg className="w-full h-full -rotate-90">
+                          <circle cx="40" cy="40" r="32" stroke="hsl(var(--muted))" strokeWidth="8" fill="none" />
+                          <motion.circle
+                            cx="40" cy="40" r="32"
+                            stroke={p.riskLevel === "Low" ? "#10b981" : p.riskLevel === "Moderate" ? "#f59e0b" : "#ef4444"}
+                            strokeWidth="8" fill="none" strokeLinecap="round"
+                            initial={{ strokeDasharray: "0 201" }}
+                            animate={{ strokeDasharray: `${(p.riskLevel === "Low" ? 0.25 : p.riskLevel === "Moderate" ? 0.5 : 0.78) * 201} 201` }}
+                            transition={{ duration: 1.2 }}
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center text-xs font-bold text-foreground">
+                          {p.riskLevel === "Low" ? "25%" : p.riskLevel === "Moderate" ? "50%" : "78%"}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Top Risk Factors</p>
+                      {(p.riskLevel === "Low" ? [
+                        { f: "Salary projection variance", s: "Low", m: "IIM placements highly stable" },
+                        { f: "Loan EMI burden", s: "Low", m: "Bank loans easily approved for Tier 1" },
+                      ] : p.riskLevel === "Moderate" ? [
+                        { f: "Tier 2 placement variance", s: "Medium", m: "Target top 20% of cohort" },
+                        { f: "Career switch difficulty", s: "Medium", m: "Build relevant projects pre-MBA" },
+                        { f: "Salary stagnation risk", s: "Low", m: "Network actively in summer internship" },
+                      ] : [
+                        { f: "Long payback period (4+ yrs)", s: "High", m: "Strongly reconsider Tier 3" },
+                        { f: "Low placement guarantee", s: "High", m: "Wait, retake CAT for Tier 2" },
+                        { f: "Limited brand value", s: "Medium", m: "Consider PGDM at established Tier 2" },
+                      ]).map((r, i) => (
+                        <div key={i} className="flex items-start gap-3 p-3 rounded bg-card border border-border">
+                          <AlertTriangle className={`w-4 h-4 mt-0.5 shrink-0 ${
+                            r.s === "High" ? "text-rose-600" : r.s === "Medium" ? "text-amber-600" : "text-emerald-600"
+                          }`} />
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between mb-0.5">
+                              <p className="text-xs font-semibold text-foreground">{r.f}</p>
+                              <Badge variant="outline" className={`text-[9px] ${
+                                r.s === "High" ? "border-rose-300 text-rose-700" :
+                                r.s === "Medium" ? "border-amber-300 text-amber-700" :
+                                "border-emerald-300 text-emerald-700"
+                              }`}>{r.s}</Badge>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground">→ {r.m}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </CardContent>
+
+          <div className="bg-muted/30 border-t border-border px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-3.5 h-3.5 text-primary" />
+              <p className="text-[11px] text-muted-foreground">Auto-rotating every 9s • Click pills to switch profiles</p>
+            </div>
+            <div className="flex gap-1.5">
+              {SAMPLE_PROFILES.map((_, i) => (
+                <div key={i} className={`h-1.5 rounded-full transition-all ${i === idx ? "w-8 bg-primary" : "w-1.5 bg-border"}`} />
+              ))}
+            </div>
+          </div>
+        </Card>
+
+        <div className="text-center mt-8">
+          <Button size="lg" onClick={onStart} className="h-12 px-8 rounded-xl shadow-lg shadow-primary/20">
+            Get My Personalized Report <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+          <p className="text-xs text-muted-foreground mt-3">100% free • 3 minutes • No credit card</p>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 // ========== FORM SHELL ==========
 const FormShell = ({ step, form, setForm, otpStep, otpValue, setOtpValue, otpSending, otpVerifying, resendTimer, handleSendOtp, handleVerifyOtp, toggleArr, canProceed, onBack, onNext }: any) => {
   const progress = (step / TOTAL_FORM_STEPS) * 100;
