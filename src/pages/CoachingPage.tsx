@@ -144,17 +144,16 @@ const CoachingPage = () => {
       <SEOHead
         title={dynamicTitle}
         description={dynamicDescription}
-        keywords={["MBA coaching India", "best MBA coaching institutes", "CAT coaching", "MBA preparation"]}
+        keywords={[
+          "CAT coaching", "MBA preparation", "online MBA coaching", "exam training", "coaching institutes",
+          "best CAT coaching institutes in India fees", "top online coaching for MBA entrance exams",
+          "CAT coaching near me with reviews", "best coaching for GMAT and GRE in India",
+          "weekend CAT coaching for working professionals", "free trial classes for MBA entrance coaching",
+          "online study material for MBA entrance exams", "cheap MBA coaching classes online",
+        ]}
         canonical="https://bschoolbuzz.com/coaching"
       />
 
-      {/* Breadcrumb */}
-      <nav className="container mx-auto px-4 pt-4" aria-label="Breadcrumb">
-        <ol className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <li><Link to="/" className="hover:text-primary transition-colors">Home</Link></li>
-          <li className="flex items-center gap-1.5"><ChevronRight className="w-3 h-3" /><span className="text-foreground font-medium">Coaching</span></li>
-        </ol>
-      </nav>
 
       {/* Hero */}
       <div className="hero-gradient py-14 md:py-20 mt-2 relative overflow-hidden">

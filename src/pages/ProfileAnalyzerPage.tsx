@@ -933,12 +933,19 @@ const ProfileAnalyzerPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <SEOHead
-        title="AI-Powered MBA Profile Analyser by B School Buzz | Check IIM Chances Free"
-        description="Analyse your MBA profile with AI. Get personalised IIM admission probability, 5-dimension score breakdown, peer comparison among 25,000+ students, college-wise comparison table with difficulty ratings, and detailed preparation roadmap. 100% Free tool by B School Buzz."
-        keywords={["MBA profile analyser", "IIM chances calculator", "CAT score predictor", "MBA admission probability", "B School Buzz profile analyser", "AI MBA tool", "IIM admission predictor", "MBA college comparison", "CAT preparation", "MBA peer comparison", "free MBA profile evaluation", "check IIM chances", "MBA profile checker", "IIM admission probability calculator", "MBA college predictor India", "CAT percentile predictor", "best MBA coaching", "XAT preparation profile analysis", "NMAT score predictor", "MBA after engineering chances", "MBA for working professionals", "IIM fees and placement comparison", "MBA ROI calculator", "top MBA colleges accepting CAT score", "MBA entrance exam difficulty", "should I do MBA quiz", "MBA admission chances 2025", "IIM call predictor"]}
+        title="AI MBA Profile Analyser — Check IIM Admission Chances Free | BSchoolBuzz"
+        description="Analyse your MBA profile with AI. Get personalised IIM admission probability, 5-dimension score breakdown, peer comparison among 25,000+ students, college-wise difficulty ratings, and detailed preparation roadmap. 100% Free."
+        keywords={[
+          "MBA profile check", "B-school eligibility", "profile evaluation", "admission chances",
+          "check profile for IIM admission eligibility", "MBA profile evaluation for study abroad",
+          "is my academic profile good enough for CAT", "chances of getting into IIM with low academics",
+          "how to build a strong profile for MBA", "profile evaluation for ISB and top private colleges",
+          "MBA profile analyser", "IIM chances calculator", "CAT score predictor", "MBA admission probability",
+          "free MBA profile evaluation", "check IIM chances", "IIM admission probability calculator",
+        ]}
         canonical="https://bschoolbuzz.com/profile-analyzer"
         ogType="website"
-        ogTitle="AI-Powered MBA Profile Analyser by B School Buzz"
+        ogTitle="AI-Powered MBA Profile Analyser by BSchoolBuzz"
         ogDescription="Get personalised college predictions, 5-dimension scoring, peer ranking among 25,000+ students, and AI-powered preparation roadmap for IIM, XLRI, FMS and 50+ top MBA colleges."
         jsonLd={jsonLd}
       />

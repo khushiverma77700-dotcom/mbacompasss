@@ -103,29 +103,19 @@ const CollegeFinderPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="AI MBA College Finder & Compare | BSchoolBuzz"
-        description="Find your perfect MBA college with AI-powered recommendations. Compare top B-Schools side by side — fees, placements, rankings, ROI & more."
-        keywords={["MBA college finder", "compare MBA colleges", "best MBA college", "IIM comparison", "MBA placements comparison", "AI college recommendation", "MBA fees comparison"]}
+        title="AI MBA College Finder — Predict Best B-School Matches | BSchoolBuzz"
+        description="Input your profile and exam scores into our AI-powered College Finder. Get a curated list of MBA colleges that fit your profile, budget, and location preference."
+        keywords={[
+          "MBA college finder", "B-school predictor", "AI college finder", "college search", "admission tool",
+          "find MBA colleges based on my profile", "top MBA colleges according to CAT percentile",
+          "AI tool for MBA college selection in India", "MBA college predictor for CMAT and MAT scores",
+          "best B-school finder with placement filters", "admission chances in MBA colleges calculator",
+          "personalized MBA college recommendation engine",
+        ]}
         canonical="https://bschoolbuzz.com/college-finder"
         jsonLd={[generateBreadcrumbSchema(breadcrumbs), generateFAQSchema(collegeFaqs)]}
       />
 
-      {/* Breadcrumb */}
-      <nav className="container mx-auto px-4 pt-4" aria-label="Breadcrumb">
-        <ol className="flex items-center gap-1.5 text-xs text-muted-foreground" itemScope itemType="https://schema.org/BreadcrumbList">
-          {breadcrumbs.map((item, i) => (
-            <li key={i} className="flex items-center gap-1.5" itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-              {i > 0 && <span aria-hidden="true">/</span>}
-              {i < breadcrumbs.length - 1 ? (
-                <Link to={item.url} className="hover:text-primary transition-colors" itemProp="item"><span itemProp="name">{item.name}</span></Link>
-              ) : (
-                <span className="text-foreground font-medium" itemProp="name">{item.name}</span>
-              )}
-              <meta itemProp="position" content={String(i + 1)} />
-            </li>
-          ))}
-        </ol>
-      </nav>
 
       {/* Hero */}
       <header className="relative overflow-hidden">

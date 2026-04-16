@@ -84,9 +84,14 @@ const ComparePage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Compare MBA Coaching Courses Side by Side | BSchoolBuzz"
-        description="Compare top MBA coaching courses side by side. Analyze fees, curriculum, success rates, faculty & more. AI-powered coaching finder for personalized recommendations."
-        keywords={["compare MBA courses", "MBA coaching comparison", "CAT coaching compare", "MBA coaching fees comparison", "best MBA coaching India", "AI coaching finder", "MBA course fees", "coaching institute comparison"]}
+        title="Compare MBA Coaching Courses Side by Side — Fees, Faculty & Success Rate | BSchoolBuzz"
+        description="Compare top MBA coaching courses side by side. Analyze fees, curriculum, success rates, faculty ratings. AI-powered coaching finder for personalized recommendations."
+        keywords={[
+          "compare MBA colleges", "B-school comparison", "college vs college", "MBA fees comparison", "placement comparison",
+          "compare IIM Ahmedabad vs IIM Bangalore placements", "MBA college comparison tool for ROI",
+          "comparison of top private MBA colleges in India", "detailed comparison of MBA curriculum and faculty",
+          "compare MBA colleges in Delhi vs Mumbai", "B-school side-by-side comparison for admission",
+        ]}
         canonical="https://bschoolbuzz.com/compare"
         jsonLd={[
           generateComparisonSchema(activeCourses),
@@ -95,24 +100,6 @@ const ComparePage = () => {
         ]}
       />
 
-      {/* Breadcrumb */}
-      <nav className="container mx-auto px-4 pt-4" aria-label="Breadcrumb">
-        <ol className="flex items-center gap-1.5 text-xs text-muted-foreground" itemScope itemType="https://schema.org/BreadcrumbList">
-          {breadcrumbs.map((item, i) => (
-            <li key={i} className="flex items-center gap-1.5" itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-              {i > 0 && <span aria-hidden="true">/</span>}
-              {i < breadcrumbs.length - 1 ? (
-                <Link to={item.url} className="hover:text-primary transition-colors" itemProp="item">
-                  <span itemProp="name">{item.name}</span>
-                </Link>
-              ) : (
-                <span className="text-foreground font-medium" itemProp="name">{item.name}</span>
-              )}
-              <meta itemProp="position" content={String(i + 1)} />
-            </li>
-          ))}
-        </ol>
-      </nav>
 
       {/* Hero — immersive gradient with floating elements */}
       <header className="relative overflow-hidden hero-gradient py-12 md:py-20">

@@ -38,24 +38,22 @@ const ContactPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Contact Us — BSchoolBuzz.com | Get MBA Coaching Guidance"
-        description="Contact BSchoolBuzz.com for personalized MBA coaching guidance. Get help choosing the right coaching institute for CAT, GMAT, XAT preparation."
-        keywords={["contact MBA coaching", "MBA guidance", "CAT coaching help", "MBA preparation support"]}
+        title="Contact Us — BSchoolBuzz | MBA Counseling, Support & Business Inquiries"
+        description="Have questions about MBA admissions or coaching? Contact BSchoolBuzz for personalized guidance, advertising inquiries, or institutional partnerships."
+        keywords={[
+          "contact us", "MBA counseling help", "advertise with us", "student helpline",
+          "contact for MBA admission consultancy", "advertise on MBA portal BSchoolBuzz",
+          "email support for MBA application forms", "business inquiries for management coaching institutes",
+        ]}
         canonical="https://bschoolbuzz.com/contact"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "ContactPage",
-          name: "Contact BSchoolBuzz.com",
+          name: "Contact BSchoolBuzz",
           url: "https://bschoolbuzz.com/contact",
         }}
       />
 
-      <nav className="container mx-auto px-4 pt-4" aria-label="Breadcrumb">
-        <ol className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <li><Link to="/" className="hover:text-primary transition-colors">Home</Link></li>
-          <li className="flex items-center gap-1.5"><span>/</span><span className="text-foreground font-medium">Contact Us</span></li>
-        </ol>
-      </nav>
 
       <div className="container mx-auto px-4 py-12 max-w-4xl">
         <h1 className="font-heading text-3xl font-bold text-foreground mb-8">{heading}</h1>

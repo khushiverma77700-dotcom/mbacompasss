@@ -155,14 +155,7 @@ const ArticlePage = () => {
         {/* Content */}
         <div className="relative z-10 w-full pt-24 pb-10 md:pt-32 md:pb-14">
           <div className="container mx-auto px-4">
-            {/* Breadcrumb */}
-            <nav className="flex items-center gap-1.5 text-[11px] text-white/40 mb-5 font-medium" aria-label="Breadcrumb">
-              <Link to="/" className="hover:text-white/70 transition-colors">Home</Link>
-              <ChevronRight className="w-3 h-3" />
-              <Link to="/blog" className="hover:text-white/70 transition-colors">Blog</Link>
-              <ChevronRight className="w-3 h-3" />
-              <span className="text-white/55 line-clamp-1 max-w-[200px]">{article.title}</span>
-            </nav>
+
 
             <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
               {/* Category pill */}

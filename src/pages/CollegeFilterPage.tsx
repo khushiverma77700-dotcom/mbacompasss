@@ -99,13 +99,8 @@ const CollegeFilterPage = () => {
           <div className="absolute top-0 right-1/3 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
         </div>
         <div className="container mx-auto px-4 relative z-10">
-          <nav className="flex items-center gap-1.5 text-xs text-primary-foreground/60 mb-5" aria-label="Breadcrumb">
-            <Link to="/" className="hover:text-primary-foreground transition-colors">Home</Link>
-            <ChevronRight className="w-3 h-3" />
-            <Link to="/colleges" className="hover:text-primary-foreground transition-colors">Colleges</Link>
-            <ChevronRight className="w-3 h-3" />
-            <span className="text-primary-foreground">{displayName}</span>
-          </nav>
+
+
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-4 border border-white/10">
