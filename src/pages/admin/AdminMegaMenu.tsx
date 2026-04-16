@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,8 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronsUpDown } from "lucide-react";
 
 interface MenuRow {
   id: string;
@@ -36,6 +37,69 @@ const emptyRow: Omit<MenuRow, "id"> = {
   active: true,
 };
 
+// Dropdown + free-text combo input
+const ComboInput = ({ value, onChange, options, placeholder }: {
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+  placeholder?: string;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const filtered = options.filter((o) =>
+    o.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" className="w-full justify-between font-normal h-10 text-sm">
+          {value || <span className="text-muted-foreground">{placeholder}</span>}
+          <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2" align="start">
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search or type new..."
+          className="mb-2 h-8 text-sm"
+          autoFocus
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && search) {
+              onChange(search);
+              setSearch("");
+              setOpen(false);
+            }
+          }}
+        />
+        <div className="max-h-40 overflow-y-auto space-y-0.5">
+          {filtered.map((opt) => (
+            <button
+              key={opt}
+              onClick={() => { onChange(opt); setSearch(""); setOpen(false); }}
+              className={`w-full text-left px-2 py-1.5 text-sm rounded-md transition-colors ${
+                value === opt ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"
+              }`}
+            >
+              {opt}
+            </button>
+          ))}
+          {filtered.length === 0 && search && (
+            <button
+              onClick={() => { onChange(search); setSearch(""); setOpen(false); }}
+              className="w-full text-left px-2 py-1.5 text-sm rounded-md hover:bg-muted text-primary"
+            >
+              + Create "{search}"
+            </button>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
 const AdminMegaMenu = () => {
   const qc = useQueryClient();
   const [filterType, setFilterType] = useState<string>("college");
@@ -57,6 +121,13 @@ const AdminMegaMenu = () => {
       return data as MenuRow[];
     },
   });
+
+  // Compute existing unique tab labels and column titles for dropdowns
+  const { existingTabs, existingColumns } = useMemo(() => {
+    const tabs = [...new Set(items.map((i: MenuRow) => i.tab_label).filter(Boolean))];
+    const columns = [...new Set(items.map((i: MenuRow) => i.column_title).filter(Boolean))];
+    return { existingTabs: tabs, existingColumns: columns };
+  }, [items]);
 
   const saveMut = useMutation({
     mutationFn: async (row: Omit<MenuRow, "id"> & { id?: string }) => {
@@ -217,7 +288,12 @@ const AdminMegaMenu = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Tab Label</Label>
-                <Input value={form.tab_label} onChange={(e) => setForm({ ...form, tab_label: e.target.value })} placeholder="e.g. IIMs" />
+                <ComboInput
+                  value={form.tab_label}
+                  onChange={(v) => setForm({ ...form, tab_label: v })}
+                  options={existingTabs}
+                  placeholder="e.g. IIMs"
+                />
               </div>
               <div>
                 <Label>Tab Sort Order</Label>
@@ -228,7 +304,12 @@ const AdminMegaMenu = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Column Title</Label>
-                <Input value={form.column_title} onChange={(e) => setForm({ ...form, column_title: e.target.value })} placeholder="e.g. Top IIMs" />
+                <ComboInput
+                  value={form.column_title}
+                  onChange={(v) => setForm({ ...form, column_title: v })}
+                  options={existingColumns}
+                  placeholder="e.g. Top IIMs"
+                />
               </div>
               <div>
                 <Label>Column Sort Order</Label>
