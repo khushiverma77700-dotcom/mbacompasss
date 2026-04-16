@@ -37,12 +37,82 @@ const emptyRow: Omit<MenuRow, "id"> = {
   active: true,
 };
 
+// Dropdown + free-text combo input
+const ComboInput = ({ value, onChange, options, placeholder }: {
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+  placeholder?: string;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const filtered = options.filter((o) =>
+    o.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" className="w-full justify-between font-normal h-10 text-sm">
+          {value || <span className="text-muted-foreground">{placeholder}</span>}
+          <ChevronsUpDown className="ml-2 h-3.5 w-3.5 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-2" align="start">
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search or type new..."
+          className="mb-2 h-8 text-sm"
+          autoFocus
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && search) {
+              onChange(search);
+              setSearch("");
+              setOpen(false);
+            }
+          }}
+        />
+        <div className="max-h-40 overflow-y-auto space-y-0.5">
+          {filtered.map((opt) => (
+            <button
+              key={opt}
+              onClick={() => { onChange(opt); setSearch(""); setOpen(false); }}
+              className={`w-full text-left px-2 py-1.5 text-sm rounded-md transition-colors ${
+                value === opt ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted text-foreground"
+              }`}
+            >
+              {opt}
+            </button>
+          ))}
+          {filtered.length === 0 && search && (
+            <button
+              onClick={() => { onChange(search); setSearch(""); setOpen(false); }}
+              className="w-full text-left px-2 py-1.5 text-sm rounded-md hover:bg-muted text-primary"
+            >
+              + Create "{search}"
+            </button>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
 const AdminMegaMenu = () => {
   const qc = useQueryClient();
   const [filterType, setFilterType] = useState<string>("college");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<MenuRow | null>(null);
   const [form, setForm] = useState<Omit<MenuRow, "id">>(emptyRow);
+
+  // Compute existing unique tab labels and column titles for dropdowns
+  const { existingTabs, existingColumns } = useMemo(() => {
+    const tabs = [...new Set(items.map((i) => i.tab_label).filter(Boolean))];
+    const columns = [...new Set(items.map((i) => i.column_title).filter(Boolean))];
+    return { existingTabs: tabs, existingColumns: columns };
+  }, [items]);
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ["admin-mega-menu", filterType],
