@@ -3,6 +3,7 @@
 // All images are bundled locally for reliability
 
 import delhiImg from "@/assets/cities/delhi.jpg";
+import hyderabadImg from "@/assets/cities/hyderabad.jpg";
 import bangaloreImg from "@/assets/cities/bangalore.jpg";
 import puneImg from "@/assets/cities/pune.jpg";
 import ahmedabadImg from "@/assets/cities/ahmedabad.jpg";
