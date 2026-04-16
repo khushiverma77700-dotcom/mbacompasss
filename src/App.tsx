@@ -78,8 +78,10 @@ const AdminMegaMenu = lazy(() => import("./pages/admin/AdminMegaMenu"));
 const AdminGoogleIndexing = lazy(() => import("./pages/admin/AdminGoogleIndexing"));
 const AdminSpecializations = lazy(() => import("./pages/admin/AdminSpecializations"));
 const CATScoreCalculatorPage = lazy(() => import("./pages/CATScoreCalculatorPage"));
+const MBARoiCalculatorPage = lazy(() => import("./pages/MBARoiCalculatorPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const AdminROIAnalyses = lazy(() => import("./pages/admin/AdminROIAnalyses"));
 
 // Lazy load heavy popups
 const OnboardingDialog = lazy(() => import("@/components/OnboardingDialog"));
@@ -230,6 +232,7 @@ const App = () => (
               <Route path="mega-menu" element={<LazyPage><AdminMegaMenu /></LazyPage>} />
               <Route path="google-indexing" element={<LazyPage><AdminGoogleIndexing /></LazyPage>} />
               <Route path="specializations" element={<LazyPage><AdminSpecializations /></LazyPage>} />
+              <Route path="roi-analyses" element={<LazyPage><AdminROIAnalyses /></LazyPage>} />
             </Route>
 
             {/* Eagerly loaded — no spinner */}
@@ -255,6 +258,7 @@ const App = () => (
             <Route path="/about" element={<PublicLayout><LazyPage><AboutPage /></LazyPage></PublicLayout>} />
             <Route path="/contact" element={<PublicLayout><LazyPage><ContactPage /></LazyPage></PublicLayout>} />
             <Route path="/cat-score-calculator" element={<PublicLayout><LazyPage><CATScoreCalculatorPage /></LazyPage></PublicLayout>} />
+            <Route path="/roi-calculator" element={<PublicLayout><LazyPage><MBARoiCalculatorPage /></LazyPage></PublicLayout>} />
             <Route path="/business-inquiries" element={<PublicLayout><LazyPage><BusinessInquiryPage /></LazyPage></PublicLayout>} />
             <Route path="/forgot-password" element={<PublicLayout><LazyPage><ForgotPasswordPage /></LazyPage></PublicLayout>} />
             <Route path="/reset-password" element={<PublicLayout><LazyPage><ResetPasswordPage /></LazyPage></PublicLayout>} />

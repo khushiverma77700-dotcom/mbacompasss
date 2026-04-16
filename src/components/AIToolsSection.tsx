@@ -61,7 +61,19 @@ const tools = [
       { icon: Target, label: "Section-wise" },
       { icon: TrendingUp, label: "Percentile" },
     ],
-    tag: "🔥 Viral",
+    tag: "Viral",
+  },
+  {
+    title: "MBA ROI Calculator",
+    description: "Calculate MBA payback period, expected salary jump, and AI-matched college ROI before you invest.",
+    icon: TrendingUp,
+    path: "/roi-calculator",
+    color: "234, 88, 12",
+    stats: [
+      { icon: TrendingUp, label: "Payback" },
+      { icon: Target, label: "AI Match" },
+    ],
+    tag: "New",
   },
 ];
 
