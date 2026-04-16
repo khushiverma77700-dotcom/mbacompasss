@@ -144,7 +144,13 @@ const CoachingPage = () => {
       <SEOHead
         title={dynamicTitle}
         description={dynamicDescription}
-        keywords={["MBA coaching India", "best MBA coaching institutes", "CAT coaching", "MBA preparation"]}
+        keywords={[
+          "CAT coaching", "MBA preparation", "online MBA coaching", "exam training", "coaching institutes",
+          "best CAT coaching institutes in India fees", "top online coaching for MBA entrance exams",
+          "CAT coaching near me with reviews", "best coaching for GMAT and GRE in India",
+          "weekend CAT coaching for working professionals", "free trial classes for MBA entrance coaching",
+          "online study material for MBA entrance exams", "cheap MBA coaching classes online",
+        ]}
         canonical="https://bschoolbuzz.com/coaching"
       />
 

@@ -58,22 +58,24 @@ const Index = () => {
   return (
     <>
       <SEOHead
-        title="Best MBA Coaching 2025 — Compare Top MBA Coaching Institutes India"
-        description="India's #1 platform to find, compare & review the best MBA coaching institutes for CAT, GMAT, XAT, SNAP & GRE. Compare fees, success rates, faculty & 10,000+ student reviews. Updated daily."
+        title="BSchoolBuzz — Top MBA Colleges, Coaching & Entrance Exams India 2026"
+        description="India's #1 platform to find, compare & review best MBA coaching institutes & top B-schools for CAT, GMAT, XAT, SNAP. Compare fees, placements, success rates & 10,000+ student reviews. Updated daily."
         keywords={[
+          "MBA admissions", "top MBA colleges", "MBA entrance exams", "business schools India", "B-school news",
           "best MBA coaching", "MBA coaching institutes India", "CAT coaching", "GMAT preparation",
           "XAT coaching", "MBA entrance exam coaching", "IIM preparation coaching", "best CAT coaching",
           "MBA coaching fees comparison", "top MBA coaching centres", "MBA coaching near me",
-          "online MBA coaching", "CAT preparation 2025", "MBA coaching reviews", "top 10 MBA coaching India",
-          "CAT coaching fees", "GMAT coaching India", "MBA entrance exam preparation",
-          "best coaching for IIM", "MBA coaching online classes",
+          "online MBA coaching", "CAT preparation 2026", "MBA coaching reviews",
+          "top ranked MBA colleges in India for placement", "how to prepare for MBA admissions in India",
+          "MBA specializations with highest salary in India", "latest MBA admission notifications 2026",
+          "upcoming MBA entrance exam dates 2026", "comprehensive guide for MBA aspirants in India",
         ]}
         canonical="https://bschoolbuzz.com"
         ogType="website"
-        ogTitle="Best MBA Coaching 2025 — India's #1 Coaching Comparison Platform"
-        ogDescription="Compare 500+ MBA coaching institutes. Find the best CAT, GMAT, XAT coaching near you with verified reviews and success rates."
-        twitterTitle="Best MBA Coaching India 2025 | Compare Top Institutes"
-        twitterDescription="India's most trusted MBA coaching comparison. Compare fees, reviews, success rates of 500+ institutes."
+        ogTitle="BSchoolBuzz — Top MBA Colleges, Coaching & Entrance Exams India 2026"
+        ogDescription="Compare 500+ MBA coaching institutes & 2000+ colleges. Find the best CAT, GMAT, XAT coaching with verified reviews, fees & success rates."
+        twitterTitle="BSchoolBuzz — MBA Colleges, Coaching & Exams India 2026"
+        twitterDescription="India's most trusted MBA coaching & college comparison. Compare fees, reviews, placements of 2000+ institutes."
         jsonLd={jsonLdSchemas}
       />
       

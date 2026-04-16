@@ -142,7 +142,13 @@ const CollegesPage = () => {
       <SEOHead
         title={dynamicTitle}
         description={dynamicDescription}
-        keywords={["top MBA colleges India", "best B-schools India", "MBA college rankings", "IIM fees placements"]}
+        keywords={[
+          "MBA college list", "best MBA colleges", "top B-schools", "MBA placements", "management institutes",
+          "top MBA colleges in India with high ROI", "best MBA colleges for finance in India",
+          "MBA colleges accepting CAT score 80-90 percentile", "government MBA colleges with low fees",
+          "private MBA colleges with guaranteed placements", "top 100 MBA colleges in India rankings",
+          "MBA colleges without entrance exams in India", "distance MBA colleges with best placement support",
+        ]}
         canonical="https://bschoolbuzz.com/colleges"
         jsonLd={jsonLd}
       />

@@ -53,16 +53,22 @@ const BlogPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="MBA Blog & News — Exam Tips, Career Advice, Coaching Reviews | BSchoolBuzz.com"
-        description="Read expert articles on MBA entrance exams, coaching reviews, career advice, interview tips, and the latest MBA news."
-        keywords={["MBA blog", "CAT preparation tips", "MBA coaching reviews", "MBA career advice", "GMAT tips"]}
+        title="MBA Blog — CAT Preparation Tips, Career Advice & B-School News | BSchoolBuzz"
+        description="Read expert blogs on CAT preparation, XAT strategies, GD-PI tips, MBA vs PGDM analysis, salary insights, and the latest news from top management institutes in India."
+        keywords={[
+          "MBA tips", "CAT strategy", "MBA blog", "B-school news", "career guidance",
+          "how to prepare for CAT without coaching", "last minute tips for XAT exam",
+          "MBA vs PGDM which is better for career", "salary after MBA in India for freshers",
+          "preparation tips for MBA personal interview", "how to write statement of purpose for MBA",
+          "current affairs for MBA GD PI sessions", "life at IIM experiences from students",
+        ]}
         canonical="https://bschoolbuzz.com/blog"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "Blog",
           name: "BSchoolBuzz Blog",
           url: "https://bschoolbuzz.com/blog",
-          description: "Expert articles on MBA preparation, coaching reviews, and career advice",
+          description: "Expert articles on MBA preparation, coaching reviews, career advice, and B-school admissions.",
         }}
       />
 
