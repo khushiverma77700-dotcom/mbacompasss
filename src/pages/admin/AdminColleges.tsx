@@ -19,6 +19,8 @@ import FileUpload from "@/components/admin/FileUpload";
 import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 import SEOChecklist from "@/components/admin/SEOChecklist";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
+import MultiSelectTags from "@/components/admin/MultiSelectTags";
+import { useSpecializations } from "@/hooks/useSpecializations";
 
 const TIER_OPTIONS = ["Tier 1", "Tier 2", "Tier 3", "Tier 4"];
 const CATEGORY_OPTIONS = ["IIM", "Non-IIM"];
@@ -26,12 +28,13 @@ const CATEGORY_OPTIONS = ["IIM", "Non-IIM"];
 const emptyForm = {
   name: "", slug: "", description: "", city: "", state: "", type: "Private",
   tier: "Tier 2", college_category: "Non-IIM",
-  established: 0, ranking: 0, fees: "", website: "",
+  established: 0, ranking: 0, fees: "", fees_lakhs: 0, website: "",
   placement_avg: "", placement_highest: "", placement_median: "",
   campus_size: "", total_students: 0, admission_process: "",
   logo_url: "", banner_url: "",
   courses: [] as string[], accreditations: [] as string[],
   exams_accepted: [] as string[], top_recruiters: [] as string[],
+  specializations: [] as string[],
   meta_title: "", meta_description: "", keywords: [] as string[],
 };
 
@@ -43,6 +46,7 @@ const AdminColleges = () => {
   const [tagInputs, setTagInputs] = useState({ courses: "", accreditations: "", exams_accepted: "", top_recruiters: "", keywords: "" });
   const { toast } = useToast();
   const { sortedItems: sortedColleges, sortConfig, handleSort } = useTableSort(colleges);
+  const { data: specializationOptions = [] } = useSpecializations("college");
 
   const fetchColleges = async () => {
     const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, tier, college_category, ranking, established, created_at").order("ranking", { ascending: true });
@@ -77,7 +81,8 @@ const AdminColleges = () => {
       city: form.city || null, state: form.state || null, type: form.type || null,
       tier: form.tier || "Tier 2", college_category: form.college_category || "Non-IIM",
       established: form.established || null, ranking: form.ranking || null,
-      fees: form.fees || null, website: form.website || null,
+      fees: form.fees || null, fees_lakhs: form.fees_lakhs || null, website: form.website || null,
+      specializations: form.specializations.length > 0 ? form.specializations : null,
       placement_avg: form.placement_avg || null, placement_highest: form.placement_highest || null,
       placement_median: form.placement_median || null, campus_size: form.campus_size || null,
       total_students: form.total_students || null, admission_process: form.admission_process || null,
@@ -109,7 +114,8 @@ const AdminColleges = () => {
       city: data.city ?? "", state: data.state ?? "", type: data.type ?? "Private",
       tier: (data as any).tier ?? "Tier 2", college_category: (data as any).college_category ?? "Non-IIM",
       established: data.established ?? 0, ranking: data.ranking ?? 0,
-      fees: data.fees ?? "", website: data.website ?? "",
+      fees: data.fees ?? "", fees_lakhs: (data as any).fees_lakhs ?? 0, website: data.website ?? "",
+      specializations: (data as any).specializations ?? [],
       placement_avg: data.placement_avg ?? "", placement_highest: data.placement_highest ?? "",
       placement_median: data.placement_median ?? "", campus_size: data.campus_size ?? "",
       total_students: data.total_students ?? 0, admission_process: data.admission_process ?? "",
@@ -222,10 +228,21 @@ const AdminColleges = () => {
                     </Select>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <Input type="number" placeholder="Established Year" value={form.established || ""} onChange={(e) => setForm({ ...form, established: parseInt(e.target.value) || 0 })} />
                   <Input type="number" placeholder="Ranking" value={form.ranking || ""} onChange={(e) => setForm({ ...form, ranking: parseInt(e.target.value) || 0 })} />
                   <Input placeholder="Fees (e.g. ₹20L)" value={form.fees} onChange={(e) => setForm({ ...form, fees: e.target.value })} />
+                  <Input type="number" step="0.1" placeholder="Fees (₹ Lakhs, numeric)" value={form.fees_lakhs || ""} onChange={(e) => setForm({ ...form, fees_lakhs: parseFloat(e.target.value) || 0 })} />
+                </div>
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Specializations</Label>
+                  <MultiSelectTags
+                    options={specializationOptions.map(s => ({ value: s.slug, label: s.name }))}
+                    selected={form.specializations}
+                    onChange={(next) => setForm({ ...form, specializations: next })}
+                    placeholder="Select specializations..."
+                    emptyText="No specializations — add them in Admin → Specializations"
+                  />
                 </div>
                 <FileUpload bucket="uploads" folder="colleges/logos" value={form.logo_url} onChange={(url) => setForm({ ...form, logo_url: url })} accept="image/*" label="College Logo" sizeHint="200×200 px (square, PNG) • Max 100 KB" />
                 <ResponsiveImageUpload bucket="uploads" folder="colleges/banners" label="Banner Image" desktopValue={form.banner_url} mobileValue={(form as any).mobile_banner_url || ""} onDesktopChange={(url) => setForm({ ...form, banner_url: url })} onMobileChange={(url) => setForm({ ...form, mobile_banner_url: url } as any)} desktopSpec={{ dimensions: "1200×400 px", ratio: "3:1, landscape", maxSize: "250 KB" }} mobileSpec={{ dimensions: "600×300 px", ratio: "2:1", maxSize: "120 KB" }} />

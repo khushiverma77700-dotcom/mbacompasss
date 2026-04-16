@@ -19,6 +19,8 @@ import SEOChecklist from "@/components/admin/SEOChecklist";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import StateCitySelect from "@/components/admin/StateCitySelect";
 import { generateAndUploadLocationBanner } from "@/lib/locationBanner";
+import MultiSelectTags from "@/components/admin/MultiSelectTags";
+import { useSpecializations } from "@/hooks/useSpecializations";
 
 type Institute = {
   id: string; name: string; slug: string; city: string | null;
@@ -34,7 +36,9 @@ const emptyForm = {
   meta_title: "", meta_description: "", keywords: [] as string[],
   logo_url: "", banner_url: "", category_id: "",
   rating: 0, total_reviews: 0, students_count: 0, success_rate: 0,
+  fees_lakhs: 0,
   features: [] as string[],
+  specializations: [] as string[],
   latitude: "", longitude: "",
 };
 
@@ -47,6 +51,7 @@ const AdminInstitutes = () => {
   const [tagInput, setTagInput] = useState({ keywords: "", features: "" });
   const { toast } = useToast();
   const { sortedItems: sortedInstitutes, sortConfig, handleSort } = useTableSort(institutes);
+  const { data: specializationOptions = [] } = useSpecializations("coaching");
 
   const fetchData = async () => {
     const [i, c] = await Promise.all([
@@ -91,7 +96,9 @@ const AdminInstitutes = () => {
       category_id: form.category_id || null,
       rating: form.rating || 0, total_reviews: form.total_reviews || 0,
       students_count: form.students_count || 0, success_rate: form.success_rate || 0,
+      fees_lakhs: form.fees_lakhs || null,
       features: form.features.length > 0 ? form.features : null,
+      specializations: form.specializations.length > 0 ? form.specializations : null,
       latitude: form.latitude ? parseFloat(form.latitude) : null,
       longitude: form.longitude ? parseFloat(form.longitude) : null,
     };
@@ -125,7 +132,9 @@ const AdminInstitutes = () => {
         category_id: data.category_id ?? "",
         rating: data.rating ?? 0, total_reviews: data.total_reviews ?? 0,
         students_count: data.students_count ?? 0, success_rate: data.success_rate ?? 0,
+        fees_lakhs: (data as any).fees_lakhs ?? 0,
         features: data.features ?? [],
+        specializations: (data as any).specializations ?? [],
         latitude: data.latitude ? String(data.latitude) : "",
         longitude: data.longitude ? String(data.longitude) : "",
       });
@@ -252,7 +261,18 @@ const AdminInstitutes = () => {
                   <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Students Count</Label><Input type="number" value={form.students_count} onChange={(e) => setForm({ ...form, students_count: parseInt(e.target.value) || 0 })} /></div>
                   <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Success Rate (%)</Label><Input type="number" step="0.1" min="0" max="100" value={form.success_rate} onChange={(e) => setForm({ ...form, success_rate: parseFloat(e.target.value) || 0 })} /></div>
                 </div>
+                <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Fees (₹ Lakhs, numeric — used for filter ranges)</Label><Input type="number" step="0.1" placeholder="e.g. 1.5" value={form.fees_lakhs || ""} onChange={(e) => setForm({ ...form, fees_lakhs: parseFloat(e.target.value) || 0 })} /></div>
                 <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Key Features / USPs</Label><TagInput field="features" placeholder="e.g. 50+ Mock Tests, Personal Mentoring" /></div>
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Specializations</Label>
+                  <MultiSelectTags
+                    options={specializationOptions.map(s => ({ value: s.slug, label: s.name }))}
+                    selected={form.specializations}
+                    onChange={(next) => setForm({ ...form, specializations: next })}
+                    placeholder="Select specializations..."
+                    emptyText="No specializations — add them in Admin → Specializations"
+                  />
+                </div>
               </TabsContent>
 
               <TabsContent value="media" className="space-y-3">
