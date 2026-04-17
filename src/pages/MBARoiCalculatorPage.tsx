@@ -927,7 +927,7 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
             </motion.div>
           </AnimatePresence>
 
-          <div className="bg-card border-b border-border px-6 flex gap-1 overflow-x-auto">
+          <div className="bg-card border-b border-border px-6 pt-2 flex gap-1 overflow-x-auto relative">
             {[
               { v: "overview", l: "Overview", icon: Activity },
               { v: "financial", l: "Financial", icon: Wallet },
@@ -937,13 +937,23 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
               <button
                 key={t.v}
                 onClick={() => setTab(t.v)}
-                className={`px-4 py-3 text-xs font-semibold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                className={`relative px-4 py-3 text-xs font-semibold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
                   tab === t.v ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <t.icon className="w-3.5 h-3.5" /> {t.l}
+                {tab !== t.v && t.v !== "overview" && (
+                  <motion.span
+                    className="absolute -top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-primary"
+                    animate={{ scale: [1, 1.6, 1], opacity: [0.6, 1, 0.6] }}
+                    transition={{ duration: 1.4, repeat: Infinity, delay: 0.2 }}
+                  />
+                )}
               </button>
             ))}
+          </div>
+          <div className="px-6 pt-3 bg-card">
+            <TabHint message="Switch tabs to see Financial deep-dive, Career Map & Risk breakdown — all live" />
           </div>
 
           <CardContent className="p-6 min-h-[480px] bg-gradient-to-br from-background via-background to-blue-50/20">
