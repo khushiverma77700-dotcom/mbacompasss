@@ -1559,6 +1559,13 @@ Deno.serve(async (req) => {
         summary.steps.push("inspect_skipped: quota exhausted");
       }
 
+      // Completion heartbeat
+      await supabase.from("indexing_logs").insert({
+        action: "auto_run_tick",
+        status: "completed",
+        response: summary as any,
+      });
+
       return respond({
         ok: true,
         data: summary,
@@ -1567,9 +1574,6 @@ Deno.serve(async (req) => {
           processing_time_ms: Date.now() - startedAt,
         },
       });
-    }
-
-    if (action === "discover") {
       const tables = [
         {
           table: "articles",
