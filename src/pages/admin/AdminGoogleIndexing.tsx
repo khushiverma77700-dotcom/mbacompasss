@@ -208,28 +208,101 @@ const AdminGoogleIndexing = () => {
   }, [urls]);
 
   const chartData = useMemo(() => {
-    const indexedUrls = urls
-      .filter((row) => row.indexed_at)
-      .map((row) => ({ date: (row.indexed_at || row.last_submitted_at || row.created_at).slice(0, 10) }));
+    // Cumulative chart tracks BOTH submitted and indexed URLs over time so
+    // the line keeps growing even before Google confirms indexing.
+    const submittedByDate: Record<string, number> = {};
+    const indexedByDate: Record<string, number> = {};
+    const allDates = new Set<string>();
 
-    const dateCounts: Record<string, number> = {};
-    for (const row of indexedUrls) {
-      dateCounts[row.date] = (dateCounts[row.date] || 0) + 1;
+    for (const row of urls) {
+      if (row.last_submitted_at) {
+        const d = row.last_submitted_at.slice(0, 10);
+        submittedByDate[d] = (submittedByDate[d] || 0) + 1;
+        allDates.add(d);
+      }
+      if (row.indexed_at) {
+        const d = row.indexed_at.slice(0, 10);
+        indexedByDate[d] = (indexedByDate[d] || 0) + 1;
+        allDates.add(d);
+      }
     }
 
-    const sortedDates = Object.keys(dateCounts).sort();
-    let cumulative = 0;
+    const sortedDates = Array.from(allDates).sort();
+    let cumSubmitted = 0;
+    let cumIndexed = 0;
     const cumulativeData = sortedDates.map((date) => {
-      cumulative += dateCounts[date];
-      return { date, daily: dateCounts[date], cumulative };
+      cumSubmitted += submittedByDate[date] || 0;
+      cumIndexed += indexedByDate[date] || 0;
+      return {
+        date,
+        dailySubmitted: submittedByDate[date] || 0,
+        dailyIndexed: indexedByDate[date] || 0,
+        daily: (submittedByDate[date] || 0) + (indexedByDate[date] || 0),
+        cumulativeSubmitted: cumSubmitted,
+        cumulativeIndexed: cumIndexed,
+        cumulative: cumSubmitted,
+      };
     });
 
     if (cumulativeData.length === 0) {
       const today = new Date().toISOString().slice(0, 10);
-      cumulativeData.push({ date: today, daily: 0, cumulative: 0 });
+      cumulativeData.push({
+        date: today,
+        dailySubmitted: 0,
+        dailyIndexed: 0,
+        daily: 0,
+        cumulativeSubmitted: 0,
+        cumulativeIndexed: 0,
+        cumulative: 0,
+      });
     }
 
     return cumulativeData;
+  }, [urls]);
+
+  // Step-by-step progress: Discovered → Submitted → Indexed
+  const pipelineSteps = useMemo(() => {
+    const total = urls.length;
+    const submittedOrIndexed = urls.filter(
+      (r) => r.last_submitted_at || r.status === "submitted" || r.indexed_at || r.status === "indexed"
+    ).length;
+    const indexed = urls.filter((r) => r.indexed_at || r.status === "indexed").length;
+
+    return [
+      {
+        key: "discovered",
+        label: "Discovered",
+        description: "URLs found in your content database",
+        count: total,
+        of: total,
+        percent: total > 0 ? 100 : 0,
+        complete: total > 0,
+        color: "from-slate-400 to-slate-500",
+        icon: Search,
+      },
+      {
+        key: "submitted",
+        label: "Submitted to Google",
+        description: "Crawl request sent via Indexing API",
+        count: submittedOrIndexed,
+        of: total,
+        percent: total ? Math.round((submittedOrIndexed / total) * 100) : 0,
+        complete: total > 0 && submittedOrIndexed === total,
+        color: "from-blue-400 to-blue-600",
+        icon: ArrowUpCircle,
+      },
+      {
+        key: "indexed",
+        label: "Confirmed on Google",
+        description: "Google has acknowledged the URL",
+        count: indexed,
+        of: total,
+        percent: total ? Math.round((indexed / total) * 100) : 0,
+        complete: total > 0 && indexed === total,
+        color: "from-emerald-400 to-emerald-600",
+        icon: CheckCircle,
+      },
+    ];
   }, [urls]);
 
   const formatJson = (value: unknown) => {
@@ -566,6 +639,31 @@ const AdminGoogleIndexing = () => {
     setActionLoading(null);
   };
 
+  const handleCheckIndexStatus = async () => {
+    setActionLoading("check-status");
+    pushLog("Asking Google which URLs are already indexed…");
+    try {
+      const result = await callFunction<{
+        checked: number;
+        indexed: number;
+        not_indexed: number;
+      }>({ action: "check_index_status", limit: 50 });
+      pushLog(
+        `Status check done — ${result.indexed}/${result.checked} confirmed on Google, ${result.not_indexed} not yet.`
+      );
+      toast({
+        title: "Index status checked",
+        description: `${result.indexed} of ${result.checked} URLs confirmed on Google.`,
+      });
+      await fetchData(false);
+    } catch (error: any) {
+      const { message } = extractRequestError(error);
+      pushLog(`Status check failed: ${message}`);
+      toast({ title: "Error", description: message, variant: "destructive" });
+    }
+    setActionLoading(null);
+  };
+
   const handleManualSubmit = async () => {
     const url = manualUrl.trim();
     if (!url) return;
@@ -692,8 +790,10 @@ const AdminGoogleIndexing = () => {
   const { sortedItems: sortedLogs, sortConfig: logSortConfig, handleSort: handleLogSort } = useTableSort(logs);
 
   const chartConfig = {
-    cumulative: { label: "Total Indexed", color: "hsl(var(--primary))" },
-    daily: { label: "Daily Indexed", color: "hsl(142 71% 45%)" },
+    cumulativeSubmitted: { label: "Total Submitted", color: "hsl(217 91% 60%)" },
+    cumulativeIndexed: { label: "Total Indexed", color: "hsl(142 71% 45%)" },
+    dailySubmitted: { label: "Submitted", color: "hsl(217 91% 60%)" },
+    dailyIndexed: { label: "Indexed", color: "hsl(142 71% 45%)" },
   };
 
   const progressValue = batchProgress
@@ -729,6 +829,20 @@ const AdminGoogleIndexing = () => {
             {actionLoading === "submit-all" && batchProgress
               ? `Submitting ${batchProgress.processed}/${batchProgress.total}`
               : "Submit All Pending"}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCheckIndexStatus}
+            disabled={!!actionLoading}
+            title="Ask Google which submitted URLs are already indexed"
+          >
+            {actionLoading === "check-status" ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-1" />
+            ) : (
+              <CheckCircle className="w-4 h-4 mr-1 text-emerald-500" />
+            )}
+            Check Index Status
           </Button>
           <Button size="sm" onClick={handleRefresh} disabled={!!actionLoading}>
             {actionLoading === "refresh" ? (
@@ -766,7 +880,81 @@ const AdminGoogleIndexing = () => {
         })}
       </div>
 
-      {/* Status explanation */}
+      {/* Step-by-step indexing pipeline */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-primary" /> Indexing Pipeline — Track each step
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="relative">
+            {/* connector line behind icons */}
+            <div className="hidden md:block absolute top-6 left-[8%] right-[8%] h-1 bg-muted rounded-full" />
+            <div
+              className="hidden md:block absolute top-6 left-[8%] h-1 bg-gradient-to-r from-emerald-400 to-blue-500 rounded-full transition-all duration-700"
+              style={{
+                width: `${(pipelineSteps[pipelineSteps.length - 1].percent / 100) * 84}%`,
+              }}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+              {pipelineSteps.map((step, idx) => {
+                const Icon = step.icon;
+                return (
+                  <div key={step.key} className="flex flex-col items-center text-center">
+                    <div
+                      className={`relative z-10 w-12 h-12 rounded-full flex items-center justify-center text-white shadow-md bg-gradient-to-br ${step.color} ${
+                        step.complete ? "ring-4 ring-emerald-100" : ""
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-background border border-border text-[10px] font-bold flex items-center justify-center text-foreground">
+                        {idx + 1}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm font-semibold text-foreground">{step.label}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 max-w-[200px]">
+                      {step.description}
+                    </p>
+                    <div className="mt-3 w-full max-w-[220px]">
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="font-bold text-foreground">
+                          {step.count}
+                          <span className="text-muted-foreground font-normal"> / {step.of}</span>
+                        </span>
+                        <span className="text-muted-foreground">{step.percent}%</span>
+                      </div>
+                      <Progress value={step.percent} className="h-1.5" />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-5 pt-4 border-t border-border/60 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+            <span>
+              Tip: After submitting URLs, click <strong className="text-foreground">"Check Index Status"</strong> to see which ones Google has actually picked up.
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleCheckIndexStatus}
+              disabled={!!actionLoading}
+              className="h-7 text-xs"
+            >
+              {actionLoading === "check-status" ? (
+                <Loader2 className="w-3 h-3 animate-spin mr-1" />
+              ) : (
+                <CheckCircle className="w-3 h-3 mr-1" />
+              )}
+              Check Now
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="border-blue-200 bg-blue-50/50">
         <CardContent className="py-3 px-4">
           <div className="flex items-start gap-2">
@@ -1068,22 +1256,39 @@ const AdminGoogleIndexing = () => {
           <Card>
             <CardHeader>
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-primary" /> Cumulative Indexed URLs
+                <TrendingUp className="w-4 h-4 text-primary" /> Cumulative URLs Over Time
               </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">
+                Submitted (blue) vs. confirmed Indexed (green) — both grow as you add URLs.
+              </p>
             </CardHeader>
             <CardContent>
               <ChartContainer config={chartConfig} className="h-[280px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData}>
+                    <defs>
+                      <linearGradient id="submittedFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(217 91% 60%)" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="hsl(217 91% 60%)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis dataKey="date" tickFormatter={(value) => value.slice(5)} className="text-xs" />
-                    <YAxis className="text-xs" />
+                    <YAxis className="text-xs" allowDecimals={false} />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Line
                       type="monotone"
-                      dataKey="cumulative"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2}
+                      dataKey="cumulativeSubmitted"
+                      stroke="hsl(217 91% 60%)"
+                      strokeWidth={2.5}
+                      dot={{ r: 3 }}
+                      name="Total Submitted"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="cumulativeIndexed"
+                      stroke="hsl(142 71% 45%)"
+                      strokeWidth={2.5}
                       dot={{ r: 3 }}
                       name="Total Indexed"
                     />
@@ -1096,8 +1301,11 @@ const AdminGoogleIndexing = () => {
           <Card>
             <CardHeader>
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-emerald-500" /> Daily Indexed URLs
+                <BarChart3 className="w-4 h-4 text-emerald-500" /> Daily Activity
               </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">
+                URLs submitted and indexed each day.
+              </p>
             </CardHeader>
             <CardContent>
               <ChartContainer config={chartConfig} className="h-[280px] w-full">
@@ -1105,9 +1313,10 @@ const AdminGoogleIndexing = () => {
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis dataKey="date" tickFormatter={(value) => value.slice(5)} className="text-xs" />
-                    <YAxis className="text-xs" />
+                    <YAxis className="text-xs" allowDecimals={false} />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="daily" fill="hsl(142 71% 45%)" radius={[4, 4, 0, 0]} name="Daily Indexed" />
+                    <Bar dataKey="dailySubmitted" fill="hsl(217 91% 60%)" radius={[4, 4, 0, 0]} name="Submitted" />
+                    <Bar dataKey="dailyIndexed" fill="hsl(142 71% 45%)" radius={[4, 4, 0, 0]} name="Indexed" />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartContainer>
