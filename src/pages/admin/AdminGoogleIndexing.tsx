@@ -1256,22 +1256,39 @@ const AdminGoogleIndexing = () => {
           <Card>
             <CardHeader>
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-primary" /> Cumulative Indexed URLs
+                <TrendingUp className="w-4 h-4 text-primary" /> Cumulative URLs Over Time
               </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">
+                Submitted (blue) vs. confirmed Indexed (green) — both grow as you add URLs.
+              </p>
             </CardHeader>
             <CardContent>
               <ChartContainer config={chartConfig} className="h-[280px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={chartData}>
+                    <defs>
+                      <linearGradient id="submittedFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(217 91% 60%)" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="hsl(217 91% 60%)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis dataKey="date" tickFormatter={(value) => value.slice(5)} className="text-xs" />
-                    <YAxis className="text-xs" />
+                    <YAxis className="text-xs" allowDecimals={false} />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <Line
                       type="monotone"
-                      dataKey="cumulative"
-                      stroke="hsl(var(--primary))"
-                      strokeWidth={2}
+                      dataKey="cumulativeSubmitted"
+                      stroke="hsl(217 91% 60%)"
+                      strokeWidth={2.5}
+                      dot={{ r: 3 }}
+                      name="Total Submitted"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="cumulativeIndexed"
+                      stroke="hsl(142 71% 45%)"
+                      strokeWidth={2.5}
                       dot={{ r: 3 }}
                       name="Total Indexed"
                     />
@@ -1284,8 +1301,11 @@ const AdminGoogleIndexing = () => {
           <Card>
             <CardHeader>
               <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-emerald-500" /> Daily Indexed URLs
+                <BarChart3 className="w-4 h-4 text-emerald-500" /> Daily Activity
               </CardTitle>
+              <p className="text-xs text-muted-foreground mt-1">
+                URLs submitted and indexed each day.
+              </p>
             </CardHeader>
             <CardContent>
               <ChartContainer config={chartConfig} className="h-[280px] w-full">
@@ -1293,9 +1313,10 @@ const AdminGoogleIndexing = () => {
                   <BarChart data={chartData}>
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis dataKey="date" tickFormatter={(value) => value.slice(5)} className="text-xs" />
-                    <YAxis className="text-xs" />
+                    <YAxis className="text-xs" allowDecimals={false} />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="daily" fill="hsl(142 71% 45%)" radius={[4, 4, 0, 0]} name="Daily Indexed" />
+                    <Bar dataKey="dailySubmitted" fill="hsl(217 91% 60%)" radius={[4, 4, 0, 0]} name="Submitted" />
+                    <Bar dataKey="dailyIndexed" fill="hsl(142 71% 45%)" radius={[4, 4, 0, 0]} name="Indexed" />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartContainer>
