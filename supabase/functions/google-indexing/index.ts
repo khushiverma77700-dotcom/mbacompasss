@@ -597,26 +597,19 @@ function isIndexedInInspectionResult(data: unknown) {
 
   if (!coverageState && !verdict) return false;
 
-  const definitelyNotIndexed = [
-    "not indexed",
-    "currently not indexed",
-    "discovered - currently not indexed",
-    "crawled - currently not indexed",
-    "page with redirect",
-    "soft 404",
-    "alternate page",
-    "duplicate without user-selected canonical",
-    "blocked",
-    "excluded",
-  ].some((marker) => coverageState.includes(marker));
+  // Primary signal: Google's verdict. PASS means the URL is on Google.
+  if (verdict === "pass") return true;
 
-  if (definitelyNotIndexed) return false;
-
-  return (
-    coverageState.startsWith("indexed") ||
+  // Secondary signal: explicit "indexed" coverage states
+  if (
     coverageState.includes("submitted and indexed") ||
-    (verdict === "pass" && coverageState.includes("index"))
-  );
+    coverageState === "indexed, not submitted in sitemap" ||
+    coverageState.startsWith("indexed")
+  ) {
+    return true;
+  }
+
+  return false;
 }
 
 async function persistSubmissionResult(
