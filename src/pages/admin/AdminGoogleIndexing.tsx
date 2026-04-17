@@ -208,28 +208,101 @@ const AdminGoogleIndexing = () => {
   }, [urls]);
 
   const chartData = useMemo(() => {
-    const indexedUrls = urls
-      .filter((row) => row.indexed_at)
-      .map((row) => ({ date: (row.indexed_at || row.last_submitted_at || row.created_at).slice(0, 10) }));
+    // Cumulative chart tracks BOTH submitted and indexed URLs over time so
+    // the line keeps growing even before Google confirms indexing.
+    const submittedByDate: Record<string, number> = {};
+    const indexedByDate: Record<string, number> = {};
+    const allDates = new Set<string>();
 
-    const dateCounts: Record<string, number> = {};
-    for (const row of indexedUrls) {
-      dateCounts[row.date] = (dateCounts[row.date] || 0) + 1;
+    for (const row of urls) {
+      if (row.last_submitted_at) {
+        const d = row.last_submitted_at.slice(0, 10);
+        submittedByDate[d] = (submittedByDate[d] || 0) + 1;
+        allDates.add(d);
+      }
+      if (row.indexed_at) {
+        const d = row.indexed_at.slice(0, 10);
+        indexedByDate[d] = (indexedByDate[d] || 0) + 1;
+        allDates.add(d);
+      }
     }
 
-    const sortedDates = Object.keys(dateCounts).sort();
-    let cumulative = 0;
+    const sortedDates = Array.from(allDates).sort();
+    let cumSubmitted = 0;
+    let cumIndexed = 0;
     const cumulativeData = sortedDates.map((date) => {
-      cumulative += dateCounts[date];
-      return { date, daily: dateCounts[date], cumulative };
+      cumSubmitted += submittedByDate[date] || 0;
+      cumIndexed += indexedByDate[date] || 0;
+      return {
+        date,
+        dailySubmitted: submittedByDate[date] || 0,
+        dailyIndexed: indexedByDate[date] || 0,
+        daily: (submittedByDate[date] || 0) + (indexedByDate[date] || 0),
+        cumulativeSubmitted: cumSubmitted,
+        cumulativeIndexed: cumIndexed,
+        cumulative: cumSubmitted,
+      };
     });
 
     if (cumulativeData.length === 0) {
       const today = new Date().toISOString().slice(0, 10);
-      cumulativeData.push({ date: today, daily: 0, cumulative: 0 });
+      cumulativeData.push({
+        date: today,
+        dailySubmitted: 0,
+        dailyIndexed: 0,
+        daily: 0,
+        cumulativeSubmitted: 0,
+        cumulativeIndexed: 0,
+        cumulative: 0,
+      });
     }
 
     return cumulativeData;
+  }, [urls]);
+
+  // Step-by-step progress: Discovered → Submitted → Indexed
+  const pipelineSteps = useMemo(() => {
+    const total = urls.length;
+    const submittedOrIndexed = urls.filter(
+      (r) => r.last_submitted_at || r.status === "submitted" || r.indexed_at || r.status === "indexed"
+    ).length;
+    const indexed = urls.filter((r) => r.indexed_at || r.status === "indexed").length;
+
+    return [
+      {
+        key: "discovered",
+        label: "Discovered",
+        description: "URLs found in your content database",
+        count: total,
+        of: total,
+        percent: total > 0 ? 100 : 0,
+        complete: total > 0,
+        color: "from-slate-400 to-slate-500",
+        icon: Search,
+      },
+      {
+        key: "submitted",
+        label: "Submitted to Google",
+        description: "Crawl request sent via Indexing API",
+        count: submittedOrIndexed,
+        of: total,
+        percent: total ? Math.round((submittedOrIndexed / total) * 100) : 0,
+        complete: total > 0 && submittedOrIndexed === total,
+        color: "from-blue-400 to-blue-600",
+        icon: ArrowUpCircle,
+      },
+      {
+        key: "indexed",
+        label: "Confirmed on Google",
+        description: "Google has acknowledged the URL",
+        count: indexed,
+        of: total,
+        percent: total ? Math.round((indexed / total) * 100) : 0,
+        complete: total > 0 && indexed === total,
+        color: "from-emerald-400 to-emerald-600",
+        icon: CheckCircle,
+      },
+    ];
   }, [urls]);
 
   const formatJson = (value: unknown) => {
