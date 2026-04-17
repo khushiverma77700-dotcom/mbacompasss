@@ -1,4 +1,3 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 async function logAIUsage(feature: string, model: string, aiData: any, status = "success", errorMsg?: string) {
@@ -87,7 +86,7 @@ function calculateProfileScore(p: ProfileInput): number {
   return Math.round(score * 100) / 10;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
