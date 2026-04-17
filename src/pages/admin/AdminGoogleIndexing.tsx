@@ -790,8 +790,10 @@ const AdminGoogleIndexing = () => {
   const { sortedItems: sortedLogs, sortConfig: logSortConfig, handleSort: handleLogSort } = useTableSort(logs);
 
   const chartConfig = {
-    cumulative: { label: "Total Indexed", color: "hsl(var(--primary))" },
-    daily: { label: "Daily Indexed", color: "hsl(142 71% 45%)" },
+    cumulativeSubmitted: { label: "Total Submitted", color: "hsl(217 91% 60%)" },
+    cumulativeIndexed: { label: "Total Indexed", color: "hsl(142 71% 45%)" },
+    dailySubmitted: { label: "Submitted", color: "hsl(217 91% 60%)" },
+    dailyIndexed: { label: "Indexed", color: "hsl(142 71% 45%)" },
   };
 
   const progressValue = batchProgress
