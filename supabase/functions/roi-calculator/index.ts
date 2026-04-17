@@ -95,7 +95,8 @@ serve(async (req) => {
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     // ===== ONE-CHECK-PER-USER: return existing report if found =====
-    if (!body.force) {
+    // Admins bypass the one-report-per-user limit and can always generate fresh reports.
+    if (!body.force && !(body as any).is_admin) {
       let existingQ = sb.from("roi_analyses").select("*").order("created_at", { ascending: false }).limit(1);
       if (body.user_id) {
         existingQ = existingQ.eq("user_id", body.user_id);

@@ -125,7 +125,7 @@ const TOTAL_FORM_STEPS = 5;
 const TEMP_DISABLE_PHONE_OTP = true;
 
 const MBARoiCalculatorPage = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormState>(initialForm);
@@ -165,7 +165,7 @@ const MBARoiCalculatorPage = () => {
 
   // Check existing report on first form entry if user is logged in
   useEffect(() => {
-    if (step === 1 && user && !report) {
+    if (step === 1 && user && !report && !isAdmin) {
       (async () => {
         const { data } = await supabase
           .from("roi_analyses")
@@ -275,7 +275,7 @@ const MBARoiCalculatorPage = () => {
     try {
       const { data, error } = await supabase.functions.invoke("roi-calculator", {
         body: {
-          user_id: user?.id, force: false,
+          user_id: user?.id, force: !!isAdmin, is_admin: !!isAdmin,
           name: form.name, email: form.email, phone: form.phone, age: form.age,
           graduation_stream: form.graduation_stream, graduation_score: form.graduation_score,
           current_salary_lakhs: form.current_salary_lakhs,
