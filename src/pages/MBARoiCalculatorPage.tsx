@@ -928,7 +928,7 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
             </motion.div>
           </AnimatePresence>
 
-          <div className="bg-card border-b border-border px-6 pt-2 flex gap-1 overflow-x-auto relative">
+          <div className="sticky top-16 z-30 bg-card/90 backdrop-blur-md border-b border-border px-6 pt-2 flex gap-1 overflow-x-auto relative shadow-sm">
             {[
               { v: "overview", l: "Overview", icon: Activity },
               { v: "financial", l: "Financial", icon: Wallet },
@@ -954,7 +954,7 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
             ))}
           </div>
           <div className="px-6 pt-3 bg-card">
-            <TabHint message="Switch tabs to see Financial deep-dive, Career Map & Risk breakdown — all live" />
+            <TabHint message="Tabs stay pinned — switch sections anytime as you scroll" />
           </div>
 
           <CardContent className="p-6 min-h-[480px] bg-gradient-to-br from-background via-background to-blue-50/20">
