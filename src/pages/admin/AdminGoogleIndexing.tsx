@@ -639,7 +639,30 @@ const AdminGoogleIndexing = () => {
     setActionLoading(null);
   };
 
-  const handleManualSubmit = async () => {
+  const handleCheckIndexStatus = async () => {
+    setActionLoading("check-status");
+    pushLog("Asking Google which URLs are already indexed…");
+    try {
+      const result = await callFunction<{
+        checked: number;
+        indexed: number;
+        not_indexed: number;
+      }>({ action: "check_index_status", limit: 50 });
+      pushLog(
+        `Status check done — ${result.indexed}/${result.checked} confirmed on Google, ${result.not_indexed} not yet.`
+      );
+      toast({
+        title: "Index status checked",
+        description: `${result.indexed} of ${result.checked} URLs confirmed on Google.`,
+      });
+      await fetchData(false);
+    } catch (error: any) {
+      const { message } = extractRequestError(error);
+      pushLog(`Status check failed: ${message}`);
+      toast({ title: "Error", description: message, variant: "destructive" });
+    }
+    setActionLoading(null);
+  };
     const url = manualUrl.trim();
     if (!url) return;
 
