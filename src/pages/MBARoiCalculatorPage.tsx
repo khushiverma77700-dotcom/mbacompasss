@@ -26,6 +26,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 import SEOHead, { generateBreadcrumbSchema, generateFAQSchema, generateWebsiteSchema } from "@/components/SEOHead";
 import NarrativeBlock from "@/components/roi/NarrativeBlock";
+import TabHint from "@/components/roi/TabHint";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   ComposedChart, Line, Legend, AreaChart, Area, PieChart, Pie, Cell, RadarChart, PolarGrid,
@@ -926,7 +927,7 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
             </motion.div>
           </AnimatePresence>
 
-          <div className="bg-card border-b border-border px-6 flex gap-1 overflow-x-auto">
+          <div className="bg-card border-b border-border px-6 pt-2 flex gap-1 overflow-x-auto relative">
             {[
               { v: "overview", l: "Overview", icon: Activity },
               { v: "financial", l: "Financial", icon: Wallet },
@@ -936,13 +937,23 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
               <button
                 key={t.v}
                 onClick={() => setTab(t.v)}
-                className={`px-4 py-3 text-xs font-semibold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
+                className={`relative px-4 py-3 text-xs font-semibold border-b-2 transition-all flex items-center gap-1.5 whitespace-nowrap ${
                   tab === t.v ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <t.icon className="w-3.5 h-3.5" /> {t.l}
+                {tab !== t.v && t.v !== "overview" && (
+                  <motion.span
+                    className="absolute -top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-primary"
+                    animate={{ scale: [1, 1.6, 1], opacity: [0.6, 1, 0.6] }}
+                    transition={{ duration: 1.4, repeat: Infinity, delay: 0.2 }}
+                  />
+                )}
               </button>
             ))}
+          </div>
+          <div className="px-6 pt-3 bg-card">
+            <TabHint message="Switch tabs to see Financial deep-dive, Career Map & Risk breakdown — all live" />
           </div>
 
           <CardContent className="p-6 min-h-[480px] bg-gradient-to-br from-background via-background to-blue-50/20">
@@ -1651,14 +1662,34 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
 
       {/* TABBED DETAILED REPORT */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="w-full justify-start overflow-x-auto flex-nowrap h-auto p-1">
-          <TabsTrigger value="overview" className="text-xs gap-1"><FileText className="w-3.5 h-3.5" /> Overview</TabsTrigger>
-          <TabsTrigger value="financial" className="text-xs gap-1"><Wallet className="w-3.5 h-3.5" /> Financial</TabsTrigger>
-          <TabsTrigger value="colleges" className="text-xs gap-1"><Building2 className="w-3.5 h-3.5" /> Colleges</TabsTrigger>
-          <TabsTrigger value="career" className="text-xs gap-1"><TrendingUp className="w-3.5 h-3.5" /> Career</TabsTrigger>
-          <TabsTrigger value="risk" className="text-xs gap-1"><AlertTriangle className="w-3.5 h-3.5" /> Risk</TabsTrigger>
-          <TabsTrigger value="roadmap" className="text-xs gap-1"><Compass className="w-3.5 h-3.5" /> Roadmap</TabsTrigger>
-        </TabsList>
+        <div className="rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/5 via-blue-50/40 to-primary/5 p-2 shadow-sm">
+          <TabsList className="w-full justify-start overflow-x-auto flex-nowrap h-auto p-1 bg-transparent gap-1">
+            {[
+              { v: "overview", l: "Overview", icon: FileText },
+              { v: "financial", l: "Financial", icon: Wallet },
+              { v: "colleges", l: "Colleges", icon: Building2 },
+              { v: "career", l: "Career", icon: TrendingUp },
+              { v: "risk", l: "Risk", icon: AlertTriangle },
+              { v: "roadmap", l: "Roadmap", icon: Compass },
+            ].map(t => (
+              <TabsTrigger
+                key={t.v}
+                value={t.v}
+                className="relative text-xs gap-1.5 px-3 py-2 rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-md data-[state=active]:text-primary data-[state=active]:font-bold transition-all hover:bg-card/60"
+              >
+                <t.icon className="w-3.5 h-3.5" /> {t.l}
+                {t.v !== "overview" && (
+                  <motion.span
+                    className="absolute top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-primary data-[state=active]:hidden"
+                    animate={{ scale: [1, 1.6, 1], opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 1.6, repeat: Infinity }}
+                  />
+                )}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
+        <TabHint message="Click each tab above to unlock Financial cashflow, College picks, Career Map, Risk meter & step-by-step Roadmap" />
 
         {/* OVERVIEW TAB */}
         <TabsContent value="overview" className="space-y-5 mt-5">
