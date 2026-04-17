@@ -1837,22 +1837,27 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
           )}
 
           {ai?.tier_recommendation && (
-            <Card className="border-amber-200/60 bg-amber-50/30">
-              <CardContent className="p-6">
-                <h3 className="font-bold text-foreground mb-2 flex items-center gap-2"><Target className="w-4 h-4 text-amber-600" /> Advisor's Tier Recommendation</h3>
-                <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">{ai.tier_recommendation}</p>
-              </CardContent>
-            </Card>
+            <NarrativeBlock
+              title="Advisor's Tier Recommendation"
+              icon={Target}
+              text={ai.tier_recommendation}
+              accent="amber"
+              chart="score-bar"
+              chartData={(colleges?.tier_breakdown || []).map((t: any) => ({ label: t.tier, value: t.avg_roi_score || 0 }))}
+            />
           )}
         </TabsContent>
         <TabsContent value="financial" className="space-y-5 mt-5">
           {ai?.financial_analysis && (
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><Wallet className="w-4 h-4 text-primary" /> Financial Deep-Dive</h3>
-                <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">{ai.financial_analysis}</p>
-              </CardContent>
-            </Card>
+            <NarrativeBlock
+              title="Financial Deep-Dive"
+              icon={Wallet}
+              text={ai.financial_analysis}
+              accent="primary"
+              chart="growth"
+              chartData={(colleges?.cashflow || []).map((c: any) => ({ x: `Y${c.year}`, y: c.net_advantage }))}
+              badge={{ label: `${metrics?.roi_category || "Medium"} ROI`, tone: metrics?.roi_category === "High" ? "emerald" : metrics?.roi_category === "Low" ? "amber" : "blue" }}
+            />
           )}
 
           {/* 10-year cashflow line chart */}
@@ -1940,12 +1945,17 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
           )}
 
           {ai?.loan_advice && (
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><Lightbulb className="w-4 h-4 text-amber-500" /> Loan Strategy Advice</h3>
-                <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">{ai.loan_advice}</p>
-              </CardContent>
-            </Card>
+            <NarrativeBlock
+              title="Loan Strategy Advice"
+              icon={Banknote}
+              text={ai.loan_advice}
+              accent="blue"
+              chart={colleges?.financial?.loan_amount_lakhs > 0 ? "score-bar" : "none"}
+              chartData={colleges?.financial?.loan_amount_lakhs > 0 ? [
+                { label: "Principal", value: Math.round((colleges.financial.loan_amount_lakhs / colleges.financial.loan_total_repayment_lakhs) * 100) },
+                { label: "Interest", value: Math.round((colleges.financial.loan_interest_lakhs / colleges.financial.loan_total_repayment_lakhs) * 100) },
+              ] : []}
+            />
           )}
 
           {ai?.scholarship_opportunities?.length > 0 && (
@@ -2142,39 +2152,48 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
         {/* CAREER TAB */}
         <TabsContent value="career" className="space-y-5 mt-5">
           {ai?.career_trajectory && (
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><TrendingUp className="w-4 h-4 text-primary" /> 10-Year Career Trajectory</h3>
-                <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">{ai.career_trajectory}</p>
-              </CardContent>
-            </Card>
+            <NarrativeBlock
+              title="10-Year Career Trajectory"
+              icon={TrendingUp}
+              text={ai.career_trajectory}
+              accent="primary"
+              chart="milestones"
+              chartData={[
+                { year: "Y1", role: "Post-MBA Entry", salary: metrics?.expected_salary_lakhs || 18 },
+                { year: "Y3", role: "Mid-Manager", salary: Math.round((metrics?.expected_salary_lakhs || 18) * 1.4) },
+                { year: "Y5", role: "Senior Manager", salary: Math.round((metrics?.expected_salary_lakhs || 18) * 1.9) },
+                { year: "Y10", role: "Leadership", salary: Math.round((metrics?.expected_salary_lakhs || 18) * 3.4) },
+              ]}
+            />
           )}
 
           {ai?.salary_growth_narrative && (
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><TrendingUp className="w-4 h-4 text-primary" /> Salary Growth Outlook</h3>
-                <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">{ai.salary_growth_narrative}</p>
-              </CardContent>
-            </Card>
+            <NarrativeBlock
+              title="Salary Growth Outlook"
+              icon={TrendingUp}
+              text={ai.salary_growth_narrative}
+              accent="emerald"
+              chart="growth"
+              chartData={(colleges?.cashflow || []).map((c: any) => ({ x: `Y${c.year}`, y: c.with_mba_salary }))}
+            />
           )}
 
           {ai?.specialization_advice && (
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><Briefcase className="w-4 h-4 text-primary" /> Specialization Advice</h3>
-                <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">{ai.specialization_advice}</p>
-              </CardContent>
-            </Card>
+            <NarrativeBlock
+              title="Specialization Advice"
+              icon={Briefcase}
+              text={ai.specialization_advice}
+              accent="violet"
+            />
           )}
 
           {ai?.exam_strategy && (
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><BookOpen className="w-4 h-4 text-primary" /> Exam Strategy</h3>
-                <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">{ai.exam_strategy}</p>
-              </CardContent>
-            </Card>
+            <NarrativeBlock
+              title="Exam Strategy"
+              icon={BookOpen}
+              text={ai.exam_strategy}
+              accent="blue"
+            />
           )}
 
           {ai?.alternative_paths?.length > 0 && (
@@ -2200,15 +2219,15 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
         {/* RISK TAB */}
         <TabsContent value="risk" className="space-y-5 mt-5">
           {ai?.risk_analysis && (
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-bold text-foreground flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-primary" /> Risk Analysis</h3>
-                  {ai.risk_level && <Badge variant="outline" className={riskColor[ai.risk_level]}>Risk Level: {ai.risk_level}</Badge>}
-                </div>
-                <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">{ai.risk_analysis}</p>
-              </CardContent>
-            </Card>
+            <NarrativeBlock
+              title="Risk Analysis"
+              icon={AlertTriangle}
+              text={ai.risk_analysis}
+              accent={ai.risk_level === "Low" ? "emerald" : ai.risk_level === "High" || ai.risk_level === "Very High" ? "rose" : "amber"}
+              chart="risk-meter"
+              chartData={{ score: ai.risk_level === "Low" ? 22 : ai.risk_level === "Moderate" ? 50 : ai.risk_level === "High" ? 75 : ai.risk_level === "Very High" ? 90 : 50 }}
+              badge={ai.risk_level ? { label: `${ai.risk_level} Risk`, tone: ai.risk_level === "Low" ? "emerald" : ai.risk_level === "High" || ai.risk_level === "Very High" ? "rose" : "amber" } : undefined}
+            />
           )}
 
           {ai?.risk_factors?.length > 0 && (
