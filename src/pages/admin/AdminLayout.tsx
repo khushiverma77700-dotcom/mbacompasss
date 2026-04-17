@@ -1,6 +1,6 @@
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp, Sparkles, ShieldCheck, Lock, Briefcase, Target, PhoneCall, Database, Activity, Calculator, ChevronDown } from "lucide-react";
+import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp, Sparkles, ShieldCheck, Lock, Briefcase, Target, PhoneCall, Database, Activity, Calculator, ChevronDown, Bell } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -91,6 +91,7 @@ const AdminLayout = () => {
 
   // Notification dots state
   const [dots, setDots] = useState<Record<string, boolean>>({});
+  const [nightlyIndexingLive, setNightlyIndexingLive] = useState(false);
 
   const toggleGroup = (label: string) => {
     setCollapsedGroups(prev => ({ ...prev, [label]: !prev[label] }));
@@ -142,6 +143,34 @@ const AdminLayout = () => {
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
+  }, [user, isAdmin]);
+
+  useEffect(() => {
+    if (!user || !isAdmin) return;
+
+    let cancelled = false;
+
+    const checkNightlyIndexing = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("google-indexing", {
+          body: { action: "current_run_status" },
+        });
+
+        if (!cancelled) {
+          setNightlyIndexingLive(Boolean(!error && (data as any)?.ok && (data as any)?.data?.is_active));
+        }
+      } catch {
+        if (!cancelled) setNightlyIndexingLive(false);
+      }
+    };
+
+    checkNightlyIndexing();
+    const interval = window.setInterval(checkNightlyIndexing, 30000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
   }, [user, isAdmin]);
 
   // Mark as seen when visiting a lead page
@@ -222,6 +251,15 @@ const AdminLayout = () => {
                     >
                       <item.icon className="w-4 h-4 shrink-0" />
                       <span className="flex-1">{item.label}</span>
+                      {item.path === "/admin/google-indexing" && nightlyIndexingLive && (
+                        <span className="relative flex items-center justify-center h-5 w-5 rounded-full bg-emerald-500/15 border border-emerald-500/25" title="Nightly auto-run is live">
+                          <Bell className="w-3 h-3 text-emerald-600" />
+                          <span className="pointer-events-none absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-ping" />
+                            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500" />
+                          </span>
+                        </span>
+                      )}
                       {(item as any).dotKey && dots[(item as any).dotKey] && (
                         <span className="relative flex h-2.5 w-2.5">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />

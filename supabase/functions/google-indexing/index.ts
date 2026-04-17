@@ -1574,6 +1574,9 @@ Deno.serve(async (req) => {
           processing_time_ms: Date.now() - startedAt,
         },
       });
+    }
+
+    if (action === "discover") {
       const tables = [
         {
           table: "articles",
