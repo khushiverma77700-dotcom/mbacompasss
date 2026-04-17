@@ -1298,6 +1298,263 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "auto_run" || action === "quota_status") {
+      // Daily quotas per Google Indexing API
+      const SUBMISSION_DAILY_QUOTA = 1000;
+      const INSPECTION_DAILY_QUOTA = 200;
+      // Safety buffer to avoid exhausting quota on one site if multiple properties exist
+      const SUBMISSION_SAFETY_BUFFER = 20;
+      const INSPECTION_SAFETY_BUFFER = 5;
+
+      // Compute usage for today (UTC day window)
+      const startOfDay = new Date();
+      startOfDay.setUTCHours(0, 0, 0, 0);
+
+      const { data: todaysLogs } = await supabase
+        .from("indexing_logs")
+        .select("action, status")
+        .gte("created_at", startOfDay.toISOString());
+
+      let submissionsUsed = 0;
+      let inspectionsUsed = 0;
+      if (todaysLogs) {
+        for (const log of todaysLogs) {
+          // Submissions: any submit_url / batch_submit / refresh attempt that actually hit Google
+          if (
+            (log.action === "submit_url" ||
+              log.action === "batch_submit" ||
+              log.action === "refresh") &&
+            (log.status === "success" || log.status === "submitted" || log.status === "failed")
+          ) {
+            submissionsUsed += 1;
+          }
+          // Inspections
+          if (
+            log.action === "check_index_status" &&
+            (log.status === "success" ||
+              log.status === "indexed" ||
+              log.status === "not_indexed" ||
+              log.status === "failed")
+          ) {
+            inspectionsUsed += 1;
+          }
+        }
+      }
+
+      const submissionBudget = Math.max(
+        0,
+        SUBMISSION_DAILY_QUOTA - SUBMISSION_SAFETY_BUFFER - submissionsUsed
+      );
+      const inspectionBudget = Math.max(
+        0,
+        INSPECTION_DAILY_QUOTA - INSPECTION_SAFETY_BUFFER - inspectionsUsed
+      );
+
+      if (action === "quota_status") {
+        return respond({
+          ok: true,
+          data: {
+            submissions_used: submissionsUsed,
+            submissions_remaining: submissionBudget,
+            submissions_quota: SUBMISSION_DAILY_QUOTA,
+            inspections_used: inspectionsUsed,
+            inspections_remaining: inspectionBudget,
+            inspections_quota: INSPECTION_DAILY_QUOTA,
+            window_start: startOfDay.toISOString(),
+          },
+          diagnostics: { action, processing_time_ms: Date.now() - startedAt },
+        });
+      }
+
+      // === auto_run pipeline ===
+      const summary: any = {
+        discovered: 0,
+        submitted: 0,
+        submission_failed: 0,
+        inspected: 0,
+        newly_indexed: 0,
+        submissions_used_before: submissionsUsed,
+        inspections_used_before: inspectionsUsed,
+        submission_budget: submissionBudget,
+        inspection_budget: inspectionBudget,
+        steps: [] as string[],
+      };
+
+      // Step 1: Discover new URLs from DB tables
+      try {
+        const tables = [
+          {
+            table: "articles",
+            type: "article",
+            pathFn: (row: any) => `/article/${row.slug}`,
+            filter: { published: true },
+          },
+          { table: "institutes", type: "institute", pathFn: (row: any) => `/institute/${row.slug}` },
+          { table: "colleges", type: "college", pathFn: (row: any) => `/college/${row.slug}` },
+          { table: "exams", type: "exam", pathFn: (row: any) => `/exam/${row.slug}` },
+          {
+            table: "city_pages",
+            type: "city_page",
+            pathFn: (row: any) => `/colleges/${row.slug}`,
+            filter: { active: true },
+          },
+        ];
+
+        const now = new Date().toISOString();
+        for (const table of tables) {
+          let query = supabase.from(table.table).select("id, slug");
+          if (table.filter) {
+            for (const [key, value] of Object.entries(table.filter)) {
+              query = query.eq(key, value);
+            }
+          }
+          const { data: rows } = await query;
+          if (!rows) continue;
+
+          for (const row of rows) {
+            if (!row.slug) continue;
+            const url = `${SITE_URL}${table.pathFn(row)}`;
+            const { data: existing } = await supabase
+              .from("indexing_urls")
+              .select("id")
+              .eq("url", url)
+              .maybeSingle();
+
+            if (!existing) {
+              await supabase.from("indexing_urls").insert({
+                url,
+                page_type: table.type,
+                record_id: row.id,
+                status: "pending",
+                updated_at: now,
+              });
+              summary.discovered += 1;
+            }
+          }
+        }
+        summary.steps.push(`discover: +${summary.discovered}`);
+      } catch (e: any) {
+        summary.steps.push(`discover_error: ${e?.message || "unknown"}`);
+      }
+
+      // Step 2: Submit pending URLs up to submissionBudget
+      if (submissionBudget > 0) {
+        try {
+          const { data: pendingRows } = await supabase
+            .from("indexing_urls")
+            .select("id, url, page_type, record_id, retry_count")
+            .in("status", ["pending", "failed"])
+            .order("created_at", { ascending: true })
+            .limit(submissionBudget);
+
+          if (pendingRows && pendingRows.length) {
+            let accessToken: string | null = null;
+            try {
+              accessToken = await getToken();
+            } catch (e: any) {
+              summary.steps.push(`auth_error: ${e?.message || "auth failed"}`);
+            }
+
+            if (accessToken) {
+              for (const row of pendingRows) {
+                try {
+                  const submission = await submitUrl(accessToken, row.url);
+                  await persistSubmissionResult(supabase, {
+                    url: row.url,
+                    pageType: row.page_type,
+                    recordId: row.record_id,
+                    action: "auto_run",
+                    retryCount: row.retry_count || 0,
+                    submission,
+                  });
+                  if (submission.ok) summary.submitted += 1;
+                  else summary.submission_failed += 1;
+                } catch {
+                  summary.submission_failed += 1;
+                }
+                await delay(BATCH_DELAY_MS);
+              }
+            }
+          }
+          summary.steps.push(
+            `submit: ok=${summary.submitted} failed=${summary.submission_failed}`
+          );
+        } catch (e: any) {
+          summary.steps.push(`submit_error: ${e?.message || "unknown"}`);
+        }
+      } else {
+        summary.steps.push("submit_skipped: quota exhausted");
+      }
+
+      // Step 3: Check index status up to inspectionBudget
+      if (inspectionBudget > 0) {
+        try {
+          let inspected = 0;
+          let nextSkip = 0;
+          const perBatch = Math.min(STATUS_CHECK_BATCH_SIZE, inspectionBudget);
+          // Loop in batches until budget exhausted or no more pending
+          while (inspected < inspectionBudget) {
+            const remaining = inspectionBudget - inspected;
+            const batchSize = Math.min(STATUS_CHECK_BATCH_SIZE, remaining);
+
+            const { data: rowsToCheck } = await supabase
+              .from("indexing_urls")
+              .select("id, url, status, indexed_at")
+              .is("indexed_at", null)
+              .order("last_submitted_at", { ascending: true, nullsFirst: false })
+              .range(nextSkip, nextSkip + batchSize - 1);
+
+            if (!rowsToCheck || rowsToCheck.length === 0) break;
+
+            let accessToken: string | null = null;
+            try {
+              accessToken = await getToken();
+            } catch (e: any) {
+              summary.steps.push(`inspect_auth_error: ${e?.message || "auth failed"}`);
+              break;
+            }
+            if (!accessToken) break;
+
+            for (const row of rowsToCheck) {
+              try {
+                const inspection = await inspectUrl(accessToken, row.url);
+                inspected += 1;
+                if (inspection?.indexed) summary.newly_indexed += 1;
+                await persistInspectionResult(supabase, {
+                  id: row.id,
+                  url: row.url,
+                  inspection,
+                });
+              } catch {
+                inspected += 1;
+              }
+              await delay(BATCH_DELAY_MS);
+              if (inspected >= inspectionBudget) break;
+            }
+            nextSkip += rowsToCheck.length;
+            if (rowsToCheck.length < batchSize) break;
+          }
+          summary.inspected = inspected;
+          summary.steps.push(
+            `inspect: checked=${summary.inspected} newly_indexed=${summary.newly_indexed}`
+          );
+        } catch (e: any) {
+          summary.steps.push(`inspect_error: ${e?.message || "unknown"}`);
+        }
+      } else {
+        summary.steps.push("inspect_skipped: quota exhausted");
+      }
+
+      return respond({
+        ok: true,
+        data: summary,
+        diagnostics: {
+          action,
+          processing_time_ms: Date.now() - startedAt,
+        },
+      });
+    }
+
     if (action === "discover") {
       const tables = [
         {
