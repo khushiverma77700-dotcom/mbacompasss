@@ -254,31 +254,69 @@ const NarrativeBlock: React.FC<Props> = ({
 };
 
 /* -------------------------------------------------------------------------- */
+/*  Branded tooltip — used by all charts                                      */
+/* -------------------------------------------------------------------------- */
+
+const BrandedTooltip: React.FC<any> = ({ active, payload, label, suffix = "" }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-lg bg-white border-l-4 border-l-primary border border-border shadow-lg px-3 py-2 text-xs">
+      {label !== undefined && <p className="font-bold text-foreground mb-0.5">{label}</p>}
+      {payload.map((p: any, i: number) => (
+        <p key={i} className="font-semibold" style={{ color: p.color || p.fill || "hsl(var(--primary))" }}>
+          {p.name ? `${p.name}: ` : ""}{typeof p.value === "number" ? p.value.toLocaleString() : p.value}{suffix}
+        </p>
+      ))}
+    </div>
+  );
+};
+
+/* -------------------------------------------------------------------------- */
 /*  Chart renderer                                                            */
 /* -------------------------------------------------------------------------- */
+
+const PALETTE = {
+  blue: "#3B82F6",
+  emerald: "#10B981",
+  violet: "#8B5CF6",
+  amber: "#F59E0B",
+  rose: "#F43F5E",
+};
 
 const ChartRenderer: React.FC<{ variant: string; data: any; accent: string }> = ({ variant, data, accent }) => {
   const a = ACCENT[accent];
 
   if (variant === "growth" && data?.length > 0) {
+    const gradId = `grad-area-${accent}`;
     return (
       <div className={`${a.bg} rounded-xl p-3 h-full border ${a.border}`}>
         <p className="text-[10px] uppercase text-muted-foreground mb-2 font-semibold flex items-center gap-1">
-          <TrendingUp className="w-3 h-3" /> Trajectory
+          <TrendingUp className="w-3 h-3" /> 10-Year Trajectory
         </p>
-        <ResponsiveContainer width="100%" height={200}>
-          <AreaChart data={data}>
+        <ResponsiveContainer width="100%" height={210}>
+          <AreaChart data={data} margin={{ top: 10, right: 8, left: -10, bottom: 0 }}>
             <defs>
-              <linearGradient id={`grad-${accent}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.55} />
-                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.04} />
+              <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={PALETTE.blue} stopOpacity={0.55} />
+                <stop offset="100%" stopColor={PALETTE.blue} stopOpacity={0.04} />
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-            <XAxis dataKey="x" tick={{ fontSize: 9 }} />
-            <YAxis tick={{ fontSize: 9 }} />
-            <RechartsTooltip />
-            <Area type="monotone" dataKey="y" stroke="hsl(var(--primary))" strokeWidth={2.5} fill={`url(#grad-${accent})`} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" opacity={0.6} vertical={false} />
+            <XAxis dataKey="x" tick={{ fontSize: 10, fill: "#64748B" }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 10, fill: "#64748B" }} axisLine={false} tickLine={false} width={40} />
+            <RechartsTooltip content={<BrandedTooltip suffix="L" />} cursor={{ stroke: PALETTE.blue, strokeWidth: 1, strokeDasharray: "4 4" }} />
+            <Area
+              type="monotone"
+              dataKey="y"
+              name="Net advantage"
+              stroke={PALETTE.blue}
+              strokeWidth={3}
+              fill={`url(#${gradId})`}
+              isAnimationActive
+              animationDuration={1100}
+              dot={{ r: 3, fill: "#fff", stroke: PALETTE.blue, strokeWidth: 2 }}
+              activeDot={{ r: 5, fill: PALETTE.blue, stroke: "#fff", strokeWidth: 2 }}
+            />
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -292,7 +330,7 @@ const ChartRenderer: React.FC<{ variant: string; data: any; accent: string }> = 
           <Target className="w-3 h-3" /> Career Milestones
         </p>
         <div className="space-y-3 relative">
-          <div className="absolute left-[18px] top-2 bottom-2 w-px bg-border" />
+          <div className="absolute left-[18px] top-2 bottom-2 w-px bg-gradient-to-b from-primary/40 via-primary/20 to-transparent" />
           {data.map((m: any, i: number) => (
             <motion.div
               key={i}
@@ -302,10 +340,10 @@ const ChartRenderer: React.FC<{ variant: string; data: any; accent: string }> = 
               transition={{ delay: i * 0.1 }}
               className="flex items-center gap-3 relative"
             >
-              <div className={`w-9 h-9 rounded-full ${a.chip} flex items-center justify-center text-[10px] font-bold shrink-0 ring-4 ring-background z-10`}>
+              <div className={`w-9 h-9 rounded-full ${a.chip} flex items-center justify-center text-[10px] font-bold shrink-0 ring-4 ring-background z-10 shadow-sm`}>
                 {m.year}
               </div>
-              <div className="flex-1 min-w-0 bg-card border border-border rounded-lg px-3 py-2">
+              <div className="flex-1 min-w-0 bg-card border border-border rounded-lg px-3 py-2 shadow-sm hover:shadow-md transition-shadow">
                 <p className="text-xs font-semibold text-foreground truncate">{m.role}</p>
                 <p className={`text-[11px] ${a.text} font-bold`}>₹{m.salary} LPA</p>
               </div>
@@ -318,42 +356,65 @@ const ChartRenderer: React.FC<{ variant: string; data: any; accent: string }> = 
 
   if (variant === "risk-meter") {
     const score = data?.score || 50;
-    const color = score < 33 ? "hsl(160 70% 45%)" : score < 66 ? "hsl(40 90% 55%)" : "hsl(0 70% 60%)";
+    const color = score < 33 ? PALETTE.emerald : score < 66 ? PALETTE.amber : PALETTE.rose;
     const label = score < 33 ? "Low Risk" : score < 66 ? "Moderate Risk" : "High Risk";
+    const sub   = score < 33 ? "Comfortably manageable" : score < 66 ? "Manageable with planning" : "Needs careful mitigation";
+    const gradId = `grad-risk-${accent}`;
     return (
       <div className={`${a.bg} rounded-xl p-4 h-full flex flex-col items-center justify-center border ${a.border}`}>
-        <p className="text-[10px] uppercase text-muted-foreground mb-2 font-semibold">Risk Meter</p>
+        <p className="text-[10px] uppercase text-muted-foreground mb-2 font-semibold tracking-wider">Overall Risk</p>
         <ResponsiveContainer width="100%" height={170}>
-          <RadialBarChart innerRadius="62%" outerRadius="100%" data={[{ value: score, fill: color }]} startAngle={180} endAngle={0}>
+          <RadialBarChart innerRadius="62%" outerRadius="100%" data={[{ value: score }]} startAngle={180} endAngle={0}>
+            <defs>
+              <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor={color} stopOpacity={0.7} />
+                <stop offset="100%" stopColor={color} stopOpacity={1} />
+              </linearGradient>
+            </defs>
             <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-            <RadialBar dataKey="value" background cornerRadius={10} />
+            <RadialBar
+              dataKey="value"
+              background={{ fill: "#F1F5F9" }}
+              cornerRadius={12}
+              fill={`url(#${gradId})`}
+              isAnimationActive
+              animationDuration={1200}
+            />
           </RadialBarChart>
         </ResponsiveContainer>
         <motion.p
           initial={{ scale: 0.5, opacity: 0 }}
           whileInView={{ scale: 1, opacity: 1 }}
           viewport={{ once: true }}
-          className="text-3xl font-bold -mt-14"
+          className="text-3xl font-extrabold -mt-14 tabular-nums"
           style={{ color }}
         >
           {score}
         </motion.p>
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-7 font-semibold">{label}</p>
+        <p className="text-[11px] uppercase tracking-wider mt-7 font-bold" style={{ color }}>{label}</p>
+        <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>
       </div>
     );
   }
 
   if (variant === "score-bar" && data?.length > 0) {
+    const gradId = `grad-bar-${accent}`;
     return (
       <div className={`${a.bg} rounded-xl p-3 h-full border ${a.border}`}>
         <p className="text-[10px] uppercase text-muted-foreground mb-2 font-semibold">Tier Breakdown</p>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={data} layout="vertical">
-            <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-            <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 9 }} />
-            <YAxis type="category" dataKey="label" tick={{ fontSize: 10 }} width={80} />
-            <RechartsTooltip />
-            <Bar dataKey="value" fill="hsl(var(--primary))" radius={[0, 6, 6, 0]} animationDuration={900} />
+        <ResponsiveContainer width="100%" height={210}>
+          <BarChart data={data} layout="vertical" margin={{ top: 6, right: 30, left: 0, bottom: 0 }}>
+            <defs>
+              <linearGradient id={gradId} x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor={PALETTE.blue} stopOpacity={0.75} />
+                <stop offset="100%" stopColor={PALETTE.violet} stopOpacity={0.95} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" opacity={0.6} horizontal={false} />
+            <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: "#64748B" }} axisLine={false} tickLine={false} />
+            <YAxis type="category" dataKey="label" tick={{ fontSize: 11, fill: "#334155", fontWeight: 600 }} width={90} axisLine={false} tickLine={false} />
+            <RechartsTooltip content={<BrandedTooltip suffix="/100" />} cursor={{ fill: "#F1F5F9" }} />
+            <Bar dataKey="value" fill={`url(#${gradId})`} radius={[0, 8, 8, 0]} animationDuration={1000} label={{ position: "right", fill: "#334155", fontSize: 11, fontWeight: 700 }} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -361,30 +422,39 @@ const ChartRenderer: React.FC<{ variant: string; data: any; accent: string }> = 
   }
 
   if (variant === "donut" && data?.length > 0) {
-    const COLORS = ["hsl(var(--primary))", "hsl(160 70% 45%)", "hsl(40 90% 55%)", "hsl(280 60% 60%)", "hsl(0 70% 60%)"];
+    const COLORS = [PALETTE.blue, PALETTE.emerald, PALETTE.amber, PALETTE.violet, PALETTE.rose];
+    const total = data.reduce((s: number, d: any) => s + (Number(d.value) || 0), 0);
     return (
       <div className={`${a.bg} rounded-xl p-3 h-full border ${a.border}`}>
         <p className="text-[10px] uppercase text-muted-foreground mb-2 font-semibold">Distribution</p>
-        <ResponsiveContainer width="100%" height={200}>
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={45}
-              outerRadius={75}
-              paddingAngle={3}
-              dataKey="value"
-              animationDuration={900}
-            >
-              {data.map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-            </Pie>
-            <RechartsTooltip />
-          </PieChart>
-        </ResponsiveContainer>
+        <div className="relative">
+          <ResponsiveContainer width="100%" height={200}>
+            <PieChart>
+              <Pie
+                data={data}
+                cx="50%"
+                cy="50%"
+                innerRadius={50}
+                outerRadius={78}
+                paddingAngle={3}
+                dataKey="value"
+                stroke="#fff"
+                strokeWidth={3}
+                animationDuration={1000}
+              >
+                {data.map((_: any, i: number) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+              </Pie>
+              <RechartsTooltip content={<BrandedTooltip />} />
+            </PieChart>
+          </ResponsiveContainer>
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">Total</p>
+            <p className="text-lg font-extrabold text-foreground tabular-nums">{total}</p>
+          </div>
+        </div>
         <div className="flex flex-wrap gap-2 justify-center mt-2">
           {data.map((d: any, i: number) => (
-            <span key={i} className="flex items-center gap-1 text-[10px] text-foreground/70">
+            <span key={i} className="flex items-center gap-1 text-[10px] text-foreground/70 bg-card border border-border rounded-full px-2 py-0.5">
               <span className="w-2 h-2 rounded-full" style={{ background: COLORS[i % COLORS.length] }} />
               {d.label}
             </span>
@@ -399,12 +469,20 @@ const ChartRenderer: React.FC<{ variant: string; data: any; accent: string }> = 
       <div className={`${a.bg} rounded-xl p-3 h-full border ${a.border} flex flex-col`}>
         <p className="text-[10px] uppercase text-muted-foreground mb-1 font-semibold">Trend</p>
         <ResponsiveContainer width="100%" height={170}>
-          <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-            <XAxis dataKey="x" tick={{ fontSize: 9 }} />
-            <YAxis tick={{ fontSize: 9 }} />
-            <RechartsTooltip />
-            <Line type="monotone" dataKey="y" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ r: 3 }} animationDuration={900} />
+          <LineChart data={data} margin={{ top: 6, right: 8, left: -10, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" opacity={0.5} vertical={false} />
+            <XAxis dataKey="x" tick={{ fontSize: 10, fill: "#64748B" }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 10, fill: "#64748B" }} axisLine={false} tickLine={false} width={36} />
+            <RechartsTooltip content={<BrandedTooltip />} cursor={{ stroke: PALETTE.blue, strokeWidth: 1, strokeDasharray: "4 4" }} />
+            <Line
+              type="monotone"
+              dataKey="y"
+              stroke={PALETTE.blue}
+              strokeWidth={2.8}
+              dot={{ r: 3, fill: "#fff", stroke: PALETTE.blue, strokeWidth: 2 }}
+              activeDot={{ r: 5 }}
+              animationDuration={1000}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -412,19 +490,31 @@ const ChartRenderer: React.FC<{ variant: string; data: any; accent: string }> = 
   }
 
   if (variant === "comparison" && data?.length > 0) {
+    const gradA = `grad-cmp-a-${accent}`;
+    const gradB = `grad-cmp-b-${accent}`;
     return (
       <div className={`${a.bg} rounded-xl p-3 h-full border ${a.border}`}>
         <p className="text-[10px] uppercase text-muted-foreground mb-2 font-semibold flex items-center gap-1">
           <Lightbulb className="w-3 h-3" /> Side-by-Side
         </p>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-            <XAxis dataKey="label" tick={{ fontSize: 9 }} />
-            <YAxis tick={{ fontSize: 9 }} />
-            <RechartsTooltip />
-            <Bar dataKey="a" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} animationDuration={900} />
-            <Bar dataKey="b" fill="hsl(var(--muted-foreground))" radius={[4, 4, 0, 0]} animationDuration={900} />
+        <ResponsiveContainer width="100%" height={210}>
+          <BarChart data={data} margin={{ top: 14, right: 8, left: -10, bottom: 0 }}>
+            <defs>
+              <linearGradient id={gradA} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={PALETTE.blue} stopOpacity={1} />
+                <stop offset="100%" stopColor={PALETTE.blue} stopOpacity={0.5} />
+              </linearGradient>
+              <linearGradient id={gradB} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={PALETTE.violet} stopOpacity={1} />
+                <stop offset="100%" stopColor={PALETTE.violet} stopOpacity={0.5} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" opacity={0.6} vertical={false} />
+            <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#64748B" }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fontSize: 10, fill: "#64748B" }} axisLine={false} tickLine={false} width={36} />
+            <RechartsTooltip content={<BrandedTooltip />} cursor={{ fill: "#F1F5F9" }} />
+            <Bar dataKey="a" fill={`url(#${gradA})`} radius={[6, 6, 0, 0]} animationDuration={1000} label={{ position: "top", fill: "#334155", fontSize: 10, fontWeight: 700 }} />
+            <Bar dataKey="b" fill={`url(#${gradB})`} radius={[6, 6, 0, 0]} animationDuration={1000} label={{ position: "top", fill: "#334155", fontSize: 10, fontWeight: 700 }} />
           </BarChart>
         </ResponsiveContainer>
       </div>

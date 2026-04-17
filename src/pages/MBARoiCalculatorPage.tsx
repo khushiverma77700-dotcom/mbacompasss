@@ -27,6 +27,7 @@ import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 import SEOHead, { generateBreadcrumbSchema, generateFAQSchema, generateWebsiteSchema } from "@/components/SEOHead";
 import NarrativeBlock from "@/components/roi/NarrativeBlock";
 import TabHint from "@/components/roi/TabHint";
+import WhyThisMatters from "@/components/roi/WhyThisMatters";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   ComposedChart, Line, Legend, AreaChart, Area, PieChart, Pie, Cell, RadarChart, PolarGrid,
@@ -927,7 +928,7 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
             </motion.div>
           </AnimatePresence>
 
-          <div className="bg-card border-b border-border px-6 pt-2 flex gap-1 overflow-x-auto relative">
+          <div className="sticky top-16 z-30 bg-card/90 backdrop-blur-md border-b border-border px-6 pt-2 flex gap-1 overflow-x-auto relative shadow-sm">
             {[
               { v: "overview", l: "Overview", icon: Activity },
               { v: "financial", l: "Financial", icon: Wallet },
@@ -953,7 +954,7 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
             ))}
           </div>
           <div className="px-6 pt-3 bg-card">
-            <TabHint message="Switch tabs to see Financial deep-dive, Career Map & Risk breakdown — all live" />
+            <TabHint message="Tabs stay pinned — switch sections anytime as you scroll" />
           </div>
 
           <CardContent className="p-6 min-h-[480px] bg-gradient-to-br from-background via-background to-blue-50/20">
@@ -1662,37 +1663,50 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
 
       {/* TABBED DETAILED REPORT */}
       <Tabs defaultValue="overview" className="w-full">
-        <div className="rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/5 via-blue-50/40 to-primary/5 p-2 shadow-sm">
-          <TabsList className="w-full justify-start overflow-x-auto flex-nowrap h-auto p-1 bg-transparent gap-1">
-            {[
-              { v: "overview", l: "Overview", icon: FileText },
-              { v: "financial", l: "Financial", icon: Wallet },
-              { v: "colleges", l: "Colleges", icon: Building2 },
-              { v: "career", l: "Career", icon: TrendingUp },
-              { v: "risk", l: "Risk", icon: AlertTriangle },
-              { v: "roadmap", l: "Roadmap", icon: Compass },
-            ].map(t => (
-              <TabsTrigger
-                key={t.v}
-                value={t.v}
-                className="relative text-xs gap-1.5 px-3 py-2 rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-md data-[state=active]:text-primary data-[state=active]:font-bold transition-all hover:bg-card/60"
-              >
-                <t.icon className="w-3.5 h-3.5" /> {t.l}
-                {t.v !== "overview" && (
-                  <motion.span
-                    className="absolute top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-primary data-[state=active]:hidden"
-                    animate={{ scale: [1, 1.6, 1], opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 1.6, repeat: Infinity }}
-                  />
-                )}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+        <div className="sticky top-16 z-40 -mx-4 md:-mx-6 px-4 md:px-6 py-3 bg-white/85 backdrop-blur-md border-b border-border/60 shadow-sm">
+          <div className="rounded-2xl border border-primary/15 bg-gradient-to-r from-primary/5 via-blue-50/40 to-primary/5 p-2 shadow-sm">
+            <TabsList className="w-full justify-start overflow-x-auto flex-nowrap h-auto p-1 bg-transparent gap-1">
+              {[
+                { v: "overview", l: "Overview", icon: FileText },
+                { v: "financial", l: "Financial", icon: Wallet },
+                { v: "colleges", l: "Colleges", icon: Building2 },
+                { v: "career", l: "Career", icon: TrendingUp },
+                { v: "risk", l: "Risk", icon: AlertTriangle },
+                { v: "roadmap", l: "Roadmap", icon: Compass },
+              ].map(t => (
+                <TabsTrigger
+                  key={t.v}
+                  value={t.v}
+                  className="relative text-xs gap-1.5 px-3 py-2 rounded-xl data-[state=active]:bg-card data-[state=active]:shadow-md data-[state=active]:text-primary data-[state=active]:font-bold transition-all hover:bg-card/60"
+                >
+                  <t.icon className="w-3.5 h-3.5" /> {t.l}
+                  {t.v !== "overview" && (
+                    <motion.span
+                      className="absolute top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-primary data-[state=active]:hidden"
+                      animate={{ scale: [1, 1.6, 1], opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 1.6, repeat: Infinity }}
+                    />
+                  )}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
+          <TabHint message="Click each tab above — Financial, Colleges, Career, Risk & Roadmap stay pinned as you scroll" />
         </div>
-        <TabHint message="Click each tab above to unlock Financial cashflow, College picks, Career Map, Risk meter & step-by-step Roadmap" />
 
         {/* OVERVIEW TAB */}
         <TabsContent value="overview" className="space-y-5 mt-5">
+          <WhyThisMatters
+            icon={FileText}
+            tone="blue"
+            title="Your MBA at a glance"
+            purpose="A 30-second snapshot of whether this MBA is worth the money, time and effort — before you dive into the details."
+            bullets={[
+              "See your headline ROI score and verdict in one place",
+              "Cross-check your profile inputs are correct",
+              "Get the AI's bottom-line recommendation upfront",
+            ]}
+          />
           <Card>
             <CardContent className="p-6">
               <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><User className="w-4 h-4 text-primary" /> Profile Summary</h3>
@@ -1938,6 +1952,17 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
           )}
         </TabsContent>
         <TabsContent value="financial" className="space-y-5 mt-5">
+          <WhyThisMatters
+            icon={Wallet}
+            tone="emerald"
+            title="Will the money come back?"
+            purpose="See exactly how much you spend, when you break even, and how much extra you earn over 10 years."
+            bullets={[
+              "Total cost: tuition + living + 2 years of lost salary",
+              "Payback period — when MBA pays for itself",
+              "10-year net advantage vs. staying in your current job",
+            ]}
+          />
           {ai?.financial_analysis && (
             <NarrativeBlock
               title="Financial Deep-Dive"
@@ -2080,6 +2105,17 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
 
         {/* COLLEGES TAB */}
         <TabsContent value="colleges" className="space-y-5 mt-5">
+          <WhyThisMatters
+            icon={Building2}
+            tone="violet"
+            title="Where should you actually apply?"
+            purpose="A balanced shortlist of Dream, Target and Safe colleges — each scored on fees, salary, payback and ROI."
+            bullets={[
+              "Dream: stretch picks worth the extra prep",
+              "Target: realistic given your profile and percentile",
+              "Safe: high-confidence backups so you don't lose a year",
+            ]}
+          />
           {colleges?.dream?.length > 0 && (
             <CollegeBucket title="Dream Colleges" subtitle={ai?.dream_narrative} colleges={colleges.dream} accent="from-violet-50 to-violet-100/40" badgeClass="bg-violet-100 text-violet-700" icon={Trophy} />
           )}
@@ -2241,6 +2277,17 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
 
         {/* CAREER TAB */}
         <TabsContent value="career" className="space-y-5 mt-5">
+          <WhyThisMatters
+            icon={TrendingUp}
+            tone="blue"
+            title="Where will you be in 5 years?"
+            purpose="Understand the roles, salary jumps and growth path you can realistically expect after graduation."
+            bullets={[
+              "Year-by-year salary trajectory through Year 10",
+              "Likely roles at each stage — entry to leadership",
+              "Specializations and industries that suit your profile",
+            ]}
+          />
           {ai?.career_trajectory && (
             <NarrativeBlock
               title="10-Year Career Trajectory"
@@ -2308,6 +2355,17 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
 
         {/* RISK TAB */}
         <TabsContent value="risk" className="space-y-5 mt-5">
+          <WhyThisMatters
+            icon={AlertTriangle}
+            tone="amber"
+            title="What could go wrong?"
+            purpose="Know the real risks before you commit ₹20–40 lakhs and 2 years — and how to defuse each one."
+            bullets={[
+              "Placement, debt, opportunity-cost and ROI risks",
+              "A single risk score so you can compare options",
+              "Concrete mitigations for each red flag",
+            ]}
+          />
           {ai?.risk_analysis && (
             <NarrativeBlock
               title="Risk Analysis"
@@ -2355,6 +2413,17 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
 
         {/* ROADMAP TAB */}
         <TabsContent value="roadmap" className="space-y-5 mt-5">
+          <WhyThisMatters
+            icon={Compass}
+            tone="violet"
+            title="Your next 6–12 months, planned"
+            purpose="A step-by-step action plan so you stop wondering 'what do I do next?' and start moving."
+            bullets={[
+              "Prioritised actions: critical, high, medium",
+              "Realistic timelines for prep, applications and interviews",
+              "Personalised to your profile, exam and target tier",
+            ]}
+          />
           {ai?.recommendations?.length > 0 && (
             <Card>
               <CardContent className="p-6">
