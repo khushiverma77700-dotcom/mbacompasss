@@ -7,6 +7,19 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Table,
   TableBody,
   TableCell,
@@ -128,6 +141,9 @@ const AdminGoogleIndexing = () => {
   const [batchProgress, setBatchProgress] = useState<BatchProgressState | null>(null);
   const [liveBatchItems, setLiveBatchItems] = useState<LiveBatchItem[]>([]);
   const [actionLog, setActionLog] = useState<string[]>([]);
+  const [availableSites, setAvailableSites] = useState<string[]>([]);
+  const [selectedSite, setSelectedSite] = useState<string>("auto");
+  const [loadingSites, setLoadingSites] = useState(false);
 
   const fetchData = useCallback(
     async (showLoader = true) => {
