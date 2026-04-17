@@ -61,6 +61,7 @@ import {
 } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import SortableTableHead from "@/components/admin/SortableTableHead";
+import NightlyAutoRunPanel from "@/components/admin/NightlyAutoRunPanel";
 
 interface IndexingUrl {
   id: string;
