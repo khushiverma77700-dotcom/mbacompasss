@@ -928,6 +928,142 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "check_index_status") {
+      // Query Google's urlNotifications/metadata endpoint for each submitted URL.
+      // If Google returns metadata (latest_update with notify_time), it means Google
+      // has acknowledged the URL — we mark it as indexed (best available signal
+      // from the Indexing API; true index confirmation requires Search Console).
+      const limit = Math.min(Number(body?.limit) || 50, 100);
+      const onlyUrl = typeof body?.url === "string" ? body.url.trim() : "";
+
+      let rows: any[] = [];
+
+      if (onlyUrl) {
+        const { data } = await supabase
+          .from("indexing_urls")
+          .select("id, url, status, indexed_at")
+          .eq("url", onlyUrl)
+          .limit(1);
+        rows = data || [];
+      } else {
+        const { data, error } = await supabase
+          .from("indexing_urls")
+          .select("id, url, status, indexed_at")
+          .is("indexed_at", null)
+          .in("status", ["submitted", "pending"])
+          .order("last_submitted_at", { ascending: true, nullsFirst: false })
+          .limit(limit);
+        if (error) {
+          throw createStageError("database_error", "Failed to load URLs to check", {
+            response_preview: error.message,
+          });
+        }
+        rows = data || [];
+      }
+
+      if (!rows.length) {
+        return respond({
+          ok: true,
+          data: { checked: 0, indexed: 0, not_indexed: 0, results: [] },
+          diagnostics: { action, processing_time_ms: Date.now() - startedAt },
+        });
+      }
+
+      let accessToken: string;
+      try {
+        accessToken = await getToken();
+      } catch (error: any) {
+        return respond({
+          ok: false,
+          error: error?.message || "Google Indexing authentication failed",
+          diagnostics: {
+            action,
+            error_stage: error?.stage || "auth_issue",
+            processing_time_ms: Date.now() - startedAt,
+            ...(error?.details || {}),
+          },
+        });
+      }
+
+      const results: any[] = [];
+      let indexedCount = 0;
+      const now = new Date().toISOString();
+
+      for (const row of rows) {
+        try {
+          const metaRes = await fetch(
+            `${INDEXING_API_URL}/metadata?url=${encodeURIComponent(row.url)}`,
+            { headers: { Authorization: `Bearer ${accessToken}` } }
+          );
+          const metaData = await readResponseBody(metaRes);
+
+          // 200 OK + latestUpdate => Google has the URL on file (treat as indexed)
+          // 404 NOT_FOUND => Google has no record yet (still pending)
+          const isIndexed =
+            metaRes.ok &&
+            metaData &&
+            typeof metaData === "object" &&
+            ((metaData as any).latestUpdate?.notifyTime || (metaData as any).latest_update?.notify_time);
+
+          if (isIndexed) {
+            indexedCount += 1;
+            await supabase
+              .from("indexing_urls")
+              .update({
+                status: "indexed",
+                indexed_at: now,
+                last_response: { google: metaData, diagnostics: { source: "metadata_check" } },
+                error_message: null,
+                updated_at: now,
+              })
+              .eq("id", row.id);
+
+            await supabase.from("indexing_logs").insert({
+              indexing_url_id: row.id,
+              action: "status_check",
+              status: "indexed",
+              response: { google: metaData },
+            });
+          } else {
+            // Log the check, but don't change status — URL may still be processing
+            await supabase.from("indexing_logs").insert({
+              indexing_url_id: row.id,
+              action: "status_check",
+              status: metaRes.status === 404 ? "not_indexed_yet" : "check_failed",
+              response: { google: metaData, diagnostics: { google_status: metaRes.status } },
+              error_message: metaRes.ok ? null : getGoogleErrorMessage(metaData),
+            });
+          }
+
+          results.push({
+            url: row.url,
+            indexed: Boolean(isIndexed),
+            google_status: metaRes.status,
+            google: metaData,
+          });
+        } catch (err: any) {
+          results.push({
+            url: row.url,
+            indexed: false,
+            error: err?.message || "Status check failed",
+          });
+        }
+
+        await delay(BATCH_DELAY_MS);
+      }
+
+      return respond({
+        ok: true,
+        data: {
+          checked: rows.length,
+          indexed: indexedCount,
+          not_indexed: rows.length - indexedCount,
+          results,
+        },
+        diagnostics: { action, processing_time_ms: Date.now() - startedAt },
+      });
+    }
+
     if (action === "discover") {
       const tables = [
         {
