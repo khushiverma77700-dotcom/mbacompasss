@@ -961,6 +961,19 @@ const AdminGoogleIndexing = () => {
               ? `Submitting ${batchProgress.processed}/${batchProgress.total}`
               : "Submit All Pending"}
           </Button>
+          <Select value={selectedSite} onValueChange={setSelectedSite} disabled={!!actionLoading}>
+            <SelectTrigger className="h-9 w-[230px] text-xs" title="Search Console property used for Check Index Status">
+              <SelectValue placeholder={loadingSites ? "Loading properties…" : "Auto-detect property"} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto">Auto-detect property</SelectItem>
+              {availableSites.map((site) => (
+                <SelectItem key={site} value={site} className="text-xs font-mono">
+                  {site}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button
             variant="outline"
             size="sm"
