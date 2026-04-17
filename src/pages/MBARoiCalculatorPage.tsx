@@ -1683,35 +1683,58 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
           </Card>
 
           {ai?.executive_summary && (
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><FileText className="w-4 h-4 text-primary" /> Executive Summary</h3>
-                <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">{ai.executive_summary}</p>
-              </CardContent>
-            </Card>
+            <NarrativeBlock
+              title="Executive Summary"
+              icon={FileText}
+              text={ai.executive_summary}
+              accent="primary"
+              chart="sparkline"
+              chartData={(colleges?.cashflow || []).slice(0, 10).map((c: any, i: number) => ({ x: `Y${c.year || i + 1}`, y: c.net_advantage || 0 }))}
+              badge={ai.verdict ? { label: ai.verdict, tone: ai.verdict === "Strong Yes" ? "emerald" : ai.verdict === "Yes" ? "blue" : ai.verdict === "Maybe" ? "amber" : "rose" } : undefined}
+            />
           )}
 
           {(ai?.profile_strengths || ai?.profile_weaknesses) && (
             <div className="grid md:grid-cols-2 gap-4">
               {ai?.profile_strengths && (
-                <Card className="border-emerald-200/60">
-                  <CardContent className="p-5">
+                <Card className="border-emerald-200/60 overflow-hidden relative">
+                  <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-emerald-100/40 blur-3xl pointer-events-none" />
+                  <CardContent className="p-5 relative">
                     <h4 className="font-bold text-emerald-700 mb-3 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Your Strengths</h4>
                     <ul className="space-y-2">
                       {ai.profile_strengths.map((r: string, i: number) => (
-                        <li key={i} className="flex gap-2 text-sm text-foreground/80"><span className="text-emerald-500 mt-1">•</span>{r}</li>
+                        <motion.li
+                          key={i}
+                          initial={{ opacity: 0, x: -8 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: i * 0.06 }}
+                          className="flex gap-2 text-sm text-foreground/85 p-2 rounded-md bg-emerald-50/40 border border-emerald-100"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" />{r}
+                        </motion.li>
                       ))}
                     </ul>
                   </CardContent>
                 </Card>
               )}
               {ai?.profile_weaknesses && (
-                <Card className="border-amber-200/60">
-                  <CardContent className="p-5">
+                <Card className="border-amber-200/60 overflow-hidden relative">
+                  <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-amber-100/40 blur-3xl pointer-events-none" />
+                  <CardContent className="p-5 relative">
                     <h4 className="font-bold text-amber-700 mb-3 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Areas to Improve</h4>
                     <ul className="space-y-2">
                       {ai.profile_weaknesses.map((r: string, i: number) => (
-                        <li key={i} className="flex gap-2 text-sm text-foreground/80"><span className="text-amber-500 mt-1">•</span>{r}</li>
+                        <motion.li
+                          key={i}
+                          initial={{ opacity: 0, x: -8 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: i * 0.06 }}
+                          className="flex gap-2 text-sm text-foreground/85 p-2 rounded-md bg-amber-50/40 border border-amber-100"
+                        >
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-600 mt-0.5 shrink-0" />{r}
+                        </motion.li>
                       ))}
                     </ul>
                   </CardContent>
@@ -1723,18 +1746,54 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
           {(ai?.why_mba_makes_sense || ai?.why_mba_might_not) && (
             <div className="grid md:grid-cols-2 gap-4">
               {ai?.why_mba_makes_sense && (
-                <Card className="border-blue-200/60">
-                  <CardContent className="p-5">
-                    <h4 className="font-bold text-blue-700 mb-3 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Why MBA fits you</h4>
-                    <ul className="space-y-2">{ai.why_mba_makes_sense.map((r: string, i: number) => <li key={i} className="flex gap-2 text-sm text-foreground/80"><span className="text-blue-500 mt-1">•</span>{r}</li>)}</ul>
+                <Card className="border-blue-200/60 overflow-hidden relative">
+                  <div className="absolute -bottom-12 -left-12 w-32 h-32 rounded-full bg-blue-100/40 blur-3xl pointer-events-none" />
+                  <CardContent className="p-5 relative">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-bold text-blue-700 flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Why MBA fits you</h4>
+                      <Badge className="bg-blue-100 text-blue-700 text-[10px]">{ai.why_mba_makes_sense.length} reasons</Badge>
+                    </div>
+                    <div className="space-y-2">
+                      {ai.why_mba_makes_sense.map((r: string, i: number) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, scale: 0.96 }}
+                          whileInView={{ opacity: 1, scale: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: i * 0.06 }}
+                          className="flex gap-2 p-2.5 rounded-lg bg-blue-50/50 border border-blue-100 text-sm text-foreground/85"
+                        >
+                          <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
+                          {r}
+                        </motion.div>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
               )}
               {ai?.why_mba_might_not && (
-                <Card className="border-rose-200/60">
-                  <CardContent className="p-5">
-                    <h4 className="font-bold text-rose-700 mb-3 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Honest red flags</h4>
-                    <ul className="space-y-2">{ai.why_mba_might_not.map((r: string, i: number) => <li key={i} className="flex gap-2 text-sm text-foreground/80"><span className="text-rose-500 mt-1">•</span>{r}</li>)}</ul>
+                <Card className="border-rose-200/60 overflow-hidden relative">
+                  <div className="absolute -bottom-12 -left-12 w-32 h-32 rounded-full bg-rose-100/40 blur-3xl pointer-events-none" />
+                  <CardContent className="p-5 relative">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-bold text-rose-700 flex items-center gap-2"><AlertTriangle className="w-4 h-4" /> Honest red flags</h4>
+                      <Badge className="bg-rose-100 text-rose-700 text-[10px]">{ai.why_mba_might_not.length} flags</Badge>
+                    </div>
+                    <div className="space-y-2">
+                      {ai.why_mba_might_not.map((r: string, i: number) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, scale: 0.96 }}
+                          whileInView={{ opacity: 1, scale: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: i * 0.06 }}
+                          className="flex gap-2 p-2.5 rounded-lg bg-rose-50/50 border border-rose-100 text-sm text-foreground/85"
+                        >
+                          <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
+                          {r}
+                        </motion.div>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
               )}
