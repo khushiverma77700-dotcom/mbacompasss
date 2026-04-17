@@ -682,6 +682,7 @@ const AdminGoogleIndexing = () => {
 
   const handleCheckIndexStatus = async () => {
     setActionLoading("check-status");
+    const statusCheckBatchSize = 12;
     const pendingCount = urls.filter(
       (u) => !u.indexed_at && (u.status === "submitted" || u.status === "pending")
     ).length;
@@ -704,9 +705,10 @@ const AdminGoogleIndexing = () => {
     let totalIndexed = 0;
     let totalChecked = 0;
     let totalFailed = 0;
+    let nextSkip = 0;
     let siteProp: string | undefined;
     let guard = 0;
-    const maxIterations = Math.ceil(totalToCheck / 10) + 3;
+    const maxIterations = Math.ceil(totalToCheck / statusCheckBatchSize) + 3;
 
     try {
       while (guard++ < maxIterations) {
@@ -714,25 +716,33 @@ const AdminGoogleIndexing = () => {
           checked: number;
           indexed: number;
           not_indexed: number;
+          processed_in_batch?: number;
+          next_skip?: number;
           remaining?: number;
+          total_pending?: number;
           site_property?: string;
         }>({
           action: "check_index_status",
-          limit: 12,
+          limit: statusCheckBatchSize,
+          skip: nextSkip,
           ...(selectedSite && selectedSite !== "auto" ? { site_property: selectedSite } : {}),
         });
 
-        totalChecked += result.checked || 0;
+        const processedInBatch = result.processed_in_batch ?? result.checked ?? 0;
+
+        totalChecked += processedInBatch;
         totalIndexed += result.indexed || 0;
-        totalFailed += Math.max((result.checked || 0) - (result.indexed || 0) - (result.not_indexed || 0), 0);
+        totalFailed += Math.max(processedInBatch - (result.indexed || 0) - (result.not_indexed || 0), 0);
+        nextSkip = result.next_skip ?? totalChecked;
         siteProp = result.site_property || siteProp;
 
         setBatchProgress((prev) =>
           prev
             ? {
                 ...prev,
-                processed: Math.min(totalChecked, prev.total),
-                remaining: Math.max(prev.total - totalChecked, 0),
+                total: Math.max(prev.total, result.total_pending ?? prev.total),
+                processed: Math.min(totalChecked, Math.max(prev.total, result.total_pending ?? prev.total)),
+                remaining: Math.max((result.total_pending ?? prev.total) - totalChecked, 0),
                 success: totalIndexed,
                 failed: totalFailed,
                 currentUrl: null,
@@ -741,13 +751,12 @@ const AdminGoogleIndexing = () => {
         );
 
         pushLog(
-          `Batch ${guard}: ${result.indexed}/${result.checked} indexed${
+          `Batch ${guard}: ${result.indexed}/${processedInBatch} indexed${
             result.remaining ? ` · ${result.remaining} still to check` : ""
           }`
         );
 
-        // Stop if nothing was processed or Google says no remaining
-        if ((result.checked || 0) === 0 || !(result.remaining && result.remaining > 0)) {
+        if (processedInBatch === 0 || !(result.remaining && result.remaining > 0)) {
           break;
         }
       }

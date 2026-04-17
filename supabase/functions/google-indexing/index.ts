@@ -1120,10 +1120,12 @@ Deno.serve(async (req) => {
 
     if (action === "check_index_status") {
       const requestedLimit = Number(body?.limit) || 50;
-      const limit = Math.min(requestedLimit, 100);
+      const limit = Math.min(requestedLimit, STATUS_CHECK_BATCH_SIZE, 100);
+      const requestedSkip = Math.max(Number(body?.skip) || 0, 0);
       const onlyUrl = typeof body?.url === "string" ? body.url.trim() : "";
 
       let rows: any[] = [];
+      let totalPending = 0;
 
       if (onlyUrl) {
         const { data } = await supabase
@@ -1132,14 +1134,29 @@ Deno.serve(async (req) => {
           .eq("url", onlyUrl)
           .limit(1);
         rows = data || [];
+        totalPending = rows.length;
       } else {
+        const { count, error: countError } = await supabase
+          .from("indexing_urls")
+          .select("id", { count: "exact", head: true })
+          .is("indexed_at", null)
+          .in("status", ["submitted", "pending"]);
+
+        if (countError) {
+          throw createStageError("database_error", "Failed to count URLs to check", {
+            response_preview: countError.message,
+          });
+        }
+
+        totalPending = count || 0;
+
         const { data, error } = await supabase
           .from("indexing_urls")
           .select("id, url, status, indexed_at")
           .is("indexed_at", null)
           .in("status", ["submitted", "pending"])
           .order("last_submitted_at", { ascending: true, nullsFirst: false })
-          .limit(limit);
+          .range(requestedSkip, requestedSkip + limit - 1);
         if (error) {
           throw createStageError("database_error", "Failed to load URLs to check", {
             response_preview: error.message,
@@ -1187,7 +1204,7 @@ Deno.serve(async (req) => {
       let indexedCount = 0;
       const now = new Date().toISOString();
 
-      const rowsToCheck = rows.slice(0, STATUS_CHECK_BATCH_SIZE);
+      const rowsToCheck = rows;
       const rowChunks = chunkItems(rowsToCheck, STATUS_CHECK_CONCURRENCY);
 
       for (const rowChunk of rowChunks) {
@@ -1276,9 +1293,11 @@ Deno.serve(async (req) => {
           checked: rowsToCheck.length,
           indexed: indexedCount,
           not_indexed: rowsToCheck.length - indexedCount,
-          remaining: Math.max(rows.length - rowsToCheck.length, 0),
-          truncated: rows.length > rowsToCheck.length,
+          remaining: Math.max(totalPending - requestedSkip - rowsToCheck.length, 0),
+          truncated: totalPending > requestedSkip + rowsToCheck.length,
           processed_in_batch: rowsToCheck.length,
+          next_skip: requestedSkip + rowsToCheck.length,
+          total_pending: totalPending,
           site_property: propertySiteUrl,
           results,
         },
