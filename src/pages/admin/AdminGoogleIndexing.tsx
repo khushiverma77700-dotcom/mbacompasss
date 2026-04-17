@@ -716,7 +716,11 @@ const AdminGoogleIndexing = () => {
           not_indexed: number;
           remaining?: number;
           site_property?: string;
-        }>({ action: "check_index_status", limit: 12 });
+        }>({
+          action: "check_index_status",
+          limit: 12,
+          ...(selectedSite && selectedSite !== "auto" ? { site_property: selectedSite } : {}),
+        });
 
         totalChecked += result.checked || 0;
         totalIndexed += result.indexed || 0;
