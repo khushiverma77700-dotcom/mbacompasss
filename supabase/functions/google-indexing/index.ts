@@ -1298,6 +1298,181 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "auto_run" || action === "quota_status") {
+      // Daily quotas per Google Indexing API
+      const SUBMISSION_DAILY_QUOTA = 1000;
+      const INSPECTION_DAILY_QUOTA = 200;
+      // Safety buffer to avoid exhausting quota on one site if multiple properties exist
+      const SUBMISSION_SAFETY_BUFFER = 20;
+      const INSPECTION_SAFETY_BUFFER = 5;
+
+      // Compute usage for today (UTC day window)
+      const startOfDay = new Date();
+      startOfDay.setUTCHours(0, 0, 0, 0);
+
+      const { data: todaysLogs } = await supabase
+        .from("indexing_logs")
+        .select("action, status")
+        .gte("created_at", startOfDay.toISOString());
+
+      let submissionsUsed = 0;
+      let inspectionsUsed = 0;
+      if (todaysLogs) {
+        for (const log of todaysLogs) {
+          // Submissions: any submit_url / batch_submit / refresh attempt that actually hit Google
+          if (
+            (log.action === "submit_url" ||
+              log.action === "batch_submit" ||
+              log.action === "refresh") &&
+            (log.status === "success" || log.status === "submitted" || log.status === "failed")
+          ) {
+            submissionsUsed += 1;
+          }
+          // Inspections
+          if (
+            log.action === "check_index_status" &&
+            (log.status === "success" ||
+              log.status === "indexed" ||
+              log.status === "not_indexed" ||
+              log.status === "failed")
+          ) {
+            inspectionsUsed += 1;
+          }
+        }
+      }
+
+      const submissionBudget = Math.max(
+        0,
+        SUBMISSION_DAILY_QUOTA - SUBMISSION_SAFETY_BUFFER - submissionsUsed
+      );
+      const inspectionBudget = Math.max(
+        0,
+        INSPECTION_DAILY_QUOTA - INSPECTION_SAFETY_BUFFER - inspectionsUsed
+      );
+
+      if (action === "quota_status") {
+        return respond({
+          ok: true,
+          data: {
+            submissions_used: submissionsUsed,
+            submissions_remaining: submissionBudget,
+            submissions_quota: SUBMISSION_DAILY_QUOTA,
+            inspections_used: inspectionsUsed,
+            inspections_remaining: inspectionBudget,
+            inspections_quota: INSPECTION_DAILY_QUOTA,
+            window_start: startOfDay.toISOString(),
+          },
+          diagnostics: { action, processing_time_ms: Date.now() - startedAt },
+        });
+      }
+
+      // === auto_run pipeline ===
+      const summary: any = {
+        discovered: 0,
+        submitted: 0,
+        submission_failed: 0,
+        inspected: 0,
+        newly_indexed: 0,
+        submissions_used_before: submissionsUsed,
+        inspections_used_before: inspectionsUsed,
+        submission_budget: submissionBudget,
+        inspection_budget: inspectionBudget,
+        steps: [] as string[],
+      };
+
+      const selfUrl = `${supabaseUrl}/functions/v1/google-indexing`;
+      const selfHeaders = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${supabaseKey}`,
+        apikey: supabaseKey,
+      };
+      const callSelf = async (payload: Record<string, unknown>) => {
+        const res = await fetch(selfUrl, {
+          method: "POST",
+          headers: selfHeaders,
+          body: JSON.stringify(payload),
+        });
+        return res.json().catch(() => ({}));
+      };
+
+      // Step 1: Discover new URLs
+      try {
+        const r = await callSelf({ action: "discover" });
+        summary.discovered = r?.data?.discovered || 0;
+        summary.steps.push(`discover: +${summary.discovered}`);
+      } catch (e: any) {
+        summary.steps.push(`discover_error: ${e?.message || "unknown"}`);
+      }
+
+      // Step 2: Submit pending URLs in batches up to submissionBudget
+      if (submissionBudget > 0) {
+        try {
+          const { data: pendingRows } = await supabase
+            .from("indexing_urls")
+            .select("url, page_type, record_id")
+            .in("status", ["pending", "failed"])
+            .order("created_at", { ascending: true })
+            .limit(submissionBudget);
+
+          if (pendingRows && pendingRows.length) {
+            // Chunk into MAX_BATCH_SIZE (100)
+            for (let i = 0; i < pendingRows.length; i += MAX_BATCH_SIZE) {
+              const chunk = pendingRows.slice(i, i + MAX_BATCH_SIZE);
+              const r = await callSelf({ action: "batch_submit", urls: chunk });
+              summary.submitted += r?.data?.success || 0;
+              summary.submission_failed += r?.data?.failed || 0;
+            }
+          }
+          summary.steps.push(
+            `submit: ok=${summary.submitted} failed=${summary.submission_failed}`
+          );
+        } catch (e: any) {
+          summary.steps.push(`submit_error: ${e?.message || "unknown"}`);
+        }
+      } else {
+        summary.steps.push("submit_skipped: quota exhausted");
+      }
+
+      // Step 3: Check index status in batches up to inspectionBudget
+      if (inspectionBudget > 0) {
+        try {
+          let nextSkip = 0;
+          while (summary.inspected < inspectionBudget) {
+            const remaining = inspectionBudget - summary.inspected;
+            const batchSize = Math.min(STATUS_CHECK_BATCH_SIZE, remaining);
+            const r = await callSelf({
+              action: "check_index_status",
+              limit: batchSize,
+              skip: nextSkip,
+            });
+            const checked = r?.data?.checked || 0;
+            const indexed = r?.data?.indexed || 0;
+            if (!checked) break;
+            summary.inspected += checked;
+            summary.newly_indexed += indexed;
+            nextSkip = r?.data?.next_skip ?? nextSkip + checked;
+            if (r?.data?.truncated === false) break;
+          }
+          summary.steps.push(
+            `inspect: checked=${summary.inspected} newly_indexed=${summary.newly_indexed}`
+          );
+        } catch (e: any) {
+          summary.steps.push(`inspect_error: ${e?.message || "unknown"}`);
+        }
+      } else {
+        summary.steps.push("inspect_skipped: quota exhausted");
+      }
+
+      return respond({
+        ok: true,
+        data: summary,
+        diagnostics: {
+          action,
+          processing_time_ms: Date.now() - startedAt,
+        },
+      });
+    }
+
     if (action === "discover") {
       const tables = [
         {

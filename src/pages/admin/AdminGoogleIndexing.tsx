@@ -535,6 +535,37 @@ const AdminGoogleIndexing = () => {
     setActionLoading(null);
   };
 
+  const handleAutoRun = async () => {
+    setActionLoading("auto-run");
+    pushLog("Auto Run started: discover → submit → check index status (respecting daily quotas)...");
+    try {
+      const result = await callFunction<{
+        discovered: number;
+        submitted: number;
+        submission_failed: number;
+        inspected: number;
+        newly_indexed: number;
+        submission_budget: number;
+        inspection_budget: number;
+        steps: string[];
+      }>({ action: "auto_run" });
+      pushLog(
+        `Auto Run done — discovered:${result.discovered} submitted:${result.submitted} failed:${result.submission_failed} inspected:${result.inspected} newly indexed:${result.newly_indexed}`
+      );
+      (result.steps || []).forEach((s) => pushLog(`  • ${s}`));
+      toast({
+        title: "Auto Run complete",
+        description: `Discovered ${result.discovered}, submitted ${result.submitted}, inspected ${result.inspected}, newly indexed ${result.newly_indexed}`,
+      });
+      await fetchData(false);
+    } catch (error: any) {
+      const { message } = extractRequestError(error);
+      pushLog(`Auto Run failed: ${message}`);
+      toast({ title: "Error", description: message, variant: "destructive" });
+    }
+    setActionLoading(null);
+  };
+
   const handleRefresh = async () => {
     setActionLoading("refresh");
     pushLog("Retrying failed URLs...");
@@ -952,6 +983,19 @@ const AdminGoogleIndexing = () => {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            onClick={handleAutoRun}
+            disabled={!!actionLoading}
+            title="Discover → Submit → Check Index Status. Runs automatically every day at 12 AM IST."
+          >
+            {actionLoading === "auto-run" ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-1" />
+            ) : (
+              <Zap className="w-4 h-4 mr-1" />
+            )}
+            Auto Run (Daily)
+          </Button>
           <Button variant="outline" size="sm" onClick={handleDiscover} disabled={!!actionLoading}>
             {actionLoading === "discover" ? (
               <Loader2 className="w-4 h-4 animate-spin mr-1" />
