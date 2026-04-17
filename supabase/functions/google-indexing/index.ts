@@ -15,6 +15,8 @@ const SITE_URL = "https://bschoolbuzz.com";
 const GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token";
 const MAX_BATCH_SIZE = 100;
 const BATCH_DELAY_MS = 150;
+const STATUS_CHECK_BATCH_SIZE = 15;
+const STATUS_CHECK_CONCURRENCY = 3;
 
 interface ServiceAccount {
   client_email: string;
@@ -687,6 +689,16 @@ function normalizeBatchEntries(rawEntries: unknown[]): BatchEntry[] {
 
 async function delay(ms: number) {
   await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function chunkItems<T>(items: T[], size: number) {
+  const chunks: T[][] = [];
+
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+
+  return chunks;
 }
 
 Deno.serve(async (req) => {
