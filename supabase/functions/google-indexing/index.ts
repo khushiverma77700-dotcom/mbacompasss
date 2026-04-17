@@ -1457,6 +1457,12 @@ Deno.serve(async (req) => {
       }
 
       // === auto_run pipeline ===
+      // Log a heartbeat tick so the admin UI can show "live activity"
+      await supabase.from("indexing_logs").insert({
+        action: "auto_run_tick",
+        status: "started",
+      });
+
       const summary: any = {
         discovered: 0,
         submitted: 0,
