@@ -663,6 +663,8 @@ const AdminGoogleIndexing = () => {
     }
     setActionLoading(null);
   };
+
+  const handleManualSubmit = async () => {
     const url = manualUrl.trim();
     if (!url) return;
 
