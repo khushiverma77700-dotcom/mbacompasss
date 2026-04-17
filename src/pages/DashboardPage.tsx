@@ -120,12 +120,92 @@ const DashboardPage = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="saved" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 max-w-md">
+        <Tabs defaultValue="reports" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 max-w-2xl">
+            <TabsTrigger value="reports" className="gap-1"><FileBarChart2 className="w-4 h-4" /> Reports</TabsTrigger>
             <TabsTrigger value="saved" className="gap-1"><Heart className="w-4 h-4" /> Saved</TabsTrigger>
             <TabsTrigger value="reviews" className="gap-1"><Star className="w-4 h-4" /> Reviews</TabsTrigger>
             <TabsTrigger value="profile" className="gap-1"><Settings className="w-4 h-4" /> Profile</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="reports" className="space-y-8">
+            {/* ROI Reports */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-heading text-lg font-semibold text-foreground flex items-center gap-2">
+                  <IndianRupee className="w-5 h-5 text-primary" /> MBA ROI Reports ({roiReports.length})
+                </h2>
+                <Link to="/roi-calculator"><Button size="sm" variant="outline" className="gap-1"><Calculator className="w-3.5 h-3.5" /> New Report</Button></Link>
+              </div>
+              {roiReports.length === 0 ? (
+                <Card><CardContent className="pt-6 text-center">
+                  <FileBarChart2 className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground">No ROI reports yet.</p>
+                  <Link to="/roi-calculator"><Button variant="outline" className="mt-3">Generate Your First Report</Button></Link>
+                </CardContent></Card>
+              ) : (
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {roiReports.map((r, i) => (
+                    <motion.div key={r.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                      <Card className="hover:-translate-y-1 transition-all duration-300 border-primary/10">
+                        <CardContent className="pt-5">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <p className="font-heading font-semibold text-foreground text-sm">{r.name || "MBA ROI Analysis"}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">{new Date(r.created_at).toLocaleDateString()} · {r.expected_tier}</p>
+                            </div>
+                            {r.roi_category && <Badge variant={r.roi_category === "High" ? "default" : "secondary"} className="text-[10px]">{r.roi_category} ROI</Badge>}
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-border/60">
+                            <div><p className="text-[10px] text-muted-foreground">Investment</p><p className="text-sm font-bold text-foreground">₹{r.total_investment_lakhs || 0}L</p></div>
+                            <div><p className="text-[10px] text-muted-foreground">Salary</p><p className="text-sm font-bold text-emerald-600">₹{r.expected_salary_lakhs || 0}L</p></div>
+                            <div><p className="text-[10px] text-muted-foreground">Payback</p><p className="text-sm font-bold text-primary">{r.payback_years || 0}y</p></div>
+                          </div>
+                          <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                            <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> Score: <span className="font-semibold text-foreground">{r.roi_score || 0}/100</span>
+                          </div>
+                          <Link to="/roi-calculator"><Button size="sm" variant="ghost" className="mt-3 w-full gap-1"><Eye className="w-3.5 h-3.5" /> View Report</Button></Link>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Profile Analyzer Reports */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="font-heading text-lg font-semibold text-foreground flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-primary" /> Profile Analyzer Reports ({profileReports.length})
+                </h2>
+                <Link to="/profile-analyzer"><Button size="sm" variant="outline" className="gap-1"><User className="w-3.5 h-3.5" /> New Analysis</Button></Link>
+              </div>
+              {profileReports.length === 0 ? (
+                <Card><CardContent className="pt-6 text-center text-sm text-muted-foreground">No profile analyses yet.</CardContent></Card>
+              ) : (
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {profileReports.map((r, i) => (
+                    <motion.div key={r.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}>
+                      <Card>
+                        <CardContent className="pt-5">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <p className="font-heading font-semibold text-foreground text-sm">{r.name || "Profile Analysis"}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">{new Date(r.created_at).toLocaleDateString()} · Target: {r.target_exam}</p>
+                            </div>
+                            <Badge variant="secondary" className="text-[10px]">Score {r.profile_score || 0}/10</Badge>
+                          </div>
+                          <Link to="/profile-analyzer"><Button size="sm" variant="ghost" className="mt-3 w-full gap-1"><Eye className="w-3.5 h-3.5" /> View</Button></Link>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
 
           <TabsContent value="saved">
             <h2 className="font-heading text-lg font-semibold text-foreground mb-4">Saved Coaching Institutes ({savedInstitutes.length})</h2>
