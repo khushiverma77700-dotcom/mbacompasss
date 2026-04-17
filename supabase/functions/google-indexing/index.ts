@@ -1055,10 +1055,6 @@ Deno.serve(async (req) => {
     }
 
     if (action === "check_index_status") {
-      // Query Google's urlNotifications/metadata endpoint for each submitted URL.
-      // If Google returns metadata (latest_update with notify_time), it means Google
-      // has acknowledged the URL — we mark it as indexed (best available signal
-      // from the Indexing API; true index confirmation requires Search Console).
       const limit = Math.min(Number(body?.limit) || 50, 100);
       const onlyUrl = typeof body?.url === "string" ? body.url.trim() : "";
 
@@ -1096,8 +1092,13 @@ Deno.serve(async (req) => {
       }
 
       let accessToken: string;
+      let availableSites: string[];
+      let propertySiteUrl: string;
       try {
-        accessToken = await getToken();
+        const serviceAccount = resolveServiceAccountFromEnv();
+        accessToken = await getAccessToken(serviceAccount, [WEBMASTERS_READONLY_SCOPE]);
+        availableSites = await listSearchConsoleSites(accessToken);
+        propertySiteUrl = resolveSearchConsoleSite(availableSites, rows[0].url);
       } catch (error: any) {
         return respond({
           ok: false,
@@ -1117,19 +1118,8 @@ Deno.serve(async (req) => {
 
       for (const row of rows) {
         try {
-          const metaRes = await fetch(
-            `${INDEXING_API_URL}/metadata?url=${encodeURIComponent(row.url)}`,
-            { headers: { Authorization: `Bearer ${accessToken}` } }
-          );
-          const metaData = await readResponseBody(metaRes);
-
-          // 200 OK + latestUpdate => Google has the URL on file (treat as indexed)
-          // 404 NOT_FOUND => Google has no record yet (still pending)
-          const isIndexed =
-            metaRes.ok &&
-            metaData &&
-            typeof metaData === "object" &&
-            ((metaData as any).latestUpdate?.notifyTime || (metaData as any).latest_update?.notify_time);
+          const inspection = await inspectUrlWithSearchConsole(accessToken, row.url, propertySiteUrl);
+          const isIndexed = inspection.ok && isIndexedInInspectionResult(inspection.data);
 
           if (isIndexed) {
             indexedCount += 1;
@@ -1138,7 +1128,10 @@ Deno.serve(async (req) => {
               .update({
                 status: "indexed",
                 indexed_at: now,
-                last_response: { google: metaData, diagnostics: { source: "metadata_check" } },
+                last_response: {
+                  google: inspection.data,
+                  diagnostics: { source: "search_console_inspection", site_property: propertySiteUrl },
+                },
                 error_message: null,
                 updated_at: now,
               })
@@ -1148,24 +1141,41 @@ Deno.serve(async (req) => {
               indexing_url_id: row.id,
               action: "status_check",
               status: "indexed",
-              response: { google: metaData },
+              response: { google: inspection.data, diagnostics: { site_property: propertySiteUrl } },
             });
           } else {
-            // Log the check, but don't change status — URL may still be processing
+            const inspectionMessage = inspection.ok ? null : inspection.errorMessage;
+
             await supabase.from("indexing_logs").insert({
               indexing_url_id: row.id,
               action: "status_check",
-              status: metaRes.status === 404 ? "not_indexed_yet" : "check_failed",
-              response: { google: metaData, diagnostics: { google_status: metaRes.status } },
-              error_message: metaRes.ok ? null : getGoogleErrorMessage(metaData),
+              status: inspection.ok ? "not_indexed_yet" : "check_failed",
+              response: {
+                google: inspection.data,
+                diagnostics: { google_status: inspection.status, site_property: propertySiteUrl },
+              },
+              error_message: inspectionMessage,
             });
+
+            await supabase
+              .from("indexing_urls")
+              .update({
+                last_response: {
+                  google: inspection.data,
+                  diagnostics: { source: "search_console_inspection", site_property: propertySiteUrl },
+                },
+                error_message: inspectionMessage,
+                updated_at: now,
+              })
+              .eq("id", row.id);
           }
 
           results.push({
             url: row.url,
             indexed: Boolean(isIndexed),
-            google_status: metaRes.status,
-            google: metaData,
+            google_status: inspection.status,
+            google: inspection.data,
+            site_property: propertySiteUrl,
           });
         } catch (err: any) {
           results.push({
@@ -1184,6 +1194,7 @@ Deno.serve(async (req) => {
           checked: rows.length,
           indexed: indexedCount,
           not_indexed: rows.length - indexedCount,
+          site_property: propertySiteUrl,
           results,
         },
         diagnostics: { action, processing_time_ms: Date.now() - startedAt },
