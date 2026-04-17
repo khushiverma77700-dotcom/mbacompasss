@@ -647,13 +647,14 @@ const AdminGoogleIndexing = () => {
         checked: number;
         indexed: number;
         not_indexed: number;
-      }>({ action: "check_index_status", limit: 50 });
+        site_property?: string;
+      }>({ action: "check_index_status", limit: Math.min(Math.max(urls.length, 20), 100) });
       pushLog(
-        `Status check done — ${result.indexed}/${result.checked} confirmed on Google, ${result.not_indexed} not yet.`
+        `Status check done — ${result.indexed}/${result.checked} confirmed on Google, ${result.not_indexed} not yet.${result.site_property ? ` Property: ${result.site_property}` : ""}`
       );
       toast({
         title: "Index status checked",
-        description: `${result.indexed} of ${result.checked} URLs confirmed on Google.`,
+        description: `${result.indexed} of ${result.checked} URLs confirmed on Google${result.site_property ? ` via ${result.site_property}` : ""}.`,
       });
       await fetchData(false);
     } catch (error: any) {

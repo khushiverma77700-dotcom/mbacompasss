@@ -7,6 +7,10 @@ const corsHeaders = {
 };
 
 const INDEXING_API_URL = "https://indexing.googleapis.com/v3/urlNotifications";
+const SEARCH_CONSOLE_SITES_API_URL = "https://www.googleapis.com/webmasters/v3/sites";
+const URL_INSPECTION_API_URL = "https://searchconsole.googleapis.com/v1/urlInspection/index:inspect";
+const INDEXING_SCOPE = "https://www.googleapis.com/auth/indexing";
+const WEBMASTERS_READONLY_SCOPE = "https://www.googleapis.com/auth/webmasters.readonly";
 const SITE_URL = "https://bschoolbuzz.com";
 const GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token";
 const MAX_BATCH_SIZE = 100;
@@ -354,12 +358,15 @@ function createFailedSubmission(
   };
 }
 
-async function getAccessToken(sa: ServiceAccount): Promise<string> {
+async function getAccessToken(
+  sa: ServiceAccount,
+  scopes: string[] = [INDEXING_SCOPE]
+): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   const header = { alg: "RS256", typ: "JWT" };
   const payload = {
     iss: sa.client_email,
-    scope: "https://www.googleapis.com/auth/indexing",
+    scope: scopes.join(" "),
     aud: sa.token_uri,
     iat: now,
     exp: now + 3600,
@@ -461,6 +468,125 @@ async function submitUrl(
       response_preview: stringifyValue(data).slice(0, 500),
     },
   };
+}
+
+async function listSearchConsoleSites(accessToken: string): Promise<string[]> {
+  const response = await fetch(SEARCH_CONSOLE_SITES_API_URL, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  const data = await readResponseBody(response);
+
+  if (!response.ok) {
+    throw createStageError(
+      classifyGoogleErrorStage(response.status, data),
+      `Failed to load Search Console properties: ${getGoogleErrorMessage(data)}`,
+      {
+        google_status: response.status,
+        response_preview: stringifyValue(data).slice(0, 500),
+      }
+    );
+  }
+
+  if (!data || typeof data !== "object" || !Array.isArray((data as any).siteEntry)) {
+    return [];
+  }
+
+  return (data as any).siteEntry
+    .map((entry: any) => (typeof entry?.siteUrl === "string" ? entry.siteUrl : null))
+    .filter((value: string | null): value is string => Boolean(value));
+}
+
+function resolveSearchConsoleSite(availableSites: string[], inspectionUrl: string): string {
+  const { hostname, origin } = new URL(inspectionUrl);
+  const bareHost = hostname.replace(/^www\./, "");
+  const candidates = Array.from(
+    new Set([
+      `sc-domain:${bareHost}`,
+      `${origin}/`,
+      `${SITE_URL}/`,
+      `https://${bareHost}/`,
+      `https://www.${bareHost}/`,
+      `http://${bareHost}/`,
+      `http://www.${bareHost}/`,
+    ])
+  );
+
+  const match = candidates.find((candidate) => availableSites.includes(candidate));
+  if (match) return match;
+
+  throw createStageError(
+    "permission_denied",
+    `No matching Search Console property found for ${inspectionUrl}.`,
+    {
+      requested_url: inspectionUrl,
+      available_sites: availableSites.slice(0, 20),
+    }
+  );
+}
+
+async function inspectUrlWithSearchConsole(
+  accessToken: string,
+  inspectionUrl: string,
+  siteUrl: string
+) {
+  const response = await fetch(URL_INSPECTION_API_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      inspectionUrl,
+      siteUrl,
+      languageCode: "en-US",
+    }),
+  });
+
+  const data = await readResponseBody(response);
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    data,
+    errorMessage: response.ok ? null : getGoogleErrorMessage(data),
+    diagnostics: {
+      requested_url: inspectionUrl,
+      site_property: siteUrl,
+      google_status: response.status,
+      error_stage: response.ok ? "inspected" : classifyGoogleErrorStage(response.status, data),
+      response_preview: stringifyValue(data).slice(0, 500),
+    },
+  };
+}
+
+function isIndexedInInspectionResult(data: unknown) {
+  const inspection = (data as any)?.inspectionResult?.indexStatusResult;
+  const coverageState = String(inspection?.coverageState || "").toLowerCase().trim();
+  const verdict = String(inspection?.verdict || "").toLowerCase().trim();
+
+  if (!coverageState && !verdict) return false;
+
+  const definitelyNotIndexed = [
+    "not indexed",
+    "currently not indexed",
+    "discovered - currently not indexed",
+    "crawled - currently not indexed",
+    "page with redirect",
+    "soft 404",
+    "alternate page",
+    "duplicate without user-selected canonical",
+    "blocked",
+    "excluded",
+  ].some((marker) => coverageState.includes(marker));
+
+  if (definitelyNotIndexed) return false;
+
+  return (
+    coverageState.startsWith("indexed") ||
+    coverageState.includes("submitted and indexed") ||
+    (verdict === "pass" && coverageState.includes("index"))
+  );
 }
 
 async function persistSubmissionResult(
@@ -929,10 +1055,6 @@ Deno.serve(async (req) => {
     }
 
     if (action === "check_index_status") {
-      // Query Google's urlNotifications/metadata endpoint for each submitted URL.
-      // If Google returns metadata (latest_update with notify_time), it means Google
-      // has acknowledged the URL — we mark it as indexed (best available signal
-      // from the Indexing API; true index confirmation requires Search Console).
       const limit = Math.min(Number(body?.limit) || 50, 100);
       const onlyUrl = typeof body?.url === "string" ? body.url.trim() : "";
 
@@ -970,8 +1092,13 @@ Deno.serve(async (req) => {
       }
 
       let accessToken: string;
+      let availableSites: string[];
+      let propertySiteUrl: string;
       try {
-        accessToken = await getToken();
+        const serviceAccount = resolveServiceAccountFromEnv();
+        accessToken = await getAccessToken(serviceAccount, [WEBMASTERS_READONLY_SCOPE]);
+        availableSites = await listSearchConsoleSites(accessToken);
+        propertySiteUrl = resolveSearchConsoleSite(availableSites, rows[0].url);
       } catch (error: any) {
         return respond({
           ok: false,
@@ -991,19 +1118,8 @@ Deno.serve(async (req) => {
 
       for (const row of rows) {
         try {
-          const metaRes = await fetch(
-            `${INDEXING_API_URL}/metadata?url=${encodeURIComponent(row.url)}`,
-            { headers: { Authorization: `Bearer ${accessToken}` } }
-          );
-          const metaData = await readResponseBody(metaRes);
-
-          // 200 OK + latestUpdate => Google has the URL on file (treat as indexed)
-          // 404 NOT_FOUND => Google has no record yet (still pending)
-          const isIndexed =
-            metaRes.ok &&
-            metaData &&
-            typeof metaData === "object" &&
-            ((metaData as any).latestUpdate?.notifyTime || (metaData as any).latest_update?.notify_time);
+          const inspection = await inspectUrlWithSearchConsole(accessToken, row.url, propertySiteUrl);
+          const isIndexed = inspection.ok && isIndexedInInspectionResult(inspection.data);
 
           if (isIndexed) {
             indexedCount += 1;
@@ -1012,7 +1128,10 @@ Deno.serve(async (req) => {
               .update({
                 status: "indexed",
                 indexed_at: now,
-                last_response: { google: metaData, diagnostics: { source: "metadata_check" } },
+                last_response: {
+                  google: inspection.data,
+                  diagnostics: { source: "search_console_inspection", site_property: propertySiteUrl },
+                },
                 error_message: null,
                 updated_at: now,
               })
@@ -1022,24 +1141,41 @@ Deno.serve(async (req) => {
               indexing_url_id: row.id,
               action: "status_check",
               status: "indexed",
-              response: { google: metaData },
+              response: { google: inspection.data, diagnostics: { site_property: propertySiteUrl } },
             });
           } else {
-            // Log the check, but don't change status — URL may still be processing
+            const inspectionMessage = inspection.ok ? null : inspection.errorMessage;
+
             await supabase.from("indexing_logs").insert({
               indexing_url_id: row.id,
               action: "status_check",
-              status: metaRes.status === 404 ? "not_indexed_yet" : "check_failed",
-              response: { google: metaData, diagnostics: { google_status: metaRes.status } },
-              error_message: metaRes.ok ? null : getGoogleErrorMessage(metaData),
+              status: inspection.ok ? "not_indexed_yet" : "check_failed",
+              response: {
+                google: inspection.data,
+                diagnostics: { google_status: inspection.status, site_property: propertySiteUrl },
+              },
+              error_message: inspectionMessage,
             });
+
+            await supabase
+              .from("indexing_urls")
+              .update({
+                last_response: {
+                  google: inspection.data,
+                  diagnostics: { source: "search_console_inspection", site_property: propertySiteUrl },
+                },
+                error_message: inspectionMessage,
+                updated_at: now,
+              })
+              .eq("id", row.id);
           }
 
           results.push({
             url: row.url,
             indexed: Boolean(isIndexed),
-            google_status: metaRes.status,
-            google: metaData,
+            google_status: inspection.status,
+            google: inspection.data,
+            site_property: propertySiteUrl,
           });
         } catch (err: any) {
           results.push({
@@ -1058,6 +1194,7 @@ Deno.serve(async (req) => {
           checked: rows.length,
           indexed: indexedCount,
           not_indexed: rows.length - indexedCount,
+          site_property: propertySiteUrl,
           results,
         },
         diagnostics: { action, processing_time_ms: Date.now() - startedAt },
