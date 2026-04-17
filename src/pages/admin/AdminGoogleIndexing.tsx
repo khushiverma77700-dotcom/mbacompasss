@@ -7,6 +7,19 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   Table,
   TableBody,
   TableCell,
@@ -128,6 +141,9 @@ const AdminGoogleIndexing = () => {
   const [batchProgress, setBatchProgress] = useState<BatchProgressState | null>(null);
   const [liveBatchItems, setLiveBatchItems] = useState<LiveBatchItem[]>([]);
   const [actionLog, setActionLog] = useState<string[]>([]);
+  const [availableSites, setAvailableSites] = useState<string[]>([]);
+  const [selectedSite, setSelectedSite] = useState<string>("auto");
+  const [loadingSites, setLoadingSites] = useState(false);
 
   const fetchData = useCallback(
     async (showLoader = true) => {
@@ -178,6 +194,31 @@ const AdminGoogleIndexing = () => {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Fetch available Search Console sites once
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoadingSites(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("google-indexing", {
+          body: { action: "list_sites" },
+        });
+        if (cancelled) return;
+        if (!error && data && typeof data === "object" && "ok" in data && (data as any).ok) {
+          const sites: string[] = (data as any).data?.sites || [];
+          setAvailableSites(sites);
+        }
+      } catch {
+        // silent
+      } finally {
+        if (!cancelled) setLoadingSites(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -675,7 +716,11 @@ const AdminGoogleIndexing = () => {
           not_indexed: number;
           remaining?: number;
           site_property?: string;
-        }>({ action: "check_index_status", limit: 12 });
+        }>({
+          action: "check_index_status",
+          limit: 12,
+          ...(selectedSite && selectedSite !== "auto" ? { site_property: selectedSite } : {}),
+        });
 
         totalChecked += result.checked || 0;
         totalIndexed += result.indexed || 0;
@@ -873,6 +918,19 @@ const AdminGoogleIndexing = () => {
     ? Math.round((batchProgress.processed / Math.max(batchProgress.total, 1)) * 100)
     : 0;
 
+  const getCoverageInfo = (response: unknown): { coverage: string; verdict: string } => {
+    try {
+      const r = response as any;
+      const result = r?.google?.inspectionResult?.indexStatusResult;
+      return {
+        coverage: String(result?.coverageState || "").trim(),
+        verdict: String(result?.verdict || "").trim(),
+      };
+    } catch {
+      return { coverage: "", verdict: "" };
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -903,6 +961,19 @@ const AdminGoogleIndexing = () => {
               ? `Submitting ${batchProgress.processed}/${batchProgress.total}`
               : "Submit All Pending"}
           </Button>
+          <Select value={selectedSite} onValueChange={setSelectedSite} disabled={!!actionLoading}>
+            <SelectTrigger className="h-9 w-[230px] text-xs" title="Search Console property used for Check Index Status">
+              <SelectValue placeholder={loadingSites ? "Loading properties…" : "Auto-detect property"} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto">Auto-detect property</SelectItem>
+              {availableSites.map((site) => (
+                <SelectItem key={site} value={site} className="text-xs font-mono">
+                  {site}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button
             variant="outline"
             size="sm"
@@ -1269,7 +1340,39 @@ const AdminGoogleIndexing = () => {
                             {row.page_type}
                           </Badge>
                         </TableCell>
-                        <TableCell>{statusBadge(getDisplayStatus(row))}</TableCell>
+                        <TableCell>
+                          {(() => {
+                            const { coverage, verdict } = getCoverageInfo(row.last_response);
+                            const badge = statusBadge(getDisplayStatus(row));
+                            if (!coverage && !verdict) return badge;
+                            return (
+                              <TooltipProvider delayDuration={100}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="inline-flex cursor-help border-b border-dashed border-muted-foreground/40">
+                                      {badge}
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-xs text-xs">
+                                    <div className="space-y-1">
+                                      {coverage && (
+                                        <div>
+                                          <span className="font-semibold">Google coverage:</span>{" "}
+                                          {coverage}
+                                        </div>
+                                      )}
+                                      {verdict && (
+                                        <div>
+                                          <span className="font-semibold">Verdict:</span> {verdict}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            );
+                          })()}
+                        </TableCell>
                         <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                           {formatTime(row.last_submitted_at)}
                         </TableCell>

@@ -794,6 +794,30 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "list_sites") {
+      try {
+        const serviceAccount = resolveServiceAccountFromEnv();
+        const accessToken = await getAccessToken(serviceAccount, [WEBMASTERS_READONLY_SCOPE]);
+        const sites = await listSearchConsoleSites(accessToken);
+        return respond({
+          ok: true,
+          data: { sites },
+          diagnostics: { action, processing_time_ms: Date.now() - startedAt },
+        });
+      } catch (error: any) {
+        return respond({
+          ok: false,
+          error: error?.message || "Failed to list Search Console sites",
+          diagnostics: {
+            action,
+            error_stage: error?.stage || "auth_issue",
+            processing_time_ms: Date.now() - startedAt,
+            ...(error?.details || {}),
+          },
+        });
+      }
+    }
+
     if (action === "submit_url") {
       const url = typeof body?.url === "string" ? body.url.trim() : "";
       const pageType = typeof body?.page_type === "string" ? body.page_type : "other";
@@ -1139,7 +1163,13 @@ Deno.serve(async (req) => {
         const serviceAccount = resolveServiceAccountFromEnv();
         accessToken = await getAccessToken(serviceAccount, [WEBMASTERS_READONLY_SCOPE]);
         availableSites = await listSearchConsoleSites(accessToken);
-        propertySiteUrl = resolveSearchConsoleSite(availableSites, rows[0].url);
+        const overrideSite =
+          typeof body?.site_property === "string" ? body.site_property.trim() : "";
+        if (overrideSite && availableSites.includes(overrideSite)) {
+          propertySiteUrl = overrideSite;
+        } else {
+          propertySiteUrl = resolveSearchConsoleSite(availableSites, rows[0].url);
+        }
       } catch (error: any) {
         return respond({
           ok: false,
