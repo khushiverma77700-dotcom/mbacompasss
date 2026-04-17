@@ -983,6 +983,19 @@ const AdminGoogleIndexing = () => {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            onClick={handleAutoRun}
+            disabled={!!actionLoading}
+            title="Discover → Submit → Check Index Status. Runs automatically every day at 12 AM IST."
+          >
+            {actionLoading === "auto-run" ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-1" />
+            ) : (
+              <Zap className="w-4 h-4 mr-1" />
+            )}
+            Auto Run (Daily)
+          </Button>
           <Button variant="outline" size="sm" onClick={handleDiscover} disabled={!!actionLoading}>
             {actionLoading === "discover" ? (
               <Loader2 className="w-4 h-4 animate-spin mr-1" />
