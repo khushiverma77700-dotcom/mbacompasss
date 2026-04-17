@@ -195,6 +195,31 @@ const AdminGoogleIndexing = () => {
     fetchData();
   }, [fetchData]);
 
+  // Fetch available Search Console sites once
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoadingSites(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("google-indexing", {
+          body: { action: "list_sites" },
+        });
+        if (cancelled) return;
+        if (!error && data && typeof data === "object" && "ok" in data && (data as any).ok) {
+          const sites: string[] = (data as any).data?.sites || [];
+          setAvailableSites(sites);
+        }
+      } catch {
+        // silent
+      } finally {
+        if (!cancelled) setLoadingSites(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   useEffect(() => {
     const interval = window.setInterval(() => {
       fetchData(false);
