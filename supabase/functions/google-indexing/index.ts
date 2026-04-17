@@ -15,7 +15,7 @@ const SITE_URL = "https://bschoolbuzz.com";
 const GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token";
 const MAX_BATCH_SIZE = 100;
 const BATCH_DELAY_MS = 150;
-const STATUS_CHECK_BATCH_SIZE = 15;
+const STATUS_CHECK_BATCH_SIZE = 12;
 const STATUS_CHECK_CONCURRENCY = 3;
 
 interface ServiceAccount {
