@@ -25,6 +25,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 import SEOHead, { generateBreadcrumbSchema, generateFAQSchema, generateWebsiteSchema } from "@/components/SEOHead";
+import NarrativeBlock from "@/components/roi/NarrativeBlock";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   ComposedChart, Line, Legend, AreaChart, Area, PieChart, Pie, Cell, RadarChart, PolarGrid,
