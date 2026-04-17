@@ -1696,6 +1696,17 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
 
         {/* OVERVIEW TAB */}
         <TabsContent value="overview" className="space-y-5 mt-5">
+          <WhyThisMatters
+            icon={FileText}
+            tone="blue"
+            title="Your MBA at a glance"
+            purpose="A 30-second snapshot of whether this MBA is worth the money, time and effort — before you dive into the details."
+            bullets={[
+              "See your headline ROI score and verdict in one place",
+              "Cross-check your profile inputs are correct",
+              "Get the AI's bottom-line recommendation upfront",
+            ]}
+          />
           <Card>
             <CardContent className="p-6">
               <h3 className="font-bold text-foreground mb-3 flex items-center gap-2"><User className="w-4 h-4 text-primary" /> Profile Summary</h3>
@@ -1941,6 +1952,17 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
           )}
         </TabsContent>
         <TabsContent value="financial" className="space-y-5 mt-5">
+          <WhyThisMatters
+            icon={Wallet}
+            tone="emerald"
+            title="Will the money come back?"
+            purpose="See exactly how much you spend, when you break even, and how much extra you earn over 10 years."
+            bullets={[
+              "Total cost: tuition + living + 2 years of lost salary",
+              "Payback period — when MBA pays for itself",
+              "10-year net advantage vs. staying in your current job",
+            ]}
+          />
           {ai?.financial_analysis && (
             <NarrativeBlock
               title="Financial Deep-Dive"
@@ -2083,6 +2105,17 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
 
         {/* COLLEGES TAB */}
         <TabsContent value="colleges" className="space-y-5 mt-5">
+          <WhyThisMatters
+            icon={Building2}
+            tone="violet"
+            title="Where should you actually apply?"
+            purpose="A balanced shortlist of Dream, Target and Safe colleges — each scored on fees, salary, payback and ROI."
+            bullets={[
+              "Dream: stretch picks worth the extra prep",
+              "Target: realistic given your profile and percentile",
+              "Safe: high-confidence backups so you don't lose a year",
+            ]}
+          />
           {colleges?.dream?.length > 0 && (
             <CollegeBucket title="Dream Colleges" subtitle={ai?.dream_narrative} colleges={colleges.dream} accent="from-violet-50 to-violet-100/40" badgeClass="bg-violet-100 text-violet-700" icon={Trophy} />
           )}
@@ -2244,6 +2277,17 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
 
         {/* CAREER TAB */}
         <TabsContent value="career" className="space-y-5 mt-5">
+          <WhyThisMatters
+            icon={TrendingUp}
+            tone="blue"
+            title="Where will you be in 5 years?"
+            purpose="Understand the roles, salary jumps and growth path you can realistically expect after graduation."
+            bullets={[
+              "Year-by-year salary trajectory through Year 10",
+              "Likely roles at each stage — entry to leadership",
+              "Specializations and industries that suit your profile",
+            ]}
+          />
           {ai?.career_trajectory && (
             <NarrativeBlock
               title="10-Year Career Trajectory"
@@ -2311,6 +2355,17 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
 
         {/* RISK TAB */}
         <TabsContent value="risk" className="space-y-5 mt-5">
+          <WhyThisMatters
+            icon={AlertTriangle}
+            tone="amber"
+            title="What could go wrong?"
+            purpose="Know the real risks before you commit ₹20–40 lakhs and 2 years — and how to defuse each one."
+            bullets={[
+              "Placement, debt, opportunity-cost and ROI risks",
+              "A single risk score so you can compare options",
+              "Concrete mitigations for each red flag",
+            ]}
+          />
           {ai?.risk_analysis && (
             <NarrativeBlock
               title="Risk Analysis"
@@ -2358,6 +2413,17 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
 
         {/* ROADMAP TAB */}
         <TabsContent value="roadmap" className="space-y-5 mt-5">
+          <WhyThisMatters
+            icon={Compass}
+            tone="violet"
+            title="Your next 6–12 months, planned"
+            purpose="A step-by-step action plan so you stop wondering 'what do I do next?' and start moving."
+            bullets={[
+              "Prioritised actions: critical, high, medium",
+              "Realistic timelines for prep, applications and interviews",
+              "Personalised to your profile, exam and target tier",
+            ]}
+          />
           {ai?.recommendations?.length > 0 && (
             <Card>
               <CardContent className="p-6">
