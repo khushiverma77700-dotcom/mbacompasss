@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { User, Heart, Star, Settings, MapPin, Trash2, Save, Calculator, TrendingUp, Eye } from "lucide-react";
+import { User, Heart, Star, Settings, MapPin, Trash2, Save, Calculator, TrendingUp, Eye, FileBarChart2, IndianRupee } from "lucide-react";
 import { motion } from "framer-motion";
 
 const DashboardPage = () => {
@@ -19,6 +19,8 @@ const DashboardPage = () => {
   const [profile, setProfile] = useState<any>(null);
   const [savedInstitutes, setSavedInstitutes] = useState<any[]>([]);
   const [reviews, setReviews] = useState<any[]>([]);
+  const [roiReports, setRoiReports] = useState<any[]>([]);
+  const [profileReports, setProfileReports] = useState<any[]>([]);
   const [profileForm, setProfileForm] = useState({ display_name: "", phone: "", city: "", target_exam: "" });
   const [saving, setSaving] = useState(false);
 
@@ -31,7 +33,27 @@ const DashboardPage = () => {
     fetchProfile();
     fetchSaved();
     fetchReviews();
+    fetchRoiReports();
+    fetchProfileReports();
   }, [user]);
+
+  const fetchRoiReports = async () => {
+    const { data } = await supabase
+      .from("roi_analyses")
+      .select("id, name, target_exams, expected_tier, payback_years, roi_score, roi_category, total_investment_lakhs, expected_salary_lakhs, created_at")
+      .eq("user_id", user!.id)
+      .order("created_at", { ascending: false });
+    setRoiReports(data || []);
+  };
+
+  const fetchProfileReports = async () => {
+    const { data } = await supabase
+      .from("profile_analyses")
+      .select("id, name, target_exam, profile_score, created_at, report_unlocked")
+      .eq("user_id", user!.id)
+      .order("created_at", { ascending: false });
+    setProfileReports(data || []);
+  };
 
   const fetchProfile = async () => {
     const { data } = await supabase.from("profiles").select("*").eq("user_id", user!.id).maybeSingle();
