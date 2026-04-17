@@ -60,15 +60,15 @@ const StatsCounterSection = () => (
               transition={{ delay: i * 0.1, duration: 0.5 }}
               className="group"
             >
-              <div className="bg-card rounded-2xl p-5 md:p-6 text-center border border-border shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-                <div className={`w-12 h-12 md:w-14 md:h-14 mx-auto rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3 shadow-md group-hover:scale-110 transition-transform`}>
-                  <Icon className="w-6 h-6 md:w-7 md:h-7 text-white" />
+              <div className="bg-card rounded-xl p-3 md:p-4 text-center border border-border shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
+                <div className={`w-9 h-9 md:w-10 md:h-10 mx-auto rounded-lg bg-gradient-to-br ${stat.color} flex items-center justify-center mb-2 shadow-sm group-hover:scale-110 transition-transform`}>
+                  <Icon className="w-4 h-4 md:w-5 md:h-5 text-white" />
                 </div>
-                <p className="text-2xl md:text-4xl font-extrabold text-foreground mb-0.5 tracking-tight font-heading">
+                <p className="text-lg md:text-2xl font-extrabold text-foreground mb-0.5 tracking-tight font-heading leading-tight">
                   <AnimatedNumber target={stat.value} suffix={stat.suffix} />
                 </p>
-                <p className="text-foreground font-semibold text-xs md:text-sm mb-0.5">{stat.label}</p>
-                <p className="text-muted-foreground text-[10px] md:text-xs">{stat.desc}</p>
+                <p className="text-foreground font-semibold text-[11px] md:text-xs mb-0.5 leading-tight">{stat.label}</p>
+                <p className="text-muted-foreground text-[9px] md:text-[11px] leading-tight">{stat.desc}</p>
               </div>
             </motion.div>
           );
