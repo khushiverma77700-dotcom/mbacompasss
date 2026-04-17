@@ -641,25 +641,97 @@ const AdminGoogleIndexing = () => {
 
   const handleCheckIndexStatus = async () => {
     setActionLoading("check-status");
-    pushLog("Asking Google which URLs are already indexed…");
+    const pendingCount = urls.filter(
+      (u) => !u.indexed_at && (u.status === "submitted" || u.status === "pending")
+    ).length;
+    const totalToCheck = Math.max(pendingCount, 1);
+
+    setBatchProgress({
+      total: totalToCheck,
+      processed: 0,
+      remaining: totalToCheck,
+      success: 0,
+      failed: 0,
+      currentUrl: null,
+      startedAt: new Date().toISOString(),
+      finishedAt: null,
+      isRunning: true,
+    });
+    setLiveBatchItems([]);
+    pushLog(`Asking Google which URLs are indexed… (${totalToCheck} to check)`);
+
+    let totalIndexed = 0;
+    let totalChecked = 0;
+    let totalFailed = 0;
+    let siteProp: string | undefined;
+    let guard = 0;
+    const maxIterations = Math.ceil(totalToCheck / 10) + 3;
+
     try {
-      const result = await callFunction<{
-        checked: number;
-        indexed: number;
-        not_indexed: number;
-        site_property?: string;
-      }>({ action: "check_index_status", limit: Math.min(Math.max(urls.length, 20), 100) });
-      pushLog(
-        `Status check done — ${result.indexed}/${result.checked} confirmed on Google, ${result.not_indexed} not yet.${result.site_property ? ` Property: ${result.site_property}` : ""}`
+      while (guard++ < maxIterations) {
+        const result = await callFunction<{
+          checked: number;
+          indexed: number;
+          not_indexed: number;
+          remaining?: number;
+          site_property?: string;
+        }>({ action: "check_index_status", limit: 12 });
+
+        totalChecked += result.checked || 0;
+        totalIndexed += result.indexed || 0;
+        totalFailed += Math.max((result.checked || 0) - (result.indexed || 0) - (result.not_indexed || 0), 0);
+        siteProp = result.site_property || siteProp;
+
+        setBatchProgress((prev) =>
+          prev
+            ? {
+                ...prev,
+                processed: Math.min(totalChecked, prev.total),
+                remaining: Math.max(prev.total - totalChecked, 0),
+                success: totalIndexed,
+                failed: totalFailed,
+                currentUrl: null,
+              }
+            : prev
+        );
+
+        pushLog(
+          `Batch ${guard}: ${result.indexed}/${result.checked} indexed${
+            result.remaining ? ` · ${result.remaining} still to check` : ""
+          }`
+        );
+
+        // Stop if nothing was processed or Google says no remaining
+        if ((result.checked || 0) === 0 || !(result.remaining && result.remaining > 0)) {
+          break;
+        }
+      }
+
+      setBatchProgress((prev) =>
+        prev
+          ? {
+              ...prev,
+              finishedAt: new Date().toISOString(),
+              isRunning: false,
+              processed: prev.total,
+              remaining: 0,
+            }
+          : prev
       );
+
       toast({
         title: "Index status checked",
-        description: `${result.indexed} of ${result.checked} URLs confirmed on Google${result.site_property ? ` via ${result.site_property}` : ""}.`,
+        description: `${totalIndexed} of ${totalChecked} URLs confirmed on Google${
+          siteProp ? ` via ${siteProp}` : ""
+        }.`,
       });
       await fetchData(false);
     } catch (error: any) {
       const { message } = extractRequestError(error);
       pushLog(`Status check failed: ${message}`);
+      setBatchProgress((prev) =>
+        prev ? { ...prev, finishedAt: new Date().toISOString(), isRunning: false } : prev
+      );
       toast({ title: "Error", description: message, variant: "destructive" });
     }
     setActionLoading(null);
