@@ -1,73 +1,52 @@
 
-Building an MBA ROI Calculator mirroring the Profile Analyzer pattern. Reusing existing OTP infra (`send-otp`/`verify-otp`), `colleges` table for dataset, and Lovable AI for the narrative layer.
+Goal: Make the MBA ROI report self-explanatory, visually richer, and easier to navigate.
 
-## Plan: AI-Powered MBA ROI Calculator
+Scope (file: `src/pages/MBARoiCalculatorPage.tsx`, plus `src/components/roi/NarrativeBlock.tsx`):
 
-### 1. Database (1 migration)
-**New table: `roi_analyses`**
-- Identity: `id`, `user_id` (nullable), `name`, `email`, `phone`, `created_at`, `updated_at`
-- Inputs: `graduation_stream`, `current_salary_lakhs`, `work_experience_years`, `target_exams[]`, `expected_tier` ('Tier 1'/'Tier 2'/'Tier 3'), `preferred_specialization`, `budget_lakhs`, `preferred_location` ('India'/'Abroad'/city), `target_states[]`
-- Computed: `total_investment_lakhs`, `expected_salary_lakhs`, `payback_years`, `roi_score` (0–100), `roi_category` ('High'/'Medium'/'Low')
-- Output: `ai_insights` (jsonb — verdict, summary, risk analysis, recommendations narrative), `college_recommendations` (jsonb — dream/target/safe buckets with ROI per college), `report_unlocked` (bool)
-- RLS: identical pattern to `profile_analyses` (anyone insert, owner+admin read/update, admin delete)
+1. Sticky Tab Navigation
+   - Wrap the report `TabsList` (and the TabHint banner) in a `sticky top-16 z-40` container with a blurred white background (`bg-white/85 backdrop-blur-md border-b`).
+   - Apply on both the actual Report and the Sample Report showcase so users can switch tabs anytime without scrolling back up.
+   - Ensure it sits below the global navbar (offset using existing navbar height ~64px).
 
-### 2. Edge Function: `roi-calculator`
-- Validates input (zod)
-- **Deterministic ROI math** (no AI):
-  - Pulls colleges from `colleges` table filtered by tier + specializations + location/state + accepted exams
-  - For each college: fees from `fees_lakhs`, expected salary parsed from `placement_avg`
-  - `Total Investment = fees + opportunity_cost (current_salary × 2 years)`
-  - `Annual Gain = expected_salary − current_salary`
-  - `Payback = Total Investment / Annual Gain`
-  - `ROI Score` weighted: payback period (50%), salary jump multiple (30%), tier prestige (20%)
-  - Bucket into Dream/Target/Safe by tier vs user's expected tier
-- **Light AI layer** (Gemini 2.5 Flash via Lovable AI Gateway):
-  - Generates: personalized verdict ("Should you do an MBA now?"), risk analysis paragraph, 3–5 recommendations, narrative for each bucket
-  - Uses `logAIUsage` helper (per existing pattern)
-- Saves analysis to `roi_analyses`, returns full report
+2. "Why this matters" intro for every section
+   - Add a small intro card at the top of each tab (Overview, Financial, Career, Risk, Roadmap, Colleges) with:
+     - A one-line "Purpose" (what this tab shows)
+     - 2–3 bullet "Why you should check this" points in plain student-friendly language
+     - An icon + soft gradient background (blue/emerald/violet per tab)
+   - Content is static, advisor-style copy (not AI generated) so it always renders cleanly. Examples:
+     - Overview: "Your MBA at a glance — is it worth the money, time, and effort?"
+     - Financial: "See exactly how much you spend, when you break even, and how much extra you earn over 10 years."
+     - Career: "Understand the roles, salary jumps, and growth path you can expect after graduation."
+     - Risk: "Know what could go wrong before you commit ₹20–40 lakhs."
+     - Roadmap: "Your step-by-step action plan for the next 6–12 months."
+     - Colleges: "Compare every shortlisted college on fees, salary, payback, and ROI score."
 
-### 3. Frontend: `/roi-calculator` page (`MBARoiCalculatorPage.tsx`)
-Mirrors `ProfileAnalyzerPage` step machine + animations:
-- **Step 0 — Landing**: Hero "Check Your MBA ROI Before You Invest", animated sample ROI preview (payback gauge, salary bars), how-it-works (4 steps), trust stats, sample report preview, FAQ, cross-promo of other AI tools
-- **Step 1–3 — Form** (multi-step):
-  - Step 1: Name, Email, **Mobile + OTP** (reuses `send-otp`/`verify-otp` — mandatory verified)
-  - Step 2: Graduation stream, current salary, work experience, target exams (chips), expected tier
-  - Step 3: Preferred specialization, budget range slider, preferred location (India/Abroad/city), target states (optional)
-- **Step 4 — Loading**: progress bar with rotating fun facts (matches Profile Analyzer)
-- **Step 5 — Report**: locked preview + `LoginRequiredDialog` gate (auth required to unlock, same pattern). Once unlocked:
-  - Profile Summary card
-  - **ROI Headline panel**: Total Investment | Expected Salary | Payback Years | ROI category badge
-  - **AI Verdict** ("Should you do an MBA now?")
-  - **College Recommendations** — 3 buckets (Dream / Target / Safe) with per-college ROI, fees, avg salary, payback
-  - **ROI Comparison chart**: High vs Low ROI colleges (bar chart via recharts)
-  - **Fees vs Salary chart**
-  - **Risk Analysis** section with risk level + backup suggestions
-  - **Final Verdict** + actionable next steps
-  - Save / Download / Share actions
+3. Richer chart UI
+   - Upgrade `NarrativeBlock` chart variants and inline charts in the report:
+     - Replace flat AreaCharts with gradient-filled areas (linearGradient defs), rounded corners, soft drop shadows, and animated entrance (`isAnimationActive`).
+     - Add value labels on top of bars, custom rounded bar shapes, and gradient bar fills.
+     - Donut/Pie: add center label (e.g. "ROI 78/100"), thicker stroke, color-coded legend chips.
+     - Risk meter (RadialBar): add gradient track, animated needle, qualitative label ("Moderate Risk — manageable").
+     - Add subtle grid (`strokeDasharray="3 3"`, low opacity) and branded tooltip (white card, shadow, primary accent border).
+   - Use a consistent palette: primary blue `#3B82F6`, emerald `#10B981`, violet `#8B5CF6`, amber `#F59E0B` — no dark navy.
 
-### 4. Routing & Navigation
-- Add lazy route `/roi-calculator` in `App.tsx`
-- Add to AI Tools section + cross-promo in Profile Analyzer / Shortlister
-- SEO meta + JSON-LD (same pattern as Profile Analyzer)
+4. Plain-language rewrites
+   - Replace AI prose headers with student-friendly titles: e.g. "Financial Deep-Dive" → "Will the money come back?", "Career Trajectory" → "Where will you be in 5 years?", "Risk Analysis" → "What could go wrong?".
+   - Each `NarrativeBlock` gets a short subtitle under the title in conversational tone.
+   - Keep AI narrative collapsed by default (already done) but auto-expand the Key Takeaways and add a "In simple words" 1-line summary above it.
 
-### 5. Admin
-- New page `AdminROIAnalyses.tsx` (mirror of `AdminProfileAnalyzer.tsx`): list, filter by ROI category/exam/date, CSV export, detail dialog
-- Add route under `/admin/roi-analyses` + sidebar link
+5. Section dividers & polish
+   - Add gradient section dividers between major blocks within a tab.
+   - Cards: rounded-2xl, subtle border, shadow-sm, hover:shadow-lg transition.
+   - Animate section entrance with framer-motion stagger (already used) — keep consistent.
 
-### Key Reuse
-- OTP: existing `send-otp` / `verify-otp` (Fast2SMS, 5m expiry, 30s resend)
-- Auth gate: `LoginRequiredDialog` + `useAuth`
-- College data: existing `colleges` table (fees_lakhs, placement_avg, tier, specializations, exams_accepted, state)
-- AI: Lovable AI Gateway, default `google/gemini-2.5-flash`, `logAIUsage` helper
-- Styling: white/light blue palette, no emojis, framer-motion animations, professional advisor tone
+Technical Notes
+- No schema/edge function changes. Pure frontend.
+- `sticky` requires no parent `overflow-hidden` — verify the report wrapper doesn't clip.
+- Sticky offset: navbar is `h-16` → use `top-16`. On mobile, tabs become horizontally scrollable already.
+- Reuse existing `recharts` — add `<defs><linearGradient>` per chart for gradient fills.
+- Keep all copy aligned with the "smart MBA advisor" tone (per project memory).
 
-### Files to Create
-- `supabase/migrations/<timestamp>_roi_analyses.sql`
-- `supabase/functions/roi-calculator/index.ts`
-- `src/pages/MBARoiCalculatorPage.tsx`
-- `src/pages/admin/AdminROIAnalyses.tsx`
-
-### Files to Modify
-- `src/App.tsx` (route + admin route)
-- `src/components/AIToolsSection.tsx` (add tile)
-- `src/pages/admin/AdminLayout.tsx` (sidebar link)
+Out of Scope
+- No changes to landing page, sample report logic (only sticky + visual polish mirrored), or backend.
+- No new dependencies.
