@@ -2374,20 +2374,55 @@ const Report = ({ report, unlocked, saving, savedToDashboard, onSaveToDashboard,
           )}
 
           {ai?.final_verdict && (
-            <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-background">
-              <CardContent className="p-6">
-                <h3 className="text-lg font-bold text-foreground mb-3 flex items-center gap-2"><Award className="w-5 h-5 text-primary" /> Final Verdict</h3>
-                <p className="text-base text-foreground leading-relaxed mb-5 whitespace-pre-line">{ai.final_verdict}</p>
+            <Card className="border-primary/30 bg-gradient-to-br from-primary/8 via-blue-50/40 to-background overflow-hidden relative">
+              <motion.div
+                aria-hidden
+                className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-primary/15 blur-3xl pointer-events-none"
+                animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.75, 0.5] }}
+                transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <CardContent className="p-6 relative">
+                <div className="flex items-center gap-3 mb-4">
+                  <motion.div
+                    initial={{ scale: 0, rotate: -45 }}
+                    whileInView={{ scale: 1, rotate: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ type: "spring", stiffness: 200 }}
+                    className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-blue-500 flex items-center justify-center shadow-lg shadow-primary/30"
+                  >
+                    <Award className="w-6 h-6 text-white" />
+                  </motion.div>
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-primary font-bold">AI Final Verdict</p>
+                    <h3 className="text-xl font-bold text-foreground">Your decision, decoded</h3>
+                  </div>
+                </div>
+
+                <div className="bg-card border border-primary/15 rounded-xl p-4 mb-5">
+                  <p className="text-base text-foreground leading-relaxed whitespace-pre-line">{ai.final_verdict}</p>
+                </div>
+
                 {ai.next_steps?.length > 0 && (
                   <div>
-                    <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">Your immediate next steps</p>
-                    <ol className="space-y-1.5">
+                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5">
+                      <Rocket className="w-3 h-3 text-primary" /> Your immediate next steps
+                    </p>
+                    <div className="grid md:grid-cols-2 gap-2.5">
                       {ai.next_steps.map((s: string, i: number) => (
-                        <li key={i} className="flex gap-2 text-sm text-foreground/80">
-                          <span className="font-bold text-primary">{i + 1}.</span>{s}
-                        </li>
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, y: 10 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: i * 0.07 }}
+                          whileHover={{ y: -2, scale: 1.01 }}
+                          className="flex gap-3 p-3 rounded-xl bg-card border border-border hover:border-primary/40 hover:shadow-md transition-all"
+                        >
+                          <span className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-blue-500 text-white text-xs font-bold flex items-center justify-center shrink-0 shadow-sm">{i + 1}</span>
+                          <p className="text-sm text-foreground/85 leading-relaxed">{s}</p>
+                        </motion.div>
                       ))}
-                    </ol>
+                    </div>
                   </div>
                 )}
               </CardContent>
