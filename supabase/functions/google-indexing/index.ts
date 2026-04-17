@@ -1380,100 +1380,47 @@ Deno.serve(async (req) => {
         steps: [] as string[],
       };
 
-      // Step 1: Discover new URLs from DB tables
+      const selfUrl = `${supabaseUrl}/functions/v1/google-indexing`;
+      const selfHeaders = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${supabaseKey}`,
+        apikey: supabaseKey,
+      };
+      const callSelf = async (payload: Record<string, unknown>) => {
+        const res = await fetch(selfUrl, {
+          method: "POST",
+          headers: selfHeaders,
+          body: JSON.stringify(payload),
+        });
+        return res.json().catch(() => ({}));
+      };
+
+      // Step 1: Discover new URLs
       try {
-        const tables = [
-          {
-            table: "articles",
-            type: "article",
-            pathFn: (row: any) => `/article/${row.slug}`,
-            filter: { published: true },
-          },
-          { table: "institutes", type: "institute", pathFn: (row: any) => `/institute/${row.slug}` },
-          { table: "colleges", type: "college", pathFn: (row: any) => `/college/${row.slug}` },
-          { table: "exams", type: "exam", pathFn: (row: any) => `/exam/${row.slug}` },
-          {
-            table: "city_pages",
-            type: "city_page",
-            pathFn: (row: any) => `/colleges/${row.slug}`,
-            filter: { active: true },
-          },
-        ];
-
-        const now = new Date().toISOString();
-        for (const table of tables) {
-          let query = supabase.from(table.table).select("id, slug");
-          if (table.filter) {
-            for (const [key, value] of Object.entries(table.filter)) {
-              query = query.eq(key, value);
-            }
-          }
-          const { data: rows } = await query;
-          if (!rows) continue;
-
-          for (const row of rows) {
-            if (!row.slug) continue;
-            const url = `${SITE_URL}${table.pathFn(row)}`;
-            const { data: existing } = await supabase
-              .from("indexing_urls")
-              .select("id")
-              .eq("url", url)
-              .maybeSingle();
-
-            if (!existing) {
-              await supabase.from("indexing_urls").insert({
-                url,
-                page_type: table.type,
-                record_id: row.id,
-                status: "pending",
-                updated_at: now,
-              });
-              summary.discovered += 1;
-            }
-          }
-        }
+        const r = await callSelf({ action: "discover" });
+        summary.discovered = r?.data?.discovered || 0;
         summary.steps.push(`discover: +${summary.discovered}`);
       } catch (e: any) {
         summary.steps.push(`discover_error: ${e?.message || "unknown"}`);
       }
 
-      // Step 2: Submit pending URLs up to submissionBudget
+      // Step 2: Submit pending URLs in batches up to submissionBudget
       if (submissionBudget > 0) {
         try {
           const { data: pendingRows } = await supabase
             .from("indexing_urls")
-            .select("id, url, page_type, record_id, retry_count")
+            .select("url, page_type, record_id")
             .in("status", ["pending", "failed"])
             .order("created_at", { ascending: true })
             .limit(submissionBudget);
 
           if (pendingRows && pendingRows.length) {
-            let accessToken: string | null = null;
-            try {
-              accessToken = await getToken();
-            } catch (e: any) {
-              summary.steps.push(`auth_error: ${e?.message || "auth failed"}`);
-            }
-
-            if (accessToken) {
-              for (const row of pendingRows) {
-                try {
-                  const submission = await submitUrl(accessToken, row.url);
-                  await persistSubmissionResult(supabase, {
-                    url: row.url,
-                    pageType: row.page_type,
-                    recordId: row.record_id,
-                    action: "auto_run",
-                    retryCount: row.retry_count || 0,
-                    submission,
-                  });
-                  if (submission.ok) summary.submitted += 1;
-                  else summary.submission_failed += 1;
-                } catch {
-                  summary.submission_failed += 1;
-                }
-                await delay(BATCH_DELAY_MS);
-              }
+            // Chunk into MAX_BATCH_SIZE (100)
+            for (let i = 0; i < pendingRows.length; i += MAX_BATCH_SIZE) {
+              const chunk = pendingRows.slice(i, i + MAX_BATCH_SIZE);
+              const r = await callSelf({ action: "batch_submit", urls: chunk });
+              summary.submitted += r?.data?.success || 0;
+              summary.submission_failed += r?.data?.failed || 0;
             }
           }
           summary.steps.push(
@@ -1486,55 +1433,26 @@ Deno.serve(async (req) => {
         summary.steps.push("submit_skipped: quota exhausted");
       }
 
-      // Step 3: Check index status up to inspectionBudget
+      // Step 3: Check index status in batches up to inspectionBudget
       if (inspectionBudget > 0) {
         try {
-          let inspected = 0;
           let nextSkip = 0;
-          const perBatch = Math.min(STATUS_CHECK_BATCH_SIZE, inspectionBudget);
-          // Loop in batches until budget exhausted or no more pending
-          while (inspected < inspectionBudget) {
-            const remaining = inspectionBudget - inspected;
+          while (summary.inspected < inspectionBudget) {
+            const remaining = inspectionBudget - summary.inspected;
             const batchSize = Math.min(STATUS_CHECK_BATCH_SIZE, remaining);
-
-            const { data: rowsToCheck } = await supabase
-              .from("indexing_urls")
-              .select("id, url, status, indexed_at")
-              .is("indexed_at", null)
-              .order("last_submitted_at", { ascending: true, nullsFirst: false })
-              .range(nextSkip, nextSkip + batchSize - 1);
-
-            if (!rowsToCheck || rowsToCheck.length === 0) break;
-
-            let accessToken: string | null = null;
-            try {
-              accessToken = await getToken();
-            } catch (e: any) {
-              summary.steps.push(`inspect_auth_error: ${e?.message || "auth failed"}`);
-              break;
-            }
-            if (!accessToken) break;
-
-            for (const row of rowsToCheck) {
-              try {
-                const inspection = await inspectUrl(accessToken, row.url);
-                inspected += 1;
-                if (inspection?.indexed) summary.newly_indexed += 1;
-                await persistInspectionResult(supabase, {
-                  id: row.id,
-                  url: row.url,
-                  inspection,
-                });
-              } catch {
-                inspected += 1;
-              }
-              await delay(BATCH_DELAY_MS);
-              if (inspected >= inspectionBudget) break;
-            }
-            nextSkip += rowsToCheck.length;
-            if (rowsToCheck.length < batchSize) break;
+            const r = await callSelf({
+              action: "check_index_status",
+              limit: batchSize,
+              skip: nextSkip,
+            });
+            const checked = r?.data?.checked || 0;
+            const indexed = r?.data?.indexed || 0;
+            if (!checked) break;
+            summary.inspected += checked;
+            summary.newly_indexed += indexed;
+            nextSkip = r?.data?.next_skip ?? nextSkip + checked;
+            if (r?.data?.truncated === false) break;
           }
-          summary.inspected = inspected;
           summary.steps.push(
             `inspect: checked=${summary.inspected} newly_indexed=${summary.newly_indexed}`
           );
