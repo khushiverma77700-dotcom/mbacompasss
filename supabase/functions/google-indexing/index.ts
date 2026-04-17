@@ -562,6 +562,34 @@ async function inspectUrlWithSearchConsole(
   };
 }
 
+// Inspect a URL, automatically trying www/non-www variants if the first returns "unknown"
+async function inspectUrlWithVariants(
+  accessToken: string,
+  inspectionUrl: string,
+  siteUrl: string
+) {
+  let result = await inspectUrlWithSearchConsole(accessToken, inspectionUrl, siteUrl);
+  if (result.ok && isIndexedInInspectionResult(result.data)) return result;
+
+  // Try variant (toggle www)
+  try {
+    const u = new URL(inspectionUrl);
+    const altHost = u.hostname.startsWith("www.")
+      ? u.hostname.replace(/^www\./, "")
+      : `www.${u.hostname}`;
+    u.hostname = altHost;
+    const altUrl = u.toString();
+    if (altUrl !== inspectionUrl) {
+      const alt = await inspectUrlWithSearchConsole(accessToken, altUrl, siteUrl);
+      if (alt.ok && isIndexedInInspectionResult(alt.data)) return alt;
+    }
+  } catch (_) {
+    // ignore
+  }
+
+  return result;
+}
+
 function isIndexedInInspectionResult(data: unknown) {
   const inspection = (data as any)?.inspectionResult?.indexStatusResult;
   const coverageState = String(inspection?.coverageState || "").toLowerCase().trim();
