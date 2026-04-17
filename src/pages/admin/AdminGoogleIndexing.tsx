@@ -828,6 +828,20 @@ const AdminGoogleIndexing = () => {
               ? `Submitting ${batchProgress.processed}/${batchProgress.total}`
               : "Submit All Pending"}
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCheckIndexStatus}
+            disabled={!!actionLoading}
+            title="Ask Google which submitted URLs are already indexed"
+          >
+            {actionLoading === "check-status" ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-1" />
+            ) : (
+              <CheckCircle className="w-4 h-4 mr-1 text-emerald-500" />
+            )}
+            Check Index Status
+          </Button>
           <Button size="sm" onClick={handleRefresh} disabled={!!actionLoading}>
             {actionLoading === "refresh" ? (
               <Loader2 className="w-4 h-4 animate-spin mr-1" />
