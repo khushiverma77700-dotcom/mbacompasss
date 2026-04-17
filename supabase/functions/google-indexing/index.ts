@@ -1164,7 +1164,7 @@ Deno.serve(async (req) => {
         const chunkResults = await Promise.all(
           rowChunk.map(async (row) => {
             try {
-              const inspection = await inspectUrlWithSearchConsole(accessToken, row.url, propertySiteUrl);
+              const inspection = await inspectUrlWithVariants(accessToken, row.url, propertySiteUrl);
               const isIndexed = inspection.ok && isIndexedInInspectionResult(inspection.data);
 
               if (isIndexed) {
