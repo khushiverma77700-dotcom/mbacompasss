@@ -878,7 +878,81 @@ const AdminGoogleIndexing = () => {
         })}
       </div>
 
-      {/* Status explanation */}
+      {/* Step-by-step indexing pipeline */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-primary" /> Indexing Pipeline — Track each step
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="relative">
+            {/* connector line behind icons */}
+            <div className="hidden md:block absolute top-6 left-[8%] right-[8%] h-1 bg-muted rounded-full" />
+            <div
+              className="hidden md:block absolute top-6 left-[8%] h-1 bg-gradient-to-r from-emerald-400 to-blue-500 rounded-full transition-all duration-700"
+              style={{
+                width: `${(pipelineSteps[pipelineSteps.length - 1].percent / 100) * 84}%`,
+              }}
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
+              {pipelineSteps.map((step, idx) => {
+                const Icon = step.icon;
+                return (
+                  <div key={step.key} className="flex flex-col items-center text-center">
+                    <div
+                      className={`relative z-10 w-12 h-12 rounded-full flex items-center justify-center text-white shadow-md bg-gradient-to-br ${step.color} ${
+                        step.complete ? "ring-4 ring-emerald-100" : ""
+                      }`}
+                    >
+                      <Icon className="w-5 h-5" />
+                      <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-background border border-border text-[10px] font-bold flex items-center justify-center text-foreground">
+                        {idx + 1}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm font-semibold text-foreground">{step.label}</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 max-w-[200px]">
+                      {step.description}
+                    </p>
+                    <div className="mt-3 w-full max-w-[220px]">
+                      <div className="flex items-center justify-between text-xs mb-1">
+                        <span className="font-bold text-foreground">
+                          {step.count}
+                          <span className="text-muted-foreground font-normal"> / {step.of}</span>
+                        </span>
+                        <span className="text-muted-foreground">{step.percent}%</span>
+                      </div>
+                      <Progress value={step.percent} className="h-1.5" />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="mt-5 pt-4 border-t border-border/60 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+            <span>
+              Tip: After submitting URLs, click <strong className="text-foreground">"Check Index Status"</strong> to see which ones Google has actually picked up.
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleCheckIndexStatus}
+              disabled={!!actionLoading}
+              className="h-7 text-xs"
+            >
+              {actionLoading === "check-status" ? (
+                <Loader2 className="w-3 h-3 animate-spin mr-1" />
+              ) : (
+                <CheckCircle className="w-3 h-3 mr-1" />
+              )}
+              Check Now
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="border-blue-200 bg-blue-50/50">
         <CardContent className="py-3 px-4">
           <div className="flex items-start gap-2">
