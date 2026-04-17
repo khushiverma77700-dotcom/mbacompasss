@@ -1340,7 +1340,39 @@ const AdminGoogleIndexing = () => {
                             {row.page_type}
                           </Badge>
                         </TableCell>
-                        <TableCell>{statusBadge(getDisplayStatus(row))}</TableCell>
+                        <TableCell>
+                          {(() => {
+                            const { coverage, verdict } = getCoverageInfo(row.last_response);
+                            const badge = statusBadge(getDisplayStatus(row));
+                            if (!coverage && !verdict) return badge;
+                            return (
+                              <TooltipProvider delayDuration={100}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <span className="inline-flex cursor-help border-b border-dashed border-muted-foreground/40">
+                                      {badge}
+                                    </span>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="max-w-xs text-xs">
+                                    <div className="space-y-1">
+                                      {coverage && (
+                                        <div>
+                                          <span className="font-semibold">Google coverage:</span>{" "}
+                                          {coverage}
+                                        </div>
+                                      )}
+                                      {verdict && (
+                                        <div>
+                                          <span className="font-semibold">Verdict:</span> {verdict}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            );
+                          })()}
+                        </TableCell>
                         <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                           {formatTime(row.last_submitted_at)}
                         </TableCell>
