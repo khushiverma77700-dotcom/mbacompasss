@@ -15,6 +15,8 @@ const SITE_URL = "https://bschoolbuzz.com";
 const GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token";
 const MAX_BATCH_SIZE = 100;
 const BATCH_DELAY_MS = 150;
+const STATUS_CHECK_BATCH_SIZE = 12;
+const STATUS_CHECK_CONCURRENCY = 3;
 
 interface ServiceAccount {
   client_email: string;
@@ -689,6 +691,16 @@ async function delay(ms: number) {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function chunkItems<T>(items: T[], size: number) {
+  const chunks: T[][] = [];
+
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+
+  return chunks;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -1055,7 +1067,8 @@ Deno.serve(async (req) => {
     }
 
     if (action === "check_index_status") {
-      const limit = Math.min(Number(body?.limit) || 50, 100);
+      const requestedLimit = Number(body?.limit) || 50;
+      const limit = Math.min(requestedLimit, 100);
       const onlyUrl = typeof body?.url === "string" ? body.url.trim() : "";
 
       let rows: any[] = [];
@@ -1116,84 +1129,98 @@ Deno.serve(async (req) => {
       let indexedCount = 0;
       const now = new Date().toISOString();
 
-      for (const row of rows) {
-        try {
-          const inspection = await inspectUrlWithSearchConsole(accessToken, row.url, propertySiteUrl);
-          const isIndexed = inspection.ok && isIndexedInInspectionResult(inspection.data);
+      const rowsToCheck = rows.slice(0, STATUS_CHECK_BATCH_SIZE);
+      const rowChunks = chunkItems(rowsToCheck, STATUS_CHECK_CONCURRENCY);
 
-          if (isIndexed) {
-            indexedCount += 1;
-            await supabase
-              .from("indexing_urls")
-              .update({
-                status: "indexed",
-                indexed_at: now,
-                last_response: {
-                  google: inspection.data,
-                  diagnostics: { source: "search_console_inspection", site_property: propertySiteUrl },
-                },
-                error_message: null,
-                updated_at: now,
-              })
-              .eq("id", row.id);
+      for (const rowChunk of rowChunks) {
+        const chunkResults = await Promise.all(
+          rowChunk.map(async (row) => {
+            try {
+              const inspection = await inspectUrlWithSearchConsole(accessToken, row.url, propertySiteUrl);
+              const isIndexed = inspection.ok && isIndexedInInspectionResult(inspection.data);
 
-            await supabase.from("indexing_logs").insert({
-              indexing_url_id: row.id,
-              action: "status_check",
-              status: "indexed",
-              response: { google: inspection.data, diagnostics: { site_property: propertySiteUrl } },
-            });
-          } else {
-            const inspectionMessage = inspection.ok ? null : inspection.errorMessage;
+              if (isIndexed) {
+                await supabase
+                  .from("indexing_urls")
+                  .update({
+                    status: "indexed",
+                    indexed_at: now,
+                    last_response: {
+                      google: inspection.data,
+                      diagnostics: { source: "search_console_inspection", site_property: propertySiteUrl },
+                    },
+                    error_message: null,
+                    updated_at: now,
+                  })
+                  .eq("id", row.id);
 
-            await supabase.from("indexing_logs").insert({
-              indexing_url_id: row.id,
-              action: "status_check",
-              status: inspection.ok ? "not_indexed_yet" : "check_failed",
-              response: {
+                await supabase.from("indexing_logs").insert({
+                  indexing_url_id: row.id,
+                  action: "status_check",
+                  status: "indexed",
+                  response: { google: inspection.data, diagnostics: { site_property: propertySiteUrl } },
+                });
+              } else {
+                const inspectionMessage = inspection.ok ? null : inspection.errorMessage;
+
+                await supabase.from("indexing_logs").insert({
+                  indexing_url_id: row.id,
+                  action: "status_check",
+                  status: inspection.ok ? "not_indexed_yet" : "check_failed",
+                  response: {
+                    google: inspection.data,
+                    diagnostics: { google_status: inspection.status, site_property: propertySiteUrl },
+                  },
+                  error_message: inspectionMessage,
+                });
+
+                await supabase
+                  .from("indexing_urls")
+                  .update({
+                    last_response: {
+                      google: inspection.data,
+                      diagnostics: { source: "search_console_inspection", site_property: propertySiteUrl },
+                    },
+                    error_message: inspectionMessage,
+                    updated_at: now,
+                  })
+                  .eq("id", row.id);
+              }
+
+              return {
+                url: row.url,
+                indexed: Boolean(isIndexed),
+                google_status: inspection.status,
                 google: inspection.data,
-                diagnostics: { google_status: inspection.status, site_property: propertySiteUrl },
-              },
-              error_message: inspectionMessage,
-            });
+                site_property: propertySiteUrl,
+              };
+            } catch (err: any) {
+              return {
+                url: row.url,
+                indexed: false,
+                error: err?.message || "Status check failed",
+              };
+            }
+          })
+        );
 
-            await supabase
-              .from("indexing_urls")
-              .update({
-                last_response: {
-                  google: inspection.data,
-                  diagnostics: { source: "search_console_inspection", site_property: propertySiteUrl },
-                },
-                error_message: inspectionMessage,
-                updated_at: now,
-              })
-              .eq("id", row.id);
-          }
+        results.push(...chunkResults);
+        indexedCount += chunkResults.filter((entry) => entry.indexed).length;
 
-          results.push({
-            url: row.url,
-            indexed: Boolean(isIndexed),
-            google_status: inspection.status,
-            google: inspection.data,
-            site_property: propertySiteUrl,
-          });
-        } catch (err: any) {
-          results.push({
-            url: row.url,
-            indexed: false,
-            error: err?.message || "Status check failed",
-          });
+        if (rowChunk !== rowChunks[rowChunks.length - 1]) {
+          await delay(BATCH_DELAY_MS);
         }
-
-        await delay(BATCH_DELAY_MS);
       }
 
       return respond({
         ok: true,
         data: {
-          checked: rows.length,
+          checked: rowsToCheck.length,
           indexed: indexedCount,
-          not_indexed: rows.length - indexedCount,
+          not_indexed: rowsToCheck.length - indexedCount,
+          remaining: Math.max(rows.length - rowsToCheck.length, 0),
+          truncated: rows.length > rowsToCheck.length,
+          processed_in_batch: rowsToCheck.length,
           site_property: propertySiteUrl,
           results,
         },
