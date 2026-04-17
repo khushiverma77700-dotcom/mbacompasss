@@ -125,7 +125,7 @@ const TOTAL_FORM_STEPS = 5;
 const TEMP_DISABLE_PHONE_OTP = true;
 
 const MBARoiCalculatorPage = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormState>(initialForm);
