@@ -1163,7 +1163,13 @@ Deno.serve(async (req) => {
         const serviceAccount = resolveServiceAccountFromEnv();
         accessToken = await getAccessToken(serviceAccount, [WEBMASTERS_READONLY_SCOPE]);
         availableSites = await listSearchConsoleSites(accessToken);
-        propertySiteUrl = resolveSearchConsoleSite(availableSites, rows[0].url);
+        const overrideSite =
+          typeof body?.site_property === "string" ? body.site_property.trim() : "";
+        if (overrideSite && availableSites.includes(overrideSite)) {
+          propertySiteUrl = overrideSite;
+        } else {
+          propertySiteUrl = resolveSearchConsoleSite(availableSites, rows[0].url);
+        }
       } catch (error: any) {
         return respond({
           ok: false,
