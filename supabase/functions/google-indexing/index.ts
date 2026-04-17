@@ -1298,6 +1298,96 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "current_run_status") {
+      // Window: 18:30–19:35 UTC = 12:00–1:05 AM IST. Plus a "recently active" check
+      // (any auto_run log in the last 15 min outside the window also counts).
+      const now = new Date();
+      const utcHour = now.getUTCHours();
+      const utcMin = now.getUTCMinutes();
+      const utcMinutesOfDay = utcHour * 60 + utcMin;
+      const WINDOW_START = 18 * 60 + 30; // 18:30 UTC
+      const WINDOW_END = 19 * 60 + 35; // 19:35 UTC
+      const inWindow = utcMinutesOfDay >= WINDOW_START && utcMinutesOfDay <= WINDOW_END;
+
+      // Today's window start as ISO (in UTC)
+      const windowStartToday = new Date(now);
+      windowStartToday.setUTCHours(18, 30, 0, 0);
+      // If we're past midnight UTC but before 18:30, the "current" window is yesterday's
+      const referenceWindowStart =
+        utcMinutesOfDay < WINDOW_START
+          ? new Date(windowStartToday.getTime() - 24 * 60 * 60 * 1000)
+          : windowStartToday;
+      const referenceWindowEnd = new Date(referenceWindowStart.getTime() + 65 * 60 * 1000);
+
+      // Pull logs from the reference window
+      const { data: windowLogs } = await supabase
+        .from("indexing_logs")
+        .select("action, status, created_at, error_message")
+        .gte("created_at", referenceWindowStart.toISOString())
+        .lte("created_at", referenceWindowEnd.toISOString())
+        .order("created_at", { ascending: false })
+        .limit(500);
+
+      let submittedInWindow = 0;
+      let indexedInWindow = 0;
+      let failedInWindow = 0;
+      let lastActivityAt: string | null = null;
+      let autoRunTicks = 0;
+
+      if (windowLogs) {
+        for (const log of windowLogs) {
+          if (!lastActivityAt) lastActivityAt = log.created_at;
+          if (log.action === "auto_run_tick") autoRunTicks += 1;
+          if (
+            (log.action === "submit_url" ||
+              log.action === "batch_submit" ||
+              log.action === "refresh") &&
+            (log.status === "success" || log.status === "submitted")
+          ) {
+            submittedInWindow += 1;
+          }
+          if (log.action === "check_index_status" && log.status === "indexed") {
+            indexedInWindow += 1;
+          }
+          if (log.status === "failed") failedInWindow += 1;
+        }
+      }
+
+      // Active = in window AND we saw a tick in the last 15 min, OR a tick in last 15 min anytime
+      const fifteenMinAgo = new Date(now.getTime() - 15 * 60 * 1000).toISOString();
+      const isActive = !!(lastActivityAt && lastActivityAt >= fifteenMinAgo);
+
+      // Compute next window start
+      let nextWindowStart: Date;
+      if (utcMinutesOfDay < WINDOW_START) {
+        nextWindowStart = new Date(now);
+        nextWindowStart.setUTCHours(18, 30, 0, 0);
+      } else if (utcMinutesOfDay > WINDOW_END) {
+        nextWindowStart = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        nextWindowStart.setUTCHours(18, 30, 0, 0);
+      } else {
+        // currently in window
+        nextWindowStart = referenceWindowStart;
+      }
+
+      return respond({
+        ok: true,
+        data: {
+          in_window: inWindow,
+          is_active: isActive,
+          window_start_utc: referenceWindowStart.toISOString(),
+          window_end_utc: referenceWindowEnd.toISOString(),
+          next_window_start_utc: nextWindowStart.toISOString(),
+          submitted_in_window: submittedInWindow,
+          indexed_in_window: indexedInWindow,
+          failed_in_window: failedInWindow,
+          auto_run_ticks: autoRunTicks,
+          last_activity_at: lastActivityAt,
+        },
+        diagnostics: { action, processing_time_ms: Date.now() - startedAt },
+      });
+    }
+
     if (action === "auto_run" || action === "quota_status") {
       // Daily quotas per Google Indexing API
       const SUBMISSION_DAILY_QUOTA = 1000;
