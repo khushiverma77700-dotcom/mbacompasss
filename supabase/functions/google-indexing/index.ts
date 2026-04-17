@@ -7,6 +7,10 @@ const corsHeaders = {
 };
 
 const INDEXING_API_URL = "https://indexing.googleapis.com/v3/urlNotifications";
+const SEARCH_CONSOLE_SITES_API_URL = "https://www.googleapis.com/webmasters/v3/sites";
+const URL_INSPECTION_API_URL = "https://searchconsole.googleapis.com/v1/urlInspection/index:inspect";
+const INDEXING_SCOPE = "https://www.googleapis.com/auth/indexing";
+const WEBMASTERS_READONLY_SCOPE = "https://www.googleapis.com/auth/webmasters.readonly";
 const SITE_URL = "https://bschoolbuzz.com";
 const GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token";
 const MAX_BATCH_SIZE = 100;
@@ -354,12 +358,15 @@ function createFailedSubmission(
   };
 }
 
-async function getAccessToken(sa: ServiceAccount): Promise<string> {
+async function getAccessToken(
+  sa: ServiceAccount,
+  scopes: string[] = [INDEXING_SCOPE]
+): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   const header = { alg: "RS256", typ: "JWT" };
   const payload = {
     iss: sa.client_email,
-    scope: "https://www.googleapis.com/auth/indexing",
+    scope: scopes.join(" "),
     aud: sa.token_uri,
     iat: now,
     exp: now + 3600,
@@ -461,6 +468,125 @@ async function submitUrl(
       response_preview: stringifyValue(data).slice(0, 500),
     },
   };
+}
+
+async function listSearchConsoleSites(accessToken: string): Promise<string[]> {
+  const response = await fetch(SEARCH_CONSOLE_SITES_API_URL, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  const data = await readResponseBody(response);
+
+  if (!response.ok) {
+    throw createStageError(
+      classifyGoogleErrorStage(response.status, data),
+      `Failed to load Search Console properties: ${getGoogleErrorMessage(data)}`,
+      {
+        google_status: response.status,
+        response_preview: stringifyValue(data).slice(0, 500),
+      }
+    );
+  }
+
+  if (!data || typeof data !== "object" || !Array.isArray((data as any).siteEntry)) {
+    return [];
+  }
+
+  return (data as any).siteEntry
+    .map((entry: any) => (typeof entry?.siteUrl === "string" ? entry.siteUrl : null))
+    .filter((value: string | null): value is string => Boolean(value));
+}
+
+function resolveSearchConsoleSite(availableSites: string[], inspectionUrl: string): string {
+  const { hostname, origin } = new URL(inspectionUrl);
+  const bareHost = hostname.replace(/^www\./, "");
+  const candidates = Array.from(
+    new Set([
+      `sc-domain:${bareHost}`,
+      `${origin}/`,
+      `${SITE_URL}/`,
+      `https://${bareHost}/`,
+      `https://www.${bareHost}/`,
+      `http://${bareHost}/`,
+      `http://www.${bareHost}/`,
+    ])
+  );
+
+  const match = candidates.find((candidate) => availableSites.includes(candidate));
+  if (match) return match;
+
+  throw createStageError(
+    "permission_denied",
+    `No matching Search Console property found for ${inspectionUrl}.`,
+    {
+      requested_url: inspectionUrl,
+      available_sites: availableSites.slice(0, 20),
+    }
+  );
+}
+
+async function inspectUrlWithSearchConsole(
+  accessToken: string,
+  inspectionUrl: string,
+  siteUrl: string
+) {
+  const response = await fetch(URL_INSPECTION_API_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      inspectionUrl,
+      siteUrl,
+      languageCode: "en-US",
+    }),
+  });
+
+  const data = await readResponseBody(response);
+
+  return {
+    ok: response.ok,
+    status: response.status,
+    data,
+    errorMessage: response.ok ? null : getGoogleErrorMessage(data),
+    diagnostics: {
+      requested_url: inspectionUrl,
+      site_property: siteUrl,
+      google_status: response.status,
+      error_stage: response.ok ? "inspected" : classifyGoogleErrorStage(response.status, data),
+      response_preview: stringifyValue(data).slice(0, 500),
+    },
+  };
+}
+
+function isIndexedInInspectionResult(data: unknown) {
+  const inspection = (data as any)?.inspectionResult?.indexStatusResult;
+  const coverageState = String(inspection?.coverageState || "").toLowerCase().trim();
+  const verdict = String(inspection?.verdict || "").toLowerCase().trim();
+
+  if (!coverageState && !verdict) return false;
+
+  const definitelyNotIndexed = [
+    "not indexed",
+    "currently not indexed",
+    "discovered - currently not indexed",
+    "crawled - currently not indexed",
+    "page with redirect",
+    "soft 404",
+    "alternate page",
+    "duplicate without user-selected canonical",
+    "blocked",
+    "excluded",
+  ].some((marker) => coverageState.includes(marker));
+
+  if (definitelyNotIndexed) return false;
+
+  return (
+    coverageState.startsWith("indexed") ||
+    coverageState.includes("submitted and indexed") ||
+    (verdict === "pass" && coverageState.includes("index"))
+  );
 }
 
 async function persistSubmissionResult(
