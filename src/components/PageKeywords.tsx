@@ -86,6 +86,41 @@ const PageKeywords = ({ contentType, recordId, fallbackKeywords = [] }: PageKeyw
           </motion.div>
         )}
 
+        {/* FAQ Section (auto-injected from AI snapshot) */}
+        {hasFaqs && (
+          <motion.div initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <div className="flex items-center gap-2.5 mb-5">
+              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Search className="h-4 w-4 text-primary" />
+              </div>
+              <h2 className="text-lg font-heading font-bold text-foreground">Frequently Asked Questions</h2>
+            </div>
+            <div className="space-y-3">
+              {faqs.map((f, i) => {
+                const q = f.question || f.q;
+                const a = f.answer || f.a;
+                if (!q || !a) return null;
+                return (
+                  <motion.details
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.04 }}
+                    className="group rounded-xl border border-border/50 bg-card p-4 hover:border-primary/30 transition-colors"
+                  >
+                    <summary className="cursor-pointer list-none flex items-start justify-between gap-3 font-medium text-foreground text-sm">
+                      <span className="flex-1">{q}</span>
+                      <ArrowRight className="h-4 w-4 text-primary mt-0.5 shrink-0 group-open:rotate-90 transition-transform" />
+                    </summary>
+                    <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{a}</p>
+                  </motion.details>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+
         {/* Keywords Section */}
         {(hasAIKeywords || (displayKeywords && displayKeywords.length > 0)) && (
           <motion.div initial={{ opacity: 0, y: 15 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
