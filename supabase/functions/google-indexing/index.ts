@@ -865,6 +865,37 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "ping_sitemap") {
+      // Pings Google to re-fetch the sitemap. This is the supported way to
+      // ask Google to discover regular pages (Indexing API only officially
+      // works for JobPosting / BroadcastEvent).
+      const sitemapUrl = typeof body?.sitemap_url === "string" && body.sitemap_url
+        ? body.sitemap_url
+        : `${SITE_URL}/sitemap.xml`;
+      const pingUrl = `https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`;
+      try {
+        const res = await fetch(pingUrl, { method: "GET" });
+        const ok = res.ok;
+        await supabase.from("indexing_logs").insert({
+          action: "ping_sitemap",
+          status: ok ? "success" : "failed",
+          response: { sitemap_url: sitemapUrl, http_status: res.status },
+          error_message: ok ? null : `HTTP ${res.status}`,
+        });
+        return respond({
+          ok,
+          data: { sitemap_url: sitemapUrl, http_status: res.status },
+          diagnostics: { action, processing_time_ms: Date.now() - startedAt },
+        });
+      } catch (error: any) {
+        return respond({
+          ok: false,
+          error: error?.message || "Sitemap ping failed",
+          diagnostics: { action, processing_time_ms: Date.now() - startedAt },
+        });
+      }
+    }
+
     if (action === "batch_submit") {
       const entries = normalizeBatchEntries(Array.isArray(body?.urls) ? body.urls : []).slice(
         0,
