@@ -2,7 +2,15 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, LogIn, LogOut, Shield, LayoutDashboard, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import SmartSearch from "@/components/SmartSearch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
@@ -42,25 +50,33 @@ const Navbar = () => {
 
   return (
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
-      <div className="container mx-auto flex items-center justify-between h-16 px-4">
-        <Link to="/" className="flex items-center gap-2">
+      <div className="container mx-auto flex items-center justify-between h-16 px-4 gap-3">
+        <Link to="/" className="flex items-center gap-2 shrink-0">
           <img src={mbahubLogo} alt="MBAHub Logo" className="w-9 h-9 rounded-lg object-contain" />
           <div className="flex flex-col leading-tight">
             <span className="font-heading font-bold text-xl text-foreground">
               {brandName.includes("Hub") ? (
-                <>{brandName.replace("Hub", "")}<span className="text-gradient">Hub</span></>
-              ) : brandName}
+                <>
+                  {brandName.replace("Hub", "")}
+                  <span className="text-gradient">Hub</span>
+                </>
+              ) : (
+                brandName
+              )}
             </span>
-            <span className="text-[9px] font-medium text-muted-foreground -mt-0.5 tracking-wide">by B School Buzz</span>
+            <span className="text-[9px] font-medium text-muted-foreground -mt-0.5 tracking-wide">
+              by B School Buzz
+            </span>
           </div>
         </Link>
 
-        {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-1">
           <Link
             to="/"
             className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-              location.pathname === "/" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              location.pathname === "/"
+                ? "bg-secondary text-secondary-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
           >
             Home
@@ -72,7 +88,9 @@ const Navbar = () => {
           <Link
             to="/blog"
             className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-              location.pathname === "/blog" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              location.pathname === "/blog"
+                ? "bg-secondary text-secondary-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
           >
             Blogs
@@ -81,25 +99,30 @@ const Navbar = () => {
           <Link
             to="/compare"
             className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-              location.pathname === "/compare" ? "bg-secondary text-secondary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              location.pathname === "/compare"
+                ? "bg-secondary text-secondary-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
             }`}
           >
             Compare
           </Link>
         </nav>
 
-        {/* Desktop Actions */}
-        <div className="hidden md:flex items-center gap-3">
-          <GooglePreferredSourceCTA size="compact" className="hidden lg:inline-flex" />
-          <SmartSearch className="w-56" />
+        <div className="hidden md:flex items-center gap-3 min-w-0">
+          <GooglePreferredSourceCTA size="compact" className="inline-flex shrink-0" />
+          <SmartSearch className="hidden xl:block w-56" />
           {user ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <Button variant="outline" size="sm" asChild>
-                <Link to="/dashboard"><LayoutDashboard className="w-4 h-4 mr-1" /> Dashboard</Link>
+                <Link to="/dashboard">
+                  <LayoutDashboard className="w-4 h-4 mr-1" /> Dashboard
+                </Link>
               </Button>
               {isAdmin && (
                 <Button variant="outline" size="sm" asChild>
-                  <Link to="/admin"><Shield className="w-4 h-4 mr-1" /> Admin</Link>
+                  <Link to="/admin">
+                    <Shield className="w-4 h-4 mr-1" /> Admin
+                  </Link>
                 </Button>
               )}
               <Button variant="ghost" size="sm" onClick={() => setShowSignOutDialog(true)}>
@@ -108,7 +131,9 @@ const Navbar = () => {
             </div>
           ) : (
             <Button size="sm" asChild>
-              <Link to="/auth"><LogIn className="w-4 h-4 mr-1" /> Sign In</Link>
+              <Link to="/auth">
+                <LogIn className="w-4 h-4 mr-1" /> Sign In
+              </Link>
             </Button>
           )}
         </div>
@@ -122,11 +147,14 @@ const Navbar = () => {
         </button>
       </div>
 
-      {/* Mobile Menu */}
       {mobileOpen && (
-        <div className="md:hidden bg-card border-b border-border px-4 pb-4 max-h-[80vh] overflow-y-auto">
+        <div className="md:hidden bg-card border-b border-border px-4 pb-4 max-h-[80vh] overflow-y-auto animate-fade-in">
           <nav className="flex flex-col gap-1">
-            <Link to="/" onClick={closeMobile} className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground">
+            <Link
+              to="/"
+              onClick={closeMobile}
+              className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
               Home
             </Link>
 
@@ -148,10 +176,18 @@ const Navbar = () => {
             </button>
             {mobileCoachingOpen && <MobileMegaMenu menuType="coaching" onNavigate={closeMobile} />}
 
-            <Link to="/blog" onClick={closeMobile} className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground">
+            <Link
+              to="/blog"
+              onClick={closeMobile}
+              className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
               Blogs
             </Link>
-            <Link to="/compare" onClick={closeMobile} className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground">
+            <Link
+              to="/compare"
+              onClick={closeMobile}
+              className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
               Compare
             </Link>
           </nav>
@@ -163,11 +199,15 @@ const Navbar = () => {
           {user ? (
             <div className="mt-3 space-y-2">
               <Button variant="outline" className="w-full" size="sm" asChild>
-                <Link to="/dashboard" onClick={closeMobile}><LayoutDashboard className="w-4 h-4 mr-1" /> Dashboard</Link>
+                <Link to="/dashboard" onClick={closeMobile}>
+                  <LayoutDashboard className="w-4 h-4 mr-1" /> Dashboard
+                </Link>
               </Button>
               {isAdmin && (
                 <Button variant="outline" className="w-full" size="sm" asChild>
-                  <Link to="/admin" onClick={closeMobile}><Shield className="w-4 h-4 mr-1" /> Admin Panel</Link>
+                  <Link to="/admin" onClick={closeMobile}>
+                    <Shield className="w-4 h-4 mr-1" /> Admin Panel
+                  </Link>
                 </Button>
               )}
               <Button variant="ghost" className="w-full" size="sm" onClick={() => setShowSignOutDialog(true)}>
@@ -176,7 +216,9 @@ const Navbar = () => {
             </div>
           ) : (
             <Button className="w-full mt-3" size="sm" asChild>
-              <Link to="/auth" onClick={closeMobile}>Sign In</Link>
+              <Link to="/auth" onClick={closeMobile}>
+                Sign In
+              </Link>
             </Button>
           )}
         </div>
@@ -186,7 +228,9 @@ const Navbar = () => {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Sign out?</AlertDialogTitle>
-            <AlertDialogDescription>Are you sure you want to sign out of your account?</AlertDialogDescription>
+            <AlertDialogDescription>
+              Are you sure you want to sign out of your account?
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isSigningOut}>Cancel</AlertDialogCancel>
