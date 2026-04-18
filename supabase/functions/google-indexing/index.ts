@@ -18,6 +18,39 @@ const BATCH_DELAY_MS = 150;
 const STATUS_CHECK_BATCH_SIZE = 12;
 const STATUS_CHECK_CONCURRENCY = 3;
 
+// IndexNow — Bing/Yandex/Naver/Seznam pick this up within minutes,
+// and Google reads IndexNow signals indirectly. Free + no quota.
+// Key file is hosted at /<key>.txt in /public.
+const INDEXNOW_KEY = "cc5b688453c4e43d3466783d7f7c426e";
+const INDEXNOW_KEY_LOCATION = `${SITE_URL}/${INDEXNOW_KEY}.txt`;
+const INDEXNOW_ENDPOINT = "https://api.indexnow.org/IndexNow";
+const SITE_HOST = "bschoolbuzz.com";
+
+async function submitToIndexNow(urls: string[]): Promise<{ ok: boolean; status: number; error?: string }> {
+  if (!urls.length) return { ok: true, status: 200 };
+  try {
+    const res = await fetch(INDEXNOW_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify({
+        host: SITE_HOST,
+        key: INDEXNOW_KEY,
+        keyLocation: INDEXNOW_KEY_LOCATION,
+        urlList: urls,
+      }),
+    });
+    // 200 = accepted; 202 = accepted but verification pending; both are good.
+    const ok = res.status === 200 || res.status === 202;
+    return {
+      ok,
+      status: res.status,
+      error: ok ? undefined : `IndexNow HTTP ${res.status}`,
+    };
+  } catch (err: any) {
+    return { ok: false, status: 0, error: err?.message || "IndexNow fetch failed" };
+  }
+}
+
 interface ServiceAccount {
   client_email: string;
   private_key: string;
