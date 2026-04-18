@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import SmartSearch from "@/components/SmartSearch";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import NavMegaMenu, { MobileMegaMenu } from "@/components/NavMegaMenu";
@@ -110,7 +110,7 @@ const Navbar = () => {
 
         <div className="hidden md:flex items-center gap-3 min-w-0">
           <GooglePreferredSourceCTA size="compact" className="inline-flex shrink-0" />
-          <SmartSearch className="hidden xl:block w-56" />
+          
           {user ? (
             <div className="flex items-center gap-2 shrink-0">
               <Button variant="outline" size="sm" asChild>
