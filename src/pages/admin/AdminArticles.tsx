@@ -14,6 +14,7 @@ import { Plus, Pencil, Trash2, Eye, Search, X, ArrowLeft } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import SortableTableHead from "@/components/admin/SortableTableHead";
 import SEOChecklist from "@/components/admin/SEOChecklist";
+import SeoEnhanceFields from "@/components/admin/SeoEnhanceFields";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
@@ -31,6 +32,7 @@ const emptyForm = {
   published: false, meta_title: "", meta_description: "", keywords: [] as string[],
   priority: 0, featured: false, status: "draft", intro: "", banner_url: "",
   image_url: "", h1_tag: "", is_comparison: false, comparison_id: "" as string,
+  primary_keyword: "" as string, funnel_stage: "" as string, cluster_id: "" as string,
 };
 
 const AdminArticles = () => {
@@ -86,6 +88,10 @@ const AdminArticles = () => {
       image_url: form.image_url || null, h1_tag: form.h1_tag || null,
       is_comparison: form.is_comparison,
       comparison_id: form.is_comparison && form.comparison_id ? form.comparison_id : null,
+      primary_keyword: form.primary_keyword || null,
+      funnel_stage: form.funnel_stage || null,
+      cluster_id: form.cluster_id || null,
+      last_seo_refresh: new Date().toISOString(),
     };
 
     if (editId) {
@@ -110,6 +116,9 @@ const AdminArticles = () => {
       intro: article.intro || "", banner_url: article.banner_url || "",
       image_url: article.image_url || "", h1_tag: article.h1_tag || "",
       is_comparison: article.is_comparison || false, comparison_id: article.comparison_id || "",
+      primary_keyword: article.primary_keyword || "",
+      funnel_stage: article.funnel_stage || "",
+      cluster_id: article.cluster_id || "",
     });
     setEditId(article.id); setShowForm(true);
   };
