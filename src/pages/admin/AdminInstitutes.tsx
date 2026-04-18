@@ -16,6 +16,7 @@ import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
 import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 import SEOChecklist from "@/components/admin/SEOChecklist";
+import SeoEnhanceFields from "@/components/admin/SeoEnhanceFields";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import StateCitySelect from "@/components/admin/StateCitySelect";
 import { generateAndUploadLocationBanner } from "@/lib/locationBanner";
@@ -40,6 +41,7 @@ const emptyForm = {
   features: [] as string[],
   specializations: [] as string[],
   latitude: "", longitude: "",
+  primary_keyword: "" as string, funnel_stage: "" as string, cluster_id: "" as string,
 };
 
 const AdminInstitutes = () => {
@@ -101,6 +103,10 @@ const AdminInstitutes = () => {
       specializations: form.specializations.length > 0 ? form.specializations : null,
       latitude: form.latitude ? parseFloat(form.latitude) : null,
       longitude: form.longitude ? parseFloat(form.longitude) : null,
+      primary_keyword: form.primary_keyword || null,
+      funnel_stage: form.funnel_stage || null,
+      cluster_id: form.cluster_id || null,
+      last_seo_refresh: new Date().toISOString(),
     };
 
     if (editId) {
@@ -137,6 +143,9 @@ const AdminInstitutes = () => {
         specializations: (data as any).specializations ?? [],
         latitude: data.latitude ? String(data.latitude) : "",
         longitude: data.longitude ? String(data.longitude) : "",
+        primary_keyword: (data as any).primary_keyword ?? "",
+        funnel_stage: (data as any).funnel_stage ?? "",
+        cluster_id: (data as any).cluster_id ?? "",
       });
       setEditId(id); setShowForm(true);
     }
@@ -289,6 +298,12 @@ const AdminInstitutes = () => {
                 <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Description</Label><Input value={form.meta_description} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} maxLength={170} placeholder="Join the best MBA coaching in Mumbai..." /><span className="text-xs text-muted-foreground">{form.meta_description.length}/160 chars</span></div>
                 <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">SEO Keywords</Label><TagInput field="keywords" placeholder="e.g. MBA coaching Mumbai, CAT prep" /></div>
                 <SEOChecklist data={{ title: form.name, slug: form.slug, meta_title: form.meta_title, meta_description: form.meta_description, keywords: form.keywords, content: form.description, image_url: form.logo_url, banner_url: form.banner_url, schemaType: "institute" }} contentType="institute" recordId={editId || undefined} />
+                <SeoEnhanceFields
+                  data={{ title: form.name, slug: form.slug, meta_title: form.meta_title, meta_description: form.meta_description, primary_keyword: form.primary_keyword, funnel_stage: form.funnel_stage, cluster_id: form.cluster_id }}
+                  onChange={(patch) => setForm({ ...form, ...patch } as typeof form)}
+                  contentType="institute"
+                  recordId={editId || undefined}
+                />
               </TabsContent>
 
               <TabsContent value="schema" className="space-y-3">

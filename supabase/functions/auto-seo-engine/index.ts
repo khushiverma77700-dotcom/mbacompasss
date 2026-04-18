@@ -733,46 +733,101 @@ RULES:
 
     // ── NEW: content_score ──
     if (mode === "content_score") {
-      const { contentType, pageIds } = body;
-      if (!contentType || !pageIds?.length) {
-        return new Response(JSON.stringify({ error: "contentType and pageIds required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-      const config = CONTENT_TABLES[contentType];
-      if (!config) return new Response(JSON.stringify({ error: "Invalid contentType" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const { contentType, pageIds, allContentTypes } = body;
 
-      const { data: pages } = await supabase.from(config.table).select("*").in("id", pageIds);
+      // Build the work list: either a specific (contentType, pageIds) batch
+      // OR scan ALL content types when allContentTypes=true (used by nightly cron).
+      const workItems: { contentType: string; config: typeof CONTENT_TABLES[string]; pages: any[] }[] = [];
+
+      if (allContentTypes) {
+        for (const [ct, cfg] of Object.entries(CONTENT_TABLES)) {
+          const { data: pages } = await supabase.from(cfg.table).select("*").limit(500);
+          if (pages?.length) workItems.push({ contentType: ct, config: cfg, pages });
+        }
+      } else {
+        if (!contentType || !pageIds?.length) {
+          return new Response(JSON.stringify({ error: "contentType and pageIds required (or set allContentTypes=true)" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+        const cfg = CONTENT_TABLES[contentType];
+        if (!cfg) return new Response(JSON.stringify({ error: "Invalid contentType" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        const { data: pages } = await supabase.from(cfg.table).select("*").in("id", pageIds);
+        if (pages?.length) workItems.push({ contentType, config: cfg, pages });
+      }
+
       const results: any[] = [];
       const now = new Date().toISOString();
 
-      for (const page of (pages || [])) {
-        const html = page.content || page.detailed_content || page.description || page.intro_content || "";
-        const text = stripHtml(html);
-        const words = text.split(/\s+/).filter(Boolean);
-        const wordCount = words.length;
+      for (const { contentType: ct, config, pages } of workItems) {
+        for (const page of pages) {
+          const html = page.content || page.detailed_content || page.description || page.intro_content || "";
+          const text = stripHtml(html);
+          const words = text.split(/\s+/).filter(Boolean);
+          const wordCount = words.length;
 
-        const paragraphs = (html.match(/<p[^>]*>[\s\S]*?<\/p>/gi) || []).length;
-        const h1 = (html.match(/<h1[\s>]/gi) || []).length;
-        const h2 = (html.match(/<h2[\s>]/gi) || []).length;
-        const h3 = (html.match(/<h3[\s>]/gi) || []).length;
-        const hasFAQ = /faq|frequently asked/i.test(html);
-        const hasNums = (text.match(/\d+(\.\d+)?/g) || []).length >= 5;
-        const hasLists = /<(ul|ol)[\s>]/i.test(html);
+          const paragraphs = (html.match(/<p[^>]*>[\s\S]*?<\/p>/gi) || []).length;
+          const h1 = (html.match(/<h1[\s>]/gi) || []).length;
+          const h2 = (html.match(/<h2[\s>]/gi) || []).length;
+          const h3 = (html.match(/<h3[\s>]/gi) || []).length;
+          const hasFAQ = /faq|frequently asked/i.test(html);
+          const hasNums = (text.match(/\d+(\.\d+)?/g) || []).length >= 5;
+          const hasLists = /<(ul|ol)[\s>]/i.test(html);
 
-        let score = 0;
-        if (wordCount >= 1500) score += 30; else if (wordCount >= 800) score += 20; else if (wordCount >= 400) score += 10;
-        if (h1 === 1) score += 10;
-        if (h2 >= 3) score += 10;
-        if (h3 >= 2) score += 5;
-        if (hasFAQ) score += 15;
-        if (hasNums) score += 10;
-        if (hasLists) score += 5;
-        if (paragraphs >= 5) score += 15;
-        score = Math.min(100, score);
+          let score = 0;
+          if (wordCount >= 1500) score += 30; else if (wordCount >= 800) score += 20; else if (wordCount >= 400) score += 10;
+          if (h1 === 1) score += 10;
+          if (h2 >= 3) score += 10;
+          if (h3 >= 2) score += 5;
+          if (hasFAQ) score += 15;
+          if (hasNums) score += 10;
+          if (hasLists) score += 5;
+          if (paragraphs >= 5) score += 15;
+          score = Math.min(100, score);
 
-        await supabase.from(config.table).update({ content_score: score, last_seo_refresh: now }).eq("id", page.id);
-        results.push({ id: page.id, name: getName(page), score, wordCount, hasFAQ });
+          await supabase.from(config.table).update({ content_score: score, last_seo_refresh: now }).eq("id", page.id);
+          results.push({ contentType: ct, id: page.id, name: getName(page), score, wordCount, hasFAQ });
+        }
       }
       return new Response(JSON.stringify({ results, processed: results.length }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── NEW: image_audit — scan all pages for images lacking ALT or modern formats ──
+    if (mode === "image_audit") {
+      const results: any[] = [];
+      for (const [ct, cfg] of Object.entries(CONTENT_TABLES)) {
+        const { data: pages } = await supabase.from(cfg.table).select("id,slug,name,title,content,detailed_content,description,intro_content,banner_url,logo_url").limit(500);
+        for (const page of (pages || [])) {
+          const html = (page.content || page.detailed_content || page.description || page.intro_content || "") as string;
+          const imgs = html.match(/<img[^>]*>/gi) || [];
+          let missingAlt = 0;
+          let legacyFormat = 0;
+          for (const img of imgs) {
+            if (!/alt=["'][^"']+["']/i.test(img)) missingAlt++;
+            const srcMatch = img.match(/src=["']([^"']+)["']/i);
+            if (srcMatch && /\.(jpg|jpeg|png|gif)(\?|$)/i.test(srcMatch[1])) legacyFormat++;
+          }
+          // Also audit banner/logo
+          const heroImages: string[] = [page.banner_url, page.logo_url].filter(Boolean) as string[];
+          for (const url of heroImages) {
+            if (/\.(jpg|jpeg|png|gif)(\?|$)/i.test(url)) legacyFormat++;
+          }
+          const total = imgs.length + heroImages.length;
+          if (total > 0 && (missingAlt > 0 || legacyFormat > 0)) {
+            results.push({
+              contentType: ct,
+              id: page.id,
+              name: getName(page),
+              slug: page.slug,
+              path: cfg.getPath(page),
+              totalImages: total,
+              missingAlt,
+              legacyFormat,
+              healthScore: Math.max(0, Math.round(100 - (missingAlt * 25) - (legacyFormat * 15))),
+            });
+          }
+        }
+      }
+      results.sort((a, b) => a.healthScore - b.healthScore);
+      return new Response(JSON.stringify({ results, totalIssues: results.length }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // ── NEW: faq_generate ──

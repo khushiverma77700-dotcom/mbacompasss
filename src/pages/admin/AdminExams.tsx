@@ -13,6 +13,7 @@ import { useTableSort } from "@/hooks/useTableSort";
 import SortableTableHead from "@/components/admin/SortableTableHead";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import SEOChecklist from "@/components/admin/SEOChecklist";
+import SeoEnhanceFields from "@/components/admin/SeoEnhanceFields";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 
 const emptyForm = {
@@ -20,6 +21,7 @@ const emptyForm = {
   eligibility: "", exam_date: "", registration_deadline: "", frequency: "",
   syllabus: [] as string[], keywords: [] as string[],
   meta_title: "", meta_description: "",
+  primary_keyword: "" as string, funnel_stage: "" as string, cluster_id: "" as string,
 };
 
 const AdminExams = () => {
@@ -52,6 +54,10 @@ const AdminExams = () => {
       syllabus: form.syllabus.length > 0 ? form.syllabus : null,
       keywords: form.keywords.length > 0 ? form.keywords : null,
       meta_title: form.meta_title || null, meta_description: form.meta_description || null,
+      primary_keyword: form.primary_keyword || null,
+      funnel_stage: form.funnel_stage || null,
+      cluster_id: form.cluster_id || null,
+      last_seo_refresh: new Date().toISOString(),
     };
 
     if (editId) {
@@ -73,6 +79,9 @@ const AdminExams = () => {
       registration_deadline: exam.registration_deadline ?? "", frequency: exam.frequency ?? "",
       syllabus: exam.syllabus ?? [], keywords: exam.keywords ?? [],
       meta_title: exam.meta_title ?? "", meta_description: exam.meta_description ?? "",
+      primary_keyword: exam.primary_keyword ?? "",
+      funnel_stage: exam.funnel_stage ?? "",
+      cluster_id: exam.cluster_id ?? "",
     });
     setEditId(exam.id); setShowForm(true);
   };
