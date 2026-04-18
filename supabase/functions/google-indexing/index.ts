@@ -18,6 +18,39 @@ const BATCH_DELAY_MS = 150;
 const STATUS_CHECK_BATCH_SIZE = 12;
 const STATUS_CHECK_CONCURRENCY = 3;
 
+// IndexNow — Bing/Yandex/Naver/Seznam pick this up within minutes,
+// and Google reads IndexNow signals indirectly. Free + no quota.
+// Key file is hosted at /<key>.txt in /public.
+const INDEXNOW_KEY = "cc5b688453c4e43d3466783d7f7c426e";
+const INDEXNOW_KEY_LOCATION = `${SITE_URL}/${INDEXNOW_KEY}.txt`;
+const INDEXNOW_ENDPOINT = "https://api.indexnow.org/IndexNow";
+const SITE_HOST = "bschoolbuzz.com";
+
+async function submitToIndexNow(urls: string[]): Promise<{ ok: boolean; status: number; error?: string }> {
+  if (!urls.length) return { ok: true, status: 200 };
+  try {
+    const res = await fetch(INDEXNOW_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify({
+        host: SITE_HOST,
+        key: INDEXNOW_KEY,
+        keyLocation: INDEXNOW_KEY_LOCATION,
+        urlList: urls,
+      }),
+    });
+    // 200 = accepted; 202 = accepted but verification pending; both are good.
+    const ok = res.status === 200 || res.status === 202;
+    return {
+      ok,
+      status: res.status,
+      error: ok ? undefined : `IndexNow HTTP ${res.status}`,
+    };
+  } catch (err: any) {
+    return { ok: false, status: 0, error: err?.message || "IndexNow fetch failed" };
+  }
+}
+
 interface ServiceAccount {
   client_email: string;
   private_key: string;
@@ -872,10 +905,21 @@ Deno.serve(async (req) => {
         submission,
       });
 
+      // Fan out to IndexNow (Bing/Yandex/Naver) — independent of Google API.
+      const indexNowResult = await submitToIndexNow([url]);
+      await supabase.from("indexing_logs").insert({
+        indexing_url_id: record.id,
+        action: "indexnow_submit",
+        status: indexNowResult.ok ? "success" : "failed",
+        response: { http_status: indexNowResult.status, urls: [url] },
+        error_message: indexNowResult.error || null,
+      });
+
       const diagnostics = {
         ...submission.diagnostics,
         action,
         processing_time_ms: Date.now() - startedAt,
+        indexnow: { ok: indexNowResult.ok, status: indexNowResult.status },
       };
 
       return respond({
@@ -886,6 +930,7 @@ Deno.serve(async (req) => {
           status: record.status,
           error: record.error_message,
           google: submission.data,
+          indexnow: indexNowResult,
           diagnostics,
           record,
         },
@@ -1008,6 +1053,15 @@ Deno.serve(async (req) => {
         await delay(BATCH_DELAY_MS);
       }
 
+      // Single bulk IndexNow ping for the whole batch.
+      const indexNowResult = await submitToIndexNow(entries.map((e) => e.url));
+      await supabase.from("indexing_logs").insert({
+        action: "indexnow_batch",
+        status: indexNowResult.ok ? "success" : "failed",
+        response: { http_status: indexNowResult.status, count: entries.length },
+        error_message: indexNowResult.error || null,
+      });
+
       return respond({
         ok: true,
         data: {
@@ -1015,11 +1069,13 @@ Deno.serve(async (req) => {
           processed: results.length,
           success: successCount,
           failed: results.length - successCount,
+          indexnow: indexNowResult,
           results,
         },
         diagnostics: {
           action,
           processing_time_ms: Date.now() - startedAt,
+          indexnow: { ok: indexNowResult.ok, status: indexNowResult.status },
         },
       });
     }
@@ -1157,17 +1213,28 @@ Deno.serve(async (req) => {
         await delay(BATCH_DELAY_MS);
       }
 
+      // Bulk IndexNow ping for all retried URLs.
+      const indexNowResult = await submitToIndexNow(pendingRows.map((r: any) => r.url));
+      await supabase.from("indexing_logs").insert({
+        action: "indexnow_refresh",
+        status: indexNowResult.ok ? "success" : "failed",
+        response: { http_status: indexNowResult.status, count: pendingRows.length },
+        error_message: indexNowResult.error || null,
+      });
+
       return respond({
         ok: true,
         data: {
           total: pendingRows.length,
           success: successCount,
           failed: results.length - successCount,
+          indexnow: indexNowResult,
           results,
         },
         diagnostics: {
           action,
           processing_time_ms: Date.now() - startedAt,
+          indexnow: { ok: indexNowResult.ok, status: indexNowResult.status },
         },
       });
     }
