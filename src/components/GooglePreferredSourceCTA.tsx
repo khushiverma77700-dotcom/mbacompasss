@@ -13,7 +13,7 @@ import { ArrowRight, X, Sparkles } from "lucide-react";
 
 const PREFERRED_URL =
   "https://www.google.com/preferences/source?hl=en&source=bschoolbuzz.com";
-const DISMISS_KEY = "gps_banner_dismissed_v1";
+const DISMISS_KEY = "gps_banner_dismissed_v2";
 
 interface Props {
   variant?: "inline" | "banner";
@@ -81,13 +81,11 @@ const PremiumPill = ({ compact = false }: { compact?: boolean }) => (
 );
 
 const GooglePreferredSourceCTA = ({ variant = "inline", className = "" }: Props) => {
-  const [dismissed, setDismissed] = useState(true);
+  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    if (variant === "banner") {
+    if (variant === "banner" && typeof window !== "undefined") {
       setDismissed(localStorage.getItem(DISMISS_KEY) === "1");
-    } else {
-      setDismissed(false);
     }
   }, [variant]);
 
