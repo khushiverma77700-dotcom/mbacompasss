@@ -229,6 +229,8 @@ Generate unique, page-specific SEO optimization.`,
             meta_title: seo.meta_title,
             meta_description: seo.meta_description,
             keywords: allKeywords,
+            content_hash: newHash,
+            last_seo_refresh: new Date().toISOString(),
           };
           // h1_tag column now exists on all content tables
           if (seo.h1_tag) update.h1_tag = seo.h1_tag;
