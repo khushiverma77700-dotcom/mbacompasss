@@ -15,8 +15,8 @@ const SITE_URL = "https://bschoolbuzz.com";
 const GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token";
 const MAX_BATCH_SIZE = 100;
 const BATCH_DELAY_MS = 150;
-const STATUS_CHECK_BATCH_SIZE = 12;
-const STATUS_CHECK_CONCURRENCY = 3;
+const STATUS_CHECK_BATCH_SIZE = 5;
+const STATUS_CHECK_CONCURRENCY = 5;
 
 // IndexNow — Bing/Yandex/Naver/Seznam pick this up within minutes,
 // and Google reads IndexNow signals indirectly. Free + no quota.
