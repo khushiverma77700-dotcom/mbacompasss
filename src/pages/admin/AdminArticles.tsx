@@ -198,6 +198,12 @@ const AdminArticles = () => {
 
               <TabsContent value="seo" className="space-y-4">
                 <SEOChecklist data={form} contentType="article" recordId={editId || undefined} />
+                <SeoEnhanceFields
+                  data={form}
+                  onChange={(patch) => setForm({ ...form, ...patch } as typeof form)}
+                  contentType="article"
+                  recordId={editId || undefined}
+                />
                 <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">H1 Tag</Label><Input placeholder="Primary H1 heading" value={form.h1_tag} onChange={(e) => setForm({ ...form, h1_tag: e.target.value })} /></div>
                 <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Title (max 60 chars)</Label><Input placeholder="SEO title for search results" value={form.meta_title} onChange={(e) => setForm({ ...form, meta_title: e.target.value })} maxLength={70} /><span className="text-xs text-muted-foreground">{form.meta_title.length}/60</span></div>
                 <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Description (max 160 chars)</Label><Input placeholder="SEO description" value={form.meta_description} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} maxLength={170} /><span className="text-xs text-muted-foreground">{form.meta_description.length}/160</span></div>
