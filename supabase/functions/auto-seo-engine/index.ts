@@ -354,7 +354,7 @@ Generate unique, page-specific SEO optimization.`,
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: CHEAP_MODEL,
           generationConfig: { maxOutputTokens: 6144 },
           messages: [
             { role: "system", content: "You are an SEO expert for Indian MBA education. Analyze content inventory and identify gaps." },
