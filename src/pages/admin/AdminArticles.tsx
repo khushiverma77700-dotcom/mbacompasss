@@ -14,6 +14,7 @@ import { Plus, Pencil, Trash2, Eye, Search, X, ArrowLeft } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import SortableTableHead from "@/components/admin/SortableTableHead";
 import SEOChecklist from "@/components/admin/SEOChecklist";
+import SeoEnhanceFields from "@/components/admin/SeoEnhanceFields";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
@@ -31,6 +32,7 @@ const emptyForm = {
   published: false, meta_title: "", meta_description: "", keywords: [] as string[],
   priority: 0, featured: false, status: "draft", intro: "", banner_url: "",
   image_url: "", h1_tag: "", is_comparison: false, comparison_id: "" as string,
+  primary_keyword: "" as string, funnel_stage: "" as string, cluster_id: "" as string,
 };
 
 const AdminArticles = () => {
@@ -86,6 +88,10 @@ const AdminArticles = () => {
       image_url: form.image_url || null, h1_tag: form.h1_tag || null,
       is_comparison: form.is_comparison,
       comparison_id: form.is_comparison && form.comparison_id ? form.comparison_id : null,
+      primary_keyword: form.primary_keyword || null,
+      funnel_stage: form.funnel_stage || null,
+      cluster_id: form.cluster_id || null,
+      last_seo_refresh: new Date().toISOString(),
     };
 
     if (editId) {
@@ -110,6 +116,9 @@ const AdminArticles = () => {
       intro: article.intro || "", banner_url: article.banner_url || "",
       image_url: article.image_url || "", h1_tag: article.h1_tag || "",
       is_comparison: article.is_comparison || false, comparison_id: article.comparison_id || "",
+      primary_keyword: article.primary_keyword || "",
+      funnel_stage: article.funnel_stage || "",
+      cluster_id: article.cluster_id || "",
     });
     setEditId(article.id); setShowForm(true);
   };
@@ -189,6 +198,12 @@ const AdminArticles = () => {
 
               <TabsContent value="seo" className="space-y-4">
                 <SEOChecklist data={form} contentType="article" recordId={editId || undefined} />
+                <SeoEnhanceFields
+                  data={form}
+                  onChange={(patch) => setForm({ ...form, ...patch } as typeof form)}
+                  contentType="article"
+                  recordId={editId || undefined}
+                />
                 <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">H1 Tag</Label><Input placeholder="Primary H1 heading" value={form.h1_tag} onChange={(e) => setForm({ ...form, h1_tag: e.target.value })} /></div>
                 <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Title (max 60 chars)</Label><Input placeholder="SEO title for search results" value={form.meta_title} onChange={(e) => setForm({ ...form, meta_title: e.target.value })} maxLength={70} /><span className="text-xs text-muted-foreground">{form.meta_title.length}/60</span></div>
                 <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Description (max 160 chars)</Label><Input placeholder="SEO description" value={form.meta_description} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} maxLength={170} /><span className="text-xs text-muted-foreground">{form.meta_description.length}/160</span></div>
