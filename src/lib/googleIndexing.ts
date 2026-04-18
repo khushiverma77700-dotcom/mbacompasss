@@ -22,27 +22,25 @@ const pathMap: Record<PageType, (slug: string) => string> = {
  * the queue every 5 minutes. This helper now only nudges the queue
  * and pings the sitemap — fire-and-forget, never blocks admin saves.
  */
-export const submitToGoogleIndexing = (
+export const submitToGoogleIndexing = async (
   pageType: PageType,
   slug: string,
   _recordId?: string
-) => {
+): Promise<void> => {
   if (!slug) return;
-  // Reference URL kept for log clarity in callers / future use.
+  // Reference URL kept for log clarity / future use.
   void `${SITE_URL}${pathMap[pageType](slug)}`;
 
-  void (async () => {
-    try {
-      await Promise.all([
-        supabase.functions.invoke("google-indexing", {
-          body: { action: "submit_pending", limit: 5 },
-        }),
-        supabase.functions.invoke("google-indexing", {
-          body: { action: "ping_sitemap" },
-        }),
-      ]);
-    } catch (e) {
-      console.warn("Background indexing nudge failed (non-blocking):", e);
-    }
-  })();
+  try {
+    await Promise.all([
+      supabase.functions.invoke("google-indexing", {
+        body: { action: "submit_pending", limit: 5 },
+      }),
+      supabase.functions.invoke("google-indexing", {
+        body: { action: "ping_sitemap" },
+      }),
+    ]);
+  } catch (e) {
+    console.warn("Background indexing nudge failed (non-blocking):", e);
+  }
 };
