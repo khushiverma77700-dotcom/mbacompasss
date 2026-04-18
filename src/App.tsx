@@ -8,7 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import GooglePreferredSourceCTA from "@/components/GooglePreferredSourceCTA";
+
 import ScrollToTop from "@/components/ScrollToTop";
 import BackButton from "@/components/BackButton";
 import { consumePostAuthRedirect } from "@/lib/authRedirect";
@@ -113,7 +113,6 @@ const SettingsPrefetcher = () => {
 const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   <>
     <Navbar />
-    <GooglePreferredSourceCTA variant="banner" />
     {children}
     <Footer />
     <Suspense fallback={null}>

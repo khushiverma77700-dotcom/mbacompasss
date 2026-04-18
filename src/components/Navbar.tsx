@@ -7,6 +7,7 @@ import SmartSearch from "@/components/SmartSearch";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import NavMegaMenu, { MobileMegaMenu } from "@/components/NavMegaMenu";
+import GooglePreferredSourceCTA from "@/components/GooglePreferredSourceCTA";
 import mbahubLogo from "@/assets/mbahub-logo-sm.png";
 
 const Navbar = () => {
@@ -89,6 +90,7 @@ const Navbar = () => {
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-3">
+          <GooglePreferredSourceCTA size="compact" className="hidden lg:inline-flex" />
           <SmartSearch className="w-56" />
           {user ? (
             <div className="flex items-center gap-2">
@@ -153,6 +155,10 @@ const Navbar = () => {
               Compare
             </Link>
           </nav>
+
+          <div className="mt-3" onClick={closeMobile}>
+            <GooglePreferredSourceCTA size="full" />
+          </div>
 
           {user ? (
             <div className="mt-3 space-y-2">

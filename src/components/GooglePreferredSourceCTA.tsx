@@ -1,26 +1,23 @@
-import { useEffect, useState } from "react";
-import { ArrowRight, X, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 /**
- * Google Preferred Source CTA — premium pill that deep-links to Google's
- * "Preferred Sources" page so signed-in Google users can pin BSchoolBuzz
- * in Top Stories / Discover.
+ * Google Preferred Source CTA — premium animated pill that deep-links to
+ * Google's "Preferred Sources" page so signed-in Google users can pin
+ * BSchoolBuzz in Top Stories / Discover.
  *
- * Variants:
- *  - "inline": rendered inside content (article/blog) — not dismissible.
- *  - "banner": dismissible site-wide strip (mounted once in PublicLayout).
+ * Designed to live INSIDE the Navbar (desktop + mobile) — no separate banner row.
  */
 
 const PREFERRED_URL =
   "https://www.google.com/preferences/source?hl=en&source=bschoolbuzz.com";
-const DISMISS_KEY = "gps_banner_dismissed_v2";
 
 interface Props {
-  variant?: "inline" | "banner";
   className?: string;
+  /** "compact" for desktop nav, "full" for mobile menu */
+  size?: "compact" | "full";
 }
 
-const GoogleG = ({ className = "w-5 h-5" }: { className?: string }) => (
+const GoogleG = ({ className = "w-4 h-4" }: { className?: string }) => (
   <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
     <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z" />
     <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
@@ -29,97 +26,47 @@ const GoogleG = ({ className = "w-5 h-5" }: { className?: string }) => (
   </svg>
 );
 
-const PremiumPill = ({ compact = false }: { compact?: boolean }) => (
-  <a
-    href={PREFERRED_URL}
-    target="_blank"
-    rel="noopener noreferrer"
-    className={`group relative inline-flex items-center gap-3 rounded-full overflow-hidden
-      bg-gradient-to-r from-card via-card to-card
-      hover:from-primary/5 hover:via-card hover:to-primary/5
-      shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_6px_24px_rgba(59,130,246,0.18)]
-      transition-all duration-300
-      ${compact ? "pl-2 pr-3 py-1.5" : "pl-2.5 pr-4 py-2"}
-      border border-primary/15 hover:border-primary/40`}
-    style={{
-      backgroundImage:
-        "linear-gradient(white, white), linear-gradient(90deg, hsl(207 90% 54%), hsl(207 90% 70%), hsl(207 90% 54%))",
-      backgroundOrigin: "border-box",
-      backgroundClip: "padding-box, border-box",
-    }}
-  >
-    <span
-      className={`flex items-center justify-center rounded-full bg-background ring-1 ring-border/60 shrink-0 ${
-        compact ? "w-7 h-7" : "w-8 h-8"
-      }`}
-    >
-      <GoogleG className={compact ? "w-4 h-4" : "w-[18px] h-[18px]"} />
-    </span>
-    <span className="flex flex-col leading-tight min-w-0">
-      <span
-        className={`font-bold text-foreground tracking-tight whitespace-nowrap ${
-          compact ? "text-[12.5px]" : "text-sm"
-        }`}
-      >
-        Add BSchoolBuzz on Google
-      </span>
-      {!compact && (
-        <span className="text-[10.5px] text-muted-foreground font-medium tracking-wide flex items-center gap-1">
-          <Sparkles className="w-2.5 h-2.5 text-primary" />
-          Set as preferred source · Top Stories
-        </span>
-      )}
-    </span>
-    <span
-      className={`flex items-center justify-center rounded-full bg-primary text-primary-foreground shrink-0 group-hover:translate-x-0.5 transition-transform ${
-        compact ? "w-5 h-5" : "w-6 h-6"
-      }`}
-    >
-      <ArrowRight className={compact ? "w-2.5 h-2.5" : "w-3 h-3"} />
-    </span>
-  </a>
-);
-
-const GooglePreferredSourceCTA = ({ variant = "inline", className = "" }: Props) => {
-  const [dismissed, setDismissed] = useState(false);
-
-  useEffect(() => {
-    if (variant === "banner" && typeof window !== "undefined") {
-      setDismissed(localStorage.getItem(DISMISS_KEY) === "1");
-    }
-  }, [variant]);
-
-  if (variant === "banner") {
-    if (dismissed) return null;
-    return (
-      <div
-        className={`w-full border-b border-primary/10 ${className}`}
-        style={{
-          background:
-            "linear-gradient(90deg, hsl(207 90% 97%) 0%, hsl(0 0% 100%) 50%, hsl(207 90% 97%) 100%)",
-        }}
-      >
-        <div className="container mx-auto px-4 py-2 flex items-center justify-center gap-3 relative">
-          <PremiumPill compact />
-          <button
-            onClick={() => {
-              localStorage.setItem(DISMISS_KEY, "1");
-              setDismissed(true);
-            }}
-            aria-label="Dismiss"
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1.5 rounded-full hover:bg-background transition-colors"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-    );
-  }
+const GooglePreferredSourceCTA = ({ className = "", size = "compact" }: Props) => {
+  const isFull = size === "full";
 
   return (
-    <div className={`flex justify-center ${className}`}>
-      <PremiumPill />
-    </div>
+    <a
+      href={PREFERRED_URL}
+      target="_blank"
+      rel="noopener noreferrer"
+      title="Add B School Buzz as preferred source on Google"
+      className={`group relative inline-flex items-center gap-2 rounded-full overflow-hidden
+        bg-card border border-primary/25 hover:border-primary/60
+        shadow-sm hover:shadow-[0_6px_20px_hsl(var(--primary)/0.25)]
+        transition-all duration-300 hover:-translate-y-0.5
+        ${isFull ? "px-3 py-2 w-full justify-center" : "px-2.5 py-1.5"}
+        ${className}`}
+    >
+      {/* Animated shimmer sweep */}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-[1100ms] ease-out
+          bg-gradient-to-r from-transparent via-primary/15 to-transparent"
+      />
+
+      <span className="relative flex items-center justify-center w-6 h-6 rounded-full bg-background ring-1 ring-border shrink-0 group-hover:scale-110 transition-transform">
+        <GoogleG className="w-[14px] h-[14px]" />
+      </span>
+
+      <span
+        className={`relative font-semibold text-foreground tracking-tight whitespace-nowrap ${
+          isFull ? "text-sm" : "text-[12.5px]"
+        }`}
+      >
+        Add B School Buzz <span className="text-muted-foreground font-medium">as preferred source on</span>{" "}
+        <span className="text-primary">Google</span>
+      </span>
+
+      <Sparkles
+        className="relative w-3 h-3 text-primary shrink-0 animate-pulse"
+        aria-hidden="true"
+      />
+    </a>
   );
 };
 
