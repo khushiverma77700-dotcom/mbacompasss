@@ -38,6 +38,45 @@ function getTextContent(item: Record<string, any>) {
   );
 }
 
+// ─── COST OPTIMIZATION HELPERS (Balanced Tier) ───────────────
+// Cheap model for structured/templated tasks (scoring, schema, keywords, image audit)
+const CHEAP_MODEL = "google/gemini-2.5-flash-lite";
+// Standard model for nuanced output (meta titles/descriptions, FAQs)
+const STANDARD_MODEL = "google/gemini-2.5-flash";
+// Premium reserved only for FAQ generation where quality matters most
+const PREMIUM_MODEL = "google/gemini-2.5-pro";
+
+// SHA-256 hash of text content — used to skip pages that haven't changed since last refresh
+async function computeContentHash(text: string): Promise<string> {
+  const data = new TextEncoder().encode(text || "");
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// Smart truncation: keeps intro + headings + first sentence of each section.
+// Preserves SEO-critical structure while cutting tokens by ~60-70%.
+// NOT used for FAQ generation (which needs full context).
+function truncateForAI(text: string, maxChars = 1500): string {
+  if (!text || text.length <= maxChars) return text;
+  const stripped = stripHtml(text);
+  if (stripped.length <= maxChars) return stripped;
+  // Keep first 1000 chars (intro) + last 500 chars (often conclusion/CTA context)
+  return stripped.slice(0, 1000) + " ... " + stripped.slice(-500);
+}
+
+// Returns true if page should be skipped (unchanged since last refresh within freshDays).
+async function shouldSkipForCache(
+  item: Record<string, any>,
+  newHash: string,
+  freshDays = 7
+): Promise<boolean> {
+  if (!item.content_hash || item.content_hash !== newHash) return false;
+  if (!item.last_seo_refresh) return false;
+  const ageMs = Date.now() - new Date(item.last_seo_refresh).getTime();
+  return ageMs < freshDays * 24 * 60 * 60 * 1000;
+}
+
 function getName(item: Record<string, any>) {
   return item.title || item.name || item.full_name || "Untitled";
 }
