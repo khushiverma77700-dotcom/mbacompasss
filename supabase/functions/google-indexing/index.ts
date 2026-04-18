@@ -1053,6 +1053,15 @@ Deno.serve(async (req) => {
         await delay(BATCH_DELAY_MS);
       }
 
+      // Single bulk IndexNow ping for the whole batch.
+      const indexNowResult = await submitToIndexNow(entries.map((e) => e.url));
+      await supabase.from("indexing_logs").insert({
+        action: "indexnow_batch",
+        status: indexNowResult.ok ? "success" : "failed",
+        response: { http_status: indexNowResult.status, count: entries.length },
+        error_message: indexNowResult.error || null,
+      });
+
       return respond({
         ok: true,
         data: {
@@ -1060,11 +1069,13 @@ Deno.serve(async (req) => {
           processed: results.length,
           success: successCount,
           failed: results.length - successCount,
+          indexnow: indexNowResult,
           results,
         },
         diagnostics: {
           action,
           processing_time_ms: Date.now() - startedAt,
+          indexnow: { ok: indexNowResult.ok, status: indexNowResult.status },
         },
       });
     }
