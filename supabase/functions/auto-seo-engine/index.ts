@@ -137,16 +137,28 @@ Deno.serve(async (req) => {
         desc: (p.meta_description || "").toLowerCase(),
       }));
 
+      let cachedSkipped = 0;
       for (const page of (pages || [])) {
         try {
           const contentText = getTextContent(page);
           const wordCount = contentText.split(/\s+/).filter(Boolean).length;
 
+          // ─── COST OPT: Skip unchanged pages refreshed in last 7 days ───
+          const newHash = await computeContentHash(contentText + "|" + getName(page) + "|" + (page.slug || ""));
+          if (await shouldSkipForCache(page, newHash, 7)) {
+            cachedSkipped++;
+            results.push({ id: page.id, name: getName(page), status: "cached_skip" });
+            continue;
+          }
+
+          // ─── COST OPT: Truncate input content for AI (saves ~50% input tokens) ───
+          const truncatedContent = truncateForAI(contentText, 1500);
+
           const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
             headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "google/gemini-2.5-flash",
+              model: STANDARD_MODEL,
               generationConfig: { maxOutputTokens: 4096 },
               messages: [
                 {
@@ -168,7 +180,7 @@ Name: ${getName(page)}
 Slug: ${page.slug}
 City: ${page.city || "N/A"}
 Word Count: ${wordCount}
-Content (first 2500 chars): ${contentText.slice(0, 2500)}
+Content (truncated): ${truncatedContent}
 ${page.courses ? `Courses: ${(page.courses || []).join(", ")}` : ""}
 ${page.fees ? `Fees: ${page.fees}` : ""}
 ${page.ranking ? `Ranking: #${page.ranking}` : ""}
