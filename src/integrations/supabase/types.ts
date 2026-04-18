@@ -141,6 +141,7 @@ export type Database = {
           cluster_id: string | null
           comparison_id: string | null
           content: string | null
+          content_hash: string | null
           content_score: number | null
           created_at: string
           excerpt: string | null
@@ -170,6 +171,7 @@ export type Database = {
           cluster_id?: string | null
           comparison_id?: string | null
           content?: string | null
+          content_hash?: string | null
           content_score?: number | null
           created_at?: string
           excerpt?: string | null
@@ -199,6 +201,7 @@ export type Database = {
           cluster_id?: string | null
           comparison_id?: string | null
           content?: string | null
+          content_hash?: string | null
           content_score?: number | null
           created_at?: string
           excerpt?: string | null
@@ -480,6 +483,7 @@ export type Database = {
           active: boolean | null
           city_aliases: string[] | null
           cluster_id: string | null
+          content_hash: string | null
           content_score: number | null
           created_at: string
           detailed_content: string | null
@@ -505,6 +509,7 @@ export type Database = {
           active?: boolean | null
           city_aliases?: string[] | null
           cluster_id?: string | null
+          content_hash?: string | null
           content_score?: number | null
           created_at?: string
           detailed_content?: string | null
@@ -530,6 +535,7 @@ export type Database = {
           active?: boolean | null
           city_aliases?: string[] | null
           cluster_id?: string | null
+          content_hash?: string | null
           content_score?: number | null
           created_at?: string
           detailed_content?: string | null
@@ -726,6 +732,7 @@ export type Database = {
           city: string | null
           cluster_id: string | null
           college_category: string | null
+          content_hash: string | null
           content_score: number | null
           courses: string[] | null
           created_at: string
@@ -768,6 +775,7 @@ export type Database = {
           city?: string | null
           cluster_id?: string | null
           college_category?: string | null
+          content_hash?: string | null
           content_score?: number | null
           courses?: string[] | null
           created_at?: string
@@ -810,6 +818,7 @@ export type Database = {
           city?: string | null
           cluster_id?: string | null
           college_category?: string | null
+          content_hash?: string | null
           content_score?: number | null
           courses?: string[] | null
           created_at?: string
@@ -1096,6 +1105,7 @@ export type Database = {
         Row: {
           cluster_id: string | null
           conducting_body: string | null
+          content_hash: string | null
           content_score: number | null
           created_at: string
           cutoffs: Json | null
@@ -1122,6 +1132,7 @@ export type Database = {
         Insert: {
           cluster_id?: string | null
           conducting_body?: string | null
+          content_hash?: string | null
           content_score?: number | null
           created_at?: string
           cutoffs?: Json | null
@@ -1148,6 +1159,7 @@ export type Database = {
         Update: {
           cluster_id?: string | null
           conducting_body?: string | null
+          content_hash?: string | null
           content_score?: number | null
           created_at?: string
           cutoffs?: Json | null
@@ -1400,6 +1412,7 @@ export type Database = {
           category_id: string | null
           city: string | null
           cluster_id: string | null
+          content_hash: string | null
           content_score: number | null
           created_at: string
           description: string | null
@@ -1440,6 +1453,7 @@ export type Database = {
           category_id?: string | null
           city?: string | null
           cluster_id?: string | null
+          content_hash?: string | null
           content_score?: number | null
           created_at?: string
           description?: string | null
@@ -1480,6 +1494,7 @@ export type Database = {
           category_id?: string | null
           city?: string | null
           cluster_id?: string | null
+          content_hash?: string | null
           content_score?: number | null
           created_at?: string
           description?: string | null
