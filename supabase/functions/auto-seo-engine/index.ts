@@ -410,7 +410,7 @@ Generate unique, page-specific SEO optimization.`,
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: STANDARD_MODEL,
           generationConfig: { maxOutputTokens: 8192 },
           messages: [
             { role: "system", content: `You are an SEO internal-linking strategist for an Indian MBA education platform. Given the full site inventory, suggest high-value internal links that boost topical authority, distribute link equity, and improve user journeys. For each suggestion provide source page, target page, and the best anchor text. Group by theme. Return 30-50 link suggestions prioritized by SEO impact.` },
