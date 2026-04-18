@@ -33,14 +33,16 @@ const PageKeywords = ({ contentType, recordId, fallbackKeywords = [] }: PageKeyw
   const longTail = snapshot?.keywordBuckets?.longTail || [];
   const trending = snapshot?.keywordBuckets?.trending || [];
   const faq = snapshot?.keywordBuckets?.faq || [];
+  const faqs: { question?: string; answer?: string; q?: string; a?: string }[] = (snapshot as any)?.faqs || [];
   const allKeywords = snapshot?.keywords || fallbackKeywords;
   const approvedLinks: { path: string; anchorText: string; targetName?: string }[] = snapshot?.internalLinks?.approved || [];
 
   const hasAIKeywords = shortTail.length > 0 || longTail.length > 0;
   const displayKeywords = hasAIKeywords ? [] : allKeywords;
   const hasLinks = approvedLinks.length > 0;
+  const hasFaqs = faqs.length > 0;
 
-  if (!displayKeywords?.length && !shortTail.length && !longTail.length && !hasLinks) return null;
+  if (!displayKeywords?.length && !shortTail.length && !longTail.length && !hasLinks && !hasFaqs) return null;
 
   const sections = [
     { ...sectionStyles[0], items: shortTail },
