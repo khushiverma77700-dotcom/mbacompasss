@@ -1148,8 +1148,8 @@ Deno.serve(async (req) => {
           .select("id, url, status, indexed_at")
           .is("indexed_at", null)
           .in("status", ["submitted", "pending"])
-          .order("last_submitted_at", { ascending: true, nullsFirst: false })
-          .range(requestedSkip, requestedSkip + limit - 1);
+          .order("updated_at", { ascending: true, nullsFirst: false })
+          .limit(limit);
         if (error) {
           throw createStageError("database_error", "Failed to load URLs to check", {
             response_preview: error.message,
@@ -1286,10 +1286,10 @@ Deno.serve(async (req) => {
           checked: rowsToCheck.length,
           indexed: indexedCount,
           not_indexed: rowsToCheck.length - indexedCount,
-          remaining: Math.max(totalPending - requestedSkip - rowsToCheck.length, 0),
-          truncated: totalPending > requestedSkip + rowsToCheck.length,
+          remaining: Math.max(totalPending - rowsToCheck.length, 0),
+          truncated: totalPending > rowsToCheck.length,
           processed_in_batch: rowsToCheck.length,
-          next_skip: requestedSkip + rowsToCheck.length,
+          next_skip: 0,
           total_pending: totalPending,
           site_property: propertySiteUrl,
           results,
@@ -1339,14 +1339,14 @@ Deno.serve(async (req) => {
           if (!lastActivityAt) lastActivityAt = log.created_at;
           if (log.action === "auto_run_tick") autoRunTicks += 1;
           if (
-            (log.action === "submit_url" ||
+            (log.action === "submit" ||
               log.action === "batch_submit" ||
-              log.action === "refresh") &&
+              log.action === "retry") &&
             (log.status === "success" || log.status === "submitted")
           ) {
             submittedInWindow += 1;
           }
-          if (log.action === "check_index_status" && log.status === "indexed") {
+          if (log.action === "status_check" && log.status === "indexed") {
             indexedInWindow += 1;
           }
           if (log.status === "failed") failedInWindow += 1;
@@ -1411,19 +1411,21 @@ Deno.serve(async (req) => {
         for (const log of todaysLogs) {
           // Submissions: any submit_url / batch_submit / refresh attempt that actually hit Google
           if (
-            (log.action === "submit_url" ||
+            (log.action === "submit" ||
               log.action === "batch_submit" ||
-              log.action === "refresh") &&
+              log.action === "retry") &&
             (log.status === "success" || log.status === "submitted" || log.status === "failed")
           ) {
             submissionsUsed += 1;
           }
           // Inspections
           if (
-            log.action === "check_index_status" &&
+            log.action === "status_check" &&
             (log.status === "success" ||
               log.status === "indexed" ||
               log.status === "not_indexed" ||
+              log.status === "not_indexed_yet" ||
+              log.status === "check_failed" ||
               log.status === "failed")
           ) {
             inspectionsUsed += 1;
