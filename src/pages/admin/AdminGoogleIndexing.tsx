@@ -918,7 +918,7 @@ const AdminGoogleIndexing = () => {
       submitted: {
         cls: "bg-blue-50 text-blue-700 border-blue-200",
         icon: ArrowUpCircle,
-        label: "Submitted",
+        label: "Crawl Request Sent",
       },
       indexed: {
         cls: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -1103,7 +1103,7 @@ const AdminGoogleIndexing = () => {
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {[
           { key: "all", label: "Total URLs", value: stats.total, icon: BarChart3, color: "text-muted-foreground" },
-          { key: "submitted", label: "Submitted", value: stats.submitted, icon: ArrowUpCircle, color: "text-blue-500" },
+          { key: "submitted", label: "Crawl Requested", value: stats.submitted, icon: ArrowUpCircle, color: "text-blue-500" },
           { key: "indexed", label: "Indexed", value: stats.indexed, icon: CheckCircle, color: "text-emerald-500" },
           { key: "failed", label: "Failed", value: stats.failed, icon: XCircle, color: "text-red-500" },
           { key: "pending", label: "Pending", value: stats.pending, icon: Clock, color: "text-amber-500" },
@@ -1205,9 +1205,9 @@ const AdminGoogleIndexing = () => {
           <div className="flex items-start gap-2">
             <Info className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
             <div className="text-xs text-blue-800 space-y-1">
-              <p className="font-medium">How Google Indexing works:</p>
-              <p><strong>Pending</strong> = URL discovered, not yet sent to Google. <strong>Submitted</strong> = Google notified to crawl (does NOT mean indexed yet). <strong>Indexed</strong> = Confirmed indexed by Google. <strong>Failed</strong> = API error, will retry.</p>
-              <p>"Submitted" status means Google received our request — actual indexing can take hours to days.</p>
+              <p className="font-medium">How Google Indexing actually works:</p>
+              <p><strong>Pending</strong> = URL discovered, not yet sent to Google. <strong>Crawl Request Sent</strong> = Google's Indexing API received our notification (this does NOT guarantee Search Console will mark it submitted — the Indexing API officially supports only JobPosting / BroadcastEvent pages). <strong>Indexed</strong> = Confirmed indexed by Google. <strong>Failed</strong> = API error, will retry.</p>
+              <p>For regular pages (Institutes, Colleges, Articles) the reliable path is the sitemap. We auto-ping <code>/sitemap.xml</code> after every change so Google re-discovers new URLs.</p>
             </div>
           </div>
         </CardContent>

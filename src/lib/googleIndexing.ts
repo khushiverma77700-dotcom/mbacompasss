@@ -26,6 +26,8 @@ export const submitToGoogleIndexing = async (
   const url = `${SITE_URL}${pathMap[pageType](slug)}`;
 
   try {
+    // 1) Notify Google Indexing API (officially only JobPosting/BroadcastEvent
+    //    are guaranteed, but we still record the attempt for tracking).
     await supabase.functions.invoke("google-indexing", {
       body: {
         action: "submit_url",
@@ -33,6 +35,12 @@ export const submitToGoogleIndexing = async (
         page_type: pageType,
         record_id: recordId,
       },
+    });
+
+    // 2) Ping the sitemap so Google actually discovers regular pages
+    //    (this is the supported path for institutes/colleges/articles).
+    await supabase.functions.invoke("google-indexing", {
+      body: { action: "ping_sitemap" },
     });
   } catch (e) {
     console.error("Google Indexing submission failed:", e);

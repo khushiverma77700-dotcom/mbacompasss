@@ -38,29 +38,8 @@ Deno.serve(async () => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Check if we have a saved sitemap from admin panel
-    const { data: savedSitemap } = await supabase
-      .from("site_settings")
-      .select("value")
-      .eq("key", "sitemap_xml")
-      .single();
-
-    if (savedSitemap?.value) {
-      const parsed = typeof savedSitemap.value === "string"
-        ? JSON.parse(savedSitemap.value)
-        : savedSitemap.value;
-      if (parsed?.xml) {
-        return new Response(parsed.xml, {
-          headers: {
-            "Content-Type": "application/xml; charset=utf-8",
-            "Cache-Control": "public, max-age=3600, s-maxage=3600",
-            "Access-Control-Allow-Origin": "*",
-          },
-        });
-      }
-    }
-
-    // Fallback: generate dynamically from DB
+    // Always generate fresh from DB to avoid stale cached sitemaps
+    // (saved sitemap was causing missing institute/college URLs after edits)
     const STATIC_PAGES = [
       { loc: "/", priority: 1.0 },
       { loc: "/blog", priority: DEFAULT_PRIORITY },
@@ -118,7 +97,7 @@ Deno.serve(async () => {
     return new Response(xml, {
       headers: {
         "Content-Type": "application/xml; charset=utf-8",
-        "Cache-Control": "public, max-age=3600, s-maxage=3600",
+        "Cache-Control": "public, max-age=300, s-maxage=300",
         "Access-Control-Allow-Origin": "*",
       },
     });
