@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Static seed sitemap served at https://bschoolbuzz.com/sitemap.xml
+  The full, auto-generated, always-fresh sitemap lives at:
+  https://mttoiqruzzxooveooldo.supabase.co/functions/v1/serve-sitemap
+  Submit BOTH URLs to Google Search Console for maximum coverage.
+-->
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://mttoiqruzzxooveooldo.supabase.co/functions/v1/serve-sitemap</loc>
+  </sitemap>
+</sitemapindex>

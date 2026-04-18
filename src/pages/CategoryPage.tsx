@@ -143,8 +143,8 @@ const CategoryPage = () => {
 
   const metaTitle = cityPage?.meta_title ||
     (hasLocationFilter
-      ? `Best ${category?.name || "MBA"} Coaching in ${displayName} 2026 — Fees, Reviews`
-      : `${category?.name || "All MBA"} Coaching Institutes in India | MBAHub`);
+      ? `Best ${category?.name || "MBA"} Coaching in ${displayName} 2026 — Fees, Reviews | BSchoolBuzz`
+      : `${category?.name || "All MBA"} Coaching Institutes in India | BSchoolBuzz`);
   const metaDesc = cityPage?.meta_description ||
     (hasLocationFilter
       ? `Explore top ${category?.name || "MBA"} coaching institutes in ${displayName} with fees, ratings, success rates, and student reviews.`

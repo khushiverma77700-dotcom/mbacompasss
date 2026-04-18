@@ -4,6 +4,8 @@ Disallow: /admin
 Disallow: /admin/
 Disallow: /auth
 Disallow: /dashboard
+Disallow: /forgot-password
+Disallow: /reset-password
 
 User-agent: Bingbot
 Allow: /
@@ -24,5 +26,10 @@ Disallow: /admin
 Disallow: /admin/
 Disallow: /auth
 Disallow: /dashboard
+Disallow: /*?*sort=
+Disallow: /*?*q=
 
+# Primary sitemap (live, auto-generated from database)
+Sitemap: https://mttoiqruzzxooveooldo.supabase.co/functions/v1/serve-sitemap
+# Mirror sitemap on main domain (refreshed via Admin → Sitemap Manager)
 Sitemap: https://bschoolbuzz.com/sitemap.xml

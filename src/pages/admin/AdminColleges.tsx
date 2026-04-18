@@ -101,12 +101,18 @@ const AdminColleges = () => {
       last_seo_refresh: new Date().toISOString(),
     };
 
+    let savedId = editId;
     if (editId) {
       const { error } = await supabase.from("colleges").update(payload).eq("id", editId);
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     } else {
-      const { error } = await supabase.from("colleges").insert(payload);
+      const { data, error } = await supabase.from("colleges").insert(payload).select("id").single();
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      savedId = data?.id ?? null;
+    }
+    if (slug) {
+      const { submitToGoogleIndexing } = await import("@/lib/googleIndexing");
+      submitToGoogleIndexing("college", slug, savedId ?? undefined).catch(() => {});
     }
     toast({ title: editId ? "College updated" : "College created" });
     setShowForm(false); setForm(emptyForm); setEditId(null); fetchColleges();
