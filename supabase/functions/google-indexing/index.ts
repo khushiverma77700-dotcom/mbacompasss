@@ -939,6 +939,103 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "submit_pending") {
+      // Auto-flush worker — picks up pending URLs queued by DB triggers
+      // and submits them in small batches to Google + IndexNow.
+      const requestedLimit = Number(body?.limit) || 5;
+      const limit = Math.min(Math.max(requestedLimit, 1), 10);
+      const MAX_RETRIES = 5;
+
+      const { data: pending, error: fetchErr } = await supabase
+        .from("indexing_urls")
+        .select("id, url, page_type, record_id, retry_count")
+        .in("status", ["pending", "failed"])
+        .or(`next_retry_at.is.null,next_retry_at.lte.${new Date().toISOString()}`)
+        .lt("retry_count", MAX_RETRIES)
+        .order("created_at", { ascending: true })
+        .limit(limit);
+
+      if (fetchErr) {
+        throw createStageError("queue_fetch_error", fetchErr.message);
+      }
+
+      if (!pending || pending.length === 0) {
+        return respond({ ok: true, data: { processed: 0, message: "No pending URLs" } });
+      }
+
+      let accessToken: string | null = null;
+      try {
+        accessToken = await getToken();
+      } catch (err: any) {
+        // Auth failure — log against all rows and exit.
+        for (const row of pending) {
+          const nextRetry = new Date(Date.now() + Math.pow(2, (row.retry_count || 0) + 1) * 60_000);
+          await supabase.from("indexing_urls").update({
+            status: "failed",
+            retry_count: (row.retry_count || 0) + 1,
+            next_retry_at: nextRetry.toISOString(),
+            error_message: err?.message || "auth failed",
+            updated_at: new Date().toISOString(),
+          }).eq("id", row.id);
+        }
+        return respond({ ok: false, error: err?.message || "Auth failed", data: { processed: 0 } });
+      }
+
+      const results: Array<{ url: string; ok: boolean; error?: string }> = [];
+
+      for (const row of pending) {
+        let submission: GoogleSubmissionResult;
+        try {
+          submission = await submitUrl(accessToken!, row.url);
+        } catch (error: any) {
+          submission = createFailedSubmission(
+            row.url,
+            error?.message || "Submit failed",
+            error?.stage || "submit_error",
+            error?.details || {}
+          );
+        }
+
+        const indexNowResult = await submitToIndexNow([row.url]);
+        const overallOk = submission.ok || indexNowResult.ok;
+        const newRetryCount = (row.retry_count || 0) + (overallOk ? 0 : 1);
+        const nextRetry = overallOk
+          ? null
+          : new Date(Date.now() + Math.pow(2, newRetryCount) * 60_000).toISOString();
+
+        await supabase.from("indexing_urls").update({
+          status: overallOk ? "submitted" : (newRetryCount >= MAX_RETRIES ? "permanently_failed" : "failed"),
+          retry_count: newRetryCount,
+          next_retry_at: nextRetry,
+          last_submitted_at: new Date().toISOString(),
+          last_response: { google: submission.data, indexnow: indexNowResult },
+          error_message: overallOk ? null : (submission.errorMessage || indexNowResult.error || null),
+          updated_at: new Date().toISOString(),
+        }).eq("id", row.id);
+
+        await supabase.from("indexing_logs").insert({
+          indexing_url_id: row.id,
+          action: "auto_flush",
+          status: overallOk ? "success" : "failed",
+          response: { google_status: submission.status, indexnow_status: indexNowResult.status },
+          error_message: overallOk ? null : (submission.errorMessage || indexNowResult.error || null),
+        });
+
+        results.push({ url: row.url, ok: overallOk, error: overallOk ? undefined : (submission.errorMessage || indexNowResult.error) });
+        await new Promise((r) => setTimeout(r, BATCH_DELAY_MS));
+      }
+
+      return respond({
+        ok: true,
+        data: {
+          processed: results.length,
+          succeeded: results.filter((r) => r.ok).length,
+          failed: results.filter((r) => !r.ok).length,
+          results,
+        },
+      });
+    }
+
     if (action === "ping_sitemap") {
       // Note: Google's classic /ping?sitemap= endpoint was deprecated in 2023.
       // The reliable method is to (a) keep sitemap.xml fresh and (b) submit

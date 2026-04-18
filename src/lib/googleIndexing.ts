@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const SITE_URL = "https://bschoolbuzz.com";
 
-type PageType = "article" | "institute" | "college" | "exam" | "city_page";
+type PageType = "article" | "institute" | "college" | "exam" | "city_page" | "category";
 
 const pathMap: Record<PageType, (slug: string) => string> = {
   article: (s) => `/article/${s}`,
@@ -10,39 +10,37 @@ const pathMap: Record<PageType, (slug: string) => string> = {
   college: (s) => `/college/${s}`,
   exam: (s) => `/exam/${s}`,
   city_page: (s) => `/colleges/${s}`,
+  category: (s) => `/category/${s}`,
 };
 
 /**
- * Submit a newly created page URL to Google Indexing API.
- * Call this after successfully inserting a new record.
+ * Notify the Google indexing pipeline about a new/updated page.
+ *
+ * As of the auto-indexing rollout, every insert/update on articles,
+ * colleges, institutes, exams, city_pages and categories is
+ * automatically queued via a Postgres trigger, and a cron flushes
+ * the queue every 5 minutes. This helper now only nudges the queue
+ * and pings the sitemap — fire-and-forget, never blocks admin saves.
  */
 export const submitToGoogleIndexing = async (
   pageType: PageType,
   slug: string,
-  recordId?: string
-) => {
+  _recordId?: string
+): Promise<void> => {
   if (!slug) return;
-
-  const url = `${SITE_URL}${pathMap[pageType](slug)}`;
+  // Reference URL kept for log clarity / future use.
+  void `${SITE_URL}${pathMap[pageType](slug)}`;
 
   try {
-    // 1) Notify Google Indexing API (officially only JobPosting/BroadcastEvent
-    //    are guaranteed, but we still record the attempt for tracking).
-    await supabase.functions.invoke("google-indexing", {
-      body: {
-        action: "submit_url",
-        url,
-        page_type: pageType,
-        record_id: recordId,
-      },
-    });
-
-    // 2) Ping the sitemap so Google actually discovers regular pages
-    //    (this is the supported path for institutes/colleges/articles).
-    await supabase.functions.invoke("google-indexing", {
-      body: { action: "ping_sitemap" },
-    });
+    await Promise.all([
+      supabase.functions.invoke("google-indexing", {
+        body: { action: "submit_pending", limit: 5 },
+      }),
+      supabase.functions.invoke("google-indexing", {
+        body: { action: "ping_sitemap" },
+      }),
+    ]);
   } catch (e) {
-    console.error("Google Indexing submission failed:", e);
+    console.warn("Background indexing nudge failed (non-blocking):", e);
   }
 };
