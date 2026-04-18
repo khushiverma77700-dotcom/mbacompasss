@@ -783,7 +783,7 @@ const AdminGoogleIndexing = () => {
 
   const handleCheckIndexStatus = async () => {
     setActionLoading("check-status");
-    const statusCheckBatchSize = 12;
+    const statusCheckBatchSize = 5;
     const pendingCount = urls.filter(
       (u) => !u.indexed_at && (u.status === "submitted" || u.status === "pending")
     ).length;
