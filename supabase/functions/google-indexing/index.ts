@@ -905,10 +905,21 @@ Deno.serve(async (req) => {
         submission,
       });
 
+      // Fan out to IndexNow (Bing/Yandex/Naver) — independent of Google API.
+      const indexNowResult = await submitToIndexNow([url]);
+      await supabase.from("indexing_logs").insert({
+        indexing_url_id: record.id,
+        action: "indexnow_submit",
+        status: indexNowResult.ok ? "success" : "failed",
+        response: { http_status: indexNowResult.status, urls: [url] },
+        error_message: indexNowResult.error || null,
+      });
+
       const diagnostics = {
         ...submission.diagnostics,
         action,
         processing_time_ms: Date.now() - startedAt,
+        indexnow: { ok: indexNowResult.ok, status: indexNowResult.status },
       };
 
       return respond({
@@ -919,6 +930,7 @@ Deno.serve(async (req) => {
           status: record.status,
           error: record.error_message,
           google: submission.data,
+          indexnow: indexNowResult,
           diagnostics,
           record,
         },
