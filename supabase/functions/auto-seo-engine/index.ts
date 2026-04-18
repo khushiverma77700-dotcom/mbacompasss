@@ -921,7 +921,7 @@ RULES:
       });
       if (!aiResp.ok) throw new Error(`AI error ${aiResp.status}`);
       const aiJson = await aiResp.json();
-      await logAIUsage("faq-generate", "google/gemini-2.5-pro", aiJson);
+      await logAIUsage("faq-generate", STANDARD_MODEL, aiJson);
       const { faqs } = extractToolResult(aiJson);
 
       const snapshotKey = `seo_page__${contentType}__${page.id}`;
