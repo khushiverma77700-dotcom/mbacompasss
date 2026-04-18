@@ -1213,17 +1213,28 @@ Deno.serve(async (req) => {
         await delay(BATCH_DELAY_MS);
       }
 
+      // Bulk IndexNow ping for all retried URLs.
+      const indexNowResult = await submitToIndexNow(pendingRows.map((r: any) => r.url));
+      await supabase.from("indexing_logs").insert({
+        action: "indexnow_refresh",
+        status: indexNowResult.ok ? "success" : "failed",
+        response: { http_status: indexNowResult.status, count: pendingRows.length },
+        error_message: indexNowResult.error || null,
+      });
+
       return respond({
         ok: true,
         data: {
           total: pendingRows.length,
           success: successCount,
           failed: results.length - successCount,
+          indexnow: indexNowResult,
           results,
         },
         diagnostics: {
           action,
           processing_time_ms: Date.now() - startedAt,
+          indexnow: { ok: indexNowResult.ok, status: indexNowResult.status },
         },
       });
     }
