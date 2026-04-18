@@ -166,7 +166,7 @@ const CollegesPage = () => {
           "private MBA colleges with guaranteed placements", "top 100 MBA colleges in India rankings",
           "MBA colleges without entrance exams in India", "distance MBA colleges with best placement support",
         ]}
-        canonical="https://bschoolbuzz.com/colleges"
+        canonical={typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}${window.location.search}` : "https://bschoolbuzz.com/colleges"}
         jsonLd={jsonLd}
       />
 

@@ -201,7 +201,7 @@ const CoachingPage = () => {
           "weekend CAT coaching for working professionals", "free trial classes for MBA entrance coaching",
           "online study material for MBA entrance exams", "cheap MBA coaching classes online",
         ]}
-        canonical="https://bschoolbuzz.com/coaching"
+        canonical={typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}${window.location.search}` : "https://bschoolbuzz.com/coaching"}
       />
 
 

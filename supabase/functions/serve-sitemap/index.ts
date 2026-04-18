@@ -53,8 +53,6 @@ Deno.serve(async () => {
       { loc: "/college-shortlister", priority: DEFAULT_PRIORITY },
     ];
 
-    const FEE_BUCKETS = ["under-1l", "under-3l", "under-5l", "under-10l", "under-20l", "above-20l"];
-
     const [
       { data: institutes },
       { data: colleges },
@@ -62,7 +60,6 @@ Deno.serve(async () => {
       { data: categories },
       { data: articles },
       { data: cityPages },
-      { data: specializations },
     ] = await Promise.all([
       supabase.from("institutes").select("slug"),
       supabase.from("colleges").select("slug"),
@@ -70,12 +67,10 @@ Deno.serve(async () => {
       supabase.from("categories").select("slug"),
       supabase.from("articles").select("slug").eq("published", true),
       supabase.from("city_pages").select("slug").eq("active", true),
-      supabase.from("specializations").select("slug, type").eq("active", true),
     ]);
 
-    const collegeSpecs = (specializations ?? []).filter((s: any) => s.type === "college" || s.type === "both");
-    const coachingSpecs = (specializations ?? []).filter((s: any) => s.type === "coaching" || s.type === "both");
-
+    // Only include canonical, indexable URLs. Filtered/query-param URLs are intentionally
+    // excluded — they self-canonicalize via the page's SEOHead and dilute crawl budget.
     const urls = [
       ...STATIC_PAGES,
       ...(institutes ?? []).flatMap((i: { slug: string | null }) => i.slug ? [{ loc: `/institute/${i.slug}`, priority: DEFAULT_PRIORITY }] : []),
@@ -84,12 +79,6 @@ Deno.serve(async () => {
       ...(categories ?? []).flatMap((c: { slug: string | null }) => c.slug ? [{ loc: `/category/${c.slug}`, priority: DEFAULT_PRIORITY }] : []),
       ...(articles ?? []).flatMap((a: { slug: string | null }) => a.slug ? [{ loc: `/article/${a.slug}`, priority: DEFAULT_PRIORITY }] : []),
       ...(cityPages ?? []).flatMap((cp: { slug: string | null }) => cp.slug ? [{ loc: `/colleges/${cp.slug}`, priority: DEFAULT_PRIORITY }] : []),
-      // Fee-range filter pages
-      ...FEE_BUCKETS.map((b) => ({ loc: `/colleges?fee=${b}`, priority: 0.6 })),
-      ...FEE_BUCKETS.map((b) => ({ loc: `/coaching?fee=${b}`, priority: 0.6 })),
-      // Specialization filter pages
-      ...collegeSpecs.flatMap((s: any) => s.slug ? [{ loc: `/colleges?specialization=${s.slug}`, priority: 0.65 }] : []),
-      ...coachingSpecs.flatMap((s: any) => s.slug ? [{ loc: `/coaching?specialization=${s.slug}`, priority: 0.65 }] : []),
     ];
 
     const xml = buildSitemapXml(urls);
