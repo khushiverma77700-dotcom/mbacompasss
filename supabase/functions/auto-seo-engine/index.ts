@@ -584,7 +584,7 @@ Generate unique, page-specific SEO optimization.`,
             method: "POST",
             headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "google/gemini-2.5-flash",
+              model: CHEAP_MODEL,
               generationConfig: { maxOutputTokens: 4096 },
               messages: [
                 {
