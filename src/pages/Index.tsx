@@ -3,6 +3,7 @@ import HeroSection from "@/components/HeroSection";
 import StatsCounterSection from "@/components/StatsCounterSection";
 import CategoryCards from "@/components/CategoryCards";
 import SEOHead, { generateWebsiteSchema, generateOrganizationSchema, generateFAQSchema, generateBreadcrumbSchema } from "@/components/SEOHead";
+import GooglePreferredSourceCTA from "@/components/GooglePreferredSourceCTA";
 
 // Lazy load below-the-fold sections
 const CoachingOfWeekSection = lazy(() => import("@/components/CoachingOfWeekSection"));
@@ -79,6 +80,8 @@ const Index = () => {
         jsonLd={jsonLdSchemas}
       />
       
+      <GooglePreferredSourceCTA variant="banner" />
+
       {/* Above-the-fold: loaded eagerly */}
       <HeroSection />
       <StatsCounterSection />
