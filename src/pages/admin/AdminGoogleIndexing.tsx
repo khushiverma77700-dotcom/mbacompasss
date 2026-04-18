@@ -918,7 +918,7 @@ const AdminGoogleIndexing = () => {
       submitted: {
         cls: "bg-blue-50 text-blue-700 border-blue-200",
         icon: ArrowUpCircle,
-        label: "Crawl Request Sent",
+        label: "Notified Google + IndexNow",
       },
       indexed: {
         cls: "bg-emerald-50 text-emerald-700 border-emerald-200",
@@ -1505,22 +1505,35 @@ const AdminGoogleIndexing = () => {
                           )}
                         </TableCell>
                         <TableCell>
-                          {(getDisplayStatus(row) === "failed" || getDisplayStatus(row) === "pending") && (
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={() => handleResubmit(row)}
-                              disabled={actionLoading === row.id}
-                              title="Re-submit"
-                            >
-                              {actionLoading === row.id ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              ) : (
-                                <RefreshCw className="w-3.5 h-3.5" />
-                              )}
-                            </Button>
-                          )}
+                          <div className="flex items-center gap-1">
+                            {(getDisplayStatus(row) === "failed" || getDisplayStatus(row) === "pending") && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => handleResubmit(row)}
+                                disabled={actionLoading === row.id}
+                                title="Re-submit via API"
+                              >
+                                {actionLoading === row.id ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                  <RefreshCw className="w-3.5 h-3.5" />
+                                )}
+                              </Button>
+                            )}
+                            {!row.indexed_at && getDisplayStatus(row) !== "indexed" && (
+                              <a
+                                href={`https://search.google.com/search-console/inspect?resource_id=${encodeURIComponent("sc-domain:bschoolbuzz.com")}&id=${encodeURIComponent(row.url)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Open in Search Console — use the 'Request Indexing' button there for guaranteed indexing within minutes"
+                                className="inline-flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                              </a>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
