@@ -371,6 +371,77 @@ Deno.serve(async (req) => {
       payload = buildKeywordResearchPayload(searchQuery, existingKeywords || [], { google, paa, trends, wiki, alphabet });
     } else if (mode === "blog_titles") {
       payload = buildBlogTitlesPayload(query || niche || "MBA coaching");
+    } else if (mode === "cluster_map") {
+      const pillarTopic = query || niche || "MBA coaching";
+      payload = {
+        systemPrompt: "You are an SEO topic-cluster strategist for Indian MBA education. Build pillar→cluster maps with funnel stage tagging (TOFU=awareness, MOFU=consideration, BOFU=decision).",
+        userPrompt: `Build a topic cluster around the pillar: "${pillarTopic}". Include 8-12 cluster page ideas. For each, give: title, target keyword, funnel stage (tofu/mofu/bofu), search intent, suggested URL slug, internal-link anchor text to the pillar.`,
+        tool: {
+          type: "function",
+          function: {
+            name: "cluster_map",
+            description: "Topic cluster map",
+            parameters: {
+              type: "object",
+              properties: {
+                pillar: { type: "object", properties: { title: { type: "string" }, primaryKeyword: { type: "string" }, slug: { type: "string" } }, required: ["title", "primaryKeyword", "slug"] },
+                clusterPages: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string" },
+                      targetKeyword: { type: "string" },
+                      funnelStage: { type: "string", enum: ["tofu", "mofu", "bofu"] },
+                      intent: { type: "string" },
+                      slug: { type: "string" },
+                      anchorToPillar: { type: "string" },
+                    },
+                    required: ["title", "targetKeyword", "funnelStage", "slug"],
+                  },
+                },
+                summary: { type: "string" },
+              },
+              required: ["pillar", "clusterPages"],
+            },
+          },
+        },
+        toolName: "cluster_map",
+      };
+    } else if (mode === "conversational_queries") {
+      const topic = query || niche || "MBA coaching";
+      payload = {
+        systemPrompt: "You optimize content for AI search engines (Google AI Overviews, Perplexity, ChatGPT). Generate natural conversational queries Indian MBA aspirants ask.",
+        userPrompt: `Topic: "${topic}". Generate 20 conversational, long-tail, question-style queries — the way users actually ask AI assistants. Group by intent (informational, comparison, decision).`,
+        tool: {
+          type: "function",
+          function: {
+            name: "conversational_queries",
+            description: "Conversational AI-search queries",
+            parameters: {
+              type: "object",
+              properties: {
+                queries: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      query: { type: "string" },
+                      intent: { type: "string", enum: ["informational", "comparison", "decision", "navigational"] },
+                      suggestedAnswerFormat: { type: "string" },
+                      targetKeyword: { type: "string" },
+                    },
+                    required: ["query", "intent"],
+                  },
+                },
+                summary: { type: "string" },
+              },
+              required: ["queries"],
+            },
+          },
+        },
+        toolName: "conversational_queries",
+      };
     } else {
       payload = buildCompetitorPayload(competitors || []);
     }

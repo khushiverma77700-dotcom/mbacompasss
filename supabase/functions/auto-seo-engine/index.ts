@@ -731,6 +731,185 @@ RULES:
       });
     }
 
+    // ── NEW: content_score ──
+    if (mode === "content_score") {
+      const { contentType, pageIds } = body;
+      if (!contentType || !pageIds?.length) {
+        return new Response(JSON.stringify({ error: "contentType and pageIds required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const config = CONTENT_TABLES[contentType];
+      if (!config) return new Response(JSON.stringify({ error: "Invalid contentType" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+      const { data: pages } = await supabase.from(config.table).select("*").in("id", pageIds);
+      const results: any[] = [];
+      const now = new Date().toISOString();
+
+      for (const page of (pages || [])) {
+        const html = page.content || page.detailed_content || page.description || page.intro_content || "";
+        const text = stripHtml(html);
+        const words = text.split(/\s+/).filter(Boolean);
+        const wordCount = words.length;
+
+        const paragraphs = (html.match(/<p[^>]*>[\s\S]*?<\/p>/gi) || []).length;
+        const h1 = (html.match(/<h1[\s>]/gi) || []).length;
+        const h2 = (html.match(/<h2[\s>]/gi) || []).length;
+        const h3 = (html.match(/<h3[\s>]/gi) || []).length;
+        const hasFAQ = /faq|frequently asked/i.test(html);
+        const hasNums = (text.match(/\d+(\.\d+)?/g) || []).length >= 5;
+        const hasLists = /<(ul|ol)[\s>]/i.test(html);
+
+        let score = 0;
+        if (wordCount >= 1500) score += 30; else if (wordCount >= 800) score += 20; else if (wordCount >= 400) score += 10;
+        if (h1 === 1) score += 10;
+        if (h2 >= 3) score += 10;
+        if (h3 >= 2) score += 5;
+        if (hasFAQ) score += 15;
+        if (hasNums) score += 10;
+        if (hasLists) score += 5;
+        if (paragraphs >= 5) score += 15;
+        score = Math.min(100, score);
+
+        await supabase.from(config.table).update({ content_score: score, last_seo_refresh: now }).eq("id", page.id);
+        results.push({ id: page.id, name: getName(page), score, wordCount, hasFAQ });
+      }
+      return new Response(JSON.stringify({ results, processed: results.length }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── NEW: faq_generate ──
+    if (mode === "faq_generate") {
+      const { contentType, pageId } = body;
+      if (!contentType || !pageId) return new Response(JSON.stringify({ error: "contentType and pageId required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const config = CONTENT_TABLES[contentType];
+      if (!config) return new Response(JSON.stringify({ error: "Invalid contentType" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+      const { data: page } = await supabase.from(config.table).select("*").eq("id", pageId).maybeSingle();
+      if (!page) return new Response(JSON.stringify({ error: "Page not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+      const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-pro",
+          messages: [
+            { role: "system", content: "You write FAQs for Indian MBA education pages. Return 6-8 questions that real aspirants search, with concise factual answers (50-120 words each)." },
+            { role: "user", content: `Page: ${getName(page)}\nType: ${contentType}\nCity: ${page.city || ""}\nContent: ${getTextContent(page).slice(0, 3500)}\n\nReturn 6-8 FAQs as Q&A pairs grounded in this page.` },
+          ],
+          tools: [{
+            type: "function",
+            function: {
+              name: "faqs",
+              description: "Return FAQ list",
+              parameters: {
+                type: "object",
+                properties: {
+                  faqs: { type: "array", items: { type: "object", properties: { question: { type: "string" }, answer: { type: "string" } }, required: ["question", "answer"] } },
+                },
+                required: ["faqs"],
+              },
+            },
+          }],
+          tool_choice: { type: "function", function: { name: "faqs" } },
+        }),
+      });
+      if (!aiResp.ok) throw new Error(`AI error ${aiResp.status}`);
+      const aiJson = await aiResp.json();
+      await logAIUsage("faq-generate", "google/gemini-2.5-pro", aiJson);
+      const { faqs } = extractToolResult(aiJson);
+
+      const snapshotKey = `seo_page__${contentType}__${page.id}`;
+      const { data: existSnap } = await supabase.from("site_settings").select("id, value").eq("key", snapshotKey).limit(1);
+      const faqSchema = {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: (faqs || []).map((f: any) => ({
+          "@type": "Question",
+          name: f.question,
+          acceptedAnswer: { "@type": "Answer", text: f.answer },
+        })),
+      };
+      if (existSnap?.[0]) {
+        const val = (existSnap[0].value as any) || {};
+        val.faqs = faqs;
+        const existingSchema = val.schemaMarkup;
+        const schemaArr = Array.isArray(existingSchema) ? existingSchema.filter((s: any) => s?.["@type"] !== "FAQPage") : existingSchema ? [existingSchema] : [];
+        val.schemaMarkup = [...schemaArr, faqSchema];
+        await supabase.from("site_settings").update({ value: val }).eq("id", existSnap[0].id);
+      } else {
+        await supabase.from("site_settings").insert({
+          key: snapshotKey,
+          value: { contentType, recordId: page.id, slug: page.slug, pagePath: config.getPath(page), canonicalUrl: config.getPath(page), faqs, schemaMarkup: [faqSchema], generatedAt: new Date().toISOString() } as any,
+        });
+      }
+      return new Response(JSON.stringify({ faqs, count: (faqs || []).length }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── NEW: stale_content ──
+    if (mode === "stale_content") {
+      const days = body.days || 90;
+      const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+      const stale: any[] = [];
+      for (const [ct, config] of Object.entries(CONTENT_TABLES)) {
+        const { data } = await supabase.from(config.table).select("id, slug, name, title, full_name, last_seo_refresh, updated_at").or(`last_seo_refresh.is.null,last_seo_refresh.lt.${cutoff}`).limit(500);
+        (data || []).forEach((p: any) => {
+          const ref = p.last_seo_refresh || p.updated_at;
+          const daysOld = ref ? Math.floor((Date.now() - new Date(ref).getTime()) / 86400000) : 9999;
+          stale.push({ contentType: ct, id: p.id, slug: p.slug, name: getName(p), daysOld, lastRefresh: p.last_seo_refresh });
+        });
+      }
+      stale.sort((a, b) => b.daysOld - a.daysOld);
+      return new Response(JSON.stringify({ stale, count: stale.length, thresholdDays: days }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── NEW: broken_links_scan ──
+    if (mode === "broken_links_scan") {
+      const siteUrl = "https://bschoolbuzz.com";
+      const internalLinks = new Set<string>();
+      for (const [, config] of Object.entries(CONTENT_TABLES)) {
+        const { data } = await supabase.from(config.table).select("slug, content, description, detailed_content, intro_content").limit(300);
+        (data || []).forEach((p: any) => {
+          const html = (p.content || "") + (p.description || "") + (p.detailed_content || "") + (p.intro_content || "");
+          const matches = html.match(/href=["'](\/[^"'#?]+)["']/gi) || [];
+          matches.forEach((m: string) => {
+            const path = m.match(/href=["'](\/[^"']+)["']/i)?.[1];
+            if (path) internalLinks.add(path);
+          });
+        });
+      }
+      const broken: any[] = [];
+      const links = Array.from(internalLinks).slice(0, 100); // cap to keep runtime reasonable
+      for (const path of links) {
+        try {
+          const r = await fetch(`${siteUrl}${path}`, { method: "HEAD", redirect: "follow" });
+          if (r.status >= 400) broken.push({ path, status: r.status });
+        } catch (e: any) {
+          broken.push({ path, status: 0, error: e.message });
+        }
+      }
+      return new Response(JSON.stringify({ scanned: links.length, broken, brokenCount: broken.length }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── NEW: orphan_pages ──
+    if (mode === "orphan_pages") {
+      const allPaths = new Map<string, { contentType: string; id: string; name: string; path: string }>();
+      const linkedPaths = new Set<string>();
+      for (const [ct, config] of Object.entries(CONTENT_TABLES)) {
+        const { data } = await supabase.from(config.table).select("id, slug, name, title, full_name, content, description, detailed_content, intro_content").limit(500);
+        (data || []).forEach((p: any) => {
+          const path = config.getPath(p);
+          allPaths.set(path, { contentType: ct, id: p.id, name: getName(p), path });
+          const html = (p.content || "") + (p.description || "") + (p.detailed_content || "") + (p.intro_content || "");
+          const matches = html.match(/href=["'](\/[^"'#?]+)["']/gi) || [];
+          matches.forEach((m: string) => {
+            const found = m.match(/href=["'](\/[^"']+)["']/i)?.[1];
+            if (found) linkedPaths.add(found);
+          });
+        });
+      }
+      const orphans: any[] = [];
+      allPaths.forEach((info, path) => { if (!linkedPaths.has(path)) orphans.push(info); });
+      return new Response(JSON.stringify({ orphans, total: allPaths.size, orphanCount: orphans.length }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     return new Response(JSON.stringify({ error: "Invalid mode" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
