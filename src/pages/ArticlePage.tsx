@@ -13,6 +13,7 @@ import SEOHead, { generateArticleSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import AIGistSection from "@/components/AIGistSection";
 import InlineAIToolCTA from "@/components/InlineAIToolCTA";
+import GooglePreferredSourceCTA from "@/components/GooglePreferredSourceCTA";
 
 const ArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -195,6 +196,8 @@ const ArticlePage = () => {
         <div className="grid lg:grid-cols-3 gap-10">
           {/* Main Article */}
           <article className="lg:col-span-2">
+
+            <GooglePreferredSourceCTA className="mb-6" />
 
             <AIGistSection
               content={article.content || article.excerpt || ""}
