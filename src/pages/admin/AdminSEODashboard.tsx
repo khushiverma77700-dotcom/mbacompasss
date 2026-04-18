@@ -856,6 +856,9 @@ const AdminSEODashboard = () => {
     { id: "backlinks", label: "Backlink Strategy", icon: Network },
     { id: "page-speed", label: "Page Speed", icon: Gauge },
     { id: "technical", label: "Technical SEO", icon: Shield },
+    { id: "seo-health", label: "SEO Health", icon: Activity },
+    { id: "topic-clusters", label: "Topic Clusters", icon: Layers },
+    { id: "content-freshness", label: "Content Freshness", icon: RefreshCw },
   ];
 
   return (
