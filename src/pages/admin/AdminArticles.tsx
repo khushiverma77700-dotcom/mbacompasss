@@ -94,12 +94,19 @@ const AdminArticles = () => {
       last_seo_refresh: new Date().toISOString(),
     };
 
+    let savedId = editId;
     if (editId) {
       const { error } = await supabase.from("articles").update(payload).eq("id", editId);
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     } else {
-      const { error } = await supabase.from("articles").insert(payload);
+      const { data, error } = await supabase.from("articles").insert(payload).select("id").single();
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      savedId = data?.id ?? null;
+    }
+    // Auto-submit to Google Indexing API + IndexNow when published
+    if (published && slug) {
+      const { submitToGoogleIndexing } = await import("@/lib/googleIndexing");
+      submitToGoogleIndexing("article", slug, savedId ?? undefined).catch(() => {});
     }
     toast({ title: editId ? "Article updated" : "Article created" });
     setShowForm(false); setForm(emptyForm); setEditId(null); fetchArticles();
