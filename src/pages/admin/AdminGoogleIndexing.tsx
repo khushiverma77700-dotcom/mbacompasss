@@ -363,6 +363,16 @@ const AdminGoogleIndexing = () => {
     if (typeof value === "string") return value;
 
     const record = value as Record<string, any>;
+    const inspection = record.google?.inspectionResult?.indexStatusResult || record.inspectionResult?.indexStatusResult;
+
+    if (inspection) {
+      const coverage = String(inspection.coverageState || "").trim();
+      const verdict = String(inspection.verdict || "").trim().toUpperCase();
+
+      if (verdict === "PASS") return "Indexed on Google";
+      if (coverage) return coverage;
+      if (verdict === "NEUTRAL") return "Not indexed yet";
+    }
 
     if (record.google) return getResponseSummary(record.google);
     if (record.error?.message) return String(record.error.message);
@@ -377,6 +387,27 @@ const AdminGoogleIndexing = () => {
 
   const getErrorSummary = (response: unknown, explicitError?: string | null) => {
     if (explicitError) return explicitError;
+
+    if (response && typeof response === "object") {
+      const record = response as Record<string, any>;
+      const inspection = record.google?.inspectionResult?.indexStatusResult || record.inspectionResult?.indexStatusResult;
+
+      if (inspection) {
+        const coverage = String(inspection.coverageState || "").trim();
+        const verdict = String(inspection.verdict || "").trim().toUpperCase();
+
+        if (verdict === "PASS") return "—";
+        if (coverage === "URL is unknown to Google") {
+          return "Not indexed yet — Google has not discovered this URL yet.";
+        }
+
+        return coverage || (verdict === "NEUTRAL" ? "Awaiting Google indexing." : "—");
+      }
+
+      if (record.urlNotificationMetadata) return "—";
+      if (!record.error && !record.google?.error && !record.diagnostics?.error_stage) return "—";
+    }
+
     const summary = getResponseSummary(response);
     return summary === "—" ? "—" : summary;
   };
@@ -903,6 +934,21 @@ const AdminGoogleIndexing = () => {
         cls: "bg-amber-50 text-amber-700 border-amber-200",
         icon: Clock,
         label: "Pending",
+      },
+      not_indexed_yet: {
+        cls: "bg-amber-50 text-amber-700 border-amber-200",
+        icon: Clock,
+        label: "Not indexed yet",
+      },
+      check_failed: {
+        cls: "bg-red-50 text-red-700 border-red-200",
+        icon: XCircle,
+        label: "Check failed",
+      },
+      started: {
+        cls: "bg-sky-50 text-sky-700 border-sky-200",
+        icon: Activity,
+        label: "Started",
       },
     };
 
@@ -1436,7 +1482,11 @@ const AdminGoogleIndexing = () => {
                         </TableCell>
                         <TableCell className="text-xs text-center">{row.retry_count}</TableCell>
                         <TableCell className="max-w-[240px]">
-                          <div className="text-[11px] text-red-600 break-words whitespace-pre-wrap">
+                          <div
+                            className={`text-[11px] break-words whitespace-pre-wrap ${
+                              row.error_message ? "text-red-600" : "text-muted-foreground"
+                            }`}
+                          >
                             {getErrorSummary(row.last_response, row.error_message)}
                           </div>
                         </TableCell>
