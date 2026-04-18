@@ -550,18 +550,26 @@ const AdminGoogleIndexing = () => {
     };
 
     let data: any;
-    try {
-      data = await invokeOnce(90_000);
-    } catch (err: any) {
-      // Retry once on network/abort errors only (not on application errors)
-      const isNetworkError =
-        err?.name === "AbortError" ||
-        err?.name === "TypeError" ||
-        /network|failed to fetch|load failed/i.test(err?.message || "");
-      if (!isNetworkError) throw err;
-      await new Promise((r) => setTimeout(r, 1500));
-      data = await invokeOnce(90_000);
+    let lastErr: any;
+    const maxAttempts = 3;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        data = await invokeOnce(90_000);
+        lastErr = null;
+        break;
+      } catch (err: any) {
+        lastErr = err;
+        const msg = String(err?.message || "");
+        const isNetworkError =
+          err?.name === "AbortError" ||
+          err?.name === "TypeError" ||
+          /network|failed to fetch|load failed|networkerror/i.test(msg);
+        if (!isNetworkError || attempt === maxAttempts) throw err;
+        // exponential backoff: 1s, 2.5s
+        await new Promise((r) => setTimeout(r, attempt * 1500));
+      }
     }
+    if (lastErr) throw lastErr;
 
     if (data && typeof data === "object" && "ok" in data) {
       const payload = data as { ok: boolean; data?: T; error?: string };
