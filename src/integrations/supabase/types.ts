@@ -1286,6 +1286,7 @@ export type Database = {
           indexed_at: string | null
           last_response: Json | null
           last_submitted_at: string | null
+          next_retry_at: string | null
           page_type: string
           record_id: string | null
           retry_count: number
@@ -1300,6 +1301,7 @@ export type Database = {
           indexed_at?: string | null
           last_response?: Json | null
           last_submitted_at?: string | null
+          next_retry_at?: string | null
           page_type?: string
           record_id?: string | null
           retry_count?: number
@@ -1314,6 +1316,7 @@ export type Database = {
           indexed_at?: string | null
           last_response?: Json | null
           last_submitted_at?: string | null
+          next_retry_at?: string | null
           page_type?: string
           record_id?: string | null
           retry_count?: number
