@@ -58,6 +58,7 @@ import {
   Timer,
   Zap,
   Info,
+  ExternalLink,
 } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import SortableTableHead from "@/components/admin/SortableTableHead";
