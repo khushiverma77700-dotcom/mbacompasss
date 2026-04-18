@@ -276,7 +276,7 @@ const MBARoiCalculatorPage = () => {
     try {
       const { data, error } = await supabase.functions.invoke("roi-calculator", {
         body: {
-          user_id: user?.id, force: !!isAdmin, is_admin: !!isAdmin,
+          user_id: user?.id,
           name: form.name, email: form.email, phone: form.phone, age: form.age,
           graduation_stream: form.graduation_stream, graduation_score: form.graduation_score,
           current_salary_lakhs: form.current_salary_lakhs,

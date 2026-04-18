@@ -94,8 +94,24 @@ Deno.serve(async (req) => {
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     // ===== ONE-CHECK-PER-USER: return existing report if found =====
-    // Admins bypass the one-report-per-user limit and can always generate fresh reports.
-    if (!body.force && !(body as any).is_admin) {
+    // Admins bypass the limit — verified server-side via JWT + user_roles, never trust client claims.
+    let isAdminCaller = false;
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      try {
+        const sbAuth = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!);
+        const { data: userData } = await sbAuth.auth.getUser(authHeader.replace("Bearer ", ""));
+        if (userData?.user) {
+          const { data: roleRow } = await sb
+            .from("user_roles").select("role").eq("user_id", userData.user.id).eq("role", "admin").maybeSingle();
+          isAdminCaller = !!roleRow;
+        }
+      } catch (e) {
+        console.warn("[roi-calculator] Admin check failed:", e);
+      }
+    }
+
+    if (!isAdminCaller) {
       let existingQ = sb.from("roi_analyses").select("*").order("created_at", { ascending: false }).limit(1);
       if (body.user_id) {
         existingQ = existingQ.eq("user_id", body.user_id);
