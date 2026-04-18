@@ -2590,7 +2590,7 @@ function SEOHealthPanel({ rows }: { rows: DashboardRow[] }) {
     const ref = r.item.last_seo_refresh || r.item.updated_at;
     return !ref || (Date.now() - new Date(ref).getTime() > NINETY);
   }).length;
-  const withFaq = rows.filter(r => Array.isArray(r.snapshot?.faqs) && r.snapshot.faqs.length).length;
+  const withFaq = rows.filter(r => Array.isArray((r.snapshot as any)?.faqs) && (r.snapshot as any).faqs.length).length;
 
   return (
     <div className="space-y-4">
