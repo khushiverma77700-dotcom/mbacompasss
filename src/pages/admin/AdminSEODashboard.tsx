@@ -859,6 +859,7 @@ const AdminSEODashboard = () => {
     { id: "seo-health", label: "SEO Health", icon: Activity },
     { id: "topic-clusters", label: "Topic Clusters", icon: Layers },
     { id: "content-freshness", label: "Content Freshness", icon: RefreshCw },
+    { id: "image-audit", label: "Image Audit", icon: Eye },
   ];
 
   return (
@@ -2513,6 +2514,9 @@ const AdminSEODashboard = () => {
         {activeTab === "content-freshness" && (
           <ContentFreshnessPanel rows={rows} onRefresh={fetchDashboardData} />
         )}
+
+        {/* ═══ IMAGE AUDIT ═══ */}
+        {activeTab === "image-audit" && <ImageAuditPanel />}
       </div>
     </div>
   );
@@ -2806,6 +2810,118 @@ function ContentFreshnessPanel({ rows, onRefresh }: { rows: DashboardRow[]; onRe
               </div>
             ))}
           </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+interface ImageAuditRow {
+  contentType: string;
+  id: string;
+  name: string;
+  slug?: string;
+  path: string;
+  totalImages: number;
+  missingAlt: number;
+  legacyFormat: number;
+  healthScore: number;
+}
+
+function ImageAuditPanel() {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState<ImageAuditRow[]>([]);
+  const [scanned, setScanned] = useState(false);
+
+  const runAudit = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-seo-engine", {
+        body: { mode: "image_audit" },
+      });
+      if (error) throw error;
+      setResults(((data as any)?.results || []) as ImageAuditRow[]);
+      setScanned(true);
+      toast({ title: "Image audit complete", description: `${(data as any)?.totalIssues || 0} pages with image issues.` });
+    } catch (e: any) {
+      toast({ title: "Audit failed", description: e.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const totalMissingAlt = results.reduce((s, r) => s + r.missingAlt, 0);
+  const totalLegacy = results.reduce((s, r) => s + r.legacyFormat, 0);
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <CardTitle className="flex items-center gap-2"><Eye className="h-5 w-5 text-primary" /> Image Audit</CardTitle>
+            <CardDescription>Detect images missing ALT text or using legacy formats (JPG/PNG/GIF instead of WebP/AVIF)</CardDescription>
+          </div>
+          <Button onClick={runAudit} disabled={loading} size="sm">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Eye className="h-4 w-4 mr-1.5" />}
+            {scanned ? "Re-run Audit" : "Run Audit"}
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {scanned && (
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <Card><CardContent className="pt-4">
+              <p className="text-xs text-muted-foreground">Pages with issues</p>
+              <p className="text-2xl font-bold text-foreground">{results.length}</p>
+            </CardContent></Card>
+            <Card><CardContent className="pt-4">
+              <p className="text-xs text-muted-foreground">Images missing ALT</p>
+              <p className="text-2xl font-bold text-amber-600">{totalMissingAlt}</p>
+            </CardContent></Card>
+            <Card><CardContent className="pt-4">
+              <p className="text-xs text-muted-foreground">Legacy format images</p>
+              <p className="text-2xl font-bold text-red-600">{totalLegacy}</p>
+            </CardContent></Card>
+          </div>
+        )}
+
+        {!scanned && !loading && (
+          <p className="text-sm text-muted-foreground py-6 text-center">
+            Click "Run Audit" to scan all articles, colleges, institutes, exams, and city pages for image SEO issues.
+          </p>
+        )}
+
+        {results.length > 0 && (
+          <div className="space-y-2">
+            {results.slice(0, 100).map((r) => (
+              <div key={`${r.contentType}-${r.id}`} className="flex items-center gap-3 p-2.5 border rounded">
+                <Badge variant="outline" className="text-[10px]">{r.contentType}</Badge>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{r.name}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">{r.path}</p>
+                </div>
+                <div className="flex items-center gap-2 text-xs">
+                  <Badge variant="outline" className="border-amber-200 text-amber-700">
+                    {r.missingAlt} no ALT
+                  </Badge>
+                  <Badge variant="outline" className="border-red-200 text-red-700">
+                    {r.legacyFormat} legacy
+                  </Badge>
+                  <Badge className={r.healthScore >= 70 ? "bg-emerald-100 text-emerald-700" : r.healthScore >= 40 ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}>
+                    {r.healthScore}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+            {results.length > 100 && (
+              <p className="text-xs text-muted-foreground text-center pt-2">Showing first 100 of {results.length}</p>
+            )}
+          </div>
+        )}
+
+        {scanned && results.length === 0 && (
+          <p className="text-sm text-muted-foreground py-6 text-center">All images have ALT text and modern formats ✨</p>
         )}
       </CardContent>
     </Card>
