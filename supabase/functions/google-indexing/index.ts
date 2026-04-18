@@ -866,31 +866,32 @@ Deno.serve(async (req) => {
     }
 
     if (action === "ping_sitemap") {
-      // Pings Google to re-fetch the sitemap. This is the supported way to
-      // ask Google to discover regular pages (Indexing API only officially
-      // works for JobPosting / BroadcastEvent).
+      // Note: Google's classic /ping?sitemap= endpoint was deprecated in 2023.
+      // The reliable method is to (a) keep sitemap.xml fresh and (b) submit
+      // it once in Google Search Console — Google then re-fetches it on its
+      // own schedule. We log the intent so admins can see the trigger.
       const sitemapUrl = typeof body?.sitemap_url === "string" && body.sitemap_url
         ? body.sitemap_url
         : `${SITE_URL}/sitemap.xml`;
-      const pingUrl = `https://www.google.com/ping?sitemap=${encodeURIComponent(sitemapUrl)}`;
       try {
-        const res = await fetch(pingUrl, { method: "GET" });
+        // Touch the sitemap to invalidate downstream caches and verify it serves.
+        const res = await fetch(`${sitemapUrl}?refresh=${Date.now()}`, { method: "GET" });
         const ok = res.ok;
         await supabase.from("indexing_logs").insert({
           action: "ping_sitemap",
           status: ok ? "success" : "failed",
-          response: { sitemap_url: sitemapUrl, http_status: res.status },
+          response: { sitemap_url: sitemapUrl, http_status: res.status, note: "Google /ping endpoint deprecated; sitemap re-fetched and cache busted" },
           error_message: ok ? null : `HTTP ${res.status}`,
         });
         return respond({
           ok,
-          data: { sitemap_url: sitemapUrl, http_status: res.status },
+          data: { sitemap_url: sitemapUrl, http_status: res.status, message: ok ? "Sitemap refreshed. Google re-fetches it automatically from Search Console." : "Sitemap not reachable" },
           diagnostics: { action, processing_time_ms: Date.now() - startedAt },
         });
       } catch (error: any) {
         return respond({
           ok: false,
-          error: error?.message || "Sitemap ping failed",
+          error: error?.message || "Sitemap refresh failed",
           diagnostics: { action, processing_time_ms: Date.now() - startedAt },
         });
       }
