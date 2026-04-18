@@ -138,19 +138,24 @@ export type Database = {
           author: string | null
           banner_url: string | null
           category: string | null
+          cluster_id: string | null
           comparison_id: string | null
           content: string | null
+          content_score: number | null
           created_at: string
           excerpt: string | null
           featured: boolean | null
+          funnel_stage: string | null
           h1_tag: string | null
           id: string
           image_url: string | null
           intro: string | null
           is_comparison: boolean | null
           keywords: string[] | null
+          last_seo_refresh: string | null
           meta_description: string | null
           meta_title: string | null
+          primary_keyword: string | null
           priority: number | null
           published: boolean | null
           slug: string
@@ -162,19 +167,24 @@ export type Database = {
           author?: string | null
           banner_url?: string | null
           category?: string | null
+          cluster_id?: string | null
           comparison_id?: string | null
           content?: string | null
+          content_score?: number | null
           created_at?: string
           excerpt?: string | null
           featured?: boolean | null
+          funnel_stage?: string | null
           h1_tag?: string | null
           id?: string
           image_url?: string | null
           intro?: string | null
           is_comparison?: boolean | null
           keywords?: string[] | null
+          last_seo_refresh?: string | null
           meta_description?: string | null
           meta_title?: string | null
+          primary_keyword?: string | null
           priority?: number | null
           published?: boolean | null
           slug: string
@@ -186,19 +196,24 @@ export type Database = {
           author?: string | null
           banner_url?: string | null
           category?: string | null
+          cluster_id?: string | null
           comparison_id?: string | null
           content?: string | null
+          content_score?: number | null
           created_at?: string
           excerpt?: string | null
           featured?: boolean | null
+          funnel_stage?: string | null
           h1_tag?: string | null
           id?: string
           image_url?: string | null
           intro?: string | null
           is_comparison?: boolean | null
           keywords?: string[] | null
+          last_seo_refresh?: string | null
           meta_description?: string | null
           meta_title?: string | null
+          primary_keyword?: string | null
           priority?: number | null
           published?: boolean | null
           slug?: string
@@ -207,6 +222,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "articles_cluster_id_fkey"
+            columns: ["cluster_id"]
+            isOneToOne: false
+            referencedRelation: "topic_clusters"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "articles_comparison_id_fkey"
             columns: ["comparison_id"]
@@ -457,17 +479,22 @@ export type Database = {
         Row: {
           active: boolean | null
           city_aliases: string[] | null
+          cluster_id: string | null
+          content_score: number | null
           created_at: string
           detailed_content: string | null
           faq_content: string | null
+          funnel_stage: string | null
           h1_tag: string | null
           hero_image_url: string | null
           id: string
           intro_content: string | null
           keywords: string[] | null
+          last_seo_refresh: string | null
           meta_description: string | null
           meta_title: string | null
           name: string
+          primary_keyword: string | null
           slug: string
           sort_order: number | null
           state: string | null
@@ -477,17 +504,22 @@ export type Database = {
         Insert: {
           active?: boolean | null
           city_aliases?: string[] | null
+          cluster_id?: string | null
+          content_score?: number | null
           created_at?: string
           detailed_content?: string | null
           faq_content?: string | null
+          funnel_stage?: string | null
           h1_tag?: string | null
           hero_image_url?: string | null
           id?: string
           intro_content?: string | null
           keywords?: string[] | null
+          last_seo_refresh?: string | null
           meta_description?: string | null
           meta_title?: string | null
           name: string
+          primary_keyword?: string | null
           slug: string
           sort_order?: number | null
           state?: string | null
@@ -497,24 +529,37 @@ export type Database = {
         Update: {
           active?: boolean | null
           city_aliases?: string[] | null
+          cluster_id?: string | null
+          content_score?: number | null
           created_at?: string
           detailed_content?: string | null
           faq_content?: string | null
+          funnel_stage?: string | null
           h1_tag?: string | null
           hero_image_url?: string | null
           id?: string
           intro_content?: string | null
           keywords?: string[] | null
+          last_seo_refresh?: string | null
           meta_description?: string | null
           meta_title?: string | null
           name?: string
+          primary_keyword?: string | null
           slug?: string
           sort_order?: number | null
           state?: string | null
           type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "city_pages_cluster_id_fkey"
+            columns: ["cluster_id"]
+            isOneToOne: false
+            referencedRelation: "topic_clusters"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       coaching_of_week: {
         Row: {
@@ -679,7 +724,9 @@ export type Database = {
           banner_url: string | null
           campus_size: string | null
           city: string | null
+          cluster_id: string | null
           college_category: string | null
+          content_score: number | null
           courses: string[] | null
           created_at: string
           cutoff_info: Json | null
@@ -688,10 +735,12 @@ export type Database = {
           exams_accepted: string[] | null
           fees: string | null
           fees_lakhs: number | null
+          funnel_stage: string | null
           h1_tag: string | null
           highlights: Json | null
           id: string
           keywords: string[] | null
+          last_seo_refresh: string | null
           logo_url: string | null
           meta_description: string | null
           meta_title: string | null
@@ -699,6 +748,7 @@ export type Database = {
           placement_avg: string | null
           placement_highest: string | null
           placement_median: string | null
+          primary_keyword: string | null
           ranking: number | null
           slug: string
           specializations: string[] | null
@@ -716,7 +766,9 @@ export type Database = {
           banner_url?: string | null
           campus_size?: string | null
           city?: string | null
+          cluster_id?: string | null
           college_category?: string | null
+          content_score?: number | null
           courses?: string[] | null
           created_at?: string
           cutoff_info?: Json | null
@@ -725,10 +777,12 @@ export type Database = {
           exams_accepted?: string[] | null
           fees?: string | null
           fees_lakhs?: number | null
+          funnel_stage?: string | null
           h1_tag?: string | null
           highlights?: Json | null
           id?: string
           keywords?: string[] | null
+          last_seo_refresh?: string | null
           logo_url?: string | null
           meta_description?: string | null
           meta_title?: string | null
@@ -736,6 +790,7 @@ export type Database = {
           placement_avg?: string | null
           placement_highest?: string | null
           placement_median?: string | null
+          primary_keyword?: string | null
           ranking?: number | null
           slug: string
           specializations?: string[] | null
@@ -753,7 +808,9 @@ export type Database = {
           banner_url?: string | null
           campus_size?: string | null
           city?: string | null
+          cluster_id?: string | null
           college_category?: string | null
+          content_score?: number | null
           courses?: string[] | null
           created_at?: string
           cutoff_info?: Json | null
@@ -762,10 +819,12 @@ export type Database = {
           exams_accepted?: string[] | null
           fees?: string | null
           fees_lakhs?: number | null
+          funnel_stage?: string | null
           h1_tag?: string | null
           highlights?: Json | null
           id?: string
           keywords?: string[] | null
+          last_seo_refresh?: string | null
           logo_url?: string | null
           meta_description?: string | null
           meta_title?: string | null
@@ -773,6 +832,7 @@ export type Database = {
           placement_avg?: string | null
           placement_highest?: string | null
           placement_median?: string | null
+          primary_keyword?: string | null
           ranking?: number | null
           slug?: string
           specializations?: string[] | null
@@ -784,7 +844,15 @@ export type Database = {
           updated_at?: string
           website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "colleges_cluster_id_fkey"
+            columns: ["cluster_id"]
+            isOneToOne: false
+            referencedRelation: "topic_clusters"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       comparisons: {
         Row: {
@@ -1026,7 +1094,9 @@ export type Database = {
       }
       exams: {
         Row: {
+          cluster_id: string | null
           conducting_body: string | null
+          content_score: number | null
           created_at: string
           cutoffs: Json | null
           description: string | null
@@ -1034,20 +1104,25 @@ export type Database = {
           exam_date: string | null
           frequency: string | null
           full_name: string | null
+          funnel_stage: string | null
           h1_tag: string | null
           id: string
           important_dates: Json | null
           keywords: string[] | null
+          last_seo_refresh: string | null
           meta_description: string | null
           meta_title: string | null
           name: string
           pattern: Json | null
+          primary_keyword: string | null
           registration_deadline: string | null
           slug: string
           syllabus: string[] | null
         }
         Insert: {
+          cluster_id?: string | null
           conducting_body?: string | null
+          content_score?: number | null
           created_at?: string
           cutoffs?: Json | null
           description?: string | null
@@ -1055,20 +1130,25 @@ export type Database = {
           exam_date?: string | null
           frequency?: string | null
           full_name?: string | null
+          funnel_stage?: string | null
           h1_tag?: string | null
           id?: string
           important_dates?: Json | null
           keywords?: string[] | null
+          last_seo_refresh?: string | null
           meta_description?: string | null
           meta_title?: string | null
           name: string
           pattern?: Json | null
+          primary_keyword?: string | null
           registration_deadline?: string | null
           slug: string
           syllabus?: string[] | null
         }
         Update: {
+          cluster_id?: string | null
           conducting_body?: string | null
+          content_score?: number | null
           created_at?: string
           cutoffs?: Json | null
           description?: string | null
@@ -1076,19 +1156,30 @@ export type Database = {
           exam_date?: string | null
           frequency?: string | null
           full_name?: string | null
+          funnel_stage?: string | null
           h1_tag?: string | null
           id?: string
           important_dates?: Json | null
           keywords?: string[] | null
+          last_seo_refresh?: string | null
           meta_description?: string | null
           meta_title?: string | null
           name?: string
           pattern?: Json | null
+          primary_keyword?: string | null
           registration_deadline?: string | null
           slug?: string
           syllabus?: string[] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "exams_cluster_id_fkey"
+            columns: ["cluster_id"]
+            isOneToOne: false
+            referencedRelation: "topic_clusters"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       faculty: {
         Row: {
@@ -1308,6 +1399,8 @@ export type Database = {
           banner_url: string | null
           category_id: string | null
           city: string | null
+          cluster_id: string | null
+          content_score: number | null
           created_at: string
           description: string | null
           discount: string | null
@@ -1315,9 +1408,11 @@ export type Database = {
           featured: boolean | null
           features: string[] | null
           fees_lakhs: number | null
+          funnel_stage: string | null
           h1_tag: string | null
           id: string
           keywords: string[] | null
+          last_seo_refresh: string | null
           latitude: number | null
           logo_url: string | null
           longitude: number | null
@@ -1327,6 +1422,7 @@ export type Database = {
           name: string
           offer: string | null
           phone: string | null
+          primary_keyword: string | null
           rating: number | null
           slug: string
           specializations: string[] | null
@@ -1343,6 +1439,8 @@ export type Database = {
           banner_url?: string | null
           category_id?: string | null
           city?: string | null
+          cluster_id?: string | null
+          content_score?: number | null
           created_at?: string
           description?: string | null
           discount?: string | null
@@ -1350,9 +1448,11 @@ export type Database = {
           featured?: boolean | null
           features?: string[] | null
           fees_lakhs?: number | null
+          funnel_stage?: string | null
           h1_tag?: string | null
           id?: string
           keywords?: string[] | null
+          last_seo_refresh?: string | null
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
@@ -1362,6 +1462,7 @@ export type Database = {
           name: string
           offer?: string | null
           phone?: string | null
+          primary_keyword?: string | null
           rating?: number | null
           slug: string
           specializations?: string[] | null
@@ -1378,6 +1479,8 @@ export type Database = {
           banner_url?: string | null
           category_id?: string | null
           city?: string | null
+          cluster_id?: string | null
+          content_score?: number | null
           created_at?: string
           description?: string | null
           discount?: string | null
@@ -1385,9 +1488,11 @@ export type Database = {
           featured?: boolean | null
           features?: string[] | null
           fees_lakhs?: number | null
+          funnel_stage?: string | null
           h1_tag?: string | null
           id?: string
           keywords?: string[] | null
+          last_seo_refresh?: string | null
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
@@ -1397,6 +1502,7 @@ export type Database = {
           name?: string
           offer?: string | null
           phone?: string | null
+          primary_keyword?: string | null
           rating?: number | null
           slug?: string
           specializations?: string[] | null
@@ -1414,6 +1520,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institutes_cluster_id_fkey"
+            columns: ["cluster_id"]
+            isOneToOne: false
+            referencedRelation: "topic_clusters"
             referencedColumns: ["id"]
           },
         ]
@@ -1939,6 +2052,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      topic_clusters: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          pillar_page_type: string | null
+          pillar_record_id: string | null
+          primary_keyword: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          pillar_page_type?: string | null
+          pillar_record_id?: string | null
+          primary_keyword?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          pillar_page_type?: string | null
+          pillar_record_id?: string | null
+          primary_keyword?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
