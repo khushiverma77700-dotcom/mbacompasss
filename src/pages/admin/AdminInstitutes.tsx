@@ -109,14 +109,20 @@ const AdminInstitutes = () => {
       last_seo_refresh: new Date().toISOString(),
     };
 
+    let savedId = editId;
     if (editId) {
       const { error } = await supabase.from("institutes").update(payload).eq("id", editId);
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       toast({ title: "Institute updated" });
     } else {
-      const { error } = await supabase.from("institutes").insert(payload);
+      const { data, error } = await supabase.from("institutes").insert(payload).select("id").single();
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+      savedId = data?.id ?? null;
       toast({ title: "Institute added" });
+    }
+    if (slug) {
+      const { submitToGoogleIndexing } = await import("@/lib/googleIndexing");
+      submitToGoogleIndexing("institute", slug, savedId ?? undefined).catch(() => {});
     }
     setShowForm(false); setForm(emptyForm); setEditId(null); fetchData();
   };
