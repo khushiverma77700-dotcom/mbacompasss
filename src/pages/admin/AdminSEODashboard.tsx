@@ -2502,6 +2502,17 @@ const AdminSEODashboard = () => {
             )}
           </div>
         )}
+
+        {/* ═══ SEO HEALTH ═══ */}
+        {activeTab === "seo-health" && <SEOHealthPanel rows={rows} />}
+
+        {/* ═══ TOPIC CLUSTERS ═══ */}
+        {activeTab === "topic-clusters" && <TopicClustersPanel />}
+
+        {/* ═══ CONTENT FRESHNESS ═══ */}
+        {activeTab === "content-freshness" && (
+          <ContentFreshnessPanel rows={rows} onRefresh={fetchDashboardData} />
+        )}
       </div>
     </div>
   );
