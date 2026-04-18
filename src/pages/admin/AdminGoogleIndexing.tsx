@@ -507,31 +507,60 @@ const AdminGoogleIndexing = () => {
   };
 
   const callFunction = async <T,>(body: Record<string, unknown>): Promise<T> => {
-    const { data, error } = await supabase.functions.invoke("google-indexing", { body });
+    const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+    const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+    const url = `${SUPABASE_URL}/functions/v1/google-indexing`;
 
-    if (error) {
-      let details: any = null;
-      const context = (error as any).context;
+    const invokeOnce = async (timeoutMs: number) => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData?.session?.access_token || SUPABASE_KEY;
 
-      if (context) {
+      const controller = new AbortController();
+      const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+
+      try {
+        const res = await fetch(url, {
+          method: "POST",
+          signal: controller.signal,
+          headers: {
+            "Content-Type": "application/json",
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify(body),
+        });
+
+        const text = await res.text();
+        let parsed: any = null;
         try {
-          details = await context.clone().json();
+          parsed = text ? JSON.parse(text) : null;
         } catch {
-          try {
-            details = await context.text();
-          } catch {
-            details = null;
-          }
+          parsed = { error: text || `HTTP ${res.status}` };
         }
-      }
 
-      const enrichedError = new Error(
-        (details && typeof details === "object" && "error" in details ? String((details as any).error) : "") ||
-          error.message ||
-          "Edge Function request failed"
-      );
-      (enrichedError as any).details = details;
-      throw enrichedError;
+        if (!res.ok) {
+          const err = new Error(parsed?.error || `Edge Function returned ${res.status}`);
+          (err as any).details = parsed;
+          throw err;
+        }
+        return parsed;
+      } finally {
+        window.clearTimeout(timer);
+      }
+    };
+
+    let data: any;
+    try {
+      data = await invokeOnce(90_000);
+    } catch (err: any) {
+      // Retry once on network/abort errors only (not on application errors)
+      const isNetworkError =
+        err?.name === "AbortError" ||
+        err?.name === "TypeError" ||
+        /network|failed to fetch|load failed/i.test(err?.message || "");
+      if (!isNetworkError) throw err;
+      await new Promise((r) => setTimeout(r, 1500));
+      data = await invokeOnce(90_000);
     }
 
     if (data && typeof data === "object" && "ok" in data) {
