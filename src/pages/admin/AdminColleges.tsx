@@ -18,6 +18,7 @@ import { generateAndUploadLocationBanner } from "@/lib/locationBanner";
 import FileUpload from "@/components/admin/FileUpload";
 import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 import SEOChecklist from "@/components/admin/SEOChecklist";
+import SeoEnhanceFields from "@/components/admin/SeoEnhanceFields";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import MultiSelectTags from "@/components/admin/MultiSelectTags";
 import { useSpecializations } from "@/hooks/useSpecializations";
@@ -36,6 +37,7 @@ const emptyForm = {
   exams_accepted: [] as string[], top_recruiters: [] as string[],
   specializations: [] as string[],
   meta_title: "", meta_description: "", keywords: [] as string[],
+  primary_keyword: "" as string, funnel_stage: "" as string, cluster_id: "" as string,
 };
 
 const AdminColleges = () => {
@@ -93,6 +95,10 @@ const AdminColleges = () => {
       top_recruiters: form.top_recruiters.length > 0 ? form.top_recruiters : null,
       meta_title: form.meta_title || null, meta_description: form.meta_description || null,
       keywords: form.keywords.length > 0 ? form.keywords : null,
+      primary_keyword: form.primary_keyword || null,
+      funnel_stage: form.funnel_stage || null,
+      cluster_id: form.cluster_id || null,
+      last_seo_refresh: new Date().toISOString(),
     };
 
     if (editId) {
@@ -124,6 +130,9 @@ const AdminColleges = () => {
       exams_accepted: data.exams_accepted ?? [], top_recruiters: data.top_recruiters ?? [],
       meta_title: data.meta_title ?? "", meta_description: data.meta_description ?? "",
       keywords: data.keywords ?? [],
+      primary_keyword: (data as any).primary_keyword ?? "",
+      funnel_stage: (data as any).funnel_stage ?? "",
+      cluster_id: (data as any).cluster_id ?? "",
     });
     setEditId(id); setShowForm(true);
   };
@@ -274,6 +283,12 @@ const AdminColleges = () => {
 
               <TabsContent value="seo" className="space-y-3">
                 <SEOChecklist data={{ title: form.name, slug: form.slug, meta_title: form.meta_title, meta_description: form.meta_description, keywords: form.keywords, description: form.description, banner_url: form.banner_url, schemaType: "college" }} contentType="college" recordId={editId || undefined} showPublishWarning />
+                <SeoEnhanceFields
+                  data={{ title: form.name, slug: form.slug, meta_title: form.meta_title, meta_description: form.meta_description, primary_keyword: form.primary_keyword, funnel_stage: form.funnel_stage, cluster_id: form.cluster_id }}
+                  onChange={(patch) => setForm({ ...form, ...patch } as typeof form)}
+                  contentType="college"
+                  recordId={editId || undefined}
+                />
                 <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Title</Label><Input value={form.meta_title} onChange={(e) => setForm({ ...form, meta_title: e.target.value })} maxLength={70} /><span className="text-xs text-muted-foreground">{form.meta_title.length}/60</span></div>
                 <div><Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Meta Description</Label><Input value={form.meta_description} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} maxLength={170} /><span className="text-xs text-muted-foreground">{form.meta_description.length}/160</span></div>
                 <TagInput field="keywords" label="Target Keywords" />
