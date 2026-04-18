@@ -80,10 +80,9 @@ const Index = () => {
         jsonLd={jsonLdSchemas}
       />
       
-      <GooglePreferredSourceCTA variant="banner" />
-
       {/* Above-the-fold: loaded eagerly */}
       <HeroSection />
+      <GooglePreferredSourceCTA variant="banner" />
       <StatsCounterSection />
       <CategoryCards />
       
