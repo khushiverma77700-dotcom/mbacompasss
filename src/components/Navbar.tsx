@@ -90,8 +90,8 @@ const Navbar = () => {
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-3">
-          <GooglePreferredSourceCTA size="compact" className="hidden lg:inline-flex" />
-          <SmartSearch className="w-56" />
+          <GooglePreferredSourceCTA size="compact" className="inline-flex shrink-0" />
+          <SmartSearch className="hidden lg:block w-56" />
           {user ? (
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" asChild>
@@ -112,50 +112,7 @@ const Navbar = () => {
             </Button>
           )}
         </div>
-
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="md:hidden p-2 text-foreground"
-          aria-label="Toggle mobile menu"
-        >
-          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
-      </div>
-
-      {/* Mobile Menu */}
-      {mobileOpen && (
-        <div className="md:hidden bg-card border-b border-border px-4 pb-4 max-h-[80vh] overflow-y-auto">
-          <nav className="flex flex-col gap-1">
-            <Link to="/" onClick={closeMobile} className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground">
-              Home
-            </Link>
-
-            <button
-              onClick={() => setMobileCollegeOpen(!mobileCollegeOpen)}
-              className="flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground"
-            >
-              Colleges
-              <ChevronDown className={`w-4 h-4 transition-transform ${mobileCollegeOpen ? "rotate-180" : ""}`} />
-            </button>
-            {mobileCollegeOpen && <MobileMegaMenu menuType="college" onNavigate={closeMobile} />}
-
-            <button
-              onClick={() => setMobileCoachingOpen(!mobileCoachingOpen)}
-              className="flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground"
-            >
-              Coaching
-              <ChevronDown className={`w-4 h-4 transition-transform ${mobileCoachingOpen ? "rotate-180" : ""}`} />
-            </button>
-            {mobileCoachingOpen && <MobileMegaMenu menuType="coaching" onNavigate={closeMobile} />}
-
-            <Link to="/blog" onClick={closeMobile} className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground">
-              Blogs
-            </Link>
-            <Link to="/compare" onClick={closeMobile} className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground">
-              Compare
-            </Link>
-          </nav>
-
+...
           <div className="mt-3" onClick={closeMobile}>
             <GooglePreferredSourceCTA size="full" />
           </div>
