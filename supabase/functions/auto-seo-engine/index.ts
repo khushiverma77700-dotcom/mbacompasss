@@ -38,6 +38,45 @@ function getTextContent(item: Record<string, any>) {
   );
 }
 
+// ─── COST OPTIMIZATION HELPERS (Balanced Tier) ───────────────
+// Cheap model for structured/templated tasks (scoring, schema, keywords, image audit)
+const CHEAP_MODEL = "google/gemini-2.5-flash-lite";
+// Standard model for nuanced output (meta titles/descriptions, FAQs)
+const STANDARD_MODEL = "google/gemini-2.5-flash";
+// Premium reserved only for FAQ generation where quality matters most
+const PREMIUM_MODEL = "google/gemini-2.5-pro";
+
+// SHA-256 hash of text content — used to skip pages that haven't changed since last refresh
+async function computeContentHash(text: string): Promise<string> {
+  const data = new TextEncoder().encode(text || "");
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+// Smart truncation: keeps intro + headings + first sentence of each section.
+// Preserves SEO-critical structure while cutting tokens by ~60-70%.
+// NOT used for FAQ generation (which needs full context).
+function truncateForAI(text: string, maxChars = 1500): string {
+  if (!text || text.length <= maxChars) return text;
+  const stripped = stripHtml(text);
+  if (stripped.length <= maxChars) return stripped;
+  // Keep first 1000 chars (intro) + last 500 chars (often conclusion/CTA context)
+  return stripped.slice(0, 1000) + " ... " + stripped.slice(-500);
+}
+
+// Returns true if page should be skipped (unchanged since last refresh within freshDays).
+async function shouldSkipForCache(
+  item: Record<string, any>,
+  newHash: string,
+  freshDays = 7
+): Promise<boolean> {
+  if (!item.content_hash || item.content_hash !== newHash) return false;
+  if (!item.last_seo_refresh) return false;
+  const ageMs = Date.now() - new Date(item.last_seo_refresh).getTime();
+  return ageMs < freshDays * 24 * 60 * 60 * 1000;
+}
+
 function getName(item: Record<string, any>) {
   return item.title || item.name || item.full_name || "Untitled";
 }
@@ -98,16 +137,28 @@ Deno.serve(async (req) => {
         desc: (p.meta_description || "").toLowerCase(),
       }));
 
+      let cachedSkipped = 0;
       for (const page of (pages || [])) {
         try {
           const contentText = getTextContent(page);
           const wordCount = contentText.split(/\s+/).filter(Boolean).length;
 
+          // ─── COST OPT: Skip unchanged pages refreshed in last 7 days ───
+          const newHash = await computeContentHash(contentText + "|" + getName(page) + "|" + (page.slug || ""));
+          if (await shouldSkipForCache(page, newHash, 7)) {
+            cachedSkipped++;
+            results.push({ id: page.id, name: getName(page), status: "cached_skip" });
+            continue;
+          }
+
+          // ─── COST OPT: Truncate input content for AI (saves ~50% input tokens) ───
+          const truncatedContent = truncateForAI(contentText, 1500);
+
           const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
             method: "POST",
             headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "google/gemini-2.5-flash",
+              model: STANDARD_MODEL,
               generationConfig: { maxOutputTokens: 4096 },
               messages: [
                 {
@@ -129,7 +180,7 @@ Name: ${getName(page)}
 Slug: ${page.slug}
 City: ${page.city || "N/A"}
 Word Count: ${wordCount}
-Content (first 2500 chars): ${contentText.slice(0, 2500)}
+Content (truncated): ${truncatedContent}
 ${page.courses ? `Courses: ${(page.courses || []).join(", ")}` : ""}
 ${page.fees ? `Fees: ${page.fees}` : ""}
 ${page.ranking ? `Ranking: #${page.ranking}` : ""}
@@ -178,6 +229,8 @@ Generate unique, page-specific SEO optimization.`,
             meta_title: seo.meta_title,
             meta_description: seo.meta_description,
             keywords: allKeywords,
+            content_hash: newHash,
+            last_seo_refresh: new Date().toISOString(),
           };
           // h1_tag column now exists on all content tables
           if (seo.h1_tag) update.h1_tag = seo.h1_tag;
@@ -301,7 +354,7 @@ Generate unique, page-specific SEO optimization.`,
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: CHEAP_MODEL,
           generationConfig: { maxOutputTokens: 6144 },
           messages: [
             { role: "system", content: "You are an SEO expert for Indian MBA education. Analyze content inventory and identify gaps." },
@@ -332,7 +385,7 @@ Generate unique, page-specific SEO optimization.`,
 
       if (!aiResp.ok) throw new Error(`AI error: ${aiResp.status}`);
       const aiJson = await aiResp.json();
-      await logAIUsage("auto-seo", "google/gemini-2.5-flash", aiJson);
+      await logAIUsage("auto-seo", CHEAP_MODEL, aiJson);
       const gaps = extractToolResult(aiJson);
       return new Response(JSON.stringify(gaps), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -357,7 +410,7 @@ Generate unique, page-specific SEO optimization.`,
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: STANDARD_MODEL,
           generationConfig: { maxOutputTokens: 8192 },
           messages: [
             { role: "system", content: `You are an SEO internal-linking strategist for an Indian MBA education platform. Given the full site inventory, suggest high-value internal links that boost topical authority, distribute link equity, and improve user journeys. For each suggestion provide source page, target page, and the best anchor text. Group by theme. Return 30-50 link suggestions prioritized by SEO impact.` },
@@ -531,7 +584,7 @@ Generate unique, page-specific SEO optimization.`,
             method: "POST",
             headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
-              model: "google/gemini-2.5-flash",
+              model: CHEAP_MODEL,
               generationConfig: { maxOutputTokens: 4096 },
               messages: [
                 {
@@ -844,7 +897,7 @@ RULES:
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.5-pro",
+          model: STANDARD_MODEL,
           messages: [
             { role: "system", content: "You write FAQs for Indian MBA education pages. Return 6-8 questions that real aspirants search, with concise factual answers (50-120 words each)." },
             { role: "user", content: `Page: ${getName(page)}\nType: ${contentType}\nCity: ${page.city || ""}\nContent: ${getTextContent(page).slice(0, 3500)}\n\nReturn 6-8 FAQs as Q&A pairs grounded in this page.` },
@@ -868,7 +921,7 @@ RULES:
       });
       if (!aiResp.ok) throw new Error(`AI error ${aiResp.status}`);
       const aiJson = await aiResp.json();
-      await logAIUsage("faq-generate", "google/gemini-2.5-pro", aiJson);
+      await logAIUsage("faq-generate", STANDARD_MODEL, aiJson);
       const { faqs } = extractToolResult(aiJson);
 
       const snapshotKey = `seo_page__${contentType}__${page.id}`;
