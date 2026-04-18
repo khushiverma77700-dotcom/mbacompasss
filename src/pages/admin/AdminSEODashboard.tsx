@@ -856,6 +856,9 @@ const AdminSEODashboard = () => {
     { id: "backlinks", label: "Backlink Strategy", icon: Network },
     { id: "page-speed", label: "Page Speed", icon: Gauge },
     { id: "technical", label: "Technical SEO", icon: Shield },
+    { id: "seo-health", label: "SEO Health", icon: Activity },
+    { id: "topic-clusters", label: "Topic Clusters", icon: Layers },
+    { id: "content-freshness", label: "Content Freshness", icon: RefreshCw },
   ];
 
   return (
@@ -2499,6 +2502,17 @@ const AdminSEODashboard = () => {
             )}
           </div>
         )}
+
+        {/* ═══ SEO HEALTH ═══ */}
+        {activeTab === "seo-health" && <SEOHealthPanel rows={rows} />}
+
+        {/* ═══ TOPIC CLUSTERS ═══ */}
+        {activeTab === "topic-clusters" && <TopicClustersPanel />}
+
+        {/* ═══ CONTENT FRESHNESS ═══ */}
+        {activeTab === "content-freshness" && (
+          <ContentFreshnessPanel rows={rows} onRefresh={fetchDashboardData} />
+        )}
       </div>
     </div>
   );
@@ -2556,6 +2570,245 @@ function RecommendationRow({ icon, text, severity }: { icon: React.ReactNode; te
       <p className="text-sm flex-1">{text}</p>
       <Badge className={`text-[10px] ${severity === "high" ? "bg-red-100 text-red-700" : severity === "medium" ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"}`}>{severity}</Badge>
     </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// SEO HEALTH PANEL — Aggregated KPI Dashboard
+// ═══════════════════════════════════════════════════════════
+function SEOHealthPanel({ rows }: { rows: DashboardRow[] }) {
+  const total = rows.length || 1;
+  const withPrimaryKW = rows.filter(r => r.item.primary_keyword).length;
+  const withFunnel = rows.filter(r => r.item.funnel_stage).length;
+  const withCluster = rows.filter(r => r.item.cluster_id).length;
+  const scored = rows.filter(r => typeof r.item.content_score === "number");
+  const avgScore = scored.length
+    ? Math.round(scored.reduce((s, r) => s + (r.item.content_score || 0), 0) / scored.length)
+    : 0;
+  const NINETY = 90 * 24 * 60 * 60 * 1000;
+  const stale = rows.filter(r => {
+    const ref = r.item.last_seo_refresh || r.item.updated_at;
+    return !ref || (Date.now() - new Date(ref).getTime() > NINETY);
+  }).length;
+  const withFaq = rows.filter(r => Array.isArray((r.snapshot as any)?.faqs) && (r.snapshot as any).faqs.length).length;
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Activity className="h-5 w-5 text-primary" /> SEO Health Overview</CardTitle>
+          <CardDescription>Cross-page KPI snapshot for AI-search readiness</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+            <StatCard label="Pages with Primary KW" value={`${Math.round((withPrimaryKW / total) * 100)}%`} helper={`${withPrimaryKW}/${total}`} tone={withPrimaryKW / total > 0.8 ? "good" : withPrimaryKW / total > 0.5 ? "warning" : "poor"} icon={<Target className="h-4 w-4" />} />
+            <StatCard label="Funnel Tagged" value={`${Math.round((withFunnel / total) * 100)}%`} helper={`${withFunnel}/${total}`} tone={withFunnel / total > 0.8 ? "good" : "warning"} icon={<Layers className="h-4 w-4" />} />
+            <StatCard label="In Topic Cluster" value={`${Math.round((withCluster / total) * 100)}%`} helper={`${withCluster}/${total}`} tone={withCluster / total > 0.5 ? "good" : "warning"} icon={<Network className="h-4 w-4" />} />
+            <StatCard label="Avg Content Score" value={`${avgScore}`} helper="0-100 (E-E-A-T)" tone={avgScore > 75 ? "good" : avgScore > 50 ? "warning" : "poor"} icon={<Brain className="h-4 w-4" />} />
+            <StatCard label="With FAQs" value={`${Math.round((withFaq / total) * 100)}%`} helper={`${withFaq}/${total}`} tone={withFaq / total > 0.5 ? "good" : "warning"} icon={<Search className="h-4 w-4" />} />
+            <StatCard label="Stale (>90d)" value={`${stale}`} helper="Need refresh" tone={stale > total * 0.3 ? "poor" : stale > 0 ? "warning" : "good"} icon={<RefreshCw className="h-4 w-4" />} />
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">KPI Targets (per AI-Search Plan)</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <CoverageBar label="Pages with Primary Keyword" count={withPrimaryKW} total={total} icon={<Target className="h-4 w-4 text-primary" />} />
+          <CoverageBar label="Pages with FAQ Schema" count={withFaq} total={total} icon={<Search className="h-4 w-4 text-primary" />} />
+          <CoverageBar label="Pages in Topic Cluster" count={withCluster} total={total} icon={<Network className="h-4 w-4 text-primary" />} />
+          <CoverageBar label="Pages Funnel-Tagged" count={withFunnel} total={total} icon={<Layers className="h-4 w-4 text-primary" />} />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// TOPIC CLUSTERS PANEL — Pillar/Cluster Map
+// ═══════════════════════════════════════════════════════════
+function TopicClustersPanel() {
+  const { toast } = useToast();
+  const [clusters, setClusters] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newKW, setNewKW] = useState("");
+  const [pillarTopic, setPillarTopic] = useState("");
+  const [aiSuggestions, setAiSuggestions] = useState<any[]>([]);
+
+  const load = useCallback(async () => {
+    const { data } = await (supabase as any).from("topic_clusters").select("*").order("created_at", { ascending: false });
+    setClusters(data || []);
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const create = async () => {
+    if (!newName.trim() || !newKW.trim()) return;
+    const { error } = await (supabase as any).from("topic_clusters").insert({ name: newName.trim(), primary_keyword: newKW.trim() });
+    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+    setNewName(""); setNewKW(""); toast({ title: "Cluster created" }); load();
+  };
+
+  const remove = async (id: string) => {
+    await (supabase as any).from("topic_clusters").delete().eq("id", id);
+    load();
+  };
+
+  const generateMap = async () => {
+    if (!pillarTopic.trim()) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-keyword-research", {
+        body: { mode: "cluster_map", pillarTopic: pillarTopic.trim() },
+      });
+      if (error) throw error;
+      setAiSuggestions(data?.clusters || data?.suggestions || []);
+      toast({ title: "AI cluster map generated" });
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Network className="h-5 w-5 text-primary" /> Topic Clusters</CardTitle>
+          <CardDescription>Group pages into pillar/cluster structures for topical authority</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2 flex-wrap">
+            <Input placeholder="Cluster name (e.g. CAT Preparation)" value={newName} onChange={e => setNewName(e.target.value)} className="flex-1 min-w-[200px]" />
+            <Input placeholder="Primary keyword" value={newKW} onChange={e => setNewKW(e.target.value)} className="flex-1 min-w-[200px]" />
+            <Button onClick={create}><Sparkles className="h-4 w-4 mr-1" /> Create Cluster</Button>
+          </div>
+          <div className="border-t pt-4">
+            <div className="flex gap-2 flex-wrap mb-3">
+              <Input placeholder="Pillar topic for AI map (e.g. MBA Coaching)" value={pillarTopic} onChange={e => setPillarTopic(e.target.value)} className="flex-1 min-w-[200px]" />
+              <Button variant="outline" onClick={generateMap} disabled={loading}>
+                {loading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Brain className="h-4 w-4 mr-1" />}
+                Generate AI Cluster Map
+              </Button>
+            </div>
+            {aiSuggestions.length > 0 && (
+              <div className="grid gap-2 md:grid-cols-2">
+                {aiSuggestions.map((s, i) => (
+                  <Card key={i} className="bg-muted/30">
+                    <CardContent className="py-3 space-y-1">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-[10px]">{s.funnelStage || s.funnel_stage || "TOFU"}</Badge>
+                        <p className="text-sm font-semibold">{s.clusterName || s.name || s.title}</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{s.primaryKeyword || s.pillarKeyword}</p>
+                      {Array.isArray(s.supportingKeywords) && (
+                        <div className="flex flex-wrap gap-1 pt-1">
+                          {s.supportingKeywords.slice(0, 6).map((k: string, j: number) => (
+                            <Badge key={j} variant="outline" className="text-[10px]">{k}</Badge>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="border-t pt-4">
+            <h4 className="text-sm font-semibold mb-3">Existing Clusters ({clusters.length})</h4>
+            {clusters.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No clusters yet. Create one above or generate via AI.</p>
+            ) : (
+              <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+                {clusters.map((c) => (
+                  <Card key={c.id}>
+                    <CardContent className="py-3 flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold truncate">{c.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{c.primary_keyword}</p>
+                      </div>
+                      <Button size="sm" variant="ghost" onClick={() => remove(c.id)}>
+                        <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════
+// CONTENT FRESHNESS PANEL
+// ═══════════════════════════════════════════════════════════
+function ContentFreshnessPanel({ rows, onRefresh }: { rows: DashboardRow[]; onRefresh: () => void }) {
+  const { toast } = useToast();
+  const [busy, setBusy] = useState<string | null>(null);
+  const NINETY = 90 * 24 * 60 * 60 * 1000;
+  const staleRows = useMemo(() => {
+    return rows
+      .map(r => {
+        const ref = r.item.last_seo_refresh || r.item.updated_at;
+        const age = ref ? Math.floor((Date.now() - new Date(ref).getTime()) / (24 * 60 * 60 * 1000)) : 999;
+        return { row: r, ageDays: age };
+      })
+      .filter(x => x.ageDays > 90)
+      .sort((a, b) => b.ageDays - a.ageDays);
+  }, [rows]);
+
+  const refreshOne = async (r: DashboardRow) => {
+    setBusy(r.key);
+    try {
+      const { error } = await supabase.functions.invoke("auto-seo-engine", {
+        body: { mode: "content_score", contentType: r.contentType, recordId: r.id },
+      });
+      if (error) throw error;
+      toast({ title: "Refreshed", description: r.name });
+      onRefresh();
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><RefreshCw className="h-5 w-5 text-primary" /> Content Freshness</CardTitle>
+        <CardDescription>Pages not refreshed in 90+ days — refresh to maintain rankings</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {staleRows.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-6 text-center">All pages are fresh ✨</p>
+        ) : (
+          <div className="space-y-2">
+            <p className="text-sm text-muted-foreground mb-3">{staleRows.length} stale pages</p>
+            {staleRows.slice(0, 50).map(({ row, ageDays }) => (
+              <div key={row.key} className="flex items-center gap-3 p-2.5 border rounded">
+                <Badge variant="outline" className="text-[10px]">{row.contentType}</Badge>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{row.name}</p>
+                  <p className="text-[11px] text-muted-foreground">{ageDays} days old</p>
+                </div>
+                <Badge className={ageDays > 180 ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}>
+                  {ageDays > 180 ? "Critical" : "Stale"}
+                </Badge>
+                <Button size="sm" variant="outline" onClick={() => refreshOne(row)} disabled={busy === row.key}>
+                  {busy === row.key ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
