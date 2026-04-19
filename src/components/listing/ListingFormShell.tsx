@@ -122,9 +122,9 @@ const ListingFormShell = ({ listing, type }: Props) => {
       listing_type: type,
       target_table: targetTable,
       target_record_id: listing.approved_record_id,
-      old_payload: liveRow,
-      new_payload: payload,
-      diff,
+      old_payload: liveRow as any,
+      new_payload: payload as any,
+      diff: diff as any,
       status,
       submitted_at: new Date().toISOString(),
     };
