@@ -5,7 +5,7 @@ const DEFAULT_SITE_URL = "https://bschoolbuzz.com";
 export const SITE_URL = typeof window !== "undefined" ? window.location.origin : DEFAULT_SITE_URL;
 export const SEO_SNAPSHOT_KEY_PREFIX = "seo_page__";
 
-export type SEOContentType = "article" | "institute" | "college" | "exam" | "cityPage";
+export type SEOContentType = "article" | "institute" | "college" | "exam" | "cityPage" | "category";
 
 export interface SEOKeywordBuckets {
   primary: string[];
@@ -92,6 +92,12 @@ export const contentTypeConfig: Record<
     table: "city_pages",
     supportsH1Column: true,
     getPath: (item) => `/colleges/${item.slug}`,
+  },
+  category: {
+    label: "Categories",
+    table: "categories",
+    supportsH1Column: false,
+    getPath: (item) => `/category/${item.slug}`,
   },
 };
 
