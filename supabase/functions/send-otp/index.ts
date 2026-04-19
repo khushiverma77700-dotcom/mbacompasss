@@ -58,8 +58,9 @@ Deno.serve(async (req) => {
       throw new Error("Failed to store OTP");
     }
 
-    // Send via Fast2SMS OTP route (works without DLT template approval)
-    const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${fast2smsKey}&variables_values=${otp}&route=otp&numbers=${phone}`;
+    // Send via Fast2SMS Quick SMS route (no DLT/website verification required)
+    const message = encodeURIComponent(`Your BSchoolBuzz verification code is ${otp}. Valid for 5 minutes. Do not share this OTP with anyone.`);
+    const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${fast2smsKey}&message=${message}&language=english&route=q&numbers=${phone}`;
 
     const smsResponse = await fetch(url, { method: "GET" });
     const smsResult = await smsResponse.json();
