@@ -133,7 +133,7 @@ const ListingPocPage = () => {
       toast.error(parsed.error.issues[0].message);
       return;
     }
-    if (!otpVerified) {
+    if (!otpVerified && !isAdmin) {
       toast.error("Please verify your mobile via OTP");
       return;
     }
