@@ -131,7 +131,15 @@ const ListingPocPage = () => {
         .from("user_listing_pocs")
         .insert([{
           user_id: user.id,
-          ...parsed.data,
+          full_name: parsed.data.full_name,
+          designation: parsed.data.designation,
+          organization: parsed.data.organization,
+          website: parsed.data.website,
+          email: parsed.data.email,
+          mobile: parsed.data.mobile,
+          whatsapp: parsed.data.whatsapp,
+          state: parsed.data.state,
+          city: parsed.data.city,
           email_is_generic: isGeneric,
           mobile_otp_verified: true,
         }])
