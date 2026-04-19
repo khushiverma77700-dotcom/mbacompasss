@@ -53,6 +53,7 @@ const adminNavGroups = [
       { label: "Master Data", path: "/admin/all-leads-unified", icon: Database, dotKey: "master" },
       { label: "Subscribers", path: "/admin/subscribers", icon: Mail, dotKey: "subscribers" },
       { label: "Business Inquiries", path: "/admin/business-inquiries", icon: Briefcase, dotKey: "business" },
+      { label: "User Submissions", path: "/admin/user-submissions", icon: ShieldCheck, dotKey: "submissions" },
     ],
   },
   {

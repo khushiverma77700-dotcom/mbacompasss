@@ -87,6 +87,7 @@ const ListYourBusinessPage = lazy(() => import("./pages/ListYourBusinessPage"));
 const ListingPocPage = lazy(() => import("./pages/ListingPocPage"));
 const ListingFormPage = lazy(() => import("./pages/ListingFormPage"));
 const MyListingsPage = lazy(() => import("./pages/MyListingsPage"));
+const AdminUserSubmissions = lazy(() => import("./pages/admin/AdminUserSubmissions"));
 
 // Lazy load heavy popups
 const OnboardingDialog = lazy(() => import("@/components/OnboardingDialog"));
@@ -238,6 +239,7 @@ const App = () => (
               <Route path="google-indexing" element={<LazyPage><AdminGoogleIndexing /></LazyPage>} />
               <Route path="specializations" element={<LazyPage><AdminSpecializations /></LazyPage>} />
               <Route path="roi-analyses" element={<LazyPage><AdminROIAnalyses /></LazyPage>} />
+              <Route path="user-submissions" element={<LazyPage><AdminUserSubmissions /></LazyPage>} />
             </Route>
 
             {/* Eagerly loaded — no spinner */}
