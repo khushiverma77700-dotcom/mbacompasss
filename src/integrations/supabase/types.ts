@@ -748,6 +748,7 @@ export type Database = {
           id: string
           keywords: string[] | null
           last_seo_refresh: string | null
+          last_updated_by: string | null
           logo_url: string | null
           meta_description: string | null
           meta_title: string | null
@@ -758,8 +759,10 @@ export type Database = {
           primary_keyword: string | null
           ranking: number | null
           slug: string
+          source: string | null
           specializations: string[] | null
           state: string | null
+          submitted_by_user_id: string | null
           tier: string | null
           top_recruiters: string[] | null
           total_students: number | null
@@ -791,6 +794,7 @@ export type Database = {
           id?: string
           keywords?: string[] | null
           last_seo_refresh?: string | null
+          last_updated_by?: string | null
           logo_url?: string | null
           meta_description?: string | null
           meta_title?: string | null
@@ -801,8 +805,10 @@ export type Database = {
           primary_keyword?: string | null
           ranking?: number | null
           slug: string
+          source?: string | null
           specializations?: string[] | null
           state?: string | null
+          submitted_by_user_id?: string | null
           tier?: string | null
           top_recruiters?: string[] | null
           total_students?: number | null
@@ -834,6 +840,7 @@ export type Database = {
           id?: string
           keywords?: string[] | null
           last_seo_refresh?: string | null
+          last_updated_by?: string | null
           logo_url?: string | null
           meta_description?: string | null
           meta_title?: string | null
@@ -844,8 +851,10 @@ export type Database = {
           primary_keyword?: string | null
           ranking?: number | null
           slug?: string
+          source?: string | null
           specializations?: string[] | null
           state?: string | null
+          submitted_by_user_id?: string | null
           tier?: string | null
           top_recruiters?: string[] | null
           total_students?: number | null
@@ -1429,6 +1438,7 @@ export type Database = {
           id: string
           keywords: string[] | null
           last_seo_refresh: string | null
+          last_updated_by: string | null
           latitude: number | null
           logo_url: string | null
           longitude: number | null
@@ -1441,9 +1451,11 @@ export type Database = {
           primary_keyword: string | null
           rating: number | null
           slug: string
+          source: string | null
           specializations: string[] | null
           state: string | null
           students_count: number | null
+          submitted_by_user_id: string | null
           success_rate: number | null
           total_reviews: number | null
           updated_at: string
@@ -1470,6 +1482,7 @@ export type Database = {
           id?: string
           keywords?: string[] | null
           last_seo_refresh?: string | null
+          last_updated_by?: string | null
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
@@ -1482,9 +1495,11 @@ export type Database = {
           primary_keyword?: string | null
           rating?: number | null
           slug: string
+          source?: string | null
           specializations?: string[] | null
           state?: string | null
           students_count?: number | null
+          submitted_by_user_id?: string | null
           success_rate?: number | null
           total_reviews?: number | null
           updated_at?: string
@@ -1511,6 +1526,7 @@ export type Database = {
           id?: string
           keywords?: string[] | null
           last_seo_refresh?: string | null
+          last_updated_by?: string | null
           latitude?: number | null
           logo_url?: string | null
           longitude?: number | null
@@ -1523,9 +1539,11 @@ export type Database = {
           primary_keyword?: string | null
           rating?: number | null
           slug?: string
+          source?: string | null
           specializations?: string[] | null
           state?: string | null
           students_count?: number | null
+          submitted_by_user_id?: string | null
           success_rate?: number | null
           total_reviews?: number | null
           updated_at?: string
@@ -2101,6 +2119,114 @@ export type Database = {
           pillar_record_id?: string | null
           primary_keyword?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_listing_pocs: {
+        Row: {
+          city: string | null
+          created_at: string
+          designation: string | null
+          email: string | null
+          email_is_generic: boolean | null
+          full_name: string
+          id: string
+          mobile: string | null
+          mobile_otp_verified: boolean | null
+          organization: string | null
+          state: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          designation?: string | null
+          email?: string | null
+          email_is_generic?: boolean | null
+          full_name: string
+          id?: string
+          mobile?: string | null
+          mobile_otp_verified?: boolean | null
+          organization?: string | null
+          state?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          designation?: string | null
+          email?: string | null
+          email_is_generic?: boolean | null
+          full_name?: string
+          id?: string
+          mobile?: string | null
+          mobile_otp_verified?: boolean | null
+          organization?: string | null
+          state?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      user_listings: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          id: string
+          listing_type: string
+          payload: Json
+          poc: Json | null
+          poc_verified: boolean
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sections: Json
+          status: string
+          submitted_at: string | null
+          target_record_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          listing_type: string
+          payload?: Json
+          poc?: Json | null
+          poc_verified?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sections?: Json
+          status?: string
+          submitted_at?: string | null
+          target_record_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          listing_type?: string
+          payload?: Json
+          poc?: Json | null
+          poc_verified?: boolean
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sections?: Json
+          status?: string
+          submitted_at?: string | null
+          target_record_id?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
