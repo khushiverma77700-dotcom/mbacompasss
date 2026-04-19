@@ -68,9 +68,9 @@ const AdminSitemap = () => {
         </Button>
       </div>
 
-      <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20">
+      <Card className="border-border bg-muted/30">
         <CardContent className="pt-6 flex gap-3 text-sm">
-          <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <AlertTriangle className="w-5 h-5 text-primary shrink-0 mt-0.5" />
           <div className="space-y-1">
             <p className="font-semibold text-foreground">How publishing works</p>
             <p className="text-muted-foreground">
