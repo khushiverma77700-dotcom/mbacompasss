@@ -212,4 +212,106 @@ const AdminUserSubmissions = () => {
   );
 };
 
+// ---- Pretty submission renderer ----
+const formatLabel = (k: string) => k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+const isEmpty = (v: any) =>
+  v === null || v === undefined || v === "" ||
+  (Array.isArray(v) && v.length === 0) ||
+  (typeof v === "object" && !Array.isArray(v) && Object.keys(v).length === 0);
+
+const renderValue = (v: any) => {
+  if (isEmpty(v)) return <span className="text-muted-foreground italic">—</span>;
+  if (typeof v === "boolean") return v ? "Yes" : "No";
+  if (Array.isArray(v)) {
+    if (v.every((x) => typeof x !== "object")) {
+      return (
+        <div className="flex flex-wrap gap-1.5">
+          {v.map((x, i) => (
+            <span key={i} className="px-2 py-0.5 rounded bg-muted text-xs">{String(x)}</span>
+          ))}
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-2">
+        {v.map((row, i) => (
+          <div key={i} className="rounded border border-border p-2 bg-muted/30">
+            <FieldGrid data={row} />
+          </div>
+        ))}
+      </div>
+    );
+  }
+  if (typeof v === "object") return <FieldGrid data={v} />;
+  if (typeof v === "string" && /^https?:\/\//i.test(v)) {
+    return <a href={v} target="_blank" rel="noreferrer" className="text-primary hover:underline break-all">{v}</a>;
+  }
+  return <span className="break-words">{String(v)}</span>;
+};
+
+const FieldGrid = ({ data }: { data: Record<string, any> }) => {
+  const entries = Object.entries(data || {}).filter(([k]) => !["id", "created_at", "updated_at"].includes(k));
+  if (entries.length === 0) return <span className="text-muted-foreground italic text-xs">No data</span>;
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5">
+      {entries.map(([k, v]) => (
+        <div key={k} className="text-sm">
+          <div className="text-xs font-medium text-muted-foreground mb-0.5">{formatLabel(k)}</div>
+          <div className="text-foreground">{renderValue(v)}</div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+  <div>
+    <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-2 pb-1.5 border-b border-border">
+      {title}
+    </h3>
+    {children}
+  </div>
+);
+
+const SubmissionDetails = ({ item }: { item: any }) => {
+  const poc = item.poc || {};
+  const payload = item.payload || {};
+  const arrayKeys = ["courses_list", "faculty_list", "results_list"];
+  const mainPayload: Record<string, any> = {};
+  const nested: Record<string, any[]> = {};
+  for (const [k, v] of Object.entries(payload)) {
+    if (arrayKeys.includes(k) && Array.isArray(v)) nested[k] = v;
+    else mainPayload[k] = v;
+  }
+
+  return (
+    <div className="space-y-6">
+      <Section title="Point of Contact"><FieldGrid data={poc} /></Section>
+      <Section title="Listing Details"><FieldGrid data={mainPayload} /></Section>
+      {Object.entries(nested).map(([k, list]) => (
+        <Section key={k} title={formatLabel(k)}>
+          {list.length === 0 ? (
+            <span className="text-muted-foreground italic text-xs">None added</span>
+          ) : (
+            <div className="space-y-2">
+              {list.map((row: any, i: number) => (
+                <div key={i} className="rounded-lg border border-border p-3 bg-muted/30">
+                  <div className="text-xs font-medium text-muted-foreground mb-2">#{i + 1}</div>
+                  <FieldGrid data={row} />
+                </div>
+              ))}
+            </div>
+          )}
+        </Section>
+      ))}
+      {item.admin_notes && (
+        <Section title="Admin Notes">
+          <p className="text-sm whitespace-pre-wrap">{item.admin_notes}</p>
+        </Section>
+      )}
+    </div>
+  );
+};
+
 export default AdminUserSubmissions;
