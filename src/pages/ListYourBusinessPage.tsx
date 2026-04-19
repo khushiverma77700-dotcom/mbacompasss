@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import SEOHead from "@/components/SEOHead";
 import { useAuth } from "@/contexts/AuthContext";
-import { storePostAuthRedirect } from "@/lib/authRedirect";
 
 const options = [
   {
@@ -35,13 +34,8 @@ const ListYourBusinessPage = () => {
   const { user } = useAuth();
 
   const handleSelect = (type: string) => {
-    const target = `/list-your-business/poc?type=${type}`;
-    if (!user) {
-      storePostAuthRedirect(target);
-      navigate("/auth");
-      return;
-    }
-    navigate(target);
+    // Auth happens inline on the POC page — no pre-redirect needed.
+    navigate(`/list-your-business/poc?type=${type}`);
   };
 
   return (

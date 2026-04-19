@@ -9,9 +9,9 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { storePostAuthRedirect } from "@/lib/authRedirect";
 import SEOHead from "@/components/SEOHead";
 import StateCitySelect from "@/components/admin/StateCitySelect";
+import InlineAuthPanel from "@/components/listing/InlineAuthPanel";
 
 const GENERIC_DOMAINS = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "rediffmail.com", "icloud.com", "live.com", "aol.com"];
 
@@ -60,12 +60,7 @@ const ListingPocPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !user) {
-      storePostAuthRedirect(`/list-your-business/poc?type=${type}`);
-      navigate("/auth");
-    }
-  }, [loading, user, navigate, type]);
+  // Note: no auto-redirect to /auth — we render an inline auth panel below if not signed in.
 
   useEffect(() => {
     if (!user) return;
@@ -187,7 +182,7 @@ const ListingPocPage = () => {
     }
   };
 
-  if (loading || !user) {
+  if (loading) {
     return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
   }
 
@@ -209,6 +204,13 @@ const ListingPocPage = () => {
           We need your details to verify you're authorized to manage this listing. This stays private and is reviewed by our team.
         </p>
 
+        {!user ? (
+          <InlineAuthPanel
+            returnTo={`/list-your-business/poc?type=${type}`}
+            title="Sign in to start your listing"
+            subtitle="Your account becomes the owner of this listing — you can sign back in anytime to manage and update it."
+          />
+        ) : (
         <Card className="p-6">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid md:grid-cols-2 gap-4">
@@ -290,6 +292,7 @@ const ListingPocPage = () => {
             </Button>
           </form>
         </Card>
+        )}
       </div>
     </>
   );
