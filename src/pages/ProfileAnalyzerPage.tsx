@@ -747,9 +747,9 @@ const ProfileAnalyzerPage = () => {
               detailed_college_table: Array.isArray((analysisData.college_predictions as any)?.detailed_college_table) ? (analysisData.college_predictions as any).detailed_college_table : Array.isArray(analysisData.college_predictions) ? analysisData.college_predictions : [],
             };
             setResult(reconstructed);
-            setUnlocked(!!profileData.report_unlocked);
-            // Auto-show the report
-            setStep(profileData.report_unlocked ? 8 : 7);
+            setUnlocked(true);
+            // Always show full unlocked report
+            setStep(8);
           }
         } else {
           setCooldownDate(null);
@@ -881,8 +881,19 @@ const ProfileAnalyzerPage = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data);
+      // Persist verified phone immediately so the lead is captured
+      try {
+        if (data?.profile_id) {
+          await supabase.from("profile_analyses").update({
+            phone: phone || null,
+            email: form.email || null,
+            report_unlocked: true,
+          }).eq("id", data.profile_id);
+        }
+      } catch { /* non-fatal */ }
+      setUnlocked(true);
       localStorage.removeItem(STORAGE_KEY);
-      setTimeout(() => { setStep(7); window.scrollTo({ top: 0, behavior: "smooth" }); }, 600);
+      setTimeout(() => { setStep(8); window.scrollTo({ top: 0, behavior: "smooth" }); }, 600);
     } catch (e: any) {
       clearInterval(interval);
       toast({ title: "Analysis Failed", description: e.message || "Please try again.", variant: "destructive" });
