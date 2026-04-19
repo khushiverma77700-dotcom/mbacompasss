@@ -110,7 +110,8 @@ const MyListingsPage = () => {
                       <Badge className={STATUS_STYLES[l.status] || STATUS_STYLES.draft}>{STATUS_LABEL[l.status]}</Badge>
                       <Button size="sm" variant="outline" asChild>
                         <Link to={`/list-your-business/${l.listing_type}/${l.id}`}>
-                          {l.status === "approved" ? <><Eye className="w-3.5 h-3.5 mr-1.5" /> View</> : <><Pencil className="w-3.5 h-3.5 mr-1.5" /> Edit</>}
+                          <Pencil className="w-3.5 h-3.5 mr-1.5" />
+                          {l.status === "approved" ? "Edit live listing" : l.status === "pending" ? "View" : "Edit"}
                         </Link>
                       </Button>
                     </div>
