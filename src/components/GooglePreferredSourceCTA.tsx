@@ -8,8 +8,10 @@ import { Sparkles } from "lucide-react";
  * Designed to live INSIDE the Navbar (desktop + mobile) — no separate banner row.
  */
 
+// Google Preferred Sources — `q` pre-fills the search box with our domain
+// so the user only needs to tap the result + "Save". No manual typing.
 const PREFERRED_URL =
-  "https://www.google.com/preferences/source?hl=en&source=bschoolbuzz.com";
+  "https://www.google.com/preferences/source?q=bschoolbuzz.com&hl=en";
 
 interface Props {
   className?: string;
