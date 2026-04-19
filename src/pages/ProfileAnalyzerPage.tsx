@@ -648,9 +648,58 @@ const ProfileAnalyzerPage = () => {
   const [cooldownDate, setCooldownDate] = useState<Date | null>(null);
   const [existingReport, setExistingReport] = useState<any>(null);
   const [checkingCooldown, setCheckingCooldown] = useState(false);
+  // Phone + OTP state for Step 1
+  const [phone, setPhone] = useState("");
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
   const { toast } = useToast();
   const { user } = useAuth();
   const reportRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const t = setInterval(() => setResendTimer(s => s - 1), 1000);
+    return () => clearInterval(t);
+  }, [resendTimer]);
+
+  const handleSendOtp = async () => {
+    if (!/^[6-9]\d{9}$/.test(phone)) {
+      toast({ title: "Invalid phone", description: "Enter a valid 10-digit Indian mobile number.", variant: "destructive" });
+      return;
+    }
+    setOtpSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-otp", { body: { phone } });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "OTP Sent!", description: `A 6-digit OTP has been sent to +91 ${phone}` });
+      setOtpStep(true);
+      setResendTimer(30);
+    } catch (e: any) {
+      toast({ title: "Failed to send OTP", description: e.message, variant: "destructive" });
+    } finally { setOtpSending(false); }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otpValue.length !== 6) return;
+    setOtpVerifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-otp", { body: { phone, otp: otpValue } });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      if (data?.verified) {
+        setPhoneVerified(true);
+        setOtpStep(false);
+        toast({ title: "Phone Verified ✓", description: "Your mobile has been verified." });
+      }
+    } catch (e: any) {
+      toast({ title: "Verification failed", description: e.message, variant: "destructive" });
+    } finally { setOtpVerifying(false); }
+  };
 
   // Check if user already has an analysis — if so, load full results and show report
   useEffect(() => {
