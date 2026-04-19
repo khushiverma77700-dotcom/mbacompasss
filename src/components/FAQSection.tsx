@@ -2,7 +2,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { motion } from "framer-motion";
 import { HelpCircle, MessageCircle } from "lucide-react";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
-import { generateFAQSchema } from "@/components/SEOHead";
 
 const fallbackFaqs = [
   {
@@ -107,11 +106,11 @@ const FAQSection = () => {
         </div>
       </div>
 
-      {/* JSON-LD for FAQ Schema */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(generateFAQSchema(faqs)) }}
-      />
+      {/*
+        FAQ JSON-LD is injected centrally by SEOHead on the homepage
+        (Index.tsx → generateFAQSchema). Do NOT duplicate it here —
+        Google flags duplicate FAQPage schemas as an error.
+      */}
     </section>
   );
 };
