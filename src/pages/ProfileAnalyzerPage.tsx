@@ -786,6 +786,8 @@ const ProfileAnalyzerPage = () => {
     if (s === 1) {
       if (!form.name.trim()) errs.name = "Enter your name";
       if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Enter a valid email";
+      if (!/^[6-9]\d{9}$/.test(phone)) errs.phone = "Enter a valid 10-digit Indian mobile number";
+      else if (!phoneVerified) errs.phone = "Please verify your mobile number with OTP";
     } else if (s === 2) {
       if (!form.tenth_score || +form.tenth_score < 1 || +form.tenth_score > 100) errs.tenth_score = "Enter valid percentage (1-100)";
       if (!form.twelfth_score || +form.twelfth_score < 1 || +form.twelfth_score > 100) errs.twelfth_score = "Enter valid percentage (1-100)";
