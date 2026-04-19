@@ -26,6 +26,7 @@ const CONTENT_TABLES: Record<string, { table: string; getPath: (i: any) => strin
   college: { table: "colleges", getPath: (i) => `/college/${i.slug}` },
   exam: { table: "exams", getPath: (i) => `/exam/${i.slug}` },
   cityPage: { table: "city_pages", getPath: (i) => `/colleges/${i.slug}` },
+  category: { table: "categories", getPath: (i) => `/category/${i.slug}` },
 };
 
 function stripHtml(v: string) {
