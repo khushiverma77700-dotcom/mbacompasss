@@ -88,6 +88,7 @@ const ListingPocPage = lazy(() => import("./pages/ListingPocPage"));
 const ListingFormPage = lazy(() => import("./pages/ListingFormPage"));
 const MyListingsPage = lazy(() => import("./pages/MyListingsPage"));
 const AdminUserSubmissions = lazy(() => import("./pages/admin/AdminUserSubmissions"));
+const AdminListingChangeRequests = lazy(() => import("./pages/admin/AdminListingChangeRequests"));
 
 // Lazy load heavy popups
 const OnboardingDialog = lazy(() => import("@/components/OnboardingDialog"));
@@ -240,6 +241,7 @@ const App = () => (
               <Route path="specializations" element={<LazyPage><AdminSpecializations /></LazyPage>} />
               <Route path="roi-analyses" element={<LazyPage><AdminROIAnalyses /></LazyPage>} />
               <Route path="user-submissions" element={<LazyPage><AdminUserSubmissions /></LazyPage>} />
+              <Route path="listing-change-requests" element={<LazyPage><AdminListingChangeRequests /></LazyPage>} />
             </Route>
 
             {/* Eagerly loaded — no spinner */}
