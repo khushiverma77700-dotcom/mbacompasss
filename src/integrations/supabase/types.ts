@@ -2332,6 +2332,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      user_owns_listing: {
+        Args: { _target_id: string; _target_table: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

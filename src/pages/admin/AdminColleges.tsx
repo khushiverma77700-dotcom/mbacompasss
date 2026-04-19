@@ -51,7 +51,7 @@ const AdminColleges = () => {
   const { data: specializationOptions = [] } = useSpecializations("college");
 
   const fetchColleges = async () => {
-    const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, tier, college_category, ranking, established, created_at").order("ranking", { ascending: true });
+    const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, tier, college_category, ranking, established, created_at, source, last_updated_by").order("ranking", { ascending: true });
     if (data) setColleges(data);
   };
 
@@ -335,7 +335,17 @@ const AdminColleges = () => {
                 <TableRow key={c.id}>
                   <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell>{c.ranking ?? "—"}</TableCell>
-                  <TableCell className="font-medium">{c.name}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span>{c.name}</span>
+                      {c.source === "user" && (
+                        <Badge variant="outline" className="text-[10px] border-blue-300 text-blue-700">User-submitted</Badge>
+                      )}
+                      {c.last_updated_by === "user-verified" && (
+                        <Badge variant="outline" className="text-[10px] border-green-300 text-green-700">User-edited (verified)</Badge>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell><Badge variant={c.college_category === "IIM" ? "default" : "secondary"}>{c.college_category ?? "—"}</Badge></TableCell>
                   <TableCell><Badge variant="outline">{c.tier ?? "—"}</Badge></TableCell>
                   <TableCell>{c.city ?? "—"}</TableCell>
