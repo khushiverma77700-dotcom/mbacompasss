@@ -83,8 +83,9 @@ const MBAJourneySection = () => {
         stageRef.current.style.transform = `rotateY(${currentRotation.current.toFixed(2)}deg)`;
       }
       if (mobileTrackRef.current) {
-        const offset = -targetRotation.current / ANGLE;
-        mobileTrackRef.current.style.transform = `translate3d(${-offset * 100}%, 0, 0)`;
+        // Mobile: slide one card-width (236px = 220 card + 16 padding) per step
+        const stepIdx = -currentRotation.current / ANGLE; // smoothly interpolated 0..7
+        mobileTrackRef.current.style.transform = `translate3d(${(-stepIdx * 236).toFixed(2)}px, 0, 0)`;
       }
       rafRef.current = requestAnimationFrame(tick);
     };
