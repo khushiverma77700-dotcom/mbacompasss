@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import SEOHead from "@/components/SEOHead";
 import { useAuth } from "@/contexts/AuthContext";
-import { setPostAuthRedirect } from "@/lib/authRedirect";
+import { storePostAuthRedirect } from "@/lib/authRedirect";
 
 const options = [
   {
@@ -37,7 +37,7 @@ const ListYourBusinessPage = () => {
   const handleSelect = (type: string) => {
     const target = `/list-your-business/poc?type=${type}`;
     if (!user) {
-      setPostAuthRedirect(target);
+      storePostAuthRedirect(target);
       navigate("/auth");
       return;
     }
@@ -49,7 +49,7 @@ const ListYourBusinessPage = () => {
       <SEOHead
         title="List Your Coaching Institute or College | B School Buzz"
         description="Get your MBA coaching institute or B-school listed on B School Buzz. Reach lakhs of aspirants with verified, structured listings."
-        canonicalUrl="https://bschoolbuzz.com/list-your-business"
+        canonical="https://bschoolbuzz.com/list-your-business"
       />
 
       <section className="relative overflow-hidden bg-gradient-to-b from-blue-50/60 via-background to-background">
