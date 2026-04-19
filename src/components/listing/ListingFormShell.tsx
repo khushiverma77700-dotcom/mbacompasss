@@ -55,6 +55,37 @@ const ListingFormShell = ({ listing, type }: Props) => {
     dirtyRef.current = true;
   }, [payload, completedSections]);
 
+  // In change-request mode: hydrate the form from the LIVE listing (institutes/colleges) and
+  // preload any existing pending change request so users can edit-and-resubmit.
+  useEffect(() => {
+    if (!changeRequestMode) return;
+    let cancelled = false;
+    (async () => {
+      const targetTable = type === "college" ? "colleges" : "institutes";
+      const [{ data: liveRow }, { data: pending }] = await Promise.all([
+        supabase.from(targetTable).select("*").eq("id", listing.approved_record_id).maybeSingle(),
+        supabase
+          .from("listing_change_requests")
+          .select("*")
+          .eq("user_listing_id", listing.id)
+          .eq("status", "pending")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      if (cancelled) return;
+      // Prefer the pending change-request payload (so user resumes their last edit), else live row.
+      const seed = pending?.new_payload ?? liveRow ?? {};
+      setPayload({ ...emptyPayload(type), ...(seed as any) });
+      setPendingRequest(pending);
+      // reset dirty after hydration
+      firstRender.current = true;
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [changeRequestMode, listing.id, listing.approved_record_id, type]);
+
   // Auto-save every 20s if dirty
   useEffect(() => {
     if (readOnly) return;
@@ -63,26 +94,88 @@ const ListingFormShell = ({ listing, type }: Props) => {
     }, 20000);
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [readOnly]);
+  }, [readOnly, changeRequestMode]);
 
   const updatePayload = (patch: any) => setPayload((p: any) => ({ ...p, ...patch }));
+
+  // Fetch the current live row so we can compute a fresh diff at save/submit time.
+  const fetchLiveRow = async () => {
+    const targetTable = type === "college" ? "colleges" : "institutes";
+    const { data } = await supabase.from(targetTable).select("*").eq("id", listing.approved_record_id).maybeSingle();
+    return data || {};
+  };
+
+  const upsertChangeRequest = async (status: "pending") => {
+    const targetTable = type === "college" ? "colleges" : "institutes";
+    const liveRow = await fetchLiveRow();
+    const diff = computeDiff(liveRow, payload);
+
+    if (Object.keys(diff).length === 0) {
+      toast.info("No changes detected");
+      return null;
+    }
+
+    const userId = (await supabase.auth.getUser()).data.user?.id;
+    const basePayload = {
+      user_listing_id: listing.id,
+      user_id: userId!,
+      listing_type: type,
+      target_table: targetTable,
+      target_record_id: listing.approved_record_id,
+      old_payload: liveRow,
+      new_payload: payload,
+      diff,
+      status,
+      submitted_at: new Date().toISOString(),
+    };
+
+    if (pendingRequest?.id) {
+      const { data, error } = await supabase
+        .from("listing_change_requests")
+        .update(basePayload)
+        .eq("id", pendingRequest.id)
+        .select()
+        .single();
+      if (error) throw error;
+      setPendingRequest(data);
+      return data;
+    }
+
+    const { data, error } = await supabase
+      .from("listing_change_requests")
+      .insert([basePayload])
+      .select()
+      .single();
+    if (error) throw error;
+    setPendingRequest(data);
+    return data;
+  };
 
   const saveDraft = async (silent = false) => {
     if (readOnly) return;
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from("user_listings")
-        .update({
-          payload,
-          sections: completedSections,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", listing.id);
-      if (error) throw error;
-      dirtyRef.current = false;
-      setLastSavedAt(new Date());
-      if (!silent) toast.success("Draft saved");
+      if (changeRequestMode) {
+        const res = await upsertChangeRequest("pending");
+        if (res) {
+          dirtyRef.current = false;
+          setLastSavedAt(new Date());
+          if (!silent) toast.success("Changes saved as pending review");
+        }
+      } else {
+        const { error } = await supabase
+          .from("user_listings")
+          .update({
+            payload,
+            sections: completedSections,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", listing.id);
+        if (error) throw error;
+        dirtyRef.current = false;
+        setLastSavedAt(new Date());
+        if (!silent) toast.success("Draft saved");
+      }
     } catch (e: any) {
       if (!silent) toast.error(e.message || "Failed to save");
     } finally {
@@ -98,19 +191,27 @@ const ListingFormShell = ({ listing, type }: Props) => {
     }
     setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from("user_listings")
-        .update({
-          payload,
-          sections: completedSections,
-          status: "pending",
-          submitted_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", listing.id);
-      if (error) throw error;
-      toast.success("Submitted for admin review");
-      navigate("/my-listings");
+      if (changeRequestMode) {
+        const res = await upsertChangeRequest("pending");
+        if (res) {
+          toast.success("Edit submitted — awaiting admin review");
+          navigate("/my-listings");
+        }
+      } else {
+        const { error } = await supabase
+          .from("user_listings")
+          .update({
+            payload,
+            sections: completedSections,
+            status: "pending",
+            submitted_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", listing.id);
+        if (error) throw error;
+        toast.success("Submitted for admin review");
+        navigate("/my-listings");
+      }
     } catch (e: any) {
       toast.error(e.message || "Failed to submit");
     } finally {
