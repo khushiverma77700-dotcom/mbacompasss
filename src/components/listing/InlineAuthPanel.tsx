@@ -432,9 +432,9 @@ const InlineAuthPanel = ({
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full h-11" disabled={loading}>
+            <Button type="submit" className="w-full h-11" disabled={loading || !phoneVerified}>
               {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-              Create account & continue
+              {phoneVerified ? "Create account & continue" : "Verify mobile to continue"}
             </Button>
           </form>
         </TabsContent>
