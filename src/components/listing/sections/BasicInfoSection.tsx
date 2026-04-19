@@ -131,9 +131,9 @@ const BasicInfoSection = ({ type, value, onChange }: Props) => {
         </div>
 
         <div className="md:col-span-2">
+          <Label>Specializations</Label>
           <MultiSelectTags
-            label="Specializations"
-            options={specOptions}
+            options={specOptions.map((s) => ({ value: s.name, label: s.name }))}
             selected={value.specializations || []}
             onChange={(specializations) => onChange({ specializations })}
             placeholder="Add specializations offered"
