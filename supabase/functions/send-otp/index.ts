@@ -22,11 +22,13 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const fast2smsKey = Deno.env.get("FAST2SMS_API_KEY");
+    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+    const twilioApiKey = Deno.env.get("TWILIO_API_KEY");
+    const twilioFrom = Deno.env.get("TWILIO_FROM_NUMBER");
 
-    if (!fast2smsKey) {
-      throw new Error("FAST2SMS_API_KEY is not configured");
-    }
+    if (!lovableApiKey) throw new Error("LOVABLE_API_KEY is not configured");
+    if (!twilioApiKey) throw new Error("TWILIO_API_KEY is not configured");
+    if (!twilioFrom) throw new Error("TWILIO_FROM_NUMBER is not configured");
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -60,29 +62,30 @@ Deno.serve(async (req) => {
       throw new Error("Failed to store OTP");
     }
 
-    // Send OTP via Fast2SMS DLT route
-    const smsResponse = await fetch("https://www.fast2sms.com/dev/bulkV2", {
+    // Send OTP via Twilio (through Lovable connector gateway)
+    const toNumber = `+91${phone}`;
+    const smsResponse = await fetch("https://connector-gateway.lovable.dev/twilio/Messages.json", {
       method: "POST",
       headers: {
-        authorization: fast2smsKey,
-        "Content-Type": "application/json",
+        Authorization: `Bearer ${lovableApiKey}`,
+        "X-Connection-Api-Key": twilioApiKey,
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: JSON.stringify({
-        route: "otp",
-        variables_values: otp,
-        numbers: phone,
-        flash: "0",
+      body: new URLSearchParams({
+        To: toNumber,
+        From: twilioFrom,
+        Body: `Your MBAHub verification code is ${otp}. Valid for 5 minutes. Do not share this code with anyone.`,
       }),
     });
 
     const smsResult = await smsResponse.json();
 
-    if (!smsResponse.ok || smsResult.return === false) {
-      console.error("Fast2SMS error:", JSON.stringify(smsResult));
-      throw new Error(`SMS send failed: ${smsResult.message?.[0] || "Unknown error"}`);
+    if (!smsResponse.ok) {
+      console.error("Twilio error:", JSON.stringify(smsResult));
+      throw new Error(`SMS send failed: ${smsResult.message || "Unknown error"}`);
     }
 
-    console.log("OTP sent successfully via Fast2SMS to", phone);
+    console.log("OTP sent successfully via Twilio to", toNumber, "sid:", smsResult.sid);
 
     return new Response(
       JSON.stringify({ success: true, message: "OTP sent successfully" }),
