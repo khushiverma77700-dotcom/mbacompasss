@@ -23,14 +23,19 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks(id) {
           if (id.includes("node_modules")) {
-            if (id.includes("react-dom") || id.includes("react-router") || id.includes("/react/")) return "vendor";
+            // Keep React core in its own chunk so it's cached aggressively
+            if (id.includes("/react-dom/") || id.includes("/scheduler/") || id.includes("/react/")) return "react";
+            if (id.includes("react-router")) return "router";
             if (id.includes("@tanstack")) return "query";
             if (id.includes("@supabase")) return "supabase";
             if (id.includes("framer-motion")) return "motion";
-            if (id.includes("sonner")) return "sonner";
+            if (id.includes("sonner") || id.includes("@radix-ui/react-toast")) return "toast";
             if (id.includes("@radix-ui")) return "radix";
             if (id.includes("@tiptap") || id.includes("prosemirror")) return "editor";
+            if (id.includes("recharts") || id.includes("d3-")) return "charts";
             if (id.includes("lucide")) return "icons";
+            if (id.includes("date-fns")) return "date";
+            if (id.includes("zod") || id.includes("react-hook-form")) return "forms";
           }
         },
         chunkFileNames: "assets/[name]-[hash].js",

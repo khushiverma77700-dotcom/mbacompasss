@@ -1,19 +1,20 @@
 import React, { Suspense, useState, lazy, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-
 import ScrollToTop from "@/components/ScrollToTop";
 import BackButton from "@/components/BackButton";
 import { consumePostAuthRedirect } from "@/lib/authRedirect";
 import { supabase } from "@/integrations/supabase/client";
 import { useAllSiteSettings } from "@/hooks/useSiteSettings";
+
+// Lazy below-the-fold + interaction-only chrome (keep out of initial bundle)
+const Footer = lazy(() => import("@/components/Footer"));
+const Toaster = lazy(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
+const Sonner = lazy(() => import("@/components/ui/sonner").then(m => ({ default: m.Toaster })));
 
 // Home eager so first paint is instant; everything else lazy to shrink initial bundle
 import Index from "./pages/Index";
@@ -120,8 +121,8 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   <>
     <Navbar />
     {children}
-    <Footer />
     <Suspense fallback={null}>
+      <Footer />
       <ProfileAnalyzerPopup />
     </Suspense>
   </>
@@ -191,8 +192,10 @@ const OAuthRedirectHandler = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
+      <Suspense fallback={null}>
+        <Toaster />
+        <Sonner />
+      </Suspense>
       <SettingsPrefetcher />
       <BrowserRouter>
         <ScrollToTop />
