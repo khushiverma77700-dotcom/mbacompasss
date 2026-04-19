@@ -305,10 +305,28 @@ const ListingFormShell = ({ listing, type }: Props) => {
               <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5" />
               <div>
                 <span className="font-semibold">View-only mode.</span>{" "}
-                {listing.status === "pending"
-                  ? "Your submission is under admin review."
-                  : "This listing is approved and live."}
+                Your submission is under admin review.
               </div>
+            </div>
+          </Card>
+        )}
+
+        {changeRequestMode && (
+          <Card className="p-4 border-primary/30 bg-primary/5">
+            <div className="flex items-start gap-2.5 text-sm">
+              <ShieldCheck className="w-4 h-4 text-primary mt-0.5" />
+              <div className="flex-1">
+                <div className="font-semibold text-foreground">Edit mode — changes require admin approval</div>
+                <p className="text-muted-foreground text-xs mt-0.5">
+                  Your live listing stays unchanged until an admin approves your edits.
+                  {pendingRequest && (
+                    <> You have a pending edit submitted on {new Date(pendingRequest.submitted_at).toLocaleDateString()}.</>
+                  )}
+                </p>
+              </div>
+              {pendingRequest && (
+                <Badge variant="secondary">Pending review</Badge>
+              )}
             </div>
           </Card>
         )}
@@ -319,7 +337,7 @@ const ListingFormShell = ({ listing, type }: Props) => {
               <h2 className="text-xl font-bold">{current.label}</h2>
               <p className="text-sm text-muted-foreground mt-0.5">{current.description}</p>
             </div>
-            {!readOnly && (
+            {!readOnly && !changeRequestMode && (
               <Button
                 type="button"
                 variant={completedSections[current.id] ? "default" : "outline"}
@@ -342,6 +360,8 @@ const ListingFormShell = ({ listing, type }: Props) => {
             <div className="text-xs text-muted-foreground">
               {lastSavedAt ? (
                 <>Auto-saved {lastSavedAt.toLocaleTimeString()}</>
+              ) : changeRequestMode ? (
+                <>Edits auto-save as a pending change request every 20 seconds</>
               ) : (
                 <>Drafts auto-save every 20 seconds</>
               )}
@@ -349,11 +369,11 @@ const ListingFormShell = ({ listing, type }: Props) => {
             <div className="flex gap-2">
               <Button type="button" variant="outline" onClick={() => saveDraft(false)} disabled={saving}>
                 {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                Save draft
+                {changeRequestMode ? "Save changes" : "Save draft"}
               </Button>
               <Button type="button" onClick={submitForReview} disabled={submitting || saving}>
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Send className="w-4 h-4 mr-2" />}
-                Submit for review
+                {changeRequestMode ? "Submit changes for approval" : "Submit for review"}
               </Button>
             </div>
           </div>
