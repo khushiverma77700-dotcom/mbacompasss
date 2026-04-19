@@ -32,7 +32,9 @@ export default defineConfig(({ mode }) => ({
             if (id.includes("sonner") || id.includes("@radix-ui/react-toast")) return "toast";
             if (id.includes("@radix-ui")) return "radix";
             if (id.includes("@tiptap") || id.includes("prosemirror")) return "editor";
-            if (id.includes("recharts") || id.includes("d3-")) return "charts";
+            // Let Rollup keep charting libs together with their import graph.
+            // Splitting recharts/d3 into a forced manual chunk can produce runtime
+            // initialization-order errors in the published bundle.
             if (id.includes("lucide")) return "icons";
             if (id.includes("date-fns")) return "date";
             if (id.includes("zod") || id.includes("react-hook-form")) return "forms";
