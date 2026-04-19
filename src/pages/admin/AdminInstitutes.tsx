@@ -28,6 +28,7 @@ type Institute = {
   rating: number | null; featured: boolean | null; mode: string | null;
   students_count: number | null; success_rate: number | null;
   created_at: string;
+  source?: string | null; last_updated_by?: string | null;
 };
 
 const emptyForm = {
@@ -57,7 +58,7 @@ const AdminInstitutes = () => {
 
   const fetchData = async () => {
     const [i, c] = await Promise.all([
-      supabase.from("institutes").select("id, name, slug, city, rating, featured, mode, students_count, success_rate, created_at").order("created_at", { ascending: false }),
+      supabase.from("institutes").select("id, name, slug, city, rating, featured, mode, students_count, success_rate, created_at, source, last_updated_by").order("created_at", { ascending: false }),
       supabase.from("categories").select("id, name").order("name"),
     ]);
     if (i.data) setInstitutes(i.data);
@@ -373,7 +374,17 @@ const AdminInstitutes = () => {
               {sortedInstitutes.map((inst, idx) => (
                 <TableRow key={inst.id}>
                   <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
-                  <TableCell className="font-medium">{inst.name}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span>{inst.name}</span>
+                      {inst.source === "user" && (
+                        <Badge variant="outline" className="text-[10px] border-blue-300 text-blue-700">User-submitted</Badge>
+                      )}
+                      {inst.last_updated_by === "user-verified" && (
+                        <Badge variant="outline" className="text-[10px] border-green-300 text-green-700">User-edited (verified)</Badge>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>{inst.city || "—"}</TableCell>
                   <TableCell><Badge variant="secondary" className="text-xs">{inst.mode}</Badge></TableCell>
                   <TableCell><span className="flex items-center gap-1"><Star className="w-3 h-3 fill-amber-400 text-amber-400" /> {inst.rating || 0}</span></TableCell>
