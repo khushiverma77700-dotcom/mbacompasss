@@ -129,12 +129,12 @@ const ListingPocPage = () => {
       // Save POC profile
       const { data: poc, error: pocErr } = await supabase
         .from("user_listing_pocs")
-        .insert({
+        .insert([{
           user_id: user.id,
           ...parsed.data,
           email_is_generic: isGeneric,
           mobile_otp_verified: true,
-        })
+        }])
         .select()
         .single();
       if (pocErr) throw pocErr;
@@ -142,13 +142,13 @@ const ListingPocPage = () => {
       // Create draft listing
       const { data: listing, error: listErr } = await supabase
         .from("user_listings")
-        .insert({
+        .insert([{
           user_id: user.id,
           listing_type: type,
           status: "draft",
           poc: poc as any,
           poc_verified: !isGeneric,
-        })
+        }])
         .select()
         .single();
       if (listErr) throw listErr;
@@ -253,7 +253,8 @@ const ListingPocPage = () => {
                 <StateCitySelect
                   state={form.state}
                   city={form.city}
-                  onChange={(state, city) => setForm((f) => ({ ...f, state, city }))}
+                  onStateChange={(state) => setForm((f) => ({ ...f, state, city: "" }))}
+                  onCityChange={(city) => setForm((f) => ({ ...f, city }))}
                 />
               </div>
             </div>
