@@ -60,12 +60,7 @@ const ListingPocPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  useEffect(() => {
-    if (!loading && !user) {
-      storePostAuthRedirect(`/list-your-business/poc?type=${type}`);
-      navigate("/auth");
-    }
-  }, [loading, user, navigate, type]);
+  // Note: no auto-redirect to /auth — we render an inline auth panel below if not signed in.
 
   useEffect(() => {
     if (!user) return;
@@ -187,7 +182,7 @@ const ListingPocPage = () => {
     }
   };
 
-  if (loading || !user) {
+  if (loading) {
     return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
   }
 
