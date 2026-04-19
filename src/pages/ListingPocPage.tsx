@@ -9,9 +9,9 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { storePostAuthRedirect } from "@/lib/authRedirect";
 import SEOHead from "@/components/SEOHead";
 import StateCitySelect from "@/components/admin/StateCitySelect";
+import InlineAuthPanel from "@/components/listing/InlineAuthPanel";
 
 const GENERIC_DOMAINS = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "rediffmail.com", "icloud.com", "live.com", "aol.com"];
 
