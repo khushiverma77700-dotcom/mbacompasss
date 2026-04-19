@@ -350,13 +350,62 @@ const InlineAuthPanel = ({
               <div className="relative mt-1">
                 <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  className="pl-9"
+                  className="pl-9 pr-28"
                   value={signupForm.phone}
-                  onChange={(e) => setSignupForm((f) => ({ ...f, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "").slice(0, 10);
+                    setSignupForm((f) => ({ ...f, phone: v }));
+                    setPhoneVerified(false);
+                    setOtpStep(false);
+                    setOtpValue("");
+                  }}
                   placeholder="9876543210"
                   maxLength={10}
+                  disabled={phoneVerified}
                 />
+                {phoneVerified ? (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-emerald-600 flex items-center gap-1">
+                    <ShieldCheck className="w-4 h-4" /> Verified
+                  </span>
+                ) : (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 text-xs"
+                    onClick={handleSendOtp}
+                    disabled={signupForm.phone.length !== 10 || otpSending}
+                  >
+                    {otpSending ? <Loader2 className="w-3 h-3 animate-spin" /> : "Send OTP"}
+                  </Button>
+                )}
               </div>
+              {otpStep && !phoneVerified && (
+                <div className="mt-3 space-y-2 p-3 rounded-md border border-border bg-muted/40">
+                  <p className="text-xs text-muted-foreground">Enter the 6-digit OTP sent to +91 {signupForm.phone}</p>
+                  <div className="flex justify-center">
+                    <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
+                      <InputOTPGroup>
+                        {[0,1,2,3,4,5].map((i) => <InputOTPSlot key={i} index={i} />)}
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      className="text-xs text-primary hover:underline disabled:opacity-50"
+                      disabled={resendTimer > 0 || otpSending}
+                      onClick={handleSendOtp}
+                    >
+                      {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend OTP"}
+                    </button>
+                    <Button type="button" size="sm" onClick={handleVerifyOtp} disabled={otpVerifying || otpValue.length !== 6}>
+                      {otpVerifying && <Loader2 className="w-3 h-3 animate-spin mr-1" />}
+                      Verify
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
             <div>
               <Label>Designation *</Label>
