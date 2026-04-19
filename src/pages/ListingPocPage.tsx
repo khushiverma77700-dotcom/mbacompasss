@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
-import { Loader2, ShieldCheck, ArrowRight, Building2, GraduationCap, FileQuestion } from "lucide-react";
+import { Loader2, ArrowRight, Building2, GraduationCap, FileQuestion } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,72 +52,29 @@ const ListingPocPage = () => {
     state: "",
     city: "",
   });
-  const [otpSent, setOtpSent] = useState(false);
-  const [otp, setOtp] = useState("");
-  const [otpVerified, setOtpVerified] = useState(false);
-  const [sending, setSending] = useState(false);
-  const [verifying, setVerifying] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
 
-  // Note: no auto-redirect to /auth — we render an inline auth panel below if not signed in.
-
+  // Prefill from authenticated user's profile so they don't re-type things they already provided.
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data } = await supabase
-        .from("user_roles")
-        .select("role")
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name, phone")
         .eq("user_id", user.id)
-        .eq("role", "admin")
         .maybeSingle();
-      if (data) {
-        setIsAdmin(true);
-        setOtpVerified(true);
-      }
+      setForm((f) => ({
+        ...f,
+        full_name: f.full_name || profile?.display_name || "",
+        email: f.email || user.email || "",
+        mobile: f.mobile || profile?.phone || "",
+        whatsapp: f.whatsapp || profile?.phone || "",
+      }));
     })();
   }, [user]);
 
   const setField = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
-
-  const sendOtp = async () => {
-    if (!/^\d{10}$/.test(form.mobile)) {
-      toast.error("Enter a valid 10-digit mobile number first");
-      return;
-    }
-    setSending(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("send-otp", { body: { phone: form.mobile } });
-      if (error || !data?.success) throw new Error(data?.error || error?.message || "Failed to send OTP");
-      setOtpSent(true);
-      toast.success("OTP sent to your mobile");
-    } catch (e: any) {
-      toast.error(e.message || "Failed to send OTP");
-    } finally {
-      setSending(false);
-    }
-  };
-
-  const verifyOtp = async () => {
-    if (!/^\d{6}$/.test(otp)) {
-      toast.error("Enter the 6-digit OTP");
-      return;
-    }
-    setVerifying(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("verify-otp", {
-        body: { phone: form.mobile, otp },
-      });
-      if (error || !data?.verified) throw new Error(data?.error || "Invalid OTP");
-      setOtpVerified(true);
-      toast.success("Mobile verified");
-    } catch (e: any) {
-      toast.error(e.message || "Invalid OTP");
-    } finally {
-      setVerifying(false);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,17 +85,12 @@ const ListingPocPage = () => {
       toast.error(parsed.error.issues[0].message);
       return;
     }
-    if (!otpVerified && !isAdmin) {
-      toast.error("Please verify your mobile via OTP");
-      return;
-    }
 
     setSubmitting(true);
     try {
       const emailDomain = form.email.split("@")[1]?.toLowerCase() || "";
       const isGeneric = GENERIC_DOMAINS.includes(emailDomain);
 
-      // Save POC profile
       const { data: poc, error: pocErr } = await supabase
         .from("user_listing_pocs")
         .insert([{
@@ -153,13 +105,12 @@ const ListingPocPage = () => {
           state: parsed.data.state,
           city: parsed.data.city,
           email_is_generic: isGeneric,
-          mobile_otp_verified: true,
+          mobile_otp_verified: true, // Mobile is captured at signup; no separate OTP step.
         }])
         .select()
         .single();
       if (pocErr) throw pocErr;
 
-      // Create draft listing
       const { data: listing, error: listErr } = await supabase
         .from("user_listings")
         .insert([{
@@ -173,7 +124,7 @@ const ListingPocPage = () => {
         .single();
       if (listErr) throw listErr;
 
-      toast.success("POC saved. Let's fill the listing details.");
+      toast.success("Details saved. Let's fill the listing.");
       navigate(`/list-your-business/${type}/${listing.id}`);
     } catch (e: any) {
       toast.error(e.message || "Failed to save");
@@ -189,8 +140,8 @@ const ListingPocPage = () => {
   return (
     <>
       <SEOHead
-        title={`POC Verification — ${meta.label} | B School Buzz`}
-        description="Verify yourself as the official Point of Contact to list your institute or college on B School Buzz."
+        title={`Point of Contact — ${meta.label} | B School Buzz`}
+        description="Share your point-of-contact details to list your institute or college on B School Buzz."
         noIndex
       />
       <div className="container mx-auto px-4 py-10 max-w-3xl">
@@ -207,8 +158,8 @@ const ListingPocPage = () => {
         {!user ? (
           <InlineAuthPanel
             returnTo={`/list-your-business/poc?type=${type}`}
-            title="Sign in to start your listing"
-            subtitle="Your account becomes the owner of this listing — you can sign back in anytime to manage and update it."
+            title="Create your institute account"
+            subtitle="Quick, no OTP. Your account becomes the owner of this listing — sign back in anytime to manage it."
           />
         ) : (
         <Card className="p-6">
@@ -235,43 +186,10 @@ const ListingPocPage = () => {
                 <Input type="email" value={form.email} onChange={setField("email")} placeholder="poc@institute.com" />
                 <p className="text-xs text-muted-foreground mt-1">Use a domain-based email for faster verification.</p>
               </div>
-
-              <div className="md:col-span-2 border border-border rounded-lg p-4 bg-muted/30">
-                <Label>Mobile Number * {!isAdmin && <span className="text-xs font-normal text-muted-foreground">(OTP verification required)</span>}</Label>
-                <div className="flex gap-2 mt-1">
-                  <Input
-                    value={form.mobile}
-                    onChange={setField("mobile")}
-                    placeholder="10-digit mobile"
-                    maxLength={10}
-                    disabled={otpVerified && !isAdmin}
-                  />
-                  {!isAdmin && !otpVerified && (
-                    <Button type="button" variant="outline" onClick={sendOtp} disabled={sending}>
-                      {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : otpSent ? "Resend OTP" : "Send OTP"}
-                    </Button>
-                  )}
-                </div>
-                {!isAdmin && otpSent && !otpVerified && (
-                  <div className="flex gap-2 mt-3">
-                    <Input
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                      placeholder="6-digit OTP"
-                      maxLength={6}
-                    />
-                    <Button type="button" onClick={verifyOtp} disabled={verifying}>
-                      {verifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify"}
-                    </Button>
-                  </div>
-                )}
-                {otpVerified && (
-                  <div className="flex items-center gap-2 mt-2 text-sm text-green-600 dark:text-green-400">
-                    <ShieldCheck className="w-4 h-4" /> {isAdmin ? "Admin — OTP bypassed" : "Mobile verified"}
-                  </div>
-                )}
+              <div>
+                <Label>Mobile Number *</Label>
+                <Input value={form.mobile} onChange={setField("mobile")} placeholder="10-digit mobile" maxLength={10} />
               </div>
-
               <div>
                 <Label>WhatsApp Number *</Label>
                 <Input value={form.whatsapp} onChange={setField("whatsapp")} placeholder="10-digit WhatsApp" maxLength={10} />
@@ -286,7 +204,7 @@ const ListingPocPage = () => {
               </div>
             </div>
 
-            <Button type="submit" size="lg" className="w-full" disabled={submitting || (!otpVerified && !isAdmin)}>
+            <Button type="submit" size="lg" className="w-full" disabled={submitting}>
               {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Continue to Listing Form <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
