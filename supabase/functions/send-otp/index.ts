@@ -22,11 +22,13 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const fast2smsKey = Deno.env.get("FAST2SMS_API_KEY");
+    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+    const twilioApiKey = Deno.env.get("TWILIO_API_KEY");
+    const twilioFrom = Deno.env.get("TWILIO_FROM_NUMBER");
 
-    if (!fast2smsKey) {
-      throw new Error("FAST2SMS_API_KEY is not configured");
-    }
+    if (!lovableApiKey) throw new Error("LOVABLE_API_KEY is not configured");
+    if (!twilioApiKey) throw new Error("TWILIO_API_KEY is not configured");
+    if (!twilioFrom) throw new Error("TWILIO_FROM_NUMBER is not configured");
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
