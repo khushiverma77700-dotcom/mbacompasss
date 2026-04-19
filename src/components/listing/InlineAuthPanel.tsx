@@ -69,6 +69,20 @@ const InlineAuthPanel = ({
   });
   const [signinForm, setSigninForm] = useState({ identifier: "", password: "" });
 
+  // OTP state for signup mobile verification
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const t = setInterval(() => setResendTimer((s) => s - 1), 1000);
+    return () => clearInterval(t);
+  }, [resendTimer]);
+
   const handleGoogle = async () => {
     setGoogleLoading(true);
     try {
@@ -89,6 +103,68 @@ const InlineAuthPanel = ({
     }
   };
 
+  const switchToLoginWith = (identifier: string) => {
+    setTab("signin");
+    setSigninForm({ identifier, password: "" });
+    toast.error("You already have an account. Please log in.");
+  };
+
+  const handleSendOtp = async () => {
+    if (!/^\d{10}$/.test(signupForm.phone)) {
+      toast.error("Enter a valid 10-digit mobile number first.");
+      return;
+    }
+    // Pre-check duplicate phone before sending OTP
+    try {
+      const { data: dup } = await supabase.functions.invoke("check-duplicate", {
+        body: { phone: signupForm.phone },
+      });
+      if (dup?.phoneExists) {
+        switchToLoginWith(signupForm.phone);
+        return;
+      }
+    } catch {
+      /* non-fatal */
+    }
+
+    setOtpSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-otp", {
+        body: { phone: signupForm.phone },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      toast.success(`OTP sent to ${signupForm.phone}`);
+      setOtpStep(true);
+      setResendTimer(30);
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to send OTP");
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otpValue.length !== 6) return;
+    setOtpVerifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-otp", {
+        body: { phone: signupForm.phone, otp: otpValue },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      if (data?.verified) {
+        setPhoneVerified(true);
+        setOtpStep(false);
+        toast.success("Mobile verified");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Verification failed");
+    } finally {
+      setOtpVerifying(false);
+    }
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     const parsed = signupSchema.safeParse(signupForm);
@@ -96,29 +172,29 @@ const InlineAuthPanel = ({
       toast.error(parsed.error.issues[0].message);
       return;
     }
+    if (!phoneVerified) {
+      toast.error("Please verify your mobile number with OTP first.");
+      return;
+    }
     setLoading(true);
     try {
-      // Duplicate guard — prevent silent creation of orphaned accounts
+      // Duplicate guard
       try {
         const { data: dup } = await supabase.functions.invoke("check-duplicate", {
           body: { email: parsed.data.email, phone: parsed.data.phone },
         });
         if (dup?.emailExists) {
-          toast.error("This email is already registered. Please sign in instead.");
-          setTab("signin");
-          setSigninForm({ identifier: parsed.data.email, password: "" });
+          switchToLoginWith(parsed.data.email);
           setLoading(false);
           return;
         }
         if (dup?.phoneExists) {
-          toast.error("This mobile number is already registered. Please sign in instead.");
-          setTab("signin");
-          setSigninForm({ identifier: parsed.data.phone, password: "" });
+          switchToLoginWith(parsed.data.phone);
           setLoading(false);
           return;
         }
       } catch {
-        // non-fatal — proceed to signup
+        /* non-fatal */
       }
 
       await signUp(
@@ -129,7 +205,6 @@ const InlineAuthPanel = ({
         parsed.data.designation
       );
 
-      // Auto sign-in immediately (works when email confirmation is disabled)
       try {
         await signIn(parsed.data.email, parsed.data.password);
         toast.success("Account created. You're signed in.");
@@ -141,9 +216,7 @@ const InlineAuthPanel = ({
     } catch (e: any) {
       const msg = e?.message || "Signup failed";
       if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("registered")) {
-        toast.error("This email is already registered. Please sign in instead.");
-        setTab("signin");
-        setSigninForm({ identifier: parsed.data.email, password: "" });
+        switchToLoginWith(parsed.data.email);
       } else {
         toast.error(msg);
       }
