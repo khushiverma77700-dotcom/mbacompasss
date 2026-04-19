@@ -72,10 +72,8 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
   const [auditProgress, setAuditProgress] = useState<{ current: number; total: number } | null>(null);
   const { toast } = useToast();
 
-  const targetRows = rows.filter(r => {
-    if (r.key.startsWith("static:")) return false;
-    return selectedType === "all" || r.contentType === selectedType;
-  });
+  // Include ALL rows (static + DB) so audit count matches the rest of the SEO admin
+  const targetRows = rows.filter(r => selectedType === "all" || r.contentType === selectedType);
 
   const runFullAudit = useCallback(async () => {
     setLoading(true);
@@ -83,7 +81,8 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
     setApprovedFixes({});
 
     try {
-      const pagesToAudit = targetRows.slice(0, 30);
+      // Audit ALL pages (no 30-row cap) so the count matches All Site Links
+      const pagesToAudit = targetRows;
       const results: AuditResult[] = [];
       setAuditProgress({ current: 0, total: pagesToAudit.length });
 
