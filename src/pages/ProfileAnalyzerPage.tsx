@@ -20,6 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -648,9 +649,58 @@ const ProfileAnalyzerPage = () => {
   const [cooldownDate, setCooldownDate] = useState<Date | null>(null);
   const [existingReport, setExistingReport] = useState<any>(null);
   const [checkingCooldown, setCheckingCooldown] = useState(false);
+  // Phone + OTP state for Step 1
+  const [phone, setPhone] = useState("");
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
   const { toast } = useToast();
   const { user } = useAuth();
   const reportRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const t = setInterval(() => setResendTimer(s => s - 1), 1000);
+    return () => clearInterval(t);
+  }, [resendTimer]);
+
+  const handleSendOtp = async () => {
+    if (!/^[6-9]\d{9}$/.test(phone)) {
+      toast({ title: "Invalid phone", description: "Enter a valid 10-digit Indian mobile number.", variant: "destructive" });
+      return;
+    }
+    setOtpSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-otp", { body: { phone } });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "OTP Sent!", description: `A 6-digit OTP has been sent to +91 ${phone}` });
+      setOtpStep(true);
+      setResendTimer(30);
+    } catch (e: any) {
+      toast({ title: "Failed to send OTP", description: e.message, variant: "destructive" });
+    } finally { setOtpSending(false); }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otpValue.length !== 6) return;
+    setOtpVerifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-otp", { body: { phone, otp: otpValue } });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      if (data?.verified) {
+        setPhoneVerified(true);
+        setOtpStep(false);
+        toast({ title: "Phone Verified ✓", description: "Your mobile has been verified." });
+      }
+    } catch (e: any) {
+      toast({ title: "Verification failed", description: e.message, variant: "destructive" });
+    } finally { setOtpVerifying(false); }
+  };
 
   // Check if user already has an analysis — if so, load full results and show report
   useEffect(() => {
@@ -698,9 +748,9 @@ const ProfileAnalyzerPage = () => {
               detailed_college_table: Array.isArray((analysisData.college_predictions as any)?.detailed_college_table) ? (analysisData.college_predictions as any).detailed_college_table : Array.isArray(analysisData.college_predictions) ? analysisData.college_predictions : [],
             };
             setResult(reconstructed);
-            setUnlocked(!!profileData.report_unlocked);
-            // Auto-show the report
-            setStep(profileData.report_unlocked ? 8 : 7);
+            setUnlocked(true);
+            // Always show full unlocked report
+            setStep(8);
           }
         } else {
           setCooldownDate(null);
@@ -737,6 +787,8 @@ const ProfileAnalyzerPage = () => {
     if (s === 1) {
       if (!form.name.trim()) errs.name = "Enter your name";
       if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Enter a valid email";
+      if (!/^[6-9]\d{9}$/.test(phone)) errs.phone = "Enter a valid 10-digit Indian mobile number";
+      else if (!phoneVerified) errs.phone = "Please verify your mobile number with OTP";
     } else if (s === 2) {
       if (!form.tenth_score || +form.tenth_score < 1 || +form.tenth_score > 100) errs.tenth_score = "Enter valid percentage (1-100)";
       if (!form.twelfth_score || +form.twelfth_score < 1 || +form.twelfth_score > 100) errs.twelfth_score = "Enter valid percentage (1-100)";
@@ -803,7 +855,7 @@ const ProfileAnalyzerPage = () => {
       const { data, error } = await supabase.functions.invoke("profile-analyzer", {
         body: {
           user_id: user?.id || undefined,
-          name: form.name, email: form.email,
+          name: form.name, email: form.email, phone: phone || undefined,
           tenth_score: +form.tenth_score, twelfth_score: +form.twelfth_score,
           graduation_score: +form.graduation_score, graduation_stream: form.graduation_stream,
           is_pursuing_graduation: form.is_pursuing_graduation,
@@ -830,8 +882,19 @@ const ProfileAnalyzerPage = () => {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       setResult(data);
+      // Persist verified phone immediately so the lead is captured
+      try {
+        if (data?.profile_id) {
+          await supabase.from("profile_analyses").update({
+            phone: phone || null,
+            email: form.email || null,
+            report_unlocked: true,
+          }).eq("id", data.profile_id);
+        }
+      } catch { /* non-fatal */ }
+      setUnlocked(true);
       localStorage.removeItem(STORAGE_KEY);
-      setTimeout(() => { setStep(7); window.scrollTo({ top: 0, behavior: "smooth" }); }, 600);
+      setTimeout(() => { setStep(8); window.scrollTo({ top: 0, behavior: "smooth" }); }, 600);
     } catch (e: any) {
       clearInterval(interval);
       toast({ title: "Analysis Failed", description: e.message || "Please try again.", variant: "destructive" });
@@ -1108,7 +1171,7 @@ const ProfileAnalyzerPage = () => {
                     />
                   </Button>
                   <p className="text-xs text-muted-foreground mt-3">
-                    {user && cooldownDate ? "You can re-check after 60 days from last analysis" : "No payment • No signup • Instant results"}
+                    {user && cooldownDate ? "You can re-check after 60 days from last analysis" : "100% free • Mobile verified • Instant AI report"}
                   </p>
                 </motion.div>
 
@@ -1242,7 +1305,7 @@ const ProfileAnalyzerPage = () => {
               <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-3xl mx-auto text-center relative z-10">
                 <img src={bschoolLogo} alt="B School Buzz" className="w-16 h-16 mx-auto rounded-2xl shadow-lg mb-6" />
                 <h2 className="text-3xl md:text-5xl font-bold mb-4">Ready to Know Your MBA Chances?</h2>
-                <p className="text-muted-foreground text-lg mb-8">Takes less than 2 minutes. No payment. No signup. Instant AI-powered results.</p>
+                <p className="text-muted-foreground text-lg mb-8">Takes less than 2 minutes. 100% free. Mobile verified for your privacy. Instant AI-powered results.</p>
                 <Button size="lg" onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="text-lg px-12 py-7 rounded-2xl shadow-2xl group">
                   Start Free Analysis <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>
@@ -1366,6 +1429,70 @@ const ProfileAnalyzerPage = () => {
                       <Label className="flex items-center gap-1.5"><Mail className="w-3.5 h-3.5" /> Email Address <span className="text-destructive">*</span></Label>
                       <Input type="email" placeholder="your@email.com" value={form.email} onChange={e => updateField("email", e.target.value)} className={errors.email ? "border-destructive" : ""} />
                       {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" /> Mobile Number <span className="text-destructive">*</span></Label>
+                      <div className="relative">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium select-none">+91</div>
+                        <Input
+                          type="tel"
+                          inputMode="numeric"
+                          maxLength={10}
+                          placeholder="Enter 10-digit mobile number"
+                          value={phone}
+                          onChange={e => {
+                            const v = e.target.value.replace(/\D/g, "").slice(0, 10);
+                            setPhone(v);
+                            setPhoneVerified(false);
+                            setOtpStep(false);
+                            setOtpValue("");
+                          }}
+                          disabled={phoneVerified}
+                          className={`pl-12 pr-28 ${errors.phone ? "border-destructive" : ""} ${phoneVerified ? "border-emerald-500" : ""}`}
+                        />
+                        {phoneVerified ? (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium flex items-center gap-1 text-emerald-600">
+                            <CheckCircle2 className="w-4 h-4" /> Verified
+                          </span>
+                        ) : (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="secondary"
+                            className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 text-xs"
+                            onClick={handleSendOtp}
+                            disabled={phone.length !== 10 || otpSending}
+                          >
+                            {otpSending ? "Sending..." : otpStep ? "Resend" : "Send OTP"}
+                          </Button>
+                        )}
+                      </div>
+                      {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+                      {otpStep && !phoneVerified && (
+                        <div className="mt-3 space-y-2 p-3 rounded-md border border-border bg-muted/40">
+                          <p className="text-xs text-muted-foreground">Enter the 6-digit OTP sent to +91 {phone}</p>
+                          <div className="flex justify-center">
+                            <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
+                              <InputOTPGroup>
+                                {[0,1,2,3,4,5].map((i) => <InputOTPSlot key={i} index={i} />)}
+                              </InputOTPGroup>
+                            </InputOTP>
+                          </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <button
+                              type="button"
+                              className="text-xs text-primary hover:underline disabled:opacity-50"
+                              disabled={resendTimer > 0 || otpSending}
+                              onClick={handleSendOtp}
+                            >
+                              {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend OTP"}
+                            </button>
+                            <Button type="button" size="sm" onClick={handleVerifyOtp} disabled={otpVerifying || otpValue.length !== 6}>
+                              {otpVerifying ? "Verifying..." : "Verify OTP"}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </>
                 )}

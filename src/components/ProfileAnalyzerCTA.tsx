@@ -89,7 +89,7 @@ const ProfileAnalyzerCTA = () => {
                 className="absolute inset-0 bg-gradient-to-r from-transparent via-primary-foreground/10 to-transparent"
               />
             </Button>
-            <p className="text-xs text-muted-foreground">No payment • No signup • Instant results</p>
+            <p className="text-xs text-muted-foreground">100% free • Instant AI-powered results</p>
           </motion.div>
 
           {/* Right: Animated Report Preview */}

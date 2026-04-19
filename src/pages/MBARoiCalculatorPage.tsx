@@ -123,7 +123,7 @@ const FUN_FACTS = [
 ];
 
 const TOTAL_FORM_STEPS = 5;
-const TEMP_DISABLE_PHONE_OTP = true;
+const TEMP_DISABLE_PHONE_OTP = false;
 
 const MBARoiCalculatorPage = () => {
   const { user, isAdmin } = useAuth();
@@ -716,7 +716,7 @@ const Landing = ({ onStart }: { onStart: () => void }) => {
           <CardContent className="p-8 md:p-12 text-center">
             <Rocket className="w-12 h-12 text-primary mx-auto mb-4" />
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Ready to make a data-backed MBA decision?</h2>
-            <p className="text-muted-foreground mb-6 max-w-xl mx-auto">Join 12,000+ aspirants who got clarity in 3 minutes. Free, no credit card required.</p>
+            <p className="text-muted-foreground mb-6 max-w-xl mx-auto">Join 12,000+ aspirants who got clarity in 3 minutes. 100% free, mobile-verified for your privacy.</p>
             <Button size="lg" onClick={onStart} className="h-12 px-8 rounded-xl shadow-lg">
               Start My ROI Analysis <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
@@ -1224,7 +1224,7 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
           <Button size="lg" onClick={onStart} className="h-12 px-8 rounded-xl shadow-lg shadow-primary/20">
             Get My Personalized Report <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
-          <p className="text-xs text-muted-foreground mt-3">100% free • 3 minutes • No credit card</p>
+          <p className="text-xs text-muted-foreground mt-3">100% free • 3 minutes • Mobile verified</p>
         </div>
       </div>
     </section>
@@ -1279,16 +1279,40 @@ const FormShell = ({ step, form, setForm, otpStep, otpValue, setOtpValue, otpSen
                   />
                   {form.phoneVerified ? (
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium flex items-center gap-1 text-emerald-600">
-                      <ShieldCheck className="w-4 h-4" /> Accepted
+                      <ShieldCheck className="w-4 h-4" /> Verified
                     </span>
                   ) : (
                     <Button type="button" size="sm" variant="secondary" className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 text-xs"
-                      onClick={handleSendOtp} disabled={form.phone.length !== 10}>
-                      Continue
+                      onClick={handleSendOtp} disabled={form.phone.length !== 10 || otpSending}>
+                      {otpSending ? "Sending..." : otpStep ? "Resend" : "Send OTP"}
                     </Button>
                   )}
                 </div>
-                {TEMP_DISABLE_PHONE_OTP && <p className="text-xs text-muted-foreground">OTP verification is temporarily disabled.</p>}
+                {otpStep && !form.phoneVerified && (
+                  <div className="mt-3 space-y-2 p-3 rounded-md border border-border bg-muted/40">
+                    <p className="text-xs text-muted-foreground">Enter the 6-digit OTP sent to +91 {form.phone}</p>
+                    <div className="flex justify-center">
+                      <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
+                        <InputOTPGroup>
+                          {[0,1,2,3,4,5].map((i) => <InputOTPSlot key={i} index={i} />)}
+                        </InputOTPGroup>
+                      </InputOTP>
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <button
+                        type="button"
+                        className="text-xs text-primary hover:underline disabled:opacity-50"
+                        disabled={resendTimer > 0 || otpSending}
+                        onClick={handleSendOtp}
+                      >
+                        {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend OTP"}
+                      </button>
+                      <Button type="button" size="sm" onClick={handleVerifyOtp} disabled={otpVerifying || otpValue.length !== 6}>
+                        {otpVerifying ? "Verifying..." : "Verify OTP"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
