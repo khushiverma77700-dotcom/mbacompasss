@@ -15,15 +15,15 @@ import { consumePostAuthRedirect } from "@/lib/authRedirect";
 import { supabase } from "@/integrations/supabase/client";
 import { useAllSiteSettings } from "@/hooks/useSiteSettings";
 
-// Eagerly load most-visited pages — no spinner
+// Home eager so first paint is instant; everything else lazy to shrink initial bundle
 import Index from "./pages/Index";
-import CategoryPage from "./pages/CategoryPage";
-import BlogPage from "./pages/BlogPage";
-import CollegesPage from "./pages/CollegesPage";
-import CoachingPage from "./pages/CoachingPage";
-import AuthPage from "./pages/AuthPage";
-import InstitutePage from "./pages/InstitutePage";
-import ComparePage from "./pages/ComparePage";
+const CategoryPage = lazy(() => import("./pages/CategoryPage"));
+const BlogPage = lazy(() => import("./pages/BlogPage"));
+const CollegesPage = lazy(() => import("./pages/CollegesPage"));
+const CoachingPage = lazy(() => import("./pages/CoachingPage"));
+const AuthPage = lazy(() => import("./pages/AuthPage"));
+const InstitutePage = lazy(() => import("./pages/InstitutePage"));
+const ComparePage = lazy(() => import("./pages/ComparePage"));
 const ArticlePage = lazy(() => import("./pages/ArticlePage"));
 const ExamDetailPage = lazy(() => import("./pages/ExamDetailPage"));
 const AboutPage = lazy(() => import("./pages/AboutPage"));
@@ -244,17 +244,15 @@ const App = () => (
               <Route path="listing-change-requests" element={<LazyPage><AdminListingChangeRequests /></LazyPage>} />
             </Route>
 
-            {/* Eagerly loaded — no spinner */}
+            {/* Home eager; rest lazy with invisible fallback */}
             <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
-            <Route path="/category/:slug" element={<PublicLayout><CategoryPage /></PublicLayout>} />
-            <Route path="/blog" element={<PublicLayout><BlogPage /></PublicLayout>} />
-            <Route path="/colleges" element={<PublicLayout><CollegesPage /></PublicLayout>} />
-            <Route path="/coaching" element={<PublicLayout><CoachingPage /></PublicLayout>} />
-            <Route path="/auth" element={<PublicLayout><AuthPage /></PublicLayout>} />
-
-            {/* Lazy loaded — invisible fallback */}
-            <Route path="/institute/:slug" element={<PublicLayout><InstitutePage /></PublicLayout>} />
-            <Route path="/compare" element={<PublicLayout><ComparePage /></PublicLayout>} />
+            <Route path="/category/:slug" element={<PublicLayout><LazyPage><CategoryPage /></LazyPage></PublicLayout>} />
+            <Route path="/blog" element={<PublicLayout><LazyPage><BlogPage /></LazyPage></PublicLayout>} />
+            <Route path="/colleges" element={<PublicLayout><LazyPage><CollegesPage /></LazyPage></PublicLayout>} />
+            <Route path="/coaching" element={<PublicLayout><LazyPage><CoachingPage /></LazyPage></PublicLayout>} />
+            <Route path="/auth" element={<PublicLayout><LazyPage><AuthPage /></LazyPage></PublicLayout>} />
+            <Route path="/institute/:slug" element={<PublicLayout><LazyPage><InstitutePage /></LazyPage></PublicLayout>} />
+            <Route path="/compare" element={<PublicLayout><LazyPage><ComparePage /></LazyPage></PublicLayout>} />
             <Route path="/article/:slug" element={<PublicLayout><LazyPage><ArticlePage /></LazyPage></PublicLayout>} />
             <Route path="/college/:slug" element={<PublicLayout><LazyPage><CollegeDetailPage /></LazyPage></PublicLayout>} />
             <Route path="/colleges/:region" element={<PublicLayout><LazyPage><CollegeFilterPage /></LazyPage></PublicLayout>} />

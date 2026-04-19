@@ -36,11 +36,14 @@ const Index = () => {
   const [showDeferredSections, setShowDeferredSections] = useState(false);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setShowDeferredSections(true);
-    }, 250);
-
-    return () => window.clearTimeout(timer);
+    // Mount deferred sections right after first paint (next frame, idle if available)
+    const w = window as any;
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 0));
+    const handle = schedule(() => setShowDeferredSections(true));
+    return () => {
+      const cancel = w.cancelIdleCallback ?? window.clearTimeout;
+      cancel(handle);
+    };
   }, []);
 
   const jsonLdSchemas = [
