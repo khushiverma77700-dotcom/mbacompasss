@@ -49,10 +49,17 @@ const MBAJourneySection = () => {
   const currentRotation = useRef(0);
   const maxProgress = useRef(0); // ratchet — never goes backward while inside
 
+  const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
+
   useEffect(() => {
+    // On mobile we skip the heavy scroll-driven 3D animation entirely (was causing white screen / jank).
+    if (isMobile) return;
+
     let lastIdx = -1;
+    let ticking = false;
 
     const update = () => {
+      ticking = false;
       const el = wrapperRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
@@ -61,7 +68,6 @@ const MBAJourneySection = () => {
       const scrolled = Math.min(Math.max(-rect.top, 0), total);
       const p = total > 0 ? scrolled / total : 0;
 
-      // Ratchet: only advance forward. Reset only when user scrolls well above section.
       if (rect.top > vh * 0.5) {
         maxProgress.current = 0;
       } else if (p > maxProgress.current) {
@@ -77,29 +83,31 @@ const MBAJourneySection = () => {
       }
     };
 
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    };
+
     const tick = () => {
       currentRotation.current += (targetRotation.current - currentRotation.current) * 0.15;
       if (stageRef.current) {
         stageRef.current.style.transform = `rotateY(${currentRotation.current.toFixed(2)}deg)`;
-      }
-      if (mobileTrackRef.current) {
-        // Mobile: slide one card-width (236px = 220 card + 16 padding) per step
-        const stepIdx = -currentRotation.current / ANGLE; // smoothly interpolated 0..7
-        mobileTrackRef.current.style.transform = `translate3d(${(-stepIdx * 236).toFixed(2)}px, 0, 0)`;
       }
       rafRef.current = requestAnimationFrame(tick);
     };
 
     update();
     tick();
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
     return () => {
-      window.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, []);
+  }, [isMobile]);
 
   return (
     // Pinned wrapper
