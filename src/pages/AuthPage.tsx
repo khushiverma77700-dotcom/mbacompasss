@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getAuthRedirectUri, normalizeRedirectPath, storePostAuthRedirect } from "@/lib/authRedirect";
 import mbahubLogo from "@/assets/mbahub-logo.png";
 
-const TEMP_DISABLE_PHONE_OTP = true;
+const TEMP_DISABLE_PHONE_OTP = false;
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
