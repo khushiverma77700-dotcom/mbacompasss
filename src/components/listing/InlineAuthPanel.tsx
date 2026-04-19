@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { z } from "zod";
-import { Loader2, Mail, Lock, User as UserIcon, Phone } from "lucide-react";
+import { Loader2, Mail, Lock, User as UserIcon, Phone, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,17 +8,27 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+
+/**
+ * Institute-only auth panel.
+ * - No OTP anywhere.
+ * - Signup captures: Name, Email, Mobile, Designation, Password.
+ * - Login uses a single smart field that accepts email OR 10-digit mobile.
+ * - After signup, auto sign-in so the user lands directly on the next step / dashboard.
+ */
 
 const signupSchema = z.object({
   display_name: z.string().trim().min(2, "Name must be at least 2 characters").max(100),
   email: z.string().trim().email("Valid email required").max(255),
   phone: z.string().regex(/^\d{10}$/, "Enter 10-digit mobile"),
+  designation: z.string().trim().min(2, "Designation required").max(100),
   password: z.string().min(8, "Password must be at least 8 characters").max(72),
 });
 
 const signinSchema = z.object({
-  email: z.string().trim().email("Valid email required").max(255),
+  identifier: z.string().trim().min(1, "Email or mobile required"),
   password: z.string().min(1, "Password required").max(72),
 });
 
@@ -28,25 +38,39 @@ interface InlineAuthPanelProps {
   /** Heading text shown above the panel */
   title?: string;
   subtitle?: string;
+  /** Default fields the parent already collected (e.g. from POC form) */
+  defaultName?: string;
+  defaultEmail?: string;
+  defaultPhone?: string;
+  defaultDesignation?: string;
 }
 
 const InlineAuthPanel = ({
   returnTo,
-  title = "Sign in to continue",
-  subtitle = "Create an account or sign in — your listing will be linked to this account so you can manage it anytime.",
+  title = "Create your institute account",
+  subtitle = "Your account becomes the owner of this listing — sign back in anytime to manage it.",
+  defaultName = "",
+  defaultEmail = "",
+  defaultPhone = "",
+  defaultDesignation = "",
 }: InlineAuthPanelProps) => {
   const { signUp, signIn } = useAuth();
   const [tab, setTab] = useState<"signup" | "signin">("signup");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
 
-  const [signupForm, setSignupForm] = useState({ display_name: "", email: "", phone: "", password: "" });
-  const [signinForm, setSigninForm] = useState({ email: "", password: "" });
+  const [signupForm, setSignupForm] = useState({
+    display_name: defaultName,
+    email: defaultEmail,
+    phone: defaultPhone,
+    designation: defaultDesignation,
+    password: "",
+  });
+  const [signinForm, setSigninForm] = useState({ identifier: "", password: "" });
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
     try {
-      // Persist target so AuthContext / app can route back; lovable redirect_uri sends to origin.
       sessionStorage.setItem("postAuthRedirect", returnTo);
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: window.location.origin + returnTo,
@@ -56,8 +80,7 @@ const InlineAuthPanel = ({
         setGoogleLoading(false);
         return;
       }
-      if (result.redirected) return; // browser navigates away
-      // tokens already set
+      if (result.redirected) return;
       toast.success("Signed in with Google");
     } catch (e: any) {
       toast.error(e?.message || "Google sign-in failed");
@@ -74,25 +97,78 @@ const InlineAuthPanel = ({
     }
     setLoading(true);
     try {
-      await signUp(parsed.data.email, parsed.data.password, parsed.data.display_name, parsed.data.phone);
-      toast.success("Account created! Check your inbox to verify your email, then continue.");
-      // Try auto sign-in (works if email confirmation is disabled)
+      // Duplicate guard — prevent silent creation of orphaned accounts
+      try {
+        const { data: dup } = await supabase.functions.invoke("check-duplicate", {
+          body: { email: parsed.data.email, phone: parsed.data.phone },
+        });
+        if (dup?.emailExists) {
+          toast.error("This email is already registered. Please sign in instead.");
+          setTab("signin");
+          setSigninForm({ identifier: parsed.data.email, password: "" });
+          setLoading(false);
+          return;
+        }
+        if (dup?.phoneExists) {
+          toast.error("This mobile number is already registered. Please sign in instead.");
+          setTab("signin");
+          setSigninForm({ identifier: parsed.data.phone, password: "" });
+          setLoading(false);
+          return;
+        }
+      } catch {
+        // non-fatal — proceed to signup
+      }
+
+      await signUp(
+        parsed.data.email,
+        parsed.data.password,
+        parsed.data.display_name,
+        parsed.data.phone,
+        parsed.data.designation
+      );
+
+      // Auto sign-in immediately (works when email confirmation is disabled)
       try {
         await signIn(parsed.data.email, parsed.data.password);
+        toast.success("Account created. You're signed in.");
       } catch {
-        // confirmation required — user will sign in after verifying
+        toast.success("Account created. Please verify your email, then sign in.");
+        setTab("signin");
+        setSigninForm({ identifier: parsed.data.email, password: "" });
       }
     } catch (e: any) {
       const msg = e?.message || "Signup failed";
-      if (msg.toLowerCase().includes("already")) {
-        toast.error("Email already registered. Please sign in instead.");
+      if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("registered")) {
+        toast.error("This email is already registered. Please sign in instead.");
         setTab("signin");
-        setSigninForm((f) => ({ ...f, email: parsed.data.email }));
+        setSigninForm({ identifier: parsed.data.email, password: "" });
       } else {
         toast.error(msg);
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const resolveEmailFromMobile = async (mobile: string): Promise<string | null> => {
+    // Look up the email via the profile so the user can log in with mobile.
+    const { data } = await supabase
+      .from("profiles")
+      .select("user_id")
+      .eq("phone", mobile)
+      .maybeSingle();
+    if (!data?.user_id) return null;
+    // We can't read auth.users.email from the client. Use the duplicate-check edge function
+    // as a safe lookup: it returns whether an email exists, but we need the email itself.
+    // Instead, ask the dedicated lookup endpoint.
+    try {
+      const { data: lookup } = await supabase.functions.invoke("lookup-email-by-phone", {
+        body: { phone: mobile },
+      });
+      return lookup?.email ?? null;
+    } catch {
+      return null;
     }
   };
 
@@ -105,10 +181,24 @@ const InlineAuthPanel = ({
     }
     setLoading(true);
     try {
-      await signIn(parsed.data.email, parsed.data.password);
+      const id = parsed.data.identifier.trim();
+      let email = id;
+
+      // If the user typed a 10-digit mobile, resolve it to email.
+      if (/^\d{10}$/.test(id)) {
+        const resolved = await resolveEmailFromMobile(id);
+        if (!resolved) {
+          toast.error("No account found for this mobile number.");
+          setLoading(false);
+          return;
+        }
+        email = resolved;
+      }
+
+      await signIn(email, parsed.data.password);
       toast.success("Signed in");
     } catch (e: any) {
-      toast.error(e?.message || "Invalid email or password");
+      toast.error(e?.message || "Invalid credentials");
     } finally {
       setLoading(false);
     }
@@ -144,7 +234,7 @@ const InlineAuthPanel = ({
       <div className="relative my-5">
         <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border" /></div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-card px-2 text-muted-foreground">Or with email</span>
+          <span className="bg-card px-2 text-muted-foreground">Or use email</span>
         </div>
       </div>
 
@@ -195,6 +285,18 @@ const InlineAuthPanel = ({
               </div>
             </div>
             <div>
+              <Label>Designation *</Label>
+              <div className="relative mt-1">
+                <Briefcase className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  className="pl-9"
+                  value={signupForm.designation}
+                  onChange={(e) => setSignupForm((f) => ({ ...f, designation: e.target.value }))}
+                  placeholder="e.g. Director, Marketing Head"
+                />
+              </div>
+            </div>
+            <div>
               <Label>Password *</Label>
               <div className="relative mt-1">
                 <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -217,17 +319,18 @@ const InlineAuthPanel = ({
         <TabsContent value="signin">
           <form onSubmit={handleSignin} className="space-y-4">
             <div>
-              <Label>Email *</Label>
+              <Label>Email or Mobile *</Label>
               <div className="relative mt-1">
-                <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <UserIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  type="email"
                   className="pl-9"
-                  value={signinForm.email}
-                  onChange={(e) => setSigninForm((f) => ({ ...f, email: e.target.value }))}
-                  placeholder="you@institute.com"
+                  value={signinForm.identifier}
+                  onChange={(e) => setSigninForm((f) => ({ ...f, identifier: e.target.value }))}
+                  placeholder="you@institute.com or 9876543210"
+                  autoComplete="username"
                 />
               </div>
+              <p className="text-xs text-muted-foreground mt-1">Use the email or 10-digit mobile you signed up with.</p>
             </div>
             <div>
               <Label>Password *</Label>
@@ -239,6 +342,7 @@ const InlineAuthPanel = ({
                   value={signinForm.password}
                   onChange={(e) => setSigninForm((f) => ({ ...f, password: e.target.value }))}
                   placeholder="Your password"
+                  autoComplete="current-password"
                 />
               </div>
             </div>

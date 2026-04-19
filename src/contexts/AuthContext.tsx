@@ -8,7 +8,7 @@ interface AuthContextType {
   loading: boolean;
   isAdmin: boolean;
   allowedSections: string[] | null; // null = full access (super admin)
-  signUp: (email: string, password: string, displayName: string, phone?: string) => Promise<void>;
+  signUp: (email: string, password: string, displayName: string, phone?: string, designation?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -111,16 +111,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [user?.id, user?.email]);
 
-  const signUp = async (email: string, password: string, displayName: string, phone?: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    displayName: string,
+    phone?: string,
+    designation?: string
+  ) => {
     const signupPageUrl = window.location.pathname;
     const signupPageName = document.title || "Unknown";
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo: `${window.location.origin}/`,
         data: {
           display_name: displayName,
           phone: phone || "",
+          designation: designation || "",
           signup_page_url: signupPageUrl,
           signup_page_name: signupPageName,
         },
