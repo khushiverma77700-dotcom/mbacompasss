@@ -83,6 +83,10 @@ const MBARoiCalculatorPage = lazy(() => import("./pages/MBARoiCalculatorPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const AdminROIAnalyses = lazy(() => import("./pages/admin/AdminROIAnalyses"));
+const ListYourBusinessPage = lazy(() => import("./pages/ListYourBusinessPage"));
+const ListingPocPage = lazy(() => import("./pages/ListingPocPage"));
+const ListingFormPage = lazy(() => import("./pages/ListingFormPage"));
+const MyListingsPage = lazy(() => import("./pages/MyListingsPage"));
 
 // Lazy load heavy popups
 const OnboardingDialog = lazy(() => import("@/components/OnboardingDialog"));
@@ -263,6 +267,10 @@ const App = () => (
             <Route path="/business-inquiries" element={<PublicLayout><LazyPage><BusinessInquiryPage /></LazyPage></PublicLayout>} />
             <Route path="/forgot-password" element={<PublicLayout><LazyPage><ForgotPasswordPage /></LazyPage></PublicLayout>} />
             <Route path="/reset-password" element={<PublicLayout><LazyPage><ResetPasswordPage /></LazyPage></PublicLayout>} />
+            <Route path="/list-your-business" element={<PublicLayout><LazyPage><ListYourBusinessPage /></LazyPage></PublicLayout>} />
+            <Route path="/list-your-business/poc" element={<PublicLayout><LazyPage><ListingPocPage /></LazyPage></PublicLayout>} />
+            <Route path="/list-your-business/:type/:id" element={<PublicLayout><LazyPage><ListingFormPage /></LazyPage></PublicLayout>} />
+            <Route path="/my-listings" element={<PublicLayout><LazyPage><MyListingsPage /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />
           </Routes>
         </AuthProvider>
