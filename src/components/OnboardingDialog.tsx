@@ -18,7 +18,7 @@ interface OnboardingDialogProps {
   userId: string;
 }
 
-const TEMP_DISABLE_PHONE_OTP = true;
+const TEMP_DISABLE_PHONE_OTP = false;
 
 const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) => {
   const [selectedExams, setSelectedExams] = useState<string[]>([]);
