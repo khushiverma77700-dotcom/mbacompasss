@@ -167,28 +167,11 @@ const AdminUserSubmissions = () => {
 
       {/* Review payload dialog */}
       <Dialog open={!!reviewItem} onOpenChange={(o) => !o && setReviewItem(null)}>
-        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Submission Details</DialogTitle>
           </DialogHeader>
-          {reviewItem && (
-            <div className="space-y-4 text-sm">
-              <div>
-                <div className="font-semibold mb-1">POC</div>
-                <pre className="text-xs bg-muted p-3 rounded overflow-auto">{JSON.stringify(reviewItem.poc, null, 2)}</pre>
-              </div>
-              <div>
-                <div className="font-semibold mb-1">Payload</div>
-                <pre className="text-xs bg-muted p-3 rounded overflow-auto max-h-96">{JSON.stringify(reviewItem.payload, null, 2)}</pre>
-              </div>
-              {reviewItem.sections && (
-                <div>
-                  <div className="font-semibold mb-1">Section Progress</div>
-                  <pre className="text-xs bg-muted p-3 rounded overflow-auto">{JSON.stringify(reviewItem.sections, null, 2)}</pre>
-                </div>
-              )}
-            </div>
-          )}
+          {reviewItem && <SubmissionDetails item={reviewItem} />}
         </DialogContent>
       </Dialog>
 
