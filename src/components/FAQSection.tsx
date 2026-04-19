@@ -107,11 +107,11 @@ const FAQSection = () => {
         </div>
       </div>
 
-      {/* JSON-LD for FAQ Schema */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(generateFAQSchema(faqs)) }}
-      />
+      {/*
+        FAQ JSON-LD is injected centrally by SEOHead on the homepage
+        (Index.tsx → generateFAQSchema). Do NOT duplicate it here —
+        Google flags duplicate FAQPage schemas as an error.
+      */}
     </section>
   );
 };
