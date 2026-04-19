@@ -1,4 +1,5 @@
 import { Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 
 /**
  * Google Preferred Source CTA — premium animated pill that deep-links to
@@ -32,28 +33,72 @@ const GooglePreferredSourceCTA = ({ className = "", size = "compact" }: Props) =
   const isFull = size === "full";
 
   return (
-    <a
+    <motion.a
       href={PREFERRED_URL}
       target="_blank"
       rel="noopener noreferrer"
       title="Add B School Buzz as preferred source on Google"
+      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ 
+        duration: 0.5, 
+        ease: [0.25, 0.46, 0.45, 0.94],
+        delay: 0.2 
+      }}
+      whileHover={{ 
+        y: -2, 
+        boxShadow: "0 8px 30px -8px hsl(var(--primary) / 0.35)",
+        transition: { duration: 0.25, ease: "easeOut" }
+      }}
+      whileTap={{ scale: 0.98 }}
       className={`group relative inline-flex items-center gap-2 rounded-full overflow-hidden
-        bg-card border border-primary/25 hover:border-primary/60
-        shadow-sm hover:shadow-[0_6px_20px_hsl(var(--primary)/0.25)]
-        transition-all duration-300 hover:-translate-y-0.5
+        bg-card border border-primary/25 
+        shadow-sm hover:border-primary/60
+        transition-colors duration-300
         ${isFull ? "px-3 py-2 w-full justify-center" : "px-2.5 py-1.5"}
         ${className}`}
     >
+      {/* Animated gradient background on hover */}
+      <motion.span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+        style={{
+          background: "linear-gradient(135deg, hsl(var(--primary) / 0.08) 0%, hsl(var(--primary) / 0.02) 50%, hsl(var(--primary) / 0.08) 100%)"
+        }}
+      />
+
       {/* Animated shimmer sweep */}
       <span
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-[1100ms] ease-out
-          bg-gradient-to-r from-transparent via-primary/15 to-transparent"
+        className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-[1200ms] ease-out
+          bg-gradient-to-r from-transparent via-primary/20 to-transparent"
       />
 
-      <span className="relative flex items-center justify-center w-6 h-6 rounded-full bg-background ring-1 ring-border shrink-0 group-hover:scale-110 transition-transform">
+      {/* Pulsing glow effect */}
+      <motion.span
+        aria-hidden="true"
+        className="pointer-events-none absolute -inset-0.5 rounded-full opacity-0 group-hover:opacity-100"
+        style={{
+          background: "radial-gradient(ellipse at center, hsl(var(--primary) / 0.15) 0%, transparent 70%)"
+        }}
+        animate={{
+          scale: [1, 1.05, 1],
+          opacity: [0, 0.6, 0]
+        }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+
+      <motion.span 
+        className="relative flex items-center justify-center w-6 h-6 rounded-full bg-background ring-1 ring-border shrink-0"
+        whileHover={{ scale: 1.15, rotate: 5 }}
+        transition={{ type: "spring", stiffness: 400, damping: 15 }}
+      >
         <GoogleG className="w-[14px] h-[14px]" />
-      </span>
+      </motion.span>
 
       <span
         className={`relative font-semibold text-foreground tracking-tight whitespace-nowrap ${
@@ -64,11 +109,45 @@ const GooglePreferredSourceCTA = ({ className = "", size = "compact" }: Props) =
         <span className="text-primary">Google</span>
       </span>
 
-      <Sparkles
-        className="relative w-3 h-3 text-primary shrink-0 animate-pulse"
+      <motion.div
+        animate={{ 
+          rotate: [0, 15, -15, 0],
+          scale: [1, 1.2, 1]
+        }}
+        transition={{
+          duration: 2,
+          repeat: Infinity,
+          repeatDelay: 1,
+          ease: "easeInOut"
+        }}
+      >
+        <Sparkles
+          className="relative w-3 h-3 text-primary shrink-0"
+          aria-hidden="true"
+        />
+      </motion.div>
+
+      {/* Subtle border glow animation */}
+      <motion.span
         aria-hidden="true"
+        className="pointer-events-none absolute inset-0 rounded-full"
+        style={{
+          boxShadow: "inset 0 0 0 1px hsl(var(--primary) / 0)"
+        }}
+        animate={{
+          boxShadow: [
+            "inset 0 0 0 1px hsl(var(--primary) / 0)",
+            "inset 0 0 0 1px hsl(var(--primary) / 0.3)",
+            "inset 0 0 0 1px hsl(var(--primary) / 0)"
+          ]
+        }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
       />
-    </a>
+    </motion.a>
   );
 };
 
