@@ -89,6 +89,7 @@ const Index = () => {
       <HeroSection />
       <Suspense fallback={null}>
         <StatsCounterSection />
+        <MBAJourneySection />
         <CategoryCards />
       </Suspense>
 
