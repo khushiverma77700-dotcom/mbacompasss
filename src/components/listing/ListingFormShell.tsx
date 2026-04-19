@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2, Save, Send, Check, AlertCircle, ChevronRight } from "lucide-react";
+import { Loader2, Save, Send, Check, AlertCircle, ChevronRight, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { emptyPayload, getSections, type ListingType, type SectionId } from "@/lib/listingFormSchema";
+import { computeDiff } from "@/lib/listingDiff";
 
 import BasicInfoSection from "./sections/BasicInfoSection";
 import ContactSection from "./sections/ContactSection";
@@ -34,9 +35,15 @@ const ListingFormShell = ({ listing, type }: Props) => {
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [pendingRequest, setPendingRequest] = useState<any>(null);
   const dirtyRef = useRef(false);
 
-  const readOnly = listing.status === "approved" || listing.status === "pending";
+  // Edit mode for an already-approved live listing — writes go to change_requests, not the live row.
+  const isApproved = listing.status === "approved" && !!listing.approved_record_id;
+  // Pending review (first-time submission) is still view-only.
+  const readOnly = listing.status === "pending";
+  // Whether dashboard saves should target the change-request table instead of user_listings.
+  const changeRequestMode = isApproved;
 
   // Mark dirty whenever payload changes (after mount)
   const firstRender = useRef(true);
