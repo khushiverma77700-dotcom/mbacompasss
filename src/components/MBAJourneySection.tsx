@@ -319,36 +319,56 @@ const CardContent = ({ step, isActive }: { step: Step; isActive: boolean }) => {
   const { n, title, Icon, bullets, gradient } = step;
   return (
     <>
-      {/* gradient header */}
-      <div className={`relative h-14 bg-gradient-to-br ${gradient}`}>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.45),transparent_60%)]" />
-        <div className="absolute inset-x-0 bottom-0 h-px bg-white/30" />
+      {/* gradient header with mesh shine */}
+      <div className={`relative h-16 bg-gradient-to-br ${gradient} overflow-hidden`}>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.5),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(0,0,0,0.2),transparent_50%)]" />
+        {/* diagonal sheen */}
+        <div className="absolute -inset-1 bg-gradient-to-tr from-transparent via-white/20 to-transparent rotate-12" />
+        <div className="absolute inset-x-0 bottom-0 h-px bg-white/40" />
       </div>
-      <div className="absolute top-1.5 right-1.5 h-5 px-1.5 rounded-full bg-white text-[9px] font-bold text-foreground flex items-center justify-center shadow-md z-10">
-        {n}
+
+      {/* Step badge */}
+      <div className="absolute top-2 right-2 h-5 px-2 rounded-full bg-white text-[9px] font-bold text-foreground flex items-center justify-center shadow-md z-10 ring-1 ring-black/5">
+        STEP {n}
       </div>
-      <div className="relative -mt-6 flex justify-center">
+
+      {/* Corner accent */}
+      <div className="absolute top-0 left-0 h-6 w-6 border-t-2 border-l-2 border-white/40 rounded-tl-2xl pointer-events-none" />
+
+      {/* Floating icon */}
+      <div className="relative -mt-7 flex justify-center">
         <div
-          className={`h-12 w-12 rounded-xl bg-gradient-to-br ${gradient} text-white flex items-center justify-center shadow-lg ring-[3px] ring-card ${
+          className={`relative h-14 w-14 rounded-2xl bg-gradient-to-br ${gradient} text-white flex items-center justify-center shadow-xl ring-[3px] ring-card ${
             isActive ? "animate-[bob_2s_ease-in-out_infinite]" : ""
           }`}
         >
-          <Icon className="h-5 w-5" strokeWidth={2.3} />
+          <Icon className="h-6 w-6 relative z-10" strokeWidth={2.3} />
+          {/* inner highlight */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-white/30 to-transparent" />
+          {/* active pulse ring */}
+          {isActive && (
+            <div className="absolute -inset-1 rounded-2xl border-2 border-white/40 animate-[ping_2s_ease-out_infinite]" />
+          )}
         </div>
       </div>
+
       <div className="px-3 pt-2 pb-3">
-        <h3 className="text-[13px] font-bold text-foreground text-center mb-1.5 leading-tight">
+        <h3 className="text-[13px] font-bold text-foreground text-center mb-2 leading-tight">
           {title}
         </h3>
         <ul className="space-y-1">
           {bullets.map((b) => (
-            <li key={b} className="text-[10.5px] text-muted-foreground flex items-center gap-1">
-              <CheckCircle2 className="h-2.5 w-2.5 text-primary flex-shrink-0" />
+            <li key={b} className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+              <CheckCircle2 className="h-3 w-3 text-primary flex-shrink-0" />
               <span className="truncate">{b}</span>
             </li>
           ))}
         </ul>
       </div>
+
+      {/* Bottom accent bar */}
+      <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r ${gradient} ${isActive ? "opacity-100" : "opacity-50"}`} />
     </>
   );
 };
@@ -357,12 +377,12 @@ const MobileCard = ({ step, isActive }: { step: Step; isActive: boolean }) => {
   const { glow } = step;
   return (
     <div
-      className={`relative h-[240px] rounded-2xl bg-card border overflow-hidden ${
+      className={`relative h-[260px] rounded-2xl bg-card border overflow-hidden ${
         isActive ? "border-primary/60" : "border-border"
       }`}
       style={{
         boxShadow: isActive
-          ? `0 25px 50px -12px rgba(${glow}, 0.5), 0 0 0 1px rgba(${glow}, 0.3)`
+          ? `0 25px 50px -12px rgba(${glow}, 0.5), 0 0 0 1px rgba(${glow}, 0.3), 0 0 30px rgba(${glow}, 0.15)`
           : "0 10px 25px -8px rgba(0,0,0,0.2)",
       }}
     >
