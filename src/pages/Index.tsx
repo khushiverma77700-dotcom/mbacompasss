@@ -4,7 +4,7 @@ import SEOHead, { generateWebsiteSchema, generateOrganizationSchema, generateFAQ
 
 // Lazy load — these pull framer-motion which would bloat the initial bundle
 const StatsCounterSection = lazy(() => import("@/components/StatsCounterSection"));
-const MBAJourneySection = lazy(() => import("@/components/MBAJourneySection"));
+
 const CategoryCards = lazy(() => import("@/components/CategoryCards"));
 
 // Lazy load below-the-fold sections
@@ -89,7 +89,7 @@ const Index = () => {
       <HeroSection />
       <Suspense fallback={null}>
         <StatsCounterSection />
-        <MBAJourneySection />
+        
         <CategoryCards />
       </Suspense>
 
