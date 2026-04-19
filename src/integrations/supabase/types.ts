@@ -2179,6 +2179,8 @@ export type Database = {
       user_listings: {
         Row: {
           admin_notes: string | null
+          approved_at: string | null
+          approved_record_id: string | null
           created_at: string
           id: string
           listing_type: string
@@ -2196,6 +2198,8 @@ export type Database = {
         }
         Insert: {
           admin_notes?: string | null
+          approved_at?: string | null
+          approved_record_id?: string | null
           created_at?: string
           id?: string
           listing_type: string
@@ -2213,6 +2217,8 @@ export type Database = {
         }
         Update: {
           admin_notes?: string | null
+          approved_at?: string | null
+          approved_record_id?: string | null
           created_at?: string
           id?: string
           listing_type?: string
