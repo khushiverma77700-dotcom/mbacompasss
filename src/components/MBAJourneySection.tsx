@@ -148,28 +148,40 @@ const MBAJourneySection = () => {
             </p>
           </div>
 
-          {/* ===== MOBILE: smooth horizontal carousel ===== */}
-          <div className="md:hidden overflow-hidden">
-            <div className="relative h-[280px]" style={{ perspective: "1000px" }}>
+          {/* ===== MOBILE: premium 3D coverflow carousel ===== */}
+          <div className="md:hidden overflow-hidden -mx-4 px-4">
+            <div className="relative h-[320px]" style={{ perspective: "1200px", perspectiveOrigin: "50% 50%" }}>
+              {/* glow under active card */}
+              <div
+                aria-hidden
+                className="absolute left-1/2 bottom-3 -translate-x-1/2 h-6 w-[220px] rounded-[50%] blur-2xl"
+                style={{
+                  background: `radial-gradient(ellipse, rgba(${steps[activeIdx].glow}, 0.55), transparent 70%)`,
+                  transition: "background 0.6s ease",
+                }}
+              />
               <div
                 ref={mobileTrackRef}
                 className="absolute inset-0 flex items-center"
                 style={{
                   willChange: "transform",
                   transformStyle: "preserve-3d",
-                  paddingLeft: "calc(50% - 120px)",
+                  paddingLeft: "calc(50% - 110px)",
                 }}
               >
                 {steps.map((step, i) => {
-                  const { n, title, Icon, bullets, gradient, glow } = step;
                   const isActive = i === activeIdx;
+                  const offset = i - activeIdx;
+                  const abs = Math.abs(offset);
                   return (
                     <div
-                      key={n}
-                      className="w-[240px] flex-shrink-0 px-2 transition-all duration-500"
+                      key={step.n}
+                      className="w-[220px] flex-shrink-0 px-2 transition-all duration-500 ease-out"
                       style={{
-                        transform: isActive ? "scale(1) rotateY(0deg)" : "scale(0.85) rotateY(15deg)",
-                        opacity: isActive ? 1 : 0.45,
+                        transform: `scale(${isActive ? 1 : abs === 1 ? 0.82 : 0.7}) rotateY(${offset * -22}deg) translateZ(${isActive ? 0 : -80}px)`,
+                        opacity: isActive ? 1 : abs === 1 ? 0.55 : 0.25,
+                        zIndex: isActive ? 10 : 5 - abs,
+                        transformStyle: "preserve-3d",
                       }}
                     >
                       <MobileCard step={step} isActive={isActive} />
@@ -272,32 +284,8 @@ const MBAJourneySection = () => {
             ))}
           </div>
 
-          {/* Active step indicator */}
-          <div className="text-center mt-2">
-            <p className="text-xs md:text-sm font-semibold text-foreground">
-              <span className="text-primary">Step {steps[activeIdx].n}</span> · {steps[activeIdx].title}
-            </p>
-            {activeIdx < N - 1 && (
-              <p className="text-[10px] text-muted-foreground/70 mt-0.5 inline-flex items-center gap-1">
-                <ChevronDown className="h-3 w-3 animate-bounce" />
-                Scroll to continue
-              </p>
-            )}
-          </div>
-
-          {/* CTA row */}
-          <div className="mt-3 flex flex-col sm:flex-row items-center justify-center gap-2">
-            <Button asChild size="sm" className="w-full sm:w-auto h-9 hover-scale shadow-lg hover:shadow-primary/40">
-              <Link to="/profile-analyzer">
-                Start Your MBA Journey
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </Button>
-            <Button asChild size="sm" variant="outline" className="w-full sm:w-auto h-9 hover-scale">
-              <Link to="/contact">Get Free Counseling</Link>
-            </Button>
-          </div>
         </div>
+
 
         <style>{`
           @keyframes shimmer {
