@@ -53,15 +53,26 @@ const AuthPage = () => {
       return;
     }
 
+    // Block duplicate phone before sending OTP
+    try {
+      const { data: dupCheck } = await supabase.functions.invoke("check-duplicate", {
+        body: { phone },
+      });
+      if (dupCheck?.phoneExists) {
+        toast({ title: "You already have an account", description: "This mobile number is already registered. Please log in.", variant: "destructive" });
+        setIsLogin(true);
+        return;
+      }
+    } catch {
+      /* non-fatal */
+    }
+
     if (TEMP_DISABLE_PHONE_OTP) {
       setPhoneVerified(true);
       setOtpStep(false);
       setOtpValue("");
       setResendTimer(0);
-      toast({
-        title: "Phone accepted",
-        description: "OTP verification is temporarily disabled. You can continue.",
-      });
+      toast({ title: "Phone accepted", description: "OTP verification is temporarily disabled. You can continue." });
       return;
     }
 
