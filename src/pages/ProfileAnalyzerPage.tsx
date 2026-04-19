@@ -1108,7 +1108,7 @@ const ProfileAnalyzerPage = () => {
                     />
                   </Button>
                   <p className="text-xs text-muted-foreground mt-3">
-                    {user && cooldownDate ? "You can re-check after 60 days from last analysis" : "No payment • No signup • Instant results"}
+                    {user && cooldownDate ? "You can re-check after 60 days from last analysis" : "100% free • Mobile verified • Instant AI report"}
                   </p>
                 </motion.div>
 
@@ -1242,7 +1242,7 @@ const ProfileAnalyzerPage = () => {
               <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-3xl mx-auto text-center relative z-10">
                 <img src={bschoolLogo} alt="B School Buzz" className="w-16 h-16 mx-auto rounded-2xl shadow-lg mb-6" />
                 <h2 className="text-3xl md:text-5xl font-bold mb-4">Ready to Know Your MBA Chances?</h2>
-                <p className="text-muted-foreground text-lg mb-8">Takes less than 2 minutes. No payment. No signup. Instant AI-powered results.</p>
+                <p className="text-muted-foreground text-lg mb-8">Takes less than 2 minutes. 100% free. Mobile verified for your privacy. Instant AI-powered results.</p>
                 <Button size="lg" onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="text-lg px-12 py-7 rounded-2xl shadow-2xl group">
                   Start Free Analysis <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Button>

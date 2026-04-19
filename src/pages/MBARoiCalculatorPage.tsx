@@ -716,7 +716,7 @@ const Landing = ({ onStart }: { onStart: () => void }) => {
           <CardContent className="p-8 md:p-12 text-center">
             <Rocket className="w-12 h-12 text-primary mx-auto mb-4" />
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">Ready to make a data-backed MBA decision?</h2>
-            <p className="text-muted-foreground mb-6 max-w-xl mx-auto">Join 12,000+ aspirants who got clarity in 3 minutes. Free, no credit card required.</p>
+            <p className="text-muted-foreground mb-6 max-w-xl mx-auto">Join 12,000+ aspirants who got clarity in 3 minutes. 100% free, mobile-verified for your privacy.</p>
             <Button size="lg" onClick={onStart} className="h-12 px-8 rounded-xl shadow-lg">
               Start My ROI Analysis <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
@@ -1224,7 +1224,7 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
           <Button size="lg" onClick={onStart} className="h-12 px-8 rounded-xl shadow-lg shadow-primary/20">
             Get My Personalized Report <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
-          <p className="text-xs text-muted-foreground mt-3">100% free • 3 minutes • No credit card</p>
+          <p className="text-xs text-muted-foreground mt-3">100% free • 3 minutes • Mobile verified</p>
         </div>
       </div>
     </section>

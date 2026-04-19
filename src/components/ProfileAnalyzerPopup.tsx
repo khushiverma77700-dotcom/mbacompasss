@@ -173,7 +173,7 @@ const ProfileAnalyzerPopup = () => {
             </Button>
 
             <p className="text-center text-[11px] text-muted-foreground mt-3">
-              Takes only 2 minutes • No credit card required
+              Takes only 2 minutes • Mobile verified for your privacy
             </p>
 
             <Button
