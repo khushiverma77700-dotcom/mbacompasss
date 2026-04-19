@@ -47,6 +47,7 @@ const MBAJourneySection = () => {
   const rafRef = useRef<number | null>(null);
   const targetRotation = useRef(0);
   const currentRotation = useRef(0);
+  const maxProgress = useRef(0); // ratchet — never goes backward while inside
 
   useEffect(() => {
     let lastIdx = -1;
@@ -60,22 +61,29 @@ const MBAJourneySection = () => {
       const scrolled = Math.min(Math.max(-rect.top, 0), total);
       const p = total > 0 ? scrolled / total : 0;
 
-      targetRotation.current = -p * ANGLE * (N - 1);
-      const idx = Math.min(N - 1, Math.floor(p * N));
+      // Ratchet: only advance forward. Reset only when user scrolls well above section.
+      if (rect.top > vh * 0.5) {
+        maxProgress.current = 0;
+      } else if (p > maxProgress.current) {
+        maxProgress.current = p;
+      }
+      const effective = maxProgress.current;
+
+      targetRotation.current = -effective * ANGLE * (N - 1);
+      const idx = Math.min(N - 1, Math.floor(effective * N));
       if (idx !== lastIdx) {
         lastIdx = idx;
         setActiveIdx(idx);
       }
     };
 
-    // Smooth interpolation loop — runs every frame for buttery rotation
     const tick = () => {
       currentRotation.current += (targetRotation.current - currentRotation.current) * 0.15;
       if (stageRef.current) {
         stageRef.current.style.transform = `rotateY(${currentRotation.current.toFixed(2)}deg)`;
       }
       if (mobileTrackRef.current) {
-        const offset = -targetRotation.current / ANGLE; // 0..7
+        const offset = -targetRotation.current / ANGLE;
         mobileTrackRef.current.style.transform = `translate3d(${-offset * 100}%, 0, 0)`;
       }
       rafRef.current = requestAnimationFrame(tick);
