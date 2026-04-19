@@ -235,22 +235,22 @@ const ListingPocPage = () => {
               </div>
 
               <div className="md:col-span-2 border border-border rounded-lg p-4 bg-muted/30">
-                <Label>Mobile Number * <span className="text-xs font-normal text-muted-foreground">(OTP verification required)</span></Label>
+                <Label>Mobile Number * {!isAdmin && <span className="text-xs font-normal text-muted-foreground">(OTP verification required)</span>}</Label>
                 <div className="flex gap-2 mt-1">
                   <Input
                     value={form.mobile}
                     onChange={setField("mobile")}
                     placeholder="10-digit mobile"
                     maxLength={10}
-                    disabled={otpVerified}
+                    disabled={otpVerified && !isAdmin}
                   />
-                  {!otpVerified && (
+                  {!isAdmin && !otpVerified && (
                     <Button type="button" variant="outline" onClick={sendOtp} disabled={sending}>
                       {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : otpSent ? "Resend OTP" : "Send OTP"}
                     </Button>
                   )}
                 </div>
-                {otpSent && !otpVerified && (
+                {!isAdmin && otpSent && !otpVerified && (
                   <div className="flex gap-2 mt-3">
                     <Input
                       value={otp}
@@ -265,7 +265,7 @@ const ListingPocPage = () => {
                 )}
                 {otpVerified && (
                   <div className="flex items-center gap-2 mt-2 text-sm text-green-600 dark:text-green-400">
-                    <ShieldCheck className="w-4 h-4" /> Mobile verified
+                    <ShieldCheck className="w-4 h-4" /> {isAdmin ? "Admin — OTP bypassed" : "Mobile verified"}
                   </div>
                 )}
               </div>
@@ -284,7 +284,7 @@ const ListingPocPage = () => {
               </div>
             </div>
 
-            <Button type="submit" size="lg" className="w-full" disabled={submitting || !otpVerified}>
+            <Button type="submit" size="lg" className="w-full" disabled={submitting || (!otpVerified && !isAdmin)}>
               {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Continue to Listing Form <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
