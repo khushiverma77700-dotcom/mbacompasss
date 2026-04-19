@@ -29,7 +29,5 @@ Disallow: /dashboard
 Disallow: /*?*sort=
 Disallow: /*?*q=
 
-# Primary sitemap (live, auto-generated from database)
-Sitemap: https://mttoiqruzzxooveooldo.supabase.co/functions/v1/serve-sitemap
-# Mirror sitemap on main domain (refreshed via Admin → Sitemap Manager)
+# Same-domain sitemap (kept fresh by Admin → Sitemap Manager and a 6-hour cron)
 Sitemap: https://bschoolbuzz.com/sitemap.xml
