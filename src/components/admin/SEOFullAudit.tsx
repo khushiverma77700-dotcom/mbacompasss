@@ -321,7 +321,7 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
             </div>
             <Button onClick={runFullAudit} disabled={loading} size="lg">
               {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
-              Run Full Audit ({Math.min(targetRows.length, 30)} pages)
+              Run Full Audit ({targetRows.length} pages)
             </Button>
           </div>
           {auditProgress && (
@@ -335,7 +335,7 @@ const SEOFullAudit = ({ rows, onRefresh }: SEOFullAuditProps) => {
           )}
           {!auditProgress && (
             <p className="text-xs text-muted-foreground">
-              Audits up to 30 pages per run across Technical SEO, On-Page SEO, Content SEO & Internal Linking.
+              Audits all {targetRows.length} indexable pages across Technical SEO, On-Page SEO, Content SEO & Internal Linking.
               Each check gets ✅ Pass / ⚠️ Warning / ❌ Fail. Auto-fixes are generated for failed items.
             </p>
           )}
