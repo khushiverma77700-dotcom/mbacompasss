@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
-import { Loader2, Mail, Lock, User as UserIcon, Phone, Briefcase } from "lucide-react";
+import { Loader2, Mail, Lock, User as UserIcon, Phone, Briefcase, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -68,6 +69,20 @@ const InlineAuthPanel = ({
   });
   const [signinForm, setSigninForm] = useState({ identifier: "", password: "" });
 
+  // OTP state for signup mobile verification
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+
+  useEffect(() => {
+    if (resendTimer <= 0) return;
+    const t = setInterval(() => setResendTimer((s) => s - 1), 1000);
+    return () => clearInterval(t);
+  }, [resendTimer]);
+
   const handleGoogle = async () => {
     setGoogleLoading(true);
     try {
@@ -88,6 +103,68 @@ const InlineAuthPanel = ({
     }
   };
 
+  const switchToLoginWith = (identifier: string) => {
+    setTab("signin");
+    setSigninForm({ identifier, password: "" });
+    toast.error("You already have an account. Please log in.");
+  };
+
+  const handleSendOtp = async () => {
+    if (!/^\d{10}$/.test(signupForm.phone)) {
+      toast.error("Enter a valid 10-digit mobile number first.");
+      return;
+    }
+    // Pre-check duplicate phone before sending OTP
+    try {
+      const { data: dup } = await supabase.functions.invoke("check-duplicate", {
+        body: { phone: signupForm.phone },
+      });
+      if (dup?.phoneExists) {
+        switchToLoginWith(signupForm.phone);
+        return;
+      }
+    } catch {
+      /* non-fatal */
+    }
+
+    setOtpSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-otp", {
+        body: { phone: signupForm.phone },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      toast.success(`OTP sent to ${signupForm.phone}`);
+      setOtpStep(true);
+      setResendTimer(30);
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to send OTP");
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otpValue.length !== 6) return;
+    setOtpVerifying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-otp", {
+        body: { phone: signupForm.phone, otp: otpValue },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      if (data?.verified) {
+        setPhoneVerified(true);
+        setOtpStep(false);
+        toast.success("Mobile verified");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Verification failed");
+    } finally {
+      setOtpVerifying(false);
+    }
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     const parsed = signupSchema.safeParse(signupForm);
@@ -95,29 +172,29 @@ const InlineAuthPanel = ({
       toast.error(parsed.error.issues[0].message);
       return;
     }
+    if (!phoneVerified) {
+      toast.error("Please verify your mobile number with OTP first.");
+      return;
+    }
     setLoading(true);
     try {
-      // Duplicate guard — prevent silent creation of orphaned accounts
+      // Duplicate guard
       try {
         const { data: dup } = await supabase.functions.invoke("check-duplicate", {
           body: { email: parsed.data.email, phone: parsed.data.phone },
         });
         if (dup?.emailExists) {
-          toast.error("This email is already registered. Please sign in instead.");
-          setTab("signin");
-          setSigninForm({ identifier: parsed.data.email, password: "" });
+          switchToLoginWith(parsed.data.email);
           setLoading(false);
           return;
         }
         if (dup?.phoneExists) {
-          toast.error("This mobile number is already registered. Please sign in instead.");
-          setTab("signin");
-          setSigninForm({ identifier: parsed.data.phone, password: "" });
+          switchToLoginWith(parsed.data.phone);
           setLoading(false);
           return;
         }
       } catch {
-        // non-fatal — proceed to signup
+        /* non-fatal */
       }
 
       await signUp(
@@ -128,7 +205,6 @@ const InlineAuthPanel = ({
         parsed.data.designation
       );
 
-      // Auto sign-in immediately (works when email confirmation is disabled)
       try {
         await signIn(parsed.data.email, parsed.data.password);
         toast.success("Account created. You're signed in.");
@@ -140,9 +216,7 @@ const InlineAuthPanel = ({
     } catch (e: any) {
       const msg = e?.message || "Signup failed";
       if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("registered")) {
-        toast.error("This email is already registered. Please sign in instead.");
-        setTab("signin");
-        setSigninForm({ identifier: parsed.data.email, password: "" });
+        switchToLoginWith(parsed.data.email);
       } else {
         toast.error(msg);
       }
@@ -276,13 +350,62 @@ const InlineAuthPanel = ({
               <div className="relative mt-1">
                 <Phone className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  className="pl-9"
+                  className="pl-9 pr-28"
                   value={signupForm.phone}
-                  onChange={(e) => setSignupForm((f) => ({ ...f, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, "").slice(0, 10);
+                    setSignupForm((f) => ({ ...f, phone: v }));
+                    setPhoneVerified(false);
+                    setOtpStep(false);
+                    setOtpValue("");
+                  }}
                   placeholder="9876543210"
                   maxLength={10}
+                  disabled={phoneVerified}
                 />
+                {phoneVerified ? (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-emerald-600 flex items-center gap-1">
+                    <ShieldCheck className="w-4 h-4" /> Verified
+                  </span>
+                ) : (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 text-xs"
+                    onClick={handleSendOtp}
+                    disabled={signupForm.phone.length !== 10 || otpSending}
+                  >
+                    {otpSending ? <Loader2 className="w-3 h-3 animate-spin" /> : "Send OTP"}
+                  </Button>
+                )}
               </div>
+              {otpStep && !phoneVerified && (
+                <div className="mt-3 space-y-2 p-3 rounded-md border border-border bg-muted/40">
+                  <p className="text-xs text-muted-foreground">Enter the 6-digit OTP sent to +91 {signupForm.phone}</p>
+                  <div className="flex justify-center">
+                    <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
+                      <InputOTPGroup>
+                        {[0,1,2,3,4,5].map((i) => <InputOTPSlot key={i} index={i} />)}
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      className="text-xs text-primary hover:underline disabled:opacity-50"
+                      disabled={resendTimer > 0 || otpSending}
+                      onClick={handleSendOtp}
+                    >
+                      {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend OTP"}
+                    </button>
+                    <Button type="button" size="sm" onClick={handleVerifyOtp} disabled={otpVerifying || otpValue.length !== 6}>
+                      {otpVerifying && <Loader2 className="w-3 h-3 animate-spin mr-1" />}
+                      Verify
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
             <div>
               <Label>Designation *</Label>
@@ -309,9 +432,9 @@ const InlineAuthPanel = ({
                 />
               </div>
             </div>
-            <Button type="submit" className="w-full h-11" disabled={loading}>
+            <Button type="submit" className="w-full h-11" disabled={loading || !phoneVerified}>
               {loading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-              Create account & continue
+              {phoneVerified ? "Create account & continue" : "Verify mobile to continue"}
             </Button>
           </form>
         </TabsContent>

@@ -14,7 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getAuthRedirectUri, normalizeRedirectPath, storePostAuthRedirect } from "@/lib/authRedirect";
 import mbahubLogo from "@/assets/mbahub-logo.png";
 
-const TEMP_DISABLE_PHONE_OTP = true;
+const TEMP_DISABLE_PHONE_OTP = false;
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -53,15 +53,26 @@ const AuthPage = () => {
       return;
     }
 
+    // Block duplicate phone before sending OTP
+    try {
+      const { data: dupCheck } = await supabase.functions.invoke("check-duplicate", {
+        body: { phone },
+      });
+      if (dupCheck?.phoneExists) {
+        toast({ title: "You already have an account", description: "This mobile number is already registered. Please log in.", variant: "destructive" });
+        setIsLogin(true);
+        return;
+      }
+    } catch {
+      /* non-fatal */
+    }
+
     if (TEMP_DISABLE_PHONE_OTP) {
       setPhoneVerified(true);
       setOtpStep(false);
       setOtpValue("");
       setResendTimer(0);
-      toast({
-        title: "Phone accepted",
-        description: "OTP verification is temporarily disabled. You can continue.",
-      });
+      toast({ title: "Phone accepted", description: "OTP verification is temporarily disabled. You can continue." });
       return;
     }
 
@@ -128,12 +139,16 @@ const AuthPage = () => {
           body: { phone, email },
         });
         if (dupCheck?.phoneExists) {
-          toast({ title: "Already Registered", description: "This mobile number is already registered. Please sign in instead.", variant: "destructive" });
+          toast({ title: "You already have an account", description: "This mobile number is already registered. Please log in instead.", variant: "destructive" });
+          setIsLogin(true);
+          setOtpStep(false);
+          setPhoneVerified(false);
           setLoading(false);
           return;
         }
         if (dupCheck?.emailExists) {
-          toast({ title: "Already Registered", description: "This email is already registered. Please sign in instead.", variant: "destructive" });
+          toast({ title: "You already have an account", description: "This email is already registered. Please log in instead.", variant: "destructive" });
+          setIsLogin(true);
           setLoading(false);
           return;
         }
@@ -246,14 +261,36 @@ const AuthPage = () => {
                         variant="secondary"
                         className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 text-xs"
                         onClick={handleSendOtp}
-                        disabled={phone.length !== 10}
+                        disabled={phone.length !== 10 || otpSending}
                       >
-                        Continue
+                        {otpSending ? "Sending..." : otpStep ? "Resend" : "Send OTP"}
                       </Button>
                     )}
                   </div>
-                  {TEMP_DISABLE_PHONE_OTP && (
-                    <p className="text-xs text-muted-foreground">OTP verification is temporarily disabled.</p>
+                  {otpStep && !phoneVerified && (
+                    <div className="space-y-2 p-3 rounded-md border border-border bg-muted/40">
+                      <p className="text-xs text-muted-foreground">Enter the 6-digit OTP sent to +91 {phone}</p>
+                      <div className="flex justify-center">
+                        <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
+                          <InputOTPGroup>
+                            {[0,1,2,3,4,5].map((i) => <InputOTPSlot key={i} index={i} />)}
+                          </InputOTPGroup>
+                        </InputOTP>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          className="text-xs text-primary hover:underline disabled:opacity-50"
+                          disabled={resendTimer > 0 || otpSending}
+                          onClick={handleSendOtp}
+                        >
+                          {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend OTP"}
+                        </button>
+                        <Button type="button" size="sm" onClick={handleVerifyOtp} disabled={otpVerifying || otpValue.length !== 6}>
+                          {otpVerifying ? "Verifying..." : "Verify OTP"}
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </div>
 
