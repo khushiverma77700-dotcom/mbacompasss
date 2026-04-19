@@ -1,11 +1,21 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { Loader2, Construction } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import { Loader2, ArrowLeft, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import SEOHead from "@/components/SEOHead";
+import { storePostAuthRedirect } from "@/lib/authRedirect";
+import ListingFormShell from "@/components/listing/ListingFormShell";
+import type { ListingType } from "@/lib/listingFormSchema";
+
+const STATUS_LABEL: Record<string, string> = {
+  draft: "Draft",
+  pending: "Pending Review",
+  changes_requested: "Changes Requested",
+  approved: "Approved & Live",
+  rejected: "Rejected",
+};
 
 const ListingFormPage = () => {
   const navigate = useNavigate();
@@ -15,8 +25,11 @@ const ListingFormPage = () => {
   const [fetching, setFetching] = useState(true);
 
   useEffect(() => {
-    if (!loading && !user) navigate("/auth");
-  }, [loading, user, navigate]);
+    if (!loading && !user) {
+      storePostAuthRedirect(`/list-your-business/${type}/${id}`);
+      navigate("/auth");
+    }
+  }, [loading, user, navigate, type, id]);
 
   useEffect(() => {
     if (!user || !id) return;
@@ -34,26 +47,41 @@ const ListingFormPage = () => {
     return <div className="container mx-auto py-16 text-center"><p>Listing not found.</p></div>;
   }
 
+  const listingType = (listing.listing_type as ListingType) || "coaching";
+  const orgName = (listing.poc as any)?.organization || (listing.payload as any)?.name || "Untitled listing";
+
   return (
     <>
-      <SEOHead title="Listing Form | B School Buzz" noIndex />
-      <div className="container mx-auto px-4 py-10 max-w-4xl">
+      <SEOHead title={`Edit Listing — ${orgName} | B School Buzz`} noIndex />
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold capitalize">Your {type} Listing</h1>
-          <p className="text-muted-foreground mt-1">POC verified. Now fill in the details — sections coming next.</p>
+          <Link to="/my-listings" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-3">
+            <ArrowLeft className="w-3.5 h-3.5 mr-1.5" /> Back to My Listings
+          </Link>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="text-3xl font-bold">{orgName}</h1>
+              <p className="text-muted-foreground mt-1 capitalize">
+                {listingType} listing
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {listing.poc_verified ? (
+                <Badge variant="secondary" className="gap-1"><ShieldCheck className="w-3 h-3" /> POC Verified</Badge>
+              ) : (
+                <Badge variant="outline" className="gap-1"><ShieldAlert className="w-3 h-3" /> POC Unverified</Badge>
+              )}
+              <Badge>{STATUS_LABEL[listing.status] || listing.status}</Badge>
+            </div>
+          </div>
+          {listing.admin_notes && (
+            <div className="mt-3 p-3 rounded-md bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 text-sm">
+              <span className="font-medium">Admin note:</span> {listing.admin_notes}
+            </div>
+          )}
         </div>
 
-        <Card className="p-10 text-center">
-          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <Construction className="w-6 h-6 text-primary" />
-          </div>
-          <h3 className="text-xl font-semibold mb-2">Form sections coming in Phase 2</h3>
-          <p className="text-muted-foreground mb-6 max-w-lg mx-auto">
-            Your draft has been saved. The full multi-section form (basic info, courses, fees, faculty, placements, results, media, etc.)
-            will be enabled in the next phase. You'll be able to come back here anytime to continue editing.
-          </p>
-          <Button onClick={() => navigate("/my-listings")}>Back to My Listings</Button>
-        </Card>
+        <ListingFormShell listing={listing} type={listingType} />
       </div>
     </>
   );
