@@ -1,8 +1,10 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import HeroSection from "@/components/HeroSection";
-import StatsCounterSection from "@/components/StatsCounterSection";
-import CategoryCards from "@/components/CategoryCards";
 import SEOHead, { generateWebsiteSchema, generateOrganizationSchema, generateFAQSchema, generateBreadcrumbSchema } from "@/components/SEOHead";
+
+// Lazy load — these pull framer-motion which would bloat the initial bundle
+const StatsCounterSection = lazy(() => import("@/components/StatsCounterSection"));
+const CategoryCards = lazy(() => import("@/components/CategoryCards"));
 
 // Lazy load below-the-fold sections
 const CoachingOfWeekSection = lazy(() => import("@/components/CoachingOfWeekSection"));
@@ -84,9 +86,11 @@ const Index = () => {
       
       {/* Above-the-fold: loaded eagerly */}
       <HeroSection />
-      <StatsCounterSection />
-      <CategoryCards />
-      
+      <Suspense fallback={null}>
+        <StatsCounterSection />
+        <CategoryCards />
+      </Suspense>
+
       {/* Below-the-fold: mount after first paint so hero appears immediately */}
       {showDeferredSections && (
         <Suspense fallback={null}>
