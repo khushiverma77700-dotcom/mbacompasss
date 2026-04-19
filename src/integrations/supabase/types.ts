@@ -1567,6 +1567,71 @@ export type Database = {
           },
         ]
       }
+      listing_change_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          diff: Json
+          id: string
+          listing_type: string
+          new_payload: Json
+          old_payload: Json
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          target_record_id: string
+          target_table: string
+          updated_at: string
+          user_id: string
+          user_listing_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          diff?: Json
+          id?: string
+          listing_type: string
+          new_payload?: Json
+          old_payload?: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          target_record_id: string
+          target_table: string
+          updated_at?: string
+          user_id: string
+          user_listing_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          diff?: Json
+          id?: string
+          listing_type?: string
+          new_payload?: Json
+          old_payload?: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          target_record_id?: string
+          target_table?: string
+          updated_at?: string
+          user_id?: string
+          user_listing_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_change_requests_user_listing_id_fkey"
+            columns: ["user_listing_id"]
+            isOneToOne: false
+            referencedRelation: "user_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mega_menu_items: {
         Row: {
           active: boolean | null
