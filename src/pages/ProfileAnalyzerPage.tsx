@@ -1429,6 +1429,70 @@ const ProfileAnalyzerPage = () => {
                       <Input type="email" placeholder="your@email.com" value={form.email} onChange={e => updateField("email", e.target.value)} className={errors.email ? "border-destructive" : ""} />
                       {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
                     </div>
+                    <div className="space-y-1.5">
+                      <Label className="flex items-center gap-1.5"><Phone className="w-3.5 h-3.5" /> Mobile Number <span className="text-destructive">*</span></Label>
+                      <div className="relative">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium select-none">+91</div>
+                        <Input
+                          type="tel"
+                          inputMode="numeric"
+                          maxLength={10}
+                          placeholder="Enter 10-digit mobile number"
+                          value={phone}
+                          onChange={e => {
+                            const v = e.target.value.replace(/\D/g, "").slice(0, 10);
+                            setPhone(v);
+                            setPhoneVerified(false);
+                            setOtpStep(false);
+                            setOtpValue("");
+                          }}
+                          disabled={phoneVerified}
+                          className={`pl-12 pr-28 ${errors.phone ? "border-destructive" : ""} ${phoneVerified ? "border-emerald-500" : ""}`}
+                        />
+                        {phoneVerified ? (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium flex items-center gap-1 text-emerald-600">
+                            <CheckCircle2 className="w-4 h-4" /> Verified
+                          </span>
+                        ) : (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="secondary"
+                            className="absolute right-1.5 top-1/2 -translate-y-1/2 h-7 text-xs"
+                            onClick={handleSendOtp}
+                            disabled={phone.length !== 10 || otpSending}
+                          >
+                            {otpSending ? "Sending..." : otpStep ? "Resend" : "Send OTP"}
+                          </Button>
+                        )}
+                      </div>
+                      {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+                      {otpStep && !phoneVerified && (
+                        <div className="mt-3 space-y-2 p-3 rounded-md border border-border bg-muted/40">
+                          <p className="text-xs text-muted-foreground">Enter the 6-digit OTP sent to +91 {phone}</p>
+                          <div className="flex justify-center">
+                            <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
+                              <InputOTPGroup>
+                                {[0,1,2,3,4,5].map((i) => <InputOTPSlot key={i} index={i} />)}
+                              </InputOTPGroup>
+                            </InputOTP>
+                          </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <button
+                              type="button"
+                              className="text-xs text-primary hover:underline disabled:opacity-50"
+                              disabled={resendTimer > 0 || otpSending}
+                              onClick={handleSendOtp}
+                            >
+                              {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend OTP"}
+                            </button>
+                            <Button type="button" size="sm" onClick={handleVerifyOtp} disabled={otpVerifying || otpValue.length !== 6}>
+                              {otpVerifying ? "Verifying..." : "Verify OTP"}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </>
                 )}
 
