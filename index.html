@@ -17,12 +17,15 @@
     <link rel="dns-prefetch" href="https://mttoiqruzzxooveooldo.supabase.co" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'" />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap" /></noscript>
+    <!-- Single combined font request, non-blocking -->
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700&family=DM+Sans:wght@400;500&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700&family=DM+Sans:wght@400;500&display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700&family=DM+Sans:wght@400;500&display=swap" /></noscript>
     <!-- Inline critical CSS for faster FP -->
     <style>
-      body{margin:0;font-family:system-ui,-apple-system,sans-serif}
+      body{margin:0;font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:#fff;color:#0f172a}
       #root{min-height:100vh}
+      h1,h2,h3{font-family:'Plus Jakarta Sans',system-ui,sans-serif;margin:0}
     </style>
 
     <meta property="og:type" content="website" />
