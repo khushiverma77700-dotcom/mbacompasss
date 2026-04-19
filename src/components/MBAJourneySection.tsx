@@ -49,10 +49,17 @@ const MBAJourneySection = () => {
   const currentRotation = useRef(0);
   const maxProgress = useRef(0); // ratchet — never goes backward while inside
 
+  const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches;
+
   useEffect(() => {
+    // On mobile we skip the heavy scroll-driven 3D animation entirely (was causing white screen / jank).
+    if (isMobile) return;
+
     let lastIdx = -1;
+    let ticking = false;
 
     const update = () => {
+      ticking = false;
       const el = wrapperRef.current;
       if (!el) return;
       const rect = el.getBoundingClientRect();
@@ -61,7 +68,6 @@ const MBAJourneySection = () => {
       const scrolled = Math.min(Math.max(-rect.top, 0), total);
       const p = total > 0 ? scrolled / total : 0;
 
-      // Ratchet: only advance forward. Reset only when user scrolls well above section.
       if (rect.top > vh * 0.5) {
         maxProgress.current = 0;
       } else if (p > maxProgress.current) {
@@ -77,53 +83,45 @@ const MBAJourneySection = () => {
       }
     };
 
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    };
+
     const tick = () => {
       currentRotation.current += (targetRotation.current - currentRotation.current) * 0.15;
       if (stageRef.current) {
         stageRef.current.style.transform = `rotateY(${currentRotation.current.toFixed(2)}deg)`;
-      }
-      if (mobileTrackRef.current) {
-        // Mobile: slide one card-width (236px = 220 card + 16 padding) per step
-        const stepIdx = -currentRotation.current / ANGLE; // smoothly interpolated 0..7
-        mobileTrackRef.current.style.transform = `translate3d(${(-stepIdx * 236).toFixed(2)}px, 0, 0)`;
       }
       rafRef.current = requestAnimationFrame(tick);
     };
 
     update();
     tick();
-    window.addEventListener("scroll", update, { passive: true });
-    window.addEventListener("resize", update);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
     return () => {
-      window.removeEventListener("scroll", update);
-      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, []);
+  }, [isMobile]);
 
   return (
-    // Pinned wrapper
-    <div ref={wrapperRef} className="relative" style={{ height: "260vh" }}>
+    // Pinned wrapper (desktop only). On mobile we render a normal-flow section.
+    <div ref={wrapperRef} className="relative" style={{ height: isMobile ? "auto" : "260vh" }}>
       <section
-        className="sticky top-0 h-screen flex flex-col justify-center overflow-hidden bg-gradient-to-b from-background via-primary/[0.05] to-background"
+        className={`${isMobile ? "" : "sticky top-0 h-screen"} flex flex-col justify-center overflow-hidden bg-gradient-to-b from-background via-primary/[0.05] to-background py-8 md:py-0`}
         aria-labelledby="mba-journey-title"
         style={{ contain: "layout paint" }}
       >
-        {/* Background — static, GPU-friendly (no animated blurs) */}
+        {/* Background — static, GPU-friendly */}
         <div className="absolute inset-0 -z-10 pointer-events-none">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-primary/10 blur-3xl" />
           <div className="absolute top-10 left-10 h-40 w-40 rounded-full bg-accent/15 blur-3xl" />
           <div className="absolute bottom-10 right-10 h-40 w-40 rounded-full bg-primary/15 blur-3xl" />
-          <div
-            className="absolute inset-0 opacity-[0.05]"
-            style={{
-              backgroundImage:
-                "linear-gradient(hsl(var(--primary)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)",
-              backgroundSize: "40px 40px",
-              maskImage: "radial-gradient(ellipse at center, black 40%, transparent 75%)",
-              WebkitMaskImage: "radial-gradient(ellipse at center, black 40%, transparent 75%)",
-            }}
-          />
         </div>
 
         <div className="container mx-auto px-4">
@@ -137,59 +135,28 @@ const MBAJourneySection = () => {
             <h2
               id="mba-journey-title"
               className="text-lg md:text-2xl lg:text-3xl font-bold tracking-tight text-foreground"
-              style={{ textShadow: "0 1px 2px hsl(var(--primary) / 0.1)" }}
             >
               Your Complete MBA Journey —{" "}
-              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_auto] bg-clip-text text-transparent animate-[shimmer_3s_linear_infinite]">
+              <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
                 Guided at Every Step
               </span>
             </h2>
             <p className="text-xs md:text-sm text-muted-foreground mt-1">
-              Scroll to navigate through all 8 stages
+              {isMobile ? "Swipe to explore all 8 stages" : "Scroll to navigate through all 8 stages"}
             </p>
           </div>
 
-          {/* ===== MOBILE: premium 3D coverflow carousel ===== */}
-          <div className="md:hidden overflow-hidden -mx-4 px-4">
-            <div className="relative h-[320px]" style={{ perspective: "1200px", perspectiveOrigin: "50% 50%" }}>
-              {/* glow under active card */}
-              <div
-                aria-hidden
-                className="absolute left-1/2 bottom-3 -translate-x-1/2 h-6 w-[220px] rounded-[50%] blur-2xl"
-                style={{
-                  background: `radial-gradient(ellipse, rgba(${steps[activeIdx].glow}, 0.55), transparent 70%)`,
-                  transition: "background 0.6s ease",
-                }}
-              />
-              <div
-                ref={mobileTrackRef}
-                className="absolute inset-0 flex items-center"
-                style={{
-                  willChange: "transform",
-                  transformStyle: "preserve-3d",
-                  paddingLeft: "calc(50% - 110px)",
-                }}
-              >
-                {steps.map((step, i) => {
-                  const isActive = i === activeIdx;
-                  const offset = i - activeIdx;
-                  const abs = Math.abs(offset);
-                  return (
-                    <div
-                      key={step.n}
-                      className="w-[220px] flex-shrink-0 px-2 transition-all duration-500 ease-out"
-                      style={{
-                        transform: `scale(${isActive ? 1 : abs === 1 ? 0.82 : 0.7}) rotateY(${offset * -22}deg) translateZ(${isActive ? 0 : -80}px)`,
-                        opacity: isActive ? 1 : abs === 1 ? 0.55 : 0.25,
-                        zIndex: isActive ? 10 : 5 - abs,
-                        transformStyle: "preserve-3d",
-                      }}
-                    >
-                      <MobileCard step={step} isActive={isActive} />
-                    </div>
-                  );
-                })}
-              </div>
+          {/* ===== MOBILE: lightweight horizontal snap carousel ===== */}
+          <div className="md:hidden -mx-4">
+            <div
+              className="flex gap-3 overflow-x-auto px-4 pb-4 pt-2 snap-x snap-mandatory scrollbar-hide"
+              style={{ scrollbarWidth: "none" }}
+            >
+              {steps.map((step) => (
+                <div key={step.n} className="snap-center flex-shrink-0 w-[78%] max-w-[280px]">
+                  <MobileCard step={step} isActive={true} />
+                </div>
+              ))}
             </div>
           </div>
 
@@ -269,8 +236,8 @@ const MBAJourneySection = () => {
             </div>
           </div>
 
-          {/* Progress dots */}
-          <div className="flex justify-center gap-1.5 mt-4">
+          {/* Progress dots (desktop only) */}
+          <div className="hidden md:flex justify-center gap-1.5 mt-4">
             {steps.map((s, i) => (
               <div
                 key={s.n}
