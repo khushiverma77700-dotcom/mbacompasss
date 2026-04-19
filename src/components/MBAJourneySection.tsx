@@ -284,32 +284,8 @@ const MBAJourneySection = () => {
             ))}
           </div>
 
-          {/* Active step indicator */}
-          <div className="text-center mt-2">
-            <p className="text-xs md:text-sm font-semibold text-foreground">
-              <span className="text-primary">Step {steps[activeIdx].n}</span> · {steps[activeIdx].title}
-            </p>
-            {activeIdx < N - 1 && (
-              <p className="text-[10px] text-muted-foreground/70 mt-0.5 inline-flex items-center gap-1">
-                <ChevronDown className="h-3 w-3 animate-bounce" />
-                Scroll to continue
-              </p>
-            )}
-          </div>
-
-          {/* CTA row */}
-          <div className="mt-3 flex flex-col sm:flex-row items-center justify-center gap-2">
-            <Button asChild size="sm" className="w-full sm:w-auto h-9 hover-scale shadow-lg hover:shadow-primary/40">
-              <Link to="/profile-analyzer">
-                Start Your MBA Journey
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </Button>
-            <Button asChild size="sm" variant="outline" className="w-full sm:w-auto h-9 hover-scale">
-              <Link to="/contact">Get Free Counseling</Link>
-            </Button>
-          </div>
         </div>
+
 
         <style>{`
           @keyframes shimmer {
