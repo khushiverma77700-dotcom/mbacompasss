@@ -128,12 +128,16 @@ const AuthPage = () => {
           body: { phone, email },
         });
         if (dupCheck?.phoneExists) {
-          toast({ title: "Already Registered", description: "This mobile number is already registered. Please sign in instead.", variant: "destructive" });
+          toast({ title: "You already have an account", description: "This mobile number is already registered. Please log in instead.", variant: "destructive" });
+          setIsLogin(true);
+          setOtpStep(false);
+          setPhoneVerified(false);
           setLoading(false);
           return;
         }
         if (dupCheck?.emailExists) {
-          toast({ title: "Already Registered", description: "This email is already registered. Please sign in instead.", variant: "destructive" });
+          toast({ title: "You already have an account", description: "This email is already registered. Please log in instead.", variant: "destructive" });
+          setIsLogin(true);
           setLoading(false);
           return;
         }
