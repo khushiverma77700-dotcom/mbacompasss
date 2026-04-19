@@ -58,6 +58,7 @@ const ListingPocPage = () => {
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -65,6 +66,22 @@ const ListingPocPage = () => {
       navigate("/auth");
     }
   }, [loading, user, navigate, type]);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (data) {
+        setIsAdmin(true);
+        setOtpVerified(true);
+      }
+    })();
+  }, [user]);
 
   const setField = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -116,7 +133,7 @@ const ListingPocPage = () => {
       toast.error(parsed.error.issues[0].message);
       return;
     }
-    if (!otpVerified) {
+    if (!otpVerified && !isAdmin) {
       toast.error("Please verify your mobile via OTP");
       return;
     }
@@ -218,22 +235,22 @@ const ListingPocPage = () => {
               </div>
 
               <div className="md:col-span-2 border border-border rounded-lg p-4 bg-muted/30">
-                <Label>Mobile Number * <span className="text-xs font-normal text-muted-foreground">(OTP verification required)</span></Label>
+                <Label>Mobile Number * {!isAdmin && <span className="text-xs font-normal text-muted-foreground">(OTP verification required)</span>}</Label>
                 <div className="flex gap-2 mt-1">
                   <Input
                     value={form.mobile}
                     onChange={setField("mobile")}
                     placeholder="10-digit mobile"
                     maxLength={10}
-                    disabled={otpVerified}
+                    disabled={otpVerified && !isAdmin}
                   />
-                  {!otpVerified && (
+                  {!isAdmin && !otpVerified && (
                     <Button type="button" variant="outline" onClick={sendOtp} disabled={sending}>
                       {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : otpSent ? "Resend OTP" : "Send OTP"}
                     </Button>
                   )}
                 </div>
-                {otpSent && !otpVerified && (
+                {!isAdmin && otpSent && !otpVerified && (
                   <div className="flex gap-2 mt-3">
                     <Input
                       value={otp}
@@ -248,7 +265,7 @@ const ListingPocPage = () => {
                 )}
                 {otpVerified && (
                   <div className="flex items-center gap-2 mt-2 text-sm text-green-600 dark:text-green-400">
-                    <ShieldCheck className="w-4 h-4" /> Mobile verified
+                    <ShieldCheck className="w-4 h-4" /> {isAdmin ? "Admin — OTP bypassed" : "Mobile verified"}
                   </div>
                 )}
               </div>
@@ -267,7 +284,7 @@ const ListingPocPage = () => {
               </div>
             </div>
 
-            <Button type="submit" size="lg" className="w-full" disabled={submitting || !otpVerified}>
+            <Button type="submit" size="lg" className="w-full" disabled={submitting || (!otpVerified && !isAdmin)}>
               {submitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               Continue to Listing Form <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
