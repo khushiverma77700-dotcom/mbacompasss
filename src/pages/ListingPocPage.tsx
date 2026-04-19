@@ -204,6 +204,13 @@ const ListingPocPage = () => {
           We need your details to verify you're authorized to manage this listing. This stays private and is reviewed by our team.
         </p>
 
+        {!user ? (
+          <InlineAuthPanel
+            returnTo={`/list-your-business/poc?type=${type}`}
+            title="Sign in to start your listing"
+            subtitle="Your account becomes the owner of this listing — you can sign back in anytime to manage and update it."
+          />
+        ) : (
         <Card className="p-6">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid md:grid-cols-2 gap-4">
