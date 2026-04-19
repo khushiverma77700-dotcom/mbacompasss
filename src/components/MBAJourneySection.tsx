@@ -236,8 +236,8 @@ const MBAJourneySection = () => {
             </div>
           </div>
 
-          {/* Progress dots */}
-          <div className="flex justify-center gap-1.5 mt-4">
+          {/* Progress dots (desktop only) */}
+          <div className="hidden md:flex justify-center gap-1.5 mt-4">
             {steps.map((s, i) => (
               <div
                 key={s.n}
