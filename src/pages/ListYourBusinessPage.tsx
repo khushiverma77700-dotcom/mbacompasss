@@ -35,13 +35,8 @@ const ListYourBusinessPage = () => {
   const { user } = useAuth();
 
   const handleSelect = (type: string) => {
-    const target = `/list-your-business/poc?type=${type}`;
-    if (!user) {
-      storePostAuthRedirect(target);
-      navigate("/auth");
-      return;
-    }
-    navigate(target);
+    // Auth happens inline on the POC page — no pre-redirect needed.
+    navigate(`/list-your-business/poc?type=${type}`);
   };
 
   return (
