@@ -16,7 +16,11 @@ const ProfileAnalyzerPopup = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (location.pathname === "/profile-analyzer" || location.pathname.startsWith("/admin")) return;
+    if (
+      location.pathname === "/" ||
+      location.pathname === "/profile-analyzer" ||
+      location.pathname.startsWith("/admin")
+    ) return;
     const dismissed = sessionStorage.getItem(POPUP_DISMISSED_KEY);
     if (dismissed) return;
 
