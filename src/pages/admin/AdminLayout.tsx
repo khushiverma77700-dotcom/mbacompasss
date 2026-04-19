@@ -54,6 +54,7 @@ const adminNavGroups = [
       { label: "Subscribers", path: "/admin/subscribers", icon: Mail, dotKey: "subscribers" },
       { label: "Business Inquiries", path: "/admin/business-inquiries", icon: Briefcase, dotKey: "business" },
       { label: "User Submissions", path: "/admin/user-submissions", icon: ShieldCheck, dotKey: "submissions" },
+      { label: "Listing Edit Requests", path: "/admin/listing-change-requests", icon: GitCompare, dotKey: "changeRequests" },
     ],
   },
   {
