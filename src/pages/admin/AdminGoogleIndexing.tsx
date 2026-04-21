@@ -1503,32 +1503,27 @@ const AdminGoogleIndexing = () => {
                           {(() => {
                             const { coverage, verdict } = getCoverageInfo(row.last_response);
                             const badge = statusBadge(getDisplayStatus(row));
-                            if (!coverage && !verdict) return badge;
+                            const cl = coverage.toLowerCase();
+                            const isStuck =
+                              cl.includes("crawled - currently not indexed") ||
+                              cl.includes("discovered - currently not indexed") ||
+                              cl.includes("duplicate") ||
+                              cl.includes("excluded") ||
+                              cl.includes("blocked");
                             return (
-                              <TooltipProvider delayDuration={100}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span className="inline-flex cursor-help border-b border-dashed border-muted-foreground/40">
-                                      {badge}
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top" className="max-w-xs text-xs">
-                                    <div className="space-y-1">
-                                      {coverage && (
-                                        <div>
-                                          <span className="font-semibold">Google coverage:</span>{" "}
-                                          {coverage}
-                                        </div>
-                                      )}
-                                      {verdict && (
-                                        <div>
-                                          <span className="font-semibold">Verdict:</span> {verdict}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                              <div className="space-y-1">
+                                {badge}
+                                {coverage && (
+                                  <div
+                                    className={`text-[10px] leading-tight max-w-[180px] ${
+                                      isStuck ? "text-amber-700 font-medium" : "text-muted-foreground"
+                                    }`}
+                                    title={verdict ? `Google verdict: ${verdict}` : undefined}
+                                  >
+                                    Google: {coverage}
+                                  </div>
+                                )}
+                              </div>
                             );
                           })()}
                         </TableCell>
