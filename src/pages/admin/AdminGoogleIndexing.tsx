@@ -928,6 +928,26 @@ const AdminGoogleIndexing = () => {
   };
 
   const handleResubmit = async (row: IndexingUrl) => {
+    // Warn when Google has already crawled this URL and chose not to index it.
+    // Re-submitting via the Indexing API will NOT change Google's decision —
+    // only improving the page (content, internal links, authority) will.
+    const r = row.last_response as any;
+    const coverage = String(
+      r?.google?.inspectionResult?.indexStatusResult?.coverageState || ""
+    ).toLowerCase();
+    const alreadyCrawled =
+      coverage.includes("crawled - currently not indexed") ||
+      coverage.includes("discovered - currently not indexed") ||
+      coverage.includes("duplicate") ||
+      coverage.includes("excluded");
+
+    if (alreadyCrawled) {
+      const proceed = window.confirm(
+        `Google has already crawled this URL and reported:\n\n"${r?.google?.inspectionResult?.indexStatusResult?.coverageState}"\n\nRe-submitting via the Indexing API will NOT change Google's decision. The URL was received successfully — Google chose not to index it based on its own quality signals.\n\nTo get this page indexed:\n• Improve the content (depth, originality, freshness)\n• Add internal links from indexed pages\n• Use "Request Indexing" in Search Console (manual button)\n\nProceed with API re-submission anyway?`
+      );
+      if (!proceed) return;
+    }
+
     setActionLoading(row.id);
     try {
       const result = await callFunction<SubmitUrlResponse>({
