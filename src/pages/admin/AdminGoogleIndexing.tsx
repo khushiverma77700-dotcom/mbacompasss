@@ -928,6 +928,26 @@ const AdminGoogleIndexing = () => {
   };
 
   const handleResubmit = async (row: IndexingUrl) => {
+    // Warn when Google has already crawled this URL and chose not to index it.
+    // Re-submitting via the Indexing API will NOT change Google's decision —
+    // only improving the page (content, internal links, authority) will.
+    const r = row.last_response as any;
+    const coverage = String(
+      r?.google?.inspectionResult?.indexStatusResult?.coverageState || ""
+    ).toLowerCase();
+    const alreadyCrawled =
+      coverage.includes("crawled - currently not indexed") ||
+      coverage.includes("discovered - currently not indexed") ||
+      coverage.includes("duplicate") ||
+      coverage.includes("excluded");
+
+    if (alreadyCrawled) {
+      const proceed = window.confirm(
+        `Google has already crawled this URL and reported:\n\n"${r?.google?.inspectionResult?.indexStatusResult?.coverageState}"\n\nRe-submitting via the Indexing API will NOT change Google's decision. The URL was received successfully — Google chose not to index it based on its own quality signals.\n\nTo get this page indexed:\n• Improve the content (depth, originality, freshness)\n• Add internal links from indexed pages\n• Use "Request Indexing" in Search Console (manual button)\n\nProceed with API re-submission anyway?`
+      );
+      if (!proceed) return;
+    }
+
     setActionLoading(row.id);
     try {
       const result = await callFunction<SubmitUrlResponse>({
@@ -1483,32 +1503,27 @@ const AdminGoogleIndexing = () => {
                           {(() => {
                             const { coverage, verdict } = getCoverageInfo(row.last_response);
                             const badge = statusBadge(getDisplayStatus(row));
-                            if (!coverage && !verdict) return badge;
+                            const cl = coverage.toLowerCase();
+                            const isStuck =
+                              cl.includes("crawled - currently not indexed") ||
+                              cl.includes("discovered - currently not indexed") ||
+                              cl.includes("duplicate") ||
+                              cl.includes("excluded") ||
+                              cl.includes("blocked");
                             return (
-                              <TooltipProvider delayDuration={100}>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <span className="inline-flex cursor-help border-b border-dashed border-muted-foreground/40">
-                                      {badge}
-                                    </span>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top" className="max-w-xs text-xs">
-                                    <div className="space-y-1">
-                                      {coverage && (
-                                        <div>
-                                          <span className="font-semibold">Google coverage:</span>{" "}
-                                          {coverage}
-                                        </div>
-                                      )}
-                                      {verdict && (
-                                        <div>
-                                          <span className="font-semibold">Verdict:</span> {verdict}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
+                              <div className="space-y-1">
+                                {badge}
+                                {coverage && (
+                                  <div
+                                    className={`text-[10px] leading-tight max-w-[180px] ${
+                                      isStuck ? "text-amber-700 font-medium" : "text-muted-foreground"
+                                    }`}
+                                    title={verdict ? `Google verdict: ${verdict}` : undefined}
+                                  >
+                                    Google: {coverage}
+                                  </div>
+                                )}
+                              </div>
                             );
                           })()}
                         </TableCell>
