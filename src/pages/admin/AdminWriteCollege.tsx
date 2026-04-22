@@ -40,12 +40,15 @@ const AdminWriteCollege = () => {
   const [targetKeyword, setTargetKeyword] = useState(seed.targetKeyword);
   const [secondaryKws, setSecondaryKws] = useState<string[]>([]);
   const [secInput, setSecInput] = useState("");
-  const [contentDateContext, setContentDateContext] = useState<string>(
-    `Use only the most recent dates, fees, placement figures and statistics (${new Date().getFullYear()}-${new Date().getFullYear() + 1}). Avoid outdated years.`
-  );
+  const buildLatestDateContext = () => {
+    const y = new Date().getFullYear();
+    return `Use ONLY the most recent verified data: ${y}-${y + 1} admission cycle, ${y - 1}-${y} placement reports. All fees, placement figures, ranking and seat numbers MUST reflect the latest published year. Do NOT use outdated 2020-2023 figures unless the field is explicitly historical (e.g. founding year).`;
+  };
+  const [contentDateContext, setContentDateContext] = useState<string>(buildLatestDateContext());
 
   const [generating, setGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [reviewData, setReviewData] = useState<{ insertedId: string; factCheck: any; faqsCount: number } | null>(null);
 
   // Auto-sync slug from name until user edits slug manually
   const [slugTouched, setSlugTouched] = useState<boolean>(Boolean(seed.slug));
