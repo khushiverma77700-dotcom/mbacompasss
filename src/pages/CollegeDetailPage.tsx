@@ -18,6 +18,9 @@ import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 import AIGistSection from "@/components/AIGistSection";
 import InlineAIToolCTA from "@/components/InlineAIToolCTA";
+import MobileActionBar from "@/components/mobile/MobileActionBar";
+import FloatingTOC from "@/components/mobile/FloatingTOC";
+import { Share2, Phone } from "lucide-react";
 
 // ── Fallback data used when no DB sections exist ──
 const fallbackRatingAspects = [
