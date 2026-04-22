@@ -11,6 +11,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Loader2, Sparkles, X, Plus, AlertCircle, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import StateCitySelect from "@/components/admin/StateCitySelect";
+import AIGenerationProgress, { type ProgressStep } from "@/components/admin/AIGenerationProgress";
+import PrePublishReport from "@/components/admin/PrePublishReport";
+import { checkSeoCompleteness, type CompletenessReport } from "@/lib/seoCompletenessChecker";
+import { validateHtml, type HtmlValidationReport } from "@/lib/htmlValidator";
+import { checkLatestCycle, type CycleReport } from "@/lib/cycleChecker";
+
+const COLLEGE_STEPS: { key: string; label: string }[] = [
+  { key: "brief", label: "Validating brief" },
+  { key: "research", label: "Researching college" },
+  { key: "draft", label: "Writing profile" },
+  { key: "factcheck", label: "Factuality check" },
+  { key: "save", label: "Saving as draft" },
+  { key: "faqs", label: "Injecting FAQ schema" },
+  { key: "validate", label: "Pre-publish checks" },
+];
 
 const TYPE_OPTIONS = ["IIM", "Private", "Government", "Deemed", "Autonomous", "University"];
 const TIER_OPTIONS = ["Tier 1", "Tier 2", "Tier 3", "Tier 4"];
