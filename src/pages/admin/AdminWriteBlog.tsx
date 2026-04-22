@@ -10,8 +10,22 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Loader2, Sparkles, X, Plus, AlertCircle, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import AIGenerationProgress, { type ProgressStep } from "@/components/admin/AIGenerationProgress";
+import PrePublishReport from "@/components/admin/PrePublishReport";
+import { checkSeoCompleteness, type CompletenessReport } from "@/lib/seoCompletenessChecker";
+import { validateHtml, type HtmlValidationReport } from "@/lib/htmlValidator";
+import { checkLatestCycle, type CycleReport } from "@/lib/cycleChecker";
 
 const CATEGORIES = ["news", "exam-tips", "career", "success-stories", "reviews", "college-news", "coaching", "gd-pi", "placements", "scholarships"];
+
+const BLOG_STEPS: { key: string; label: string }[] = [
+  { key: "brief", label: "Validating brief" },
+  { key: "research", label: "Researching topic" },
+  { key: "draft", label: "Writing article" },
+  { key: "save", label: "Saving as draft" },
+  { key: "faqs", label: "Injecting FAQ schema" },
+  { key: "validate", label: "Pre-publish checks" },
+];
 
 const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
@@ -60,6 +74,14 @@ const AdminWriteBlog = () => {
   const [generating, setGenerating] = useState(false);
   const [stats, setStats] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [progressSteps, setProgressSteps] = useState<ProgressStep[]>([]);
+  const [progressCurrent, setProgressCurrent] = useState<string>("");
+  const [seoReport, setSeoReport] = useState<CompletenessReport | null>(null);
+  const [htmlReport, setHtmlReport] = useState<HtmlValidationReport | null>(null);
+  const [cycleReport, setCycleReport] = useState<CycleReport | null>(null);
+
+  const setStep = (key: string, status: ProgressStep["status"], error?: string) =>
+    setProgressSteps(prev => prev.map(s => s.key === key ? { ...s, status, error } : s));
 
   // Auto-sync slug from title until user edits slug manually
   const [slugTouched, setSlugTouched] = useState<boolean>(Boolean(seed.slug));
