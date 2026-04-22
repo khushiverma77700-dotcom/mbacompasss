@@ -243,6 +243,7 @@ const App = () => (
               <Route path="callbacks" element={<LazyPage><AdminCallbacks /></LazyPage>} />
               <Route path="database-backup" element={<LazyPage><AdminDatabaseBackup /></LazyPage>} />
               <Route path="ai-usage" element={<LazyPage><AdminAIUsage /></LazyPage>} />
+              <Route path="citations-audit" element={<LazyPage><AdminCitationsAudit /></LazyPage>} />
               <Route path="course-categories" element={<LazyPage><AdminCourseCategories /></LazyPage>} />
               <Route path="cat-scores" element={<LazyPage><AdminCATScores /></LazyPage>} />
               <Route path="mega-menu" element={<LazyPage><AdminMegaMenu /></LazyPage>} />
