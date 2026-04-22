@@ -10,8 +10,22 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Loader2, Sparkles, X, Plus, AlertCircle, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import AIGenerationProgress, { type ProgressStep } from "@/components/admin/AIGenerationProgress";
+import PrePublishReport from "@/components/admin/PrePublishReport";
+import { checkSeoCompleteness, type CompletenessReport } from "@/lib/seoCompletenessChecker";
+import { validateHtml, type HtmlValidationReport } from "@/lib/htmlValidator";
+import { checkLatestCycle, type CycleReport } from "@/lib/cycleChecker";
 
 const CATEGORIES = ["news", "exam-tips", "career", "success-stories", "reviews", "college-news", "coaching", "gd-pi", "placements", "scholarships"];
+
+const BLOG_STEPS: { key: string; label: string }[] = [
+  { key: "brief", label: "Validating brief" },
+  { key: "research", label: "Researching topic" },
+  { key: "draft", label: "Writing article" },
+  { key: "save", label: "Saving as draft" },
+  { key: "faqs", label: "Injecting FAQ schema" },
+  { key: "validate", label: "Pre-publish checks" },
+];
 
 const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
@@ -60,6 +74,14 @@ const AdminWriteBlog = () => {
   const [generating, setGenerating] = useState(false);
   const [stats, setStats] = useState<any>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [progressSteps, setProgressSteps] = useState<ProgressStep[]>([]);
+  const [progressCurrent, setProgressCurrent] = useState<string>("");
+  const [seoReport, setSeoReport] = useState<CompletenessReport | null>(null);
+  const [htmlReport, setHtmlReport] = useState<HtmlValidationReport | null>(null);
+  const [cycleReport, setCycleReport] = useState<CycleReport | null>(null);
+
+  const setStep = (key: string, status: ProgressStep["status"], error?: string) =>
+    setProgressSteps(prev => prev.map(s => s.key === key ? { ...s, status, error } : s));
 
   // Auto-sync slug from title until user edits slug manually
   const [slugTouched, setSlugTouched] = useState<boolean>(Boolean(seed.slug));
@@ -93,9 +115,16 @@ const AdminWriteBlog = () => {
     setGenerating(true);
     setErrorMsg(null);
     setStats(null);
+    setSeoReport(null);
+    setHtmlReport(null);
+    setCycleReport(null);
+    setProgressSteps(BLOG_STEPS.map(s => ({ ...s, status: "pending" })));
+    setProgressCurrent(BLOG_STEPS[0].label);
+    setStep("brief", "ok");
 
     try {
-      // 1. Call the writer
+      setStep("research", "running");
+      setProgressCurrent("Researching topic");
       const { data, error } = await supabase.functions.invoke("ai-blog-writer", {
         body: {
           title: title.trim(),
@@ -112,14 +141,17 @@ const AdminWriteBlog = () => {
         },
       });
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      if (!data?.article) throw new Error("AI returned an empty response");
+      if (error) { setStep("research", "fail", error.message); throw error; }
+      if (data?.error) { setStep("research", "fail", data.error); throw new Error(data.error); }
+      if (!data?.article) { setStep("research", "fail", "Empty response"); throw new Error("AI returned an empty response"); }
+      setStep("research", "ok");
+      setStep("draft", "ok");
+      setProgressCurrent("Saving draft");
 
       const a = data.article;
       setStats(data.stats);
 
-      // 2. Ensure slug uniqueness
+      setStep("save", "running");
       let finalSlug = a.slug || slug;
       const { data: existing } = await supabase
         .from("articles")
@@ -130,7 +162,6 @@ const AdminWriteBlog = () => {
         finalSlug = `${finalSlug}-${Date.now().toString(36).slice(-4)}`;
       }
 
-      // 3. Insert as draft
       const insertPayload = {
         title: a.title || title,
         slug: finalSlug,
@@ -156,28 +187,54 @@ const AdminWriteBlog = () => {
         .select("id")
         .single();
 
-      if (insertErr) throw insertErr;
+      if (insertErr) { setStep("save", "fail", insertErr.message); throw insertErr; }
+      setStep("save", "ok");
 
-      // Auto-seed FAQ schema snapshot (so FAQPage JSON-LD is injected into the live article)
+      setStep("faqs", "running");
       const extractedFaqs = Array.isArray(data?.faqs) ? data.faqs : [];
       if (extractedFaqs.length > 0 && inserted?.id) {
         try {
           await supabase.functions.invoke("auto-seo-engine", {
             body: { mode: "seed_faqs", contentType: "article", pageId: inserted.id, faqs: extractedFaqs },
           });
-        } catch (e) { console.warn("FAQ seed failed", e); }
+          setStep("faqs", "ok");
+        } catch (e) { console.warn("FAQ seed failed", e); setStep("faqs", "fail", "Schema injection failed"); }
+      } else {
+        setStep("faqs", "ok");
       }
 
-      // Clear the saved brief
+      setStep("validate", "running");
+      setProgressCurrent("Running pre-publish checks");
+      const seoRep = checkSeoCompleteness({
+        metaTitle: insertPayload.meta_title,
+        metaDescription: insertPayload.meta_description,
+        slug: finalSlug,
+        primaryKeyword: insertPayload.primary_keyword,
+        secondaryKeywords: secondaryKws,
+        html: insertPayload.content,
+        faqs: extractedFaqs,
+        faqExpected: true,
+      });
+      const htmlRep = validateHtml(insertPayload.content, { context: "blog" });
+      const cycleRep = checkLatestCycle(insertPayload.content);
+      setSeoReport(seoRep);
+      setHtmlReport(htmlRep);
+      setCycleReport(cycleRep);
+      setStep("validate", "ok");
+      setProgressCurrent("");
+
       try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
+
+      const issues: string[] = [];
+      if (seoRep.level !== "pass") issues.push(`SEO ${seoRep.summary.toLowerCase()}`);
+      if (!htmlRep.ok) issues.push(`${htmlRep.issues.filter(i => i.level === "error").length} HTML blocker(s)`);
+      if (!cycleRep.ok) issues.push("date mismatches found");
 
       toast({
         title: "Article generated!",
-        description: `${data.stats?.actualWords ?? "~"} words, ${data.stats?.actualDensityPct ?? "~"}% density${extractedFaqs.length ? ` · ${extractedFaqs.length} FAQs schema-injected` : ""}. Opening editor...`,
+        description: `${data.stats?.actualWords ?? "~"} words${extractedFaqs.length ? ` · ${extractedFaqs.length} FAQs` : ""}${issues.length ? ` · Review: ${issues.join(", ")}` : " · All checks passed"}. Review below before opening editor.`,
       });
-
-      // Redirect to AdminArticles with edit query
-      navigate(`/admin/articles?edit=${inserted.id}`);
+      setStats((prev: any) => ({ ...(prev || {}), insertedId: inserted.id }));
     } catch (e: any) {
       console.error("AI blog generation failed", e);
       setErrorMsg(e?.message || "Generation failed");
@@ -331,6 +388,20 @@ const AdminWriteBlog = () => {
         </CardContent>
       </Card>
 
+      {(generating || progressSteps.length > 0) && (
+        <AIGenerationProgress
+          workflow="Blog generation"
+          active={generating}
+          total={progressSteps.length}
+          done={progressSteps.filter(s => s.status === "ok" || s.status === "fail").length}
+          ok={progressSteps.filter(s => s.status === "ok").length}
+          fail={progressSteps.filter(s => s.status === "fail").length}
+          current={progressCurrent}
+          steps={progressSteps}
+          onDismiss={() => setProgressSteps([])}
+        />
+      )}
+
       {errorMsg && (
         <Card className="border-destructive">
           <CardContent className="pt-4 flex gap-2 items-start text-sm">
@@ -347,9 +418,17 @@ const AdminWriteBlog = () => {
             <p>Words: {stats.actualWords} (target {stats.targetWordsRange?.[0]}-{stats.targetWordsRange?.[1]})</p>
             <p>Keyword density: {stats.actualDensityPct}% (target ~{stats.targetDensityPct}%)</p>
             <p>Primary keyword occurrences: {stats.actualOccurrences} (target ~{stats.targetOccurrences})</p>
+            {stats.insertedId && (
+              <Button size="sm" className="mt-2" onClick={() => navigate(`/admin/articles?edit=${stats.insertedId}`)}>
+                Open in editor
+              </Button>
+            )}
           </CardContent>
         </Card>
       )}
+
+      <PrePublishReport seo={seoReport} html={htmlReport} cycle={cycleReport} title="Pre-publish checks" />
+
 
       <div className="flex gap-3 sticky bottom-0 bg-background py-3 border-t">
         <Button
