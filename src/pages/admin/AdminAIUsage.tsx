@@ -347,19 +347,17 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
 function CloudUsageTab() {
   const [edgeLogs, setEdgeLogs] = useState<EdgeLog[]>([]);
   const [authLogs, setAuthLogs] = useState<AuthLog[]>([]);
-  const [dbLogs, setDbLogs] = useState<DbLog[]>([]);
+  const [, setDbLogs] = useState<DbLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [dbStats, setDbStats] = useState({ tables: 0, totalRows: 0, storageFiles: 0 });
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [edgeInvocations30d, setEdgeInvocations30d] = useState(0);
 
   const fetchCloudData = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch edge function logs
-      const edgeResp = await supabase.functions.invoke("serve-sitemap", { body: {} }).catch(() => null);
-
-      // Fetch DB table stats
       const tables = ["institutes", "colleges", "articles", "exams", "city_pages", "categories", "banners", "testimonials", "inquiries", "courses", "reviews", "profiles", "coupons", "comparisons", "site_settings", "newsletter_subscribers", "faculty", "coaching_of_week", "coaching_results", "institute_results", "college_sections", "business_inquiries", "profile_analyses", "analysis_results", "saved_institutes", "coupon_claims", "admin_permissions", "user_roles", "ai_usage_logs"];
-      
+
       let totalRows = 0;
       const tableCounts: { name: string; count: number }[] = [];
 
@@ -383,10 +381,8 @@ function CloudUsageTab() {
 
       setDbStats({ tables: tables.length, totalRows, storageFiles });
 
-      // Sort by count descending
       tableCounts.sort((a, b) => b.count - a.count);
 
-      // Store counts for chart
       setEdgeLogs(tableCounts.filter(t => t.count > 0).map((t, i) => ({
         id: String(i),
         timestamp: new Date().toISOString(),
@@ -396,14 +392,33 @@ function CloudUsageTab() {
         execution_time_ms: t.count,
       })));
 
+      // Edge invocations proxy: count AI usage logs in last 30d (each call is
+      // a function invocation). Real edge logs require analytics access; this
+      // is a conservative lower-bound for cost estimation.
+      try {
+        const since = new Date(Date.now() - 30 * 86400000).toISOString();
+        const { count } = await supabase
+          .from("ai_usage_logs")
+          .select("*", { count: "exact", head: true })
+          .gte("created_at", since);
+        // Multiply by ~3x to account for non-AI edge functions (sitemap,
+        // indexing, OTP, etc.) which we cannot count directly.
+        setEdgeInvocations30d(Math.round((count || 0) * 3));
+      } catch {}
+
     } catch (e) {
       console.error("Cloud data fetch error:", e);
       toast.error("Failed to load some Cloud data");
     }
 
-    // Auth logs
+    // Auth logs (latest 50 + total user count)
     try {
-      const { data: authData } = await supabase.from("profiles").select("user_id, display_name, created_at, city, target_exam").order("created_at", { ascending: false }).limit(50);
+      const { data: authData, count } = await supabase
+        .from("profiles")
+        .select("user_id, display_name, created_at, city, target_exam", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .limit(50);
+      setTotalUsers(count || (authData?.length || 0));
       setAuthLogs((authData || []).map((u: any, i: number) => ({
         id: String(i),
         timestamp: u.created_at,
@@ -418,6 +433,13 @@ function CloudUsageTab() {
   }, []);
 
   useEffect(() => { fetchCloudData(); }, [fetchCloudData]);
+
+  const cloudCost = useMemo(() => estimateCloudCost({
+    totalRows: dbStats.totalRows,
+    storageFiles: dbStats.storageFiles,
+    edgeInvocationsLast30d: edgeInvocations30d,
+    monthlyActiveUsers: totalUsers,
+  }), [dbStats, edgeInvocations30d, totalUsers]);
 
   // Table distribution chart data
   const tableChartData = useMemo(() => {
