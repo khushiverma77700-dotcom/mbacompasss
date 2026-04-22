@@ -213,7 +213,7 @@ const ArticlePage = () => {
               </div>
             )}
 
-            <div id="article-content" className="bg-card rounded-2xl border border-border p-6 md:p-10 shadow-sm">
+            <div id="article-content" className="bg-card rounded-2xl border border-border p-5 sm:p-6 md:p-10 shadow-sm text-[15px] sm:text-base leading-relaxed">
               {article.content ? renderContent(article.content) : (
                 <p className="text-muted-foreground text-center py-10">Full article content coming soon.</p>
               )}
