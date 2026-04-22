@@ -154,12 +154,22 @@ const AdminWriteCollege = () => {
 
       if (insertErr) throw insertErr;
 
+      // Auto-seed FAQ schema snapshot from extracted FAQs
+      const faqs = Array.isArray(data?.faqs) ? data.faqs : [];
+      if (faqs.length > 0 && inserted?.id) {
+        try {
+          await supabase.functions.invoke("auto-seo-engine", {
+            body: { mode: "seed_faqs", contentType: "college", pageId: inserted.id, faqs },
+          });
+        } catch (e) { console.warn("FAQ seed failed", e); }
+      }
+
+      const factCheck = data?.factCheck || { confidence: {}, warnings: [], omit_fields: [] };
+      setReviewData({ insertedId: inserted.id, factCheck, faqsCount: faqs.length });
       toast({
         title: "College generated!",
-        description: "Opening the college in the editor for review...",
+        description: `Review the factuality report below before opening the editor.${faqs.length ? ` ${faqs.length} FAQs schema-injected.` : ""}`,
       });
-
-      navigate(`/admin/colleges?edit=${inserted.id}`);
     } catch (e: any) {
       console.error("AI college generation failed", e);
       setErrorMsg(e?.message || "Generation failed");
