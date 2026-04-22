@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Activity, Zap, DollarSign, AlertTriangle, RefreshCw, TrendingUp, BarChart3, Clock, Cloud, Database, Shield, HardDrive, Server } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from "recharts";
 import { toast } from "sonner";
+import { computeAICost, modelLabel } from "@/lib/aiPricing";
+import { estimateCloudCost, formatUsd, CLOUD_FREE_MONTHLY_USD } from "@/lib/cloudPricing";
 
 // ── Types ──
 
@@ -98,51 +100,73 @@ function getDateRange(range: string) {
 // ── AI Usage Tab ──
 
 function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
+  // Recompute cost from model + tokens (the stored estimated_cost column was
+  // written with a flat rate that does not reflect actual per-model pricing).
+  const enriched = useMemo(() => logs.map(l => ({
+    ...l,
+    cost: computeAICost({
+      model: l.model,
+      promptTokens: l.prompt_tokens,
+      completionTokens: l.completion_tokens,
+      totalTokens: l.total_tokens,
+    }),
+  })), [logs]);
+
   const stats = useMemo(() => {
-    const totalCalls = logs.length;
-    const totalTokens = logs.reduce((s, l) => s + (l.total_tokens || 0), 0);
-    const totalCost = logs.reduce((s, l) => s + Number(l.estimated_cost || 0), 0);
-    const errors = logs.filter(l => l.status === "error").length;
+    const totalCalls = enriched.length;
+    const totalTokens = enriched.reduce((s, l) => s + (l.total_tokens || 0), 0);
+    const totalCost = enriched.reduce((s, l) => s + l.cost, 0);
+    const errors = enriched.filter(l => l.status === "error").length;
     const successRate = totalCalls ? ((totalCalls - errors) / totalCalls * 100).toFixed(1) : "0";
-    return { totalCalls, totalTokens, totalCost, errors, successRate };
-  }, [logs]);
+    const avgCostPerCall = totalCalls ? totalCost / totalCalls : 0;
+    return { totalCalls, totalTokens, totalCost, errors, successRate, avgCostPerCall };
+  }, [enriched]);
 
   const byFeature = useMemo(() => {
     const map: Record<string, { calls: number; tokens: number; cost: number; errors: number }> = {};
-    logs.forEach(l => {
+    enriched.forEach(l => {
       if (!map[l.feature]) map[l.feature] = { calls: 0, tokens: 0, cost: 0, errors: 0 };
       map[l.feature].calls++;
       map[l.feature].tokens += l.total_tokens || 0;
-      map[l.feature].cost += Number(l.estimated_cost || 0);
+      map[l.feature].cost += l.cost;
       if (l.status === "error") map[l.feature].errors++;
     });
     return Object.entries(map).map(([feature, d]) => ({
       feature, name: FEATURE_LABELS[feature] || feature, ...d,
       color: FEATURE_COLORS[feature] || "#94a3b8",
     })).sort((a, b) => b.cost - a.cost);
-  }, [logs]);
+  }, [enriched]);
 
   const dailyTrend = useMemo(() => {
     const map: Record<string, { date: string; calls: number; tokens: number; cost: number }> = {};
-    logs.forEach(l => {
+    enriched.forEach(l => {
       const d = l.created_at.split("T")[0];
       if (!map[d]) map[d] = { date: d, calls: 0, tokens: 0, cost: 0 };
       map[d].calls++;
       map[d].tokens += l.total_tokens || 0;
-      map[d].cost += Number(l.estimated_cost || 0);
+      map[d].cost += l.cost;
     });
     return Object.values(map).sort((a, b) => a.date.localeCompare(b.date));
-  }, [logs]);
+  }, [enriched]);
 
   const byModel = useMemo(() => {
-    const map: Record<string, number> = {};
-    logs.forEach(l => { const m = l.model || "unknown"; map[m] = (map[m] || 0) + 1; });
-    return Object.entries(map).map(([name, value]) => ({ name: name.split("/").pop() || name, value }));
-  }, [logs]);
+    const map: Record<string, { calls: number; cost: number }> = {};
+    enriched.forEach(l => {
+      const m = l.model || "unknown";
+      if (!map[m]) map[m] = { calls: 0, cost: 0 };
+      map[m].calls++;
+      map[m].cost += l.cost;
+    });
+    return Object.entries(map).map(([name, v]) => ({
+      name: modelLabel(name),
+      value: v.calls,
+      cost: v.cost,
+    }));
+  }, [enriched]);
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         <Card><CardContent className="pt-4 text-center">
           <Zap className="w-5 h-5 mx-auto mb-1 text-primary" />
           <p className="text-2xl font-bold">{stats.totalCalls}</p>
@@ -155,8 +179,13 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
         </CardContent></Card>
         <Card><CardContent className="pt-4 text-center">
           <DollarSign className="w-5 h-5 mx-auto mb-1 text-primary" />
-          <p className="text-2xl font-bold">${stats.totalCost.toFixed(4)}</p>
-          <p className="text-xs text-muted-foreground">Est. AI Cost</p>
+          <p className="text-2xl font-bold">{formatUsd(stats.totalCost, 4)}</p>
+          <p className="text-xs text-muted-foreground">AI Cost (per-model)</p>
+        </CardContent></Card>
+        <Card><CardContent className="pt-4 text-center">
+          <DollarSign className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
+          <p className="text-2xl font-bold">{formatUsd(stats.avgCostPerCall, 5)}</p>
+          <p className="text-xs text-muted-foreground">Avg Cost / Call</p>
         </CardContent></Card>
         <Card><CardContent className="pt-4 text-center">
           <TrendingUp className="w-5 h-5 mx-auto mb-1 text-primary" />
@@ -169,6 +198,14 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
           <p className="text-xs text-muted-foreground">Errors</p>
         </CardContent></Card>
       </div>
+
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="pt-4 text-xs text-muted-foreground">
+          Cost is recomputed live using current Lovable AI per-model pricing
+          (input vs output tokens). Older log rows showing different stored
+          values are ignored.
+        </CardContent>
+      </Card>
 
       <Tabs defaultValue="breakdown">
         <TabsList>
@@ -273,16 +310,16 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
                   <TableHead>Status</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
-                  {logs.slice(0, 100).map(l => (
+                  {enriched.slice(0, 100).map(l => (
                     <TableRow key={l.id}>
                       <TableCell className="text-xs whitespace-nowrap">
                         <Clock className="w-3 h-3 inline mr-1" />
                         {new Date(l.created_at).toLocaleString()}
                       </TableCell>
                       <TableCell><Badge variant="secondary" className="text-xs">{FEATURE_LABELS[l.feature] || l.feature}</Badge></TableCell>
-                      <TableCell className="text-xs font-mono">{(l.model || "").split("/").pop()}</TableCell>
+                      <TableCell className="text-xs font-mono">{modelLabel(l.model)}</TableCell>
                       <TableCell className="text-right font-mono text-xs">{(l.total_tokens || 0).toLocaleString()}</TableCell>
-                      <TableCell className="text-right font-mono text-xs">${Number(l.estimated_cost || 0).toFixed(4)}</TableCell>
+                      <TableCell className="text-right font-mono text-xs">{formatUsd(l.cost, 5)}</TableCell>
                       <TableCell>
                         {l.status === "success" ? (
                           <Badge className="bg-primary/10 text-primary border-primary/20">OK</Badge>
@@ -310,19 +347,17 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
 function CloudUsageTab() {
   const [edgeLogs, setEdgeLogs] = useState<EdgeLog[]>([]);
   const [authLogs, setAuthLogs] = useState<AuthLog[]>([]);
-  const [dbLogs, setDbLogs] = useState<DbLog[]>([]);
+  const [, setDbLogs] = useState<DbLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [dbStats, setDbStats] = useState({ tables: 0, totalRows: 0, storageFiles: 0 });
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [edgeInvocations30d, setEdgeInvocations30d] = useState(0);
 
   const fetchCloudData = useCallback(async () => {
     setLoading(true);
     try {
-      // Fetch edge function logs
-      const edgeResp = await supabase.functions.invoke("serve-sitemap", { body: {} }).catch(() => null);
-
-      // Fetch DB table stats
       const tables = ["institutes", "colleges", "articles", "exams", "city_pages", "categories", "banners", "testimonials", "inquiries", "courses", "reviews", "profiles", "coupons", "comparisons", "site_settings", "newsletter_subscribers", "faculty", "coaching_of_week", "coaching_results", "institute_results", "college_sections", "business_inquiries", "profile_analyses", "analysis_results", "saved_institutes", "coupon_claims", "admin_permissions", "user_roles", "ai_usage_logs"];
-      
+
       let totalRows = 0;
       const tableCounts: { name: string; count: number }[] = [];
 
@@ -346,10 +381,8 @@ function CloudUsageTab() {
 
       setDbStats({ tables: tables.length, totalRows, storageFiles });
 
-      // Sort by count descending
       tableCounts.sort((a, b) => b.count - a.count);
 
-      // Store counts for chart
       setEdgeLogs(tableCounts.filter(t => t.count > 0).map((t, i) => ({
         id: String(i),
         timestamp: new Date().toISOString(),
@@ -359,14 +392,33 @@ function CloudUsageTab() {
         execution_time_ms: t.count,
       })));
 
+      // Edge invocations proxy: count AI usage logs in last 30d (each call is
+      // a function invocation). Real edge logs require analytics access; this
+      // is a conservative lower-bound for cost estimation.
+      try {
+        const since = new Date(Date.now() - 30 * 86400000).toISOString();
+        const { count } = await supabase
+          .from("ai_usage_logs")
+          .select("*", { count: "exact", head: true })
+          .gte("created_at", since);
+        // Multiply by ~3x to account for non-AI edge functions (sitemap,
+        // indexing, OTP, etc.) which we cannot count directly.
+        setEdgeInvocations30d(Math.round((count || 0) * 3));
+      } catch {}
+
     } catch (e) {
       console.error("Cloud data fetch error:", e);
       toast.error("Failed to load some Cloud data");
     }
 
-    // Auth logs
+    // Auth logs (latest 50 + total user count)
     try {
-      const { data: authData } = await supabase.from("profiles").select("user_id, display_name, created_at, city, target_exam").order("created_at", { ascending: false }).limit(50);
+      const { data: authData, count } = await supabase
+        .from("profiles")
+        .select("user_id, display_name, created_at, city, target_exam", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .limit(50);
+      setTotalUsers(count || (authData?.length || 0));
       setAuthLogs((authData || []).map((u: any, i: number) => ({
         id: String(i),
         timestamp: u.created_at,
@@ -381,6 +433,13 @@ function CloudUsageTab() {
   }, []);
 
   useEffect(() => { fetchCloudData(); }, [fetchCloudData]);
+
+  const cloudCost = useMemo(() => estimateCloudCost({
+    totalRows: dbStats.totalRows,
+    storageFiles: dbStats.storageFiles,
+    edgeInvocationsLast30d: edgeInvocations30d,
+    monthlyActiveUsers: totalUsers,
+  }), [dbStats, edgeInvocations30d, totalUsers]);
 
   // Table distribution chart data
   const tableChartData = useMemo(() => {
@@ -415,7 +474,7 @@ function CloudUsageTab() {
   return (
     <div className="space-y-6">
       {/* Cloud Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card><CardContent className="pt-4 text-center">
           <Database className="w-5 h-5 mx-auto mb-1 text-primary" />
           <p className="text-2xl font-bold">{dbStats.tables}</p>
@@ -433,25 +492,67 @@ function CloudUsageTab() {
         </CardContent></Card>
         <Card><CardContent className="pt-4 text-center">
           <Shield className="w-5 h-5 mx-auto mb-1 text-primary" />
-          <p className="text-2xl font-bold">{authLogs.length}</p>
+          <p className="text-2xl font-bold">{totalUsers.toLocaleString()}</p>
           <p className="text-xs text-muted-foreground">Registered Users</p>
+        </CardContent></Card>
+        <Card className="border-primary/40 bg-primary/5"><CardContent className="pt-4 text-center">
+          <DollarSign className="w-5 h-5 mx-auto mb-1 text-primary" />
+          <p className="text-2xl font-bold text-primary">{formatUsd(cloudCost.totalMonthly, 4)}</p>
+          <p className="text-xs text-muted-foreground">Est. Monthly Cloud Cost</p>
         </CardContent></Card>
       </div>
 
-      {/* Cloud cost estimate */}
+      {/* Detailed Cloud cost breakdown */}
       <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="pt-4">
-          <div className="flex items-start gap-3">
-            <Cloud className="w-5 h-5 text-primary mt-0.5" />
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Cloud className="w-4 h-4 text-primary" />
+            Cloud Cost Breakdown — Live Estimate
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="rounded-lg border bg-card p-3">
+              <p className="text-[11px] text-muted-foreground uppercase">DB Storage</p>
+              <p className="text-base font-bold">{formatUsd(cloudCost.dbStorageCost, 5)}</p>
+              <p className="text-[10px] text-muted-foreground">{cloudCost.dbStorageGb.toFixed(4)} GB</p>
+            </div>
+            <div className="rounded-lg border bg-card p-3">
+              <p className="text-[11px] text-muted-foreground uppercase">File Storage</p>
+              <p className="text-base font-bold">{formatUsd(cloudCost.fileStorageCost, 5)}</p>
+              <p className="text-[10px] text-muted-foreground">{cloudCost.fileStorageGb.toFixed(4)} GB</p>
+            </div>
+            <div className="rounded-lg border bg-card p-3">
+              <p className="text-[11px] text-muted-foreground uppercase">Edge Invocations (30d)</p>
+              <p className="text-base font-bold">{formatUsd(cloudCost.edgeInvocationsCost, 5)}</p>
+              <p className="text-[10px] text-muted-foreground">{edgeInvocations30d.toLocaleString()} calls</p>
+            </div>
+            <div className="rounded-lg border bg-card p-3">
+              <p className="text-[11px] text-muted-foreground uppercase">Auth (MAU)</p>
+              <p className="text-base font-bold">{formatUsd(cloudCost.authCost, 5)}</p>
+              <p className="text-[10px] text-muted-foreground">{totalUsers.toLocaleString()} users (free under 100k)</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-between rounded-lg bg-card border p-3">
             <div>
-              <h3 className="font-semibold text-sm">Cloud Cost Estimate</h3>
-              <p className="text-xs text-muted-foreground mt-1">
-                Lovable Cloud uses usage-based pricing. Your project gets <strong>$25 free Cloud balance</strong> and <strong>$1 free AI balance</strong> monthly.
-                Cloud costs are typically <strong>$1-3/month</strong> for small-medium sites. Database queries, storage, and edge function invocations draw from the Cloud balance.
-                AI calls draw from the separate AI balance. Top up in <strong>Settings → Cloud & AI balance</strong>.
+              <p className="text-xs text-muted-foreground">Total estimated monthly Cloud cost</p>
+              <p className="text-xl font-bold text-primary">{formatUsd(cloudCost.totalMonthly, 4)}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground">Free monthly balance</p>
+              <p className="text-sm font-semibold">
+                {cloudCost.withinFreeTier
+                  ? <span className="text-primary">Within free ${CLOUD_FREE_MONTHLY_USD} tier · {formatUsd(cloudCost.freeRemaining, 2)} left</span>
+                  : <span className="text-destructive">Over free tier by {formatUsd(-cloudCost.freeRemaining + CLOUD_FREE_MONTHLY_USD - cloudCost.totalMonthly, 2)}</span>}
               </p>
             </div>
           </div>
+          <p className="text-[11px] text-muted-foreground">
+            Estimate based on Supabase pay-as-you-go rates: $0.125/GB-month DB,
+            $0.021/GB-month file storage, $2/1M edge invocations. Edge call
+            volume is approximated from AI usage logs ×3 to cover non-AI
+            functions. Real billing is shown in <strong>Settings → Cloud & AI balance</strong>.
+          </p>
         </CardContent>
       </Card>
 
