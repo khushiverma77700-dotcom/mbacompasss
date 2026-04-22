@@ -9,9 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, X, GripVertical, ArrowLeft, Sparkles, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, X, GripVertical, ArrowLeft, Sparkles, Loader2, CheckCircle2, XCircle } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
+import { Progress } from "@/components/ui/progress";
 
 const SECTION_TYPES = [
   { value: "courses_fees", label: "Courses & Fee Structure" },
@@ -120,6 +121,7 @@ const AdminCollegeSections = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const [aiBusy, setAiBusy] = useState<string | null>(null); // section_type currently generating, or "form" / "bulk:<id>"
+  const [bulkProgress, setBulkProgress] = useState<{ total: number; done: number; ok: number; fail: number; current: string; results: { type: string; label: string; status: "pending" | "ok" | "fail"; error?: string }[] } | null>(null);
   const { toast } = useToast();
 
   const fetchColleges = async () => { const { data } = await supabase.from("colleges").select("id, name, city, state, type, tier, established").order("name"); if (data) setColleges(data); };
@@ -194,10 +196,28 @@ const AdminCollegeSections = () => {
         await supabase.from("college_sections").insert(inserts);
         await fetchSections();
       }
-      const { data: rows } = await supabase.from("college_sections").select("*").eq("college_id", selectedCollege);
+      const { data: rows } = await supabase.from("college_sections").select("*").eq("college_id", selectedCollege).order("sort_order");
       const list = rows || [];
+
+      // Initialize progress
+      setBulkProgress({
+        total: list.length,
+        done: 0,
+        ok: 0,
+        fail: 0,
+        current: "",
+        results: list.map(r => ({
+          type: r.section_type,
+          label: SECTION_TYPES.find(t => t.value === r.section_type)?.label || r.section_type,
+          status: "pending",
+        })),
+      });
+
       let ok = 0, fail = 0;
-      for (const row of list) {
+      for (let i = 0; i < list.length; i++) {
+        const row = list[i];
+        const label = SECTION_TYPES.find(t => t.value === row.section_type)?.label || row.section_type;
+        setBulkProgress(prev => prev ? { ...prev, current: label } : prev);
         try {
           const sec = await generateForSection(selectedCollege, row.section_type);
           await supabase.from("college_sections").update({
@@ -206,9 +226,21 @@ const AdminCollegeSections = () => {
             data: sec.data || {},
           }).eq("id", row.id);
           ok++;
-        } catch (err) {
+          setBulkProgress(prev => {
+            if (!prev) return prev;
+            const results = [...prev.results];
+            results[i] = { ...results[i], status: "ok" };
+            return { ...prev, done: prev.done + 1, ok: prev.ok + 1, results };
+          });
+        } catch (err: any) {
           console.error("bulk fail for", row.section_type, err);
           fail++;
+          setBulkProgress(prev => {
+            if (!prev) return prev;
+            const results = [...prev.results];
+            results[i] = { ...results[i], status: "fail", error: err?.message || "Failed" };
+            return { ...prev, done: prev.done + 1, fail: prev.fail + 1, results };
+          });
         }
         // tiny pause to avoid burst rate-limits
         await new Promise(r => setTimeout(r, 800));
@@ -219,6 +251,8 @@ const AdminCollegeSections = () => {
       toast({ title: "Bulk generation failed", description: e?.message || "Unknown error", variant: "destructive" });
     } finally {
       setAiBusy(null);
+      // Keep progress panel visible so user can review which succeeded/failed; auto-hide after 30s
+      setTimeout(() => setBulkProgress(null), 30000);
     }
   };
 
@@ -316,6 +350,48 @@ const AdminCollegeSections = () => {
           </Button>
         </div>
       </div>
+
+      {bulkProgress && (
+        <Card className="mb-4 border-primary/30 bg-primary/5">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {aiBusy === "bulk" ? <Loader2 className="w-4 h-4 animate-spin text-primary" /> : <CheckCircle2 className="w-4 h-4 text-primary" />}
+                <span className="text-sm font-semibold text-foreground">
+                  {aiBusy === "bulk" ? "Generating AI content…" : "Generation complete"}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-xs">
+                <span className="text-muted-foreground">{bulkProgress.done} / {bulkProgress.total}</span>
+                <span className="text-emerald-600 font-medium">✓ {bulkProgress.ok}</span>
+                {bulkProgress.fail > 0 && <span className="text-destructive font-medium">✕ {bulkProgress.fail}</span>}
+                <span className="font-bold text-primary">{Math.round((bulkProgress.done / Math.max(bulkProgress.total, 1)) * 100)}%</span>
+                {aiBusy !== "bulk" && (
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setBulkProgress(null)}>
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
+                )}
+              </div>
+            </div>
+            <Progress value={(bulkProgress.done / Math.max(bulkProgress.total, 1)) * 100} className="h-2" />
+            {bulkProgress.current && aiBusy === "bulk" && (
+              <p className="text-xs text-muted-foreground">Currently generating: <span className="font-medium text-foreground">{bulkProgress.current}</span></p>
+            )}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 max-h-48 overflow-y-auto pt-1">
+              {bulkProgress.results.map((r, idx) => (
+                <div key={idx} className="flex items-center gap-1.5 text-xs px-2 py-1 rounded bg-background/60 border border-border/50">
+                  {r.status === "ok" && <CheckCircle2 className="w-3 h-3 text-emerald-600 flex-shrink-0" />}
+                  {r.status === "fail" && <XCircle className="w-3 h-3 text-destructive flex-shrink-0" />}
+                  {r.status === "pending" && (bulkProgress.current === r.label && aiBusy === "bulk"
+                    ? <Loader2 className="w-3 h-3 animate-spin text-primary flex-shrink-0" />
+                    : <div className="w-3 h-3 rounded-full border border-muted-foreground/30 flex-shrink-0" />)}
+                  <span className={`truncate ${r.status === "fail" ? "text-destructive" : "text-foreground"}`} title={r.error || r.label}>{r.label}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="mb-4">
         <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Filter by College</Label>
