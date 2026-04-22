@@ -249,3 +249,41 @@
   font-size: 1rem !important;
   font-family: var(--font-body) !important;
 }
+
+/* Inline citation pills produced by aiContentEnhancer.ts */
+.ai-content .ai-citation {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.125rem;
+  font-size: 0.65rem !important;
+  line-height: 1 !important;
+  font-weight: 500 !important;
+  padding: 0.15rem 0.4rem;
+  margin: 0 0.15rem;
+  border-radius: 9999px;
+  border: 1px solid hsl(var(--primary) / 0.3);
+  background: hsl(var(--primary) / 0.06);
+  color: hsl(var(--primary)) !important;
+  text-decoration: none !important;
+  vertical-align: middle;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+.ai-content .ai-citation:hover {
+  background: hsl(var(--primary) / 0.14);
+  text-decoration: underline !important;
+}
+
+/* Horizontally-scrollable wrapper around AI tables for mobile safety. */
+.ai-content .ai-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0.75rem 0;
+  border-radius: 0.5rem;
+  border: 1px solid hsl(var(--border));
+}
+.ai-content .ai-table-wrap > table {
+  margin: 0 !important;
+  min-width: 100%;
+}
