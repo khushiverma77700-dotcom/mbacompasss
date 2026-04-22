@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Activity, Zap, DollarSign, AlertTriangle, RefreshCw, TrendingUp, BarChart3, Clock, Cloud, Database, Shield, HardDrive, Server } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend } from "recharts";
 import { toast } from "sonner";
+import { computeAICost, modelLabel } from "@/lib/aiPricing";
+import { estimateCloudCost, formatUsd, CLOUD_FREE_MONTHLY_USD } from "@/lib/cloudPricing";
 
 // ── Types ──
 
