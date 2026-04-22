@@ -42,15 +42,33 @@ Deno.serve(async (req) => {
     const density = brief.keywordDensityPct ?? 10;
     const targetKw = brief.targetKeyword.trim();
     const secKws = (brief.secondaryKeywords || []).filter(Boolean);
+    const _now = new Date();
+    const _yr = _now.getFullYear();
     const dateCtx = brief.contentDateContext?.trim() ||
-      "Use only the most recent verified data (2025-2026 admission cycle, 2024-2025 placement reports). All dates, exam cycles, fees, cutoffs and statistics MUST reflect the latest available year. Do NOT use outdated 2020-2023 figures unless explicitly historical context.";
+      `Use only the most recent verified data (${_yr}-${_yr + 1} admission cycle, ${_yr - 1}-${_yr} placement reports). All dates, exam cycles, fees, cutoffs and statistics MUST reflect the latest available year. Do NOT use outdated 2020-2023 figures unless explicitly historical context. Today is ${_now.toISOString().slice(0, 10)}.`;
 
     // Approx target keyword occurrences. NOTE: 10% literal density is unnatural and Google-flag-worthy.
     // The prompt asks the model to AIM for the requested density while keeping prose natural.
     const targetWords = Math.round((wmin + wmax) / 2);
     const targetOccurrences = Math.round((targetWords * density) / 100);
 
-    const systemPrompt = `You are an expert SEO content writer specializing in MBA, B-school, coaching and exam preparation content for the Indian audience. You write in a clear, friendly, HUMAN voice — like a smart senior mentor talking to a student. Plain English, short sentences, contractions allowed (you're, don't, it's). Avoid corporate jargon, avoid "In today's fast-paced world..." style fluff, avoid robotic AI phrasing. Output is valid HTML using only these tags: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>, <blockquote>. Do NOT include <html>, <head>, <body>, <h1>, or markdown fences.`;
+    const today = new Date();
+    const todayIso = today.toISOString().slice(0, 10);
+    const currentYear = today.getFullYear();
+
+    const systemPrompt = `You are an expert SEO content writer specializing in MBA, PGP, PGDM and Masters-in-Management (MiM) content for the Indian audience. You write in a clear, friendly, HUMAN voice — like a smart senior mentor talking to a student. Plain English, short sentences, contractions allowed (you're, don't, it's). Avoid corporate jargon, avoid "In today's fast-paced world..." style fluff, avoid robotic AI phrasing.
+
+# SCOPE LOCK — MBA / MASTERS IN MANAGEMENT ONLY (NON-NEGOTIABLE)
+- Every article MUST stay strictly within MBA / PGP / PGDM / PGPM / MMS / MMM / EMBA / PGPX / PGCM / PGPBM / Executive MBA / 1-Year MBA / Masters in Management (MiM) topics, plus the entrance ecosystem that feeds them (CAT, XAT, NMAT, SNAP, CMAT, GMAT, MAT, IIFT, MICAT, TISSNET, MAH-CET).
+- DO NOT write about B.Tech, M.Tech, BE, ME, BCA, MCA, B.Sc, M.Sc, engineering, medical, law, design, coding bootcamps, data-science certifications, school-level boards or any non-management discipline. If the working title is ambiguous, interpret it through the MBA / MiM lens.
+- Recruiters, salaries, fees, specializations and example colleges referenced must all be management-program-specific.
+
+# FRESHNESS
+- Today is ${todayIso}. Active admission cycle: ${currentYear}-${currentYear + 1}. Placement reference: ${currentYear - 1}-${currentYear}.
+- Use only the most recent verified data. Reference the year naturally inside prose. End the article with a small italic line: <p><em>Last updated: ${todayIso}</em></p>.
+
+# OUTPUT FORMAT
+- Valid HTML using only these tags: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>, <blockquote>. Do NOT include <html>, <head>, <body>, <h1>, or markdown fences. NO inline style="", NO <font>, NO class/id attributes — plain semantic HTML only so typography stays uniform.`;
 
     const userPrompt = `Write a complete, ready-to-publish SEO blog article.
 
