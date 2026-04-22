@@ -42,8 +42,10 @@ Deno.serve(async (req) => {
     const density = brief.keywordDensityPct ?? 10;
     const targetKw = brief.targetKeyword.trim();
     const secKws = (brief.secondaryKeywords || []).filter(Boolean);
+    const _now = new Date();
+    const _yr = _now.getFullYear();
     const dateCtx = brief.contentDateContext?.trim() ||
-      "Use only the most recent verified data (2025-2026 admission cycle, 2024-2025 placement reports). All dates, exam cycles, fees, cutoffs and statistics MUST reflect the latest available year. Do NOT use outdated 2020-2023 figures unless explicitly historical context.";
+      `Use only the most recent verified data (${_yr}-${_yr + 1} admission cycle, ${_yr - 1}-${_yr} placement reports). All dates, exam cycles, fees, cutoffs and statistics MUST reflect the latest available year. Do NOT use outdated 2020-2023 figures unless explicitly historical context. Today is ${_now.toISOString().slice(0, 10)}.`;
 
     // Approx target keyword occurrences. NOTE: 10% literal density is unnatural and Google-flag-worthy.
     // The prompt asks the model to AIM for the requested density while keeping prose natural.
