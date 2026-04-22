@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, X, ArrowLeft } from "lucide-react";
+import { Plus, Pencil, Trash2, X, ArrowLeft, Sparkles } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import SortableTableHead from "@/components/admin/SortableTableHead";
 import RichTextEditor from "@/components/admin/RichTextEditor";
@@ -49,6 +50,8 @@ const AdminColleges = () => {
   const { toast } = useToast();
   const { sortedItems: sortedColleges, sortConfig, handleSort } = useTableSort(colleges);
   const { data: specializationOptions = [] } = useSpecializations("college");
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const fetchColleges = async () => {
     const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, tier, college_category, ranking, established, created_at, source, last_updated_by").order("ranking", { ascending: true });
@@ -56,6 +59,18 @@ const AdminColleges = () => {
   };
 
   useEffect(() => { fetchColleges(); }, []);
+
+  // Auto-open edit form when ?edit=<id> is present (used by AI generator redirect)
+  useEffect(() => {
+    const editIdParam = searchParams.get("edit");
+    if (editIdParam && !showForm) {
+      handleEdit(editIdParam);
+      // Clear the param so refresh doesn't re-trigger
+      searchParams.delete("edit");
+      setSearchParams(searchParams, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const generateSlug = (name: string) => name.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").slice(0, 75);
 
@@ -309,9 +324,20 @@ const AdminColleges = () => {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="font-heading text-2xl font-bold text-foreground">Manage Colleges</h1>
-        <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add College</Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => navigate("/admin/colleges/generate-ai")}
+            className="border-primary/40 text-primary hover:bg-primary/5"
+          >
+            <Sparkles className="w-4 h-4 mr-2" /> Generate via AI
+          </Button>
+          <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}>
+            <Plus className="w-4 h-4 mr-2" /> Add College
+          </Button>
+        </div>
       </div>
 
       <Card>
