@@ -241,6 +241,107 @@ export type Database = {
           },
         ]
       }
+      audit_runs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          finished_at: string | null
+          fixes_applied: number
+          id: string
+          issues_found: number
+          mode: string
+          overall_score: number | null
+          pages_scanned: number
+          pending_issues: number
+          report: Json
+          started_at: string
+          status: string
+          triggered_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          finished_at?: string | null
+          fixes_applied?: number
+          id?: string
+          issues_found?: number
+          mode?: string
+          overall_score?: number | null
+          pages_scanned?: number
+          pending_issues?: number
+          report?: Json
+          started_at?: string
+          status?: string
+          triggered_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          finished_at?: string | null
+          fixes_applied?: number
+          id?: string
+          issues_found?: number
+          mode?: string
+          overall_score?: number | null
+          pages_scanned?: number
+          pending_issues?: number
+          report?: Json
+          started_at?: string
+          status?: string
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
+      audit_step_logs: {
+        Row: {
+          created_at: string
+          details: Json
+          duration_ms: number | null
+          id: string
+          pages_affected: number
+          run_id: string
+          status: string
+          step_key: string
+          step_label: string
+          step_number: number
+          summary: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json
+          duration_ms?: number | null
+          id?: string
+          pages_affected?: number
+          run_id: string
+          status?: string
+          step_key: string
+          step_label: string
+          step_number: number
+          summary?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json
+          duration_ms?: number | null
+          id?: string
+          pages_affected?: number
+          run_id?: string
+          status?: string
+          step_key?: string
+          step_label?: string
+          step_number?: number
+          summary?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_step_logs_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "audit_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       banners: {
         Row: {
           active: boolean | null
