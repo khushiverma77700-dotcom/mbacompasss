@@ -690,7 +690,26 @@ const AdminSEODashboard = () => {
     await saveBlogIdeasToDb([]);
   };
 
-  // ── Interlink Studio Functions ──
+  // Hand off a blog brief to the Write-Blog page
+  const handleWriteBlogViaAI = (brief: {
+    title: string; slug?: string; targetKeyword: string;
+    metaTitle?: string; metaDescription?: string; category?: string;
+    secondaryKeywords?: string[];
+  }) => {
+    try {
+      sessionStorage.setItem("ai_blog_brief_draft", JSON.stringify({
+        title: brief.title,
+        slug: brief.slug || generateSlug(brief.title),
+        targetKeyword: brief.targetKeyword,
+        metaTitle: brief.metaTitle || "",
+        metaDescription: brief.metaDescription || "",
+        category: brief.category || "news",
+        secondaryKeywords: brief.secondaryKeywords || [],
+      }));
+    } catch {}
+    navigate("/admin/seo/write-blog");
+  };
+
   const runInterlinkSuggest = async () => {
     setInterlinkLoading(true);
     try {
