@@ -93,6 +93,11 @@ const AdminWriteCollege = () => {
 
     setGenerating(true);
     setErrorMsg(null);
+    setSeoReport(null); setHtmlReport(null); setCycleReport(null);
+    setProgressSteps(COLLEGE_STEPS.map(s => ({ ...s, status: "pending" })));
+    setProgressCurrent("Researching college");
+    setStep("brief", "ok");
+    setStep("research", "running");
 
     try {
       const { data, error } = await supabase.functions.invoke("ai-college-writer", {
