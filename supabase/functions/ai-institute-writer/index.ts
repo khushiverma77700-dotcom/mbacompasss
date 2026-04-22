@@ -387,12 +387,9 @@ RULES:
       console.warn("Audit pass exception:", e);
     }
 
-    // Apply omissions
-    const omit = new Set<string>(Array.isArray(factCheck.omit_fields) ? factCheck.omit_fields : []);
+    // Complete-Data Mode: keep all populated fields. Audit warnings are still
+    // returned so admins can spot low-confidence values, but we never null them.
     const safeProfile: any = { ...profile };
-    omit.forEach((field) => {
-      if (field in safeProfile) safeProfile[field] = null;
-    });
 
     return new Response(
       JSON.stringify({
