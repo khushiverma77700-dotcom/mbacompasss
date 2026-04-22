@@ -92,6 +92,7 @@ const AdminUserSubmissions = lazy(() => import("./pages/admin/AdminUserSubmissio
 const AdminListingChangeRequests = lazy(() => import("./pages/admin/AdminListingChangeRequests"));
 const AdminWriteBlog = lazy(() => import("./pages/admin/AdminWriteBlog"));
 const AdminWriteCollege = lazy(() => import("./pages/admin/AdminWriteCollege"));
+const AdminWebsiteOptimizer = lazy(() => import("./pages/admin/AdminWebsiteOptimizer"));
 
 // Lazy load heavy popups
 const OnboardingDialog = lazy(() => import("@/components/OnboardingDialog"));
@@ -249,6 +250,7 @@ const App = () => (
               <Route path="listing-change-requests" element={<LazyPage><AdminListingChangeRequests /></LazyPage>} />
               <Route path="seo/write-blog" element={<LazyPage><AdminWriteBlog /></LazyPage>} />
               <Route path="colleges/generate-ai" element={<LazyPage><AdminWriteCollege /></LazyPage>} />
+              <Route path="website-optimizer" element={<LazyPage><AdminWebsiteOptimizer /></LazyPage>} />
             </Route>
 
             {/* Home eager; rest lazy with invisible fallback */}

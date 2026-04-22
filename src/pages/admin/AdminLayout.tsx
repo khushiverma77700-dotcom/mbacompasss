@@ -61,6 +61,7 @@ const adminNavGroups = [
     label: "SEO & AI Tools",
     items: [
       { label: "AI SEO Dashboard", path: "/admin/seo-dashboard", icon: Sparkles },
+      { label: "Website Optimizer", path: "/admin/website-optimizer", icon: Sparkles },
       { label: "Static Page SEO", path: "/admin/static-seo", icon: Globe },
       { label: "Google Indexing", path: "/admin/google-indexing", icon: Globe },
       { label: "Sitemap", path: "/admin/sitemap", icon: MapPin },
