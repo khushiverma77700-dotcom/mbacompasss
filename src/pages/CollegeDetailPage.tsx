@@ -842,6 +842,21 @@ const CollegeDetailPage = () => {
         </div>
       </div>
       {college?.id && <PageKeywords contentType="college" recordId={college.id} fallbackKeywords={(college as any).keywords || []} />}
+
+      {/* Mobile-first: Floating TOC + Sticky action bar */}
+      <FloatingTOC
+        items={tabItems.map(t => ({ id: t.value, label: t.label }))}
+        onSelect={scrollToSection}
+        bottomOffset={88}
+      />
+      <MobileActionBar
+        actions={[
+          { icon: <Phone />, label: "Enquire", primary: true, onClick: () => sectionRefs.current["overview"]?.scrollIntoView({ behavior: "smooth" }) },
+          { icon: <Download />, label: "Brochure", onClick: handleDownloadBrochure },
+          { icon: <Share2 />, label: "Share", onClick: () => { if (navigator.share) navigator.share({ title: college.name, url: window.location.href }); else { navigator.clipboard.writeText(window.location.href); toast({ title: "Link copied!" }); } } },
+        ]}
+      />
+      <div className="md:hidden h-20" aria-hidden />
     </div>
   );
 };
