@@ -317,9 +317,9 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
                         {new Date(l.created_at).toLocaleString()}
                       </TableCell>
                       <TableCell><Badge variant="secondary" className="text-xs">{FEATURE_LABELS[l.feature] || l.feature}</Badge></TableCell>
-                      <TableCell className="text-xs font-mono">{(l.model || "").split("/").pop()}</TableCell>
+                      <TableCell className="text-xs font-mono">{modelLabel(l.model)}</TableCell>
                       <TableCell className="text-right font-mono text-xs">{(l.total_tokens || 0).toLocaleString()}</TableCell>
-                      <TableCell className="text-right font-mono text-xs">${Number(l.estimated_cost || 0).toFixed(4)}</TableCell>
+                      <TableCell className="text-right font-mono text-xs">{formatUsd(l.cost, 5)}</TableCell>
                       <TableCell>
                         {l.status === "success" ? (
                           <Badge className="bg-primary/10 text-primary border-primary/20">OK</Badge>
