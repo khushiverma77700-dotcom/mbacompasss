@@ -74,6 +74,7 @@ const AdminShortlisterColleges = lazy(() => import("./pages/admin/AdminShortlist
 const AdminCallbacks = lazy(() => import("./pages/admin/AdminCallbacks"));
 const AdminDatabaseBackup = lazy(() => import("./pages/admin/AdminDatabaseBackup"));
 const AdminAIUsage = lazy(() => import("./pages/admin/AdminAIUsage"));
+const AdminCitationsAudit = lazy(() => import("./pages/admin/AdminCitationsAudit"));
 const AdminCourseCategories = lazy(() => import("./pages/admin/AdminCourseCategories"));
 const AdminCATScores = lazy(() => import("./pages/admin/AdminCATScores"));
 const AdminMegaMenu = lazy(() => import("./pages/admin/AdminMegaMenu"));
@@ -242,6 +243,7 @@ const App = () => (
               <Route path="callbacks" element={<LazyPage><AdminCallbacks /></LazyPage>} />
               <Route path="database-backup" element={<LazyPage><AdminDatabaseBackup /></LazyPage>} />
               <Route path="ai-usage" element={<LazyPage><AdminAIUsage /></LazyPage>} />
+              <Route path="citations-audit" element={<LazyPage><AdminCitationsAudit /></LazyPage>} />
               <Route path="course-categories" element={<LazyPage><AdminCourseCategories /></LazyPage>} />
               <Route path="cat-scores" element={<LazyPage><AdminCATScores /></LazyPage>} />
               <Route path="mega-menu" element={<LazyPage><AdminMegaMenu /></LazyPage>} />
