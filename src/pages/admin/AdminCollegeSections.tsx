@@ -337,6 +337,9 @@ const AdminCollegeSections = () => {
                   <TableCell>{s.title || "—"}</TableCell>
                   <TableCell>{s.sort_order}</TableCell>
                   <TableCell className="text-right space-x-1">
+                    <Button variant="ghost" size="sm" onClick={() => handleAIGenerateRow(s)} disabled={aiBusy === `row:${s.id}`} title="Regenerate with AI">
+                      {aiBusy === `row:${s.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-primary" />}
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(s.id)}><Pencil className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(s.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                   </TableCell>
