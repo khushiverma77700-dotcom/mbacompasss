@@ -296,7 +296,21 @@ const AdminWriteCollege = () => {
           </div>
 
           <div>
-            <Label className="text-xs font-semibold mb-1.5 block">Date / Freshness Context</Label>
+            <div className="flex items-center justify-between mb-1.5">
+              <Label className="text-xs font-semibold block">Date / Freshness Context</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs gap-1"
+                onClick={() => {
+                  setContentDateContext(buildLatestDateContext());
+                  toast({ title: "Reset to latest dates", description: `Refreshed to ${new Date().getFullYear()}-${new Date().getFullYear() + 1} cycle. Click Generate to refresh fees, placements & admission details.` });
+                }}
+              >
+                <Sparkles className="h-3 w-3" /> Regenerate with latest dates
+              </Button>
+            </div>
             <Textarea
               value={contentDateContext}
               onChange={(e) => setContentDateContext(e.target.value)}
@@ -316,6 +330,73 @@ const AdminWriteCollege = () => {
         </Card>
       )}
 
+      {reviewData && (
+        <Card className="border-amber-300 bg-amber-50/40">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2 text-amber-900">
+              <AlertCircle className="h-4 w-4" /> Pre-publish Factuality Review
+            </CardTitle>
+            <CardDescription className="text-amber-800">
+              Review confidence on each high-risk field and any flagged inconsistencies before opening the editor.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm">
+            <div>
+              <div className="font-semibold mb-2">Source confidence</div>
+              <div className="flex flex-wrap gap-1.5">
+                {Object.entries(reviewData.factCheck?.confidence || {}).map(([k, v]: any) => {
+                  const cls = v === "Verified" ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                    : v === "Range" ? "bg-blue-100 text-blue-800 border-blue-300"
+                    : "bg-red-100 text-red-800 border-red-300";
+                  return (
+                    <Badge key={k} variant="outline" className={`text-xs ${cls}`}>
+                      {k}: {v as string}
+                    </Badge>
+                  );
+                })}
+                {Object.keys(reviewData.factCheck?.confidence || {}).length === 0 && (
+                  <span className="text-xs text-muted-foreground">No confidence data returned.</span>
+                )}
+              </div>
+            </div>
+
+            {Array.isArray(reviewData.factCheck?.warnings) && reviewData.factCheck.warnings.length > 0 ? (
+              <div>
+                <div className="font-semibold mb-2">Likely inconsistencies</div>
+                <ul className="space-y-1.5">
+                  {reviewData.factCheck.warnings.map((w: any, i: number) => (
+                    <li key={i} className="flex gap-2 items-start">
+                      <Badge variant="outline" className={`text-[10px] ${w.severity === "high" ? "bg-red-100 text-red-800 border-red-300" : w.severity === "medium" ? "bg-amber-100 text-amber-800 border-amber-300" : "bg-muted"}`}>
+                        {w.severity}
+                      </Badge>
+                      <span><strong>{w.field}:</strong> {w.message}{w.suggested ? ` → suggested: ${w.suggested}` : ""}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="text-emerald-800 text-xs">No inconsistencies flagged. Safe to publish after a quick visual check.</p>
+            )}
+
+            {Array.isArray(reviewData.factCheck?.omit_fields) && reviewData.factCheck.omit_fields.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                The following fields were auto-omitted (set to null) because the AI was not confident:{" "}
+                <strong>{reviewData.factCheck.omit_fields.join(", ")}</strong>
+              </p>
+            )}
+
+            <div className="flex gap-2 pt-2">
+              <Button size="sm" onClick={() => navigate(`/admin/colleges?edit=${reviewData.insertedId}`)}>
+                Open in Editor
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setReviewData(null)}>
+                Dismiss
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="flex gap-3 sticky bottom-0 bg-background py-3 border-t">
         <Button
           size="lg"
@@ -324,7 +405,7 @@ const AdminWriteCollege = () => {
           className="flex-1"
         >
           {generating ? (
-            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Researching & writing... (45-90s)</>
+            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Researching, writing & fact-checking... (60-120s)</>
           ) : (
             <><Sparkles className="h-4 w-4 mr-2" /> Approve & Generate College</>
           )}
