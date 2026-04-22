@@ -115,9 +115,16 @@ const AdminWriteBlog = () => {
     setGenerating(true);
     setErrorMsg(null);
     setStats(null);
+    setSeoReport(null);
+    setHtmlReport(null);
+    setCycleReport(null);
+    setProgressSteps(BLOG_STEPS.map(s => ({ ...s, status: "pending" })));
+    setProgressCurrent(BLOG_STEPS[0].label);
+    setStep("brief", "ok");
 
     try {
-      // 1. Call the writer
+      setStep("research", "running");
+      setProgressCurrent("Researching topic");
       const { data, error } = await supabase.functions.invoke("ai-blog-writer", {
         body: {
           title: title.trim(),
@@ -134,14 +141,17 @@ const AdminWriteBlog = () => {
         },
       });
 
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      if (!data?.article) throw new Error("AI returned an empty response");
+      if (error) { setStep("research", "fail", error.message); throw error; }
+      if (data?.error) { setStep("research", "fail", data.error); throw new Error(data.error); }
+      if (!data?.article) { setStep("research", "fail", "Empty response"); throw new Error("AI returned an empty response"); }
+      setStep("research", "ok");
+      setStep("draft", "ok");
+      setProgressCurrent("Saving draft");
 
       const a = data.article;
       setStats(data.stats);
 
-      // 2. Ensure slug uniqueness
+      setStep("save", "running");
       let finalSlug = a.slug || slug;
       const { data: existing } = await supabase
         .from("articles")
@@ -152,7 +162,6 @@ const AdminWriteBlog = () => {
         finalSlug = `${finalSlug}-${Date.now().toString(36).slice(-4)}`;
       }
 
-      // 3. Insert as draft
       const insertPayload = {
         title: a.title || title,
         slug: finalSlug,
@@ -178,28 +187,54 @@ const AdminWriteBlog = () => {
         .select("id")
         .single();
 
-      if (insertErr) throw insertErr;
+      if (insertErr) { setStep("save", "fail", insertErr.message); throw insertErr; }
+      setStep("save", "ok");
 
-      // Auto-seed FAQ schema snapshot (so FAQPage JSON-LD is injected into the live article)
+      setStep("faqs", "running");
       const extractedFaqs = Array.isArray(data?.faqs) ? data.faqs : [];
       if (extractedFaqs.length > 0 && inserted?.id) {
         try {
           await supabase.functions.invoke("auto-seo-engine", {
             body: { mode: "seed_faqs", contentType: "article", pageId: inserted.id, faqs: extractedFaqs },
           });
-        } catch (e) { console.warn("FAQ seed failed", e); }
+          setStep("faqs", "ok");
+        } catch (e) { console.warn("FAQ seed failed", e); setStep("faqs", "fail", "Schema injection failed"); }
+      } else {
+        setStep("faqs", "ok");
       }
 
-      // Clear the saved brief
+      setStep("validate", "running");
+      setProgressCurrent("Running pre-publish checks");
+      const seoRep = checkSeoCompleteness({
+        metaTitle: insertPayload.meta_title,
+        metaDescription: insertPayload.meta_description,
+        slug: finalSlug,
+        primaryKeyword: insertPayload.primary_keyword,
+        secondaryKeywords: secondaryKws,
+        html: insertPayload.content,
+        faqs: extractedFaqs,
+        faqExpected: true,
+      });
+      const htmlRep = validateHtml(insertPayload.content, { context: "blog" });
+      const cycleRep = checkLatestCycle(insertPayload.content);
+      setSeoReport(seoRep);
+      setHtmlReport(htmlRep);
+      setCycleReport(cycleRep);
+      setStep("validate", "ok");
+      setProgressCurrent("");
+
       try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
+
+      const issues: string[] = [];
+      if (seoRep.level !== "pass") issues.push(`SEO ${seoRep.summary.toLowerCase()}`);
+      if (!htmlRep.ok) issues.push(`${htmlRep.issues.filter(i => i.level === "error").length} HTML blocker(s)`);
+      if (!cycleRep.ok) issues.push("date mismatches found");
 
       toast({
         title: "Article generated!",
-        description: `${data.stats?.actualWords ?? "~"} words, ${data.stats?.actualDensityPct ?? "~"}% density${extractedFaqs.length ? ` · ${extractedFaqs.length} FAQs schema-injected` : ""}. Opening editor...`,
+        description: `${data.stats?.actualWords ?? "~"} words${extractedFaqs.length ? ` · ${extractedFaqs.length} FAQs` : ""}${issues.length ? ` · Review: ${issues.join(", ")}` : " · All checks passed"}. Review below before opening editor.`,
       });
-
-      // Redirect to AdminArticles with edit query
-      navigate(`/admin/articles?edit=${inserted.id}`);
+      setStats((prev: any) => ({ ...(prev || {}), insertedId: inserted.id }));
     } catch (e: any) {
       console.error("AI blog generation failed", e);
       setErrorMsg(e?.message || "Generation failed");
