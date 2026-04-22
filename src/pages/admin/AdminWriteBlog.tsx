@@ -291,7 +291,21 @@ const AdminWriteBlog = () => {
           </div>
 
           <div>
-            <Label className="text-xs font-semibold mb-1.5 block">Date / Freshness Context</Label>
+            <div className="flex items-center justify-between mb-1.5">
+              <Label className="text-xs font-semibold block">Date / Freshness Context</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs gap-1"
+                onClick={() => {
+                  setContentDateContext(buildLatestDateContext());
+                  toast({ title: "Reset to latest dates", description: `Refreshed to ${new Date().getFullYear()}-${new Date().getFullYear() + 1} cycle. Click Generate to regenerate.` });
+                }}
+              >
+                <Sparkles className="h-3 w-3" /> Regenerate with latest dates
+              </Button>
+            </div>
             <Textarea
               value={contentDateContext}
               onChange={(e) => setContentDateContext(e.target.value)}
