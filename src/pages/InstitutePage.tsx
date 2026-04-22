@@ -284,7 +284,7 @@ const InstitutePage = () => {
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             {/* About */}
-            <Card id="institute-about">
+            <Card id="institute-about" className="scroll-mt-24">
               <CardHeader><CardTitle className="font-heading">About {institute.name}</CardTitle></CardHeader>
               <CardContent>
                 <div className="prose prose-sm max-w-none text-muted-foreground dark:prose-invert leading-relaxed mb-4" dangerouslySetInnerHTML={{ __html: institute.description || '' }} />
@@ -900,7 +900,28 @@ const InstitutePage = () => {
         </div>
         {institute?.id && <PageKeywords contentType="institute" recordId={institute.id} fallbackKeywords={(institute as any).keywords || []} />}
       </div>
-    </div>
+
+      {/* Mobile-first navigation + actions */}
+      <FloatingTOC
+        items={[
+          { id: "institute-about", label: "About" },
+          { id: "courses", label: "Courses & Fees" },
+          { id: "faculty", label: "Faculty" },
+          { id: "testimonials", label: "Testimonials" },
+          { id: "reviews", label: "Reviews" },
+        ]}
+        onSelect={(id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })}
+        bottomOffset={88}
+      />
+      <MobileActionBar
+        actions={[
+          { icon: <GraduationCap />, label: "Enquire", primary: true, onClick: () => document.getElementById("courses")?.scrollIntoView({ behavior: "smooth" }) },
+          { icon: <Heart className={saved ? "fill-current" : ""} />, label: saved ? "Saved" : "Save", active: saved, onClick: handleSaveInstitute },
+          { icon: <Download />, label: "Brochure", onClick: handleDownloadPDF },
+          { icon: <Share2 />, label: "Share", onClick: () => { if (navigator.share) navigator.share({ title: institute.name, url: window.location.href }); else { navigator.clipboard.writeText(window.location.href); toast({ title: "Link copied!" }); } } },
+        ]}
+      />
+      <div className="md:hidden h-20" aria-hidden />
     </div>
   );
 };
