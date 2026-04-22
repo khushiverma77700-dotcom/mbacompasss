@@ -351,6 +351,48 @@ const AdminCollegeSections = () => {
         </div>
       </div>
 
+      {bulkProgress && (
+        <Card className="mb-4 border-primary/30 bg-primary/5">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {aiBusy === "bulk" ? <Loader2 className="w-4 h-4 animate-spin text-primary" /> : <CheckCircle2 className="w-4 h-4 text-primary" />}
+                <span className="text-sm font-semibold text-foreground">
+                  {aiBusy === "bulk" ? "Generating AI content…" : "Generation complete"}
+                </span>
+              </div>
+              <div className="flex items-center gap-3 text-xs">
+                <span className="text-muted-foreground">{bulkProgress.done} / {bulkProgress.total}</span>
+                <span className="text-emerald-600 font-medium">✓ {bulkProgress.ok}</span>
+                {bulkProgress.fail > 0 && <span className="text-destructive font-medium">✕ {bulkProgress.fail}</span>}
+                <span className="font-bold text-primary">{Math.round((bulkProgress.done / Math.max(bulkProgress.total, 1)) * 100)}%</span>
+                {aiBusy !== "bulk" && (
+                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setBulkProgress(null)}>
+                    <X className="w-3.5 h-3.5" />
+                  </Button>
+                )}
+              </div>
+            </div>
+            <Progress value={(bulkProgress.done / Math.max(bulkProgress.total, 1)) * 100} className="h-2" />
+            {bulkProgress.current && aiBusy === "bulk" && (
+              <p className="text-xs text-muted-foreground">Currently generating: <span className="font-medium text-foreground">{bulkProgress.current}</span></p>
+            )}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1.5 max-h-48 overflow-y-auto pt-1">
+              {bulkProgress.results.map((r, idx) => (
+                <div key={idx} className="flex items-center gap-1.5 text-xs px-2 py-1 rounded bg-background/60 border border-border/50">
+                  {r.status === "ok" && <CheckCircle2 className="w-3 h-3 text-emerald-600 flex-shrink-0" />}
+                  {r.status === "fail" && <XCircle className="w-3 h-3 text-destructive flex-shrink-0" />}
+                  {r.status === "pending" && (bulkProgress.current === r.label && aiBusy === "bulk"
+                    ? <Loader2 className="w-3 h-3 animate-spin text-primary flex-shrink-0" />
+                    : <div className="w-3 h-3 rounded-full border border-muted-foreground/30 flex-shrink-0" />)}
+                  <span className={`truncate ${r.status === "fail" ? "text-destructive" : "text-foreground"}`} title={r.error || r.label}>{r.label}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="mb-4">
         <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Filter by College</Label>
         <select className="border border-border rounded-md p-2 text-sm bg-background w-64" value={selectedCollege} onChange={(e) => setSelectedCollege(e.target.value)}>
