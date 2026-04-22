@@ -283,6 +283,11 @@ const AdminCollegeSections = () => {
               </div>
             </div>
             <Input placeholder="Section Title (optional override)" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+            <div className="flex justify-end">
+              <Button type="button" variant="outline" size="sm" onClick={handleAIFillForm} disabled={aiBusy === "form" || !form.college_id}>
+                {aiBusy === "form" ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating…</> : <><Sparkles className="w-4 h-4 mr-2" /> Generate this section via AI</>}
+              </Button>
+            </div>
             <div className="border border-border rounded-lg p-4 bg-muted/10">
               <h3 className="text-sm font-semibold text-foreground mb-3">{SECTION_TYPES.find(t => t.value === form.section_type)?.label} — Content Editor</h3>
               <SectionFormRenderer type={form.section_type} data={form.data} onChange={(d) => setForm({ ...form, data: d })} content={form.content} onContentChange={(c) => setForm({ ...form, content: c })} />
