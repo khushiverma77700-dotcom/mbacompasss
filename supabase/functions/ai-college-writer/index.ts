@@ -391,12 +391,11 @@ RULES:
       factCheck.warnings = extraWarnings;
     }
 
-    // Apply omissions: null out high-risk fields the auditor flagged as untrustworthy
-    const omit = new Set<string>(Array.isArray(factCheck.omit_fields) ? factCheck.omit_fields : []);
+    // Complete-Data Mode: keep all populated fields. The audit metadata is still
+    // returned (factCheck.warnings) so the admin UI can surface low-confidence
+    // values, but we never null them out — empty fields hurt the page worse
+    // than a confidence-flagged value.
     const safeProfile: any = { ...profile };
-    omit.forEach((field) => {
-      if (field in safeProfile) safeProfile[field] = null;
-    });
 
     return new Response(
       JSON.stringify({
