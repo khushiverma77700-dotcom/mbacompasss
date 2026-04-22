@@ -1740,6 +1740,9 @@ const AdminSEODashboard = () => {
                               <div className="flex gap-1 justify-end">
                                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { navigator.clipboard.writeText(`Title: ${bt.title}\nMeta: ${bt.metaTitle}\nDesc: ${bt.metaDescription}\nSlug: ${bt.slug}\nKeyword: ${bt.targetKeyword}`); toast({ title: "Copied" }); }}><Copy className="h-3 w-3" /></Button>
                                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleSaveBlogIdea(bt)} disabled={savedBlogIdeas.some(s => s.title === bt.title)}><Save className="h-3 w-3" /></Button>
+                                <Button variant="default" size="sm" className="h-7 px-2 gap-1" onClick={() => handleWriteBlogViaAI({ title: bt.title, slug: bt.slug, targetKeyword: bt.targetKeyword, metaTitle: bt.metaTitle, metaDescription: bt.metaDescription, category: "news" })}>
+                                  <Wand2 className="h-3 w-3" /> Write via AI
+                                </Button>
                               </div>
                             </TableCell>
                           </TableRow>
