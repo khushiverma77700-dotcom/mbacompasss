@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import {
   Save, Search, Shield, Sparkles, Tag, Target, Trash2, TrendingUp, Trophy, Users, XCircle, Zap,
   Download, Eye, Database, Layers, Radio, Settings, FileCheck, MonitorSmartphone, Lock,
   ExternalLink, Activity, LayoutGrid, Network, Crosshair, Swords, Brain, Lightbulb, Star,
+  Wand2,
 } from "lucide-react";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import { PageSpeedMonitor } from "@/components/admin/PageSpeedMonitor";
@@ -191,6 +193,7 @@ const getSEOAudit = (contentType: SEOContentType, item: Record<string, any>, sna
 const SEO_KNOWN_KEYS_STORAGE = "seo_dashboard_known_keys";
 
 const AdminSEODashboard = () => {
+  const navigate = useNavigate();
   const [rows, setRows] = useState<DashboardRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
@@ -687,7 +690,26 @@ const AdminSEODashboard = () => {
     await saveBlogIdeasToDb([]);
   };
 
-  // ── Interlink Studio Functions ──
+  // Hand off a blog brief to the Write-Blog page
+  const handleWriteBlogViaAI = (brief: {
+    title: string; slug?: string; targetKeyword: string;
+    metaTitle?: string; metaDescription?: string; category?: string;
+    secondaryKeywords?: string[];
+  }) => {
+    try {
+      sessionStorage.setItem("ai_blog_brief_draft", JSON.stringify({
+        title: brief.title,
+        slug: brief.slug || generateSlug(brief.title),
+        targetKeyword: brief.targetKeyword,
+        metaTitle: brief.metaTitle || "",
+        metaDescription: brief.metaDescription || "",
+        category: brief.category || "news",
+        secondaryKeywords: brief.secondaryKeywords || [],
+      }));
+    } catch {}
+    navigate("/admin/seo/write-blog");
+  };
+
   const runInterlinkSuggest = async () => {
     setInterlinkLoading(true);
     try {
@@ -1718,6 +1740,9 @@ const AdminSEODashboard = () => {
                               <div className="flex gap-1 justify-end">
                                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { navigator.clipboard.writeText(`Title: ${bt.title}\nMeta: ${bt.metaTitle}\nDesc: ${bt.metaDescription}\nSlug: ${bt.slug}\nKeyword: ${bt.targetKeyword}`); toast({ title: "Copied" }); }}><Copy className="h-3 w-3" /></Button>
                                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleSaveBlogIdea(bt)} disabled={savedBlogIdeas.some(s => s.title === bt.title)}><Save className="h-3 w-3" /></Button>
+                                <Button variant="default" size="sm" className="h-7 px-2 gap-1" onClick={() => handleWriteBlogViaAI({ title: bt.title, slug: bt.slug, targetKeyword: bt.targetKeyword, metaTitle: bt.metaTitle, metaDescription: bt.metaDescription, category: "news" })}>
+                                  <Wand2 className="h-3 w-3" /> Write via AI
+                                </Button>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -1779,7 +1804,14 @@ const AdminSEODashboard = () => {
                           <TableCell className="font-mono text-xs">{idea.searchVolume?.toLocaleString()}</TableCell>
                           <TableCell><Badge className={`text-[10px] ${priorityColor(idea.priority)}`}>{idea.priority}</Badge></TableCell>
                           <TableCell className="text-[10px] text-muted-foreground">{new Date(idea.savedAt).toLocaleDateString()}</TableCell>
-                          <TableCell><Button variant="ghost" size="icon" className="h-6 w-6 text-red-400 hover:text-red-600" onClick={() => handleDeleteBlogIdea(idea.id)}><Trash2 className="h-3 w-3" /></Button></TableCell>
+                          <TableCell>
+                            <div className="flex gap-1 justify-end">
+                              <Button variant="default" size="sm" className="h-6 px-2 gap-1 text-[10px]" onClick={() => handleWriteBlogViaAI({ title: idea.title, slug: idea.slug, targetKeyword: idea.targetKeyword, metaTitle: idea.metaTitle, metaDescription: idea.metaDescription, category: "news" })}>
+                                <Wand2 className="h-3 w-3" /> AI
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-6 w-6 text-red-400 hover:text-red-600" onClick={() => handleDeleteBlogIdea(idea.id)}><Trash2 className="h-3 w-3" /></Button>
+                            </div>
+                          </TableCell>
                         </TableRow>
                         );
                       })}

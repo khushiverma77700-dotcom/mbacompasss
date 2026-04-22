@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +45,7 @@ const AdminArticles = () => {
   const [keywordInput, setKeywordInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
 
   const fetchComparisons = async () => {
@@ -57,6 +59,21 @@ const AdminArticles = () => {
   };
 
   useEffect(() => { fetchArticles(); fetchComparisons(); }, []);
+
+  // Auto-open edit form when ?edit=<id> is present
+  useEffect(() => {
+    const editParam = searchParams.get("edit");
+    if (!editParam || !articles.length) return;
+    const article = articles.find(a => a.id === editParam);
+    if (article) {
+      handleEdit(article);
+      // Clean the param so refresh doesn't re-open
+      const next = new URLSearchParams(searchParams);
+      next.delete("edit");
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [articles, searchParams]);
 
   const generateSlug = (title: string) => title.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 75);
 
