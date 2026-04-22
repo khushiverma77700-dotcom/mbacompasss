@@ -127,12 +127,30 @@ const AdminCollegeSections = () => {
   const fetchColleges = async () => { const { data } = await supabase.from("colleges").select("id, name, city, state, type, tier, established").order("name"); if (data) setColleges(data); };
   const fetchSections = async () => { let query = supabase.from("college_sections").select("*, colleges(name)").order("sort_order"); if (selectedCollege) query = query.eq("college_id", selectedCollege); const { data } = await query; if (data) setSections(data); };
 
+  // Fetch the FULL college row so we can pass shared anchor facts (established year, ranking,
+  // fees, placements, exams, accreditations) into every section call. This keeps the same
+  // facts consistent across every generated section for one college.
+  const fetchAnchorFacts = async (collegeId: string) => {
+    const { data } = await supabase
+      .from("colleges")
+      .select("established, ranking, fees, fees_lakhs, placement_avg, placement_highest, placement_median, exams_accepted, accreditations")
+      .eq("id", collegeId)
+      .maybeSingle();
+    const cy = new Date().getFullYear();
+    return {
+      ...(data || {}),
+      admission_cycle: `${cy}-${cy + 1}`,
+    };
+  };
+
   useEffect(() => { fetchColleges(); }, []);
   useEffect(() => { fetchSections(); }, [selectedCollege]);
 
-  const generateForSection = async (collegeId: string, sectionType: string) => {
+  const generateForSection = async (collegeId: string, sectionType: string, anchorFacts?: any) => {
     const college = colleges.find(c => c.id === collegeId);
     if (!college) throw new Error("College not found");
+    const facts = anchorFacts || await fetchAnchorFacts(collegeId);
+    const cy = new Date().getFullYear();
     const { data, error } = await supabase.functions.invoke("ai-college-section", {
       body: {
         collegeName: college.name,
@@ -142,6 +160,9 @@ const AdminCollegeSections = () => {
         tier: college.tier,
         established: college.established,
         sectionType,
+        anchorFacts: facts,
+        factSafety: true,
+        freshnessWindow: `${cy - 1}-${cy + 1}`,
       },
     });
     if (error) throw error;
