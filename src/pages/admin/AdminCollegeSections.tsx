@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, X, GripVertical, ArrowLeft } from "lucide-react";
+import { Plus, Pencil, Trash2, X, GripVertical, ArrowLeft, Sparkles, Loader2 } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
 
@@ -114,18 +114,113 @@ const SectionFormRenderer = ({ type, data, onChange, content, onContentChange }:
 
 const AdminCollegeSections = () => {
   const [sections, setSections] = useState<any[]>([]);
-  const [colleges, setColleges] = useState<{ id: string; name: string }[]>([]);
+  const [colleges, setColleges] = useState<{ id: string; name: string; city?: string | null; state?: string | null; type?: string | null; tier?: string | null; established?: number | null }[]>([]);
   const [selectedCollege, setSelectedCollege] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
+  const [aiBusy, setAiBusy] = useState<string | null>(null); // section_type currently generating, or "form" / "bulk:<id>"
   const { toast } = useToast();
 
-  const fetchColleges = async () => { const { data } = await supabase.from("colleges").select("id, name").order("name"); if (data) setColleges(data); };
+  const fetchColleges = async () => { const { data } = await supabase.from("colleges").select("id, name, city, state, type, tier, established").order("name"); if (data) setColleges(data); };
   const fetchSections = async () => { let query = supabase.from("college_sections").select("*, colleges(name)").order("sort_order"); if (selectedCollege) query = query.eq("college_id", selectedCollege); const { data } = await query; if (data) setSections(data); };
 
   useEffect(() => { fetchColleges(); }, []);
   useEffect(() => { fetchSections(); }, [selectedCollege]);
+
+  const generateForSection = async (collegeId: string, sectionType: string) => {
+    const college = colleges.find(c => c.id === collegeId);
+    if (!college) throw new Error("College not found");
+    const { data, error } = await supabase.functions.invoke("ai-college-section", {
+      body: {
+        collegeName: college.name,
+        city: college.city,
+        state: college.state,
+        type: college.type,
+        tier: college.tier,
+        established: college.established,
+        sectionType,
+      },
+    });
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+    if (!data?.section) throw new Error("AI returned empty response");
+    return data.section as { title: string | null; content: string; data: any };
+  };
+
+  const handleAIFillForm = async () => {
+    if (!form.college_id) { toast({ title: "Select a college first", variant: "destructive" }); return; }
+    setAiBusy("form");
+    try {
+      const sec = await generateForSection(form.college_id, form.section_type);
+      setForm(prev => ({ ...prev, title: sec.title || prev.title, content: sec.content || "", data: sec.data || {} }));
+      toast({ title: "AI content loaded", description: "Review and click Update/Create to save." });
+    } catch (e: any) {
+      toast({ title: "AI generation failed", description: e?.message || "Unknown error", variant: "destructive" });
+    } finally {
+      setAiBusy(null);
+    }
+  };
+
+  const handleAIGenerateRow = async (row: any) => {
+    setAiBusy(`row:${row.id}`);
+    try {
+      const sec = await generateForSection(row.college_id, row.section_type);
+      const { error } = await supabase.from("college_sections").update({
+        title: sec.title || row.title,
+        content: sec.content || row.content,
+        data: sec.data || row.data || {},
+      }).eq("id", row.id);
+      if (error) throw error;
+      toast({ title: "Section updated by AI" });
+      fetchSections();
+    } catch (e: any) {
+      toast({ title: "AI generation failed", description: e?.message || "Unknown error", variant: "destructive" });
+    } finally {
+      setAiBusy(null);
+    }
+  };
+
+  const handleAIGenerateAll = async () => {
+    if (!selectedCollege) { toast({ title: "Select a college first", variant: "destructive" }); return; }
+    if (!confirm("Generate AI content for ALL sections of this college? Existing content will be replaced.")) return;
+    setAiBusy("bulk");
+    try {
+      // Ensure every section type exists
+      const existingTypes = sections.filter(s => s.college_id === selectedCollege).map(s => s.section_type);
+      const missing = SECTION_TYPES.filter(t => !existingTypes.includes(t.value));
+      if (missing.length) {
+        const inserts = missing.map((t, i) => ({ college_id: selectedCollege, section_type: t.value, title: t.label, sort_order: (existingTypes.length + i) * 10, data: {} }));
+        await supabase.from("college_sections").insert(inserts);
+        await fetchSections();
+      }
+      const { data: rows } = await supabase.from("college_sections").select("*").eq("college_id", selectedCollege);
+      const list = rows || [];
+      let ok = 0, fail = 0;
+      for (const row of list) {
+        try {
+          const sec = await generateForSection(selectedCollege, row.section_type);
+          await supabase.from("college_sections").update({
+            title: sec.title || row.title,
+            content: sec.content || row.content,
+            data: sec.data || {},
+          }).eq("id", row.id);
+          ok++;
+        } catch (err) {
+          console.error("bulk fail for", row.section_type, err);
+          fail++;
+        }
+        // tiny pause to avoid burst rate-limits
+        await new Promise(r => setTimeout(r, 800));
+      }
+      toast({ title: "Bulk AI generation complete", description: `${ok} succeeded, ${fail} failed.` });
+      fetchSections();
+    } catch (e: any) {
+      toast({ title: "Bulk generation failed", description: e?.message || "Unknown error", variant: "destructive" });
+    } finally {
+      setAiBusy(null);
+    }
+  };
 
   const handleSave = async () => {
     if (!form.college_id) { toast({ title: "Select a college", variant: "destructive" }); return; }
@@ -188,6 +283,11 @@ const AdminCollegeSections = () => {
               </div>
             </div>
             <Input placeholder="Section Title (optional override)" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+            <div className="flex justify-end">
+              <Button type="button" variant="outline" size="sm" onClick={handleAIFillForm} disabled={aiBusy === "form" || !form.college_id}>
+                {aiBusy === "form" ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating…</> : <><Sparkles className="w-4 h-4 mr-2" /> Generate this section via AI</>}
+              </Button>
+            </div>
             <div className="border border-border rounded-lg p-4 bg-muted/10">
               <h3 className="text-sm font-semibold text-foreground mb-3">{SECTION_TYPES.find(t => t.value === form.section_type)?.label} — Content Editor</h3>
               <SectionFormRenderer type={form.section_type} data={form.data} onChange={(d) => setForm({ ...form, data: d })} content={form.content} onContentChange={(c) => setForm({ ...form, content: c })} />
@@ -204,7 +304,12 @@ const AdminCollegeSections = () => {
     <div>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="font-heading text-2xl font-bold text-foreground">College Sections</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {selectedCollege && (
+            <Button variant="outline" onClick={handleAIGenerateAll} disabled={aiBusy === "bulk"}>
+              {aiBusy === "bulk" ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Generating all…</> : <><Sparkles className="w-4 h-4 mr-1" /> Generate ALL via AI</>}
+            </Button>
+          )}
           {selectedCollege && (<Button variant="outline" onClick={handleQuickAdd}><Plus className="w-4 h-4 mr-1" /> Quick Add All Missing</Button>)}
           <Button onClick={() => { setForm({ ...emptyForm, college_id: selectedCollege }); setEditId(null); setShowForm(true); }}>
             <Plus className="w-4 h-4 mr-2" /> Add Section
@@ -232,6 +337,9 @@ const AdminCollegeSections = () => {
                   <TableCell>{s.title || "—"}</TableCell>
                   <TableCell>{s.sort_order}</TableCell>
                   <TableCell className="text-right space-x-1">
+                    <Button variant="ghost" size="sm" onClick={() => handleAIGenerateRow(s)} disabled={aiBusy === `row:${s.id}`} title="Regenerate with AI">
+                      {aiBusy === `row:${s.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-primary" />}
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(s.id)}><Pencil className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(s.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                   </TableCell>
