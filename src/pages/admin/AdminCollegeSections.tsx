@@ -220,6 +220,10 @@ const AdminCollegeSections = () => {
       const { data: rows } = await supabase.from("college_sections").select("*").eq("college_id", selectedCollege).order("sort_order");
       const list = rows || [];
 
+      // Fetch shared anchor facts ONCE so every section uses the same establishment year,
+      // ranking, fees, exams and accreditations — keeping content consistent across sections.
+      const sharedFacts = await fetchAnchorFacts(selectedCollege);
+
       // Initialize progress
       setBulkProgress({
         total: list.length,
@@ -240,7 +244,7 @@ const AdminCollegeSections = () => {
         const label = SECTION_TYPES.find(t => t.value === row.section_type)?.label || row.section_type;
         setBulkProgress(prev => prev ? { ...prev, current: label } : prev);
         try {
-          const sec = await generateForSection(selectedCollege, row.section_type);
+          const sec = await generateForSection(selectedCollege, row.section_type, sharedFacts);
           await supabase.from("college_sections").update({
             title: sec.title || row.title,
             content: sec.content || row.content,
