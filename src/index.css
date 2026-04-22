@@ -203,7 +203,8 @@
 /* ── Unified AI-generated content typography ──
    Use on any container that renders AI / TipTap HTML so font sizes stay
    consistent across blogs, college pages, etc. Body = 1rem everywhere;
-   only headings step up. */
+   only headings step up. `!important` locks typography against any inline
+   style="" or class="" the model might emit. */
 .ai-content,
 .ai-content p,
 .ai-content li,
@@ -212,14 +213,17 @@
 .ai-content blockquote,
 .ai-content a,
 .ai-content strong,
-.ai-content em {
-  font-size: 1rem;
-  line-height: 1.7;
+.ai-content em,
+.ai-content span,
+.ai-content div {
+  font-size: 1rem !important;
+  line-height: 1.7 !important;
+  font-family: var(--font-body) !important;
 }
-.ai-content h1 { font-size: 1.75rem; line-height: 1.3; font-weight: 700; margin: 1.25rem 0 0.75rem; }
-.ai-content h2 { font-size: 1.375rem; line-height: 1.35; font-weight: 700; margin: 1.25rem 0 0.625rem; }
-.ai-content h3 { font-size: 1.125rem; line-height: 1.4; font-weight: 600; margin: 1rem 0 0.5rem; }
-.ai-content h4 { font-size: 1.0625rem; line-height: 1.45; font-weight: 600; margin: 0.875rem 0 0.5rem; }
+.ai-content h1 { font-size: 1.75rem !important; line-height: 1.3 !important; font-weight: 700 !important; margin: 1.25rem 0 0.75rem !important; font-family: var(--font-heading) !important; }
+.ai-content h2 { font-size: 1.375rem !important; line-height: 1.35 !important; font-weight: 700 !important; margin: 1.25rem 0 0.625rem !important; font-family: var(--font-heading) !important; }
+.ai-content h3 { font-size: 1.125rem !important; line-height: 1.4 !important; font-weight: 600 !important; margin: 1rem 0 0.5rem !important; font-family: var(--font-heading) !important; }
+.ai-content h4 { font-size: 1.0625rem !important; line-height: 1.45 !important; font-weight: 600 !important; margin: 0.875rem 0 0.5rem !important; font-family: var(--font-heading) !important; }
 .ai-content p,
 .ai-content ul,
 .ai-content ol,
@@ -237,4 +241,11 @@
   padding-left: 1rem;
   font-style: italic;
   margin: 1rem 0;
+}
+/* Strip any inline font-size / font-family the model may have injected via attributes. */
+.ai-content [style*="font-size"],
+.ai-content [style*="font-family"],
+.ai-content font {
+  font-size: 1rem !important;
+  font-family: var(--font-body) !important;
 }

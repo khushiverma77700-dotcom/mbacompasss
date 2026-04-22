@@ -1,11 +1,31 @@
 // AI College Section Writer — generates structured content for one section of a college profile.
 // Uses Lovable AI Gateway (openai/gpt-5) with tool-calling for type-safe structured output.
+//
+// Hardened with:
+//  • Freshness windows (2024–2026) + "Last updated" stamp + citation hints
+//  • Fact-safety mode (returns "Not publicly confirmed" instead of inventing numbers)
+//  • Per-section SEO meta + canonical-slug suggestion + FAQ schema for `qa` sections
+//  • HTML sanitization (strips inline `style=` and font/size tags so typography stays uniform)
+//  • Anchor-fact propagation so the same establishment year / ranking / fees are reused across every section
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
+
+interface AnchorFacts {
+  established?: number | null;
+  ranking?: number | null;
+  fees?: string | null;
+  fees_lakhs?: number | null;
+  placement_avg?: string | null;
+  placement_highest?: string | null;
+  placement_median?: string | null;
+  exams_accepted?: string[] | null;
+  accreditations?: string[] | null;
+  admission_cycle?: string | null; // e.g. "2025-2026"
+}
 
 interface SectionBrief {
   collegeName: string;
@@ -16,6 +36,9 @@ interface SectionBrief {
   established?: number | null;
   sectionType: string; // matches SECTION_TYPES.value in AdminCollegeSections.tsx
   extraContext?: string;
+  anchorFacts?: AnchorFacts; // shared facts to keep consistent across every section
+  factSafety?: boolean;       // when true, model must use "Not publicly confirmed" instead of guessing
+  freshnessWindow?: string;   // e.g. "2024-2026" — appended into prompts
 }
 
 const SECTION_TOOLS: Record<string, any> = {
@@ -354,6 +377,61 @@ const SECTION_TOOLS: Record<string, any> = {
   },
 };
 
+// ── Common SEO fields appended to EVERY section payload ──
+const SEO_FIELDS = {
+  meta_title: { type: "string", description: "<=60 chars, declarative, includes section topic + college name." },
+  meta_description: { type: "string", description: "140-160 chars, declarative, includes section topic + college name." },
+  canonical_slug: { type: "string", description: "Lowercase-hyphenated suggestion for the section anchor, e.g. 'placements-2025'." },
+};
+const SEO_REQUIRED = ["meta_title", "meta_description", "canonical_slug"];
+
+// Strip inline styles, font/size tags, and any class/id attributes that could
+// override the platform's `.ai-content` typography lock.
+function sanitizeHtml(html: string): string {
+  if (!html || typeof html !== "string") return "";
+  let out = html;
+  // Remove <style> blocks entirely
+  out = out.replace(/<style[\s\S]*?<\/style>/gi, "");
+  // Remove <script> blocks entirely
+  out = out.replace(/<script[\s\S]*?<\/script>/gi, "");
+  // Strip <font> tags but keep their inner text
+  out = out.replace(/<\/?font[^>]*>/gi, "");
+  // Strip inline style="..." attributes
+  out = out.replace(/\s+style\s*=\s*"[^"]*"/gi, "");
+  out = out.replace(/\s+style\s*=\s*'[^']*'/gi, "");
+  // Strip class and id attributes (so author CSS can't change typography)
+  out = out.replace(/\s+class\s*=\s*"[^"]*"/gi, "");
+  out = out.replace(/\s+class\s*=\s*'[^']*'/gi, "");
+  out = out.replace(/\s+id\s*=\s*"[^"]*"/gi, "");
+  out = out.replace(/\s+id\s*=\s*'[^']*'/gi, "");
+  // Strip width/height attributes that affect layout
+  out = out.replace(/\s+(width|height|align|bgcolor|color|face|size)\s*=\s*"[^"]*"/gi, "");
+  out = out.replace(/\s+(width|height|align|bgcolor|color|face|size)\s*=\s*'[^']*'/gi, "");
+  // Drop any <h1> that the model produced (page already has one)
+  out = out.replace(/<h1[^>]*>/gi, "<h2>").replace(/<\/h1>/gi, "</h2>");
+  return out.trim();
+}
+
+function buildFaqSchema(items: { question: string; answer: string }[]) {
+  if (!Array.isArray(items) || items.length === 0) return null;
+  const cleaned = items
+    .map((q) => ({
+      question: String(q?.question || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim(),
+      answer: String(q?.answer || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim(),
+    }))
+    .filter((q) => q.question.length > 5 && q.answer.length >= 20);
+  if (!cleaned.length) return null;
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: cleaned.map((q) => ({
+      "@type": "Question",
+      name: q.question,
+      acceptedAnswer: { "@type": "Answer", text: q.answer },
+    })),
+  };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -369,23 +447,66 @@ Deno.serve(async (req) => {
       );
     }
 
-    const spec = SECTION_TOOLS[brief.sectionType];
-    if (!spec) {
+    const baseSpec = SECTION_TOOLS[brief.sectionType];
+    if (!baseSpec) {
       return new Response(
         JSON.stringify({ error: `Unsupported sectionType: ${brief.sectionType}` }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    // Inject SEO fields into every section spec
+    const spec = {
+      ...baseSpec,
+      fields: { ...baseSpec.fields, ...SEO_FIELDS },
+      required: [...baseSpec.required, ...SEO_REQUIRED],
+    };
+
+    const today = new Date();
+    const todayIso = today.toISOString().slice(0, 10);
+    const currentYear = today.getFullYear();
+    const freshness = brief.freshnessWindow || `${currentYear - 1}-${currentYear + 1}`; // e.g. 2024-2026
+    const admissionCycle = brief.anchorFacts?.admission_cycle || `${currentYear}-${currentYear + 1}`;
+    const factSafety = brief.factSafety !== false; // default ON
+
+    const anchor = brief.anchorFacts || {};
+    const anchorBlock = `
+# CROSS-SECTION ANCHOR FACTS (USE THESE EXACT VALUES — DO NOT CONTRADICT)
+${anchor.established ? `- Established Year: ${anchor.established}` : ""}
+${anchor.ranking ? `- National Ranking (NIRF band): ${anchor.ranking}` : ""}
+${anchor.fees ? `- Total Fees: ${anchor.fees}` : ""}
+${anchor.fees_lakhs ? `- Fees (Lakhs): ${anchor.fees_lakhs}` : ""}
+${anchor.placement_avg ? `- Avg Placement: ${anchor.placement_avg}` : ""}
+${anchor.placement_highest ? `- Highest Placement: ${anchor.placement_highest}` : ""}
+${anchor.placement_median ? `- Median Placement: ${anchor.placement_median}` : ""}
+${anchor.exams_accepted?.length ? `- Exams Accepted: ${anchor.exams_accepted.join(", ")}` : ""}
+${anchor.accreditations?.length ? `- Accreditations: ${anchor.accreditations.join(", ")}` : ""}
+- Active Admission Cycle: ${admissionCycle}
+- Freshness Window: ${freshness}
+- Today: ${todayIso}
+`.trim();
+
+    const factSafetyRules = factSafety
+      ? `
+# FACT-SAFETY MODE (STRICT)
+- NEVER invent specific numbers (establishment year, NIRF rank, fees, placement packages, percentile cutoffs, recruiter names you don't actually know).
+- If a precise number is NOT in the anchor facts above AND you are not 100% confident from training, write the literal string "Not publicly confirmed" (or for arrays, return a single item "Not publicly confirmed").
+- For HTML prose: phrase uncertain figures as "publicly available reports indicate around X" only when X is a widely-cited, plausible range; otherwise omit the figure.
+- A wrong-by-decades founding year (e.g. 2020 for XLRI which is 1949) is the worst possible failure — refuse to guess.`
+      : "";
+
     const systemPrompt = `You are a senior MBA/B-school researcher and SEO writer for Indian students. Write like a smart senior mentor — clear, friendly, plain English, contractions OK. NEVER fabricate facts about well-known institutions (IIMs, XLRI, FMS, MDI, SPJIMR, IIFT, NMIMS, SIBM, JBIMS, ISB, etc.).
 
 ACCURACY RULES:
 - Established years for famous schools must be correct (XLRI=1949, IIM-A=1961, IIM-B=1973, IIM-C=1961, FMS=1954, JBIMS=1965, SPJIMR=1981, MDI=1973, IIFT=1963, NMIMS=1981, ISB=2001).
-- All fees, placements, cutoffs, recruiter lists must reflect the latest 2024-2025 placement cycle and 2025-2026 admission cycle. Never use 2020-2023 numbers.
+- All fees, placements, cutoffs, recruiter lists must reflect the latest ${freshness} data window. The active admission cycle is ${admissionCycle}. Today is ${todayIso}. Never use 2020-2023 numbers.
+- Where you reference a stat, add a one-line citation hint inside the prose like "(source: NIRF 2025)" or "(source: official placement report 2024-25)" — keep it short, no links, no fake URLs.
+- End every long-form HTML content field with a small italic line: <p><em>Last updated: ${todayIso}</em></p>
 - HTML output uses ONLY: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. No <html>/<head>/<body>/<h1>/markdown fences.
+- ABSOLUTELY NO inline style="" attributes, NO <font> tags, NO class="" / id="" attributes, NO width/height/color attributes. Plain semantic HTML only — the platform applies uniform typography.
 - Headings & opening sentences must be DECLARATIVE — never start with a question.
 - Avoid AI clichés: "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving".
-- Reading level ~grade 8. Use real numbers, real names, contractions.`;
+- Reading level ~grade 8. Use real numbers, real names, contractions.${factSafetyRules}`;
 
     const userPrompt = `Generate the "${brief.sectionType}" section for the following Indian B-school. Verify every factual claim before writing.
 
@@ -395,19 +516,24 @@ ACCURACY RULES:
 - State: ${brief.state || "(use the actual state)"}
 - Type: ${brief.type || "(use the correct type)"}
 - Tier: ${brief.tier || "(use realistic tier)"}
-- Established: ${brief.established ?? "(use the correct historical year)"}
+- Established: ${brief.established ?? anchor.established ?? "(use the correct historical year)"}
 ${brief.extraContext ? `- Extra context: ${brief.extraContext}` : ""}
+
+${anchorBlock}
 
 # SECTION INSTRUCTIONS
 ${spec.instructions}
 
-# SEO MUST-HAVES
+# SEO MUST-HAVES (mandatory in returned payload)
+- meta_title: <=60 chars, declarative, includes section topic + college name. NO question marks.
+- meta_description: 140-160 chars, declarative, includes section topic + college name + freshness year.
+- canonical_slug: lowercase-hyphenated section anchor (e.g. "${brief.sectionType}-${currentYear}").
 - Use the college name and primary keyword naturally (no stuffing).
-- Latest 2025-2026 data context.
+- Latest ${admissionCycle} admission cycle context.
 - Include 1-2 internal-link-style anchors where natural (e.g. <a href="/exams/cat">CAT exam</a>, <a href="/college-shortlister">College Shortlister</a>) — only inside HTML content fields.
 - All headings declarative, no questions in headings.
 
-Return JSON via the tool call below — fill EVERY required field with real, accurate values.`;
+Return JSON via the tool call below — fill EVERY required field with real, accurate values that respect the anchor facts and freshness window.`;
 
     const tool = {
       type: "function",
@@ -487,8 +613,23 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
       );
     }
 
+    // ── Sanitize HTML in `content` field ──
+    if (typeof payload.content === "string") {
+      payload.content = sanitizeHtml(payload.content);
+      // Ensure "Last updated" stamp is present
+      if (!/Last updated:/i.test(payload.content)) {
+        payload.content += `\n<p><em>Last updated: ${todayIso}</em></p>`;
+      }
+    }
+
+    // ── Build FAQ schema for `qa` sections so they're rich-results eligible ──
+    let faq_schema: any = null;
+    if (brief.sectionType === "qa" && Array.isArray(payload.questions)) {
+      faq_schema = buildFaqSchema(payload.questions);
+    }
+
     // Map structured payload back into the form shape used by AdminCollegeSections
-    const { title, content, ...dataRest } = payload;
+    const { title, content, meta_title, meta_description, canonical_slug, ...dataRest } = payload;
     return new Response(
       JSON.stringify({
         success: true,
@@ -497,6 +638,14 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
           content: typeof content === "string" ? content : "",
           data: dataRest,
         },
+        seo: {
+          meta_title: meta_title || null,
+          meta_description: meta_description || null,
+          canonical_slug: canonical_slug || null,
+          last_updated: todayIso,
+          freshness_window: freshness,
+        },
+        faq_schema,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
