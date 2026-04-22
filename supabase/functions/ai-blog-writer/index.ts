@@ -158,20 +158,30 @@ Deno.serve(async (req) => {
     }
 
     const aiJson = await aiRes.json();
-    const toolCall = aiJson?.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall?.function?.arguments) {
+    console.log("AI finish_reason:", aiJson?.choices?.[0]?.finish_reason);
+    const message = aiJson?.choices?.[0]?.message;
+    const toolCall = message?.tool_calls?.[0];
+    const rawArgs = toolCall?.function?.arguments;
+
+    if (!rawArgs) {
+      console.error("No tool call. Message preview:", JSON.stringify(message)?.slice(0, 800));
       return new Response(
-        JSON.stringify({ error: "AI did not return a structured article" }),
+        JSON.stringify({
+          error: "AI did not return a structured article",
+          detail: message?.content?.slice(0, 300) || "no content returned",
+          finish_reason: aiJson?.choices?.[0]?.finish_reason,
+        }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     let article: any;
     try {
-      article = JSON.parse(toolCall.function.arguments);
+      article = JSON.parse(rawArgs);
     } catch (e) {
+      console.error("Parse fail. Length:", rawArgs.length, "Tail:", rawArgs.slice(-300));
       return new Response(
-        JSON.stringify({ error: "Failed to parse AI output" }),
+        JSON.stringify({ error: "AI output was truncated or malformed JSON. Try again or reduce word count.", detail: String(e).slice(0, 200) }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
