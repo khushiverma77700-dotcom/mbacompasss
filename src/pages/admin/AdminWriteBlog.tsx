@@ -48,9 +48,11 @@ const AdminWriteBlog = () => {
   const [category, setCategory] = useState<string>(seed.category || "news");
   const [secondaryKws, setSecondaryKws] = useState<string[]>(seed.secondaryKeywords || []);
   const [secInput, setSecInput] = useState("");
-  const [contentDateContext, setContentDateContext] = useState<string>(
-    `Use only the most recent dates, exam cycles, fees and statistics (${new Date().getFullYear()}-${new Date().getFullYear() + 1}). Avoid outdated years.`
-  );
+  const buildLatestDateContext = () => {
+    const y = new Date().getFullYear();
+    return `Use ONLY the most recent verified data: ${y}-${y + 1} admission cycle, ${y - 1}-${y} placement reports. All dates, exam cycles, fees, cutoffs and statistics MUST reflect the latest published year. Do NOT use outdated 2020-2023 figures unless explicitly historical context.`;
+  };
+  const [contentDateContext, setContentDateContext] = useState<string>(buildLatestDateContext());
   const [wordMin, setWordMin] = useState(2000);
   const [wordMax, setWordMax] = useState(2500);
   const [densityPct, setDensityPct] = useState(10);
