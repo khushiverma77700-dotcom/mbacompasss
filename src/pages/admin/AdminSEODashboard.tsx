@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import {
   Save, Search, Shield, Sparkles, Tag, Target, Trash2, TrendingUp, Trophy, Users, XCircle, Zap,
   Download, Eye, Database, Layers, Radio, Settings, FileCheck, MonitorSmartphone, Lock,
   ExternalLink, Activity, LayoutGrid, Network, Crosshair, Swords, Brain, Lightbulb, Star,
+  Wand2,
 } from "lucide-react";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import { PageSpeedMonitor } from "@/components/admin/PageSpeedMonitor";
