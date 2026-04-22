@@ -23,6 +23,7 @@ import InlineAIToolCTA from "@/components/InlineAIToolCTA";
 import LastUpdatedBadge from "@/components/LastUpdatedBadge";
 import CitationLink from "@/components/CitationLink";
 import { fallbackText } from "@/lib/contentFallback";
+import { enhanceAIContent } from "@/lib/aiContentEnhancer";
 import MobileActionBar from "@/components/mobile/MobileActionBar";
 import FloatingTOC from "@/components/mobile/FloatingTOC";
 import { Share2 } from "lucide-react";
