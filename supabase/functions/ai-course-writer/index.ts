@@ -148,7 +148,14 @@ async function generate(body: Extract<Body, { mode: "generate" }>, apiKey: strin
     body.contentDateContext?.trim() ||
     `Use only the most recent verified data (freshness window ${f.window}; active batch cycle ${f.cycle}). Fees, batch start dates, and seat numbers must reflect the latest published year. Today is ${f.todayIso}.`;
 
-  const system = `You are a senior MBA-entrance coaching researcher and SEO writer for India. You write like a smart senior mentor talking to a CAT/XAT/GMAT aspirant — clear, friendly, plain English, contractions allowed. NEVER fabricate facts. If a precise number is not well known, return a plausible RANGE (e.g. "INR 35,000 - 55,000 for full classroom CAT course") and set confidence = "Range". Never invent a single false rupee figure.
+  const system = `You are a senior MBA-entrance coaching researcher and SEO writer for India. You write like a smart senior mentor talking to a CAT/XAT/GMAT aspirant — clear, friendly, plain English, contractions allowed.
+
+# COMPLETE-DATA MODE (NON-NEGOTIABLE)
+- EVERY field MUST be filled with concrete, useful, realistic ${f.currentYear} data. Empty strings, "N/A", "Not available", "TBD", "Contact for details", 0 (where 0 is meaningless like fees_inr=0 or total_seats=0) are STRICTLY FORBIDDEN.
+- For famous brands (TIME, IMS, Career Launcher, 2IIM, iQuanta, Bulls Eye, Endeavor, Cracku, Hitbullseye) you have abundant verified data — USE IT confidently.
+- When the EXACT current-year fee is not in training data, give a TIGHT realistic ${f.currentYear - 1}-${f.currentYear} range as fees_text (e.g. "INR 35,000 - 55,000") AND set fees_inr to the midpoint (e.g. 45000). Never set fees_inr to 0 or skip it.
+- highlights[] MUST have 5-8 punchy real bullets. curriculum[] MUST have 6-12 real module names. start_date MUST be a real-feeling string like "Next batch: 15 ${new Date(0,(f.currentYear*12+new Date().getMonth()+1)%12).toLocaleString('en',{month:'long'})} ${f.currentYear}" or "Rolling weekly batches".
+- batch_info MUST be a real specific line like "Weekend + Weekday batches, 4 classes/week, 3 hr each, max 40 students per batch".`;
 
 ${SCOPE_LOCK}
 
