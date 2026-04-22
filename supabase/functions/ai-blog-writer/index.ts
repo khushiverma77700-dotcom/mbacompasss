@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
     const targetWords = Math.round((wmin + wmax) / 2);
     const targetOccurrences = Math.round((targetWords * density) / 100);
 
-    const systemPrompt = `You are an expert SEO content writer specializing in MBA, B-school, coaching and exam preparation content for the Indian audience. You write in a clear, authoritative "smart MBA advisor" voice — never generic, never robotic. Output is valid HTML using only these tags: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. Do NOT include <html>, <head>, <body>, <h1>, or markdown fences.`;
+    const systemPrompt = `You are an expert SEO content writer specializing in MBA, B-school, coaching and exam preparation content for the Indian audience. You write in a clear, friendly, HUMAN voice — like a smart senior mentor talking to a student. Plain English, short sentences, contractions allowed (you're, don't, it's). Avoid corporate jargon, avoid "In today's fast-paced world..." style fluff, avoid robotic AI phrasing. Output is valid HTML using only these tags: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>, <blockquote>. Do NOT include <html>, <head>, <body>, <h1>, or markdown fences.`;
 
     const userPrompt = `Write a complete, ready-to-publish SEO blog article.
 
@@ -64,23 +64,40 @@ Deno.serve(async (req) => {
 # HARD RULES
 1. Word count: ${wmin}-${wmax} words. Stay strictly inside this range.
 2. Keyword density: aim for the primary keyword "${targetKw}" to appear ~${targetOccurrences} times (~${density}% density) NATURALLY across H2s, intro, body and conclusion. Use exact match plus close variants. Never keyword-stuff into a single paragraph.
-3. Use short paragraphs (2-4 sentences), bullet/numbered lists, and at least one HTML table where it adds value (comparison, fees, dates, cutoffs, etc.).
-4. Structure: a strong intro paragraph, then 6-10 <h2> sections, with <h3> subsections where helpful, and a final FAQ section with 4-6 Q&A.
-5. Include real, current Indian MBA ecosystem context (CAT, XAT, NMAT, SNAP, IIMs, top private B-schools, fee ranges in lakhs, recent 2025-2026 dates wherever applicable).
-6. Do NOT invent numbers that look implausible. If unsure, use ranges (e.g., "INR 18-25 lakhs").
-7. Do NOT include any <h1> — the title is rendered separately.
-8. Sprinkle the secondary keywords naturally where they fit.
-9. End with a short CTA paragraph encouraging the reader to explore related resources on the site.
+3. **MANDATORY OPENING — TL;DR SUMMARY**: The very first element of "intro" MUST be a <p> block that starts with <strong>Quick Summary:</strong> followed by a tight 55-65 word overview of the entire article. This summary must give the reader the core answer/takeaway upfront — NOT tease it.
+4. **NEVER START WITH A QUESTION**. The first sentence after the Quick Summary, every <h2>, and every paragraph opener must be a DECLARATIVE statement that gives the student an answer or a clear fact. Bad: "Why should you prepare for CAT without coaching?" Good: "Self-study works for CAT when you have discipline, the right material, and a 6-month runway." Headings can be topic phrases (e.g. "How to Prepare for CAT Without Coaching") but never end with a question mark — except inside the final FAQ section.
+5. **HUMANIZED LANGUAGE**: Write at roughly an 8th-grade reading level. Use contractions, real examples, second person ("you"), and concrete numbers. Vary sentence length. NO phrases like "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving". NO em-dash overuse.
+6. Use short paragraphs (2-4 sentences), bullet/numbered lists, and at least one HTML table where it adds value (comparison, fees, dates, cutoffs, etc.).
+7. **STRUCTURE** (in this exact order inside intro + content):
+   a. Quick Summary paragraph (rule 3)
+   b. 1-2 paragraph hook that states the problem and the answer
+   c. 6-10 <h2> sections with <h3> subsections where helpful
+   d. A "Key Takeaways" <h2> with 4-6 bullet points
+   e. A final <h2>Frequently Asked Questions</h2> with 4-6 Q&A (each Q in <h3>, A in <p>)
+   f. A short CTA paragraph at the very end
+8. **ON-PAGE SEO MUST-HAVES (build these into the HTML naturally)**:
+   - Primary keyword in the first 100 words AND in at least 2 <h2> headings.
+   - Secondary keywords sprinkled in <h2>/<h3>/<p> where they fit naturally.
+   - At least 3-5 internal-link-style anchors using relative URLs to relevant site sections, e.g. <a href="/colleges">top MBA colleges</a>, <a href="/coaching">CAT coaching</a>, <a href="/exams/cat">CAT exam</a>, <a href="/profile-analyzer">AI Profile Analyzer</a>, <a href="/mba-roi-calculator">MBA ROI Calculator</a>, <a href="/college-shortlister">College Shortlister</a>. Choose the ones that genuinely fit the topic.
+   - At least 1-2 outward references to authoritative bodies by name in plain text (e.g. "as per IIM Bangalore's 2025 placement report") — do NOT fabricate URLs.
+   - Use <strong> on 6-12 high-value phrases (keywords + key facts). Use <em> sparingly.
+   - Add descriptive image-alt-friendly phrasing inside paragraphs near where images would go (e.g. "the CAT 2025 sectional cutoff chart below…") even though we don't insert <img> tags.
+   - Use semantic lists (<ul>/<ol>) for any enumeration of 3+ items.
+   - Include a comparison or data <table> at least once.
+9. **FORMATTING POLISH**: Bold the first 2-4 words of important paragraphs when it improves scannability. Keep <h2> titles 4-9 words, benefit-driven, not clickbait. No ALL-CAPS shouting.
+10. Include real, current Indian MBA ecosystem context (CAT, XAT, NMAT, SNAP, IIMs, top private B-schools, fee ranges in lakhs, recent 2025-2026 dates wherever applicable).
+11. Do NOT invent numbers that look implausible. If unsure, use ranges (e.g., "INR 18-25 lakhs").
+12. Do NOT include any <h1> — the title is rendered separately.
 
 # OUTPUT FORMAT (return JSON via the tool call below)
-- title: refined version of the working title (<= 70 chars)
+- title: refined version of the working title (<= 70 chars). MUST NOT end with "?".
 - slug: URL slug, lowercase-hyphenated (<= 80 chars)
-- metaTitle: <= 60 chars, include primary keyword
-- metaDescription: 140-160 chars, include primary keyword, action-oriented
-- excerpt: 1-2 sentences, plain text, ~160-220 chars
-- intro: opening paragraph as HTML (<p>...)
-- content: the FULL article body as HTML (everything AFTER the intro, no <h1>)
-- h1Tag: the on-page H1 (usually same as title, may be slightly more descriptive)
+- metaTitle: <= 60 chars, include primary keyword, no question mark at the end
+- metaDescription: 140-160 chars, include primary keyword, action-oriented, declarative (not a question)
+- excerpt: 1-2 sentences, plain text, ~160-220 chars, declarative
+- intro: opening HTML — MUST begin with the <p><strong>Quick Summary:</strong> ... </p> block, then 1-2 hook paragraphs. No headings inside intro.
+- content: the FULL article body as HTML (everything AFTER the intro, no <h1>), including the Key Takeaways section, FAQ section and final CTA paragraph.
+- h1Tag: the on-page H1 (usually same as title, declarative, no "?")
 - keywords: array of 8-12 keywords (mix of short and long tail). MUST include the primary keyword as the first item.
 - primaryKeyword: the primary target keyword (echo "${targetKw}")
 - wordCount: integer, your accurate count of words in (intro + content) plain text
