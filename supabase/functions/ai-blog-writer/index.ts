@@ -217,6 +217,29 @@ Deno.serve(async (req) => {
     const actualOccurrences = (plain.match(re) || []).length;
     const actualDensity = actualWords ? +((actualOccurrences * targetKw.split(/\s+/).length) / actualWords * 100).toFixed(2) : 0;
 
+    // ── Auto-extract FAQs from the FAQ section so the article snapshot can carry FAQ schema ──
+    const extractFaqs = (html: string) => {
+      if (!html) return [];
+      const re2 = /<h3[^>]*>([\s\S]*?)<\/h3>\s*<p[^>]*>([\s\S]*?)<\/p>/gi;
+      const out: { question: string; answer: string }[] = [];
+      let m: RegExpExecArray | null;
+      while ((m = re2.exec(html))) {
+        const q = m[1].replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+        const a = m[2].replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+        if (q && a && (q.endsWith("?") || /^(what|why|how|is|are|can|should|do|does|when|where|which|who)\b/i.test(q)) && a.length >= 20) {
+          out.push({ question: q, answer: a });
+        }
+      }
+      const seen = new Set<string>();
+      return out.filter((f) => {
+        const k = f.question.toLowerCase();
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return true;
+      }).slice(0, 8);
+    };
+    const extractedFaqs = extractFaqs(article.content || "");
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -226,6 +249,7 @@ Deno.serve(async (req) => {
           // never override target keyword
           primaryKeyword: targetKw,
         },
+        faqs: extractedFaqs,
         stats: {
           targetWordsRange: [wmin, wmax],
           actualWords,
