@@ -158,12 +158,22 @@ const AdminWriteBlog = () => {
 
       if (insertErr) throw insertErr;
 
+      // Auto-seed FAQ schema snapshot (so FAQPage JSON-LD is injected into the live article)
+      const extractedFaqs = Array.isArray(data?.faqs) ? data.faqs : [];
+      if (extractedFaqs.length > 0 && inserted?.id) {
+        try {
+          await supabase.functions.invoke("auto-seo-engine", {
+            body: { mode: "seed_faqs", contentType: "article", pageId: inserted.id, faqs: extractedFaqs },
+          });
+        } catch (e) { console.warn("FAQ seed failed", e); }
+      }
+
       // Clear the saved brief
       try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
 
       toast({
         title: "Article generated!",
-        description: `${data.stats?.actualWords ?? "~"} words, ${data.stats?.actualDensityPct ?? "~"}% density. Opening editor...`,
+        description: `${data.stats?.actualWords ?? "~"} words, ${data.stats?.actualDensityPct ?? "~"}% density${extractedFaqs.length ? ` · ${extractedFaqs.length} FAQs schema-injected` : ""}. Opening editor...`,
       });
 
       // Redirect to AdminArticles with edit query
