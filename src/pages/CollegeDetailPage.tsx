@@ -340,7 +340,7 @@ const CollegeDetailPage = () => {
           <div className="lg:col-span-2 space-y-6">
 
             {/* Overview */}
-            <div ref={el => { sectionRefs.current["overview"] = el; }}>
+            <div id="overview" ref={el => { sectionRefs.current["overview"] = el; }} className="scroll-mt-32">
               <Card>
                 <CardHeader><CardTitle className="font-heading">About {college.name}</CardTitle></CardHeader>
                 <CardContent>
@@ -388,7 +388,7 @@ const CollegeDetailPage = () => {
             </div>
 
             {/* Courses & Fees */}
-            <div ref={el => { sectionRefs.current["courses"] = el; }}>
+            <div id="courses" ref={el => { sectionRefs.current["courses"] = el; }} className="scroll-mt-32">
               <Card>
                 <CardHeader><CardTitle className="font-heading">Courses & Fee Structure</CardTitle></CardHeader>
                 <CardContent>
@@ -421,7 +421,7 @@ const CollegeDetailPage = () => {
             </div>
 
             {/* Admissions */}
-            <div ref={el => { sectionRefs.current["admission"] = el; }}>
+            <div id="admission" ref={el => { sectionRefs.current["admission"] = el; }} className="scroll-mt-32">
               <Card>
                 <CardHeader><CardTitle className="font-heading">Admission Process</CardTitle></CardHeader>
                 <CardContent>
@@ -452,7 +452,7 @@ const CollegeDetailPage = () => {
             </div>
 
             {/* Placements */}
-            <div ref={el => { sectionRefs.current["placements"] = el; }}>
+            <div id="placements" ref={el => { sectionRefs.current["placements"] = el; }} className="scroll-mt-32">
               <Card>
                 <CardHeader><CardTitle className="font-heading">Placement Statistics</CardTitle></CardHeader>
                 <CardContent>
@@ -498,7 +498,7 @@ const CollegeDetailPage = () => {
             <InlineAIToolCTA variant="college-shortlister" />
 
             {/* Cutoff */}
-            <div ref={el => { sectionRefs.current["cutoff"] = el; }}>
+            <div id="cutoff" ref={el => { sectionRefs.current["cutoff"] = el; }} className="scroll-mt-32">
               <Card>
                 <CardHeader><CardTitle className="font-heading">Cutoff Details</CardTitle></CardHeader>
                 <CardContent>
@@ -551,7 +551,7 @@ const CollegeDetailPage = () => {
             </div>
 
             {/* Rankings */}
-            <div ref={el => { sectionRefs.current["rankings"] = el; }}>
+            <div id="rankings" ref={el => { sectionRefs.current["rankings"] = el; }} className="scroll-mt-32">
               <Card>
                 <CardHeader><CardTitle className="font-heading flex items-center gap-2"><Medal className="w-5 h-5 text-primary" /> Rankings & Accreditations</CardTitle></CardHeader>
                 <CardContent>
@@ -578,7 +578,7 @@ const CollegeDetailPage = () => {
             </div>
 
             {/* Reviews */}
-            <div ref={el => { sectionRefs.current["reviews"] = el; }}>
+            <div id="reviews" ref={el => { sectionRefs.current["reviews"] = el; }} className="scroll-mt-32">
               <Card>
                 <CardHeader><CardTitle className="font-heading flex items-center gap-2"><MessageSquare className="w-5 h-5 text-primary" /> Student Reviews</CardTitle></CardHeader>
                 <CardContent>
@@ -624,7 +624,7 @@ const CollegeDetailPage = () => {
             </div>
 
             {/* Gallery */}
-            <div ref={el => { sectionRefs.current["gallery"] = el; }}>
+            <div id="gallery" ref={el => { sectionRefs.current["gallery"] = el; }} className="scroll-mt-32">
               <Card>
                 <CardHeader><CardTitle className="font-heading flex items-center gap-2"><Image className="w-5 h-5 text-primary" /> Campus Gallery</CardTitle></CardHeader>
                 <CardContent>
@@ -648,7 +648,7 @@ const CollegeDetailPage = () => {
             </div>
 
             {/* Scholarships */}
-            <div ref={el => { sectionRefs.current["scholarships"] = el; }}>
+            <div id="scholarships" ref={el => { sectionRefs.current["scholarships"] = el; }} className="scroll-mt-32">
               <Card>
                 <CardHeader><CardTitle className="font-heading flex items-center gap-2"><Banknote className="w-5 h-5 text-primary" /> Scholarships</CardTitle></CardHeader>
                 <CardContent>
@@ -669,7 +669,7 @@ const CollegeDetailPage = () => {
             </div>
 
             {/* Faculty */}
-            <div ref={el => { sectionRefs.current["faculty"] = el; }}>
+            <div id="faculty" ref={el => { sectionRefs.current["faculty"] = el; }} className="scroll-mt-32">
               <Card>
                 <CardHeader><CardTitle className="font-heading">Faculty Profiles</CardTitle></CardHeader>
                 <CardContent>
@@ -696,7 +696,7 @@ const CollegeDetailPage = () => {
             </div>
 
             {/* Hostel & Campus */}
-            <div ref={el => { sectionRefs.current["hostel"] = el; }}>
+            <div id="hostel" ref={el => { sectionRefs.current["hostel"] = el; }} className="scroll-mt-32">
               <Card>
                 <CardHeader><CardTitle className="font-heading flex items-center gap-2"><Home className="w-5 h-5 text-primary" /> Hostel & Campus Life</CardTitle></CardHeader>
                 <CardContent>
@@ -727,7 +727,7 @@ const CollegeDetailPage = () => {
             </div>
 
             {/* Q&A */}
-            <div ref={el => { sectionRefs.current["qa"] = el; }}>
+            <div id="qa" ref={el => { sectionRefs.current["qa"] = el; }} className="scroll-mt-32">
               <Card>
                 <CardHeader><CardTitle className="font-heading flex items-center gap-2"><HelpCircle className="w-5 h-5 text-primary" /> Frequently Asked Questions</CardTitle></CardHeader>
                 <CardContent>
@@ -753,7 +753,7 @@ const CollegeDetailPage = () => {
             </div>
 
             {/* News */}
-            <div ref={el => { sectionRefs.current["news"] = el; }}>
+            <div id="news" ref={el => { sectionRefs.current["news"] = el; }} className="scroll-mt-32">
               <Card>
                 <CardHeader><CardTitle className="font-heading">Latest News & Articles</CardTitle></CardHeader>
                 <CardContent>
