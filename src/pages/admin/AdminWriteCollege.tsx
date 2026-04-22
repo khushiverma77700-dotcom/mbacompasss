@@ -65,6 +65,17 @@ const AdminWriteCollege = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [reviewData, setReviewData] = useState<{ insertedId: string; factCheck: any; faqsCount: number } | null>(null);
 
+  const [seoReport, setSeoReport] = useState<CompletenessReport | null>(null);
+  const [htmlReport, setHtmlReport] = useState<HtmlValidationReport | null>(null);
+  const [cycleReport, setCycleReport] = useState<CycleReport | null>(null);
+  const [progressSteps, setProgressSteps] = useState<ProgressStep[]>(
+    COLLEGE_STEPS.map(s => ({ ...s, status: "pending" as const }))
+  );
+  const [progressCurrent, setProgressCurrent] = useState<string>("");
+  const setStep = (key: string, status: ProgressStep["status"]) => {
+    setProgressSteps(prev => prev.map(s => (s.key === key ? { ...s, status } : s)));
+  };
+
   // Auto-sync slug from name until user edits slug manually
   const [slugTouched, setSlugTouched] = useState<boolean>(Boolean(seed.slug));
   useEffect(() => {
