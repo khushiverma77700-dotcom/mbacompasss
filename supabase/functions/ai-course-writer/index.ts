@@ -155,7 +155,7 @@ async function generate(body: Extract<Body, { mode: "generate" }>, apiKey: strin
 - For famous brands (TIME, IMS, Career Launcher, 2IIM, iQuanta, Bulls Eye, Endeavor, Cracku, Hitbullseye) you have abundant verified data — USE IT confidently.
 - When the EXACT current-year fee is not in training data, give a TIGHT realistic ${f.currentYear - 1}-${f.currentYear} range as fees_text (e.g. "INR 35,000 - 55,000") AND set fees_inr to the midpoint (e.g. 45000). Never set fees_inr to 0 or skip it.
 - highlights[] MUST have 5-8 punchy real bullets. curriculum[] MUST have 6-12 real module names. start_date MUST be a real-feeling string like "Next batch: <Month> ${f.currentYear}" or "Rolling weekly batches every Saturday".
-- batch_info MUST be a real specific line like "Weekend + Weekday batches, 4 classes/week, 3 hr each, max 40 students per batch".`;
+- batch_info MUST be a real specific line like "Weekend + Weekday batches, 4 classes/week, 3 hr each, max 40 students per batch".
 
 ${SCOPE_LOCK}
 
