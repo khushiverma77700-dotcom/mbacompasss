@@ -196,10 +196,28 @@ const AdminCollegeSections = () => {
         await supabase.from("college_sections").insert(inserts);
         await fetchSections();
       }
-      const { data: rows } = await supabase.from("college_sections").select("*").eq("college_id", selectedCollege);
+      const { data: rows } = await supabase.from("college_sections").select("*").eq("college_id", selectedCollege).order("sort_order");
       const list = rows || [];
+
+      // Initialize progress
+      setBulkProgress({
+        total: list.length,
+        done: 0,
+        ok: 0,
+        fail: 0,
+        current: "",
+        results: list.map(r => ({
+          type: r.section_type,
+          label: SECTION_TYPES.find(t => t.value === r.section_type)?.label || r.section_type,
+          status: "pending",
+        })),
+      });
+
       let ok = 0, fail = 0;
-      for (const row of list) {
+      for (let i = 0; i < list.length; i++) {
+        const row = list[i];
+        const label = SECTION_TYPES.find(t => t.value === row.section_type)?.label || row.section_type;
+        setBulkProgress(prev => prev ? { ...prev, current: label } : prev);
         try {
           const sec = await generateForSection(selectedCollege, row.section_type);
           await supabase.from("college_sections").update({
@@ -208,9 +226,21 @@ const AdminCollegeSections = () => {
             data: sec.data || {},
           }).eq("id", row.id);
           ok++;
-        } catch (err) {
+          setBulkProgress(prev => {
+            if (!prev) return prev;
+            const results = [...prev.results];
+            results[i] = { ...results[i], status: "ok" };
+            return { ...prev, done: prev.done + 1, ok: prev.ok + 1, results };
+          });
+        } catch (err: any) {
           console.error("bulk fail for", row.section_type, err);
           fail++;
+          setBulkProgress(prev => {
+            if (!prev) return prev;
+            const results = [...prev.results];
+            results[i] = { ...results[i], status: "fail", error: err?.message || "Failed" };
+            return { ...prev, done: prev.done + 1, fail: prev.fail + 1, results };
+          });
         }
         // tiny pause to avoid burst rate-limits
         await new Promise(r => setTimeout(r, 800));
@@ -221,6 +251,8 @@ const AdminCollegeSections = () => {
       toast({ title: "Bulk generation failed", description: e?.message || "Unknown error", variant: "destructive" });
     } finally {
       setAiBusy(null);
+      // Keep progress panel visible so user can review which succeeded/failed; auto-hide after 30s
+      setTimeout(() => setBulkProgress(null), 30000);
     }
   };
 
