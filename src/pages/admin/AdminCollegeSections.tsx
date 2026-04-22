@@ -304,7 +304,12 @@ const AdminCollegeSections = () => {
     <div>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="font-heading text-2xl font-bold text-foreground">College Sections</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {selectedCollege && (
+            <Button variant="outline" onClick={handleAIGenerateAll} disabled={aiBusy === "bulk"}>
+              {aiBusy === "bulk" ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Generating all…</> : <><Sparkles className="w-4 h-4 mr-1" /> Generate ALL via AI</>}
+            </Button>
+          )}
           {selectedCollege && (<Button variant="outline" onClick={handleQuickAdd}><Plus className="w-4 h-4 mr-1" /> Quick Add All Missing</Button>)}
           <Button onClick={() => { setForm({ ...emptyForm, college_id: selectedCollege }); setEditId(null); setShowForm(true); }}>
             <Plus className="w-4 h-4 mr-2" /> Add Section
