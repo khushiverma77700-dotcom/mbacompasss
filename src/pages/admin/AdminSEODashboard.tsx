@@ -1804,7 +1804,14 @@ const AdminSEODashboard = () => {
                           <TableCell className="font-mono text-xs">{idea.searchVolume?.toLocaleString()}</TableCell>
                           <TableCell><Badge className={`text-[10px] ${priorityColor(idea.priority)}`}>{idea.priority}</Badge></TableCell>
                           <TableCell className="text-[10px] text-muted-foreground">{new Date(idea.savedAt).toLocaleDateString()}</TableCell>
-                          <TableCell><Button variant="ghost" size="icon" className="h-6 w-6 text-red-400 hover:text-red-600" onClick={() => handleDeleteBlogIdea(idea.id)}><Trash2 className="h-3 w-3" /></Button></TableCell>
+                          <TableCell>
+                            <div className="flex gap-1 justify-end">
+                              <Button variant="default" size="sm" className="h-6 px-2 gap-1 text-[10px]" onClick={() => handleWriteBlogViaAI({ title: idea.title, slug: idea.slug, targetKeyword: idea.targetKeyword, metaTitle: idea.metaTitle, metaDescription: idea.metaDescription, category: "news" })}>
+                                <Wand2 className="h-3 w-3" /> AI
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-6 w-6 text-red-400 hover:text-red-600" onClick={() => handleDeleteBlogIdea(idea.id)}><Trash2 className="h-3 w-3" /></Button>
+                            </div>
+                          </TableCell>
                         </TableRow>
                         );
                       })}
