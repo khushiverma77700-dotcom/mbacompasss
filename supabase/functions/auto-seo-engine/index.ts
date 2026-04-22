@@ -953,14 +953,37 @@ RULES:
       if (!aiResp.ok) throw new Error(`AI error ${aiResp.status}`);
       const aiJson = await aiResp.json();
       await logAIUsage("faq-generate", STANDARD_MODEL, aiJson);
-      const { faqs } = extractToolResult(aiJson);
+      const { faqs: rawFaqs } = extractToolResult(aiJson);
+
+      // Sanitise: strip HTML, trim, drop incomplete pairs, dedupe by question
+      const seen = new Set<string>();
+      const faqs = (Array.isArray(rawFaqs) ? rawFaqs : [])
+        .map((f: any) => ({
+          question: stripHtml(String(f?.question || "")).replace(/\s+/g, " ").trim(),
+          answer: stripHtml(String(f?.answer || "")).replace(/\s+/g, " ").trim(),
+        }))
+        .filter((f: any) => {
+          if (!f.question || !f.answer) return false;
+          if (f.question.length < 8 || f.answer.length < 20) return false;
+          const key = f.question.toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .slice(0, 10);
+
+      if (faqs.length === 0) {
+        return new Response(JSON.stringify({ error: "AI returned no usable FAQs. Please try again." }), {
+          status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       const snapshotKey = `seo_page__${contentType}__${page.id}`;
       const { data: existSnap } = await supabase.from("site_settings").select("id, value").eq("key", snapshotKey).limit(1);
       const faqSchema = {
         "@context": "https://schema.org",
         "@type": "FAQPage",
-        mainEntity: (faqs || []).map((f: any) => ({
+        mainEntity: faqs.map((f: any) => ({
           "@type": "Question",
           name: f.question,
           acceptedAnswer: { "@type": "Answer", text: f.answer },
@@ -979,7 +1002,7 @@ RULES:
           value: { contentType, recordId: page.id, slug: page.slug, pagePath: config.getPath(page), canonicalUrl: config.getPath(page), faqs, schemaMarkup: [faqSchema], generatedAt: new Date().toISOString() } as any,
         });
       }
-      return new Response(JSON.stringify({ faqs, count: (faqs || []).length }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ faqs, count: faqs.length, schemaInjected: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // ── NEW: stale_content ──
