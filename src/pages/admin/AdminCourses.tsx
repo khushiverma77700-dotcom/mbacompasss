@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, X, Clock, Star, Users, ArrowLeft } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Clock, Star, Users, ArrowLeft, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useTableSort } from "@/hooks/useTableSort";
 import SortableTableHead from "@/components/admin/SortableTableHead";
 import RichTextEditor from "@/components/admin/RichTextEditor";
@@ -34,6 +35,7 @@ const AdminCourses = () => {
   const [highlightInput, setHighlightInput] = useState("");
   const [search, setSearch] = useState("");
   const { toast } = useToast();
+  const navigate = useNavigate();
   const filtered = search ? courses.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.institutes?.name?.toLowerCase().includes(search.toLowerCase())) : courses;
   const { sortedItems: sortedCourses, sortConfig, handleSort } = useTableSort(filtered);
 
@@ -247,7 +249,16 @@ const AdminCourses = () => {
           <h1 className="font-heading text-2xl font-bold text-foreground">Manage Courses</h1>
           <p className="text-sm text-muted-foreground">{courses.length} courses across {new Set(courses.map(c => c.institute_id)).size} institutes</p>
         </div>
-        <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Course</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            onClick={() => navigate("/admin/courses/generate-ai")}
+            className="border-primary/40 text-primary hover:bg-primary/5"
+          >
+            <Sparkles className="w-4 h-4 mr-2" /> Generate via AI
+          </Button>
+          <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Course</Button>
+        </div>
       </div>
 
       <div className="mb-4"><Input placeholder="Search courses or institutes..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" /></div>

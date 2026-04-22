@@ -93,6 +93,7 @@ const AdminListingChangeRequests = lazy(() => import("./pages/admin/AdminListing
 const AdminWriteBlog = lazy(() => import("./pages/admin/AdminWriteBlog"));
 const AdminWriteCollege = lazy(() => import("./pages/admin/AdminWriteCollege"));
 const AdminWriteInstitute = lazy(() => import("./pages/admin/AdminWriteInstitute"));
+const AdminWriteCourses = lazy(() => import("./pages/admin/AdminWriteCourses"));
 const AdminWebsiteOptimizer = lazy(() => import("./pages/admin/AdminWebsiteOptimizer"));
 
 // Lazy load heavy popups
@@ -252,6 +253,7 @@ const App = () => (
               <Route path="seo/write-blog" element={<LazyPage><AdminWriteBlog /></LazyPage>} />
               <Route path="colleges/generate-ai" element={<LazyPage><AdminWriteCollege /></LazyPage>} />
               <Route path="institutes/generate-ai" element={<LazyPage><AdminWriteInstitute /></LazyPage>} />
+              <Route path="courses/generate-ai" element={<LazyPage><AdminWriteCourses /></LazyPage>} />
               <Route path="website-optimizer" element={<LazyPage><AdminWebsiteOptimizer /></LazyPage>} />
             </Route>
 
