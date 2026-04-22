@@ -166,7 +166,7 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         <Card><CardContent className="pt-4 text-center">
           <Zap className="w-5 h-5 mx-auto mb-1 text-primary" />
           <p className="text-2xl font-bold">{stats.totalCalls}</p>
@@ -179,8 +179,13 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
         </CardContent></Card>
         <Card><CardContent className="pt-4 text-center">
           <DollarSign className="w-5 h-5 mx-auto mb-1 text-primary" />
-          <p className="text-2xl font-bold">${stats.totalCost.toFixed(4)}</p>
-          <p className="text-xs text-muted-foreground">Est. AI Cost</p>
+          <p className="text-2xl font-bold">{formatUsd(stats.totalCost, 4)}</p>
+          <p className="text-xs text-muted-foreground">AI Cost (per-model)</p>
+        </CardContent></Card>
+        <Card><CardContent className="pt-4 text-center">
+          <DollarSign className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
+          <p className="text-2xl font-bold">{formatUsd(stats.avgCostPerCall, 5)}</p>
+          <p className="text-xs text-muted-foreground">Avg Cost / Call</p>
         </CardContent></Card>
         <Card><CardContent className="pt-4 text-center">
           <TrendingUp className="w-5 h-5 mx-auto mb-1 text-primary" />
@@ -193,6 +198,14 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
           <p className="text-xs text-muted-foreground">Errors</p>
         </CardContent></Card>
       </div>
+
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="pt-4 text-xs text-muted-foreground">
+          Cost is recomputed live using current Lovable AI per-model pricing
+          (input vs output tokens). Older log rows showing different stored
+          values are ignored.
+        </CardContent>
+      </Card>
 
       <Tabs defaultValue="breakdown">
         <TabsList>
