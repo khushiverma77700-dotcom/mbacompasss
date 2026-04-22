@@ -388,6 +388,20 @@ const AdminWriteBlog = () => {
         </CardContent>
       </Card>
 
+      {(generating || progressSteps.length > 0) && (
+        <AIGenerationProgress
+          workflow="Blog generation"
+          active={generating}
+          total={progressSteps.length}
+          done={progressSteps.filter(s => s.status === "ok" || s.status === "fail").length}
+          ok={progressSteps.filter(s => s.status === "ok").length}
+          fail={progressSteps.filter(s => s.status === "fail").length}
+          current={progressCurrent}
+          steps={progressSteps}
+          onDismiss={() => setProgressSteps([])}
+        />
+      )}
+
       {errorMsg && (
         <Card className="border-destructive">
           <CardContent className="pt-4 flex gap-2 items-start text-sm">
@@ -404,9 +418,17 @@ const AdminWriteBlog = () => {
             <p>Words: {stats.actualWords} (target {stats.targetWordsRange?.[0]}-{stats.targetWordsRange?.[1]})</p>
             <p>Keyword density: {stats.actualDensityPct}% (target ~{stats.targetDensityPct}%)</p>
             <p>Primary keyword occurrences: {stats.actualOccurrences} (target ~{stats.targetOccurrences})</p>
+            {stats.insertedId && (
+              <Button size="sm" className="mt-2" onClick={() => navigate(`/admin/articles?edit=${stats.insertedId}`)}>
+                Open in editor
+              </Button>
+            )}
           </CardContent>
         </Card>
       )}
+
+      <PrePublishReport seo={seoReport} html={htmlReport} cycle={cycleReport} title="Pre-publish checks" />
+
 
       <div className="flex gap-3 sticky bottom-0 bg-background py-3 border-t">
         <Button
