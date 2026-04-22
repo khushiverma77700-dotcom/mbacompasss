@@ -100,47 +100,69 @@ function getDateRange(range: string) {
 // ── AI Usage Tab ──
 
 function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
+  // Recompute cost from model + tokens (the stored estimated_cost column was
+  // written with a flat rate that does not reflect actual per-model pricing).
+  const enriched = useMemo(() => logs.map(l => ({
+    ...l,
+    cost: computeAICost({
+      model: l.model,
+      promptTokens: l.prompt_tokens,
+      completionTokens: l.completion_tokens,
+      totalTokens: l.total_tokens,
+    }),
+  })), [logs]);
+
   const stats = useMemo(() => {
-    const totalCalls = logs.length;
-    const totalTokens = logs.reduce((s, l) => s + (l.total_tokens || 0), 0);
-    const totalCost = logs.reduce((s, l) => s + Number(l.estimated_cost || 0), 0);
-    const errors = logs.filter(l => l.status === "error").length;
+    const totalCalls = enriched.length;
+    const totalTokens = enriched.reduce((s, l) => s + (l.total_tokens || 0), 0);
+    const totalCost = enriched.reduce((s, l) => s + l.cost, 0);
+    const errors = enriched.filter(l => l.status === "error").length;
     const successRate = totalCalls ? ((totalCalls - errors) / totalCalls * 100).toFixed(1) : "0";
-    return { totalCalls, totalTokens, totalCost, errors, successRate };
-  }, [logs]);
+    const avgCostPerCall = totalCalls ? totalCost / totalCalls : 0;
+    return { totalCalls, totalTokens, totalCost, errors, successRate, avgCostPerCall };
+  }, [enriched]);
 
   const byFeature = useMemo(() => {
     const map: Record<string, { calls: number; tokens: number; cost: number; errors: number }> = {};
-    logs.forEach(l => {
+    enriched.forEach(l => {
       if (!map[l.feature]) map[l.feature] = { calls: 0, tokens: 0, cost: 0, errors: 0 };
       map[l.feature].calls++;
       map[l.feature].tokens += l.total_tokens || 0;
-      map[l.feature].cost += Number(l.estimated_cost || 0);
+      map[l.feature].cost += l.cost;
       if (l.status === "error") map[l.feature].errors++;
     });
     return Object.entries(map).map(([feature, d]) => ({
       feature, name: FEATURE_LABELS[feature] || feature, ...d,
       color: FEATURE_COLORS[feature] || "#94a3b8",
     })).sort((a, b) => b.cost - a.cost);
-  }, [logs]);
+  }, [enriched]);
 
   const dailyTrend = useMemo(() => {
     const map: Record<string, { date: string; calls: number; tokens: number; cost: number }> = {};
-    logs.forEach(l => {
+    enriched.forEach(l => {
       const d = l.created_at.split("T")[0];
       if (!map[d]) map[d] = { date: d, calls: 0, tokens: 0, cost: 0 };
       map[d].calls++;
       map[d].tokens += l.total_tokens || 0;
-      map[d].cost += Number(l.estimated_cost || 0);
+      map[d].cost += l.cost;
     });
     return Object.values(map).sort((a, b) => a.date.localeCompare(b.date));
-  }, [logs]);
+  }, [enriched]);
 
   const byModel = useMemo(() => {
-    const map: Record<string, number> = {};
-    logs.forEach(l => { const m = l.model || "unknown"; map[m] = (map[m] || 0) + 1; });
-    return Object.entries(map).map(([name, value]) => ({ name: name.split("/").pop() || name, value }));
-  }, [logs]);
+    const map: Record<string, { calls: number; cost: number }> = {};
+    enriched.forEach(l => {
+      const m = l.model || "unknown";
+      if (!map[m]) map[m] = { calls: 0, cost: 0 };
+      map[m].calls++;
+      map[m].cost += l.cost;
+    });
+    return Object.entries(map).map(([name, v]) => ({
+      name: modelLabel(name),
+      value: v.calls,
+      cost: v.cost,
+    }));
+  }, [enriched]);
 
   return (
     <div className="space-y-6">
