@@ -104,8 +104,8 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
             type: { type: "string", enum: ["IIM", "Private", "Government", "Deemed", "Autonomous", "University"] },
             tier: { type: "string", enum: ["Tier 1", "Tier 2", "Tier 3", "Tier 4"] },
             college_category: { type: "string", enum: ["IIM", "Non-IIM"] },
-            established: { type: "integer", description: "Founding year, e.g. 1961" },
-            ranking: { type: "integer", description: "National ranking estimate (1-200). Use a realistic number." },
+            established: { type: ["integer", "null"], description: "Founding year. MUST be historically correct for known institutions (e.g. XLRI=1949, IIM-A=1961). Use null if genuinely unknown — never guess." },
+            ranking: { type: "integer", description: "National ranking estimate (1-200). Use a realistic NIRF-band number." },
             fees: { type: "string", description: "Display fees, e.g. 'INR 24.5 Lakhs (2-year MBA)'" },
             fees_lakhs: { type: "number", description: "Numeric total program fee in lakhs, e.g. 24.5" },
             website: { type: "string" },
@@ -147,7 +147,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "openai/gpt-5",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
