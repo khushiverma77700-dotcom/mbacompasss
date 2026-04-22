@@ -310,7 +310,7 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
                   <TableHead>Status</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
-                  {logs.slice(0, 100).map(l => (
+                  {enriched.slice(0, 100).map(l => (
                     <TableRow key={l.id}>
                       <TableCell className="text-xs whitespace-nowrap">
                         <Clock className="w-3 h-3 inline mr-1" />
