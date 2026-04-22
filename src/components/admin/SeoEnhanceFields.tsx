@@ -82,7 +82,7 @@ const SeoEnhanceFields = ({ data, onChange, contentType, recordId }: Props) => {
     setGenerating(true);
     try {
       const { data: res, error } = await supabase.functions.invoke("auto-seo-engine", {
-        body: { mode: "faq_generate", contentType, recordId },
+        body: { mode: "faq_generate", contentType, pageId: recordId },
       });
       if (error) throw error;
       toast({
