@@ -20,6 +20,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 import AIGistSection from "@/components/AIGistSection";
 import InlineAIToolCTA from "@/components/InlineAIToolCTA";
+import MobileActionBar from "@/components/mobile/MobileActionBar";
+import FloatingTOC from "@/components/mobile/FloatingTOC";
+import { Share2 } from "lucide-react";
 
 const testimonials = [
   { name: "Ankit Verma", text: "IMS coaching transformed my CAT prep. Scored 99.2 percentile. The faculty's approach to Quant was game-changing.", rating: 5, batch: "CAT 2024", type: "text" },
@@ -281,7 +284,7 @@ const InstitutePage = () => {
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             {/* About */}
-            <Card id="institute-about">
+            <Card id="institute-about" className="scroll-mt-24">
               <CardHeader><CardTitle className="font-heading">About {institute.name}</CardTitle></CardHeader>
               <CardContent>
                 <div className="prose prose-sm max-w-none text-muted-foreground dark:prose-invert leading-relaxed mb-4" dangerouslySetInnerHTML={{ __html: institute.description || '' }} />
@@ -298,7 +301,7 @@ const InstitutePage = () => {
             </Card>
 
             {/* Courses - Detailed */}
-            <Card className="overflow-hidden border-0 shadow-lg">
+            <Card id="courses" className="overflow-hidden border-0 shadow-lg scroll-mt-24">
               {/* Gradient Header */}
               <div className="relative bg-gradient-to-r from-primary/10 via-primary/5 to-accent/10 px-6 py-5 border-b border-border/50">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,hsl(var(--primary)/0.08),transparent_70%)] pointer-events-none" />
@@ -713,7 +716,7 @@ const InstitutePage = () => {
 
             {/* Faculty */}
             {faculty.length > 0 && (
-              <Card>
+              <Card id="faculty" className="scroll-mt-24">
                 <CardHeader><CardTitle className="font-heading">Faculty Profiles ({faculty.length})</CardTitle></CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -751,7 +754,7 @@ const InstitutePage = () => {
             )}
 
             {/* Auto-scroll Testimonials */}
-            <Card>
+            <Card id="testimonials" className="scroll-mt-24">
               <CardHeader><CardTitle className="font-heading flex items-center gap-2"><Quote className="w-5 h-5 text-primary" /> Student Testimonials</CardTitle></CardHeader>
               <CardContent>
                 <div className="relative overflow-hidden rounded-xl bg-secondary/30 p-6 min-h-[160px]">
@@ -791,7 +794,7 @@ const InstitutePage = () => {
 
             {/* Reviews */}
             {reviews.length > 0 && (
-              <Card>
+              <Card id="reviews" className="scroll-mt-24">
                 <CardHeader><CardTitle className="font-heading">Student Reviews ({reviews.length})</CardTitle></CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -894,10 +897,32 @@ const InstitutePage = () => {
                 <Link to="/compare"><Button variant="outline" className="w-full">Go to Compare</Button></Link>
               </CardContent>
             </Card>
+          </div>
         </div>
         {institute?.id && <PageKeywords contentType="institute" recordId={institute.id} fallbackKeywords={(institute as any).keywords || []} />}
       </div>
-    </div>
+
+      {/* Mobile-first navigation + actions */}
+      <FloatingTOC
+        items={[
+          { id: "institute-about", label: "About" },
+          { id: "courses", label: "Courses & Fees" },
+          { id: "faculty", label: "Faculty" },
+          { id: "testimonials", label: "Testimonials" },
+          { id: "reviews", label: "Reviews" },
+        ]}
+        onSelect={(id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })}
+        bottomOffset={88}
+      />
+      <MobileActionBar
+        actions={[
+          { icon: <GraduationCap />, label: "Enquire", primary: true, onClick: () => document.getElementById("courses")?.scrollIntoView({ behavior: "smooth" }) },
+          { icon: <Heart className={saved ? "fill-current" : ""} />, label: saved ? "Saved" : "Save", active: saved, onClick: handleSaveInstitute },
+          { icon: <Download />, label: "Brochure", onClick: handleDownloadPDF },
+          { icon: <Share2 />, label: "Share", onClick: () => { if (navigator.share) navigator.share({ title: institute.name, url: window.location.href }); else { navigator.clipboard.writeText(window.location.href); toast({ title: "Link copied!" }); } } },
+        ]}
+      />
+      <div className="md:hidden h-20" aria-hidden />
     </div>
   );
 };

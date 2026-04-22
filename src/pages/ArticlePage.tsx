@@ -13,6 +13,9 @@ import SEOHead, { generateArticleSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import AIGistSection from "@/components/AIGistSection";
 import InlineAIToolCTA from "@/components/InlineAIToolCTA";
+import MobileActionBar from "@/components/mobile/MobileActionBar";
+import ReadingProgress from "@/components/mobile/ReadingProgress";
+import { Bookmark } from "lucide-react";
 
 const ArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -131,6 +134,7 @@ const ArticlePage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead {...resolvedSeo} />
+      <ReadingProgress />
 
       {/* Cinematic Hero */}
       <div className="relative overflow-hidden min-h-[340px] md:min-h-[420px] lg:min-h-[460px] flex items-end">
@@ -209,7 +213,7 @@ const ArticlePage = () => {
               </div>
             )}
 
-            <div id="article-content" className="bg-card rounded-2xl border border-border p-6 md:p-10 shadow-sm">
+            <div id="article-content" className="bg-card rounded-2xl border border-border p-5 sm:p-6 md:p-10 shadow-sm text-[15px] sm:text-base leading-relaxed">
               {article.content ? renderContent(article.content) : (
                 <p className="text-muted-foreground text-center py-10">Full article content coming soon.</p>
               )}
@@ -309,6 +313,16 @@ const ArticlePage = () => {
         )}
         {article?.id && <PageKeywords contentType="article" recordId={article.id} fallbackKeywords={article.keywords || []} />}
       </div>
+
+      {/* Mobile sticky action bar */}
+      <MobileActionBar
+        actions={[
+          { icon: <Share2 />, label: "Share", primary: true, onClick: handleShare },
+          { icon: <Bookmark />, label: "Save", onClick: () => { try { const list = JSON.parse(localStorage.getItem("savedArticles") || "[]"); if (!list.includes(article.slug)) list.push(article.slug); localStorage.setItem("savedArticles", JSON.stringify(list)); toast({ title: "Saved to your reading list" }); } catch { /* noop */ } } },
+          { icon: <ArrowRight />, label: "Top", onClick: () => window.scrollTo({ top: 0, behavior: "smooth" }) },
+        ]}
+      />
+      <div className="md:hidden h-20" aria-hidden />
     </div>
   );
 };
