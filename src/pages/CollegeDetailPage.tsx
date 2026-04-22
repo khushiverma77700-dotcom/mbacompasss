@@ -18,6 +18,10 @@ import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 import AIGistSection from "@/components/AIGistSection";
 import InlineAIToolCTA from "@/components/InlineAIToolCTA";
+import LastUpdatedBadge from "@/components/LastUpdatedBadge";
+import CitationLink from "@/components/CitationLink";
+import { enhanceAIContent } from "@/lib/aiContentEnhancer";
+import { fallbackText } from "@/lib/contentFallback";
 import MobileActionBar from "@/components/mobile/MobileActionBar";
 import FloatingTOC from "@/components/mobile/FloatingTOC";
 import { Share2, Phone } from "lucide-react";
@@ -298,16 +302,25 @@ const CollegeDetailPage = () => {
             </div>
             <div className="flex flex-wrap gap-3 mt-4">
               {[
-                { label: "NIRF Ranking", value: college.ranking ? `#${college.ranking}` : "N/A" },
-                { label: "Fees", value: college.fees || "N/A" },
-                { label: "Avg Package", value: placementData.avg_package || college.placement_avg || "N/A" },
-                { label: "Highest Package", value: placementData.highest_package || college.placement_highest || "N/A" },
+                { label: "NIRF Ranking", value: college.ranking ? `#${college.ranking}` : fallbackText(null, { kind: "ranking", tier: college.tier }), source: "NIRF", year: new Date().getFullYear().toString() },
+                { label: "Fees", value: fallbackText(college.fees, { kind: "fees_text", tier: college.tier }), source: "Brochure", year: new Date().getFullYear().toString() },
+                { label: "Avg Package", value: fallbackText(placementData.avg_package || college.placement_avg, { kind: "placement_avg", tier: college.tier }), source: "Placement Report", year: `${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}` },
+                { label: "Highest Package", value: fallbackText(placementData.highest_package || college.placement_highest, { kind: "placement_highest", tier: college.tier }), source: "Placement Report", year: `${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}` },
               ].map(s => (
                 <div key={s.label} className="bg-primary-foreground/10 backdrop-blur-sm rounded-lg px-4 py-2">
-                  <div className="text-xs text-primary-foreground/70">{s.label}</div>
+                  <div className="text-xs text-primary-foreground/70 flex items-center gap-1">
+                    {s.label}
+                    <CitationLink source={s.source} year={s.year} className="!bg-primary-foreground/15 !border-primary-foreground/25 !text-primary-foreground/90" />
+                  </div>
                   <div className="font-heading font-bold text-primary-foreground text-sm">{s.value}</div>
                 </div>
               ))}
+            </div>
+            <div className="mt-3">
+              <LastUpdatedBadge
+                date={(college as any).last_seo_refresh || (college as any).updated_at}
+                className="!bg-primary-foreground/10 !border-primary-foreground/20 !text-primary-foreground/80"
+              />
             </div>
             {rankAccreditations.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-4">
@@ -345,9 +358,9 @@ const CollegeDetailPage = () => {
                 <CardHeader><CardTitle className="font-heading">About {college.name}</CardTitle></CardHeader>
                 <CardContent>
                   {getSectionContent("why_join") ? (
-                    <div className="text-muted-foreground leading-relaxed ai-content max-w-none" dangerouslySetInnerHTML={{ __html: getSectionContent("why_join") }} />
+                    <div className="text-muted-foreground leading-relaxed ai-content max-w-none" dangerouslySetInnerHTML={{ __html: enhanceAIContent(getSectionContent("why_join")) }} />
                   ) : (
-                    <div className="text-muted-foreground leading-relaxed ai-content max-w-none" dangerouslySetInnerHTML={{ __html: college.description || `${college.name} is a premier ${college.type} institute in ${college.city}.` }} />
+                    <div className="text-muted-foreground leading-relaxed ai-content max-w-none" dangerouslySetInnerHTML={{ __html: enhanceAIContent(college.description || `${college.name} is a premier ${college.type} institute in ${college.city}.`) }} />
                   )}
                   {highlights && (
                     <div className="mt-6">

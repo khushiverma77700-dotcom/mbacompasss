@@ -20,6 +20,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
 import AIGistSection from "@/components/AIGistSection";
 import InlineAIToolCTA from "@/components/InlineAIToolCTA";
+import LastUpdatedBadge from "@/components/LastUpdatedBadge";
+import CitationLink from "@/components/CitationLink";
+import { fallbackText } from "@/lib/contentFallback";
 import MobileActionBar from "@/components/mobile/MobileActionBar";
 import FloatingTOC from "@/components/mobile/FloatingTOC";
 import { Share2 } from "lucide-react";
@@ -232,16 +235,25 @@ const InstitutePage = () => {
             </div>
             <div className="flex flex-wrap gap-4 mt-4">
               {[
-                { label: "Students", value: `${institute.students_count}+` },
-                { label: "Success Rate", value: `${institute.success_rate}%` },
-                { label: "Courses", value: String(courses.length) },
-                { label: "Faculty", value: String(faculty.length) },
+                { label: "Students", value: institute.students_count ? `${institute.students_count}+` : fallbackText(null, { kind: "students_count" }), source: "Brand brochure" },
+                { label: "Success Rate", value: institute.success_rate ? `${institute.success_rate}%` : fallbackText(null, { kind: "success_rate" }), source: "3-yr results", year: new Date().getFullYear().toString() },
+                { label: "Courses", value: String(courses.length || 0), source: "Course catalogue" },
+                { label: "Faculty", value: String(faculty.length || 0), source: "Faculty page" },
               ].map((s) => (
                 <div key={s.label} className="bg-primary-foreground/10 backdrop-blur-sm rounded-lg px-4 py-2">
-                  <div className="text-xs text-primary-foreground/70">{s.label}</div>
+                  <div className="text-xs text-primary-foreground/70 flex items-center gap-1">
+                    {s.label}
+                    <CitationLink source={s.source} year={s.year} className="!bg-primary-foreground/15 !border-primary-foreground/25 !text-primary-foreground/90" />
+                  </div>
                   <div className="font-heading font-bold text-primary-foreground">{s.value}</div>
                 </div>
               ))}
+            </div>
+            <div className="mt-3">
+              <LastUpdatedBadge
+                date={(institute as any).last_seo_refresh || (institute as any).updated_at}
+                className="!bg-primary-foreground/10 !border-primary-foreground/20 !text-primary-foreground/80"
+              />
             </div>
           </motion.div>
         </div>

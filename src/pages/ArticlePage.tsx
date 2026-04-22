@@ -13,6 +13,8 @@ import SEOHead, { generateArticleSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import AIGistSection from "@/components/AIGistSection";
 import InlineAIToolCTA from "@/components/InlineAIToolCTA";
+import LastUpdatedBadge from "@/components/LastUpdatedBadge";
+import { enhanceAIContent } from "@/lib/aiContentEnhancer";
 import MobileActionBar from "@/components/mobile/MobileActionBar";
 import ReadingProgress from "@/components/mobile/ReadingProgress";
 import { Bookmark } from "lucide-react";
@@ -112,7 +114,7 @@ const ArticlePage = () => {
       return (
         <div
           className="ai-content max-w-none text-foreground"
-          dangerouslySetInnerHTML={{ __html: content }}
+          dangerouslySetInnerHTML={{ __html: enhanceAIContent(content) }}
         />
       );
     }
@@ -214,6 +216,9 @@ const ArticlePage = () => {
             )}
 
             <div id="article-content" className="bg-card rounded-2xl border border-border p-5 sm:p-6 md:p-10 shadow-sm text-[15px] sm:text-base leading-relaxed">
+              <div className="flex items-center justify-end mb-4 -mt-1">
+                <LastUpdatedBadge date={(article as any).updated_at || article.created_at} />
+              </div>
               {article.content ? renderContent(article.content) : (
                 <p className="text-muted-foreground text-center py-10">Full article content coming soon.</p>
               )}
