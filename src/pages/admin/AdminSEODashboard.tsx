@@ -193,6 +193,7 @@ const getSEOAudit = (contentType: SEOContentType, item: Record<string, any>, sna
 const SEO_KNOWN_KEYS_STORAGE = "seo_dashboard_known_keys";
 
 const AdminSEODashboard = () => {
+  const navigate = useNavigate();
   const [rows, setRows] = useState<DashboardRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
