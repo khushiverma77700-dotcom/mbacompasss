@@ -40,12 +40,15 @@ const AdminWriteCollege = () => {
   const [targetKeyword, setTargetKeyword] = useState(seed.targetKeyword);
   const [secondaryKws, setSecondaryKws] = useState<string[]>([]);
   const [secInput, setSecInput] = useState("");
-  const [contentDateContext, setContentDateContext] = useState<string>(
-    `Use only the most recent dates, fees, placement figures and statistics (${new Date().getFullYear()}-${new Date().getFullYear() + 1}). Avoid outdated years.`
-  );
+  const buildLatestDateContext = () => {
+    const y = new Date().getFullYear();
+    return `Use ONLY the most recent verified data: ${y}-${y + 1} admission cycle, ${y - 1}-${y} placement reports. All fees, placement figures, ranking and seat numbers MUST reflect the latest published year. Do NOT use outdated 2020-2023 figures unless the field is explicitly historical (e.g. founding year).`;
+  };
+  const [contentDateContext, setContentDateContext] = useState<string>(buildLatestDateContext());
 
   const [generating, setGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [reviewData, setReviewData] = useState<{ insertedId: string; factCheck: any; faqsCount: number } | null>(null);
 
   // Auto-sync slug from name until user edits slug manually
   const [slugTouched, setSlugTouched] = useState<boolean>(Boolean(seed.slug));
@@ -151,12 +154,22 @@ const AdminWriteCollege = () => {
 
       if (insertErr) throw insertErr;
 
+      // Auto-seed FAQ schema snapshot from extracted FAQs
+      const faqs = Array.isArray(data?.faqs) ? data.faqs : [];
+      if (faqs.length > 0 && inserted?.id) {
+        try {
+          await supabase.functions.invoke("auto-seo-engine", {
+            body: { mode: "seed_faqs", contentType: "college", pageId: inserted.id, faqs },
+          });
+        } catch (e) { console.warn("FAQ seed failed", e); }
+      }
+
+      const factCheck = data?.factCheck || { confidence: {}, warnings: [], omit_fields: [] };
+      setReviewData({ insertedId: inserted.id, factCheck, faqsCount: faqs.length });
       toast({
         title: "College generated!",
-        description: "Opening the college in the editor for review...",
+        description: `Review the factuality report below before opening the editor.${faqs.length ? ` ${faqs.length} FAQs schema-injected.` : ""}`,
       });
-
-      navigate(`/admin/colleges?edit=${inserted.id}`);
     } catch (e: any) {
       console.error("AI college generation failed", e);
       setErrorMsg(e?.message || "Generation failed");
@@ -283,7 +296,21 @@ const AdminWriteCollege = () => {
           </div>
 
           <div>
-            <Label className="text-xs font-semibold mb-1.5 block">Date / Freshness Context</Label>
+            <div className="flex items-center justify-between mb-1.5">
+              <Label className="text-xs font-semibold block">Date / Freshness Context</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs gap-1"
+                onClick={() => {
+                  setContentDateContext(buildLatestDateContext());
+                  toast({ title: "Reset to latest dates", description: `Refreshed to ${new Date().getFullYear()}-${new Date().getFullYear() + 1} cycle. Click Generate to refresh fees, placements & admission details.` });
+                }}
+              >
+                <Sparkles className="h-3 w-3" /> Regenerate with latest dates
+              </Button>
+            </div>
             <Textarea
               value={contentDateContext}
               onChange={(e) => setContentDateContext(e.target.value)}
@@ -303,6 +330,73 @@ const AdminWriteCollege = () => {
         </Card>
       )}
 
+      {reviewData && (
+        <Card className="border-amber-300 bg-amber-50/40">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2 text-amber-900">
+              <AlertCircle className="h-4 w-4" /> Pre-publish Factuality Review
+            </CardTitle>
+            <CardDescription className="text-amber-800">
+              Review confidence on each high-risk field and any flagged inconsistencies before opening the editor.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm">
+            <div>
+              <div className="font-semibold mb-2">Source confidence</div>
+              <div className="flex flex-wrap gap-1.5">
+                {Object.entries(reviewData.factCheck?.confidence || {}).map(([k, v]: any) => {
+                  const cls = v === "Verified" ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                    : v === "Range" ? "bg-blue-100 text-blue-800 border-blue-300"
+                    : "bg-red-100 text-red-800 border-red-300";
+                  return (
+                    <Badge key={k} variant="outline" className={`text-xs ${cls}`}>
+                      {k}: {v as string}
+                    </Badge>
+                  );
+                })}
+                {Object.keys(reviewData.factCheck?.confidence || {}).length === 0 && (
+                  <span className="text-xs text-muted-foreground">No confidence data returned.</span>
+                )}
+              </div>
+            </div>
+
+            {Array.isArray(reviewData.factCheck?.warnings) && reviewData.factCheck.warnings.length > 0 ? (
+              <div>
+                <div className="font-semibold mb-2">Likely inconsistencies</div>
+                <ul className="space-y-1.5">
+                  {reviewData.factCheck.warnings.map((w: any, i: number) => (
+                    <li key={i} className="flex gap-2 items-start">
+                      <Badge variant="outline" className={`text-[10px] ${w.severity === "high" ? "bg-red-100 text-red-800 border-red-300" : w.severity === "medium" ? "bg-amber-100 text-amber-800 border-amber-300" : "bg-muted"}`}>
+                        {w.severity}
+                      </Badge>
+                      <span><strong>{w.field}:</strong> {w.message}{w.suggested ? ` → suggested: ${w.suggested}` : ""}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="text-emerald-800 text-xs">No inconsistencies flagged. Safe to publish after a quick visual check.</p>
+            )}
+
+            {Array.isArray(reviewData.factCheck?.omit_fields) && reviewData.factCheck.omit_fields.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                The following fields were auto-omitted (set to null) because the AI was not confident:{" "}
+                <strong>{reviewData.factCheck.omit_fields.join(", ")}</strong>
+              </p>
+            )}
+
+            <div className="flex gap-2 pt-2">
+              <Button size="sm" onClick={() => navigate(`/admin/colleges?edit=${reviewData.insertedId}`)}>
+                Open in Editor
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => setReviewData(null)}>
+                Dismiss
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="flex gap-3 sticky bottom-0 bg-background py-3 border-t">
         <Button
           size="lg"
@@ -311,7 +405,7 @@ const AdminWriteCollege = () => {
           className="flex-1"
         >
           {generating ? (
-            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Researching & writing... (45-90s)</>
+            <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Researching, writing & fact-checking... (60-120s)</>
           ) : (
             <><Sparkles className="h-4 w-4 mr-2" /> Approve & Generate College</>
           )}

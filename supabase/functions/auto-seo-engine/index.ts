@@ -953,14 +953,37 @@ RULES:
       if (!aiResp.ok) throw new Error(`AI error ${aiResp.status}`);
       const aiJson = await aiResp.json();
       await logAIUsage("faq-generate", STANDARD_MODEL, aiJson);
-      const { faqs } = extractToolResult(aiJson);
+      const { faqs: rawFaqs } = extractToolResult(aiJson);
+
+      // Sanitise: strip HTML, trim, drop incomplete pairs, dedupe by question
+      const seen = new Set<string>();
+      const faqs = (Array.isArray(rawFaqs) ? rawFaqs : [])
+        .map((f: any) => ({
+          question: stripHtml(String(f?.question || "")).replace(/\s+/g, " ").trim(),
+          answer: stripHtml(String(f?.answer || "")).replace(/\s+/g, " ").trim(),
+        }))
+        .filter((f: any) => {
+          if (!f.question || !f.answer) return false;
+          if (f.question.length < 8 || f.answer.length < 20) return false;
+          const key = f.question.toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .slice(0, 10);
+
+      if (faqs.length === 0) {
+        return new Response(JSON.stringify({ error: "AI returned no usable FAQs. Please try again." }), {
+          status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       const snapshotKey = `seo_page__${contentType}__${page.id}`;
       const { data: existSnap } = await supabase.from("site_settings").select("id, value").eq("key", snapshotKey).limit(1);
       const faqSchema = {
         "@context": "https://schema.org",
         "@type": "FAQPage",
-        mainEntity: (faqs || []).map((f: any) => ({
+        mainEntity: faqs.map((f: any) => ({
           "@type": "Question",
           name: f.question,
           acceptedAnswer: { "@type": "Answer", text: f.answer },
@@ -979,7 +1002,70 @@ RULES:
           value: { contentType, recordId: page.id, slug: page.slug, pagePath: config.getPath(page), canonicalUrl: config.getPath(page), faqs, schemaMarkup: [faqSchema], generatedAt: new Date().toISOString() } as any,
         });
       }
-      return new Response(JSON.stringify({ faqs, count: (faqs || []).length }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ faqs, count: faqs.length, schemaInjected: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+    // ── NEW: seed_faqs (no-AI) — store provided FAQ list as snapshot + FAQ schema ──
+    if (mode === "seed_faqs") {
+      const { contentType, pageId, faqs: incoming } = body;
+      if (!contentType || !pageId || !Array.isArray(incoming)) {
+        return new Response(JSON.stringify({ error: "contentType, pageId and faqs[] required" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const config = CONTENT_TABLES[contentType];
+      if (!config) {
+        return new Response(JSON.stringify({ error: "Invalid contentType" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: page } = await supabase.from(config.table).select("id, slug").eq("id", pageId).maybeSingle();
+      if (!page) return new Response(JSON.stringify({ error: "Page not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+      const seen = new Set<string>();
+      const faqs = incoming
+        .map((f: any) => ({
+          question: stripHtml(String(f?.question || f?.q || "")).replace(/\s+/g, " ").trim(),
+          answer: stripHtml(String(f?.answer || f?.a || "")).replace(/\s+/g, " ").trim(),
+        }))
+        .filter((f: any) => {
+          if (!f.question || !f.answer || f.question.length < 8 || f.answer.length < 20) return false;
+          const k = f.question.toLowerCase();
+          if (seen.has(k)) return false;
+          seen.add(k);
+          return true;
+        })
+        .slice(0, 10);
+
+      if (faqs.length === 0) {
+        return new Response(JSON.stringify({ error: "No valid FAQ pairs supplied" }), {
+          status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const faqSchema = {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faqs.map((f: any) => ({ "@type": "Question", name: f.question, acceptedAnswer: { "@type": "Answer", text: f.answer } })),
+      };
+      const snapshotKey = `seo_page__${contentType}__${pageId}`;
+      const { data: existSnap } = await supabase.from("site_settings").select("id, value").eq("key", snapshotKey).limit(1);
+      if (existSnap?.[0]) {
+        const val = (existSnap[0].value as any) || {};
+        val.faqs = faqs;
+        const existingSchema = val.schemaMarkup;
+        const schemaArr = Array.isArray(existingSchema)
+          ? existingSchema.filter((s: any) => s?.["@type"] !== "FAQPage")
+          : existingSchema ? [existingSchema] : [];
+        val.schemaMarkup = [...schemaArr, faqSchema];
+        await supabase.from("site_settings").update({ value: val }).eq("id", existSnap[0].id);
+      } else {
+        await supabase.from("site_settings").insert({
+          key: snapshotKey,
+          value: { contentType, recordId: pageId, slug: page.slug, pagePath: config.getPath(page), canonicalUrl: config.getPath(page), faqs, schemaMarkup: [faqSchema], generatedAt: new Date().toISOString() } as any,
+        });
+      }
+      return new Response(JSON.stringify({ success: true, count: faqs.length, schemaInjected: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // ── NEW: stale_content ──

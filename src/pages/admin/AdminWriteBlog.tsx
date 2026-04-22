@@ -48,9 +48,11 @@ const AdminWriteBlog = () => {
   const [category, setCategory] = useState<string>(seed.category || "news");
   const [secondaryKws, setSecondaryKws] = useState<string[]>(seed.secondaryKeywords || []);
   const [secInput, setSecInput] = useState("");
-  const [contentDateContext, setContentDateContext] = useState<string>(
-    `Use only the most recent dates, exam cycles, fees and statistics (${new Date().getFullYear()}-${new Date().getFullYear() + 1}). Avoid outdated years.`
-  );
+  const buildLatestDateContext = () => {
+    const y = new Date().getFullYear();
+    return `Use ONLY the most recent verified data: ${y}-${y + 1} admission cycle, ${y - 1}-${y} placement reports. All dates, exam cycles, fees, cutoffs and statistics MUST reflect the latest published year. Do NOT use outdated 2020-2023 figures unless explicitly historical context.`;
+  };
+  const [contentDateContext, setContentDateContext] = useState<string>(buildLatestDateContext());
   const [wordMin, setWordMin] = useState(2000);
   const [wordMax, setWordMax] = useState(2500);
   const [densityPct, setDensityPct] = useState(10);
@@ -156,12 +158,22 @@ const AdminWriteBlog = () => {
 
       if (insertErr) throw insertErr;
 
+      // Auto-seed FAQ schema snapshot (so FAQPage JSON-LD is injected into the live article)
+      const extractedFaqs = Array.isArray(data?.faqs) ? data.faqs : [];
+      if (extractedFaqs.length > 0 && inserted?.id) {
+        try {
+          await supabase.functions.invoke("auto-seo-engine", {
+            body: { mode: "seed_faqs", contentType: "article", pageId: inserted.id, faqs: extractedFaqs },
+          });
+        } catch (e) { console.warn("FAQ seed failed", e); }
+      }
+
       // Clear the saved brief
       try { sessionStorage.removeItem(STORAGE_KEY); } catch {}
 
       toast({
         title: "Article generated!",
-        description: `${data.stats?.actualWords ?? "~"} words, ${data.stats?.actualDensityPct ?? "~"}% density. Opening editor...`,
+        description: `${data.stats?.actualWords ?? "~"} words, ${data.stats?.actualDensityPct ?? "~"}% density${extractedFaqs.length ? ` · ${extractedFaqs.length} FAQs schema-injected` : ""}. Opening editor...`,
       });
 
       // Redirect to AdminArticles with edit query
@@ -279,7 +291,21 @@ const AdminWriteBlog = () => {
           </div>
 
           <div>
-            <Label className="text-xs font-semibold mb-1.5 block">Date / Freshness Context</Label>
+            <div className="flex items-center justify-between mb-1.5">
+              <Label className="text-xs font-semibold block">Date / Freshness Context</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs gap-1"
+                onClick={() => {
+                  setContentDateContext(buildLatestDateContext());
+                  toast({ title: "Reset to latest dates", description: `Refreshed to ${new Date().getFullYear()}-${new Date().getFullYear() + 1} cycle. Click Generate to regenerate.` });
+                }}
+              >
+                <Sparkles className="h-3 w-3" /> Regenerate with latest dates
+              </Button>
+            </div>
             <Textarea
               value={contentDateContext}
               onChange={(e) => setContentDateContext(e.target.value)}

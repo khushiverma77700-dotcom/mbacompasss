@@ -214,21 +214,181 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       .replace(/^-|-$/g, "")
       .slice(0, 80);
 
+    // ── Auto-extract FAQs from the generated description for FAQ schema ──
+    const extractFaqs = (html: string): { question: string; answer: string }[] => {
+      if (!html) return [];
+      const text = html;
+      // Find each <h3>Question</h3><p>Answer</p> pair anywhere in the body
+      const re = /<h3[^>]*>([\s\S]*?)<\/h3>\s*<p[^>]*>([\s\S]*?)<\/p>/gi;
+      const out: { question: string; answer: string }[] = [];
+      let m: RegExpExecArray | null;
+      while ((m = re.exec(text))) {
+        const q = m[1].replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+        const a = m[2].replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+        // Heuristic: only treat as FAQ if heading reads like a question or is inside FAQ section context
+        if (q && a && (q.endsWith("?") || /^(what|why|how|is|are|can|should|do|does|when|where|which|who)\b/i.test(q))) {
+          out.push({ question: q, answer: a });
+        }
+      }
+      // Dedupe
+      const seen = new Set<string>();
+      return out.filter((f) => {
+        const k = f.question.toLowerCase();
+        if (seen.has(k)) return false;
+        seen.add(k);
+        return f.answer.length >= 20;
+      }).slice(0, 8);
+    };
+
+    const extractedFaqs = extractFaqs(profile.description || "");
+
+    // ── FACTUALITY CHECK PASS — score high-risk fields and flag inconsistencies ──
+    const currentYear = new Date().getFullYear();
+    const factCheckTool = {
+      type: "function",
+      function: {
+        name: "audit_college_facts",
+        description: "Audit the AI-generated college profile for factual accuracy. Score each high-risk field as Verified/Range/Unknown and list any inconsistencies.",
+        parameters: {
+          type: "object",
+          properties: {
+            confidence: {
+              type: "object",
+              properties: {
+                established: { type: "string", enum: ["Verified", "Range", "Unknown"] },
+                city: { type: "string", enum: ["Verified", "Range", "Unknown"] },
+                state: { type: "string", enum: ["Verified", "Range", "Unknown"] },
+                type: { type: "string", enum: ["Verified", "Range", "Unknown"] },
+                ranking: { type: "string", enum: ["Verified", "Range", "Unknown"] },
+                fees: { type: "string", enum: ["Verified", "Range", "Unknown"] },
+                placement_avg: { type: "string", enum: ["Verified", "Range", "Unknown"] },
+                placement_highest: { type: "string", enum: ["Verified", "Range", "Unknown"] },
+                exams_accepted: { type: "string", enum: ["Verified", "Range", "Unknown"] },
+                accreditations: { type: "string", enum: ["Verified", "Range", "Unknown"] },
+              },
+              required: [
+                "established", "city", "state", "type", "ranking", "fees",
+                "placement_avg", "placement_highest", "exams_accepted", "accreditations",
+              ],
+            },
+            warnings: {
+              type: "array",
+              description: "List of concrete factual issues. Each warning names the field, the suspect value and the likely correct value or reason.",
+              items: {
+                type: "object",
+                properties: {
+                  field: { type: "string" },
+                  severity: { type: "string", enum: ["high", "medium", "low"] },
+                  message: { type: "string" },
+                  suggested: { type: "string" },
+                },
+                required: ["field", "severity", "message"],
+              },
+            },
+            omit_fields: {
+              type: "array",
+              description: "Field names whose generated value is likely wrong AND no confident correction exists — frontend should drop these (set to null).",
+              items: { type: "string" },
+            },
+          },
+          required: ["confidence", "warnings", "omit_fields"],
+          additionalProperties: false,
+        },
+      },
+    };
+
+    const auditPrompt = `Audit the following AI-generated profile of an Indian MBA / B-school for factual accuracy. Use ONLY your verified knowledge of well-known Indian B-schools. Flag anything that contradicts known facts (especially established year, city/state, type, exams accepted, accreditations, ranking band). Today's year is ${currentYear}.
+
+PROFILE TO AUDIT (JSON):
+${JSON.stringify({
+  name: profile.name,
+  established: profile.established,
+  city: profile.city,
+  state: profile.state,
+  type: profile.type,
+  ranking: profile.ranking,
+  fees: profile.fees,
+  placement_avg: profile.placement_avg,
+  placement_highest: profile.placement_highest,
+  exams_accepted: profile.exams_accepted,
+  accreditations: profile.accreditations,
+}, null, 2)}
+
+RULES:
+- "Verified" = you are highly confident this exact value is correct from training knowledge of this institution.
+- "Range" = it's a plausible bracket / industry-standard estimate but not the precise published figure.
+- "Unknown" = you cannot verify and the AI may have guessed.
+- A wildly wrong establishment year for a known institution (e.g. 2020 for XLRI which is 1949) MUST be flagged severity:"high" with the correct year in "suggested".
+- An establishment year > ${currentYear} or < 1800 MUST be flagged.
+- Add the field to omit_fields ONLY when severity is high AND you have no confident correction.`;
+
+    let factCheck: any = { confidence: {}, warnings: [], omit_fields: [] };
+    try {
+      const auditRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "openai/gpt-5",
+          messages: [
+            { role: "system", content: "You are a meticulous fact-checker for Indian MBA / B-school profiles. You only confirm facts you are confident about; otherwise you flag them." },
+            { role: "user", content: auditPrompt },
+          ],
+          tools: [factCheckTool],
+          tool_choice: { type: "function", function: { name: "audit_college_facts" } },
+        }),
+      });
+      if (auditRes.ok) {
+        const auditJson = await auditRes.json();
+        const auditArgs = auditJson?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+        if (auditArgs) {
+          try { factCheck = JSON.parse(auditArgs); } catch (_) { /* ignore */ }
+        }
+      } else {
+        console.warn("Audit pass failed status:", auditRes.status);
+      }
+    } catch (e) {
+      console.warn("Audit pass exception:", e);
+    }
+
+    // Deterministic guardrails on top of model audit
+    const extraWarnings: any[] = [];
+    if (typeof profile.established === "number") {
+      if (profile.established > currentYear) {
+        extraWarnings.push({ field: "established", severity: "high", message: `Established year ${profile.established} is in the future.`, suggested: "" });
+      } else if (profile.established < 1800) {
+        extraWarnings.push({ field: "established", severity: "high", message: `Established year ${profile.established} looks wrong.`, suggested: "" });
+      }
+    }
+    if (Array.isArray(factCheck.warnings)) {
+      factCheck.warnings = [...factCheck.warnings, ...extraWarnings];
+    } else {
+      factCheck.warnings = extraWarnings;
+    }
+
+    // Apply omissions: null out high-risk fields the auditor flagged as untrustworthy
+    const omit = new Set<string>(Array.isArray(factCheck.omit_fields) ? factCheck.omit_fields : []);
+    const safeProfile: any = { ...profile };
+    omit.forEach((field) => {
+      if (field in safeProfile) safeProfile[field] = null;
+    });
+
     return new Response(
       JSON.stringify({
         success: true,
         college: {
-          ...profile,
+          ...safeProfile,
           slug,
           // honour user-provided overrides where given
-          name: brief.name || profile.name,
-          city: brief.city || profile.city || null,
-          state: brief.state || profile.state || null,
-          type: brief.type || profile.type,
-          tier: brief.tier || profile.tier,
-          college_category: brief.category || profile.college_category,
+          name: brief.name || safeProfile.name,
+          city: brief.city || safeProfile.city || null,
+          state: brief.state || safeProfile.state || null,
+          type: brief.type || safeProfile.type,
+          tier: brief.tier || safeProfile.tier,
+          college_category: brief.category || safeProfile.college_category,
           primary_keyword: targetKw,
         },
+        faqs: extractedFaqs,
+        factCheck,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
