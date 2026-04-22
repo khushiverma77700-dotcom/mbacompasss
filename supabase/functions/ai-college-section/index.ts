@@ -511,7 +511,7 @@ ${anchor.accreditations?.length ? `- Accreditations: ${anchor.accreditations.joi
 ACCURACY RULES:
 - Established years for famous schools must be correct (XLRI=1949, IIM-A=1961, IIM-B=1973, IIM-C=1961, FMS=1954, JBIMS=1965, SPJIMR=1981, MDI=1973, IIFT=1963, NMIMS=1981, ISB=2001).
 - All fees, placements, cutoffs, recruiter lists must reflect the latest ${freshness} data window. The active admission cycle is ${admissionCycle}. Today is ${todayIso}. Never use 2020-2023 numbers.
-- Where you reference a stat, add a one-line citation hint inside the prose like "(source: NIRF 2025)" or "(source: official placement report 2024-25)" — keep it short, no links, no fake URLs.
+- For EVERY key stat append a machine-readable inline citation marker in EXACT shape [src:<Source> <Year>], e.g. [src:NIRF ${todayIso.slice(0,4)}], [src:Placement Report ${Number(todayIso.slice(0,4))-1}-${todayIso.slice(2,4)}], [src:Admission Brochure ${todayIso.slice(0,4)}]. The frontend converts these into clickable "view source" pills, so the syntax must be exact (square brackets, "src:" prefix, no quotes, no URLs).
 - End every long-form HTML content field with a small italic line: <p><em>Last updated: ${todayIso}</em></p>
 - HTML output uses ONLY: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. No <html>/<head>/<body>/<h1>/markdown fences.
 - ABSOLUTELY NO inline style="" attributes, NO <font> tags, NO class="" / id="" attributes, NO width/height/color attributes. Plain semantic HTML only — the platform applies uniform typography.
