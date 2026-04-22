@@ -121,6 +121,7 @@ const AdminCollegeSections = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const [aiBusy, setAiBusy] = useState<string | null>(null); // section_type currently generating, or "form" / "bulk:<id>"
+  const [bulkProgress, setBulkProgress] = useState<{ total: number; done: number; ok: number; fail: number; current: string; results: { type: string; label: string; status: "pending" | "ok" | "fail"; error?: string }[] } | null>(null);
   const { toast } = useToast();
 
   const fetchColleges = async () => { const { data } = await supabase.from("colleges").select("id, name, city, state, type, tier, established").order("name"); if (data) setColleges(data); };
