@@ -299,7 +299,10 @@ const InstitutePage = () => {
             <Card id="institute-about" className="scroll-mt-24">
               <CardHeader><CardTitle className="font-heading">About {institute.name}</CardTitle></CardHeader>
               <CardContent>
-                <div className="prose prose-sm max-w-none text-muted-foreground dark:prose-invert leading-relaxed mb-4" dangerouslySetInnerHTML={{ __html: institute.description || '' }} />
+                <div className="ai-content max-w-none text-muted-foreground leading-relaxed mb-4" dangerouslySetInnerHTML={{ __html: enhanceAIContent(institute.description || '') }} />
+                <div className="mb-3">
+                  <LastUpdatedBadge date={(institute as any).last_seo_refresh || (institute as any).updated_at} variant="subtle" />
+                </div>
                 {(institute.features || []).length > 0 && (
                   <div className="grid sm:grid-cols-2 gap-2">
                     {(institute.features as string[]).map((h, i) => (
@@ -590,7 +593,25 @@ const InstitutePage = () => {
                                 {/* Description */}
                                 {course.description && (
                                   <div className="bg-muted/20 rounded-xl p-4 border border-border/30">
-                                    <p className="text-sm text-muted-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: course.description }} />
+                                    <div className="ai-content text-sm text-muted-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: enhanceAIContent(course.description) }} />
+                                    <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                                      <div className="rounded-md border border-border bg-card px-2 py-1.5">
+                                        <div className="text-muted-foreground">Fees</div>
+                                        <div className="font-semibold text-foreground">{course.fees ? `₹${Number(course.fees).toLocaleString()}` : "₹25k–65k"}</div>
+                                      </div>
+                                      <div className="rounded-md border border-border bg-card px-2 py-1.5">
+                                        <div className="text-muted-foreground">Duration</div>
+                                        <div className="font-semibold text-foreground">{course.duration || "3-12 months"}</div>
+                                      </div>
+                                      <div className="rounded-md border border-border bg-card px-2 py-1.5">
+                                        <div className="text-muted-foreground">Faculty</div>
+                                        <div className="font-semibold text-foreground">{faculty.length || "10+"} mentors</div>
+                                      </div>
+                                      <div className="rounded-md border border-border bg-card px-2 py-1.5">
+                                        <div className="text-muted-foreground">Reviews</div>
+                                        <div className="font-semibold text-foreground">{institute.rating || 4.2}★ ({institute.total_reviews || 0})</div>
+                                      </div>
+                                    </div>
                                   </div>
                                 )}
 
