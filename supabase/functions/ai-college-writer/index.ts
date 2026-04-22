@@ -39,38 +39,52 @@ Deno.serve(async (req) => {
     const targetKw = (brief.targetKeyword || brief.name).trim();
     const secKws = (brief.secondaryKeywords || []).filter(Boolean);
     const dateCtx = brief.contentDateContext?.trim() ||
-      "Use only the most recent dates, fees, placement figures and statistics (2025-2026). Do NOT use outdated years.";
+      "Use only the most recent verified data (2025-2026 admission cycle). Fees, placement figures, ranking and seat numbers must reflect the latest available year. Do NOT use outdated 2020-2023 figures unless the field is explicitly historical (e.g. founding year).";
 
-    const systemPrompt = `You are an expert MBA/B-school content researcher and SEO writer for the Indian audience. You produce factual, well-structured college profiles in a clear, friendly, HUMAN voice — like a smart senior mentor talking to a student. Plain English, short sentences, contractions allowed. Avoid corporate jargon and robotic AI phrasing. For long-form fields you may use HTML (<h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <table>, <thead>, <tbody>, <tr>, <th>, <td>). Never include <html>, <head>, <body>, <h1>, or markdown fences. If unsure of a precise number, use plausible ranges (e.g. "INR 18-25 LPA") rather than inventing numbers.`;
+    const systemPrompt = `You are a senior MBA/B-school researcher and SEO writer for the Indian audience. You write like a smart senior mentor talking to a student — clear, friendly, plain English, contractions allowed. NEVER fabricate facts. If a precise number is not well known, use a plausible range (e.g. "INR 18-25 LPA") rather than inventing one.
 
-    const userPrompt = `Generate a complete, ready-to-publish profile for the following Indian MBA college / B-school.
+ACCURACY IS MANDATORY. For well-known Indian B-schools (all IIMs, XLRI, FMS, MDI, SPJIMR, IIFT, NMIMS, SIBM, JBIMS, IIT MBAs, ISB, Great Lakes, TAPMI, IMT, IMI, etc.) the following fields MUST be factually correct:
+- founding/established year
+- city + state
+- type (IIM / Private / Government / Deemed / Autonomous / University)
+- approximate national ranking band (NIRF tier)
+- exams accepted (CAT/XAT/GMAT/NMAT/SNAP/CMAT etc.)
+- accreditations (AACSB / AMBA / EQUIS / NBA / NAAC if held)
+Reference points you must respect: XLRI Jamshedpur was founded in 1949. IIM Ahmedabad in 1961. IIM Bangalore in 1973. IIM Calcutta in 1961. FMS Delhi in 1954. JBIMS Mumbai in 1965. SPJIMR in 1981. MDI Gurgaon in 1973. IIFT in 1963. NMIMS in 1981. ISB Hyderabad in 2001.
+
+Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. Never include <html>, <head>, <body>, <h1>, or markdown fences.`;
+
+    const userPrompt = `Generate a complete, ready-to-publish profile for the following Indian MBA college / B-school. Verify every factual claim against your training knowledge of well-known Indian B-schools before writing.
 
 # COLLEGE
 - Name: ${brief.name}
-- City: ${brief.city || "(infer if well known, else leave blank)"}
-- State: ${brief.state || "(infer if well known, else leave blank)"}
-- Type: ${brief.type || "(infer: IIM/Private/Government/Deemed/Autonomous/University)"}
-- Category: ${brief.category || "(IIM or Non-IIM)"}
-- Tier: ${brief.tier || "(Tier 1 / Tier 2 / Tier 3 / Tier 4)"}
+- City: ${brief.city || "(use the actual city — never guess)"}
+- State: ${brief.state || "(use the actual state)"}
+- Type: ${brief.type || "(use the correct type: IIM/Private/Government/Deemed/Autonomous/University)"}
+- Category: ${brief.category || "(IIM or Non-IIM — based on actual status)"}
+- Tier: ${brief.tier || "(Tier 1 / Tier 2 / Tier 3 / Tier 4 — based on real NIRF/MBAU positioning)"}
 - Primary target keyword: "${targetKw}"
 - Secondary keywords: ${secKws.length ? secKws.map(k => `"${k}"`).join(", ") : "(none provided)"}
 - Date context: ${dateCtx}
 
 # HARD RULES
-1. **HUMANIZED LANGUAGE**: Write at roughly an 8th-grade reading level. Use contractions, real examples, second person ("you"), and concrete numbers. NO phrases like "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving".
-2. **NEVER START WITH A QUESTION**. Headings and opening sentences must be DECLARATIVE statements that give a clear fact.
-3. **DESCRIPTION (long-form HTML)**: 600-900 words covering history, USP, campus, academic strength, ranking position in Indian B-school landscape, who this college is best for. MUST start with a <p><strong>Quick Summary:</strong> ...</p> block (55-65 words) giving the core overview upfront. Then 4-6 <h2> sections (e.g. "About ${brief.name}", "Campus & Infrastructure", "Academic Strengths", "Why Choose ${brief.name}"). Use lists where helpful.
-4. **ADMISSION PROCESS (HTML)**: 250-450 words. Cover eligibility, exams accepted, selection stages (written test / WAT / GD / PI), shortlisting weightage if known. Use <h3> subsections and bullet lists. NO question headings.
-5. **ON-PAGE SEO MUST-HAVES** (build naturally into description):
+1. **FACTUAL ACCURACY (NON-NEGOTIABLE)**: established year, location, type, exams accepted, accreditations and ranking band MUST be correct for known institutions. If you are not confident about the establishment year of a less-famous institution, OMIT it (set established to null) rather than guessing. NEVER output a clearly wrong year (e.g. 2020 for a 1949 institution).
+2. **LATEST DATA**: All fees, placement figures (avg/median/highest), seat counts and recruiter lists must reflect the most recent published cycle (2024-2025 placements / 2025-2026 admissions). State the data year context naturally inside the prose (e.g. "as per the 2025 placement report").
+3. **HUMANIZED LANGUAGE**: Roughly 8th-grade reading level. Contractions, second person ("you"), concrete numbers. NO phrases like "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving".
+4. **NEVER START WITH A QUESTION**. Headings and opening sentences must be DECLARATIVE statements that give a clear fact.
+5. **DESCRIPTION (long-form HTML)**: 600-900 words covering history (with the CORRECT founding year), USP, campus, academic strength, ranking position in the Indian B-school landscape, who this college is best for. MUST start with a <p><strong>Quick Summary:</strong> ...</p> block (55-65 words) giving the core overview upfront — including the correct founding year and type. Then 4-6 <h2> sections (e.g. "About ${brief.name}", "Campus & Infrastructure", "Academic Strengths", "Why Choose ${brief.name}"). Use lists where helpful.
+6. **ADMISSION PROCESS (HTML)**: 250-450 words. Cover eligibility, exams accepted (use the REAL exams), selection stages (written test / WAT / GD / PI), shortlisting weightage if known. Use <h3> subsections and bullet lists. NO question headings. Reference 2025-2026 cycle dates where applicable.
+7. **ON-PAGE SEO MUST-HAVES** (build naturally into description):
    - Primary keyword in the first 100 words AND in at least 2 <h2> headings
    - Secondary keywords sprinkled naturally where they fit
-   - 2-4 internal-link-style anchors to relevant site sections, e.g. <a href="/colleges">top MBA colleges</a>, <a href="/exams/cat">CAT exam</a>, <a href="/coaching">CAT coaching</a>, <a href="/profile-analyzer">AI Profile Analyzer</a>, <a href="/mba-roi-calculator">MBA ROI Calculator</a>, <a href="/college-shortlister">College Shortlister</a>
-   - Use <strong> on 6-10 high-value phrases
-6. **REAL DATA**: Use realistic Indian MBA ecosystem context (CAT/XAT/NMAT/SNAP/CMAT, IIMs, top private B-schools, fees in lakhs, packages in LPA, 2025-2026 cycle).
-7. **STRUCTURED FIELDS**: Fill every field in the tool schema. For arrays (courses, accreditations, exams_accepted, top_recruiters, specializations, keywords), return real, realistic values.
-8. **SEO META**: meta_title <=60 chars (declarative, includes primary keyword, no "?"). meta_description 140-160 chars (declarative, includes primary keyword). h1_tag declarative, no "?".
-9. **SLUG**: lowercase-hyphenated, <=80 chars, derived from the college name.
-10. **NO IMAGES**: Do not return logo_url or banner_url.
+   - 3-5 internal-link-style anchors with relative URLs, e.g. <a href="/colleges">top MBA colleges</a>, <a href="/exams/cat">CAT exam</a>, <a href="/coaching">CAT coaching</a>, <a href="/profile-analyzer">AI Profile Analyzer</a>, <a href="/mba-roi-calculator">MBA ROI Calculator</a>, <a href="/college-shortlister">College Shortlister</a>
+   - Use <strong> on 6-10 high-value phrases (real names, key facts, numbers)
+   - Include at least one HTML <table> (e.g. fees breakdown, placement summary, key facts)
+   - Include a final <h2>Frequently Asked Questions</h2> section with 4-6 Q&A pairs (each Q in <h3>, A in <p>) for AI/voice-search and FAQ schema readiness
+8. **STRUCTURED FIELDS**: Fill every required field in the tool schema with REAL, accurate values for known schools. For arrays (courses, accreditations, exams_accepted, top_recruiters, specializations, keywords) return real, realistic values — never placeholder lists.
+9. **SEO META**: meta_title <=60 chars (declarative, includes primary keyword, no "?"). meta_description 140-160 chars (declarative, includes primary keyword). h1_tag declarative, no "?".
+10. **SLUG**: lowercase-hyphenated, <=80 chars, derived from the college name.
+11. **NO IMAGES**: Do not return logo_url or banner_url.
 
 # OUTPUT — return JSON via the tool call below.`;
 
@@ -90,8 +104,8 @@ Deno.serve(async (req) => {
             type: { type: "string", enum: ["IIM", "Private", "Government", "Deemed", "Autonomous", "University"] },
             tier: { type: "string", enum: ["Tier 1", "Tier 2", "Tier 3", "Tier 4"] },
             college_category: { type: "string", enum: ["IIM", "Non-IIM"] },
-            established: { type: "integer", description: "Founding year, e.g. 1961" },
-            ranking: { type: "integer", description: "National ranking estimate (1-200). Use a realistic number." },
+            established: { type: ["integer", "null"], description: "Founding year. MUST be historically correct for known institutions (e.g. XLRI=1949, IIM-A=1961). Use null if genuinely unknown — never guess." },
+            ranking: { type: "integer", description: "National ranking estimate (1-200). Use a realistic NIRF-band number." },
             fees: { type: "string", description: "Display fees, e.g. 'INR 24.5 Lakhs (2-year MBA)'" },
             fees_lakhs: { type: "number", description: "Numeric total program fee in lakhs, e.g. 24.5" },
             website: { type: "string" },
@@ -133,7 +147,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "openai/gpt-5",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
