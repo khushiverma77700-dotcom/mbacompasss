@@ -68,9 +68,10 @@ Deno.serve(async (req) => {
 - DO NOT write about B.Tech, M.Tech, BE, ME, BCA, MCA, B.Sc, M.Sc, engineering, medical, law, design, coding bootcamps, data-science certifications, school-level boards or any non-management discipline. If the working title is ambiguous, interpret it through the MBA / MiM lens.
 - Recruiters, salaries, fees, specializations and example colleges referenced must all be management-program-specific.
 
-# FRESHNESS
+# FRESHNESS & MACHINE-READABLE CITATIONS
 - Today is ${todayIso}. Active admission cycle: ${currentYear}-${currentYear + 1}. Placement reference: ${currentYear - 1}-${currentYear}.
-- Use only the most recent verified data. Reference the year naturally inside prose. End the article with a small italic line: <p><em>Last updated: ${todayIso}</em></p>.
+- For EVERY key stat (cutoff, fee, package, percentile band, ranking) append a machine-readable inline citation marker in this EXACT shape: [src:<Source> <Year>]. Examples: [src:NIRF ${currentYear}], [src:CAT Notification ${currentYear}], [src:Placement Report ${currentYear - 1}-${String(currentYear).slice(-2)}]. Our frontend converts these markers into clickable "view source" pills — the syntax must be exact (square brackets, "src:" prefix, no quotes, no URLs).
+- End the article with a small italic line: <p><em>Last updated: ${todayIso}</em></p>.
 
 # OUTPUT FORMAT
 - Valid HTML using only these tags: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>, <blockquote>. Do NOT include <html>, <head>, <body>, <h1>, or markdown fences. NO inline style="", NO <font>, NO class/id attributes — plain semantic HTML only so typography stays uniform.`;

@@ -160,7 +160,10 @@ async function generate(body: Extract<Body, { mode: "generate" }>, apiKey: strin
 ${SCOPE_LOCK}
 
 # WELL-FORMATTED HTML for description
-- Short paragraphs (2-4 sentences), semantic <ul>/<ol> for 3+ items, at least one <table> (e.g. "What's included", "Batch comparison", or "Fee breakup").
+- MUST start with a <p><strong>Quick Summary:</strong> ...</p> block (40-55 words) summarising fees + duration + ideal aspirant.
+- Short paragraphs (2-4 sentences), semantic <ul>/<ol> for 3+ items, at least TWO <table>s (e.g. "Fee breakup" + "What's included" or "Batch comparison").
+- Include a final <h2>Frequently Asked Questions</h2> with 4-6 Q&A pairs (each Q in <h3>, A in <p>).
+- For EVERY key stat (fee, mock-test count, faculty student-ratio, success metric) append a machine-readable inline citation marker in EXACT shape [src:<Source> <Year>], e.g. [src:Brochure ${f.currentYear}], [src:Result Release ${f.currentYear - 1}]. Our frontend converts these markers into clickable "view source" pills.
 - <h2> for major sub-sections, <h3> for nested. Bold key facts with <strong>.
 - End the description with: <p><em>Last updated: ${f.todayIso}</em></p>
 

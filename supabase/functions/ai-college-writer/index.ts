@@ -72,9 +72,10 @@ ACCURACY IS MANDATORY. For well-known Indian B-schools (all IIMs, XLRI, FMS, MDI
 - accreditations (AACSB / AMBA / EQUIS / NBA / NAAC if held)
 Reference points you must respect: XLRI Jamshedpur was founded in 1949. IIM Ahmedabad in 1961. IIM Bangalore in 1973. IIM Calcutta in 1961. FMS Delhi in 1954. JBIMS Mumbai in 1965. SPJIMR in 1981. MDI Gurgaon in 1973. IIFT in 1963. NMIMS in 1981. ISB Hyderabad in 2001.
 
-FRESHNESS & CITATION RULES:
+FRESHNESS & CITATION RULES (MACHINE-READABLE):
 - Today is ${todayIso}. Active admission cycle: ${admissionCycle}. Freshness window: ${freshness}.
-- Where you reference a stat, add a one-line short citation hint inline like "(source: NIRF ${currentYear})" or "(source: official placement report ${currentYear - 1}-${String(currentYear).slice(-2)})". No fake URLs.
+- For EVERY key stat (NIRF rank, fees, average/highest/median package, intake) you MUST append a machine-readable inline citation marker in this EXACT shape: [src:<Source> <Year>]. Examples: [src:NIRF ${currentYear}], [src:Placement Report ${currentYear - 1}-${String(currentYear).slice(-2)}], [src:Admission Brochure ${currentYear}]. Our frontend converts these markers into clickable "view source" pills, so the syntax must be exact (square brackets, "src:" prefix, no quotes, no URLs).
+- Use at least one [src:NIRF ${currentYear}], one [src:Placement Report …], and one [src:Admission Brochure …] across the description.
 - The long-form description MUST end with a small italic line: <p><em>Last updated: ${todayIso}</em></p>
 
 Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. Never include <html>, <head>, <body>, <h1>, or markdown fences. ABSOLUTELY NO inline style="" attributes, NO <font> tags, NO class="" / id="" attributes — plain semantic HTML only.`;
