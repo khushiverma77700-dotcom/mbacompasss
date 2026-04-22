@@ -74,6 +74,7 @@ const AdminShortlisterColleges = lazy(() => import("./pages/admin/AdminShortlist
 const AdminCallbacks = lazy(() => import("./pages/admin/AdminCallbacks"));
 const AdminDatabaseBackup = lazy(() => import("./pages/admin/AdminDatabaseBackup"));
 const AdminAIUsage = lazy(() => import("./pages/admin/AdminAIUsage"));
+const AdminCitationsAudit = lazy(() => import("./pages/admin/AdminCitationsAudit"));
 const AdminCourseCategories = lazy(() => import("./pages/admin/AdminCourseCategories"));
 const AdminCATScores = lazy(() => import("./pages/admin/AdminCATScores"));
 const AdminMegaMenu = lazy(() => import("./pages/admin/AdminMegaMenu"));
