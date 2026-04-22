@@ -474,7 +474,7 @@ function CloudUsageTab() {
   return (
     <div className="space-y-6">
       {/* Cloud Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card><CardContent className="pt-4 text-center">
           <Database className="w-5 h-5 mx-auto mb-1 text-primary" />
           <p className="text-2xl font-bold">{dbStats.tables}</p>
@@ -492,25 +492,67 @@ function CloudUsageTab() {
         </CardContent></Card>
         <Card><CardContent className="pt-4 text-center">
           <Shield className="w-5 h-5 mx-auto mb-1 text-primary" />
-          <p className="text-2xl font-bold">{authLogs.length}</p>
+          <p className="text-2xl font-bold">{totalUsers.toLocaleString()}</p>
           <p className="text-xs text-muted-foreground">Registered Users</p>
+        </CardContent></Card>
+        <Card className="border-primary/40 bg-primary/5"><CardContent className="pt-4 text-center">
+          <DollarSign className="w-5 h-5 mx-auto mb-1 text-primary" />
+          <p className="text-2xl font-bold text-primary">{formatUsd(cloudCost.totalMonthly, 4)}</p>
+          <p className="text-xs text-muted-foreground">Est. Monthly Cloud Cost</p>
         </CardContent></Card>
       </div>
 
-      {/* Cloud cost estimate */}
+      {/* Detailed Cloud cost breakdown */}
       <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="pt-4">
-          <div className="flex items-start gap-3">
-            <Cloud className="w-5 h-5 text-primary mt-0.5" />
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Cloud className="w-4 h-4 text-primary" />
+            Cloud Cost Breakdown — Live Estimate
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="rounded-lg border bg-card p-3">
+              <p className="text-[11px] text-muted-foreground uppercase">DB Storage</p>
+              <p className="text-base font-bold">{formatUsd(cloudCost.dbStorageCost, 5)}</p>
+              <p className="text-[10px] text-muted-foreground">{cloudCost.dbStorageGb.toFixed(4)} GB</p>
+            </div>
+            <div className="rounded-lg border bg-card p-3">
+              <p className="text-[11px] text-muted-foreground uppercase">File Storage</p>
+              <p className="text-base font-bold">{formatUsd(cloudCost.fileStorageCost, 5)}</p>
+              <p className="text-[10px] text-muted-foreground">{cloudCost.fileStorageGb.toFixed(4)} GB</p>
+            </div>
+            <div className="rounded-lg border bg-card p-3">
+              <p className="text-[11px] text-muted-foreground uppercase">Edge Invocations (30d)</p>
+              <p className="text-base font-bold">{formatUsd(cloudCost.edgeInvocationsCost, 5)}</p>
+              <p className="text-[10px] text-muted-foreground">{edgeInvocations30d.toLocaleString()} calls</p>
+            </div>
+            <div className="rounded-lg border bg-card p-3">
+              <p className="text-[11px] text-muted-foreground uppercase">Auth (MAU)</p>
+              <p className="text-base font-bold">{formatUsd(cloudCost.authCost, 5)}</p>
+              <p className="text-[10px] text-muted-foreground">{totalUsers.toLocaleString()} users (free under 100k)</p>
+            </div>
+          </div>
+          <div className="flex items-center justify-between rounded-lg bg-card border p-3">
             <div>
-              <h3 className="font-semibold text-sm">Cloud Cost Estimate</h3>
-              <p className="text-xs text-muted-foreground mt-1">
-                Lovable Cloud uses usage-based pricing. Your project gets <strong>$25 free Cloud balance</strong> and <strong>$1 free AI balance</strong> monthly.
-                Cloud costs are typically <strong>$1-3/month</strong> for small-medium sites. Database queries, storage, and edge function invocations draw from the Cloud balance.
-                AI calls draw from the separate AI balance. Top up in <strong>Settings → Cloud & AI balance</strong>.
+              <p className="text-xs text-muted-foreground">Total estimated monthly Cloud cost</p>
+              <p className="text-xl font-bold text-primary">{formatUsd(cloudCost.totalMonthly, 4)}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-muted-foreground">Free monthly balance</p>
+              <p className="text-sm font-semibold">
+                {cloudCost.withinFreeTier
+                  ? <span className="text-primary">Within free ${CLOUD_FREE_MONTHLY_USD} tier · {formatUsd(cloudCost.freeRemaining, 2)} left</span>
+                  : <span className="text-destructive">Over free tier by {formatUsd(-cloudCost.freeRemaining + CLOUD_FREE_MONTHLY_USD - cloudCost.totalMonthly, 2)}</span>}
               </p>
             </div>
           </div>
+          <p className="text-[11px] text-muted-foreground">
+            Estimate based on Supabase pay-as-you-go rates: $0.125/GB-month DB,
+            $0.021/GB-month file storage, $2/1M edge invocations. Edge call
+            volume is approximated from AI usage logs ×3 to cover non-AI
+            functions. Real billing is shown in <strong>Settings → Cloud & AI balance</strong>.
+          </p>
         </CardContent>
       </Card>
 
