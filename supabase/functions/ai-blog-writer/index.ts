@@ -126,13 +126,14 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "openai/gpt-5",
+        model: "openai/gpt-5-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
         tools: [tool],
         tool_choice: { type: "function", function: { name: "publish_blog_article" } },
+        max_completion_tokens: 8000,
       }),
     });
 
