@@ -342,9 +342,9 @@ const CollegeDetailPage = () => {
                 <CardHeader><CardTitle className="font-heading">About {college.name}</CardTitle></CardHeader>
                 <CardContent>
                   {getSectionContent("why_join") ? (
-                    <div className="text-muted-foreground leading-relaxed prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: getSectionContent("why_join") }} />
+                    <div className="text-muted-foreground leading-relaxed ai-content max-w-none" dangerouslySetInnerHTML={{ __html: getSectionContent("why_join") }} />
                   ) : (
-                    <div className="text-muted-foreground leading-relaxed prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: college.description || `${college.name} is a premier ${college.type} institute in ${college.city}.` }} />
+                    <div className="text-muted-foreground leading-relaxed ai-content max-w-none" dangerouslySetInnerHTML={{ __html: college.description || `${college.name} is a premier ${college.type} institute in ${college.city}.` }} />
                   )}
                   {highlights && (
                     <div className="mt-6">
@@ -423,9 +423,9 @@ const CollegeDetailPage = () => {
                 <CardHeader><CardTitle className="font-heading">Admission Process</CardTitle></CardHeader>
                 <CardContent>
                   {getSectionContent("admission") ? (
-                    <div className="text-muted-foreground leading-relaxed mb-6 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: getSectionContent("admission") }} />
+                    <div className="text-muted-foreground leading-relaxed mb-6 ai-content max-w-none" dangerouslySetInnerHTML={{ __html: getSectionContent("admission") }} />
                   ) : (
-                    <div className="text-muted-foreground leading-relaxed mb-6 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: college.admission_process || `Admission to ${college.name} is based on entrance exams followed by GD/PI.` }} />
+                    <div className="text-muted-foreground leading-relaxed mb-6 ai-content max-w-none" dangerouslySetInnerHTML={{ __html: college.admission_process || `Admission to ${college.name} is based on entrance exams followed by GD/PI.` }} />
                   )}
                   <div className="space-y-4">
                     <h3 className="font-heading font-semibold text-foreground">Admission Steps</h3>
@@ -486,7 +486,7 @@ const CollegeDetailPage = () => {
                     </div>
                   )}
                   {getSectionContent("placements") && (
-                    <div className="mt-4 prose prose-sm max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: getSectionContent("placements") }} />
+                    <div className="mt-4 ai-content max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: getSectionContent("placements") }} />
                   )}
                 </CardContent>
               </Card>
@@ -541,7 +541,7 @@ const CollegeDetailPage = () => {
                     <p className="text-center text-muted-foreground py-8">Cutoff data coming soon.</p>
                   )}
                   {getSectionContent("cutoff") && (
-                    <div className="mt-4 prose prose-sm max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: getSectionContent("cutoff") }} />
+                    <div className="mt-4 ai-content max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: getSectionContent("cutoff") }} />
                   )}
                 </CardContent>
               </Card>
@@ -717,7 +717,7 @@ const CollegeDetailPage = () => {
                     ))}
                   </div>
                   {getSectionContent("hostel") && (
-                    <div className="mt-4 prose prose-sm max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: getSectionContent("hostel") }} />
+                    <div className="mt-4 ai-content max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: getSectionContent("hostel") }} />
                   )}
                 </CardContent>
               </Card>
