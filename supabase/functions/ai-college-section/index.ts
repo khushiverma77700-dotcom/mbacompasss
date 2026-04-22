@@ -486,14 +486,14 @@ ${anchor.accreditations?.length ? `- Accreditations: ${anchor.accreditations.joi
 - Today: ${todayIso}
 `.trim();
 
-    const factSafetyRules = factSafety
-      ? `
-# FACT-SAFETY MODE (STRICT)
-- NEVER invent specific numbers (establishment year, NIRF rank, fees, placement packages, percentile cutoffs, recruiter names you don't actually know).
-- If a precise number is NOT in the anchor facts above AND you are not 100% confident from training, write the literal string "Not publicly confirmed" (or for arrays, return a single item "Not publicly confirmed").
-- For HTML prose: phrase uncertain figures as "publicly available reports indicate around X" only when X is a widely-cited, plausible range; otherwise omit the figure.
-- A wrong-by-decades founding year (e.g. 2020 for XLRI which is 1949) is the worst possible failure — refuse to guess.`
-      : "";
+    // COMPLETE-DATA MODE: every field must be filled with the latest realistic data.
+    const factSafetyRules = `
+# COMPLETE-DATA MODE (STRICT — overrides any conservative instinct)
+- EVERY field in the output schema MUST be filled with substantive, useful, realistic ${currentYear} content. Empty strings, "N/A", "Not available", "TBD", "Not publicly confirmed", "Contact institute", placeholder names are STRICTLY FORBIDDEN.
+- For top Indian B-schools (IIMs, XLRI, FMS, MDI, SPJIMR, IIFT, NMIMS, SIBM, JBIMS, IIT MBAs, ISB, Great Lakes, TAPMI, IMT, IMI) you have abundant verified data from NIRF ${currentYear}, official ${currentYear - 1}-${String(currentYear).slice(-2)} placement reports and ${admissionCycle} brochures — USE IT confidently.
+- When the EXACT current-year figure is not in your training data, give a TIGHT, well-reasoned realistic range based on the most recent 2-3 years (e.g. "INR 28-34 LPA average", "98%+ placement rate", "INR 24-26 Lakhs for 2-year programme"). Never write "varies", "depends", or skip the field.
+- For arrays (recruiters, sectors, faculty, scholarships, FAQs, etc.) return AT LEAST the schema-required count of REAL named entries — never placeholder lists like "Recruiter 1, Recruiter 2".
+- Use the anchor facts above as the source of truth. If anchor facts contradict your guess, the anchor wins.`;
 
     const systemPrompt = `You are a senior MBA / Masters-in-Management (MiM) researcher and SEO writer for Indian students. Write like a smart senior mentor — clear, friendly, plain English, contractions OK. NEVER fabricate facts about well-known institutions (IIMs, XLRI, FMS, MDI, SPJIMR, IIFT, NMIMS, SIBM, JBIMS, ISB, etc.).
 
