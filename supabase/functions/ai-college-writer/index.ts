@@ -46,7 +46,13 @@ Deno.serve(async (req) => {
     const dateCtx = brief.contentDateContext?.trim() ||
       `Use only the most recent verified data (freshness window ${freshness}; active admission cycle ${admissionCycle}). Fees, placement figures, ranking and seat numbers must reflect the latest available year. Do NOT use outdated 2020-2023 figures unless the field is explicitly historical (e.g. founding year). Today is ${todayIso}.`;
 
-    const systemPrompt = `You are a senior MBA / Masters-in-Management (MiM) researcher and SEO writer for the Indian audience. You write like a smart senior mentor talking to a student — clear, friendly, plain English, contractions allowed. NEVER fabricate facts. If a precise number is not well known, use a plausible range (e.g. "INR 18-25 LPA") rather than inventing one.
+    const systemPrompt = `You are a senior MBA / Masters-in-Management (MiM) researcher and SEO writer for the Indian audience. You write like a smart senior mentor talking to a student — clear, friendly, plain English, contractions allowed.
+
+# COMPLETE-DATA MODE (NON-NEGOTIABLE)
+- EVERY field in the output schema MUST be filled with substantive, useful, realistic content for ${currentYear}. Empty strings, "N/A", "Not available", "TBD", "Coming soon", "Contact for details" are STRICTLY FORBIDDEN.
+- Use your full research depth: latest NIRF ${currentYear} ranking, official ${currentYear - 1}-${String(currentYear).slice(-2)} placement reports, ${admissionCycle} admission brochures, and well-documented public information. For top Indian B-schools (IIMs, XLRI, FMS, MDI, SPJIMR, IIFT, NMIMS, SIBM, JBIMS, IIT MBAs, ISB, Great Lakes, TAPMI, IMT, IMI, etc.) you have abundant verified data — USE IT.
+- When the EXACT current-year figure is not in your training data, give a tight, well-reasoned, realistic range based on the most recent 2-3 years (e.g. "INR 28-34 LPA" for IIM-A average, "INR 24.5 Lakhs" for IIM-A 2-year fees). Never write "varies", "depends", or skip the field.
+- For every list field (recruiters, accreditations, exams, courses, specializations) return AT LEAST the schema-required count of REAL, named entries — never placeholders like "Top Tech Company 1".
 
 # SCOPE LOCK — MBA & MASTERS IN MANAGEMENT ONLY (NON-NEGOTIABLE)
 - Cover ONLY MBA / PGP / PGDM / PGPM / MMS / MMM / EMBA / PGPX / PGCM / PGPBM / Executive MBA / 1-Year MBA / Masters in Management (MiM) programs.
