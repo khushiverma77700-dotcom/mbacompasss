@@ -38,8 +38,13 @@ Deno.serve(async (req) => {
 
     const targetKw = (brief.targetKeyword || brief.name).trim();
     const secKws = (brief.secondaryKeywords || []).filter(Boolean);
+    const today = new Date();
+    const todayIso = today.toISOString().slice(0, 10);
+    const currentYear = today.getFullYear();
+    const freshness = `${currentYear - 1}-${currentYear + 1}`; // 2024–2026
+    const admissionCycle = `${currentYear}-${currentYear + 1}`;
     const dateCtx = brief.contentDateContext?.trim() ||
-      "Use only the most recent verified data (2025-2026 admission cycle). Fees, placement figures, ranking and seat numbers must reflect the latest available year. Do NOT use outdated 2020-2023 figures unless the field is explicitly historical (e.g. founding year).";
+      `Use only the most recent verified data (freshness window ${freshness}; active admission cycle ${admissionCycle}). Fees, placement figures, ranking and seat numbers must reflect the latest available year. Do NOT use outdated 2020-2023 figures unless the field is explicitly historical (e.g. founding year). Today is ${todayIso}.`;
 
     const systemPrompt = `You are a senior MBA/B-school researcher and SEO writer for the Indian audience. You write like a smart senior mentor talking to a student — clear, friendly, plain English, contractions allowed. NEVER fabricate facts. If a precise number is not well known, use a plausible range (e.g. "INR 18-25 LPA") rather than inventing one.
 
@@ -52,7 +57,12 @@ ACCURACY IS MANDATORY. For well-known Indian B-schools (all IIMs, XLRI, FMS, MDI
 - accreditations (AACSB / AMBA / EQUIS / NBA / NAAC if held)
 Reference points you must respect: XLRI Jamshedpur was founded in 1949. IIM Ahmedabad in 1961. IIM Bangalore in 1973. IIM Calcutta in 1961. FMS Delhi in 1954. JBIMS Mumbai in 1965. SPJIMR in 1981. MDI Gurgaon in 1973. IIFT in 1963. NMIMS in 1981. ISB Hyderabad in 2001.
 
-Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. Never include <html>, <head>, <body>, <h1>, or markdown fences.`;
+FRESHNESS & CITATION RULES:
+- Today is ${todayIso}. Active admission cycle: ${admissionCycle}. Freshness window: ${freshness}.
+- Where you reference a stat, add a one-line short citation hint inline like "(source: NIRF ${currentYear})" or "(source: official placement report ${currentYear - 1}-${String(currentYear).slice(-2)})". No fake URLs.
+- The long-form description MUST end with a small italic line: <p><em>Last updated: ${todayIso}</em></p>
+
+Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. Never include <html>, <head>, <body>, <h1>, or markdown fences. ABSOLUTELY NO inline style="" attributes, NO <font> tags, NO class="" / id="" attributes — plain semantic HTML only.`;
 
     const userPrompt = `Generate a complete, ready-to-publish profile for the following Indian MBA college / B-school. Verify every factual claim against your training knowledge of well-known Indian B-schools before writing.
 
@@ -69,11 +79,11 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
 
 # HARD RULES
 1. **FACTUAL ACCURACY (NON-NEGOTIABLE)**: established year, location, type, exams accepted, accreditations and ranking band MUST be correct for known institutions. If you are not confident about the establishment year of a less-famous institution, OMIT it (set established to null) rather than guessing. NEVER output a clearly wrong year (e.g. 2020 for a 1949 institution).
-2. **LATEST DATA**: All fees, placement figures (avg/median/highest), seat counts and recruiter lists must reflect the most recent published cycle (2024-2025 placements / 2025-2026 admissions). State the data year context naturally inside the prose (e.g. "as per the 2025 placement report").
+2. **LATEST DATA**: All fees, placement figures (avg/median/highest), seat counts and recruiter lists must reflect the most recent published cycle (${currentYear - 1}-${currentYear} placements / ${admissionCycle} admissions). State the data year context naturally inside the prose (e.g. "as per the ${currentYear} placement report").
 3. **HUMANIZED LANGUAGE**: Roughly 8th-grade reading level. Contractions, second person ("you"), concrete numbers. NO phrases like "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving".
 4. **NEVER START WITH A QUESTION**. Headings and opening sentences must be DECLARATIVE statements that give a clear fact.
-5. **DESCRIPTION (long-form HTML)**: 600-900 words covering history (with the CORRECT founding year), USP, campus, academic strength, ranking position in the Indian B-school landscape, who this college is best for. MUST start with a <p><strong>Quick Summary:</strong> ...</p> block (55-65 words) giving the core overview upfront — including the correct founding year and type. Then 4-6 <h2> sections (e.g. "About ${brief.name}", "Campus & Infrastructure", "Academic Strengths", "Why Choose ${brief.name}"). Use lists where helpful.
-6. **ADMISSION PROCESS (HTML)**: 250-450 words. Cover eligibility, exams accepted (use the REAL exams), selection stages (written test / WAT / GD / PI), shortlisting weightage if known. Use <h3> subsections and bullet lists. NO question headings. Reference 2025-2026 cycle dates where applicable.
+5. **DESCRIPTION (long-form HTML)**: 600-900 words covering history (with the CORRECT founding year), USP, campus, academic strength, ranking position in the Indian B-school landscape, who this college is best for. MUST start with a <p><strong>Quick Summary:</strong> ...</p> block (55-65 words) giving the core overview upfront — including the correct founding year and type. Then 4-6 <h2> sections (e.g. "About ${brief.name}", "Campus & Infrastructure", "Academic Strengths", "Why Choose ${brief.name}"). Use lists where helpful. End with <p><em>Last updated: ${todayIso}</em></p>.
+6. **ADMISSION PROCESS (HTML)**: 250-450 words. Cover eligibility, exams accepted (use the REAL exams), selection stages (written test / WAT / GD / PI), shortlisting weightage if known. Use <h3> subsections and bullet lists. NO question headings. Reference ${admissionCycle} cycle dates where applicable.
 7. **ON-PAGE SEO MUST-HAVES** (build naturally into description):
    - Primary keyword in the first 100 words AND in at least 2 <h2> headings
    - Secondary keywords sprinkled naturally where they fit
@@ -81,8 +91,9 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
    - Use <strong> on 6-10 high-value phrases (real names, key facts, numbers)
    - Include at least one HTML <table> (e.g. fees breakdown, placement summary, key facts)
    - Include a final <h2>Frequently Asked Questions</h2> section with 4-6 Q&A pairs (each Q in <h3>, A in <p>) for AI/voice-search and FAQ schema readiness
+   - Include short citation hints "(source: NIRF ${currentYear})" / "(source: placement report ${currentYear - 1}-${String(currentYear).slice(-2)})" near key stats
 8. **STRUCTURED FIELDS**: Fill every required field in the tool schema with REAL, accurate values for known schools. For arrays (courses, accreditations, exams_accepted, top_recruiters, specializations, keywords) return real, realistic values — never placeholder lists.
-9. **SEO META**: meta_title <=60 chars (declarative, includes primary keyword, no "?"). meta_description 140-160 chars (declarative, includes primary keyword). h1_tag declarative, no "?".
+9. **SEO META**: meta_title <=60 chars (declarative, includes primary keyword, no "?"). meta_description 140-160 chars (declarative, includes primary keyword + the year ${currentYear}). h1_tag declarative, no "?".
 10. **SLUG**: lowercase-hyphenated, <=80 chars, derived from the college name.
 11. **NO IMAGES**: Do not return logo_url or banner_url.
 
