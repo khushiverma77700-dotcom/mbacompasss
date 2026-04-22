@@ -348,9 +348,18 @@ const AdminInstitutes = () => {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-heading text-2xl font-bold text-foreground">Manage Institutes</h1>
-        <Button onClick={() => { setForm(emptyForm); setEditId(null); setTagInput({ keywords: "", features: "" }); setShowForm(true); }}>
-          <Plus className="w-4 h-4 mr-2" /> Add Institute
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => window.location.assign("/admin/institutes/generate-ai")}
+            className="border-primary/40 text-primary hover:bg-primary/5"
+          >
+            <Star className="w-4 h-4 mr-2" /> Generate via AI
+          </Button>
+          <Button onClick={() => { setForm(emptyForm); setEditId(null); setTagInput({ keywords: "", features: "" }); setShowForm(true); }}>
+            <Plus className="w-4 h-4 mr-2" /> Add Institute
+          </Button>
+        </div>
       </div>
 
       <Card>
