@@ -1204,9 +1204,16 @@ const ProfileAnalyzerPage = () => {
                           You can re-analyze your profile after <strong>{cooldownDate.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</strong>.
                           Your last report is available on your dashboard anytime.
                         </p>
-                        <Button size="sm" variant="outline" onClick={() => window.location.href = "/dashboard"}>
-                          <Eye className="w-3.5 h-3.5 mr-1.5" /> View My Report
-                        </Button>
+                        <div className="flex flex-wrap items-center justify-center gap-2">
+                          <Button size="sm" variant="outline" onClick={() => window.location.href = "/dashboard"}>
+                            <Eye className="w-3.5 h-3.5 mr-1.5" /> View My Report
+                          </Button>
+                          {isAdmin && (
+                            <Button size="sm" variant="default" onClick={handleAdminRetest}>
+                              <Sparkles className="w-3.5 h-3.5 mr-1.5" /> Admin: Re-test (skip cache)
+                            </Button>
+                          )}
+                        </div>
                       </CardContent>
                     </Card>
                   </motion.div>
