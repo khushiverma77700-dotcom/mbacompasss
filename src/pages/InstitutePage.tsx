@@ -69,7 +69,7 @@ const InstitutePage = () => {
     institute?.id,
     institute
       ? {
-          title: `${institute.name} — Best MBA Coaching in ${institute.city} | MBAHub`,
+          title: `${institute.name} — Best MBA Coaching in ${institute.city} | MBA Compass`,
           description:
             institute.meta_description ||
             `${institute.name} offers top MBA coaching in ${institute.city}. ${institute.success_rate}% success rate, ${(institute.courses || []).length} courses.`,

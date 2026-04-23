@@ -108,7 +108,7 @@ const DashboardPage = () => {
 
   if (authLoading || !user) return null;
 
-  document.title = "My Dashboard | MBAHub";
+  document.title = "My Dashboard | MBA Compass";
 
   return (
     <div className="min-h-screen bg-background">

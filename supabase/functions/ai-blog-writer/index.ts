@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
 - primaryKeyword: the primary target keyword (echo "${targetKw}")
 - wordCount: integer, your accurate count of words in (intro + content) plain text
 - keywordOccurrences: integer, how many times "${targetKw}" appears in (intro + content)
-- author: a sensible byline like "MBAHub Editorial" or a topic-appropriate author name`;
+- author: a sensible byline like "MBA Compass Editorial" or a topic-appropriate author name`;
 
     const tool = {
       type: "function",

@@ -248,7 +248,7 @@ const AdminArticles = () => {
                 <div className="border border-border rounded-lg p-4">
                   <h4 className="text-xs font-semibold text-muted-foreground mb-2">Google Preview</h4>
                   <div className="space-y-1">
-                    <div className="text-primary text-base font-medium truncate">{form.meta_title || form.title || "Page Title"} | MBAHub</div>
+                    <div className="text-primary text-base font-medium truncate">{form.meta_title || form.title || "Page Title"} | MBA Compass</div>
                     <div className="text-green-700 dark:text-green-400 text-xs">mbahub.com/article/{form.slug || "page-slug"}</div>
                     <div className="text-sm text-muted-foreground line-clamp-2">{form.meta_description || form.excerpt || "Add a meta description..."}</div>
                   </div>

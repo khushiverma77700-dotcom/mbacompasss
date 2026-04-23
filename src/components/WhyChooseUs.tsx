@@ -16,7 +16,7 @@ const fallbackFeatures = [
 const WhyChooseUs = () => {
   const { data: settings } = useSiteSettings("why_choose_us");
 
-  const heading = settings?.heading || "Why Choose MBAHub";
+  const heading = settings?.heading || "Why Choose MBA Compass";
   const subheading = settings?.subheading || "We help you make the right choice for your MBA journey";
   const features = settings?.features || fallbackFeatures;
 
@@ -25,8 +25,8 @@ const WhyChooseUs = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
           <h2 className="font-heading text-2xl md:text-3xl font-bold text-foreground mb-2">
-            {heading.includes("MBAHub") ? (
-              <>{heading.replace("MBAHub", "")}<span className="text-gradient">MBAHub</span></>
+            {heading.includes("MBA Compass") ? (
+              <>{heading.replace("MBA Compass", "")}<span className="text-gradient">MBA Compass</span></>
             ) : heading}
           </h2>
           <p className="text-muted-foreground">{subheading}</p>

@@ -378,7 +378,7 @@ const AICoachingFinder = ({ onTryManually }: AICoachingFinderProps) => {
         <div className="flex items-center gap-3">
           <div className="relative">
             <div className="w-11 h-11 rounded-2xl bg-background border border-primary/20 flex items-center justify-center shadow-lg overflow-hidden">
-              <img src={mbahubLogo} alt="MBAHub AI" className="w-8 h-8 object-contain" loading="eager" />
+              <img src={mbahubLogo} alt="MBA Compass AI" className="w-8 h-8 object-contain" loading="eager" />
             </div>
             <motion.div
               className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-green-500 border-2 border-background"

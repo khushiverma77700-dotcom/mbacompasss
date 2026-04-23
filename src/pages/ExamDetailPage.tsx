@@ -84,7 +84,7 @@ const ExamDetailPage = () => {
 
   const { seo: resolvedSeo } = useResolvedSeo("exam", dbExam?.id, {
     title: exam
-      ? `${dbExam?.meta_title || exam.fullName || exam.name} Exam ${new Date().getFullYear()} - Pattern, Syllabus, Dates | MBAHub`
+      ? `${dbExam?.meta_title || exam.fullName || exam.name} Exam ${new Date().getFullYear()} - Pattern, Syllabus, Dates | MBA Compass`
       : undefined,
     description: dbExam?.meta_description || exam?.description || undefined,
     keywords: (dbExam?.keywords || []) as string[],
