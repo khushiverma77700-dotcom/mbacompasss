@@ -8,9 +8,9 @@ const AboutPage = () => (
   <div className="min-h-screen bg-background">
     <SEOHead
       title="About MBA Compass — India's Leading MBA Admissions & Coaching Platform"
-      description="Learn about MBA Compass.com, India's leading platform connecting MBA aspirants to top B-schools and coaching institutes. Our mission to simplify management education."
+      description="Learn about MBA Compass, India's leading platform connecting MBA aspirants to top B-schools and coaching institutes. Our mission to simplify management education."
       keywords={[
-        "about MBA Compass", "MBA portal mission", "MBA education vision", "B-school buzz story",
+        "about MBA Compass", "MBA portal mission", "MBA education vision", "MBA Compass story",
         "India's leading platform for MBA aspirants", "connecting students to top MBA colleges in India",
         "our approach to MBA counseling and data", "professional mission of MBA Compass team",
       ]}
@@ -18,7 +18,7 @@ const AboutPage = () => (
       jsonLd={{
         "@context": "https://schema.org",
         "@type": "AboutPage",
-        name: "About MBA Compass.com",
+        name: "About MBA Compass",
         url: "https://mbacompass.in/about",
         description: "India's leading platform to find, compare MBA coaching institutes and top B-schools",
         mainEntity: {
@@ -32,7 +32,7 @@ const AboutPage = () => (
 
     <div className="hero-gradient py-10 md:py-14">
       <div className="container mx-auto px-4 text-center">
-        <h1 className="font-heading text-2xl md:text-4xl font-bold text-primary-foreground mb-3">About MBA Compass.com</h1>
+        <h1 className="font-heading text-2xl md:text-4xl font-bold text-primary-foreground mb-3">About MBA Compass</h1>
         <p className="text-primary-foreground/70 max-w-2xl mx-auto text-lg">
           India's most trusted platform for discovering, comparing, and reviewing MBA coaching institutes across all major cities.
         </p>
@@ -66,7 +66,7 @@ const AboutPage = () => (
             To democratize access to quality MBA coaching information, enabling every aspiring MBA student to find the right coaching institute that matches their needs, budget, and goals. We believe that the right guidance at the right time can transform careers.
           </p>
           <p className="text-muted-foreground leading-relaxed">
-            MBA Compass.com was founded with a simple vision: no student should choose the wrong coaching institute due to lack of transparent information. We aggregate data from hundreds of coaching centres, verify it through our team, and present it in an easy-to-compare format — completely free for students.
+            MBA Compass was founded with a simple vision: no student should choose the wrong coaching institute due to lack of transparent information. We aggregate data from hundreds of coaching centres, verify it through our team, and present it in an easy-to-compare format — completely free for students.
           </p>
         </CardContent>
       </Card>
@@ -80,7 +80,7 @@ const AboutPage = () => (
             { icon: BookOpen, title: "Smart Comparison Tool", desc: "Compare up to 3 courses side-by-side on fees, curriculum, success rates, faculty, and teaching mode." },
             { icon: Heart, title: "Genuine Student Reviews", desc: "Read verified reviews from real students who've attended these coaching institutes." },
             { icon: Award, title: "Expert Content & Guides", desc: "Articles, exam tips, preparation strategies, and college guides written by MBA experts." },
-            { icon: CheckCircle, title: "Exclusive Offers & Discounts", desc: "Access special coupons and discounts from partner coaching institutes — available only on MBA Compass.com." },
+            { icon: CheckCircle, title: "Exclusive Offers & Discounts", desc: "Access special coupons and discounts from partner coaching institutes — available only on MBA Compass." },
             { icon: Target, title: "College Directory", desc: "Comprehensive MBA college listings with placement data, fees, cutoffs, and admission process details." },
           ].map((item, i) => (
             <Card key={i}>
@@ -101,7 +101,7 @@ const AboutPage = () => (
       {/* Why Trust Us */}
       <Card className="bg-secondary/20">
         <CardContent className="pt-8 pb-8">
-          <h2 className="font-heading text-2xl font-bold text-foreground mb-4">Why Trust MBA Compass.com?</h2>
+          <h2 className="font-heading text-2xl font-bold text-foreground mb-4">Why Trust MBA Compass?</h2>
           <div className="space-y-3">
             {[
               "All coaching institute listings are manually verified by our team",
