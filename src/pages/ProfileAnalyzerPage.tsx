@@ -1071,7 +1071,7 @@ const ProfileAnalyzerPage = () => {
     s.toLowerCase().trim().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
   const dynamicSeo = useMemo(() => {
-    const exam = (form.target_exam || form.target_exams?.[0] || "").toUpperCase();
+    const exam = (form.target_exams?.[0] || "").toUpperCase();
     const city = (form.current_city || form.target_states?.[0] || "").trim();
     const course = (form.preferred_specialization || "").trim();
 
@@ -1103,7 +1103,7 @@ const ProfileAnalyzerPage = () => {
     ];
 
     return { title, description, canonical, dynamicKeywords };
-  }, [form.target_exam, form.target_exams, form.current_city, form.target_states, form.preferred_specialization]);
+  }, [form.target_exams, form.current_city, form.target_states, form.preferred_specialization]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
