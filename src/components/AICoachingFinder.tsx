@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, MapPin, IndianRupee, Monitor, Building2, ChevronRight, ChevronDown, GraduationCap, Zap, Clock, Briefcase, BookOpen, Target, Star, Users, TrendingUp, ExternalLink, Award, Lightbulb, CheckCircle2, Search, Brain, Database, BarChart3, ArrowDown, AlertCircle } from "lucide-react";
-import mbahubLogo from "@/assets/mbahub-logo.png";
+import mbahubLogo from "@/assets/brandLogo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

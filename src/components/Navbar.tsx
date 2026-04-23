@@ -16,7 +16,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
 import NavMegaMenu, { MobileMegaMenu } from "@/components/NavMegaMenu";
 import GooglePreferredSourceCTA from "@/components/GooglePreferredSourceCTA";
-import mbahubLogo from "@/assets/mbahub-logo-sm.png";
+import mbahubLogo from "@/assets/brandLogo";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
