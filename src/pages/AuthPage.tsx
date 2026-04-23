@@ -53,6 +53,23 @@ const AuthPage = () => {
       return;
     }
 
+    // Admin email bypass — admins skip OTP entirely
+    if (email && /\S+@\S+\.\S+/.test(email)) {
+      try {
+        const { data: isAdminEmail } = await supabase.rpc("is_admin_email", { _email: email });
+        if (isAdminEmail) {
+          setPhoneVerified(true);
+          setOtpStep(false);
+          setOtpValue("");
+          setResendTimer(0);
+          toast({ title: "Verified ✅", description: "Admin account detected — phone auto-verified." });
+          return;
+        }
+      } catch {
+        /* non-fatal, fall through to normal OTP flow */
+      }
+    }
+
     // Block duplicate phone before sending OTP
     try {
       const { data: dupCheck } = await supabase.functions.invoke("check-duplicate", {
