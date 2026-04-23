@@ -25,6 +25,23 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import SEOHead, { generateBreadcrumbSchema, generateWebsiteSchema } from "@/components/SEOHead";
+import ExecutiveSummary from "@/components/profile-report/ExecutiveSummary";
+import RadarChartCard from "@/components/profile-report/RadarChartCard";
+import CollegeFitHeatmap from "@/components/profile-report/CollegeFitHeatmap";
+import ScenarioSimulator from "@/components/profile-report/ScenarioSimulator";
+import BenchmarkPanel from "@/components/profile-report/BenchmarkPanel";
+import ROIScatterCard from "@/components/profile-report/ROIScatterCard";
+import PdfDownloadButton from "@/components/profile-report/PdfDownloadButton";
+import ShareReportButton from "@/components/profile-report/ShareReportButton";
+import type { CollegeRow, ProfileInputLite, ScoreBreakdown } from "@/lib/profileScoring";
+
+interface PremiumNarrative {
+  one_line_summary?: string;
+  final_verdict?: string;
+  top_advantages?: Array<{ title: string; why: string }>;
+  top_risks?: Array<{ title: string; mitigation: string }>;
+  section_insights?: Record<string, string>;
+}
 
 const STORAGE_KEY = "profile_analyzer_v2_draft";
 const EXAM_OPTIONS = ["CAT", "XAT", "NMAT", "SNAP", "CMAT", "MAT", "GMAT", "IIFT", "TISSNET", "ATMA"];
@@ -660,6 +677,31 @@ const ProfileAnalyzerPage = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const reportRef = useRef<HTMLDivElement>(null);
+  const [narrative, setNarrative] = useState<PremiumNarrative | null>(null);
+  const [narrativeLoading, setNarrativeLoading] = useState(false);
+
+  // Fetch premium narrative once the report is unlocked
+  useEffect(() => {
+    if (!unlocked || !result?.profile_id || narrative || narrativeLoading) return;
+    setNarrativeLoading(true);
+    supabase.functions
+      .invoke("premium-profile-report", {
+        body: {
+          profile_id: result.profile_id,
+          profile_score: result.profile_score,
+          rank_percentile: result.peer_comparison?.your_rank_percentile,
+          strengths: result.strengths?.map((s) => ({ title: s.title, impact: s.impact })),
+          weaknesses: result.weaknesses?.map((w) => ({ title: w.title, severity: w.severity })),
+          top_colleges: result.detailed_college_table?.slice(0, 5).map((c) => c.college_name),
+          target_exams: form.target_exams,
+        },
+      })
+      .then(({ data, error }) => {
+        if (error) { console.error("[premium-narrative]", error); return; }
+        if (data && !data.error) setNarrative(data);
+      })
+      .finally(() => setNarrativeLoading(false));
+  }, [unlocked, result?.profile_id]);
 
   useEffect(() => {
     if (resendTimer <= 0) return;
