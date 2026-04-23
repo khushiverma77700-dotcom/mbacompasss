@@ -83,7 +83,7 @@ export default function AdminContentRefreshes() {
     if (error) {
       toast({ title: "Load failed", description: error.message, variant: "destructive" });
     } else {
-      setRows((data as RefreshRow[]) || []);
+      setRows((data as unknown as RefreshRow[]) || []);
     }
     setLoading(false);
   };
