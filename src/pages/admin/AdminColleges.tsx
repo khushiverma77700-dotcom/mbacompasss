@@ -23,6 +23,7 @@ import SeoEnhanceFields from "@/components/admin/SeoEnhanceFields";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import MultiSelectTags from "@/components/admin/MultiSelectTags";
 import { useSpecializations } from "@/hooks/useSpecializations";
+import RefreshContentButton from "@/components/admin/RefreshContentButton";
 
 const TIER_OPTIONS = ["Tier 1", "Tier 2", "Tier 3", "Tier 4"];
 const CATEGORY_OPTIONS = ["IIM", "Non-IIM"];
