@@ -64,6 +64,7 @@ const adminNavGroups = [
       { label: "Website Optimizer", path: "/admin/website-optimizer", icon: Sparkles },
       { label: "Static Page SEO", path: "/admin/static-seo", icon: Globe },
       { label: "Google Indexing", path: "/admin/google-indexing", icon: Globe },
+      { label: "Indexing Requeue", path: "/admin/indexing-requeue", icon: RefreshCw },
       { label: "Sitemap", path: "/admin/sitemap", icon: MapPin },
       { label: "All Site Links", path: "/admin/all-links", icon: Link2 },
       { label: "Profile Analyzer", path: "/admin/profile-analyzer", icon: BarChart3 },
