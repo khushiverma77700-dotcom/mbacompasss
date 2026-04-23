@@ -412,6 +412,53 @@ function sanitizeHtml(html: string): string {
   return out.trim();
 }
 
+// Strip HTML tags, citation markers like [src:NIRF 2025], and "Last updated" stamps
+// from SHORT plain-text fields (names, percentages, amounts, etc.). Long-form `content`
+// fields keep their HTML — only the short structured fields get cleaned.
+function stripToPlainText(s: unknown): string {
+  if (s == null) return "";
+  let out = String(s);
+  // Remove [src:...] citation markers
+  out = out.replace(/\[src:[^\]]*\]/gi, "");
+  // Remove "Last updated: YYYY-MM-DD" wrapper variants (with or without tags)
+  out = out.replace(/<p>\s*<em>\s*Last updated:[^<]*<\/em>\s*<\/p>/gi, "");
+  out = out.replace(/<em>\s*Last updated:[^<]*<\/em>/gi, "");
+  out = out.replace(/Last updated:\s*\d{4}-\d{2}-\d{2}/gi, "");
+  // Strip ALL HTML tags
+  out = out.replace(/<[^>]+>/g, " ");
+  // Decode common HTML entities
+  out = out.replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/&quot;/gi, '"').replace(/&#39;/gi, "'");
+  // Collapse whitespace
+  out = out.replace(/\s+/g, " ").trim();
+  return out;
+}
+
+// Extract a numeric percentage from strings like "25", "25%", "<strong>25%</strong>", "25-30%"
+function extractPercentNumber(s: unknown): string {
+  const plain = stripToPlainText(s);
+  const m = plain.match(/(\d+(?:\.\d+)?)/);
+  return m ? m[1] : "0";
+}
+
+// Recursively clean a payload: only `content` (and explicitly listed HTML fields)
+// keep HTML. Everything else becomes plain text. Special handling for percentage.
+const HTML_FIELDS = new Set(["content"]);
+const PERCENT_FIELDS = new Set(["percentage"]);
+function cleanPayload(value: any, key?: string): any {
+  if (Array.isArray(value)) return value.map((v) => cleanPayload(v));
+  if (value && typeof value === "object") {
+    const out: any = {};
+    for (const k of Object.keys(value)) out[k] = cleanPayload(value[k], k);
+    return out;
+  }
+  if (typeof value === "string") {
+    if (key && HTML_FIELDS.has(key)) return value; // leave HTML content alone
+    if (key && PERCENT_FIELDS.has(key)) return extractPercentNumber(value);
+    return stripToPlainText(value);
+  }
+  return value;
+}
+
 function buildFaqSchema(items: { question: string; answer: string }[]) {
   if (!Array.isArray(items) || items.length === 0) return null;
   const cleaned = items
