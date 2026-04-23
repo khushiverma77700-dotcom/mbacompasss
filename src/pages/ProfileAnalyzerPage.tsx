@@ -729,6 +729,15 @@ const ProfileAnalyzerPage = () => {
       toast({ title: "Invalid phone", description: "Enter a valid 10-digit Indian mobile number.", variant: "destructive" });
       return;
     }
+    // Admin bypass — admins skip OTP entirely
+    if (isAdmin) {
+      setPhoneVerified(true);
+      setOtpStep(false);
+      setOtpValue("");
+      setResendTimer(0);
+      toast({ title: "Verified ✅", description: "Admin account detected — phone auto-verified." });
+      return;
+    }
     setOtpSending(true);
     try {
       const { data, error } = await supabase.functions.invoke("send-otp", { body: { phone } });
