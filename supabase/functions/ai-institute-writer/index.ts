@@ -220,13 +220,14 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "openai/gpt-5",
+        model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
         tools: [tool],
         tool_choice: { type: "function", function: { name: "publish_institute_profile" } },
+        max_tokens: 4000,
       }),
     });
 
@@ -376,13 +377,14 @@ RULES:
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "openai/gpt-5",
+          model: "google/gemini-3-flash-preview",
           messages: [
             { role: "system", content: "You are a meticulous fact-checker for Indian MBA-entrance coaching brands. You only confirm facts you are confident about; otherwise you flag them." },
             { role: "user", content: auditPrompt },
           ],
           tools: [factCheckTool],
           tool_choice: { type: "function", function: { name: "audit_institute_facts" } },
+          max_tokens: 2000,
         }),
       });
       if (auditRes.ok) {
