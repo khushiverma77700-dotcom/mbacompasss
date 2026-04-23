@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, BookOpen, Newspaper, MessageSquare, Users, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import MetaPassRateWidget from "@/components/admin/MetaPassRateWidget";
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -59,6 +60,9 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
         ))}
+      </div>
+      <div className="mt-6">
+        <MetaPassRateWidget />
       </div>
     </div>
   );
