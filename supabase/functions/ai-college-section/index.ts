@@ -672,7 +672,11 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
       );
     }
 
-    // ── Sanitize HTML in `content` field ──
+    // ── Clean ALL short fields: strip HTML, [src:...] citations, "Last updated" stamps,
+    //    and coerce percentage strings to numeric. The `content` field keeps its HTML.
+    payload = cleanPayload(payload);
+
+    // ── Sanitize HTML in `content` field (kept rich) ──
     if (typeof payload.content === "string") {
       payload.content = sanitizeHtml(payload.content);
       // Ensure "Last updated" stamp is present
