@@ -1063,12 +1063,55 @@ const ProfileAnalyzerPage = () => {
     },
   ];
 
+  // ─── Dynamic SEO per result type (exam / location / course) ───
+  // When a user has progressed through the analyzer their selections become
+  // signals we can use to render a unique meta-title, description and canonical
+  // — this drastically improves long-tail SEO coverage on mbacompass.in.
+  const seoSlugify = (s: string) =>
+    s.toLowerCase().trim().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+
+  const dynamicSeo = useMemo(() => {
+    const exam = (form.target_exams?.[0] || "").toUpperCase();
+    const city = (form.current_city || form.target_states?.[0] || "").trim();
+    const course = (form.preferred_specialization || "").trim();
+
+    const parts: string[] = [];
+    const canonicalParts: string[] = [];
+    if (exam) { parts.push(exam); canonicalParts.push(`exam-${seoSlugify(exam)}`); }
+    if (city) { parts.push(`in ${city}`); canonicalParts.push(`city-${seoSlugify(city)}`); }
+    if (course) { parts.push(`for ${course} MBA`); canonicalParts.push(`course-${seoSlugify(course)}`); }
+
+    const hasContext = parts.length > 0;
+    const suffix = hasContext ? ` (${parts.join(" • ")})` : "";
+
+    const title = hasContext
+      ? `AI MBA Profile Analyser ${suffix} — Free IIM Chances | MBA Compass`
+      : "AI MBA Profile Analyser — Check IIM Admission Chances Free | MBA Compass";
+
+    const description = hasContext
+      ? `Personalised MBA profile analysis${exam ? ` for ${exam} aspirants` : ""}${city ? ` from ${city}` : ""}${course ? ` targeting ${course}` : ""}. Get IIM admission probability, peer comparison among 25,000+ students, college-wise difficulty ratings, and a custom preparation roadmap — 100% free on MBA Compass.`
+      : "Analyse your MBA profile with AI. Get personalised IIM admission probability, 5-dimension score breakdown, peer comparison among 25,000+ students, college-wise difficulty ratings, and detailed preparation roadmap. 100% Free.";
+
+    const canonical = canonicalParts.length > 0
+      ? `https://mbacompass.in/profile-analyzer?${canonicalParts.join("&")}`
+      : "https://mbacompass.in/profile-analyzer";
+
+    const dynamicKeywords = [
+      ...(exam ? [`${exam} profile evaluation`, `${exam} admission chances`, `chances of cracking ${exam}`] : []),
+      ...(city ? [`MBA profile evaluation in ${city}`, `top MBA colleges from ${city}`] : []),
+      ...(course ? [`${course} MBA profile check`, `best MBA colleges for ${course}`] : []),
+    ];
+
+    return { title, description, canonical, dynamicKeywords };
+  }, [form.target_exams, form.current_city, form.target_states, form.preferred_specialization]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <SEOHead
-        title="AI MBA Profile Analyser — Check IIM Admission Chances Free | MBA Compass"
-        description="Analyse your MBA profile with AI. Get personalised IIM admission probability, 5-dimension score breakdown, peer comparison among 25,000+ students, college-wise difficulty ratings, and detailed preparation roadmap. 100% Free."
+        title={dynamicSeo.title}
+        description={dynamicSeo.description}
         keywords={[
+          ...dynamicSeo.dynamicKeywords,
           "MBA profile check", "B-school eligibility", "profile evaluation", "admission chances",
           "check profile for IIM admission eligibility", "MBA profile evaluation for study abroad",
           "is my academic profile good enough for CAT", "chances of getting into IIM with low academics",
@@ -1076,10 +1119,10 @@ const ProfileAnalyzerPage = () => {
           "MBA profile analyser", "IIM chances calculator", "CAT score predictor", "MBA admission probability",
           "free MBA profile evaluation", "check IIM chances", "IIM admission probability calculator",
         ]}
-        canonical="https://mbacompass.in/profile-analyzer"
+        canonical={dynamicSeo.canonical}
         ogType="website"
-        ogTitle="AI-Powered MBA Profile Analyser by MBA Compass"
-        ogDescription="Get personalised college predictions, 5-dimension scoring, peer ranking among 25,000+ students, and AI-powered preparation roadmap for IIM, XLRI, FMS and 50+ top MBA colleges."
+        ogTitle={dynamicSeo.title.replace(" | MBA Compass", " by MBA Compass")}
+        ogDescription={dynamicSeo.description}
         jsonLd={jsonLd}
       />
 
