@@ -2153,6 +2153,11 @@ const ProfileAnalyzerPage = () => {
                 </Button>
                 <PdfDownloadButton targetRef={reportRef} fileName={`${form.name?.split(" ")[0] || "profile"}-mba-report.pdf`} label="Download Premium PDF" />
                 <ShareReportButton profileId={result.profile_id} />
+                {isAdmin && (
+                  <Button variant="default" onClick={handleAdminRetest} className="rounded-xl">
+                    <Sparkles className="w-4 h-4 mr-2" /> Admin: Re-test (skip cache)
+                  </Button>
+                )}
               </div>
             </div>
 
