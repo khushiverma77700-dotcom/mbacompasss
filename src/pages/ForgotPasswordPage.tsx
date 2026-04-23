@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import mbahubLogo from "@/assets/mbahub-logo.png";
+import mbahubLogo from "@/assets/brandLogo";
 
 const ForgotPasswordPage = () => {
   const [step, setStep] = useState<"request" | "otp" | "reset">("request");

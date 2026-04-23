@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { lovable } from "@/integrations/lovable/index";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthRedirectUri, normalizeRedirectPath, storePostAuthRedirect } from "@/lib/authRedirect";
-import mbahubLogo from "@/assets/mbahub-logo.png";
+import mbahubLogo from "@/assets/brandLogo";
 
 const TEMP_DISABLE_PHONE_OTP = false;
 
