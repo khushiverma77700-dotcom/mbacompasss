@@ -32,6 +32,7 @@ import CollegeFitHeatmap from "@/components/profile-report/CollegeFitHeatmap";
 import ScenarioSimulator from "@/components/profile-report/ScenarioSimulator";
 import BenchmarkPanel from "@/components/profile-report/BenchmarkPanel";
 import ROIScatterCard from "@/components/profile-report/ROIScatterCard";
+import AdvancedCharts from "@/components/profile-report/AdvancedCharts";
 import PdfDownloadButton from "@/components/profile-report/PdfDownloadButton";
 import ShareReportButton from "@/components/profile-report/ShareReportButton";
 import type { CollegeRow, ProfileInputLite, ScoreBreakdown } from "@/lib/profileScoring";
@@ -2214,6 +2215,13 @@ const ProfileAnalyzerPage = () => {
 
             {/* ─── ROI Scatter (Fees vs Salary) ─── */}
             <ROIScatterCard rows={result.detailed_college_table as unknown as CollegeRow[]} />
+
+            {/* ─── Advanced Visualizations: composition donut, tier distribution, fees-vs-package, probability funnel ─── */}
+            <AdvancedCharts
+              breakdown={result.score_breakdown as ScoreBreakdown}
+              rows={result.detailed_college_table as unknown as CollegeRow[]}
+              profileScore={result.profile_score}
+            />
 
             {/* ─── Original 5-Dimension Score Radar (kept for continuity) ─── */}
             <ScoreRadar breakdown={result.score_breakdown} />
