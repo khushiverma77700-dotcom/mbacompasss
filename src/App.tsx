@@ -85,6 +85,7 @@ const AdminIndexingRequeue = lazy(() => import("./pages/admin/AdminIndexingReque
 const AdminSpecializations = lazy(() => import("./pages/admin/AdminSpecializations"));
 const AdminDomainAudit = lazy(() => import("./pages/admin/AdminDomainAudit"));
 const AdminMetaValidator = lazy(() => import("./pages/admin/AdminMetaValidator"));
+const AdminDNSStatus = lazy(() => import("./pages/admin/AdminDNSStatus"));
 const CATScoreCalculatorPage = lazy(() => import("./pages/CATScoreCalculatorPage"));
 const MBARoiCalculatorPage = lazy(() => import("./pages/MBARoiCalculatorPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
@@ -258,6 +259,7 @@ const App = () => (
               <Route path="specializations" element={<LazyPage><AdminSpecializations /></LazyPage>} />
               <Route path="domain-audit" element={<LazyPage><AdminDomainAudit /></LazyPage>} />
               <Route path="meta-validator" element={<LazyPage><AdminMetaValidator /></LazyPage>} />
+              <Route path="dns-status" element={<LazyPage><AdminDNSStatus /></LazyPage>} />
               <Route path="roi-analyses" element={<LazyPage><AdminROIAnalyses /></LazyPage>} />
               <Route path="user-submissions" element={<LazyPage><AdminUserSubmissions /></LazyPage>} />
               <Route path="listing-change-requests" element={<LazyPage><AdminListingChangeRequests /></LazyPage>} />
