@@ -196,7 +196,7 @@ const GlobalNavigationPrefetch = () => {
       if ("requestIdleCallback" in window) {
         (window as Window & { requestIdleCallback: (cb: () => void) => number }).requestIdleCallback(runner);
       } else {
-        window.setTimeout(runner, 0);
+        setTimeout(runner, 0);
       }
     };
 
