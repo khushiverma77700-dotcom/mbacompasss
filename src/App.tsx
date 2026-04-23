@@ -130,9 +130,109 @@ const queryClient = new QueryClient({
   },
 });
 
-// Minimal fallback — invisible so no flash
+const ROUTE_PREFETCHERS = {
+  "/blog": [BlogPage.preload],
+  "/compare": [ComparePage.preload],
+  "/about": [AboutPage.preload],
+  "/contact": [ContactPage.preload],
+  "/auth": [AuthPage.preload],
+  "/dashboard": [DashboardPage.preload],
+  "/college-finder": [CollegeFinderPage.preload],
+  "/college-shortlister": [CollegeShortlisterPage.preload],
+  "/profile-analyzer": [ProfileAnalyzerPage.preload],
+  "/cat-score-calculator": [CATScoreCalculatorPage.preload],
+  "/roi-calculator": [MBARoiCalculatorPage.preload],
+  "/business-inquiries": [BusinessInquiryPage.preload],
+  "/forgot-password": [ForgotPasswordPage.preload],
+  "/reset-password": [ResetPasswordPage.preload],
+  "/colleges": [CollegesPage.preload],
+  "/coaching": [CoachingPage.preload],
+  "/admin": [AdminLayout.preload, AdminDashboard.preload],
+};
+
+const ROUTE_MATCH_PREFETCHERS = [
+  { pattern: "/category/:slug", preloaders: [CategoryPage.preload] },
+  { pattern: "/article/:slug", preloaders: [ArticlePage.preload] },
+  { pattern: "/college/:slug", preloaders: [CollegeDetailPage.preload] },
+  { pattern: "/institute/:slug", preloaders: [InstitutePage.preload] },
+  { pattern: "/exam/:slug", preloaders: [ExamDetailPage.preload] },
+  { pattern: "/colleges/:region", preloaders: [CollegeFilterPage.preload] },
+  { pattern: "/coaching/:region", preloaders: [CoachingFilterPage.preload] },
+  { pattern: "/report/:id", preloaders: [SharedReportPage.preload] },
+  { pattern: "/list-your-business", preloaders: [ListYourBusinessPage.preload] },
+  { pattern: "/list-your-business/poc", preloaders: [ListingPocPage.preload] },
+  { pattern: "/list-your-business/:type/:id", preloaders: [ListingFormPage.preload] },
+  { pattern: "/my-listings", preloaders: [MyListingsPage.preload] },
+  { pattern: "/admin/:section", preloaders: [AdminLayout.preload] },
+  { pattern: "*", preloaders: [NotFound.preload] },
+];
+
+const prefetchRoute = (href?: string | null) => {
+  if (!href) return;
+
+  const url = href.startsWith("http") ? new URL(href) : new URL(href, window.location.origin);
+  if (url.origin !== window.location.origin) return;
+
+  const path = url.pathname;
+  const preloaders = new Set<() => Promise<unknown>>();
+
+  ROUTE_PREFETCHERS[path as keyof typeof ROUTE_PREFETCHERS]?.forEach((preload) => preloaders.add(preload));
+
+  for (const route of ROUTE_MATCH_PREFETCHERS) {
+    if (matchPath(route.pattern, path)) {
+      route.preloaders.forEach((preload) => preloaders.add(preload));
+    }
+  }
+
+  preloaders.forEach((preload) => {
+    void preload();
+  });
+};
+
+const GlobalNavigationPrefetch = () => {
+  useEffect(() => {
+    const schedulePrefetch = (href?: string | null) => {
+      const runner = () => prefetchRoute(href);
+      if ("requestIdleCallback" in window) {
+        (window as Window & { requestIdleCallback: (cb: () => void) => number }).requestIdleCallback(runner);
+      } else {
+        window.setTimeout(runner, 0);
+      }
+    };
+
+    const handlePointer = (event: Event) => {
+      const target = event.target as HTMLElement | null;
+      const anchor = target?.closest("a[href]") as HTMLAnchorElement | null;
+      if (!anchor) return;
+      schedulePrefetch(anchor.href);
+    };
+
+    document.addEventListener("pointerenter", handlePointer, true);
+    document.addEventListener("focusin", handlePointer, true);
+
+    schedulePrefetch("/");
+    schedulePrefetch("/blog");
+    schedulePrefetch("/compare");
+    schedulePrefetch("/admin");
+
+    return () => {
+      document.removeEventListener("pointerenter", handlePointer, true);
+      document.removeEventListener("focusin", handlePointer, true);
+    };
+  }, []);
+
+  return null;
+};
+
 const PageLoader = () => (
-  <div className="min-h-[40vh]" />
+  <div className="min-h-[40vh] bg-background">
+    <div className="container mx-auto flex min-h-[40vh] items-center justify-center px-4">
+      <div className="flex items-center gap-3 rounded-md border border-border bg-card px-4 py-3 shadow-sm">
+        <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-primary" />
+        <span className="text-sm font-medium text-muted-foreground">Loading page…</span>
+      </div>
+    </div>
+  </div>
 );
 
 // Prefetch all site settings in one batch on app mount
@@ -222,6 +322,7 @@ const App = () => (
       </Suspense>
       <SettingsPrefetcher />
       <BrowserRouter>
+        <GlobalNavigationPrefetch />
         <ScrollToTop />
         <AuthProvider>
           <OAuthRedirectHandler />
