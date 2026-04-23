@@ -865,8 +865,8 @@ const ProfileAnalyzerPage = () => {
 
   const handleSubmit = async () => {
     if (!validateStep(step)) return;
-    // Enforce 60-day cooldown for logged-in users
-    if (user && cooldownDate && cooldownDate > new Date()) {
+    // Enforce 60-day cooldown for logged-in users (admins can bypass via Re-test)
+    if (user && cooldownDate && cooldownDate > new Date() && !(isAdmin && forceRetest)) {
       toast({
         title: "Cooldown Active",
         description: `You can re-analyze after ${cooldownDate.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}. View your existing report on the dashboard.`,
