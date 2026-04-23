@@ -30,6 +30,7 @@ import {
 } from "@/lib/seoAutomation";
 import STATIC_PAGES_CONFIG from "@/data/staticPages";
 import SEOFullAudit from "@/components/admin/SEOFullAudit";
+import { AutoFixPanel } from "@/components/admin/AutoFixPanel";
 
 // ── Types ──
 type ScoreStatus = "good" | "warning" | "poor";
@@ -937,6 +938,11 @@ const AdminSEODashboard = () => {
 
       {/* ── Main Content Area ── */}
       <div className="flex-1 min-w-0 space-y-6">
+        <AutoFixPanel
+          actions={["fix_all", "fix_missing_meta", "rewrite_legacy_domains", "flush_indexing"]}
+          title="Site-wide auto-fix"
+          subtitle="Hybrid: AI-generates missing meta on a batch of pages, rewrites legacy domains, flushes the indexing queue, and pings the sitemap."
+        />
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2"><Sparkles className="h-6 w-6 text-primary" /> AI SEO Command Center</h1>
