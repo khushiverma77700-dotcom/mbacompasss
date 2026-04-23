@@ -23,6 +23,7 @@ import { generateAndUploadLocationBanner } from "@/lib/locationBanner";
 import MultiSelectTags from "@/components/admin/MultiSelectTags";
 import { useSpecializations } from "@/hooks/useSpecializations";
 import RefreshContentButton from "@/components/admin/RefreshContentButton";
+import FullPageReauditButton from "@/components/admin/FullPageReauditButton";
 
 type Institute = {
   id: string; name: string; slug: string; city: string | null;
@@ -403,6 +404,7 @@ const AdminInstitutes = () => {
                   <TableCell>{inst.featured ? <Badge className="bg-primary text-primary-foreground text-xs">Yes</Badge> : "No"}</TableCell>
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{inst.created_at ? new Date(inst.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}<br/><span className="text-[10px]">{inst.created_at ? new Date(inst.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : ""}</span></TableCell>
                   <TableCell className="text-right space-x-2">
+                    <FullPageReauditButton kind="institute" entityId={inst.id} entityName={inst.name} />
                     <RefreshContentButton entityType="institute" entityId={inst.id} entityName={inst.name} />
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(inst.id)}><Pencil className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(inst.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
