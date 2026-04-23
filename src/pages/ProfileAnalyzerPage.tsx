@@ -26,6 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import SEOHead, { generateBreadcrumbSchema, generateWebsiteSchema } from "@/components/SEOHead";
 import ExecutiveSummary from "@/components/profile-report/ExecutiveSummary";
+import SummaryHighlights from "@/components/profile-report/SummaryHighlights";
 import RadarChartCard from "@/components/profile-report/RadarChartCard";
 import CollegeFitHeatmap from "@/components/profile-report/CollegeFitHeatmap";
 import ScenarioSimulator from "@/components/profile-report/ScenarioSimulator";
