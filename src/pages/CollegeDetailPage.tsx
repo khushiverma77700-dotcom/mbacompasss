@@ -201,30 +201,51 @@ const CollegeDetailPage = () => {
     { value: "news", label: "News" },
   ];
 
+  // ── Helpers to clean already-saved AI data that may contain raw HTML/citations ──
+  const stripText = (v: any): string => {
+    if (v == null) return "";
+    return String(v)
+      .replace(/\[src:[^\]]*\]/gi, "")
+      .replace(/<p>\s*<em>\s*Last updated:[^<]*<\/em>\s*<\/p>/gi, "")
+      .replace(/Last updated:\s*\d{4}-\d{2}-\d{2}/gi, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/&quot;/gi, '"').replace(/&#39;/gi, "'")
+      .replace(/\s+/g, " ").trim();
+  };
+  const toPctNum = (v: any): number => {
+    const m = stripText(v).match(/(\d+(?:\.\d+)?)/);
+    return m ? Number(m[1]) : 0;
+  };
+
   // Placement sectors from DB or fallback
   const placementSectors = placementData.sectors?.length > 0
-    ? placementData.sectors.map((s: any) => ({ sector: s.sector, pct: Number(s.percentage) }))
+    ? placementData.sectors.map((s: any) => ({ sector: stripText(s.sector), pct: toPctNum(s.percentage) }))
     : [{ sector: "Consulting", pct: 35 }, { sector: "Finance", pct: 28 }, { sector: "IT", pct: 18 }, { sector: "FMCG", pct: 12 }, { sector: "Others", pct: 7 }];
 
   const placementRecruiters = placementData.recruiters?.length > 0
-    ? placementData.recruiters.map((r: any) => r.name)
+    ? placementData.recruiters.map((r: any) => stripText(r.name)).filter(Boolean)
     : topRecruiters;
 
   // Rankings from DB or fallback
   const rankingsList = rankingsData.rankings?.length > 0
-    ? rankingsData.rankings
+    ? rankingsData.rankings.map((r: any) => ({ body: stripText(r.body), rank: stripText(r.rank), year: stripText(r.year) }))
     : [
         { body: "NIRF", rank: college.ranking ? `#${college.ranking}` : "N/A", year: "2025" },
         { body: "Business Today", rank: college.ranking ? `#${Math.max(1, (college.ranking || 1) - 2)}` : "N/A", year: "2025" },
       ];
 
   const rankAccreditations = rankingsData.accreditations?.length > 0
-    ? rankingsData.accreditations.map((a: any) => a.name)
+    ? rankingsData.accreditations.map((a: any) => stripText(a.name)).filter(Boolean)
     : accreditations;
 
   // Scholarships from DB or fallback
   const scholarships = scholarshipsData.scholarships?.length > 0
-    ? scholarshipsData.scholarships
+    ? scholarshipsData.scholarships.map((s: any) => ({
+        name: stripText(s.name),
+        criteria: stripText(s.criteria),
+        amount: stripText(s.amount),
+        description: stripText(s.description),
+      }))
     : [
         { name: "Merit Scholarship", criteria: "Top 10% CAT percentile", amount: "Up to 50% waiver", description: "For exceptional entrance exam scores." },
         { name: "Need-Based Aid", criteria: "Family income < ₹8 LPA", amount: "₹1-3 Lakh/year", description: "Financial assistance for deserving students." },
