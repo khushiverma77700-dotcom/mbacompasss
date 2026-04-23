@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { RefreshCw, AlertTriangle, CheckCircle2, Loader2, Search, Globe, FileText, Database, Code2 } from "lucide-react";
+import { AutoFixPanel } from "@/components/admin/AutoFixPanel";
 
 const NEW_DOMAIN = "https://mbacompass.in";
 const OLD_DOMAINS = ["bschoolbuzz.com", "bschoolbus.com", "bestmbacoaching.com"];
@@ -251,6 +252,13 @@ export default function AdminDomainAudit() {
           <span className="font-mono">{NEW_DOMAIN}</span>.
         </p>
       </div>
+
+      <AutoFixPanel
+        actions={["rewrite_legacy_domains", "rebuild_sitemap", "fix_all"]}
+        title="Server-side legacy rewrite"
+        subtitle="Runs on the backend across all content tables + the indexing queue, then rebuilds the sitemap. Faster and safer than per-row clicks."
+        onComplete={() => { void runScan(); }}
+      />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="p-4">

@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Save, Globe, FileText, Tag, Loader2, CheckCircle } from "lucide-react";
 import STATIC_PAGES from "@/data/staticPages";
+import { AutoFixPanel } from "@/components/admin/AutoFixPanel";
 
 interface PageSEO {
   meta_title: string;
@@ -77,6 +78,12 @@ const AdminStaticPageSEO = () => {
         <h1 className="text-2xl font-bold">Static Page SEO</h1>
         <p className="text-muted-foreground">Manage meta title, description, and keywords for all static pages.</p>
       </div>
+
+      <AutoFixPanel
+        actions={["fix_all", "fix_missing_meta", "rewrite_legacy_domains", "rebuild_sitemap"]}
+        title="One-click site-wide SEO fix"
+        subtitle="Auto-generate missing meta on all DB-backed pages, rewrite legacy domains, and rebuild the sitemap."
+      />
 
       <div className="grid gap-6">
         {STATIC_PAGES.map((page) => {

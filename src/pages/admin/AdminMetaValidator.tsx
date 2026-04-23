@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CheckCircle2, AlertTriangle, Loader2, Search, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { buildAnalyzerCanonical, SITE_URL } from "@/lib/seoUrlBuilder";
+import { AutoFixPanel } from "@/components/admin/AutoFixPanel";
 
 const SAMPLE_EXAMS = ["CAT", "XAT", "NMAT", "SNAP", "GMAT"];
 const SAMPLE_CITIES = ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Pune"];
@@ -139,6 +140,12 @@ export default function AdminMetaValidator() {
           rendered title, description, canonical and JSON-LD against the expected SEO contract.
         </p>
       </div>
+
+      <AutoFixPanel
+        actions={["fix_missing_meta", "rewrite_legacy_domains", "rebuild_sitemap"]}
+        title="Auto-fix detected meta issues"
+        subtitle="Profile-analyzer pages are static, so issues found here usually surface from DB-backed pages. Use the buttons to remediate site-wide."
+      />
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         <Card className="p-4">
