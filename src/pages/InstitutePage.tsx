@@ -142,7 +142,7 @@ const InstitutePage = () => {
       return;
     }
     setDiscountClaimed(true);
-    toast({ title: "🎉 Best Offer Unlocked!", description: "Use code MBAHUB25 for 25% off. Show this code during enrollment." });
+    toast({ title: "🎉 Best Offer Unlocked!", description: "Use code COMPASS25 for 25% off. Show this code during enrollment." });
   };
 
   const handleDownloadPDF = () => {
@@ -896,7 +896,7 @@ const InstitutePage = () => {
                   </>
                 ) : (
                   <div className="bg-primary/10 rounded-lg p-3">
-                    <p className="text-sm font-semibold text-primary">Code: MBAHUB25</p>
+                    <p className="text-sm font-semibold text-primary">Code: COMPASS25</p>
                     <p className="text-xs text-muted-foreground mt-1">25% off — show during enrollment</p>
                   </div>
                 )}
