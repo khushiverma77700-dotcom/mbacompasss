@@ -412,6 +412,53 @@ function sanitizeHtml(html: string): string {
   return out.trim();
 }
 
+// Strip HTML tags, citation markers like [src:NIRF 2025], and "Last updated" stamps
+// from SHORT plain-text fields (names, percentages, amounts, etc.). Long-form `content`
+// fields keep their HTML — only the short structured fields get cleaned.
+function stripToPlainText(s: unknown): string {
+  if (s == null) return "";
+  let out = String(s);
+  // Remove [src:...] citation markers
+  out = out.replace(/\[src:[^\]]*\]/gi, "");
+  // Remove "Last updated: YYYY-MM-DD" wrapper variants (with or without tags)
+  out = out.replace(/<p>\s*<em>\s*Last updated:[^<]*<\/em>\s*<\/p>/gi, "");
+  out = out.replace(/<em>\s*Last updated:[^<]*<\/em>/gi, "");
+  out = out.replace(/Last updated:\s*\d{4}-\d{2}-\d{2}/gi, "");
+  // Strip ALL HTML tags
+  out = out.replace(/<[^>]+>/g, " ");
+  // Decode common HTML entities
+  out = out.replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">").replace(/&quot;/gi, '"').replace(/&#39;/gi, "'");
+  // Collapse whitespace
+  out = out.replace(/\s+/g, " ").trim();
+  return out;
+}
+
+// Extract a numeric percentage from strings like "25", "25%", "<strong>25%</strong>", "25-30%"
+function extractPercentNumber(s: unknown): string {
+  const plain = stripToPlainText(s);
+  const m = plain.match(/(\d+(?:\.\d+)?)/);
+  return m ? m[1] : "0";
+}
+
+// Recursively clean a payload: only `content` (and explicitly listed HTML fields)
+// keep HTML. Everything else becomes plain text. Special handling for percentage.
+const HTML_FIELDS = new Set(["content"]);
+const PERCENT_FIELDS = new Set(["percentage"]);
+function cleanPayload(value: any, key?: string): any {
+  if (Array.isArray(value)) return value.map((v) => cleanPayload(v));
+  if (value && typeof value === "object") {
+    const out: any = {};
+    for (const k of Object.keys(value)) out[k] = cleanPayload(value[k], k);
+    return out;
+  }
+  if (typeof value === "string") {
+    if (key && HTML_FIELDS.has(key)) return value; // leave HTML content alone
+    if (key && PERCENT_FIELDS.has(key)) return extractPercentNumber(value);
+    return stripToPlainText(value);
+  }
+  return value;
+}
+
 function buildFaqSchema(items: { question: string; answer: string }[]) {
   if (!Array.isArray(items) || items.length === 0) return null;
   const cleaned = items
@@ -512,6 +559,9 @@ ACCURACY RULES:
 - Established years for famous schools must be correct (XLRI=1949, IIM-A=1961, IIM-B=1973, IIM-C=1961, FMS=1954, JBIMS=1965, SPJIMR=1981, MDI=1973, IIFT=1963, NMIMS=1981, ISB=2001).
 - All fees, placements, cutoffs, recruiter lists must reflect the latest ${freshness} data window. The active admission cycle is ${admissionCycle}. Today is ${todayIso}. Never use 2020-2023 numbers.
 - For EVERY key stat append a machine-readable inline citation marker in EXACT shape [src:<Source> <Year>], e.g. [src:NIRF ${todayIso.slice(0,4)}], [src:Placement Report ${Number(todayIso.slice(0,4))-1}-${todayIso.slice(2,4)}], [src:Admission Brochure ${todayIso.slice(0,4)}]. The frontend converts these into clickable "view source" pills, so the syntax must be exact (square brackets, "src:" prefix, no quotes, no URLs).
+- CRITICAL — citations, HTML tags, and "Last updated" stamps belong ONLY inside long-form HTML fields named "content". For ALL other short fields (name, body, rank, year, amount, criteria, description, percentage, sector, recruiter name, faculty name, qualification, experience, label, score, value, item.value, scholarship name, etc.) return PLAIN TEXT ONLY — no HTML tags whatsoever, no <strong>, no <a href>, no [src:...] markers, no "Last updated" lines.
+- "percentage" fields must be a bare number string ("25" or "25.5") — never "25%" or "<strong>25%</strong>" or "25-30%". Pick the midpoint if you only have a range.
+- "amount" / "rank" / "score" / "rating" fields must be short plain text without HTML or citations (e.g. "Up to 50% waiver", "#1", "4.3").
 - End every long-form HTML content field with a small italic line: <p><em>Last updated: ${todayIso}</em></p>
 - HTML output uses ONLY: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. No <html>/<head>/<body>/<h1>/markdown fences.
 - ABSOLUTELY NO inline style="" attributes, NO <font> tags, NO class="" / id="" attributes, NO width/height/color attributes. Plain semantic HTML only — the platform applies uniform typography.
@@ -625,7 +675,11 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
       );
     }
 
-    // ── Sanitize HTML in `content` field ──
+    // ── Clean ALL short fields: strip HTML, [src:...] citations, "Last updated" stamps,
+    //    and coerce percentage strings to numeric. The `content` field keeps its HTML.
+    payload = cleanPayload(payload);
+
+    // ── Sanitize HTML in `content` field (kept rich) ──
     if (typeof payload.content === "string") {
       payload.content = sanitizeHtml(payload.content);
       // Ensure "Last updated" stamp is present
