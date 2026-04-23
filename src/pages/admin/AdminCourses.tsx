@@ -15,6 +15,7 @@ import { useTableSort } from "@/hooks/useTableSort";
 import SortableTableHead from "@/components/admin/SortableTableHead";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
+import RefreshContentButton from "@/components/admin/RefreshContentButton";
 
 const emptyForm = {
   name: "", description: "", institute_id: "", duration: "", fees: 0,
@@ -304,6 +305,7 @@ const AdminCourses = () => {
                   <TableCell>{c.enrolled_count ? <span className="flex items-center gap-1 text-sm"><Users className="w-3 h-3" /> {c.enrolled_count}</span> : "—"}</TableCell>
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(c.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}<br/><span className="text-[10px]">{new Date(c.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></TableCell>
                   <TableCell className="text-right space-x-2">
+                    <RefreshContentButton entityType="course" entityId={c.id} entityName={c.name} />
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(c)}><Pencil className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(c.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                   </TableCell>

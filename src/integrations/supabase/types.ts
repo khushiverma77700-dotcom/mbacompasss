@@ -1006,6 +1006,72 @@ export type Database = {
         }
         Relationships: []
       }
+      content_refreshes: {
+        Row: {
+          ai_model: string | null
+          ai_notes: string | null
+          created_at: string
+          current_snapshot: Json
+          diff: Json
+          entity_id: string
+          entity_name: string | null
+          entity_slug: string | null
+          entity_type: string
+          error_message: string | null
+          id: string
+          proposed_snapshot: Json
+          published_at: string | null
+          refresh_mode: string
+          requested_by: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          ai_model?: string | null
+          ai_notes?: string | null
+          created_at?: string
+          current_snapshot?: Json
+          diff?: Json
+          entity_id: string
+          entity_name?: string | null
+          entity_slug?: string | null
+          entity_type: string
+          error_message?: string | null
+          id?: string
+          proposed_snapshot?: Json
+          published_at?: string | null
+          refresh_mode?: string
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          ai_model?: string | null
+          ai_notes?: string | null
+          created_at?: string
+          current_snapshot?: Json
+          diff?: Json
+          entity_id?: string
+          entity_name?: string | null
+          entity_slug?: string | null
+          entity_type?: string
+          error_message?: string | null
+          id?: string
+          proposed_snapshot?: Json
+          published_at?: string | null
+          refresh_mode?: string
+          requested_by?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coupon_claims: {
         Row: {
           claimed_at: string
