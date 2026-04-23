@@ -567,13 +567,14 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "openai/gpt-5",
+        model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
         tools: [tool],
         tool_choice: { type: "function", function: { name: spec.name } },
+        max_tokens: 3000,
       }),
     });
 
