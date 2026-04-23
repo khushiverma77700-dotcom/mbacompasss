@@ -19,6 +19,8 @@ interface SEOHeadProps {
   noIndex?: boolean;
 }
 
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.png`;
+
 const SEOHead = ({
   title,
   description,
@@ -34,6 +36,7 @@ const SEOHead = ({
   twitterCard = "summary_large_image",
   noIndex,
 }: SEOHeadProps) => {
+  const resolvedOgImage = ogImage || DEFAULT_OG_IMAGE;
   useEffect(() => {
     if (title) document.title = title;
 
