@@ -1223,12 +1223,17 @@ const ProfileAnalyzerPage = () => {
                 <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.7 }}>
                   <Button
                     size="lg"
-                    onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                    disabled={!!(user && cooldownDate)}
+                    onClick={() => {
+                      if (isAdmin && cooldownDate) handleAdminRetest();
+                      else { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }
+                    }}
+                    disabled={!!(user && cooldownDate) && !isAdmin}
                     className="text-lg px-12 py-7 rounded-2xl shadow-2xl hover:shadow-3xl transition-all group relative overflow-hidden"
                   >
                     <span className="relative z-10 flex items-center gap-2">
-                      {user && cooldownDate ? "Analysis Cooldown Active" : "Start Free Analysis"} <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      {user && cooldownDate
+                        ? (isAdmin ? "Admin: Start Fresh Re-test" : "Analysis Cooldown Active")
+                        : "Start Free Analysis"} <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </span>
                     <motion.div
                       animate={{ x: ["-100%", "200%"] }}
@@ -1237,7 +1242,9 @@ const ProfileAnalyzerPage = () => {
                     />
                   </Button>
                   <p className="text-xs text-muted-foreground mt-3">
-                    {user && cooldownDate ? "You can re-check after 60 days from last analysis" : "100% free • Mobile verified • Instant AI report"}
+                    {user && cooldownDate
+                      ? (isAdmin ? "Admin mode: cache & cooldown will be bypassed" : "You can re-check after 60 days from last analysis")
+                      : "100% free • Mobile verified • Instant AI report"}
                   </p>
                 </motion.div>
 
