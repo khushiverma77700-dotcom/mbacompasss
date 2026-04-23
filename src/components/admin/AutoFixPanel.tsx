@@ -115,13 +115,13 @@ export const AutoFixPanel = ({
 
       {lastSummary && (
         <div className="mt-4 rounded-lg border border-border bg-background/60 p-3 text-xs space-y-1.5">
-          <div className="flex items-center gap-2 text-emerald-700">
+          <div className="flex items-center gap-2 text-success">
             <CheckCircle2 className="w-3.5 h-3.5" />
             <span className="font-medium">Last run completed</span>
           </div>
           {(lastSummary.steps || []).map((s: any, i: number) => (
             <div key={i} className="flex items-start gap-2 text-muted-foreground">
-              <AlertTriangle className="w-3 h-3 mt-0.5 text-amber-500" />
+              <AlertTriangle className="w-3 h-3 mt-0.5 text-warning" />
               <code className="font-mono break-all">
                 {s.name}: {JSON.stringify({ ...s, name: undefined })}
               </code>
