@@ -16,6 +16,7 @@ interface ReqBody {
   weaknesses?: Array<{ title: string; severity?: string }>;
   top_colleges?: string[];
   target_exams?: string[];
+  force_refresh?: boolean;
 }
 
 Deno.serve(async (req) => {
