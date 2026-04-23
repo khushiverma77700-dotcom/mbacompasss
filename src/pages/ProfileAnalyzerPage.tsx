@@ -36,6 +36,9 @@ import AdvancedCharts from "@/components/profile-report/AdvancedCharts";
 import PdfDownloadButton from "@/components/profile-report/PdfDownloadButton";
 import ShareReportButton from "@/components/profile-report/ShareReportButton";
 import type { CollegeRow, ProfileInputLite, ScoreBreakdown } from "@/lib/profileScoring";
+import InternalLinksSection from "@/components/profile-analyzer/InternalLinksSection";
+import { buildAnalyzerCanonical, seoSlugify as urlSlugify } from "@/lib/seoUrlBuilder";
+import { buildProfileAnalyzerSchemas } from "@/lib/profileAnalyzerSchema";
 
 interface PremiumNarrative {
   one_line_summary?: string;
@@ -1067,19 +1070,18 @@ const ProfileAnalyzerPage = () => {
   // When a user has progressed through the analyzer their selections become
   // signals we can use to render a unique meta-title, description and canonical
   // — this drastically improves long-tail SEO coverage on mbacompass.in.
-  const seoSlugify = (s: string) =>
-    s.toLowerCase().trim().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const seoSlugify = urlSlugify;
 
   const dynamicSeo = useMemo(() => {
     const exam = (form.target_exams?.[0] || "").toUpperCase();
     const city = (form.current_city || form.target_states?.[0] || "").trim();
+    const state = (form.target_states?.[0] || "").trim();
     const course = (form.preferred_specialization || "").trim();
 
     const parts: string[] = [];
-    const canonicalParts: string[] = [];
-    if (exam) { parts.push(exam); canonicalParts.push(`exam-${seoSlugify(exam)}`); }
-    if (city) { parts.push(`in ${city}`); canonicalParts.push(`city-${seoSlugify(city)}`); }
-    if (course) { parts.push(`for ${course} MBA`); canonicalParts.push(`course-${seoSlugify(course)}`); }
+    if (exam) parts.push(exam);
+    if (city) parts.push(`in ${city}`);
+    if (course) parts.push(`for ${course} MBA`);
 
     const hasContext = parts.length > 0;
     const suffix = hasContext ? ` (${parts.join(" • ")})` : "";
@@ -1092,9 +1094,7 @@ const ProfileAnalyzerPage = () => {
       ? `Personalised MBA profile analysis${exam ? ` for ${exam} aspirants` : ""}${city ? ` from ${city}` : ""}${course ? ` targeting ${course}` : ""}. Get IIM admission probability, peer comparison among 25,000+ students, college-wise difficulty ratings, and a custom preparation roadmap — 100% free on MBA Compass.`
       : "Analyse your MBA profile with AI. Get personalised IIM admission probability, 5-dimension score breakdown, peer comparison among 25,000+ students, college-wise difficulty ratings, and detailed preparation roadmap. 100% Free.";
 
-    const canonical = canonicalParts.length > 0
-      ? `https://mbacompass.in/profile-analyzer?${canonicalParts.join("&")}`
-      : "https://mbacompass.in/profile-analyzer";
+    const canonical = buildAnalyzerCanonical({ exam, city, course });
 
     const dynamicKeywords = [
       ...(exam ? [`${exam} profile evaluation`, `${exam} admission chances`, `chances of cracking ${exam}`] : []),
@@ -1102,7 +1102,14 @@ const ProfileAnalyzerPage = () => {
       ...(course ? [`${course} MBA profile check`, `best MBA colleges for ${course}`] : []),
     ];
 
-    return { title, description, canonical, dynamicKeywords };
+    const analyzerSchemas = buildProfileAnalyzerSchemas({
+      exam, city, state, course,
+      relatedExams: ["CAT", "XAT", "NMAT", "SNAP", "GMAT"].filter((e) => e !== exam).slice(0, 4),
+      nearbyCities: ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Pune"].filter((c) => c !== city).slice(0, 4),
+      popularCourses: ["Finance", "Marketing", "Operations", "HR", "Strategy"].filter((c) => c !== course).slice(0, 4),
+    });
+
+    return { title, description, canonical, dynamicKeywords, analyzerSchemas, exam, city, state, course };
   }, [form.target_exams, form.current_city, form.target_states, form.preferred_specialization]);
 
   return (
@@ -1123,7 +1130,7 @@ const ProfileAnalyzerPage = () => {
         ogType="website"
         ogTitle={dynamicSeo.title.replace(" | MBA Compass", " by MBA Compass")}
         ogDescription={dynamicSeo.description}
-        jsonLd={jsonLd}
+        jsonLd={[...jsonLd, ...dynamicSeo.analyzerSchemas]}
       />
 
       <AnimatePresence mode="wait">
@@ -2785,6 +2792,14 @@ const ProfileAnalyzerPage = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* ─── SEO: internal links section ─── */}
+            <InternalLinksSection
+              exam={dynamicSeo.exam}
+              city={dynamicSeo.city}
+              state={dynamicSeo.state}
+              course={dynamicSeo.course}
+            />
           </motion.div>
         )}
       </AnimatePresence>
