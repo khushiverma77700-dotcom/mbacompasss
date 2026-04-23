@@ -168,7 +168,7 @@ const CoachingPage = () => {
     const cat = selectedCategory !== "all" ? (categories.find((c: any) => c.slug === selectedCategory)?.name + " " || "") : "";
     const location = selectedCity !== "all" ? selectedCity : selectedState !== "all" ? selectedState : "India";
     const mode = selectedMode !== "all" ? ` (${selectedMode})` : "";
-    return `Best ${cat}MBA Coaching Institutes in ${location}${mode} 2026 | MBA Compass.com`;
+    return `Best ${cat}MBA Coaching Institutes in ${location}${mode} 2026 | MBA Compass`;
   }, [selectedState, selectedCity, selectedMode, selectedCategory, categories]);
 
   const dynamicDescription = useMemo(() => {

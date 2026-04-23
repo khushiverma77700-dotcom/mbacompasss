@@ -120,7 +120,7 @@ const CollegesPage = () => {
     else if (selectedState !== "all") parts.push(`in ${selectedState}`);
     else parts.push("in India");
     if (selectedExam !== "all") parts.push(`accepting ${selectedExam}`);
-    return `${parts.join(" ")} 2026 — Fees, Rankings, Placements | MBA Compass.com`;
+    return `${parts.join(" ")} 2026 — Fees, Rankings, Placements | MBA Compass`;
   }, [activeTab, selectedState, selectedCity, selectedExam]);
 
   const dynamicDescription = useMemo(() => {
