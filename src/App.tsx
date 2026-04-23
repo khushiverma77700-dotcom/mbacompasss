@@ -83,6 +83,7 @@ const AdminMegaMenu = lazy(() => import("./pages/admin/AdminMegaMenu"));
 const AdminGoogleIndexing = lazy(() => import("./pages/admin/AdminGoogleIndexing"));
 const AdminIndexingRequeue = lazy(() => import("./pages/admin/AdminIndexingRequeue"));
 const AdminSpecializations = lazy(() => import("./pages/admin/AdminSpecializations"));
+const AdminDomainAudit = lazy(() => import("./pages/admin/AdminDomainAudit"));
 const CATScoreCalculatorPage = lazy(() => import("./pages/CATScoreCalculatorPage"));
 const MBARoiCalculatorPage = lazy(() => import("./pages/MBARoiCalculatorPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
@@ -254,6 +255,7 @@ const App = () => (
               <Route path="google-indexing" element={<LazyPage><AdminGoogleIndexing /></LazyPage>} />
               <Route path="indexing-requeue" element={<LazyPage><AdminIndexingRequeue /></LazyPage>} />
               <Route path="specializations" element={<LazyPage><AdminSpecializations /></LazyPage>} />
+              <Route path="domain-audit" element={<LazyPage><AdminDomainAudit /></LazyPage>} />
               <Route path="roi-analyses" element={<LazyPage><AdminROIAnalyses /></LazyPage>} />
               <Route path="user-submissions" element={<LazyPage><AdminUserSubmissions /></LazyPage>} />
               <Route path="listing-change-requests" element={<LazyPage><AdminListingChangeRequests /></LazyPage>} />
