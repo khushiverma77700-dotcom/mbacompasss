@@ -64,7 +64,7 @@ const SEOHead = ({
     // Open Graph
     syncMeta("og:title", ogTitle || title, "property");
     syncMeta("og:description", ogDescription || description, "property");
-    syncMeta("og:image", ogImage, "property");
+    syncMeta("og:image", resolvedOgImage, "property");
     syncMeta("og:site_name", "MBA Compass", "property");
     syncMeta("og:type", ogType, "property");
     syncMeta("og:url", canonical, "property");
@@ -73,7 +73,7 @@ const SEOHead = ({
     syncMeta("twitter:card", twitterCard);
     syncMeta("twitter:title", twitterTitle || ogTitle || title);
     syncMeta("twitter:description", twitterDescription || ogDescription || description);
-    syncMeta("twitter:image", ogImage);
+    syncMeta("twitter:image", resolvedOgImage);
 
     // Robots
     syncMeta("robots", noIndex ? "noindex, nofollow" : "index, follow");
@@ -138,7 +138,7 @@ export const generateOrganizationSchema = () => ({
   "@type": "Organization",
   name: "MBA Compass",
   url: SITE_URL,
-  logo: `${SITE_URL}/favicon.png`,
+  logo: `${SITE_URL}/og-image.png`,
   sameAs: [],
   contactPoint: {
     "@type": "ContactPoint",
@@ -160,7 +160,7 @@ export const generateArticleSchema = (article: any) => ({
     "@type": "Organization",
     name: "MBA Compass",
     url: SITE_URL,
-    logo: { "@type": "ImageObject", url: `${SITE_URL}/favicon.png` },
+    logo: { "@type": "ImageObject", url: `${SITE_URL}/og-image.png` },
   },
   mainEntityOfPage: { "@type": "WebPage", "@id": `${SITE_URL}/article/${article.slug}` },
   keywords: (article.keywords || []).join(", "),
