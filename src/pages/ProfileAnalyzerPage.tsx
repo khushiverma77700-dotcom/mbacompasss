@@ -708,6 +708,7 @@ const ProfileAnalyzerPage = () => {
           weaknesses: result.weaknesses?.map((w) => ({ title: w.title, severity: w.severity })),
           top_colleges: result.detailed_college_table?.slice(0, 5).map((c) => c.college_name),
           target_exams: form.target_exams,
+          force_refresh: forceRetest && isAdmin,
         },
       })
       .then(({ data, error }) => {
