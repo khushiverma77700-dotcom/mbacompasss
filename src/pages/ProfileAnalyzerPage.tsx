@@ -819,7 +819,7 @@ const ProfileAnalyzerPage = () => {
       setCheckingCooldown(false);
     };
     checkExistingAnalysis();
-  }, [user]);
+  }, [user, forceRetest]);
 
   useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(form)); }, [form]);
 
