@@ -66,6 +66,7 @@ const adminNavGroups = [
       { label: "Google Indexing", path: "/admin/google-indexing", icon: Globe },
       { label: "Indexing Requeue", path: "/admin/indexing-requeue", icon: RefreshCw },
       { label: "Old-Domain Audit", path: "/admin/domain-audit", icon: ShieldCheck },
+      { label: "Meta Tag Validator", path: "/admin/meta-validator", icon: ShieldCheck },
       { label: "Sitemap", path: "/admin/sitemap", icon: MapPin },
       { label: "All Site Links", path: "/admin/all-links", icon: Link2 },
       { label: "Profile Analyzer", path: "/admin/profile-analyzer", icon: BarChart3 },
