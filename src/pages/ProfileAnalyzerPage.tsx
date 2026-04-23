@@ -760,8 +760,10 @@ const ProfileAnalyzerPage = () => {
   };
 
   // Check if user already has an analysis — if so, load full results and show report
+  // Skipped entirely when admin has triggered a forced re-test.
   useEffect(() => {
     const checkExistingAnalysis = async () => {
+      if (forceRetest) return;
       if (!user) { setCooldownDate(null); setExistingReport(null); return; }
       setCheckingCooldown(true);
       try {
