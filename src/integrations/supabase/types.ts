@@ -2499,6 +2499,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin_email: { Args: { _email: string }; Returns: boolean }
       user_owns_listing: {
         Args: { _target_id: string; _target_table: string; _user_id: string }
         Returns: boolean
