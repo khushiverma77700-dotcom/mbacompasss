@@ -42,10 +42,13 @@ Deno.serve(async (req) => {
       .order("created_at", { ascending: false })
       .limit(1);
 
+    // Generic error to prevent account enumeration
+    const genericError = "Unable to reset password. Please verify your OTP and credentials, then try again.";
+
     if (!verifiedOtp || verifiedOtp.length === 0) {
       return new Response(
-        JSON.stringify({ error: "Phone not verified or verification expired. Please verify OTP again." }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: genericError }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -58,9 +61,10 @@ Deno.serve(async (req) => {
     );
 
     if (!user) {
+      // Do not disclose whether the email exists
       return new Response(
-        JSON.stringify({ error: "No account found with this email address." }),
-        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: genericError }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -72,9 +76,10 @@ Deno.serve(async (req) => {
       .single();
 
     if (!profile || profile.phone !== phone) {
+      // Same generic error — do not disclose mismatch vs missing account
       return new Response(
-        JSON.stringify({ error: "Phone number does not match the registered account." }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: genericError }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
