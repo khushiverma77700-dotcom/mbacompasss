@@ -9,7 +9,7 @@ const Footer = () => {
   const brandDesc = footer?.brand_description || "India's trusted platform to find and compare the best MBA coaching institutes.";
   const examLinks = footer?.exam_links || [];
   const quickLinks = footer?.quick_links || [];
-  const email = footer?.contact_email || "info@mbahub.com";
+  const email = footer?.contact_email || "info@mbacompass.com";
   const phone = footer?.contact_phone || "+91 98765 43210";
   const address = footer?.contact_address || "New Delhi, India";
   const copyright = footer?.copyright || "2026 MBA Compass. All rights reserved.";

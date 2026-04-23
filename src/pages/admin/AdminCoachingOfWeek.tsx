@@ -87,7 +87,7 @@ const AdminCoachingOfWeek = () => {
               <RichTextEditor content={form.description} onChange={(html) => setForm({ ...form, description: html })} placeholder="Why this institute is featured..." /></div>
             <div className="border border-primary/20 bg-primary/5 rounded-xl p-4 space-y-3">
               <div className="flex items-center gap-2 mb-1"><Tag className="w-4 h-4 text-primary" /><Label className="text-sm font-bold text-foreground">Coupon Code Settings</Label></div>
-              <Input placeholder="Coupon Code (e.g. MBAHUB70)" value={form.coupon_code} onChange={(e) => setForm({ ...form, coupon_code: e.target.value.toUpperCase() })} />
+              <Input placeholder="Coupon Code (e.g. COMPASS70)" value={form.coupon_code} onChange={(e) => setForm({ ...form, coupon_code: e.target.value.toUpperCase() })} />
               <Input placeholder="Discount Text (e.g. 60% OFF)" value={form.coupon_discount} onChange={(e) => setForm({ ...form, coupon_discount: e.target.value })} />
               <Input placeholder="Selected Courses (e.g. CAT Complete, GMAT Prep)" value={form.selected_courses} onChange={(e) => setForm({ ...form, selected_courses: e.target.value })} />
               <Input placeholder="Website URL (e.g. https://institute.com)" value={(form as any).website_url} onChange={(e) => setForm({ ...form, website_url: e.target.value })} />

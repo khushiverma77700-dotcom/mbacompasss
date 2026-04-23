@@ -45,7 +45,7 @@ const CoachingOfWeekSection = () => {
   if (!cotwItems || cotwItems.length === 0) return null;
 
   const handleClaimCoupon = (cotw: any) => {
-    const code = cotw.coupon_code || cotw.offer_text || "MBAHUB70";
+    const code = cotw.coupon_code || cotw.offer_text || "COMPASS70";
     const discount = cotw.coupon_discount || cotw.offer_text || "Special Discount";
     navigator.clipboard.writeText(code);
     setClaimedIds(prev => new Set(prev).add(cotw.id));
