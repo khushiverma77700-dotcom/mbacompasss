@@ -12,7 +12,7 @@ const Footer = () => {
   const email = footer?.contact_email || "info@mbahub.com";
   const phone = footer?.contact_phone || "+91 98765 43210";
   const address = footer?.contact_address || "New Delhi, India";
-  const copyright = footer?.copyright || "2026 MBAHub. All rights reserved.";
+  const copyright = footer?.copyright || "2026 MBA Compass. All rights reserved.";
 
   return (
     <footer className="bg-foreground text-primary-foreground/80 py-12">
@@ -20,9 +20,9 @@ const Footer = () => {
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           <div>
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <img src={mbahubLogo} alt="MBAHub Logo" className="w-8 h-8 rounded-lg object-contain" />
+              <img src={mbahubLogo} alt="MBA Compass Logo" className="w-8 h-8 rounded-lg object-contain" />
               <div className="flex flex-col leading-tight">
-                <span className="font-heading font-bold text-lg text-primary-foreground">MBAHub</span>
+                <span className="font-heading font-bold text-lg text-primary-foreground">MBA Compass</span>
                 <span className="text-[8px] font-medium text-primary-foreground/50 -mt-0.5 tracking-wide">by B School Buzz</span>
               </div>
             </Link>

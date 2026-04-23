@@ -173,7 +173,7 @@ const AdminWriteBlog = () => {
         keywords: Array.isArray(a.keywords) ? a.keywords : [],
         primary_keyword: a.primaryKeyword || targetKeyword,
         h1_tag: a.h1Tag || a.title || title,
-        author: a.author || "MBAHub Editorial",
+        author: a.author || "MBA Compass Editorial",
         category,
         status: "draft",
         published: false,

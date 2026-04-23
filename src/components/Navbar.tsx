@@ -40,7 +40,7 @@ const Navbar = () => {
     });
   };
 
-  const brandName = header?.brand_name || "MBAHub";
+  const brandName = header?.brand_name || "MBA Compass";
 
   const closeMobile = () => {
     setMobileOpen(false);
@@ -52,7 +52,7 @@ const Navbar = () => {
     <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
       <div className="container mx-auto flex items-center justify-between h-16 px-4 gap-3">
         <Link to="/" className="flex items-center gap-2 shrink-0">
-          <img src={mbahubLogo} alt="MBAHub Logo" className="w-9 h-9 rounded-lg object-contain" />
+          <img src={mbahubLogo} alt="MBA Compass Logo" className="w-9 h-9 rounded-lg object-contain" />
           <div className="flex flex-col leading-tight">
             <span className="font-heading font-bold text-xl text-foreground">
               {brandName.includes("Hub") ? (

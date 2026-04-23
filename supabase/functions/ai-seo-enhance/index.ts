@@ -52,7 +52,7 @@ async function generateSchemaMarkup(
   const pageUrl = `${siteUrl}/${basePath}/${data.slug || ""}`;
 
   const schemaContext: Record<string, string> = {
-    article: `Article page. Title: "${data.title || data.name}". Author: "${data.author || 'MBAHub Team'}". Category: "${data.category || ''}". Published: ${data.created_at || 'N/A'}. Updated: ${data.updated_at || 'N/A'}. Image: "${data.banner_url || data.image_url || ''}". Content excerpt: "${(data.content || data.description || '').replace(/<[^>]*>/g, ' ').slice(0, 500)}".
+    article: `Article page. Title: "${data.title || data.name}". Author: "${data.author || 'MBA Compass Team'}". Category: "${data.category || ''}". Published: ${data.created_at || 'N/A'}. Updated: ${data.updated_at || 'N/A'}. Image: "${data.banner_url || data.image_url || ''}". Content excerpt: "${(data.content || data.description || '').replace(/<[^>]*>/g, ' ').slice(0, 500)}".
 Generate: Article, BreadcrumbList (Home > Blog > ${data.title || data.name}), Organization (publisher), FAQPage (generate 3-5 relevant FAQ Q&As about this article topic).`,
 
     institute: `MBA Coaching Institute page. Name: "${data.name}". City: "${data.city || ''}". State: "${data.state || ''}". Rating: ${data.rating || 'N/A'}/5 (${data.total_reviews || 0} reviews). Phone: "${data.phone || ''}". Website: "${data.website || ''}". Mode: "${data.mode || 'Offline'}". Address: "${data.address || ''}". Lat: ${data.latitude || 'N/A'}, Lng: ${data.longitude || 'N/A'}. Features: ${(data.features || []).join(', ') || 'N/A'}. Success rate: ${data.success_rate || 'N/A'}%.
@@ -86,7 +86,7 @@ RULES:
 - Use REAL data from the page — never use placeholder text
 - All URLs must use base: ${siteUrl}
 - Page URL: ${pageUrl}
-- Organization name: "MBAHub by B School Buzz", logo: "${siteUrl}/logo.png"
+- Organization name: "MBA Compass by B School Buzz", logo: "${siteUrl}/logo.png"
 - FAQPage schemas must have real, useful Q&As that students would actually search for
 - Include ALL relevant schema types for the page (aim for 4-6 schemas)
 - Return ONLY the JSON array, no markdown, no explanation`,
@@ -137,11 +137,11 @@ function getDefaultSchemas(contentType: string, data: Record<string, any>, siteU
   };
   const org = {
     "@context": "https://schema.org", "@type": "Organization",
-    name: "MBAHub by B School Buzz", url: siteUrl, logo: `${siteUrl}/logo.png`, sameAs: [],
+    name: "MBA Compass by B School Buzz", url: siteUrl, logo: `${siteUrl}/logo.png`, sameAs: [],
   };
 
   if (contentType === "article") {
-    return [{ "@context": "https://schema.org", "@type": "Article", headline: name, description, author: { "@type": "Person", name: data.author || "MBAHub Team" }, publisher: { "@type": "Organization", name: "MBAHub by B School Buzz", logo: { "@type": "ImageObject", url: `${siteUrl}/logo.png` } }, datePublished: data.created_at, dateModified: data.updated_at, mainEntityOfPage: { "@type": "WebPage", "@id": `${siteUrl}/article/${slug}` }, image: data.banner_url || data.image_url }, breadcrumb, org];
+    return [{ "@context": "https://schema.org", "@type": "Article", headline: name, description, author: { "@type": "Person", name: data.author || "MBA Compass Team" }, publisher: { "@type": "Organization", name: "MBA Compass by B School Buzz", logo: { "@type": "ImageObject", url: `${siteUrl}/logo.png` } }, datePublished: data.created_at, dateModified: data.updated_at, mainEntityOfPage: { "@type": "WebPage", "@id": `${siteUrl}/article/${slug}` }, image: data.banner_url || data.image_url }, breadcrumb, org];
   }
   if (contentType === "institute") {
     return [{ "@context": "https://schema.org", "@type": "EducationalOrganization", name, description, url: data.website || `${siteUrl}/institute/${slug}`, address: { "@type": "PostalAddress", addressLocality: city, addressRegion: state, addressCountry: "IN" }, telephone: data.phone || "", aggregateRating: data.rating ? { "@type": "AggregateRating", ratingValue: data.rating, bestRating: 5, ratingCount: data.total_reviews || 1 } : undefined }, breadcrumb, org];

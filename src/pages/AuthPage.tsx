@@ -208,14 +208,14 @@ const AuthPage = () => {
     <div className="min-h-[80vh] flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <img src={mbahubLogo} alt="MBAHub Logo" className="mx-auto w-16 h-16 rounded-xl object-contain mb-4" />
+          <img src={mbahubLogo} alt="MBA Compass Logo" className="mx-auto w-16 h-16 rounded-xl object-contain mb-4" />
           <CardTitle className="font-heading text-2xl">
             {isLogin ? "Welcome Back" : "Create Account"}
           </CardTitle>
           <CardDescription>
             {isLogin
               ? "Sign in to access your saved coaching and reviews"
-              : "Join MBAHub to save coaching, write reviews, and more"}
+              : "Join MBA Compass to save coaching, write reviews, and more"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

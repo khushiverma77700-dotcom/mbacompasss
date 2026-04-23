@@ -59,7 +59,7 @@ const ResetPasswordPage = () => {
     <div className="min-h-[80vh] flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <img src={mbahubLogo} alt="MBAHub Logo" className="mx-auto w-16 h-16 rounded-xl object-contain mb-4" />
+          <img src={mbahubLogo} alt="MBA Compass Logo" className="mx-auto w-16 h-16 rounded-xl object-contain mb-4" />
           <CardTitle className="font-heading text-2xl">
             {success ? "Password Updated" : "Set New Password"}
           </CardTitle>
