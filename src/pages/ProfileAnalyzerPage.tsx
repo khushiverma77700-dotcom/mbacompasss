@@ -675,10 +675,24 @@ const ProfileAnalyzerPage = () => {
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const reportRef = useRef<HTMLDivElement>(null);
   const [narrative, setNarrative] = useState<PremiumNarrative | null>(null);
   const [narrativeLoading, setNarrativeLoading] = useState(false);
+  // Admin: force a fresh re-test, bypassing existing analysis + cooldown + AI cache
+  const [forceRetest, setForceRetest] = useState(false);
+
+  const handleAdminRetest = () => {
+    setForceRetest(true);
+    setResult(null);
+    setUnlocked(false);
+    setNarrative(null);
+    setExistingReport(null);
+    setCooldownDate(null);
+    setStep(1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    toast({ title: "Admin re-test mode", description: "Starting a fresh analysis. Cache & cooldown bypassed." });
+  };
 
   // Fetch premium narrative once the report is unlocked
   useEffect(() => {
