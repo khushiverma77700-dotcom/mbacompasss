@@ -1130,7 +1130,7 @@ const ProfileAnalyzerPage = () => {
         ogType="website"
         ogTitle={dynamicSeo.title.replace(" | MBA Compass", " by MBA Compass")}
         ogDescription={dynamicSeo.description}
-        jsonLd={jsonLd}
+        jsonLd={[...jsonLd, ...dynamicSeo.analyzerSchemas]}
       />
 
       <AnimatePresence mode="wait">
@@ -2792,6 +2792,14 @@ const ProfileAnalyzerPage = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* ─── SEO: internal links section ─── */}
+            <InternalLinksSection
+              exam={dynamicSeo.exam}
+              city={dynamicSeo.city}
+              state={dynamicSeo.state}
+              course={dynamicSeo.course}
+            />
           </motion.div>
         )}
       </AnimatePresence>
