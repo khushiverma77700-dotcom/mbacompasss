@@ -6,9 +6,28 @@ export const useInstitutes = (categorySlug?: string) => {
     queryKey: ["institutes", categorySlug],
     queryFn: async () => {
       let query = supabase.from("institutes").select(`
-        *,
-        courses(*),
-        faculty(*),
+        id,
+        name,
+        slug,
+        city,
+        state,
+        description,
+        logo_url,
+        banner_url,
+        featured,
+        rating,
+        total_reviews,
+        students_count,
+        success_rate,
+        mode,
+        discount,
+        offer,
+        fees_lakhs,
+        category_id,
+        features,
+        specializations,
+        courses(id, name, fees),
+        faculty(id, name),
         categories:category_id(name, slug)
       `);
       if (categorySlug) {
@@ -51,7 +70,22 @@ export const useFeaturedInstitutes = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("institutes")
-        .select("*, courses(*), categories:category_id(name, slug)")
+        .select(`
+          id,
+          name,
+          slug,
+          city,
+          state,
+          logo_url,
+          banner_url,
+          rating,
+          total_reviews,
+          students_count,
+          success_rate,
+          discount,
+          courses(id, fees),
+          categories:category_id(name, slug)
+        `)
         .eq("featured", true)
         .order("rating", { ascending: false })
         .limit(6);
@@ -76,7 +110,33 @@ export const useColleges = () => {
   return useQuery({
     queryKey: ["colleges"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("colleges").select("*").order("ranking");
+      const { data, error } = await supabase
+        .from("colleges")
+        .select(`
+          id,
+          name,
+          slug,
+          city,
+          state,
+          logo_url,
+          description,
+          fees,
+          fees_lakhs,
+          placement_avg,
+          placement_highest,
+          placement_median,
+          ranking,
+          type,
+          tier,
+          established,
+          total_students,
+          campus_size,
+          exams_accepted,
+          specializations,
+          top_recruiters,
+          accreditations
+        `)
+        .order("ranking");
       if (error) throw error;
       return data || [];
     },
