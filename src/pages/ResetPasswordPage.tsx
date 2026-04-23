@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import mbahubLogo from "@/assets/mbahub-logo.png";
+import mbahubLogo from "@/assets/brandLogo";
 
 const ResetPasswordPage = () => {
   const [newPassword, setNewPassword] = useState("");

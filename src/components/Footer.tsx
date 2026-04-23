@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
-import mbahubLogo from "@/assets/mbahub-logo-sm.png";
+import mbahubLogo from "@/assets/brandLogo";
 
 const Footer = () => {
   const { data: footer } = useSiteSettings("footer");
