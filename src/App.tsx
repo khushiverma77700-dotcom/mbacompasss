@@ -34,6 +34,7 @@ const CollegeDetailPage = lazy(() => import("./pages/CollegeDetailPage"));
 const CollegeFilterPage = lazy(() => import("./pages/CollegeFilterPage"));
 const CoachingFilterPage = lazy(() => import("./pages/CoachingFilterPage"));
 const ProfileAnalyzerPage = lazy(() => import("./pages/ProfileAnalyzerPage"));
+const SharedReportPage = lazy(() => import("./pages/SharedReportPage"));
 const CollegeFinderPage = lazy(() => import("./pages/CollegeFinderPage"));
 const CollegeShortlisterPage = lazy(() => import("./pages/CollegeShortlisterPage"));
 const BusinessInquiryPage = lazy(() => import("./pages/BusinessInquiryPage"));
@@ -277,6 +278,7 @@ const App = () => (
             <Route path="/exam/:slug" element={<PublicLayout><LazyPage><ExamDetailPage /></LazyPage></PublicLayout>} />
             <Route path="/dashboard" element={<PublicLayout><LazyPage><DashboardPage /></LazyPage></PublicLayout>} />
             <Route path="/profile-analyzer" element={<PublicLayout><LazyPage><ProfileAnalyzerPage /></LazyPage></PublicLayout>} />
+            <Route path="/report/:id" element={<PublicLayout><LazyPage><SharedReportPage /></LazyPage></PublicLayout>} />
             <Route path="/college-finder" element={<PublicLayout><LazyPage><CollegeFinderPage /></LazyPage></PublicLayout>} />
             <Route path="/college-shortlister" element={<PublicLayout><LazyPage><CollegeShortlisterPage /></LazyPage></PublicLayout>} />
             <Route path="/about" element={<PublicLayout><LazyPage><AboutPage /></LazyPage></PublicLayout>} />
