@@ -16,6 +16,7 @@ interface ReqBody {
   weaknesses?: Array<{ title: string; severity?: string }>;
   top_colleges?: string[];
   target_exams?: string[];
+  force_refresh?: boolean;
 }
 
 Deno.serve(async (req) => {
@@ -38,23 +39,26 @@ Deno.serve(async (req) => {
     );
 
     // Try cache first — analysis_results.ai_summary stores the JSON
-    const { data: cached } = await supabase
-      .from("analysis_results")
-      .select("ai_summary")
-      .eq("profile_analysis_id", body.profile_id)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    // Skip cache if caller passed force_refresh (admin re-test)
+    if (!body.force_refresh) {
+      const { data: cached } = await supabase
+        .from("analysis_results")
+        .select("ai_summary")
+        .eq("profile_analysis_id", body.profile_id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-    if (cached?.ai_summary) {
-      try {
-        const parsed = JSON.parse(cached.ai_summary);
-        if (parsed?.one_line_summary) {
-          return new Response(JSON.stringify({ ...parsed, cached: true }), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-      } catch { /* not premium-shape, regenerate */ }
+      if (cached?.ai_summary) {
+        try {
+          const parsed = JSON.parse(cached.ai_summary);
+          if (parsed?.one_line_summary) {
+            return new Response(JSON.stringify({ ...parsed, cached: true }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+        } catch { /* not premium-shape, regenerate */ }
+      }
     }
 
     const prompt = `You are a sharp, McKinsey-style MBA profile narrator. Based on the data below, produce a punchy executive narrative.

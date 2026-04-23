@@ -675,10 +675,24 @@ const ProfileAnalyzerPage = () => {
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const reportRef = useRef<HTMLDivElement>(null);
   const [narrative, setNarrative] = useState<PremiumNarrative | null>(null);
   const [narrativeLoading, setNarrativeLoading] = useState(false);
+  // Admin: force a fresh re-test, bypassing existing analysis + cooldown + AI cache
+  const [forceRetest, setForceRetest] = useState(false);
+
+  const handleAdminRetest = () => {
+    setForceRetest(true);
+    setResult(null);
+    setUnlocked(false);
+    setNarrative(null);
+    setExistingReport(null);
+    setCooldownDate(null);
+    setStep(1);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    toast({ title: "Admin re-test mode", description: "Starting a fresh analysis. Cache & cooldown bypassed." });
+  };
 
   // Fetch premium narrative once the report is unlocked
   useEffect(() => {
@@ -694,6 +708,7 @@ const ProfileAnalyzerPage = () => {
           weaknesses: result.weaknesses?.map((w) => ({ title: w.title, severity: w.severity })),
           top_colleges: result.detailed_college_table?.slice(0, 5).map((c) => c.college_name),
           target_exams: form.target_exams,
+          force_refresh: forceRetest && isAdmin,
         },
       })
       .then(({ data, error }) => {
@@ -745,8 +760,10 @@ const ProfileAnalyzerPage = () => {
   };
 
   // Check if user already has an analysis — if so, load full results and show report
+  // Skipped entirely when admin has triggered a forced re-test.
   useEffect(() => {
     const checkExistingAnalysis = async () => {
+      if (forceRetest) return;
       if (!user) { setCooldownDate(null); setExistingReport(null); return; }
       setCheckingCooldown(true);
       try {
@@ -802,7 +819,7 @@ const ProfileAnalyzerPage = () => {
       setCheckingCooldown(false);
     };
     checkExistingAnalysis();
-  }, [user]);
+  }, [user, forceRetest]);
 
   useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(form)); }, [form]);
 
@@ -848,8 +865,8 @@ const ProfileAnalyzerPage = () => {
 
   const handleSubmit = async () => {
     if (!validateStep(step)) return;
-    // Enforce 60-day cooldown for logged-in users
-    if (user && cooldownDate && cooldownDate > new Date()) {
+    // Enforce 60-day cooldown for logged-in users (admins can bypass via Re-test)
+    if (user && cooldownDate && cooldownDate > new Date() && !(isAdmin && forceRetest)) {
       toast({
         title: "Cooldown Active",
         description: `You can re-analyze after ${cooldownDate.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}. View your existing report on the dashboard.`,
@@ -1187,9 +1204,16 @@ const ProfileAnalyzerPage = () => {
                           You can re-analyze your profile after <strong>{cooldownDate.toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</strong>.
                           Your last report is available on your dashboard anytime.
                         </p>
-                        <Button size="sm" variant="outline" onClick={() => window.location.href = "/dashboard"}>
-                          <Eye className="w-3.5 h-3.5 mr-1.5" /> View My Report
-                        </Button>
+                        <div className="flex flex-wrap items-center justify-center gap-2">
+                          <Button size="sm" variant="outline" onClick={() => window.location.href = "/dashboard"}>
+                            <Eye className="w-3.5 h-3.5 mr-1.5" /> View My Report
+                          </Button>
+                          {isAdmin && (
+                            <Button size="sm" variant="default" onClick={handleAdminRetest}>
+                              <Sparkles className="w-3.5 h-3.5 mr-1.5" /> Admin: Re-test (skip cache)
+                            </Button>
+                          )}
+                        </div>
                       </CardContent>
                     </Card>
                   </motion.div>
@@ -1199,12 +1223,17 @@ const ProfileAnalyzerPage = () => {
                 <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.7 }}>
                   <Button
                     size="lg"
-                    onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }}
-                    disabled={!!(user && cooldownDate)}
+                    onClick={() => {
+                      if (isAdmin && cooldownDate) handleAdminRetest();
+                      else { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }
+                    }}
+                    disabled={!!(user && cooldownDate) && !isAdmin}
                     className="text-lg px-12 py-7 rounded-2xl shadow-2xl hover:shadow-3xl transition-all group relative overflow-hidden"
                   >
                     <span className="relative z-10 flex items-center gap-2">
-                      {user && cooldownDate ? "Analysis Cooldown Active" : "Start Free Analysis"} <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      {user && cooldownDate
+                        ? (isAdmin ? "Admin: Start Fresh Re-test" : "Analysis Cooldown Active")
+                        : "Start Free Analysis"} <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                     </span>
                     <motion.div
                       animate={{ x: ["-100%", "200%"] }}
@@ -1213,7 +1242,9 @@ const ProfileAnalyzerPage = () => {
                     />
                   </Button>
                   <p className="text-xs text-muted-foreground mt-3">
-                    {user && cooldownDate ? "You can re-check after 60 days from last analysis" : "100% free • Mobile verified • Instant AI report"}
+                    {user && cooldownDate
+                      ? (isAdmin ? "Admin mode: cache & cooldown will be bypassed" : "You can re-check after 60 days from last analysis")
+                      : "100% free • Mobile verified • Instant AI report"}
                   </p>
                 </motion.div>
 
@@ -2122,6 +2153,11 @@ const ProfileAnalyzerPage = () => {
                 </Button>
                 <PdfDownloadButton targetRef={reportRef} fileName={`${form.name?.split(" ")[0] || "profile"}-mba-report.pdf`} label="Download Premium PDF" />
                 <ShareReportButton profileId={result.profile_id} />
+                {isAdmin && (
+                  <Button variant="default" onClick={handleAdminRetest} className="rounded-xl">
+                    <Sparkles className="w-4 h-4 mr-2" /> Admin: Re-test (skip cache)
+                  </Button>
+                )}
               </div>
             </div>
 
