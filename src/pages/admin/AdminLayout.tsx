@@ -1,6 +1,6 @@
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp, Sparkles, ShieldCheck, Lock, Briefcase, Target, PhoneCall, Database, Activity, Calculator, ChevronDown, Bell } from "lucide-react";
+import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp, Sparkles, ShieldCheck, Lock, Briefcase, Target, PhoneCall, Database, Activity, Calculator, ChevronDown, Bell, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -70,6 +70,7 @@ const adminNavGroups = [
       { label: "CAT Score Submissions", path: "/admin/cat-scores", icon: Calculator },
       { label: "MBA ROI Analyses", path: "/admin/roi-analyses", icon: TrendingUp },
       { label: "Citation Sources Audit", path: "/admin/citations-audit", icon: Link2 },
+      { label: "Content Refresh Queue", path: "/admin/content-refreshes", icon: RefreshCw },
     ],
   },
   {
