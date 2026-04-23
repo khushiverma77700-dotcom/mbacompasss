@@ -8,7 +8,7 @@ import {
   Trophy, Wallet, DollarSign, TrendingDown, Rocket, CircleCheck, Timer,
   Percent, Hash, Globe, Building2, Flame, CircleDot, Medal, PieChart, LineChart, Gauge
 } from "lucide-react";
-import bschoolLogo from "@/assets/bschoolbuzz-logo.png";
+import bschoolLogo from "@/assets/brandLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
