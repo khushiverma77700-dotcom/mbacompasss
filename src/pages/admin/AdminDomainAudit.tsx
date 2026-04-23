@@ -72,9 +72,9 @@ export default function AdminDomainAudit() {
               source: "sitemap",
               location: "/sitemap.xml",
               match: m,
-              preview: m,
-              fixable: false,
-              status: "manual",
+              preview: `${m} → ${rewrite(m)}`,
+              fixable: true,
+              status: "pending",
             }),
           );
         }
@@ -92,9 +92,9 @@ export default function AdminDomainAudit() {
                 source: "robots",
                 location: "/robots.txt",
                 match: line.trim(),
-                preview: line.trim(),
-                fixable: false,
-                status: "manual",
+                preview: `${line.trim()} → ${rewrite(line.trim())}`,
+                fixable: true,
+                status: "pending",
               });
             }
           });
