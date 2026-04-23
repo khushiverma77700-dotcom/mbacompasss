@@ -11,7 +11,7 @@ const SEARCH_CONSOLE_SITES_API_URL = "https://www.googleapis.com/webmasters/v3/s
 const URL_INSPECTION_API_URL = "https://searchconsole.googleapis.com/v1/urlInspection/index:inspect";
 const INDEXING_SCOPE = "https://www.googleapis.com/auth/indexing";
 const WEBMASTERS_READONLY_SCOPE = "https://www.googleapis.com/auth/webmasters.readonly";
-const SITE_URL = "https://bschoolbuzz.com";
+const SITE_URL = "https://mbacompass.in";
 const GOOGLE_TOKEN_URI = "https://oauth2.googleapis.com/token";
 const MAX_BATCH_SIZE = 100;
 const BATCH_DELAY_MS = 150;
@@ -24,7 +24,7 @@ const STATUS_CHECK_CONCURRENCY = 5;
 const INDEXNOW_KEY = "cc5b688453c4e43d3466783d7f7c426e";
 const INDEXNOW_KEY_LOCATION = `${SITE_URL}/${INDEXNOW_KEY}.txt`;
 const INDEXNOW_ENDPOINT = "https://api.indexnow.org/IndexNow";
-const SITE_HOST = "bschoolbuzz.com";
+const SITE_HOST = "mbacompass.in";
 
 async function submitToIndexNow(urls: string[]): Promise<{ ok: boolean; status: number; error?: string }> {
   if (!urls.length) return { ok: true, status: 200 };

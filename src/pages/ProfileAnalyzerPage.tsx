@@ -8,7 +8,7 @@ import {
   Trophy, Wallet, DollarSign, TrendingDown, Rocket, CircleCheck, Timer,
   Percent, Hash, Globe, Building2, Flame, CircleDot, Medal, PieChart, LineChart, Gauge
 } from "lucide-react";
-import bschoolLogo from "@/assets/bschoolbuzz-logo.png";
+import bschoolLogo from "@/assets/mbacompass-logo.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -296,7 +296,7 @@ const SampleReportPreview = () => {
         {/* Header bar */}
         <div className="bg-gradient-to-r from-primary to-primary/80 px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={bschoolLogo} alt="B School Buzz" className="w-6 h-6 rounded" />
+            <img src={bschoolLogo} alt="MBA Compass" className="w-6 h-6 rounded" />
             <span className="text-primary-foreground font-bold">Sample AI Report — Detailed Preview</span>
           </div>
           <Badge className="bg-primary-foreground/20 text-primary-foreground border-0">Live Preview</Badge>
@@ -1044,7 +1044,7 @@ const ProfileAnalyzerPage = () => {
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      "name": "AI-Powered MBA Profile Analyser by B School Buzz",
+      "name": "AI-Powered MBA Profile Analyser by MBA Compass",
       "applicationCategory": "EducationalApplication",
       "operatingSystem": "Web",
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "INR" },
@@ -1066,7 +1066,7 @@ const ProfileAnalyzerPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <SEOHead
-        title="AI MBA Profile Analyser — Check IIM Admission Chances Free | BSchoolBuzz"
+        title="AI MBA Profile Analyser — Check IIM Admission Chances Free | MBA Compass"
         description="Analyse your MBA profile with AI. Get personalised IIM admission probability, 5-dimension score breakdown, peer comparison among 25,000+ students, college-wise difficulty ratings, and detailed preparation roadmap. 100% Free."
         keywords={[
           "MBA profile check", "B-school eligibility", "profile evaluation", "admission chances",
@@ -1076,9 +1076,9 @@ const ProfileAnalyzerPage = () => {
           "MBA profile analyser", "IIM chances calculator", "CAT score predictor", "MBA admission probability",
           "free MBA profile evaluation", "check IIM chances", "IIM admission probability calculator",
         ]}
-        canonical="https://bschoolbuzz.com/profile-analyzer"
+        canonical="https://mbacompass.in/profile-analyzer"
         ogType="website"
-        ogTitle="AI-Powered MBA Profile Analyser by BSchoolBuzz"
+        ogTitle="AI-Powered MBA Profile Analyser by MBA Compass"
         ogDescription="Get personalised college predictions, 5-dimension scoring, peer ranking among 25,000+ students, and AI-powered preparation roadmap for IIM, XLRI, FMS and 50+ top MBA colleges."
         jsonLd={jsonLd}
       />
@@ -1116,7 +1116,7 @@ const ProfileAnalyzerPage = () => {
               </Float3DCard>
               <Float3DCard className="absolute bottom-[25%] right-[12%] hidden lg:block" delay={0.5} duration={8}>
                 <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-300/30 flex items-center justify-center backdrop-blur-sm shadow-xl">
-                  <img src={bschoolLogo} alt="B School Buzz" className="w-8 h-8 rounded-lg" />
+                  <img src={bschoolLogo} alt="MBA Compass" className="w-8 h-8 rounded-lg" />
                 </div>
               </Float3DCard>
 
@@ -1140,7 +1140,7 @@ const ProfileAnalyzerPage = () => {
                   transition={{ type: "spring", stiffness: 100, delay: 0.1 }}
                 >
                   <div className="w-24 h-24 mx-auto rounded-3xl bg-gradient-to-br from-primary via-primary/90 to-primary/60 flex items-center justify-center shadow-2xl relative overflow-hidden">
-                    <img src={bschoolLogo} alt="B School Buzz" className="w-14 h-14 rounded-xl" />
+                    <img src={bschoolLogo} alt="MBA Compass" className="w-14 h-14 rounded-xl" />
                     <motion.div
                       animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
                       transition={{ repeat: Infinity, duration: 2 }}
@@ -1151,7 +1151,7 @@ const ProfileAnalyzerPage = () => {
 
                 <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}>
                   <Badge variant="secondary" className="text-sm px-5 py-2 mb-4 shadow-sm">
-                    <Sparkles className="w-3.5 h-3.5 mr-1.5" /> AI-Powered Tool by B School Buzz
+                    <Sparkles className="w-3.5 h-3.5 mr-1.5" /> AI-Powered Tool by MBA Compass
                   </Badge>
                 </motion.div>
 
@@ -1387,7 +1387,7 @@ const ProfileAnalyzerPage = () => {
             <section className="py-20 px-4 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5" />
               <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-3xl mx-auto text-center relative z-10">
-                <img src={bschoolLogo} alt="B School Buzz" className="w-16 h-16 mx-auto rounded-2xl shadow-lg mb-6" />
+                <img src={bschoolLogo} alt="MBA Compass" className="w-16 h-16 mx-auto rounded-2xl shadow-lg mb-6" />
                 <h2 className="text-3xl md:text-5xl font-bold mb-4">Ready to Know Your MBA Chances?</h2>
                 <p className="text-muted-foreground text-lg mb-8">Takes less than 2 minutes. 100% free. Mobile verified for your privacy. Instant AI-powered results.</p>
                 <Button size="lg" onClick={() => { setStep(1); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="text-lg px-12 py-7 rounded-2xl shadow-2xl group">
@@ -1453,7 +1453,7 @@ const ProfileAnalyzerPage = () => {
 
                 <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    <strong>Related Searches:</strong> MBA profile checker, IIM admission chances calculator, CAT percentile predictor, MBA college predictor India, free MBA profile evaluation, B School Buzz profile analyser, check my IIM chances, MBA admission probability tool, best MBA coaching for CAT, XAT preparation profile analysis, NMAT score predictor, SNAP exam college predictor, should I do MBA, MBA after engineering chances, MBA for working professionals admission chances, IIM fees and placement comparison, MBA ROI calculator India, top MBA colleges accepting CAT score, MBA colleges in Mumbai Delhi Bangalore, MBA entrance exam difficulty comparison
+                    <strong>Related Searches:</strong> MBA profile checker, IIM admission chances calculator, CAT percentile predictor, MBA college predictor India, free MBA profile evaluation, MBA Compass profile analyser, check my IIM chances, MBA admission probability tool, best MBA coaching for CAT, XAT preparation profile analysis, NMAT score predictor, SNAP exam college predictor, should I do MBA, MBA after engineering chances, MBA for working professionals admission chances, IIM fees and placement comparison, MBA ROI calculator India, top MBA colleges accepting CAT score, MBA colleges in Mumbai Delhi Bangalore, MBA entrance exam difficulty comparison
                   </p>
                 </motion.div>
               </div>
@@ -1879,7 +1879,7 @@ const ProfileAnalyzerPage = () => {
                 </motion.div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <motion.div animate={{ scale: [1, 1.08, 1] }} transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}>
-                    <img src={bschoolLogo} alt="B School Buzz" className="w-12 h-12 md:w-16 md:h-16 rounded-2xl shadow-2xl" />
+                    <img src={bschoolLogo} alt="MBA Compass" className="w-12 h-12 md:w-16 md:h-16 rounded-2xl shadow-2xl" />
                   </motion.div>
                 </div>
                 {[...Array(6)].map((_, i) => (

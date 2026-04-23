@@ -269,7 +269,7 @@ Generate unique, page-specific SEO optimization.`,
           const { error: updateErr } = await supabase.from(config.table).update(update).eq("id", page.id);
 
           const pagePath = config.getPath(page);
-          const siteUrl = "https://bschoolbuzz.com";
+          const siteUrl = "https://mbacompass.in";
 
           // Generate technicalSEO and socialMeta so audit scores 100
           const technicalSEO = {
@@ -1087,7 +1087,7 @@ RULES:
 
     // ── NEW: broken_links_scan ──
     if (mode === "broken_links_scan") {
-      const siteUrl = "https://bschoolbuzz.com";
+      const siteUrl = "https://mbacompass.in";
       const internalLinks = new Set<string>();
       for (const [, config] of Object.entries(CONTENT_TABLES)) {
         const { data } = await supabase.from(config.table).select("slug, content, description, detailed_content, intro_content").limit(300);

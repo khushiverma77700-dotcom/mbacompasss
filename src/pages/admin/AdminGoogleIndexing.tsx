@@ -128,7 +128,7 @@ interface LiveBatchItem {
   updatedAt: string;
 }
 
-const SITE_URL = "https://bschoolbuzz.com";
+const SITE_URL = "https://mbacompass.in";
 
 const AdminGoogleIndexing = () => {
   const { toast } = useToast();
@@ -1414,7 +1414,7 @@ const AdminGoogleIndexing = () => {
         <CardContent>
           <div className="flex gap-2">
             <Input
-              placeholder="https://bschoolbuzz.com/article/..."
+              placeholder="https://mbacompass.in/article/..."
               value={manualUrl}
               onChange={(event) => setManualUrl(event.target.value)}
               onKeyDown={(event) => event.key === "Enter" && handleManualSubmit()}
@@ -1577,7 +1577,7 @@ const AdminGoogleIndexing = () => {
                             )}
                             {!row.indexed_at && getDisplayStatus(row) !== "indexed" && (
                               <a
-                                href={`https://search.google.com/search-console/inspect?resource_id=${encodeURIComponent("sc-domain:bschoolbuzz.com")}&id=${encodeURIComponent(row.url)}`}
+                                href={`https://search.google.com/search-console/inspect?resource_id=${encodeURIComponent("sc-domain:mbacompass.in")}&id=${encodeURIComponent(row.url)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title="Open in Search Console — use the 'Request Indexing' button there for guaranteed indexing within minutes"

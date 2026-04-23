@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { RefreshCw, Globe, ExternalLink, Copy, CheckCircle, Download, AlertTriangle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 
-const SITE_URL = "https://bschoolbuzz.com";
+const SITE_URL = "https://mbacompass.in";
 const SITEMAP_URL = `${SITE_URL}/sitemap.xml`;
 const LIVE_SITEMAP_URL = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/serve-sitemap`;
 

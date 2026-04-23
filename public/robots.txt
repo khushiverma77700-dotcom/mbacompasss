@@ -30,4 +30,4 @@ Disallow: /*?*sort=
 Disallow: /*?*q=
 
 # Same-domain sitemap (kept fresh by Admin → Sitemap Manager and a 6-hour cron)
-Sitemap: https://bschoolbuzz.com/sitemap.xml
+Sitemap: https://mbacompass.in/sitemap.xml

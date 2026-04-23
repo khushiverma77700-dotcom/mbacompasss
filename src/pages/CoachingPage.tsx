@@ -168,7 +168,7 @@ const CoachingPage = () => {
     const cat = selectedCategory !== "all" ? (categories.find((c: any) => c.slug === selectedCategory)?.name + " " || "") : "";
     const location = selectedCity !== "all" ? selectedCity : selectedState !== "all" ? selectedState : "India";
     const mode = selectedMode !== "all" ? ` (${selectedMode})` : "";
-    return `Best ${cat}MBA Coaching Institutes in ${location}${mode} 2026 | BSchoolBuzz.com`;
+    return `Best ${cat}MBA Coaching Institutes in ${location}${mode} 2026 | MBA Compass.com`;
   }, [selectedState, selectedCity, selectedMode, selectedCategory, categories]);
 
   const dynamicDescription = useMemo(() => {
@@ -201,7 +201,7 @@ const CoachingPage = () => {
           "weekend CAT coaching for working professionals", "free trial classes for MBA entrance coaching",
           "online study material for MBA entrance exams", "cheap MBA coaching classes online",
         ]}
-        canonical={typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}${window.location.search}` : "https://bschoolbuzz.com/coaching"}
+        canonical={typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}${window.location.search}` : "https://mbacompass.in/coaching"}
       />
 
 

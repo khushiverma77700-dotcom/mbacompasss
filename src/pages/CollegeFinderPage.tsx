@@ -103,7 +103,7 @@ const CollegeFinderPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="AI MBA College Finder — Predict Best B-School Matches | BSchoolBuzz"
+        title="AI MBA College Finder — Predict Best B-School Matches | MBA Compass"
         description="Input your profile and exam scores into our AI-powered College Finder. Get a curated list of MBA colleges that fit your profile, budget, and location preference."
         keywords={[
           "MBA college finder", "B-school predictor", "AI college finder", "college search", "admission tool",
@@ -112,7 +112,7 @@ const CollegeFinderPage = () => {
           "best B-school finder with placement filters", "admission chances in MBA colleges calculator",
           "personalized MBA college recommendation engine",
         ]}
-        canonical="https://bschoolbuzz.com/college-finder"
+        canonical="https://mbacompass.in/college-finder"
         jsonLd={[generateBreadcrumbSchema(breadcrumbs), generateFAQSchema(collegeFaqs)]}
       />
 

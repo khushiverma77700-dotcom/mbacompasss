@@ -54,7 +54,7 @@ const BlogPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="MBA Blog — CAT Preparation Tips, Career Advice & B-School News | BSchoolBuzz"
+        title="MBA Blog — CAT Preparation Tips, Career Advice & B-School News | MBA Compass"
         description="Read expert blogs on CAT preparation, XAT strategies, GD-PI tips, MBA vs PGDM analysis, salary insights, and the latest news from top management institutes in India."
         keywords={[
           "MBA tips", "CAT strategy", "MBA blog", "B-school news", "career guidance",
@@ -63,12 +63,12 @@ const BlogPage = () => {
           "preparation tips for MBA personal interview", "how to write statement of purpose for MBA",
           "current affairs for MBA GD PI sessions", "life at IIM experiences from students",
         ]}
-        canonical="https://bschoolbuzz.com/blog"
+        canonical="https://mbacompass.in/blog"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "Blog",
-          name: "BSchoolBuzz Blog",
-          url: "https://bschoolbuzz.com/blog",
+          name: "MBA Compass Blog",
+          url: "https://mbacompass.in/blog",
           description: "Expert articles on MBA preparation, coaching reviews, career advice, and B-school admissions.",
         }}
       />

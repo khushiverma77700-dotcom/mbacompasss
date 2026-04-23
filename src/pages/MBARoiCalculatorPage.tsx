@@ -331,10 +331,10 @@ const MBARoiCalculatorPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50/40 via-background to-background">
       <SEOHead
-        title="MBA ROI Calculator 2025 | AI-Powered MBA Return on Investment Tool | BSchoolBuzz"
+        title="MBA ROI Calculator 2025 | AI-Powered MBA Return on Investment Tool | MBA Compass"
         description="Free AI-powered MBA ROI Calculator. Get personalized payback period, 10-year salary projection, college recommendations across IIMs, ISB, XLRI, FMS & 200+ B-schools. Make data-backed MBA decisions in 3 minutes."
         keywords={["MBA ROI calculator", "MBA payback period calculator", "MBA salary calculator India", "is MBA worth it", "MBA fees vs salary", "IIM ROI", "MBA return on investment", "MBA cost benefit analysis", "best MBA college ROI", "MBA loan EMI calculator"]}
-        canonical="https://bschoolbuzz.com/roi-calculator"
+        canonical="https://mbacompass.in/roi-calculator"
         ogTitle="MBA ROI Calculator — Should You Pursue MBA? Find Out in 3 Minutes"
         ogDescription="AI-powered MBA Return-on-Investment calculator. Personalized college recommendations, payback period, salary projections, lifetime earnings comparison."
         jsonLd={[
@@ -891,7 +891,7 @@ const SampleReportShowcase = ({ onStart }: { onStart: () => void }) => {
             <div className="flex-1 mx-4">
               <div className="bg-background border border-border rounded-md px-3 py-1 text-[11px] text-muted-foreground flex items-center gap-2">
                 <Lock className="w-3 h-3 text-emerald-600" />
-                <span className="truncate">bschoolbuzz.com/roi-calculator/report/{p.name.toLowerCase().replace(" ", "-")}</span>
+                <span className="truncate">mbacompass.in/roi-calculator/report/{p.name.toLowerCase().replace(" ", "-")}</span>
               </div>
             </div>
             <Badge variant="outline" className="text-[10px] border-emerald-300 text-emerald-700 bg-emerald-50">

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 
-const DEFAULT_SITE_URL = "https://bschoolbuzz.com";
+const DEFAULT_SITE_URL = "https://mbacompass.in";
 const SITE_URL = typeof window !== "undefined" ? window.location.origin : DEFAULT_SITE_URL;
 
 interface SEOHeadProps {
@@ -62,7 +62,7 @@ const SEOHead = ({
     syncMeta("og:title", ogTitle || title, "property");
     syncMeta("og:description", ogDescription || description, "property");
     syncMeta("og:image", ogImage, "property");
-    syncMeta("og:site_name", "BSchoolBuzz", "property");
+    syncMeta("og:site_name", "MBA Compass", "property");
     syncMeta("og:type", ogType, "property");
     syncMeta("og:url", canonical, "property");
 
@@ -121,7 +121,7 @@ export default SEOHead;
 export const generateWebsiteSchema = () => ({
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "BSchoolBuzz",
+  name: "MBA Compass",
   url: SITE_URL,
   potentialAction: {
     "@type": "SearchAction",
@@ -133,7 +133,7 @@ export const generateWebsiteSchema = () => ({
 export const generateOrganizationSchema = () => ({
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "BSchoolBuzz",
+  name: "MBA Compass",
   url: SITE_URL,
   logo: `${SITE_URL}/favicon.png`,
   sameAs: [],
@@ -149,13 +149,13 @@ export const generateArticleSchema = (article: any) => ({
   "@type": "Article",
   headline: article.meta_title || article.title,
   description: article.meta_description || article.excerpt || "",
-  author: { "@type": "Person", name: article.author || "BSchoolBuzz Team" },
+  author: { "@type": "Person", name: article.author || "MBA Compass Team" },
   datePublished: article.created_at,
   dateModified: article.updated_at,
   image: article.image_url || article.banner_url,
   publisher: {
     "@type": "Organization",
-    name: "BSchoolBuzz",
+    name: "MBA Compass",
     url: SITE_URL,
     logo: { "@type": "ImageObject", url: `${SITE_URL}/favicon.png` },
   },

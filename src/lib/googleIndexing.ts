@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-const SITE_URL = "https://bschoolbuzz.com";
+const SITE_URL = "https://mbacompass.in";
 
 type PageType = "article" | "institute" | "college" | "exam" | "city_page" | "category";
 

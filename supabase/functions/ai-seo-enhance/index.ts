@@ -86,7 +86,7 @@ RULES:
 - Use REAL data from the page — never use placeholder text
 - All URLs must use base: ${siteUrl}
 - Page URL: ${pageUrl}
-- Organization name: "MBA Compass by B School Buzz", logo: "${siteUrl}/logo.png"
+- Organization name: "MBA Compass by MBA Compass", logo: "${siteUrl}/logo.png"
 - FAQPage schemas must have real, useful Q&As that students would actually search for
 - Include ALL relevant schema types for the page (aim for 4-6 schemas)
 - Return ONLY the JSON array, no markdown, no explanation`,
@@ -137,11 +137,11 @@ function getDefaultSchemas(contentType: string, data: Record<string, any>, siteU
   };
   const org = {
     "@context": "https://schema.org", "@type": "Organization",
-    name: "MBA Compass by B School Buzz", url: siteUrl, logo: `${siteUrl}/logo.png`, sameAs: [],
+    name: "MBA Compass by MBA Compass", url: siteUrl, logo: `${siteUrl}/logo.png`, sameAs: [],
   };
 
   if (contentType === "article") {
-    return [{ "@context": "https://schema.org", "@type": "Article", headline: name, description, author: { "@type": "Person", name: data.author || "MBA Compass Team" }, publisher: { "@type": "Organization", name: "MBA Compass by B School Buzz", logo: { "@type": "ImageObject", url: `${siteUrl}/logo.png` } }, datePublished: data.created_at, dateModified: data.updated_at, mainEntityOfPage: { "@type": "WebPage", "@id": `${siteUrl}/article/${slug}` }, image: data.banner_url || data.image_url }, breadcrumb, org];
+    return [{ "@context": "https://schema.org", "@type": "Article", headline: name, description, author: { "@type": "Person", name: data.author || "MBA Compass Team" }, publisher: { "@type": "Organization", name: "MBA Compass by MBA Compass", logo: { "@type": "ImageObject", url: `${siteUrl}/logo.png` } }, datePublished: data.created_at, dateModified: data.updated_at, mainEntityOfPage: { "@type": "WebPage", "@id": `${siteUrl}/article/${slug}` }, image: data.banner_url || data.image_url }, breadcrumb, org];
   }
   if (contentType === "institute") {
     return [{ "@context": "https://schema.org", "@type": "EducationalOrganization", name, description, url: data.website || `${siteUrl}/institute/${slug}`, address: { "@type": "PostalAddress", addressLocality: city, addressRegion: state, addressCountry: "IN" }, telephone: data.phone || "", aggregateRating: data.rating ? { "@type": "AggregateRating", ratingValue: data.rating, bestRating: 5, ratingCount: data.total_reviews || 1 } : undefined }, breadcrumb, org];
@@ -202,7 +202,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const siteUrl = "https://bschoolbuzz.com";
+    const siteUrl = "https://mbacompass.in";
 
     // Generate AI-powered schema markup in parallel with main analysis
     const schemaPromise = generateSchemaMarkup(LOVABLE_API_KEY, contentType, data, siteUrl);

@@ -18,7 +18,7 @@ const ContactPage = () => {
   const { data: settings } = useSiteSettings("contact_page");
 
   const heading = settings?.heading || "Contact Us";
-  const email = settings?.email || "info@bschoolbuzz.com";
+  const email = settings?.email || "info@mbacompass.in";
   const phone = settings?.phone || "+91 98765 43210";
   const address = settings?.address || "Connaught Place, New Delhi, India 110001";
 
@@ -38,19 +38,19 @@ const ContactPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Contact Us — BSchoolBuzz | MBA Counseling, Support & Business Inquiries"
-        description="Have questions about MBA admissions or coaching? Contact BSchoolBuzz for personalized guidance, advertising inquiries, or institutional partnerships."
+        title="Contact Us — MBA Compass | MBA Counseling, Support & Business Inquiries"
+        description="Have questions about MBA admissions or coaching? Contact MBA Compass for personalized guidance, advertising inquiries, or institutional partnerships."
         keywords={[
           "contact us", "MBA counseling help", "advertise with us", "student helpline",
-          "contact for MBA admission consultancy", "advertise on MBA portal BSchoolBuzz",
+          "contact for MBA admission consultancy", "advertise on MBA portal MBA Compass",
           "email support for MBA application forms", "business inquiries for management coaching institutes",
         ]}
-        canonical="https://bschoolbuzz.com/contact"
+        canonical="https://mbacompass.in/contact"
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "ContactPage",
-          name: "Contact BSchoolBuzz",
-          url: "https://bschoolbuzz.com/contact",
+          name: "Contact MBA Compass",
+          url: "https://mbacompass.in/contact",
         }}
       />
 
