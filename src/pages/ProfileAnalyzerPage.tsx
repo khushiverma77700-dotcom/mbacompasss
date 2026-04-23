@@ -2134,7 +2134,7 @@ const ProfileAnalyzerPage = () => {
               <h2 className="text-3xl md:text-4xl font-bold">
                 {form.name ? `${form.name.split(" ")[0]}'s Complete MBA Roadmap` : "Your Complete MBA Roadmap"}
               </h2>
-              <p className="text-muted-foreground max-w-3xl mx-auto">{result.ai_summary}</p>
+              <SummaryHighlights text={result.ai_summary} name={form.name} />
 
               {/* Main score + breakdown */}
               <div className="flex flex-wrap justify-center gap-4 mt-6">
