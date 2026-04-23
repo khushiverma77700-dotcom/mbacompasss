@@ -11,7 +11,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
-const SITE_URL = "https://bschoolbuzz.com";
+const SITE_URL = "https://mbacompass.in";
 
 const STEPS: { key: string; label: string }[] = [
   { key: "brand_consistency", label: "Brand consistency" },
@@ -176,7 +176,7 @@ async function runAllSteps(mode: "audit" | "fix", runId: string) {
       status: issues === 0 ? "completed" : "pending",
       pages_affected: issues,
       summary: `Checked brand "MBA / B-School" tone across ${allPages.length} pages. ${issues} pages need brand wording.`,
-      details: { brand: "B School Buzz", scope: "MBA/PGDM/MiM" },
+      details: { brand: "MBA Compass", scope: "MBA/PGDM/MiM" },
     };
   });
 
@@ -227,7 +227,7 @@ async function runAllSteps(mode: "audit" | "fix", runId: string) {
     let fixed = 0;
     if (mode === "fix") {
       for (const p of offenders.slice(0, 30)) {
-        const base = p.row.meta_title || `${p.name} | B School Buzz`;
+        const base = p.row.meta_title || `${p.name} | MBA Compass`;
         const t = base.length > 60 ? truncate(base, 60) : `${base} | MBA 2025`.slice(0, 60);
         await supabase.from(p.table).update({ meta_title: t }).eq("id", p.id);
         fixed++;

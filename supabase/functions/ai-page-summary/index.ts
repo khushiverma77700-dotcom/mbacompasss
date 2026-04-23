@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
           messages: [
-            { role: "system", content: `You are an expert education content summarizer for BSchoolBuzz. Write an informative, humanized summary in 100-200 words using markdown formatting.
+            { role: "system", content: `You are an expert education content summarizer for MBA Compass. Write an informative, humanized summary in 100-200 words using markdown formatting.
 
 Rules:
 - Start with a 1-2 sentence overview capturing the core topic
@@ -133,7 +133,7 @@ Rules:
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
           messages: [
-            { role: "system", content: `You are a helpful MBA admission expert for BSchoolBuzz. Answer questions accurately using markdown formatting.
+            { role: "system", content: `You are a helpful MBA admission expert for MBA Compass. Answer questions accurately using markdown formatting.
 
 Rules:
 - Use **bold** for key facts, names, numbers

@@ -27,7 +27,7 @@ const PageKeywords = lazy(() => import("@/components/PageKeywords"));
 const AIToolsSection = lazy(() => import("@/components/AIToolsSection"));
 
 const homepageFAQs = [
-  { q: "What is the best MBA coaching in India?", a: "The best MBA coaching depends on your target exam. For CAT, top choices include IMS, TIME, and Career Launcher. Compare fees, success rates, and student reviews on BSchoolBuzz.com." },
+  { q: "What is the best MBA coaching in India?", a: "The best MBA coaching depends on your target exam. For CAT, top choices include IMS, TIME, and Career Launcher. Compare fees, success rates, and student reviews on MBA Compass.com." },
   { q: "How much does MBA coaching cost in India?", a: "MBA coaching fees range from ₹15,000 to ₹1,50,000 depending on the institute, course duration, and mode (online/offline). Use our comparison tool to find the best value." },
   { q: "Which coaching is best for CAT preparation?", a: "Top CAT coaching institutes include IMS Learning Resources, TIME Institute, Career Launcher, and Unacademy. Each has unique strengths — compare them side-by-side on our platform." },
   { q: "Can I prepare for MBA entrance exams online?", a: "Yes! Many top coaching institutes now offer online MBA preparation courses with live classes, recorded lectures, mock tests, and personalized mentoring." },
@@ -64,7 +64,7 @@ const Index = () => {
   return (
     <>
       <SEOHead
-        title="BSchoolBuzz — Top MBA Colleges, Coaching & Entrance Exams India 2026"
+        title="MBA Compass — Top MBA Colleges, Coaching & Entrance Exams India 2026"
         description="India's #1 platform to find, compare & review best MBA coaching institutes & top B-schools for CAT, GMAT, XAT, SNAP. Compare fees, placements, success rates & 10,000+ student reviews. Updated daily."
         keywords={[
           "MBA admissions", "top MBA colleges", "MBA entrance exams", "business schools India", "B-school news",
@@ -76,11 +76,11 @@ const Index = () => {
           "MBA specializations with highest salary in India", "latest MBA admission notifications 2026",
           "upcoming MBA entrance exam dates 2026", "comprehensive guide for MBA aspirants in India",
         ]}
-        canonical="https://bschoolbuzz.com"
+        canonical="https://mbacompass.in"
         ogType="website"
-        ogTitle="BSchoolBuzz — Top MBA Colleges, Coaching & Entrance Exams India 2026"
+        ogTitle="MBA Compass — Top MBA Colleges, Coaching & Entrance Exams India 2026"
         ogDescription="Compare 500+ MBA coaching institutes & 2000+ colleges. Find the best CAT, GMAT, XAT coaching with verified reviews, fees & success rates."
-        twitterTitle="BSchoolBuzz — MBA Colleges, Coaching & Exams India 2026"
+        twitterTitle="MBA Compass — MBA Colleges, Coaching & Exams India 2026"
         twitterDescription="India's most trusted MBA coaching & college comparison. Compare fees, reviews, placements of 2000+ institutes."
         jsonLd={jsonLdSchemas}
       />

@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
       batchPreference && batchPreference !== "any" ? `Batch Preference: ${batchPreference}` : null,
     ].filter(Boolean).join(", ");
 
-    const systemPrompt = `You are an expert MBA coaching advisor for BSchoolBuzz.com. Based on the user's profile and available institutes data, recommend the TOP 3 to 5 best-fit coaching institutes.
+    const systemPrompt = `You are an expert MBA coaching advisor for MBA Compass.com. Based on the user's profile and available institutes data, recommend the TOP 3 to 5 best-fit coaching institutes.
 
 CRITICAL RULES:
 1. You MUST ALWAYS recommend at least 3 institutes, ideally 5. Never return 0 recommendations.

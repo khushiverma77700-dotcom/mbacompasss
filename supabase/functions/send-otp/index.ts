@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
     }
 
     // Send via Fast2SMS Quick SMS route (no DLT/website verification required)
-    const message = encodeURIComponent(`Your BSchoolBuzz verification code is ${otp}. Valid for 5 minutes. Do not share this OTP with anyone.`);
+    const message = encodeURIComponent(`Your MBA Compass verification code is ${otp}. Valid for 5 minutes. Do not share this OTP with anyone.`);
     const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${fast2smsKey}&message=${message}&language=english&route=q&numbers=${phone}`;
 
     const smsResponse = await fetch(url, { method: "GET" });

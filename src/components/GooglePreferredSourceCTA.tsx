@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 /**
  * Google Preferred Source CTA — premium animated pill that deep-links to
  * Google's "Preferred Sources" page so signed-in Google users can pin
- * BSchoolBuzz in Top Stories / Discover.
+ * MBA Compass in Top Stories / Discover.
  *
  * Designed to live INSIDE the Navbar (desktop + mobile) — no separate banner row.
  */
@@ -12,7 +12,7 @@ import { motion } from "framer-motion";
 // Google Preferred Sources — `q` pre-fills the search box with our domain
 // so the user only needs to tap the result + "Save". No manual typing.
 const PREFERRED_URL =
-  "https://www.google.com/preferences/source?q=bschoolbuzz.com&hl=en";
+  "https://www.google.com/preferences/source?q=mbacompass.in&hl=en";
 
 interface Props {
   className?: string;
@@ -37,7 +37,7 @@ const GooglePreferredSourceCTA = ({ className = "", size = "compact" }: Props) =
       href={PREFERRED_URL}
       target="_blank"
       rel="noopener noreferrer"
-      title="Add B School Buzz as preferred source on Google"
+      title="Add MBA Compass as preferred source on Google"
       initial={{ opacity: 0, y: -10, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ 
@@ -105,7 +105,7 @@ const GooglePreferredSourceCTA = ({ className = "", size = "compact" }: Props) =
           isFull ? "text-sm" : "text-[12.5px]"
         }`}
       >
-        Add B School Buzz <span className="text-muted-foreground font-medium">as preferred source on</span>{" "}
+        Add MBA Compass <span className="text-muted-foreground font-medium">as preferred source on</span>{" "}
         <span className="text-primary">Google</span>
       </span>
 

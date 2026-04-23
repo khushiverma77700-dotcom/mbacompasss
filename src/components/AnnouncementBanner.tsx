@@ -24,7 +24,7 @@ interface SiteAnnouncement {
 
 const fallbackAnnouncements: SiteAnnouncement[] = [
   { id: "a1", title: "CAT 2026 Registration Opens Soon", description: "IIM Calcutta to release CAT 2026 notification in August. Start your preparation now!", type: "urgent" },
-  { id: "a2", title: "Early Bird Discount: Save 10% on All Courses", description: "Enroll before April 30th and get flat 10% off on any coaching program listed on BSchoolBuzz.", type: "success" },
+  { id: "a2", title: "Early Bird Discount: Save 10% on All Courses", description: "Enroll before April 30th and get flat 10% off on any coaching program listed on MBA Compass.", type: "success" },
   { id: "a3", title: "Free CAT Mock Test Available", description: "Take a free full-length CAT mock test to assess your current preparation level.", type: "info" },
 ];
 

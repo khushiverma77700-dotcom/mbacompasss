@@ -41,9 +41,9 @@ const ListYourBusinessPage = () => {
   return (
     <>
       <SEOHead
-        title="List Your Coaching Institute or College | B School Buzz"
-        description="Get your MBA coaching institute or B-school listed on B School Buzz. Reach lakhs of aspirants with verified, structured listings."
-        canonical="https://bschoolbuzz.com/list-your-business"
+        title="List Your Coaching Institute or College | MBA Compass"
+        description="Get your MBA coaching institute or B-school listed on MBA Compass. Reach lakhs of aspirants with verified, structured listings."
+        canonical="https://mbacompass.in/list-your-business"
       />
 
       <section className="relative overflow-hidden bg-gradient-to-b from-blue-50/60 via-background to-background">
@@ -53,7 +53,7 @@ const ListYourBusinessPage = () => {
               <Sparkles className="w-4 h-4" /> For Institutes & Colleges
             </div>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-foreground">
-              List Your Business on B School Buzz
+              List Your Business on MBA Compass
             </h1>
             <p className="text-lg text-muted-foreground">
               Reach thousands of MBA aspirants every month. Submit your listing in minutes — our team reviews and publishes it.

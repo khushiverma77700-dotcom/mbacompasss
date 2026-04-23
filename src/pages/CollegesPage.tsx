@@ -120,7 +120,7 @@ const CollegesPage = () => {
     else if (selectedState !== "all") parts.push(`in ${selectedState}`);
     else parts.push("in India");
     if (selectedExam !== "all") parts.push(`accepting ${selectedExam}`);
-    return `${parts.join(" ")} 2026 — Fees, Rankings, Placements | BSchoolBuzz.com`;
+    return `${parts.join(" ")} 2026 — Fees, Rankings, Placements | MBA Compass.com`;
   }, [activeTab, selectedState, selectedCity, selectedExam]);
 
   const dynamicDescription = useMemo(() => {
@@ -166,7 +166,7 @@ const CollegesPage = () => {
           "private MBA colleges with guaranteed placements", "top 100 MBA colleges in India rankings",
           "MBA colleges without entrance exams in India", "distance MBA colleges with best placement support",
         ]}
-        canonical={typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}${window.location.search}` : "https://bschoolbuzz.com/colleges"}
+        canonical={typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}${window.location.search}` : "https://mbacompass.in/colleges"}
         jsonLd={jsonLd}
       />
 

@@ -1,5 +1,5 @@
 const OAUTH_RETURN_TO_KEY = "oauth-return-to";
-const FALLBACK_ORIGIN = "https://bschoolbuzz.com";
+const FALLBACK_ORIGIN = "https://mbacompass.in";
 
 export const getAuthRedirectUri = () => {
   if (typeof window === "undefined") return FALLBACK_ORIGIN;
@@ -9,8 +9,8 @@ export const getAuthRedirectUri = () => {
   if (
     hostname === "localhost" ||
     hostname === "127.0.0.1" ||
-    hostname === "bschoolbuzz.com" ||
-    hostname === "www.bschoolbuzz.com" ||
+    hostname === "mbacompass.in" ||
+    hostname === "www.mbacompass.in" ||
     hostname.endsWith(".lovable.app")
   ) {
     return origin;

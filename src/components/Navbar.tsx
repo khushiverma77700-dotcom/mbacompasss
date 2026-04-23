@@ -41,6 +41,7 @@ const Navbar = () => {
   };
 
   const brandName = header?.brand_name || "MBA Compass";
+  const brandHasCompass = brandName.includes("Compass");
 
   const closeMobile = () => {
     setMobileOpen(false);
@@ -55,10 +56,10 @@ const Navbar = () => {
           <img src={mbahubLogo} alt="MBA Compass Logo" className="w-9 h-9 rounded-lg object-contain" />
           <div className="flex flex-col leading-tight">
             <span className="font-heading font-bold text-xl text-foreground">
-              {brandName.includes("Hub") ? (
+              {brandHasCompass ? (
                 <>
-                  {brandName.replace("Hub", "")}
-                  <span className="text-gradient">Hub</span>
+                  {brandName.replace("Compass", "")}
+                  <span className="text-gradient">Compass</span>
                 </>
               ) : (
                 brandName

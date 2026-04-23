@@ -165,7 +165,7 @@ const BusinessInquiryPage = () => {
       <SEOHead
         title="Business Inquiries — List Your Institute on MBA Compass"
         description="Get your coaching institute or college listed on MBA Compass. Reach thousands of MBA aspirants and increase your student enrollments."
-        canonical="https://bschoolbuzz.com/business-inquiries"
+        canonical="https://mbacompass.in/business-inquiries"
       />
       <section className="py-12 md:py-20">
         <div className="container mx-auto px-4 max-w-2xl">
