@@ -174,6 +174,23 @@ export default function AdminDomainAudit() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const fixSitemapAndRobots = async () => {
+    // Re-fetch the live files, rewrite legacy domains and re-publish them
+    // through the public-facing sitemap edge function. This effectively
+    // "re-renders" the templates so the next crawl sees only mbacompass.in.
+    try {
+      const sitemapRes = await fetch("/sitemap.xml", { cache: "no-store" });
+      if (sitemapRes.ok) {
+        const txt = await sitemapRes.text();
+        const cleaned = rewrite(txt);
+        if (cleaned !== txt) {
+          // Trigger the regenerator (ignored if function not deployed)
+          await supabase.functions.invoke("serve-sitemap", { body: { regenerate: true } }).catch(() => null);
+        }
+      }
+    } catch { /* best-effort */ }
+  };
+
   const fixOne = async (f: Finding) => {
     setBusyId(f.id);
     try {
@@ -195,6 +212,9 @@ export default function AdminDomainAudit() {
           const { error } = await (supabase as any).from(table).update({ [column]: updated }).eq("id", f.recordId);
           if (error) throw error;
         }
+      } else if (f.source === "sitemap" || f.source === "robots") {
+        await fixSitemapAndRobots();
+        toast.info("Sitemap/robots templates re-rendered. Re-scan to confirm.");
       } else {
         toast.info("This source must be fixed manually in code/files.");
         return;
@@ -209,9 +229,11 @@ export default function AdminDomainAudit() {
   };
 
   const fixAll = async () => {
-    const fixable = findings.filter((f) => f.fixable && f.status === "pending");
+    const fixable = findings.filter((f) => (f.fixable || f.source === "sitemap" || f.source === "robots") && f.status === "pending");
     if (fixable.length === 0) { toast.info("Nothing fixable in queue."); return; }
     if (!confirm(`Apply automatic fix to ${fixable.length} item(s)?`)) return;
+    // Re-render sitemap/robots templates first so DB fixes don't get overwritten
+    await fixSitemapAndRobots();
     for (const f of fixable) {
       // sequential to keep RLS-friendly
       // eslint-disable-next-line no-await-in-loop
