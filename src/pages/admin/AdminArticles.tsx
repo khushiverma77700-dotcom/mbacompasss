@@ -18,6 +18,7 @@ import SEOChecklist from "@/components/admin/SEOChecklist";
 import SeoEnhanceFields from "@/components/admin/SeoEnhanceFields";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import RefreshContentButton from "@/components/admin/RefreshContentButton";
 import FileUpload from "@/components/admin/FileUpload";
 import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 
@@ -346,6 +347,7 @@ const AdminArticles = () => {
                     <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{new Date(a.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}<br/><span className="text-[10px]">{new Date(a.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></TableCell>
                     <TableCell className="text-right space-x-1">
                       <Button variant="ghost" size="sm" asChild><a href={`/article/${a.slug}`} target="_blank"><Eye className="w-4 h-4" /></a></Button>
+                      <RefreshContentButton entityType="article" entityId={a.id} entityName={a.title} />
                       <Button variant="ghost" size="sm" onClick={() => handleEdit(a)}><Pencil className="w-4 h-4" /></Button>
                       <Button variant="ghost" size="sm" onClick={() => handleDelete(a.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                     </TableCell>
