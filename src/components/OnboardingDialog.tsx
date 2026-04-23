@@ -73,6 +73,27 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
       return;
     }
 
+    // Admin email bypass — admins skip OTP entirely
+    try {
+      const { data: userRes } = await supabase.auth.getUser();
+      const adminEmail = userRes?.user?.email;
+      if (adminEmail) {
+        const { data: isAdminEmail } = await supabase.rpc("is_admin_email", { _email: adminEmail });
+        if (isAdminEmail) {
+          setPhoneTouched(true);
+          setPhoneError("");
+          setPhoneVerified(true);
+          setOtpStep(false);
+          setOtpValue("");
+          setResendTimer(0);
+          toast({ title: "Verified ✅", description: "Admin account detected — phone auto-verified." });
+          return;
+        }
+      }
+    } catch {
+      /* non-fatal */
+    }
+
     // Block duplicate phone before sending OTP
     try {
       const { data: dupCheck } = await supabase.functions.invoke("check-duplicate", {
