@@ -378,6 +378,7 @@ const AdminColleges = () => {
                   <TableCell><Badge variant="secondary">{c.type ?? "—"}</Badge></TableCell>
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{c.created_at ? new Date(c.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}<br/><span className="text-[10px]">{c.created_at ? new Date(c.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : ""}</span></TableCell>
                   <TableCell className="text-right space-x-2">
+                    <RefreshContentButton entityType="college" entityId={c.id} entityName={c.name} />
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(c.id)}><Pencil className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(c.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                   </TableCell>
