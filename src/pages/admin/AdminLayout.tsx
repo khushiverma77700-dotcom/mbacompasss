@@ -1,6 +1,6 @@
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp, Sparkles, ShieldCheck, Lock, Briefcase, Target, PhoneCall, Database, Activity, Calculator, ChevronDown, Bell, RefreshCw } from "lucide-react";
+import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp, Sparkles, ShieldCheck, Lock, Briefcase, Target, PhoneCall, Database, Activity, Calculator, ChevronDown, Bell, RefreshCw, PenLine } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -60,6 +60,7 @@ const adminNavGroups = [
   {
     label: "SEO & AI Tools",
     items: [
+      { label: "Page Editor & SEO", path: "/admin/page-editor", icon: PenLine },
       { label: "AI SEO Dashboard", path: "/admin/seo-dashboard", icon: Sparkles },
       { label: "Website Optimizer", path: "/admin/website-optimizer", icon: Sparkles },
       { label: "Static Page SEO", path: "/admin/static-seo", icon: Globe },
