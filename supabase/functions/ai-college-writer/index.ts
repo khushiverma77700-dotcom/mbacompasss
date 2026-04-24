@@ -296,7 +296,6 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
     const extractedFaqs = extractFaqs(profile.description || "");
 
     // ── FACTUALITY CHECK PASS — score high-risk fields and flag inconsistencies ──
-    const currentYear = new Date().getFullYear();
     const factCheckTool = {
       type: "function",
       function: {
