@@ -4,7 +4,6 @@ import { Search, BookOpen, Users, Award, GraduationCap, TrendingUp, Shield, BarC
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSiteSettings } from "@/hooks/useSiteSettings";
-import { supabase } from "@/integrations/supabase/client";
 
 type HeroSuggestion = {
   type: "institute" | "exam" | "city" | "category" | "college" | "article";
@@ -54,6 +53,8 @@ const HeroSection = () => {
     const timer = setTimeout(async () => {
       const q = query.toLowerCase();
       const results: HeroSuggestion[] = [];
+      // Lazy-import supabase only when the user actually searches — keeps it out of the LCP critical path
+      const { supabase } = await import("@/integrations/supabase/client");
       const [instRes, examRes, catRes, collegeRes, articleRes] = await Promise.all([
         supabase.from("institutes").select("name, slug, city, rating").ilike("name", `%${q}%`).limit(4),
         supabase.from("exams").select("name, slug, full_name, conducting_body").ilike("name", `%${q}%`).limit(3),
