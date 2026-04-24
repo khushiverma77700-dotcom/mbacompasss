@@ -159,29 +159,47 @@ const AdminAllLinks = () => {
         </div>
       </div>
 
-      {/* New links banner */}
-      {newLinks.length > 0 && (
-        <Card className="border-green-500/50 bg-green-500/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-green-600" />
-              {newLinks.length} New Link{newLinks.length > 1 ? "s" : ""} Found
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {newLinks.map((l) => (
-              <div key={l.url} className="flex items-center gap-2 text-sm">
-                <Badge variant="outline" className="text-green-600 border-green-500/50">NEW</Badge>
-                <span className="font-medium">{l.label}</span>
-                <span className="text-muted-foreground truncate">{SITE_URL}{l.url}</span>
-              </div>
-            ))}
-            <Button size="sm" variant="outline" className="mt-3" onClick={copyNewLinks}>
-              <Copy className="w-4 h-4 mr-2" /> Copy New Links Only
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+      {/* New links banner — grouped by type */}
+      {newLinks.length > 0 && (() => {
+        const newGrouped = newLinks.reduce<Record<string, LinkItem[]>>((acc, l) => {
+          (acc[l.type] = acc[l.type] || []).push(l);
+          return acc;
+        }, {});
+        return (
+          <Card className="border-green-500/50 bg-green-500/5">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-green-600" />
+                {newLinks.length} New Link{newLinks.length > 1 ? "s" : ""} Detected
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {Object.entries(newGrouped).map(([type, items]) => (
+                <div key={type} className="border rounded-md p-3 bg-background">
+                  <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                    <span className="font-semibold text-sm">{type} ({items.length} new)</span>
+                    <Button size="sm" variant="outline" onClick={() => copyNewSection(type, items)}>
+                      <Copy className="w-3.5 h-3.5 mr-1.5" /> Copy
+                    </Button>
+                  </div>
+                  <div className="space-y-1 max-h-[150px] overflow-y-auto">
+                    {items.map((l) => (
+                      <div key={l.url} className="flex items-center gap-2 text-xs">
+                        <Badge variant="outline" className="text-green-600 border-green-500/50 text-[10px]">NEW</Badge>
+                        <span className="font-medium truncate max-w-[180px]">{l.label}</span>
+                        <span className="text-muted-foreground truncate flex-1">{SITE_URL}{l.url}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <Button size="sm" onClick={copyNewLinks}>
+                <Copy className="w-4 h-4 mr-2" /> Copy All New Links ({newLinks.length})
+              </Button>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
