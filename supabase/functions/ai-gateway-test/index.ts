@@ -102,10 +102,9 @@ Deno.serve(async (req) => {
       results.push({ provider: "gemini-direct", status: 0, ok: false, latencyMs: 0, error: "GEMINI_API_KEY not configured" });
     }
 
+    // Lovable AI Gateway is intentionally disabled — Gemini-only policy.
     if (lovableKey) {
-      results.push(await runLovableGateway(prompt, model, lovableKey));
-    } else {
-      results.push({ provider: "lovable-gateway", status: 0, ok: false, latencyMs: 0, error: "LOVABLE_API_KEY not configured" });
+      results.push({ provider: "lovable-gateway", status: 0, ok: false, latencyMs: 0, error: "Lovable AI disabled by policy (Gemini-only)" });
     }
 
     const summary = {
