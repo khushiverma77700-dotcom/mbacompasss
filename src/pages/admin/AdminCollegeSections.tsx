@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -145,6 +146,26 @@ const AdminCollegeSections = () => {
 
   useEffect(() => { fetchColleges(); }, []);
   useEffect(() => { fetchSections(); }, [selectedCollege]);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Auto-select college from ?college= and auto-open ?section=<id>
+  useEffect(() => {
+    const collegeParam = searchParams.get("college");
+    if (collegeParam && collegeParam !== selectedCollege) {
+      setSelectedCollege(collegeParam);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+  useEffect(() => {
+    const sectionParam = searchParams.get("section");
+    if (!sectionParam || !sections.length || showForm) return;
+    handleEdit(sectionParam);
+    const next = new URLSearchParams(searchParams);
+    next.delete("section");
+    next.delete("college");
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sections, searchParams]);
 
   const generateForSection = async (collegeId: string, sectionType: string, anchorFacts?: any) => {
     const college = colleges.find(c => c.id === collegeId);
