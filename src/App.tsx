@@ -214,10 +214,10 @@ const GlobalNavigationPrefetch = () => {
     document.addEventListener("pointerenter", handlePointer, true);
     document.addEventListener("focusin", handlePointer, true);
 
-    schedulePrefetch("/");
-    schedulePrefetch("/blog");
-    schedulePrefetch("/compare");
-    schedulePrefetch("/admin");
+    // NOTE: Do NOT eagerly prefetch routes here.
+    // Previously prefetching "/admin" pulled the entire admin bundle (TipTap editor ~127KB,
+    // recharts, radix dialogs, ~30+ admin chunks) on every public page load, adding ~3-5s.
+    // Hover/focus-based prefetch above already handles real navigation intent.
 
     return () => {
       document.removeEventListener("pointerenter", handlePointer, true);
