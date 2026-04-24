@@ -881,13 +881,17 @@ const CollegeDetailPage = () => {
                 <CardContent>
                   <div className="space-y-4">
                     {scholarships.map((s: any, i: number) => (
-                      <div key={i} className="border border-border rounded-lg p-4">
-                        <div className="flex items-start justify-between mb-2">
-                          <h4 className="font-heading font-semibold text-foreground">{s.name}</h4>
-                          <Badge className="bg-primary/10 text-primary border-none text-xs">{s.amount}</Badge>
+                      <div key={i} className="border border-border rounded-lg p-4 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+                          <h4 className="font-heading font-semibold text-foreground text-base leading-snug break-words">{s.name}</h4>
+                          {s.amount && (
+                            <span className="inline-flex max-w-full bg-primary/10 text-primary text-xs font-medium px-2.5 py-1 rounded-md break-words whitespace-normal text-left sm:text-right sm:flex-shrink-0 sm:max-w-[55%] leading-snug">
+                              {s.amount}
+                            </span>
+                          )}
                         </div>
-                        <p className="text-sm text-muted-foreground mb-1">{s.description}</p>
-                        <p className="text-xs text-primary font-medium">Criteria: {s.criteria}</p>
+                        {s.description && <p className="text-sm text-muted-foreground mb-1 break-words">{s.description}</p>}
+                        {s.criteria && <p className="text-xs text-primary font-medium break-words">Criteria: {s.criteria}</p>}
                       </div>
                     ))}
                   </div>
