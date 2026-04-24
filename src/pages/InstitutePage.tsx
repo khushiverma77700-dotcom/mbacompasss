@@ -294,8 +294,8 @@ const InstitutePage = () => {
           pageId={institute.id}
           onScrollToContent={() => document.getElementById("institute-about")?.scrollIntoView({ behavior: "smooth" })}
         />
-        <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid lg:grid-cols-3 gap-6 min-w-0">
+          <div className="lg:col-span-2 space-y-6 min-w-0">
             {/* About */}
             <Card id="institute-about" className="scroll-mt-24">
               <CardHeader><CardTitle className="font-heading">About {institute.name}</CardTitle></CardHeader>
