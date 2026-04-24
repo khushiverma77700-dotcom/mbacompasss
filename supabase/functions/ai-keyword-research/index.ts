@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1";
 
+import { callAIGateway } from "../_shared/aiGateway.ts";
 async function logAIUsage(feature: string, model: string, aiData: any, status = "success", errorMsg?: string) {
   try {
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -477,10 +478,7 @@ Deno.serve(async (req) => {
 
     console.log(`[ai-keyword-research] Calling AI gateway...`);
     const aiStartTime = Date.now();
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const response = await callAIGateway({
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: payload.systemPrompt },
@@ -489,8 +487,7 @@ Deno.serve(async (req) => {
         max_tokens: 8192,
         tools: [payload.tool],
         tool_choice: { type: "function", function: { name: payload.toolName } },
-      }),
-    });
+      });
 
     if (!response.ok) {
       if (response.status === 429) {

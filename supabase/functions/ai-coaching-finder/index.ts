@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
+import { callAIGateway } from "../_shared/aiGateway.ts";
 async function logAIUsage(feature: string, model: string, aiData: any, status = "success", errorMsg?: string) {
   try {
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -160,20 +161,13 @@ ${JSON.stringify(topInstitutes, null, 2)}
 
 IMPORTANT: You MUST recommend at least 3 institutes. Return ONLY valid JSON. No markdown.`;
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    const aiResponse = await callAIGateway({
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userMessage },
         ],
-      }),
-    });
+      });
 
     if (!aiResponse.ok) {
       if (aiResponse.status === 429) {

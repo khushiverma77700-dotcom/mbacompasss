@@ -7,6 +7,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1";
 //    a page/article reuses the same summary instead of paying for a new one
 //  • ask → kept on gemini-2.5-flash for nuance, but capped completion to 400 tokens
 //  • all calls now send max_tokens to prevent runaway 8K-token responses
+import { callAIGateway } from "../_shared/aiGateway.ts";
 const SUMMARY_MODEL = "google/gemini-2.5-flash-lite";
 const ASK_MODEL = "google/gemini-2.5-flash";
 
@@ -66,10 +67,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const resp = await callAIGateway({
           model: SUMMARY_MODEL,
           max_tokens: 500,
           messages: [
@@ -87,8 +85,7 @@ Rules:
 - Make it genuinely useful so the reader gets real value without reading the full page` },
             { role: "user", content: `Summarize this ${pageType || "article"} content:\n\n${stripped}` },
           ],
-        }),
-      });
+        });
 
       if (!resp.ok) {
         if (resp.status === 429) return new Response(JSON.stringify({ error: "Rate limited, try again shortly." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -175,10 +172,7 @@ Rules:
       // Trimmed 4000 → 2500 chars (Q&A only needs the relevant snippet, not the whole page)
       const pageContent = (content || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 2500);
 
-      const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const resp = await callAIGateway({
           model: ASK_MODEL,
           max_tokens: 400, // 3-5 sentence answer fits comfortably
           messages: [
@@ -193,8 +187,7 @@ Rules:
 - Write in a warm, mentor-like tone` },
             { role: "user", content: `Page context:\n${pageContent}\n\n${dbContext ? `Database context:\n${dbContext}\n\n` : ""}User question: ${question}` },
           ],
-        }),
-      });
+        });
 
       if (!resp.ok) {
         if (resp.status === 429) return new Response(JSON.stringify({ error: "Rate limited, try again shortly." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });

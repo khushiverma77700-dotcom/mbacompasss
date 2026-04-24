@@ -15,6 +15,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1";
 
+import { callAIGateway } from "../_shared/aiGateway.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -136,10 +137,7 @@ ${JSON.stringify(target.map((t) => ({
     current: t.current,
   })), null, 2)}`;
 
-  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
+  const res = await callAIGateway({
       model: "google/gemini-2.5-flash",
       messages: [
         { role: "system", content: systemPrompt },
@@ -178,8 +176,7 @@ ${JSON.stringify(target.map((t) => ({
         },
       }],
       tool_choice: { type: "function", function: { name: "submit_meta_fixes" } },
-    }),
-  });
+    });
 
   if (res.status === 429) throw new Error("AI rate limit reached, please retry shortly.");
   if (res.status === 402) throw new Error("AI credits exhausted. Top up in Settings → Workspace.");

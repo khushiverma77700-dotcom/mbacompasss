@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
+import { callAIGateway } from "../_shared/aiGateway.ts";
 async function logAIUsage(feature: string, model: string, aiData: any, status = "success", errorMsg?: string) {
   try {
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -157,13 +158,7 @@ For salary_benchmarking, provide current salary estimates for their profile (pre
 
 For improvement_roadmap, provide a month-by-month timeline with specific milestones, mock test targets, and measurable goals.`;
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    const aiResponse = await callAIGateway({
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: `You are an expert Indian MBA admissions counselor named "B School Buzz AI Counselor". You speak directly to the student by their first name. Every insight must reference their specific data points — never give generic advice. Be warm, encouraging, yet brutally honest about areas needing improvement. Use their actual scores, stream, work experience, and target colleges to make every sentence feel personally crafted for them. Provide extremely quantitative, data-rich analysis with specific numbers, percentages, and benchmarks.` },
@@ -448,8 +443,7 @@ For improvement_roadmap, provide a month-by-month timeline with specific milesto
           },
         ],
         tool_choice: { type: "function", function: { name: "generate_profile_analysis" } },
-      }),
-    });
+      });
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();

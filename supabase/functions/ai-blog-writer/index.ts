@@ -2,6 +2,7 @@
 // using Lovable AI Gateway (openai/gpt-5).
 // Public endpoint (verify_jwt = false in supabase/config.toml is the project default).
 
+import { callAIGateway } from "../_shared/aiGateway.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -160,13 +161,7 @@ Deno.serve(async (req) => {
       },
     };
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    const aiRes = await callAIGateway({
         model: "google/gemini-2.5-flash",
         // COST OPT: Cap to 6K tokens — a full blog article (~1500 words) fits in
         // ~4K tokens; without the cap Gemini sometimes returns 8K+ of filler.
@@ -177,8 +172,7 @@ Deno.serve(async (req) => {
         ],
         tools: [tool],
         tool_choice: { type: "function", function: { name: "publish_blog_article" } },
-      }),
-    });
+      });
 
     if (!aiRes.ok) {
       const txt = await aiRes.text();

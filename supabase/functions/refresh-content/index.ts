@@ -3,6 +3,7 @@
 // and stores it as a pending content_refreshes row awaiting admin approval.
 // Public endpoint (admin gate enforced by RLS on insert via service-role).
 
+import { callAIGateway } from "../_shared/aiGateway.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -60,13 +61,7 @@ function computeDiff(current: Record<string, unknown>, proposed: Record<string, 
 }
 
 async function callAI(systemPrompt: string, userPrompt: string, schema: any): Promise<any> {
-  const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${LOVABLE_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
+  const resp = await callAIGateway({
       model: MODEL,
       messages: [
         { role: "system", content: systemPrompt },
@@ -74,8 +69,7 @@ async function callAI(systemPrompt: string, userPrompt: string, schema: any): Pr
       ],
       tools: [{ type: "function", function: { name: "emit", description: "Emit refreshed fields", parameters: schema } }],
       tool_choice: { type: "function", function: { name: "emit" } },
-    }),
-  });
+    });
   if (!resp.ok) {
     const t = await resp.text();
     throw new Error(`AI call failed ${resp.status}: ${t.slice(0, 500)}`);
