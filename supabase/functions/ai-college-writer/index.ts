@@ -190,7 +190,52 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
         throw new Error(`${label} returned empty JSON content`);
       }
 
-      return extractJSON(content);
+      try {
+        return extractJSON(content);
+      } catch (parseError) {
+        throw new Error(`${label} returned malformed JSON: ${parseError instanceof Error ? parseError.message : String(parseError)}`);
+      }
+    };
+
+    const callTextModel = async ({
+      system,
+      user,
+      maxTokens,
+      label,
+    }: {
+      system: string;
+      user: string;
+      maxTokens: number;
+      label: string;
+    }) => {
+      const res = await callAIGateway({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+        max_tokens: maxTokens,
+      });
+
+      if (!res.ok) {
+        const txt = await res.text();
+        console.error(`${label} AI error:`, res.status, txt);
+        if (res.status === 429) throw new Error("RATE_LIMIT");
+        if (res.status === 402) throw new Error("GEMINI_QUOTA");
+        throw new Error(`${label} failed: ${txt.slice(0, 500)}`);
+      }
+
+      const payload = await res.json();
+      const content = payload?.choices?.[0]?.message?.content;
+      if (typeof content !== "string" || !content.trim()) {
+        throw new Error(`${label} returned empty HTML content`);
+      }
+
+      return content
+        .replace(/^```html\s*/im, "")
+        .replace(/^```\s*/im, "")
+        .replace(/```\s*$/im, "")
+        .trim();
     };
 
     const handleModelError = (error: unknown) => {
