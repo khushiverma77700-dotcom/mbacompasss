@@ -175,7 +175,7 @@ Prioritize actions by impact. Focus on what we can implement TODAY.`,
 
     // Also save history
     const historyKey = `seo_competitor_history_${new Date().toISOString().split("T")[0]}`;
-    await supabase.from("site_settings").insert({ key: historyKey, value: report }).onConflict("key");
+    await supabase.from("site_settings").upsert({ key: historyKey, value: report }, { onConflict: "key" });
 
     return new Response(JSON.stringify({ success: true, report }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

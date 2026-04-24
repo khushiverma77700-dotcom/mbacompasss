@@ -162,9 +162,8 @@ Deno.serve(async (req) => {
       // Reset failed rows so they get picked up
       const { count: resetCount } = await sb
         .from("indexing_urls")
-        .update({ status: "pending", retry_count: 0, next_retry_at: new Date().toISOString() })
-        .eq("status", "failed")
-        .select("id", { count: "exact", head: true });
+        .update({ status: "pending", retry_count: 0, next_retry_at: new Date().toISOString() }, { count: "exact" })
+        .eq("status", "failed");
 
       // Trigger google-indexing submit_pending in batches of 10
       const flushRes = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/google-indexing`, {

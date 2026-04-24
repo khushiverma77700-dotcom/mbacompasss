@@ -298,7 +298,7 @@ Deno.serve(async (req) => {
       if (!config) continue;
 
       const fields = ["id", config.nameField, ...config.contentFields];
-      const { data: rows, error } = await supabase.from(table).select(fields.join(",")).limit(500);
+      const { data: rows, error } = await supabase.from(table).select(fields.join(",")).limit(500).returns<Record<string, any>[]>();
       if (error || !rows) continue;
 
       for (const row of rows) {
