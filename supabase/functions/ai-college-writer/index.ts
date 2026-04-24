@@ -47,13 +47,23 @@ Deno.serve(async (req) => {
     const dateCtx = brief.contentDateContext?.trim() ||
       `Use only the most recent verified data (freshness window ${freshness}; active admission cycle ${admissionCycle}). Fees, placement figures, ranking and seat numbers must reflect the latest available year. Do NOT use outdated 2020-2023 figures unless the field is explicitly historical (e.g. founding year). Today is ${todayIso}.`;
 
-    const systemPrompt = `You are a senior MBA / Masters-in-Management (MiM) researcher and SEO writer for the Indian audience. You write like a smart senior mentor talking to a student — clear, friendly, plain English, contractions allowed.
+    const systemPrompt = `You are a senior MBA / Masters-in-Management (MiM) researcher and SEO writer for the Indian audience. You write like a smart senior mentor talking to a student — clear, friendly, plain English, contractions allowed, second-person ("you"). Goal: produce industry-leading, deeply researched, plagiarism-free content that ranks #1 on Google and outperforms Shiksha, Collegedunia and CareerLauncher.
+
+# RESEARCH-FIRST APPROACH (MANDATORY)
+- Perform deep, multi-source mental research BEFORE writing each section. Cross-check facts against NIRF ${currentYear}, official placement reports, AICTE/NAAC listings, school brochures and reputable Indian education media.
+- Never produce shallow, generic, or assumption-based content. Every paragraph must carry concrete data — real recruiter names, real numbers, real dates, real specialisations.
 
 # COMPLETE-DATA MODE (NON-NEGOTIABLE)
 - EVERY field in the output schema MUST be filled with substantive, useful, realistic content for ${currentYear}. Empty strings, "N/A", "Not available", "TBD", "Coming soon", "Contact for details" are STRICTLY FORBIDDEN.
 - Use your full research depth: latest NIRF ${currentYear} ranking, official ${currentYear - 1}-${String(currentYear).slice(-2)} placement reports, ${admissionCycle} admission brochures, and well-documented public information. For top Indian B-schools (IIMs, XLRI, FMS, MDI, SPJIMR, IIFT, NMIMS, SIBM, JBIMS, IIT MBAs, ISB, Great Lakes, TAPMI, IMT, IMI, etc.) you have abundant verified data — USE IT.
 - When the EXACT current-year figure is not in your training data, give a tight, well-reasoned, realistic range based on the most recent 2-3 years (e.g. "INR 28-34 LPA" for IIM-A average, "INR 24.5 Lakhs" for IIM-A 2-year fees). Never write "varies", "depends", or skip the field.
 - For every list field (recruiters, accreditations, exams, courses, specializations) return AT LEAST the schema-required count of REAL, named entries — never placeholders like "Top Tech Company 1".
+
+# COLLEGE-NAME WEAVING (SEO + TOPICAL AUTHORITY)
+- Use the EXACT college name "${brief.name}" naturally throughout the description — aim for 12-20 mentions across the long-form description, distributed across paragraphs, headings, table captions, and FAQ answers. Never spam consecutively, but never let two H2 sections pass without naming the college.
+- At least 4 of the H2/H3 headings MUST contain the college name (e.g. "About ${brief.name}", "Placements at ${brief.name} ${currentYear}", "Why Choose ${brief.name}", "${brief.name} Admission ${admissionCycle}", "${brief.name} Fees & Scholarships", "${brief.name} Campus Life", "${brief.name} FAQs").
+- Every FAQ question and answer MUST mention "${brief.name}" by name.
+- meta_title and h1_tag MUST contain "${brief.name}" verbatim.
 
 # SCOPE LOCK — MBA & MASTERS IN MANAGEMENT ONLY (NON-NEGOTIABLE)
 - Cover ONLY MBA / PGP / PGDM / PGPM / MMS / MMM / EMBA / PGPX / PGCM / PGPBM / Executive MBA / 1-Year MBA / Masters in Management (MiM) programs.
@@ -107,14 +117,15 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
 3. **LATEST DATA (${currentYear})**: All fees, placement figures (avg/median/highest), seat counts and recruiter lists MUST reflect the most recent published cycle (${currentYear - 1}-${currentYear} placements / ${admissionCycle} admissions). State the data year context naturally inside the prose (e.g. "as per the ${currentYear} placement report").
 4. **HUMANIZED LANGUAGE**: Roughly 8th-grade reading level. Contractions, second person ("you"), concrete numbers, real examples. NO phrases like "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving", "in today's fast-paced world".
 5. **NEVER START WITH A QUESTION**. Headings and opening sentences must be DECLARATIVE statements that give a clear fact.
-6. **DESCRIPTION (long-form HTML)**: 700-1000 words covering history (with the CORRECT founding year), USP, campus, academic strength, ranking position, who this college is best for. MUST start with a <p><strong>Quick Summary:</strong> ...</p> block (55-65 words) giving the core overview upfront — including the correct founding year and type. Then 5-7 <h2> sections (e.g. "About ${brief.name}", "Campus & Infrastructure", "Academic Strengths", "Placements ${currentYear - 1}-${currentYear}", "Fees & Scholarships", "Why Choose ${brief.name}"). Use lists, at least TWO <table>s (fees, placements), <strong> for key facts. End with <p><em>Last updated: ${todayIso}</em></p>.
-7. **ADMISSION PROCESS (HTML)**: 300-500 words. Cover eligibility, exams accepted (REAL exams), selection stages (written test / WAT / GD / PI), shortlisting weightage, latest ${admissionCycle} cycle dates. Use <h3> subsections, bullet lists, and at least one <table> for the weightage / timeline. NO question headings.
+6. **DESCRIPTION (long-form HTML, 1500-2200 words — DEEP & COMPREHENSIVE)**: Cover history & legacy, rankings (national + global), accreditations, courses offered, admission process summary, eligibility, entrance exams accepted, cut-off trends, fees structure breakdown, placements (avg/median/highest/recruiters/trends), ROI analysis, campus infrastructure, faculty strength, student life, internships & industry exposure, scholarships, alumni network, comparisons with peer colleges. MUST start with a <p><strong>Quick Summary:</strong> ...</p> block (70-90 words) giving the core overview upfront — including the correct founding year and type. Then 9-13 <h2> sections such as: "About ${brief.name}", "${brief.name} History & Legacy", "${brief.name} Rankings & Accreditations", "Courses Offered at ${brief.name}", "${brief.name} Admission Process ${admissionCycle}", "${brief.name} Fees Structure & ROI", "${brief.name} Placements ${currentYear - 1}-${currentYear}", "Campus Infrastructure at ${brief.name}", "Faculty & Academic Strengths", "Student Life & Clubs", "Scholarships at ${brief.name}", "${brief.name} vs Peer B-Schools", "Why Choose ${brief.name}", "${brief.name} FAQs". Each H2 section MUST be 120-200 words minimum — never one-liners. Use semantic <ul>/<ol> for any 3+ enumeration. Include AT LEAST THREE <table>s (Fees breakdown; Placements summary; NIRF/peer comparison). Use <strong> on 15-25 high-value phrases. End with <p><em>Last updated: ${todayIso}</em></p>.
+7. **ADMISSION PROCESS (HTML, 500-800 words)**: Cover eligibility (academic + work-ex + reservation), exams accepted (REAL exams with cut-off bands), selection stages (written test / WAT / GD / PI), shortlisting weightage, latest ${admissionCycle} cycle dates, application fees, documents required, and tips to crack the process at ${brief.name}. Use <h3> subsections, bullet lists, and at least TWO <table>s (selection-criteria weightage; ${admissionCycle} timeline). Mention "${brief.name}" at least 6 times naturally. NO question headings.
 8. **ON-PAGE SEO MUST-HAVES** (build naturally into description):
-   - Primary keyword in the first 100 words AND in at least 2 <h2> headings
-   - Secondary keywords sprinkled naturally where they fit
-   - 4-6 internal-link-style anchors with relative URLs, e.g. <a href="/colleges">top MBA colleges</a>, <a href="/exams/cat">CAT exam</a>, <a href="/coaching">CAT coaching</a>, <a href="/profile-analyzer">AI Profile Analyzer</a>, <a href="/mba-roi-calculator">MBA ROI Calculator</a>, <a href="/college-shortlister">College Shortlister</a>
-   - Use <strong> on 8-12 high-value phrases (real names, key facts, numbers)
-   - Include a final <h2>Frequently Asked Questions</h2> section with 6-8 Q&A pairs (each Q in <h3>, A in <p>) for FAQ schema
+   - Primary keyword AND college name "${brief.name}" both in the first 100 words AND in at least 4 <h2> headings
+   - Secondary keywords sprinkled naturally — every secondary keyword should appear at least once
+   - Long-tail variants ("${brief.name} fees", "${brief.name} placements ${currentYear}", "${brief.name} cut-off", "${brief.name} admission ${admissionCycle}", "${brief.name} ranking", "${brief.name} courses", "${brief.name} ROI") woven naturally
+   - 6-10 internal-link-style anchors with relative URLs, e.g. <a href="/colleges">top MBA colleges in India</a>, <a href="/exams/cat">CAT exam</a>, <a href="/exams/xat">XAT exam</a>, <a href="/coaching">CAT coaching</a>, <a href="/profile-analyzer">AI Profile Analyzer</a>, <a href="/mba-roi-calculator">MBA ROI Calculator</a>, <a href="/college-shortlister">College Shortlister</a>
+   - Use <strong> on 15-25 high-value phrases (real names, key facts, numbers)
+   - Include a final <h2>${brief.name} Frequently Asked Questions</h2> section with 8-10 Q&A pairs (each Q in <h3> mentioning "${brief.name}", A in <p> 50-90 words mentioning "${brief.name}")
    - Include short citation hints "(source: NIRF ${currentYear})" / "(source: placement report ${currentYear - 1}-${String(currentYear).slice(-2)})" near key stats
 8. **STRUCTURED FIELDS**: Fill every required field in the tool schema with REAL, accurate values for known schools. For arrays (courses, accreditations, exams_accepted, top_recruiters, specializations, keywords) return real, realistic values — never placeholder lists.
 9. **SEO META**: meta_title <=60 chars (declarative, includes primary keyword, no "?"). meta_description 140-160 chars (declarative, includes primary keyword + the year ${currentYear}). h1_tag declarative, no "?".
@@ -133,7 +144,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
           properties: {
             name: { type: "string" },
             slug: { type: "string" },
-            description: { type: "string", description: "Long-form HTML description (600-900 words) starting with Quick Summary block." },
+            description: { type: "string", description: "Long-form HTML description (1500-2200 words) starting with Quick Summary block. 9-13 H2 sections, name-woven, with 3+ tables and 8-10 FAQs." },
             city: { type: "string" },
             state: { type: "string" },
             type: { type: "string", enum: ["IIM", "Private", "Government", "Deemed", "Autonomous", "University"] },
@@ -149,7 +160,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
             placement_median: { type: "string", description: "e.g. 'INR 22 LPA'" },
             campus_size: { type: "string", description: "e.g. '100 acres'" },
             total_students: { type: "integer" },
-            admission_process: { type: "string", description: "HTML, 250-450 words, declarative, no question headings." },
+            admission_process: { type: "string", description: "HTML, 500-800 words, declarative, no question headings, 2+ tables, mentions college name 6+ times." },
             courses: { type: "array", items: { type: "string" }, description: "MBA programs offered, e.g. ['PGP', 'PGPX', 'Executive MBA']" },
             accreditations: { type: "array", items: { type: "string" }, description: "e.g. ['AACSB', 'AMBA', 'EQUIS', 'NBA', 'NAAC A++']" },
             exams_accepted: { type: "array", items: { type: "string" }, description: "e.g. ['CAT', 'XAT', 'GMAT']" },
@@ -184,7 +195,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
         ],
         tools: [tool],
         tool_choice: { type: "function", function: { name: "publish_college_profile" } },
-        max_tokens: 4000,
+        max_tokens: 8000,
       });
 
     if (!aiRes.ok) {
