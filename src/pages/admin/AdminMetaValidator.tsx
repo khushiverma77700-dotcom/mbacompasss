@@ -248,11 +248,12 @@ const runChecksForUrl = async (s: { url: string; expectedCanonical: string; cont
 type Phase = "idle" | "scanning" | "researching" | "executing";
 
 export default function AdminMetaValidator() {
-  const sections = useMemo(() => buildSections(), []);
+  const [sections, setSections] = useState<SectionGroup[]>(() => [STATIC_SECTION, ...buildAnalyzerSections()]);
+  const [loadingSections, setLoadingSections] = useState(true);
   const [results, setResults] = useState<Record<string, RowResult[]>>({});
   const [phase, setPhase] = useState<Phase>("idle");
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    plain: true, exam: true, city: true, combined: true,
+    static: true, plain: true, exam_analyzer: true, city_analyzer: true, combined_analyzer: true,
   });
 
   // Bulk fix dialog
@@ -260,17 +261,40 @@ export default function AdminMetaValidator() {
   const [selectedSections, setSelectedSections] = useState<Record<string, boolean>>({});
   const [proposedFixes, setProposedFixes] = useState<any[] | null>(null);
 
+  // Load every real URL from the DB on mount
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const all = await loadAllSections();
+        if (active) setSections(all);
+      } catch (e) {
+        console.error("loadAllSections failed", e);
+      } finally {
+        if (active) setLoadingSections(false);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
   const totalRows = Object.values(results).reduce((a, b) => a + b.length, 0);
   const okRows = Object.values(results).flat().filter((r) => r.overallOk).length;
   const badRows = totalRows - okRows;
+  const totalSampledUrls = useMemo(() => sections.reduce((a, s) => a + s.samples.length, 0), [sections]);
 
   const runValidation = async () => {
     setPhase("scanning");
     setResults({});
+    // Always re-fetch the latest URL space before validating, so newly-added
+    // colleges / articles are picked up without a page reload.
+    const fresh = await loadAllSections().catch(() => sections);
+    setSections(fresh);
     const out: Record<string, RowResult[]> = {};
-    for (const sec of sections) {
+    for (const sec of fresh) {
       const rows: RowResult[] = [];
-      for (const s of sec.samples) {
+      // Cap per-section to avoid hammering the network on huge tables
+      const capped = sec.samples.slice(0, 100);
+      for (const s of capped) {
         const r = await runChecksForUrl(s);
         r.sectionKey = sec.key;
         rows.push(r);
@@ -279,9 +303,10 @@ export default function AdminMetaValidator() {
     }
     setResults(out);
     setPhase("idle");
-    const bad = Object.values(out).flat().filter((r) => !r.overallOk).length;
-    if (bad === 0) toast.success(`All ${Object.values(out).flat().length} URLs passed every check.`);
-    else toast.warning(`${bad} URL(s) need attention.`);
+    const flat = Object.values(out).flat();
+    const bad = flat.filter((r) => !r.overallOk).length;
+    if (bad === 0) toast.success(`All ${flat.length} URLs passed every check.`);
+    else toast.warning(`${bad} of ${flat.length} URL(s) need attention.`);
   };
 
   const fixSingleRow = async (row: RowResult) => {
