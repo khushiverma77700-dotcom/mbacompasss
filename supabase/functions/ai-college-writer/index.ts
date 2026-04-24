@@ -79,7 +79,14 @@ FRESHNESS & CITATION RULES (MACHINE-READABLE):
 - Use at least one [src:NIRF ${currentYear}], one [src:Placement Report …], and one [src:Admission Brochure …] across the description.
 - The long-form description MUST end with a small italic line: <p><em>Last updated: ${todayIso}</em></p>
 
-Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. Never include <html>, <head>, <body>, <h1>, or markdown fences. ABSOLUTELY NO inline style="" attributes, NO <font> tags, NO class="" / id="" attributes — plain semantic HTML only.`;
+Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. Never include <html>, <head>, <body>, <h1>, or markdown fences. ABSOLUTELY NO inline style="" attributes, NO <font> tags, NO class="" / id="" attributes — plain semantic HTML only.
+
+# CRITICAL OUTPUT HYGIENE
+- NEVER emit the literal characters "\\n", "\n", "/n", or any visible escape sequence inside any string field. Use real <p>, <br>, <li> tags or actual newlines — the frontend renders "\\n" as raw text and breaks the page.
+- Do NOT wrap output in markdown code fences. Return plain JSON via the tool call.
+
+# DEEP-RESEARCH MODE
+- Before writing each section, mentally verify the facts against the most authoritative public sources (NIRF, official placement reports, school brochures, AICTE/NAAC listings). No shallow filler — every paragraph must carry concrete data, named recruiters, real numbers or specific dates.`;
 
     const userPrompt = `Generate a complete, ready-to-publish profile for the following Indian MBA college / B-school. Verify every factual claim against your training knowledge of well-known Indian B-schools before writing.
 
