@@ -386,11 +386,26 @@ export default function AdminMetaValidator() {
       });
       if (error) throw error;
       if (!data?.ok) throw new Error(data?.error || "Execute failed");
-      toast.success(`Applied ${data.applied} meta overrides. Re-run validation to confirm.`);
+
+      const dbCount = data.dbUpdates ?? 0;
+      const ovCount = data.overrides ?? 0;
+      const errCount = (data.errors || []).length;
+
+      if (errCount > 0) {
+        toast.warning(
+          `Applied ${data.applied} fix(es) — ${dbCount} DB update(s), ${ovCount} override(s). ${errCount} failed: ${(data.errors || []).slice(0, 2).join("; ")}`,
+          { duration: 8000 },
+        );
+      } else {
+        toast.success(
+          `✅ Applied ${data.applied} fix(es) — ${dbCount} written to database, ${ovCount} as overrides. Re-running validation…`,
+        );
+      }
       setBulkOpen(false);
       setProposedFixes(null);
       await runValidation();
     } catch (e: any) {
+      console.error("executeFixes failed", e);
       toast.error(e?.message || "Execute failed");
     } finally {
       setPhase("idle");
