@@ -244,7 +244,7 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
         <Card><CardContent className="pt-4 text-center">
           <Zap className="w-5 h-5 mx-auto mb-1 text-primary" />
           <p className="text-2xl font-bold">{stats.totalCalls}</p>
@@ -274,6 +274,16 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
           <AlertTriangle className="w-5 h-5 mx-auto mb-1 text-destructive" />
           <p className="text-2xl font-bold">{stats.errors}</p>
           <p className="text-xs text-muted-foreground">Errors</p>
+        </CardContent></Card>
+        <Card><CardContent className="pt-4 text-center">
+          <Clock className="w-5 h-5 mx-auto mb-1 text-primary" />
+          <p className="text-2xl font-bold">{stats.avgLatency}<span className="text-sm font-normal text-muted-foreground">ms</span></p>
+          <p className="text-xs text-muted-foreground">Avg Latency</p>
+        </CardContent></Card>
+        <Card><CardContent className="pt-4 text-center">
+          <Server className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
+          <p className="text-2xl font-bold">{stats.p95Latency}<span className="text-sm font-normal text-muted-foreground">ms</span></p>
+          <p className="text-xs text-muted-foreground">P95 Latency</p>
         </CardContent></Card>
       </div>
 
