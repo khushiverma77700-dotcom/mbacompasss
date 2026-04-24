@@ -732,6 +732,8 @@ export default function AdminAIUsage() {
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState("7d");
   const [mainTab, setMainTab] = useState("ai");
+  const [cloudRefresh, setCloudRefresh] = useState<(() => Promise<void>) | null>(null);
+  const [cloudLoading, setCloudLoading] = useState(false);
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
@@ -745,6 +747,18 @@ export default function AdminAIUsage() {
   }, [range]);
 
   useEffect(() => { fetchLogs(); }, [fetchLogs]);
+
+  const handleRefresh = useCallback(async () => {
+    if (mainTab === "ai") {
+      await fetchLogs();
+      toast.success("AI usage refreshed");
+    } else if (cloudRefresh) {
+      await cloudRefresh();
+      toast.success("Cloud usage refreshed");
+    }
+  }, [mainTab, fetchLogs, cloudRefresh]);
+
+  const isLoading = mainTab === "ai" ? loading : cloudLoading;
 
   return (
     <div className="space-y-6">
@@ -764,8 +778,8 @@ export default function AdminAIUsage() {
               </SelectContent>
             </Select>
           )}
-          <Button variant="outline" size="sm" onClick={mainTab === "ai" ? fetchLogs : () => setMainTab("cloud")} disabled={loading}>
-            <RefreshCw className={`w-4 h-4 mr-1 ${loading ? "animate-spin" : ""}`} /> Refresh
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
+            <RefreshCw className={`w-4 h-4 mr-1 ${isLoading ? "animate-spin" : ""}`} /> Refresh
           </Button>
         </div>
       </div>
@@ -785,7 +799,10 @@ export default function AdminAIUsage() {
         </TabsContent>
 
         <TabsContent value="cloud" className="mt-4">
-          <CloudUsageTab />
+          <CloudUsageTab
+            registerRefresh={(fn) => setCloudRefresh(() => fn)}
+            registerLoading={setCloudLoading}
+          />
         </TabsContent>
       </Tabs>
     </div>
