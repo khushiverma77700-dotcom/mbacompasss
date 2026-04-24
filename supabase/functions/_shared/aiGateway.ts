@@ -181,15 +181,65 @@ function validateToolSpec(tools: any[]): { ok: true } | { ok: false; error: stri
   return { ok: true };
 }
 
-// ─── Recursively strip JSON-Schema fields Gemini's API rejects ────────────────
+// ─── Recursively normalize JSON-Schema → Gemini-compatible OpenAPI subset ─────
+// Gemini's functionDeclarations only accept a strict OpenAPI 3.0 subset:
+//  - `type` must be a single string (not an array like ["string","null"])
+//  - No `additionalProperties`, `$schema`, `$id`, `$ref`, `definitions`
+//  - No `oneOf` / `anyOf` / `allOf` / `not`
+//  - No `const`, `examples`, `default` on some shapes
+//  - `enum` only valid on string types
+//  - Empty `properties: {}` with `type: object` is rejected — must omit properties
+const STRIP_KEYS = new Set([
+  "additionalProperties", "$schema", "$id", "$ref", "definitions",
+  "patternProperties", "dependencies", "if", "then", "else", "not",
+  "examples", "const", "readOnly", "writeOnly", "contentEncoding",
+  "contentMediaType", "deprecated",
+]);
+
 function sanitizeSchema(schema: any): any {
-  if (!schema || typeof schema !== "object") return schema;
+  if (schema === null || schema === undefined) return schema;
+  if (typeof schema !== "object") return schema;
   if (Array.isArray(schema)) return schema.map(sanitizeSchema);
+
   const cleaned: any = {};
   for (const [k, v] of Object.entries(schema)) {
-    if (k === "additionalProperties" || k === "$schema" || k === "$id") continue;
+    if (STRIP_KEYS.has(k)) continue;
+
+    // Collapse union types like ["string","null"] → "string" (drop null variant)
+    if (k === "type" && Array.isArray(v)) {
+      const nonNull = v.filter((t) => t !== "null");
+      cleaned.type = nonNull[0] ?? "string";
+      cleaned.nullable = v.includes("null") || v.length !== nonNull.length;
+      continue;
+    }
+
+    // Flatten oneOf/anyOf/allOf — pick first variant (Gemini doesn't support them)
+    if (k === "oneOf" || k === "anyOf" || k === "allOf") {
+      if (Array.isArray(v) && v.length > 0) {
+        const merged = sanitizeSchema(v[0]);
+        if (merged && typeof merged === "object") {
+          for (const [mk, mv] of Object.entries(merged)) {
+            if (!(mk in cleaned)) cleaned[mk] = mv;
+          }
+        }
+      }
+      continue;
+    }
+
     cleaned[k] = sanitizeSchema(v);
   }
+
+  // Drop enum if present on non-string types (Gemini limitation)
+  if (cleaned.enum && cleaned.type && cleaned.type !== "string") {
+    delete cleaned.enum;
+  }
+
+  // Drop empty properties on object types
+  if (cleaned.type === "object" && cleaned.properties && typeof cleaned.properties === "object" && Object.keys(cleaned.properties).length === 0) {
+    delete cleaned.properties;
+    delete cleaned.required;
+  }
+
   return cleaned;
 }
 
