@@ -493,8 +493,16 @@ const CollegeDetailPage = () => {
 
             {/* Overview */}
             <div id="overview" ref={el => { sectionRefs.current["overview"] = el; }} className="scroll-mt-32">
-              <Card>
-                <CardHeader><CardTitle className="font-heading">About {college.name}</CardTitle></CardHeader>
+              <Card className="overflow-hidden border-border/60 shadow-md">
+                <div className="h-1 bg-gradient-to-r from-primary via-primary/70 to-transparent" />
+                <CardHeader>
+                  <CardTitle className="font-heading flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                      <BookOpen className="w-5 h-5 text-primary" />
+                    </div>
+                    About {college.name}
+                  </CardTitle>
+                </CardHeader>
                 <CardContent>
                   {getSectionContent("why_join") ? (
                     <div className="text-muted-foreground leading-relaxed ai-content max-w-none" dangerouslySetInnerHTML={{ __html: enhanceAIContent(getSectionContent("why_join")) }} />
@@ -502,11 +510,16 @@ const CollegeDetailPage = () => {
                     <div className="text-muted-foreground leading-relaxed ai-content max-w-none" dangerouslySetInnerHTML={{ __html: enhanceAIContent(college.description || `${college.name} is a premier ${college.type} institute in ${college.city}.`) }} />
                   )}
                   {highlights && (
-                    <div className="mt-6">
-                      <h3 className="font-heading font-semibold text-foreground mb-3">Key Highlights</h3>
-                      <div className="grid sm:grid-cols-2 gap-2">
+                    <div className="mt-6 pt-6 border-t border-dashed border-border">
+                      <h3 className="font-heading font-bold text-foreground mb-4 flex items-center gap-2">
+                        <Star className="w-4 h-4 text-amber-500 fill-amber-500" /> Key Highlights
+                      </h3>
+                      <div className="grid sm:grid-cols-2 gap-2.5">
                         {(Array.isArray(highlights) ? highlights : Object.entries(highlights).map(([k, v]) => `${k}: ${v}`)).map((h: string, i: number) => (
-                          <div key={i} className="flex items-center gap-2 text-sm text-foreground"><CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />{h}</div>
+                          <div key={i} className="flex items-start gap-2.5 text-sm text-foreground p-2.5 rounded-lg bg-gradient-to-br from-primary/5 to-transparent border border-border/40">
+                            <CheckCircle className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                            <span>{h}</span>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -515,22 +528,31 @@ const CollegeDetailPage = () => {
               </Card>
 
               {/* Why Join Ratings */}
-              <Card className="border-primary/30 mt-6">
-                <CardHeader><CardTitle className="font-heading flex items-center gap-2"><Star className="w-5 h-5 text-primary" /> Why Join {college.name}?</CardTitle></CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="text-center">
-                      <div className="text-4xl font-heading font-bold text-primary">{overallRating}</div>
-                      <div className="flex items-center gap-0.5 justify-center mt-1">
-                        {[...Array(5)].map((_, i) => <Star key={i} className={`w-4 h-4 ${i < Math.round(Number(overallRating)) ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`} />)}
-                      </div>
+              <Card className="overflow-hidden border-amber-200/50 dark:border-amber-900/30 shadow-md mt-6 bg-gradient-to-br from-amber-50/30 to-transparent dark:from-amber-950/10">
+                <div className="h-1 bg-gradient-to-r from-amber-400 via-amber-500 to-transparent" />
+                <CardHeader>
+                  <CardTitle className="font-heading flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400/30 to-amber-500/10 flex items-center justify-center">
+                      <Star className="w-5 h-5 text-amber-600 fill-amber-500" />
                     </div>
-                    <div className="flex-1 space-y-2">
+                    Why Join {college.name}?
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-6 mb-6">
+                    <div className="text-center flex-shrink-0 p-4 rounded-2xl bg-gradient-to-br from-amber-500/15 to-amber-500/5 border border-amber-200/40 dark:border-amber-900/30 min-w-[100px]">
+                      <div className="text-4xl font-heading font-extrabold bg-gradient-to-br from-amber-600 to-amber-500 bg-clip-text text-transparent">{overallRating}</div>
+                      <div className="flex items-center gap-0.5 justify-center mt-1">
+                        {[...Array(5)].map((_, i) => <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(Number(overallRating)) ? "fill-amber-500 text-amber-500" : "text-muted-foreground/40"}`} />)}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mt-1">Overall</div>
+                    </div>
+                    <div className="flex-1 space-y-2.5">
                       {whyJoinRatings.map((a: any) => (
-                        <div key={a.label} className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground w-24 flex-shrink-0">{a.label}</span>
+                        <div key={a.label} className="flex items-center gap-3">
+                          <span className="text-xs font-semibold text-foreground w-28 flex-shrink-0">{a.label}</span>
                           <Progress value={Number(a.score) * 20} className="flex-1 h-2" />
-                          <span className="text-xs font-semibold text-foreground w-8">{a.score}</span>
+                          <span className="text-xs font-extrabold text-foreground w-10 text-right">{a.score}</span>
                         </div>
                       ))}
                     </div>
