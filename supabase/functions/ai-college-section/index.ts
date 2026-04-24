@@ -138,25 +138,53 @@ const SECTION_TOOLS: Record<string, any> = {
   cutoff: {
     name: "cutoff_payload",
     fields: {
-      title: { type: "string" },
-      content: { type: "string", description: "HTML 220-350 words explaining cutoff trends across the last 3 admission cycles for the 2025-2026 cycle. Mention the college name 3-5 times." },
+      title: { type: "string", description: "Section title, e.g. 'CAT & XAT Cutoffs at <College Name> (2023-2025 Trends)'." },
+      content: {
+        type: "string",
+        description:
+          "HTML 280-450 words. Mention the college name 4-6 times. Explain (a) which exam scores the college accepts and the official shortlisting weightage (CAT/XAT/GMAT score, 10th, 12th, graduation, work-ex, gender/academic diversity), (b) overall AND sectional cutoff trends across the last 3 admission cycles, (c) why cutoffs moved up or down (applicants, seats, brand pull, new programmes), (d) category-wise relaxation logic, and (e) a clear statement of the EXPECTED 2025-2026 cutoff band. Include at least one short <table> if helpful.",
+      },
       cutoffs: {
         type: "array",
+        minItems: 8,
+        description:
+          "AT LEAST 8 rows — ideally 12-20. Cover EVERY accepted exam (CAT is mandatory for IIMs/most B-schools; add XAT for XLRI/XAT-accepting schools; GMAT/GRE for ISB/IIM PGPX/1-year programmes; CMAT/MAT/NMAT/SNAP/IIFT/TISSNET where applicable) × EVERY category (General, EWS, OBC-NCL, SC, ST, PwD) × at least the last 2-3 admission cycles (2023, 2024, 2025) so frontend can plot the trend. NEVER return an empty array — if exact figures are not publicly confirmed, return realistic researched bands with a 'Indicative' note.",
         items: {
           type: "object",
           properties: {
-            category: { type: "string" },
-            percentile: { type: "string" },
-            exam: { type: "string" },
-            year: { type: "string" },
+            exam: { type: "string", description: "Exam name — CAT, XAT, GMAT, GRE, CMAT, MAT, NMAT, SNAP, IIFT, TISSNET, etc." },
+            category: { type: "string", description: "General | EWS | OBC-NCL | SC | ST | PwD | NC-OBC." },
+            year: { type: "string", description: "Admission cycle year, e.g. '2025', '2024', '2023'." },
+            percentile: { type: "string", description: "Overall cutoff (percentile for CAT/XAT/CMAT/NMAT, score for GMAT/GRE), e.g. '99.5%ile', '95+ %ile', 'GMAT 720+'." },
+            sectional: { type: "string", description: "Sectional cutoff (e.g. 'VARC 85, DILR 80, QA 80') OR 'NA' if not applicable." },
+            notes: { type: "string", description: "Short note: programme covered (PGP / PGPX / PGP-ABM), shortlist vs final-admit cutoff, source year, 'Indicative band' if estimated." },
           },
-          required: ["category", "percentile", "exam", "year"],
+          required: ["exam", "category", "year", "percentile"],
           additionalProperties: false,
         },
       },
+      shortlisting_weightage: {
+        type: "array",
+        minItems: 4,
+        description: "Official admission weightage table (CAT/XAT score, Class 10, Class 12, Graduation, Work-Ex, Gender/Academic Diversity, WAT-PI). 4-8 rows.",
+        items: {
+          type: "object",
+          properties: {
+            criterion: { type: "string", description: "e.g. 'CAT Score', 'Class X', 'Class XII', 'Graduation', 'Work Experience', 'Gender Diversity', 'WAT-PI'." },
+            weightage: { type: "string", description: "Percentage weightage e.g. '40%', '10%', '5 marks max'." },
+          },
+          required: ["criterion", "weightage"],
+          additionalProperties: false,
+        },
+      },
+      trend_summary: {
+        type: "string",
+        description: "1-2 sentence plain-text takeaway of how cutoffs moved YoY and what aspirants should target for the 2025-2026 cycle. Mention the college name once.",
+      },
     },
-    required: ["title", "content", "cutoffs"],
-    instructions: "Cover General/OBC/SC/ST/EWS/PwD across the main exam(s) accepted. Use latest 2025 cycle cutoffs and add the prior 2 years for trend.",
+    required: ["title", "content", "cutoffs", "shortlisting_weightage", "trend_summary"],
+    instructions:
+      "DEEP RESEARCH MODE — never return an empty cutoffs array. Cover EVERY accepted entrance exam × EVERY reservation category × the last 3 admission cycles (2023, 2024, 2025). For top schools verify the exact official cutoffs (IIM-A overall ~99-99.5%ile General, IIM-B ~99+, IIM-C ~99+, IIM-L ~97+, IIM-K ~96+, IIM-I ~95+, XLRI BM ~96+/HRM ~93+ on XAT, FMS ~98+, SPJIMR ~85+ profile-led, MDI ~95+, IIFT ~98+ on IIFT exam, NMIMS ~96+ on NMAT, ISB GMAT ~700-730 median). Always provide sectional cutoffs for CAT/XAT-accepting schools (VARC, DILR, QA). Always populate the shortlisting_weightage table with the OFFICIAL admission policy weightage. If precise data is unavailable, return an 'Indicative band' rather than skipping the row.",
   },
   rankings: {
     name: "rankings_payload",
