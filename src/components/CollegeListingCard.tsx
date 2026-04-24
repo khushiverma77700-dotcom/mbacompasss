@@ -28,9 +28,17 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
     >
       <Link
         to={`/college/${college.slug}`}
-        className="group relative block bg-card rounded-2xl border border-border hover:border-primary/40 hover:shadow-[0_8px_30px_-10px_hsl(var(--primary)/0.25)] transition-all duration-300 overflow-hidden"
+        className="group relative block bg-card rounded-2xl border border-border hover:border-primary/40 hover:shadow-[0_20px_50px_-15px_hsl(var(--primary)/0.3)] hover:-translate-y-1 transition-all duration-500 overflow-hidden"
       >
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/60 to-primary/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+        {/* Top accent bar */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/70 to-primary/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+        {/* Top-3 corner ribbon */}
+        {displayRank && displayRank <= 3 && (
+          <div className="absolute -right-12 top-5 rotate-45 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[10px] font-extrabold uppercase tracking-wider px-12 py-1 shadow-lg z-10">
+            TOP {displayRank}
+          </div>
+        )}
 
         <div className="flex flex-col md:flex-row">
           {/* ===== LEFT: Identity ===== */}
