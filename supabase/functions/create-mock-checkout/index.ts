@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return json({ error: "Unauthorized" }, 401);
 
-    const supabase = createClient(
+    const supabase: any = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
@@ -108,10 +108,14 @@ Deno.serve(async (req) => {
         { onConflict: "user_id,test_id" },
       );
       if (appliedCoupon) {
-        await supabase.rpc("noop").catch(() => {});
+        const { data: c } = await supabase
+          .from("mock_coupons")
+          .select("current_uses")
+          .eq("code", appliedCoupon)
+          .maybeSingle();
         await supabase
           .from("mock_coupons")
-          .update({ current_uses: 1 })
+          .update({ current_uses: ((c?.current_uses as number) || 0) + 1 })
           .eq("code", appliedCoupon);
       }
       return json({ free: true, enrolled: true });
