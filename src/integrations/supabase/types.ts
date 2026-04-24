@@ -52,8 +52,10 @@ export type Database = {
           estimated_cost: number | null
           feature: string
           id: string
+          latency_ms: number | null
           model: string | null
           prompt_tokens: number | null
+          provider: string | null
           status: string | null
           total_tokens: number | null
           user_id: string | null
@@ -65,8 +67,10 @@ export type Database = {
           estimated_cost?: number | null
           feature: string
           id?: string
+          latency_ms?: number | null
           model?: string | null
           prompt_tokens?: number | null
+          provider?: string | null
           status?: string | null
           total_tokens?: number | null
           user_id?: string | null
@@ -78,8 +82,10 @@ export type Database = {
           estimated_cost?: number | null
           feature?: string
           id?: string
+          latency_ms?: number | null
           model?: string | null
           prompt_tokens?: number | null
+          provider?: string | null
           status?: string | null
           total_tokens?: number | null
           user_id?: string | null
