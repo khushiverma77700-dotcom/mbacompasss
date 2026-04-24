@@ -734,23 +734,41 @@ const CollegeDetailPage = () => {
 
             {/* Rankings */}
             <div id="rankings" ref={el => { sectionRefs.current["rankings"] = el; }} className="scroll-mt-32">
-              <Card>
-                <CardHeader><CardTitle className="font-heading flex items-center gap-2"><Medal className="w-5 h-5 text-primary" /> Rankings & Accreditations</CardTitle></CardHeader>
+              <Card className="overflow-hidden border-border/60 shadow-md">
+                <div className="h-1 bg-gradient-to-r from-amber-500 via-amber-400 to-transparent" />
+                <CardHeader>
+                  <CardTitle className="font-heading flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400/30 to-amber-500/10 flex items-center justify-center">
+                      <Medal className="w-5 h-5 text-amber-600" />
+                    </div>
+                    Rankings & Accreditations
+                  </CardTitle>
+                </CardHeader>
                 <CardContent>
-                  <div className="grid sm:grid-cols-2 gap-4 mb-6">
+                  <div className="grid sm:grid-cols-2 gap-3 mb-6">
                     {rankingsList.map((r: any, i: number) => (
-                      <div key={i} className="bg-secondary/50 rounded-lg p-4 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-lg hero-gradient flex items-center justify-center text-primary-foreground font-bold text-sm flex-shrink-0">{r.rank}</div>
-                        <div><div className="font-semibold text-foreground">{r.body}</div><div className="text-xs text-muted-foreground">{r.year} Ranking</div></div>
+                      <div key={i} className="relative bg-gradient-to-br from-amber-50/40 to-transparent dark:from-amber-950/10 rounded-xl p-4 flex items-center gap-4 border border-amber-200/40 dark:border-amber-900/30 hover:shadow-md hover:-translate-y-0.5 transition-all">
+                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-extrabold text-base flex-shrink-0 shadow-lg shadow-amber-500/30">
+                          {r.rank}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-bold text-foreground text-sm">{r.body}</div>
+                          <div className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mt-0.5">{r.year} Ranking</div>
+                        </div>
                       </div>
                     ))}
                   </div>
                   {rankAccreditations.length > 0 && (
-                    <div>
-                      <h3 className="font-heading font-semibold text-foreground mb-3">Accreditations</h3>
-                      <div className="flex flex-wrap gap-3">
+                    <div className="pt-4 border-t border-dashed border-border">
+                      <h3 className="font-heading font-bold text-foreground mb-3 flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-emerald-600" /> Accreditations
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
                         {rankAccreditations.map((a: string) => (
-                          <div key={a} className="flex items-center gap-2 bg-primary/10 rounded-lg px-4 py-2"><Award className="w-4 h-4 text-primary" /><span className="text-sm font-medium text-foreground">{a}</span></div>
+                          <div key={a} className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-500/15 to-emerald-500/5 border border-emerald-200/50 dark:border-emerald-900/30 rounded-lg px-3 py-1.5">
+                            <Award className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="text-xs font-bold text-foreground">{a}</span>
+                          </div>
                         ))}
                       </div>
                     </div>
