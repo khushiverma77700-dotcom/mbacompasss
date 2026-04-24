@@ -190,7 +190,8 @@ Deno.serve(async (req) => {
             headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
             body: JSON.stringify({
               model: STANDARD_MODEL,
-              generationConfig: { maxOutputTokens: 4096 },
+              generationConfig: { maxOutputTokens: 2048 },
+              max_tokens: 2048,
               messages: [
                 {
                   role: "system",
@@ -928,10 +929,12 @@ RULES:
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: STANDARD_MODEL,
+          // COST OPT: FAQ generation is structured tool-calling — flash-lite is enough.
+          model: CHEAP_MODEL,
+          max_tokens: 2000,
           messages: [
             { role: "system", content: "You write FAQs for Indian MBA education pages. Return 6-8 questions that real aspirants search, with concise factual answers (50-120 words each)." },
-            { role: "user", content: `Page: ${getName(page)}\nType: ${contentType}\nCity: ${page.city || ""}\nContent: ${getTextContent(page).slice(0, 3500)}\n\nReturn 6-8 FAQs as Q&A pairs grounded in this page.` },
+            { role: "user", content: `Page: ${getName(page)}\nType: ${contentType}\nCity: ${page.city || ""}\nContent: ${getTextContent(page).slice(0, 2500)}\n\nReturn 6-8 FAQs as Q&A pairs grounded in this page.` },
           ],
           tools: [{
             type: "function",
@@ -952,7 +955,7 @@ RULES:
       });
       if (!aiResp.ok) throw new Error(`AI error ${aiResp.status}`);
       const aiJson = await aiResp.json();
-      await logAIUsage("faq-generate", STANDARD_MODEL, aiJson);
+      await logAIUsage("faq-generate", CHEAP_MODEL, aiJson);
       const { faqs: rawFaqs } = extractToolResult(aiJson);
 
       // Sanitise: strip HTML, trim, drop incomplete pairs, dedupe by question
