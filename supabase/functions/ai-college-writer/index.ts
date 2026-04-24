@@ -144,7 +144,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
           properties: {
             name: { type: "string" },
             slug: { type: "string" },
-            description: { type: "string", description: "Long-form HTML description (1500-2200 words) starting with Quick Summary block. 9-13 H2 sections, name-woven, with 3+ tables and 8-10 FAQs." },
+            description: { type: "string", description: "Long-form HTML description (900-1300 words) starting with Quick Summary block. 6-8 H2 sections, with 2+ tables and 5-6 FAQs." },
             city: { type: "string" },
             state: { type: "string" },
             type: { type: "string", enum: ["IIM", "Private", "Government", "Deemed", "Autonomous", "University"] },
