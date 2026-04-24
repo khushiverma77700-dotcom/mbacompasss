@@ -3306,6 +3306,23 @@ export type Database = {
     }
     Functions: {
       assign_admin_by_email: { Args: { _email: string }; Returns: string }
+      get_mock_leaderboard: {
+        Args: { _limit?: number; _test_id: string }
+        Returns: {
+          accuracy: number
+          attempt_id: string
+          display_name: string
+          is_self: boolean
+          max_score: number
+          percentile: number
+          rank: number
+          submitted_at: string
+          total_attempted: number
+          total_correct: number
+          total_score: number
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
