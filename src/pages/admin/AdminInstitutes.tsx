@@ -12,6 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X, Star, ArrowLeft } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
+import { useAdminFilters } from "@/hooks/useAdminFilters";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import { useMemo } from "react";
 import SortableTableHead from "@/components/admin/SortableTableHead";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
@@ -56,8 +59,34 @@ const AdminInstitutes = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState({ keywords: "", features: "" });
   const { toast } = useToast();
-  const { sortedItems: sortedInstitutes, sortConfig, handleSort } = useTableSort(institutes);
   const { data: specializationOptions = [] } = useSpecializations("coaching");
+
+  const { filters, setFilter, clearAll, activeCount } = useAdminFilters({
+    storageKey: "admin.institutes.filters",
+    defaults: { search: "", mode: "all", featured: "all", category: "all", city: "all" },
+    preserveKeys: ["edit"],
+  });
+
+  const cityOptions = useMemo(() => {
+    const s = new Set<string>();
+    institutes.forEach((i) => i.city && s.add(i.city));
+    return Array.from(s).sort();
+  }, [institutes]);
+
+  const filteredInstitutes = useMemo(() => {
+    const q = filters.search.trim().toLowerCase();
+    return institutes.filter((i: any) => {
+      if (q && !(i.name?.toLowerCase().includes(q) || i.slug?.toLowerCase().includes(q) || i.city?.toLowerCase().includes(q))) return false;
+      if (filters.mode !== "all" && i.mode !== filters.mode) return false;
+      if (filters.featured === "yes" && !i.featured) return false;
+      if (filters.featured === "no" && i.featured) return false;
+      if (filters.category !== "all" && i.category_id !== filters.category) return false;
+      if (filters.city !== "all" && i.city !== filters.city) return false;
+      return true;
+    });
+  }, [institutes, filters]);
+
+  const { sortedItems: sortedInstitutes, sortConfig, handleSort } = useTableSort(filteredInstitutes);
 
   const fetchData = async () => {
     const [i, c] = await Promise.all([
