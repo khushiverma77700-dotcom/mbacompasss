@@ -287,11 +287,90 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
         </CardContent></Card>
       </div>
 
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="pt-4 text-xs text-muted-foreground">
-          Cost is recomputed live using current Lovable AI per-model pricing
-          (input vs output tokens). Older log rows showing different stored
-          values are ignored.
+      {/* Provider Split — Gemini Direct (your key) vs Lovable Gateway (credits) */}
+      <Card className="border-primary/30">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Server className="w-4 h-4" /> Provider Cost Split — Your Key vs Lovable Credits
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {(() => {
+            const gemini = byProvider.find(p => p.key === "gemini-direct");
+            const lovable = byProvider.find(p => p.key === "lovable-gateway");
+            const other = byProvider.filter(p => !["gemini-direct", "lovable-gateway"].includes(p.key));
+            const otherCalls = other.reduce((s, p) => s + p.calls, 0);
+            const otherCost = other.reduce((s, p) => s + p.cost, 0);
+            const otherTokens = other.reduce((s, p) => s + p.tokens, 0);
+            const totalCalls = stats.totalCalls || 1;
+            const totalCost = stats.totalCost || 0.0001;
+
+            const Block = ({
+              label, sub, color, calls, tokens, cost, billing,
+            }: { label: string; sub: string; color: string; calls: number; tokens: number; cost: number; billing: string }) => (
+              <div className="rounded-lg border p-4 space-y-2" style={{ borderColor: color + "40", background: color + "08" }}>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-semibold text-sm" style={{ color }}>{label}</p>
+                    <p className="text-xs text-muted-foreground">{sub}</p>
+                  </div>
+                  <Badge variant="outline" className="text-xs" style={{ borderColor: color, color }}>
+                    {((calls / totalCalls) * 100).toFixed(1)}% of calls
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-3 gap-2 pt-2">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Calls</p>
+                    <p className="text-lg font-bold font-mono">{calls.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Tokens</p>
+                    <p className="text-lg font-bold font-mono">{(tokens / 1000).toFixed(1)}K</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Cost</p>
+                    <p className="text-lg font-bold font-mono">{formatUsd(cost, 4)}</p>
+                  </div>
+                </div>
+                <p className="text-[11px] text-muted-foreground border-t pt-2 mt-2">{billing}</p>
+              </div>
+            );
+
+            return (
+              <div className="grid md:grid-cols-3 gap-4">
+                <Block
+                  label="🟢 Gemini Direct"
+                  sub="Your GEMINI_API_KEY"
+                  color="#4285f4"
+                  calls={gemini?.calls || 0}
+                  tokens={gemini?.tokens || 0}
+                  cost={gemini?.cost || 0}
+                  billing="Billed to your Google AI Studio account (free tier available)"
+                />
+                <Block
+                  label="🟣 Lovable Gateway"
+                  sub="OpenAI / fallback models"
+                  color="#8b5cf6"
+                  calls={lovable?.calls || 0}
+                  tokens={lovable?.tokens || 0}
+                  cost={lovable?.cost || 0}
+                  billing="Deducted from your Lovable workspace credits"
+                />
+                <Block
+                  label="⚪ Other / Legacy"
+                  sub="Pre-tracking logs"
+                  color="#94a3b8"
+                  calls={otherCalls}
+                  tokens={otherTokens}
+                  cost={otherCost}
+                  billing="Older calls before provider tracking was added"
+                />
+              </div>
+            );
+          })()}
+          <p className="text-xs text-muted-foreground mt-4 pt-3 border-t">
+            💡 Cost is recomputed live using per-model pricing. Gemini Direct calls don't deduct from Lovable credits — only Lovable Gateway calls do.
+          </p>
         </CardContent>
       </Card>
 
