@@ -20,7 +20,15 @@ const AdminBanners = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const { toast } = useToast();
-  const { sortedItems: sortedBanners, sortConfig, handleSort } = useTableSort(banners);
+  const { filtered, filters, setFilter, clearAll, activeCount } = useFilteredList(banners, {
+    storageKey: "admin.banners.filters",
+    defaults: { search: "", active: "all" },
+    searchFields: [(b) => b.title, (b) => b.subtitle, (b) => b.cta_text, (b) => b.link_url],
+    customPredicates: {
+      active: (val, b) => (val === "active" ? !!b.active : val === "inactive" ? !b.active : true),
+    },
+  });
+  const { sortedItems: sortedBanners, sortConfig, handleSort } = useTableSort(filtered);
 
   const fetchBanners = async () => {
     const { data } = await supabase.from("banners").select("*").order("sort_order");
