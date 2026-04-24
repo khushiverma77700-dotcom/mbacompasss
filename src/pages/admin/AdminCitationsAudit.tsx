@@ -292,7 +292,7 @@ const AdminCitationsAudit = () => {
                 <TableHead>Type</TableHead>
                 <TableHead>Citations</TableHead>
                 <TableHead>Last updated</TableHead>
-                <TableHead className="text-right">Open</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -332,9 +332,16 @@ const AdminCitationsAudit = () => {
                     {r.updatedAt ? new Date(r.updatedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Link to={r.url} target="_blank" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                      View <ExternalLink className="w-3 h-3" />
-                    </Link>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button asChild size="sm" variant="default" className="h-7 px-2 text-xs">
+                        <Link to={r.editUrl}>
+                          <Pencil className="w-3 h-3 mr-1" /> Edit
+                        </Link>
+                      </Button>
+                      <Link to={r.url} target="_blank" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                        View <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
