@@ -1,35 +1,36 @@
-// AI Gateway — original Lovable AI Gateway path (FAST, warm pool) with automatic
-// fallback to the direct Google Gemini OpenAI-compatible endpoint when the
-// Lovable gateway is unavailable or returns an error.
+// AI Gateway — Google Gemini ONLY.
 //
-// Behaviour matches the original Lovable AI Gateway exactly:
-//   • POST https://ai.gateway.lovable.dev/v1/chat/completions
-//   • Authorization: Bearer ${LOVABLE_API_KEY}
-//   • OpenAI-compatible payload (messages, tools, tool_choice, response_format, stream, …)
-//   • Same model IDs (google/gemini-3-flash-preview, openai/gpt-5, …)
+// All AI traffic goes directly to Google's OpenAI-compatible Gemini endpoint
+// using GEMINI_API_KEY. The interface is kept identical to the previous
+// Lovable-AI flow (same OpenAI-compatible payload: messages, tools,
+// tool_choice, response_format, stream, reasoning_effort, …) so every edge
+// function continues to work unchanged.
 //
-// If LOVABLE_API_KEY is missing OR the gateway returns 5xx / network error,
-// we transparently retry against Gemini using GEMINI_API_KEY so generations
-// never break.
+// Endpoint: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+// Auth:     Authorization: Bearer ${GEMINI_API_KEY}
+//
+// Speed parity with Lovable AI is achieved by:
+//   • Talking to Google directly (no extra hop).
+//   • Persistent fetch + small, capped retry/backoff on 5xx only.
+//   • Streaming pass-through (no buffering of large generations).
+//   • No artificial timeouts on the upstream call.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
-const LOVABLE_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const GEMINI_OPENAI_COMPAT_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+const GEMINI_OPENAI_COMPAT_URL =
+  "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
 
 const PRICING: Record<string, { input: number; output: number }> = {
-  "google/gemini-3.1-pro-preview": { input: 1.25, output: 10.0 },
-  "google/gemini-3-flash-preview": { input: 0.3, output: 2.5 },
-  "google/gemini-2.5-pro": { input: 1.25, output: 10.0 },
-  "google/gemini-2.5-flash": { input: 0.3, output: 2.5 },
-  "google/gemini-2.5-flash-lite": { input: 0.1, output: 0.4 },
-  "openai/gpt-5": { input: 1.25, output: 10.0 },
-  "openai/gpt-5-mini": { input: 0.25, output: 2.0 },
-  "openai/gpt-5-nano": { input: 0.05, output: 0.4 },
+  "gemini-3.1-pro-preview": { input: 1.25, output: 10.0 },
+  "gemini-3-flash-preview": { input: 0.3, output: 2.5 },
+  "gemini-2.5-pro": { input: 1.25, output: 10.0 },
+  "gemini-2.5-flash": { input: 0.3, output: 2.5 },
+  "gemini-2.5-flash-lite": { input: 0.1, output: 0.4 },
 };
 
-// For direct-Gemini fallback we have to strip the "google/" prefix.
-const GEMINI_DIRECT_ALIASES: Record<string, string> = {
+// Map any legacy "google/…" or "openai/…" model IDs the rest of the codebase
+// still passes in to a real Gemini model name.
+const MODEL_ALIASES: Record<string, string> = {
   "google/gemini-3-flash-preview": "gemini-3-flash-preview",
   "google/gemini-3.1-pro-preview": "gemini-3.1-pro-preview",
   "google/gemini-3-pro-image-preview": "gemini-3-pro-image-preview",
@@ -82,13 +83,12 @@ interface LogParams {
 
 export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Promise<Response> {
   const { signal, feature = "unknown", userId = null, maxRetries = 2, skipLog = false } = opts;
-  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
   const geminiKey = Deno.env.get("GEMINI_API_KEY");
   const isStream = body.stream === true;
   const startedAt = Date.now();
 
-  if (!lovableKey && !geminiKey) {
-    const err = "No AI key configured (LOVABLE_API_KEY or GEMINI_API_KEY).";
+  if (!geminiKey) {
+    const err = "GEMINI_API_KEY is not configured.";
     console.error(`[aiGateway][${feature}] ${err}`);
     if (!skipLog) {
       await logUsage({
@@ -120,80 +120,31 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
     }
   }
 
-  // ── PATH 1: Lovable AI Gateway (preferred — original fast path) ─────────
-  if (lovableKey) {
-    try {
-      const payload = buildOpenAICompatPayload(body, body.model);
-      const resp = await withRetry(
-        () => callUpstream(LOVABLE_GATEWAY_URL, lovableKey, payload, signal),
-        { maxRetries, label: `lovable-gateway[${feature}]` },
-      );
-
-      // 2xx — success, return immediately
-      if (resp.ok) {
-        if (!skipLog) logSuccess(resp, isStream, feature, body.model, userId, "lovable-gateway", startedAt);
-        return resp;
-      }
-
-      // Non-retryable client errors (400, 401, 403, 404) — also return as-is
-      // EXCEPT when we have a Gemini fallback available and want to try it
-      if (resp.status === 402 || resp.status === 429) {
-        // Credits exhausted / rate limited — log and return so the UI can show it
-        if (!skipLog) await logErrorFromResp(resp, feature, body.model, userId, "lovable-gateway", startedAt);
-        return resp;
-      }
-
-      // For 5xx or other errors, fall through to Gemini fallback if we have it
-      console.warn(`[aiGateway][${feature}] Lovable gateway returned ${resp.status}; falling back to direct Gemini.`);
-      if (!geminiKey) {
-        if (!skipLog) await logErrorFromResp(resp, feature, body.model, userId, "lovable-gateway", startedAt);
-        return resp;
-      }
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      console.warn(`[aiGateway][${feature}] Lovable gateway threw: ${msg}; trying Gemini fallback.`);
-      if (!geminiKey) {
-        if (!skipLog) {
-          await logUsage({
-            feature, model: body.model, userId,
-            provider: "lovable-gateway", status: "error",
-            errorMessage: msg, latencyMs: Date.now() - startedAt,
-          });
-        }
-        return new Response(JSON.stringify({ error: msg }), {
-          status: 502, headers: { "Content-Type": "application/json" },
-        });
-      }
-    }
-  }
-
-  // ── PATH 2: Direct Gemini OpenAI-compatible endpoint (fallback) ────────
-  const fallbackStarted = Date.now();
   const geminiModel = resolveGeminiModel(body.model);
-  const geminiPayload = buildOpenAICompatPayload(body, geminiModel);
+  const payload = buildOpenAICompatPayload(body, geminiModel);
 
   try {
     const resp = await withRetry(
-      () => callUpstream(GEMINI_OPENAI_COMPAT_URL, geminiKey!, geminiPayload, signal),
-      { maxRetries, label: `gemini-direct[${feature}]` },
+      () => callUpstream(GEMINI_OPENAI_COMPAT_URL, geminiKey, payload, signal),
+      { maxRetries, label: `gemini[${feature}]` },
     );
 
     if (!skipLog) {
       if (resp.ok) {
-        logSuccess(resp, isStream, feature, geminiModel, userId, "gemini-direct", fallbackStarted);
+        logSuccess(resp, isStream, feature, geminiModel, userId, "gemini", startedAt);
       } else {
-        await logErrorFromResp(resp, feature, geminiModel, userId, "gemini-direct", fallbackStarted);
+        await logErrorFromResp(resp, feature, geminiModel, userId, "gemini", startedAt);
       }
     }
     return resp;
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    console.error(`[aiGateway][${feature}] Gemini fallback threw:`, msg);
+    console.error(`[aiGateway][${feature}] Gemini call threw:`, msg);
     if (!skipLog) {
       await logUsage({
         feature, model: geminiModel, userId,
-        provider: "gemini-direct", status: "error",
-        errorMessage: msg, latencyMs: Date.now() - fallbackStarted,
+        provider: "gemini", status: "error",
+        errorMessage: msg, latencyMs: Date.now() - startedAt,
       });
     }
     return new Response(JSON.stringify({ error: msg }), {
@@ -203,9 +154,9 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
 }
 
 function resolveGeminiModel(model?: string): string {
-  const raw = (model || "google/gemini-3-flash-preview").trim();
-  if (GEMINI_DIRECT_ALIASES[raw]) return GEMINI_DIRECT_ALIASES[raw];
-  return raw.replace(/^google\//, "");
+  const raw = (model || "gemini-3-flash-preview").trim();
+  if (MODEL_ALIASES[raw]) return MODEL_ALIASES[raw];
+  return raw.replace(/^google\//, "").replace(/^openai\//, "");
 }
 
 function buildOpenAICompatPayload(body: ChatBody, model: string) {
@@ -295,8 +246,8 @@ async function withRetry(
     }
 
     if (attempt < opts.maxRetries) {
-      const base = 400 * Math.pow(2, attempt);
-      const jitter = Math.random() * 200;
+      const base = 300 * Math.pow(2, attempt);
+      const jitter = Math.random() * 150;
       await new Promise((resolve) => setTimeout(resolve, base + jitter));
     }
   }
