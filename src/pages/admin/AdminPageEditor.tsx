@@ -717,14 +717,30 @@ const PageEditorWorkspace = () => {
               <TabsContent value="schema" className="m-0">
                 <Card>
                   <CardHeader className="py-3">
-                    <CardTitle className="text-sm">JSON-LD Schema (from latest audit)</CardTitle>
-                    <CardDescription className="text-xs">Auto-applied to the live page when you click "Apply" on the SEO Audit tab.</CardDescription>
+                    <CardTitle className="text-sm">JSON-LD Schema {auditResult?.fromSnapshot && <Badge variant="outline" className="ml-2 text-[9px]">From saved snapshot</Badge>}</CardTitle>
+                    <CardDescription className="text-xs">
+                      This is what gets injected into the live page's &lt;head&gt; via the SEO snapshot. Auto-applied when you click "Apply Full SEO" on the SEO Audit tab.
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     {auditResult?.suggestions?.schemaMarkup ? (
-                      <pre className="text-[10px] bg-muted/40 p-3 rounded-md overflow-auto max-h-[60vh]">
-                        {JSON.stringify(auditResult.suggestions.schemaMarkup, null, 2)}
-                      </pre>
+                      <>
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-[11px] text-muted-foreground">
+                            {Array.isArray(auditResult.suggestions.schemaMarkup) ? auditResult.suggestions.schemaMarkup.length : 1} schema block(s)
+                            {Array.isArray(auditResult.suggestions.schemaMarkup) && auditResult.suggestions.schemaMarkup.length > 0 && (
+                              <> — types: {auditResult.suggestions.schemaMarkup.map((b: any) => b?.["@type"]).filter(Boolean).join(", ")}</>
+                            )}
+                          </p>
+                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => {
+                            navigator.clipboard.writeText(JSON.stringify(auditResult.suggestions.schemaMarkup, null, 2));
+                            toast({ title: "Copied", description: "JSON-LD copied to clipboard." });
+                          }}>Copy</Button>
+                        </div>
+                        <pre className="text-[10px] bg-muted/40 p-3 rounded-md overflow-auto max-h-[60vh] border border-border">
+                          {JSON.stringify(auditResult.suggestions.schemaMarkup, null, 2)}
+                        </pre>
+                      </>
                     ) : (
                       <p className="text-xs text-muted-foreground">Run an SEO audit first to generate schema.</p>
                     )}
