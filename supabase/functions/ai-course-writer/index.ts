@@ -120,18 +120,14 @@ Return UP TO ${max} distinct MBA-entrance courses this institute is known to off
     },
   };
 
-  const res = await fetch(GATEWAY_URL, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-      tools: [tool],
-      tool_choice: { type: "function", function: { name: "list_courses" } },
-    }),
+  const res = await callAIGateway({
+    model: MODEL,
+    messages: [
+      { role: "system", content: system },
+      { role: "user", content: user },
+    ],
+    tools: [tool],
+    tool_choice: { type: "function", function: { name: "list_courses" } },
   });
 
   if (!res.ok) {
