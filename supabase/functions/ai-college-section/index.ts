@@ -29,6 +29,7 @@ interface AnchorFacts {
 }
 
 interface SectionBrief {
+  collegeId?: string;          // optional — when provided, programmes auto-sync into programme_courses
   collegeName: string;
   city?: string | null;
   state?: string | null;
