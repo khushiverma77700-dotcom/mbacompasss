@@ -260,15 +260,20 @@ const PageEditorWorkspace = () => {
 
   const applyAudit = async () => {
     if (!selected || !auditResult?.suggestions || !draft) return;
+    if (auditResult.fromSnapshot) {
+      toast({ title: "Re-run audit first", description: "This view shows the last saved snapshot. Click 'Run Audit' to regenerate, then Apply.", variant: "destructive" });
+      return;
+    }
     setSavingAudit(true);
     const s = auditResult.suggestions;
     const table = TABLE_BY_KIND[selected.kind];
 
-    const flatKeywords = [
+    const flatKeywords = Array.from(new Set([
       ...(s.keywords?.primary || []),
       ...(s.keywords?.shortTail || []),
       ...(s.keywords?.longTail || []),
-    ].slice(0, 30);
+      ...(s.keywords?.lsi || []),
+    ])).slice(0, 30);
 
     const patch: Record<string, any> = {
       meta_title: s.meta_title,
@@ -285,16 +290,30 @@ const PageEditorWorkspace = () => {
       return;
     }
 
-    // Save snapshot for runtime SEOHead consumption
+    // Save the COMPLETE snapshot — meta + all keyword buckets + schema + social + technical + internal links + FAQs
     try {
       const snap = buildStoredSeoSnapshot(KIND_TO_SEO_TYPE[selected.kind], { ...draft, ...patch }, s);
-      await saveSeoSnapshot(snap);
+      // Attach FAQs explicitly (used by useResolvedSeo to auto-inject FAQ JSON-LD)
+      const faqs =
+        s.faqs ||
+        (Array.isArray(s.schemaMarkup)
+          ? s.schemaMarkup.find((x: any) => x?.["@type"] === "FAQPage")?.mainEntity?.map((q: any) => ({
+              question: q?.name,
+              answer: q?.acceptedAnswer?.text,
+            }))
+          : null);
+      const enriched = { ...snap, faqs: faqs || [] };
+      await saveSeoSnapshot(enriched as any);
     } catch (e) {
       console.error("snapshot save", e);
+      toast({ title: "Snapshot save failed", description: "Meta saved but JSON-LD/social may not appear. Check console.", variant: "destructive" });
     }
 
     setSavingAudit(false);
-    toast({ title: "Applied", description: "Meta + snapshot updated. Live page reflects new SEO." });
+    toast({
+      title: "Applied to live page",
+      description: `Meta, ${flatKeywords.length} keywords, JSON-LD schema (${Array.isArray(s.schemaMarkup) ? s.schemaMarkup.length : s.schemaMarkup ? 1 : 0} blocks), Open Graph & technical SEO saved.`,
+    });
     setDraft({ ...draft, ...patch });
     setItems((prev) => prev.map((it) => it.id === selected.id ? {
       ...it,
