@@ -12,6 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X, Star, ArrowLeft } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
+import { useAdminFilters } from "@/hooks/useAdminFilters";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import { useMemo } from "react";
 import SortableTableHead from "@/components/admin/SortableTableHead";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
@@ -32,6 +35,7 @@ type Institute = {
   students_count: number | null; success_rate: number | null;
   created_at: string;
   source?: string | null; last_updated_by?: string | null;
+  category_id?: string | null;
 };
 
 const emptyForm = {
@@ -56,12 +60,38 @@ const AdminInstitutes = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [tagInput, setTagInput] = useState({ keywords: "", features: "" });
   const { toast } = useToast();
-  const { sortedItems: sortedInstitutes, sortConfig, handleSort } = useTableSort(institutes);
   const { data: specializationOptions = [] } = useSpecializations("coaching");
+
+  const { filters, setFilter, clearAll, activeCount } = useAdminFilters({
+    storageKey: "admin.institutes.filters",
+    defaults: { search: "", mode: "all", featured: "all", category: "all", city: "all" },
+    preserveKeys: ["edit"],
+  });
+
+  const cityOptions = useMemo(() => {
+    const s = new Set<string>();
+    institutes.forEach((i) => i.city && s.add(i.city));
+    return Array.from(s).sort();
+  }, [institutes]);
+
+  const filteredInstitutes = useMemo(() => {
+    const q = filters.search.trim().toLowerCase();
+    return institutes.filter((i: any) => {
+      if (q && !(i.name?.toLowerCase().includes(q) || i.slug?.toLowerCase().includes(q) || i.city?.toLowerCase().includes(q))) return false;
+      if (filters.mode !== "all" && i.mode !== filters.mode) return false;
+      if (filters.featured === "yes" && !i.featured) return false;
+      if (filters.featured === "no" && i.featured) return false;
+      if (filters.category !== "all" && i.category_id !== filters.category) return false;
+      if (filters.city !== "all" && i.city !== filters.city) return false;
+      return true;
+    });
+  }, [institutes, filters]);
+
+  const { sortedItems: sortedInstitutes, sortConfig, handleSort } = useTableSort(filteredInstitutes);
 
   const fetchData = async () => {
     const [i, c] = await Promise.all([
-      supabase.from("institutes").select("id, name, slug, city, rating, featured, mode, students_count, success_rate, created_at, source, last_updated_by").order("created_at", { ascending: false }),
+      supabase.from("institutes").select("id, name, slug, city, rating, featured, mode, students_count, success_rate, created_at, source, last_updated_by, category_id").order("created_at", { ascending: false }),
       supabase.from("categories").select("id, name").order("name"),
     ]);
     if (i.data) setInstitutes(i.data);
@@ -376,6 +406,23 @@ const AdminInstitutes = () => {
         </div>
       </div>
 
+      <AdminFilterBar
+        searchValue={filters.search}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search by name, slug, or city…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        resultsHint={`${sortedInstitutes.length} of ${institutes.length} institutes`}
+        filters={[
+          { type: "select", key: "mode", label: "Mode", width: "w-32", options: [{ label: "All Modes", value: "all" }, { label: "Online", value: "Online" }, { label: "Offline", value: "Offline" }, { label: "Hybrid", value: "Hybrid" }] },
+          { type: "select", key: "featured", label: "Featured", width: "w-32", options: [{ label: "All", value: "all" }, { label: "Featured only", value: "yes" }, { label: "Not featured", value: "no" }] },
+          { type: "select", key: "category", label: "Category", width: "w-44", options: [{ label: "All Categories", value: "all" }, ...categories.map((c: any) => ({ label: c.name, value: c.id }))], formatChip: (v) => categories.find((c: any) => c.id === v)?.name ?? v },
+          { type: "select", key: "city", label: "City", width: "w-44", options: [{ label: "All Cities", value: "all" }, ...cityOptions.map(c => ({ label: c, value: c }))] },
+        ]}
+      />
+
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -423,8 +470,8 @@ const AdminInstitutes = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {institutes.length === 0 && (
-                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">No institutes yet</TableCell></TableRow>
+              {sortedInstitutes.length === 0 && (
+                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">{institutes.length === 0 ? "No institutes yet" : "No institutes match your filters"}</TableCell></TableRow>
               )}
             </TableBody>
           </Table>

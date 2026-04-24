@@ -12,6 +12,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X, Clock, Star, Users, ArrowLeft, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTableSort } from "@/hooks/useTableSort";
+import { useAdminFilters } from "@/hooks/useAdminFilters";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import { useMemo } from "react";
 import SortableTableHead from "@/components/admin/SortableTableHead";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
@@ -34,10 +37,31 @@ const AdminCourses = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [curriculumInput, setCurriculumInput] = useState("");
   const [highlightInput, setHighlightInput] = useState("");
-  const [search, setSearch] = useState("");
+  
   const { toast } = useToast();
   const navigate = useNavigate();
-  const filtered = search ? courses.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.institutes?.name?.toLowerCase().includes(search.toLowerCase())) : courses;
+
+  const { filters, setFilter, clearAll, activeCount } = useAdminFilters({
+    storageKey: "admin.courses.filters",
+    defaults: { search: "", institute: "all", category: "all", mode: "all", fees: "all" },
+  });
+
+  const filtered = useMemo(() => {
+    const q = filters.search.trim().toLowerCase();
+    return courses.filter((c: any) => {
+      if (q && !(c.name?.toLowerCase().includes(q) || c.institutes?.name?.toLowerCase().includes(q))) return false;
+      if (filters.institute !== "all" && c.institute_id !== filters.institute) return false;
+      if (filters.category !== "all" && c.course_category_id !== filters.category) return false;
+      if (filters.mode !== "all" && (c.mode || "Offline") !== filters.mode) return false;
+      const fee = Number(c.fees) || 0;
+      if (filters.fees === "free" && fee !== 0) return false;
+      if (filters.fees === "0-25k" && (fee <= 0 || fee > 25000)) return false;
+      if (filters.fees === "25k-50k" && (fee <= 25000 || fee > 50000)) return false;
+      if (filters.fees === "50k-1l" && (fee <= 50000 || fee > 100000)) return false;
+      if (filters.fees === "1l+" && fee <= 100000) return false;
+      return true;
+    });
+  }, [courses, filters]);
   const { sortedItems: sortedCourses, sortConfig, handleSort } = useTableSort(filtered);
 
   const fetchData = async () => {
@@ -262,7 +286,26 @@ const AdminCourses = () => {
         </div>
       </div>
 
-      <div className="mb-4"><Input placeholder="Search courses or institutes..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" /></div>
+      <AdminFilterBar
+        searchValue={filters.search}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search courses or institutes…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        resultsHint={`${sortedCourses.length} of ${courses.length} courses`}
+        filters={[
+          { type: "select", key: "institute", label: "Institute", width: "w-52", options: [{ label: "All Institutes", value: "all" }, ...institutes.map(i => ({ label: i.name, value: i.id }))], formatChip: (v) => institutes.find(i => i.id === v)?.name ?? v },
+          { type: "select", key: "category", label: "Category", width: "w-44", options: [{ label: "All Categories", value: "all" }, ...courseCategories.map(cc => ({ label: cc.name, value: cc.id }))], formatChip: (v) => courseCategories.find(cc => cc.id === v)?.name ?? v },
+          { type: "select", key: "mode", label: "Mode", width: "w-32", options: [{ label: "All Modes", value: "all" }, { label: "Online", value: "Online" }, { label: "Offline", value: "Offline" }, { label: "Hybrid", value: "Hybrid" }] },
+          { type: "select", key: "fees", label: "Fees", width: "w-40", options: [
+            { label: "All Fees", value: "all" }, { label: "Free", value: "free" },
+            { label: "Up to ₹25,000", value: "0-25k" }, { label: "₹25K – ₹50K", value: "25k-50k" },
+            { label: "₹50K – ₹1L", value: "50k-1l" }, { label: "Above ₹1L", value: "1l+" },
+          ] },
+        ]}
+      />
 
       <Card>
         <CardContent className="p-0">

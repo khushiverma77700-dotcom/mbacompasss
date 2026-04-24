@@ -13,6 +13,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, Eye, Search, X, ArrowLeft } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
+import { useAdminFilters } from "@/hooks/useAdminFilters";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import { useMemo } from "react";
 import SortableTableHead from "@/components/admin/SortableTableHead";
 import SEOChecklist from "@/components/admin/SEOChecklist";
 import SeoEnhanceFields from "@/components/admin/SeoEnhanceFields";
@@ -44,10 +47,14 @@ const AdminArticles = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const [keywordInput, setKeywordInput] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
+
+  const { filters, setFilter, clearAll, activeCount } = useAdminFilters({
+    storageKey: "admin.articles.filters",
+    defaults: { search: "", status: "all", category: "all", featured: "all" },
+    preserveKeys: ["edit"],
+  });
 
   const fetchComparisons = async () => {
     const { data } = await supabase.from("comparisons").select("id, title").eq("active", true).order("sort_order");
@@ -159,11 +166,17 @@ const AdminArticles = () => {
     fetchArticles(); toast({ title: "Article deleted" });
   };
 
-  const filteredArticles = articles.filter(a => {
-    if (filterStatus !== "all" && (a.status || "draft") !== filterStatus) return false;
-    if (searchQuery && !a.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    return true;
-  });
+  const filteredArticles = useMemo(() => {
+    const q = filters.search.trim().toLowerCase();
+    return articles.filter((a) => {
+      if (filters.status !== "all" && (a.status || "draft") !== filters.status) return false;
+      if (filters.category !== "all" && (a.category || "news") !== filters.category) return false;
+      if (filters.featured === "yes" && !a.featured) return false;
+      if (filters.featured === "no" && a.featured) return false;
+      if (q && !(a.title?.toLowerCase().includes(q) || a.slug?.toLowerCase().includes(q))) return false;
+      return true;
+    });
+  }, [articles, filters]);
 
   const { sortedItems: sortedArticles, sortConfig, handleSort } = useTableSort(filteredArticles);
 
@@ -302,19 +315,21 @@ const AdminArticles = () => {
         <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> New Article</Button>
       </div>
 
-      <div className="flex gap-3 mb-4 flex-wrap">
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search articles..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
-        </div>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            {statusOptions.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
+      <AdminFilterBar
+        searchValue={filters.search}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search articles by title or slug…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        resultsHint={`${sortedArticles.length} of ${articles.length} articles`}
+        filters={[
+          { type: "select", key: "status", label: "Status", width: "w-32", options: [{ label: "All Status", value: "all" }, ...statusOptions.map(s => ({ label: s.label, value: s.value }))] },
+          { type: "select", key: "category", label: "Category", width: "w-44", options: [{ label: "All Categories", value: "all" }, ...categories.map(c => ({ label: c.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()), value: c }))] },
+          { type: "select", key: "featured", label: "Featured", width: "w-32", options: [{ label: "All", value: "all" }, { label: "Featured", value: "yes" }, { label: "Not featured", value: "no" }] },
+        ]}
+      />
 
       <Card>
         <CardContent className="p-0">
