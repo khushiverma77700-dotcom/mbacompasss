@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, X, GripVertical, ArrowLeft, Sparkles, Loader2, CheckCircle2, XCircle, Eye, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, Search, X, ArrowLeft } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import { useAdminFilters } from "@/hooks/useAdminFilters";
 import AdminFilterBar from "@/components/admin/AdminFilterBar";
@@ -47,10 +47,14 @@ const AdminArticles = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const [keywordInput, setKeywordInput] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
+
+  const { filters, setFilter, clearAll, activeCount } = useAdminFilters({
+    storageKey: "admin.articles.filters",
+    defaults: { search: "", status: "all", category: "all", featured: "all" },
+    preserveKeys: ["edit"],
+  });
 
   const fetchComparisons = async () => {
     const { data } = await supabase.from("comparisons").select("id, title").eq("active", true).order("sort_order");
@@ -162,11 +166,17 @@ const AdminArticles = () => {
     fetchArticles(); toast({ title: "Article deleted" });
   };
 
-  const filteredArticles = articles.filter(a => {
-    if (filterStatus !== "all" && (a.status || "draft") !== filterStatus) return false;
-    if (searchQuery && !a.title.toLowerCase().includes(searchQuery.toLowerCase())) return false;
-    return true;
-  });
+  const filteredArticles = useMemo(() => {
+    const q = filters.search.trim().toLowerCase();
+    return articles.filter((a) => {
+      if (filters.status !== "all" && (a.status || "draft") !== filters.status) return false;
+      if (filters.category !== "all" && (a.category || "news") !== filters.category) return false;
+      if (filters.featured === "yes" && !a.featured) return false;
+      if (filters.featured === "no" && a.featured) return false;
+      if (q && !(a.title?.toLowerCase().includes(q) || a.slug?.toLowerCase().includes(q))) return false;
+      return true;
+    });
+  }, [articles, filters]);
 
   const { sortedItems: sortedArticles, sortConfig, handleSort } = useTableSort(filteredArticles);
 
