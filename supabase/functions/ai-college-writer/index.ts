@@ -134,98 +134,6 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
 
 # OUTPUT — return JSON via the tool call below.`;
 
-    const tool = {
-      type: "function",
-      function: {
-        name: "publish_college_profile",
-        description: "Return a fully-written, SEO-optimized college profile matching the brief.",
-        parameters: {
-          type: "object",
-          properties: {
-            name: { type: "string" },
-            slug: { type: "string" },
-            description: { type: "string", description: "Long-form HTML description (900-1300 words) starting with Quick Summary block. 6-8 H2 sections, with 2+ tables and 5-6 FAQs." },
-            city: { type: "string" },
-            state: { type: "string" },
-            type: { type: "string", enum: ["IIM", "Private", "Government", "Deemed", "Autonomous", "University"] },
-            tier: { type: "string", enum: ["Tier 1", "Tier 2", "Tier 3", "Tier 4"] },
-            college_category: { type: "string", enum: ["IIM", "Non-IIM"] },
-            established: { type: ["integer", "null"], description: "Founding year. MUST be historically correct for known institutions (e.g. XLRI=1949, IIM-A=1961). Use null if genuinely unknown — never guess." },
-            ranking: { type: "integer", description: "National ranking estimate (1-200). Use a realistic NIRF-band number." },
-            fees: { type: "string", description: "Display fees, e.g. 'INR 24.5 Lakhs (2-year MBA)'" },
-            fees_lakhs: { type: "number", description: "Numeric total program fee in lakhs, e.g. 24.5" },
-            website: { type: "string" },
-            placement_avg: { type: "string", description: "e.g. 'INR 25 LPA'" },
-            placement_highest: { type: "string", description: "e.g. 'INR 80 LPA'" },
-            placement_median: { type: "string", description: "e.g. 'INR 22 LPA'" },
-            campus_size: { type: "string", description: "e.g. '100 acres'" },
-            total_students: { type: "integer" },
-            admission_process: { type: "string", description: "HTML, 500-800 words, declarative, no question headings, 2+ tables, mentions college name 6+ times." },
-            courses: { type: "array", items: { type: "string" }, description: "MBA programs offered, e.g. ['PGP', 'PGPX', 'Executive MBA']" },
-            accreditations: { type: "array", items: { type: "string" }, description: "e.g. ['AACSB', 'AMBA', 'EQUIS', 'NBA', 'NAAC A++']" },
-            exams_accepted: { type: "array", items: { type: "string" }, description: "e.g. ['CAT', 'XAT', 'GMAT']" },
-            top_recruiters: { type: "array", items: { type: "string" }, description: "8-15 real Indian/global recruiters" },
-            specializations: { type: "array", items: { type: "string" }, description: "MBA specializations offered" },
-            meta_title: { type: "string" },
-            meta_description: { type: "string" },
-            keywords: { type: "array", items: { type: "string" }, description: "8-12 SEO keywords (primary first)" },
-            primary_keyword: { type: "string" },
-            h1_tag: { type: "string" },
-            funnel_stage: { type: "string", enum: ["awareness", "consideration", "decision"], description: "Default to 'consideration' for college pages." },
-          },
-          required: [
-            "name", "slug", "description", "type", "tier", "college_category",
-            "established", "ranking", "fees", "fees_lakhs", "placement_avg",
-            "placement_highest", "placement_median", "campus_size", "total_students",
-            "admission_process", "courses", "accreditations", "exams_accepted",
-            "top_recruiters", "specializations", "meta_title", "meta_description",
-            "keywords", "primary_keyword", "h1_tag", "funnel_stage",
-          ],
-          additionalProperties: false,
-        },
-      },
-    };
-
-    const aiRes = await callAIGateway({
-        // COST OPT: gemini-2.5-flash matches preview tier quality for tool-calling at ~30% lower cost.
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        tools: [tool],
-        tool_choice: { type: "function", function: { name: "publish_college_profile" } },
-        max_tokens: 8000,
-      });
-
-    if (!aiRes.ok) {
-      const txt = await aiRes.text();
-      console.error("AI gateway error:", aiRes.status, txt);
-      if (aiRes.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit reached. Please try again in a minute." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      if (aiRes.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "AI credits exhausted. Add funds in Lovable workspace settings." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      return new Response(
-        JSON.stringify({ error: "AI generation failed", detail: txt.slice(0, 500) }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const aiJson = await aiRes.json();
-    const finishReason = aiJson?.choices?.[0]?.finish_reason;
-    console.log("AI finish_reason:", finishReason);
-    const message = aiJson?.choices?.[0]?.message;
-    const toolCall = message?.tool_calls?.[0];
-    let rawPayload = toolCall?.function?.arguments as string | undefined;
-
     const extractJSON = (raw: string) => {
       let cleaned = String(raw)
         .replace(/^```json\s*/im, "")
@@ -247,61 +155,132 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       return JSON.parse(cleaned);
     };
 
-    if (!rawPayload) {
-      console.warn("Primary structured response missing tool arguments. finish_reason:", finishReason);
+    const callJsonModel = async ({
+      system,
+      user,
+      maxTokens,
+      label,
+    }: {
+      system: string;
+      user: string;
+      maxTokens: number;
+      label: string;
+    }) => {
+      const res = await callAIGateway({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+        response_format: { type: "json_object" },
+        max_tokens: maxTokens,
+      });
 
-      if (finishReason === "malformed_function_call" || finishReason === "tool_calls" || typeof message?.content === "string") {
-        const fallbackRes = await callAIGateway({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            {
-              role: "system",
-              content: `${systemPrompt}\n\nCRITICAL: Return ONLY one raw JSON object. Do not use tool calling. Do not wrap the response in markdown fences.`,
-            },
-            {
-              role: "user",
-              content: `${userPrompt}\n\nReturn exactly one valid JSON object containing the full college profile fields. No prose before or after the JSON.`,
-            },
-          ],
-          response_format: { type: "json_object" },
-          max_tokens: 8000,
-        });
-
-        if (fallbackRes.ok) {
-          const fallbackJson = await fallbackRes.json();
-          const fallbackContent = fallbackJson?.choices?.[0]?.message?.content;
-          if (typeof fallbackContent === "string" && fallbackContent.trim()) {
-            rawPayload = fallbackContent;
-            console.log("Recovered college profile via JSON fallback");
-          } else {
-            console.error("JSON fallback returned empty content");
-          }
-        } else {
-          const fallbackText = await fallbackRes.text();
-          console.error("JSON fallback failed:", fallbackRes.status, fallbackText.slice(0, 500));
-        }
+      if (!res.ok) {
+        const txt = await res.text();
+        console.error(`${label} AI error:`, res.status, txt);
+        if (res.status === 429) throw new Error("RATE_LIMIT");
+        if (res.status === 402) throw new Error("GEMINI_QUOTA");
+        throw new Error(`${label} failed: ${txt.slice(0, 500)}`);
       }
-    }
 
-    if (!rawPayload) {
-      console.error("No tool call. Message preview:", JSON.stringify(message)?.slice(0, 800));
+      const payload = await res.json();
+      const content = payload?.choices?.[0]?.message?.content;
+      if (typeof content !== "string" || !content.trim()) {
+        throw new Error(`${label} returned empty JSON content`);
+      }
+
+      return extractJSON(content);
+    };
+
+    const handleModelError = (error: unknown) => {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message === "RATE_LIMIT") {
+        return new Response(
+          JSON.stringify({ error: "Rate limit reached. Please try again in a minute." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      if (message === "GEMINI_QUOTA") {
+        return new Response(
+          JSON.stringify({ error: "Google Gemini quota or billing limit reached. Please check the configured API key." }),
+          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
       return new Response(
-        JSON.stringify({
-          error: "AI did not return a structured college profile",
-          detail: message?.content?.slice(0, 300) || "no content returned",
-          finish_reason: finishReason,
-        }),
+        JSON.stringify({ error: "AI generation failed", detail: message.slice(0, 500) }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
-    }
+    };
 
     let profile: any;
     try {
-      profile = extractJSON(rawPayload);
-    } catch (e) {
-      console.error("Parse fail. Length:", rawPayload.length, "Tail:", rawPayload.slice(-300));
+      profile = await callJsonModel({
+        label: "college core fields",
+        maxTokens: 3200,
+        system: `${systemPrompt}\n\nReturn ONLY a compact JSON object for the structured college fields. Do NOT include description or admission_process in this response.`,
+        user: `${userPrompt}\n\nReturn exactly one JSON object with ONLY these fields:\n- name\n- slug\n- city\n- state\n- type\n- tier\n- college_category\n- established\n- ranking\n- fees\n- fees_lakhs\n- website\n- placement_avg\n- placement_highest\n- placement_median\n- campus_size\n- total_students\n- courses\n- accreditations\n- exams_accepted\n- top_recruiters\n- specializations\n- meta_title\n- meta_description\n- keywords\n- primary_keyword\n- h1_tag\n- funnel_stage\n\nRules:\n- Return valid JSON only.\n- No markdown fences.\n- Do not include HTML fields in this step.`,
+      });
+    } catch (error) {
+      return handleModelError(error);
+    }
+
+    const contentSeed = {
+      name: profile.name || brief.name,
+      city: brief.city || profile.city || "",
+      state: brief.state || profile.state || "",
+      type: brief.type || profile.type || "",
+      tier: brief.tier || profile.tier || "",
+      college_category: brief.category || profile.college_category || "",
+      established: profile.established,
+      ranking: profile.ranking,
+      fees: profile.fees,
+      fees_lakhs: profile.fees_lakhs,
+      placement_avg: profile.placement_avg,
+      placement_highest: profile.placement_highest,
+      placement_median: profile.placement_median,
+      campus_size: profile.campus_size,
+      total_students: profile.total_students,
+      courses: profile.courses,
+      accreditations: profile.accreditations,
+      exams_accepted: profile.exams_accepted,
+      top_recruiters: profile.top_recruiters,
+      specializations: profile.specializations,
+      website: profile.website,
+      keywords: profile.keywords,
+      primary_keyword: targetKw,
+    };
+
+    const descriptionSystem = `${systemPrompt}\n\nWrite ONLY one JSON object shaped as {"html":"..."}. The html field must contain the full long-form college description only.`;
+    const admissionSystem = `${systemPrompt}\n\nWrite ONLY one JSON object shaped as {"html":"..."}. The html field must contain the admission process section only.`;
+
+    let descriptionPayload: any;
+    let admissionPayload: any;
+    try {
+      [descriptionPayload, admissionPayload] = await Promise.all([
+        callJsonModel({
+          label: "college description",
+          maxTokens: 4200,
+          system: descriptionSystem,
+          user: `Using the structured profile below, write the complete long-form HTML description for ${brief.name}.\n\nSTRUCTURED PROFILE:\n${JSON.stringify(contentSeed, null, 2)}\n\nRequirements:\n- 900-1300 words\n- start with <p><strong>Quick Summary:</strong> ...</p>\n- 6-8 <h2> sections\n- at least 2 <table>s\n- final FAQ section with 5-6 Q&A pairs\n- include citation markers like [src:NIRF ${currentYear}]\n- end with <p><em>Last updated: ${todayIso}</em></p>\n\nReturn valid JSON only as {"html":"..."}.`,
+        }),
+        callJsonModel({
+          label: "college admission process",
+          maxTokens: 2600,
+          system: admissionSystem,
+          user: `Using the structured profile below, write the HTML admission_process field for ${brief.name}.\n\nSTRUCTURED PROFILE:\n${JSON.stringify(contentSeed, null, 2)}\n\nRequirements:\n- 450-700 words\n- cover eligibility, exams accepted, selection steps, dates, fees, documents, tips\n- use <h3> subsections, bullet lists, and at least 2 <table>s\n- mention ${brief.name} at least 6 times naturally\n- end with a short freshness line for ${admissionCycle}\n\nReturn valid JSON only as {"html":"..."}.`,
+        }),
+      ]);
+    } catch (error) {
+      return handleModelError(error);
+    }
+
+    profile.description = typeof descriptionPayload?.html === "string" ? descriptionPayload.html.trim() : "";
+    profile.admission_process = typeof admissionPayload?.html === "string" ? admissionPayload.html.trim() : "";
+
+    if (!profile.description || !profile.admission_process) {
       return new Response(
-        JSON.stringify({ error: "AI output was truncated or malformed JSON. Try again.", detail: String(e).slice(0, 200) }),
+        JSON.stringify({ error: "AI returned incomplete college content", detail: "Missing description or admission_process HTML" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
