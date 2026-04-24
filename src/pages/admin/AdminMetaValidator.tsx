@@ -190,14 +190,31 @@ const runChecksForUrl = async (s: { url: string; expectedCanonical: string; cont
   const ogImage = `${SITE_URL}/og-image.png`;
   const jsonLdCount = 3;
 
-  // Probe live URL
+  // Probe live URL.
+  // Browser CORS blocks reading cross-origin responses, so we use `no-cors`
+  // which returns an opaque response (status === 0) when the URL is reachable.
+  // A thrown error genuinely means the host is unreachable / DNS failed.
   let httpOk = true;
-  let httpMsg = "HTTP 200";
+  let httpMsg = "Reachable";
   try {
-    const res = await fetch(s.url, { method: "GET", redirect: "follow" });
-    if (res.status >= 400) { httpOk = false; httpMsg = `HTTP ${res.status}`; }
+    const res = await fetch(s.url, {
+      method: "GET",
+      redirect: "follow",
+      mode: "no-cors",
+      cache: "no-store",
+    });
+    // Opaque responses have status 0 — treat as reachable.
+    if (res.type === "opaque") {
+      httpMsg = "Reachable (opaque)";
+    } else if (res.status >= 400) {
+      httpOk = false;
+      httpMsg = `HTTP ${res.status}`;
+    } else {
+      httpMsg = `HTTP ${res.status || 200}`;
+    }
   } catch {
-    httpOk = false; httpMsg = "Network error";
+    httpOk = false;
+    httpMsg = "Unreachable";
   }
 
   const checks: CheckResult[] = [
