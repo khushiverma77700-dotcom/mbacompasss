@@ -230,6 +230,18 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       );
     }
 
+    // Strip stray "\n" / "\\n" / "/n" escape artifacts the model sometimes leaks as visible text.
+    const stripEscapeArtifacts = (s: string): string =>
+      String(s)
+        .replace(/\\+n/gi, " ")
+        .replace(/(^|[\s>])\/n(?=[\s<]|$)/gi, "$1 ")
+        .replace(/<p>\s*(?:\\n|\/n|\s)*\s*<\/p>/gi, "")
+        .replace(/<li>\s*(?:\\n|\/n|\s)*\s*<\/li>/gi, "")
+        .replace(/[ \t]{2,}/g, " ");
+    for (const k of ["description", "admission_process"]) {
+      if (typeof profile[k] === "string") profile[k] = stripEscapeArtifacts(profile[k]);
+    }
+
     // Sanitise slug
     const slug = String(profile.slug || brief.slug || brief.name)
       .toLowerCase()
