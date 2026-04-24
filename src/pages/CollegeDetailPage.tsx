@@ -544,20 +544,22 @@ const CollegeDetailPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center gap-6 mb-6">
-                    <div className="text-center flex-shrink-0 p-4 rounded-2xl bg-gradient-to-br from-amber-500/15 to-amber-500/5 border border-amber-200/40 dark:border-amber-900/30 min-w-[100px]">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-6">
+                    <div className="text-center flex-shrink-0 p-4 rounded-2xl bg-gradient-to-br from-amber-500/15 to-amber-500/5 border border-amber-200/40 dark:border-amber-900/30 self-center sm:self-auto min-w-[120px]">
                       <div className="text-4xl font-heading font-extrabold bg-gradient-to-br from-amber-600 to-amber-500 bg-clip-text text-transparent">{overallRating}</div>
                       <div className="flex items-center gap-0.5 justify-center mt-1">
                         {[...Array(5)].map((_, i) => <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(Number(overallRating)) ? "fill-amber-500 text-amber-500" : "text-muted-foreground/40"}`} />)}
                       </div>
                       <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mt-1">Overall</div>
                     </div>
-                    <div className="flex-1 space-y-2.5">
+                    <div className="flex-1 w-full space-y-2.5 min-w-0">
                       {whyJoinRatings.map((a: any) => (
-                        <div key={a.label} className="flex items-center gap-3">
-                          <span className="text-xs font-semibold text-foreground w-28 flex-shrink-0">{a.label}</span>
-                          <Progress value={Number(a.score) * 20} className="flex-1 h-2" />
-                          <span className="text-xs font-extrabold text-foreground w-10 text-right">{a.score}</span>
+                        <div key={a.label}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-semibold text-foreground truncate pr-2">{a.label}</span>
+                            <span className="text-xs font-extrabold text-foreground flex-shrink-0">{a.score}/5</span>
+                          </div>
+                          <Progress value={Number(a.score) * 20} className="h-2" />
                         </div>
                       ))}
                     </div>
