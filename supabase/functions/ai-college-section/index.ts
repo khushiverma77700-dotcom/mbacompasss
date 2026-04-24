@@ -779,6 +779,81 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
 
     // Map structured payload back into the form shape used by AdminCollegeSections
     const { title, content, meta_title, meta_description, canonical_slug, ...dataRest } = payload;
+
+    // ── Auto-sync verified programme portfolio into programme_courses table ──
+    // Only fires for the courses_fees section AND when the caller passed brief.collegeId.
+    let portfolio_synced = 0;
+    if (brief.sectionType === "courses_fees" && brief.collegeId && Array.isArray(payload.courses) && payload.courses.length) {
+      try {
+        const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+        const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const slugify = (s: string) =>
+          String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80) || "programme";
+        const seen = new Set<string>();
+        const rows = (payload.courses as any[]).map((c, i) => {
+          let slug = slugify(c.short_name || c.name || `programme-${i}`);
+          let suffix = 1;
+          while (seen.has(slug)) slug = `${slugify(c.short_name || c.name || "p")}-${++suffix}`;
+          seen.add(slug);
+          return {
+            college_id: brief.collegeId,
+            slug,
+            name: String(c.name || "").slice(0, 200),
+            short_name: c.short_name ? String(c.short_name).slice(0, 60) : null,
+            programme_type: c.programme_type ? String(c.programme_type).slice(0, 60) : "MBA",
+            duration: c.duration ? String(c.duration).slice(0, 100) : null,
+            duration_months: typeof c.duration_months === "number" ? Math.round(c.duration_months) : null,
+            mode: c.mode ? String(c.mode).slice(0, 40) : "Full-time",
+            fees_total_lakhs: typeof c.fees_total_lakhs === "number" ? c.fees_total_lakhs : null,
+            fees_breakdown: c.fees_breakdown ? String(c.fees_breakdown).slice(0, 500) : null,
+            fees_year: c.fees_year ? String(c.fees_year).slice(0, 20) : `${currentYear}-${currentYear + 1}`,
+            min_graduation_percent: typeof c.min_graduation_percent === "number" ? c.min_graduation_percent : 50,
+            accepts_cat: !!c.accepts_cat,
+            accepts_xat: !!c.accepts_xat,
+            accepts_gmat: !!c.accepts_gmat,
+            accepts_gre: !!c.accepts_gre,
+            accepts_cmat: !!c.accepts_cmat,
+            accepts_nmat: !!c.accepts_nmat,
+            accepts_snap: !!c.accepts_snap,
+            accepts_iift: !!c.accepts_iift,
+            cat_percentile_target: c.cat_percentile_target ? String(c.cat_percentile_target).slice(0, 30) : null,
+            xat_percentile_target: c.xat_percentile_target ? String(c.xat_percentile_target).slice(0, 30) : null,
+            gmat_score_target: c.gmat_score_target ? String(c.gmat_score_target).slice(0, 30) : null,
+            min_work_ex_months: typeof c.min_work_ex_months === "number" ? Math.max(0, c.min_work_ex_months) : 0,
+            max_work_ex_months: typeof c.max_work_ex_months === "number" && c.max_work_ex_months > 0 ? c.max_work_ex_months : null,
+            min_age: typeof c.min_age === "number" && c.min_age > 0 ? c.min_age : null,
+            max_age: typeof c.max_age === "number" && c.max_age > 0 ? c.max_age : null,
+            specializations: Array.isArray(c.specializations) ? c.specializations.map((s: any) => String(s).slice(0, 80)) : [],
+            highlights: Array.isArray(c.highlights) ? c.highlights.map((s: any) => String(s).slice(0, 200)) : null,
+            intake_seats: typeof c.intake_seats === "number" ? c.intake_seats : null,
+            source_url: c.source_url ? String(c.source_url).slice(0, 500) : null,
+            source_brochure_url: c.source_brochure_url ? String(c.source_brochure_url).slice(0, 500) : null,
+            evidence_snippet: c.evidence_snippet ? String(c.evidence_snippet).slice(0, 500) : null,
+            source_verified_at: new Date().toISOString(),
+            sort_order: i,
+            active: true,
+          };
+        });
+        const upsertRes = await fetch(`${SUPABASE_URL}/rest/v1/programme_courses?on_conflict=college_id,slug`, {
+          method: "POST",
+          headers: {
+            apikey: SERVICE_ROLE,
+            Authorization: `Bearer ${SERVICE_ROLE}`,
+            "Content-Type": "application/json",
+            Prefer: "resolution=merge-duplicates,return=minimal",
+          },
+          body: JSON.stringify(rows),
+        });
+        if (upsertRes.ok) {
+          portfolio_synced = rows.length;
+        } else {
+          console.error("programme_courses upsert failed:", upsertRes.status, await upsertRes.text());
+        }
+      } catch (syncErr) {
+        console.error("programme_courses sync error:", syncErr);
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -795,6 +870,7 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
           freshness_window: freshness,
         },
         faq_schema,
+        portfolio_synced,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
