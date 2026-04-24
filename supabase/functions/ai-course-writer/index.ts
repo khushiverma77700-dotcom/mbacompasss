@@ -8,6 +8,7 @@
 //
 // Public endpoint — verify_jwt = false (project default). Calls Lovable AI Gateway via
 // tool-calling for strict structured output.
+import { callAIGateway } from "../_shared/aiGateway.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,7 +16,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+
 // COST OPT (2026-04): downgraded from gemini-2.5-pro → gemini-2.5-flash.
 // Course discovery + content generation is structured tool-calling work; flash
 // produces equivalent results at ~1/4 the cost. Pro is reserved for true deep
