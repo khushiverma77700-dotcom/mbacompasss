@@ -298,66 +298,145 @@ const CollegeDetailPage = () => {
       <SEOHead {...resolvedSeo} />
       <LoginRequiredDialog open={showLoginDialog} onOpenChange={setShowLoginDialog} message="Sign in to access detailed college information." />
 
-      {/* Hero Banner */}
-      <div className="hero-gradient py-10 md:py-14 relative overflow-hidden">
-        {college.banner_url && <img src={college.banner_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" />}
-        <div className="container mx-auto px-4 relative z-10">
-          <Link to="/colleges" className="inline-flex items-center gap-1 text-primary-foreground/70 hover:text-primary-foreground mb-4 text-sm"><ArrowLeft className="w-4 h-4" /> Back to Colleges</Link>
+      {/* ===== Premium Hero Banner ===== */}
+      <div className="relative overflow-hidden" style={{ background: 'hsl(207 90% 54%)' }}>
+        {/* Layered background */}
+        <div className="absolute inset-0 pointer-events-none">
+          {college.banner_url && (
+            <img src={college.banner_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40 scale-105" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/85 via-primary/70 to-primary/90" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(0_0%_100%/0.18),transparent_55%)]" />
+          <div className="absolute -top-20 -left-20 w-[480px] h-[480px] bg-white/8 rounded-full blur-3xl" />
+          <div className="absolute -bottom-32 right-0 w-[420px] h-[420px] bg-white/5 rounded-full blur-3xl" />
+          {/* Subtle dot grid */}
+          <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: 'radial-gradient(hsl(0 0% 100%) 1px, transparent 1px)', backgroundSize: '22px 22px' }} />
+        </div>
+
+        <div className="container mx-auto px-4 relative z-10 pt-6 pb-12 md:pt-8 md:pb-16">
+          {/* Breadcrumb / Back row */}
+          <div className="flex items-center justify-between mb-6">
+            <Link to="/colleges" className="inline-flex items-center gap-1.5 text-primary-foreground/85 hover:text-primary-foreground text-sm font-medium transition-colors group">
+              <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" /> Back to Colleges
+            </Link>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => { navigator.clipboard.writeText(window.location.href); toast({ title: "Link copied!" }); }}
+                className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-primary-foreground bg-white/10 hover:bg-white/15 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/15 transition-colors"
+              >
+                <Share2 className="w-3.5 h-3.5" /> Share
+              </button>
+              <Badge className="bg-amber-400/95 text-amber-950 border-none font-bold text-[10px] uppercase tracking-wider px-2.5 py-1 shadow-md">
+                ✦ Verified Profile
+              </Badge>
+            </div>
+          </div>
+
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <div className="flex items-start gap-4 mb-4">
-              {college.logo_url ? (
-                <img src={college.logo_url} alt="" className="w-16 h-16 rounded-xl object-contain bg-white p-1 flex-shrink-0" />
-              ) : (
-                <div className="w-16 h-16 rounded-xl bg-primary-foreground/20 flex items-center justify-center text-primary-foreground font-bold text-2xl flex-shrink-0">
-                  {college.ranking ? `#${college.ranking}` : college.name.charAt(0)}
+            {/* Identity Row */}
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-5 mb-7">
+              <div className="relative flex-shrink-0">
+                <div className="absolute -inset-1.5 bg-gradient-to-br from-amber-300 via-white/60 to-amber-200 rounded-3xl blur-md opacity-70" />
+                {college.logo_url ? (
+                  <img src={college.logo_url} alt={college.name} className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl object-contain bg-white p-2 shadow-2xl ring-2 ring-white/50" />
+                ) : (
+                  <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-white shadow-2xl ring-2 ring-white/50 flex items-center justify-center text-primary font-extrabold text-3xl">
+                    {college.ranking ? `#${college.ranking}` : college.name.charAt(0)}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2 mb-2">
+                  {college.ranking && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-amber-950 bg-gradient-to-r from-amber-300 to-amber-400 px-2.5 py-1 rounded-md uppercase tracking-wider shadow-md">
+                      <Award className="w-3 h-3" /> NIRF Rank #{college.ranking}
+                    </span>
+                  )}
+                  {college.tier && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary-foreground bg-white/15 backdrop-blur-sm border border-white/25 px-2.5 py-1 rounded-md uppercase tracking-wider">
+                      {college.tier}
+                    </span>
+                  )}
+                  {college.type && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-primary-foreground bg-white/15 backdrop-blur-sm border border-white/25 px-2.5 py-1 rounded-md uppercase tracking-wider">
+                      <Building className="w-3 h-3" /> {college.type}
+                    </span>
+                  )}
+                </div>
+                <h1 className="font-heading text-3xl md:text-5xl font-extrabold text-primary-foreground leading-tight tracking-tight mb-2 [text-shadow:_0_2px_8px_rgb(0_0_0_/_0.2)]">
+                  {college.name}
+                </h1>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-primary-foreground/90 text-sm">
+                  <span className="inline-flex items-center gap-1.5"><MapPin className="w-4 h-4" /> {college.city}{college.state ? `, ${college.state}` : ""}</span>
+                  {college.established && <span className="inline-flex items-center gap-1.5"><Calendar className="w-4 h-4" /> Est. {college.established}</span>}
+                  <span className="inline-flex items-center gap-1.5">
+                    <Star className="w-4 h-4 fill-amber-300 text-amber-300" />
+                    <span className="font-bold text-primary-foreground">{overallRating}</span>
+                    <span className="text-primary-foreground/70">/5 rating</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Premium Stats Strip */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+              {[
+                { label: "NIRF Ranking", value: college.ranking ? `#${college.ranking}` : fallbackText(null, { kind: "ranking", tier: college.tier }), source: "NIRF", icon: Award, year: new Date().getFullYear().toString() },
+                { label: "Total Fees", value: fallbackText(college.fees, { kind: "fees_text", tier: college.tier }), source: "Brochure", icon: Banknote, year: new Date().getFullYear().toString() },
+                { label: "Avg Package", value: fallbackText(placementData.avg_package || college.placement_avg, { kind: "placement_avg", tier: college.tier }), source: "Placement Report", icon: TrendingUp, year: `${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}` },
+                { label: "Highest Package", value: fallbackText(placementData.highest_package || college.placement_highest, { kind: "placement_highest", tier: college.tier }), source: "Placement Report", icon: Medal, year: `${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}` },
+              ].map(s => {
+                const Icon = s.icon;
+                return (
+                  <div key={s.label} className="group relative bg-white/10 backdrop-blur-md rounded-xl px-4 py-3 border border-white/15 hover:bg-white/15 hover:border-white/25 transition-all">
+                    <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <Icon className="w-3.5 h-3.5 text-primary-foreground/70" />
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/70">{s.label}</span>
+                      <CitationLink source={s.source} year={s.year} className="!bg-white/10 !border-white/20 !text-primary-foreground/80 ml-auto" />
+                    </div>
+                    <div className="font-heading font-extrabold text-primary-foreground text-base md:text-lg leading-tight">{s.value}</div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Footer row: Accreditations + Last Updated */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              {rankAccreditations.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {rankAccreditations.slice(0, 6).map((a: string) => (
+                    <span key={a} className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-400/95 text-emerald-950 shadow-sm">
+                      ✓ {a}
+                    </span>
+                  ))}
                 </div>
               )}
-              <div>
-                <h1 className="font-heading text-2xl md:text-4xl font-bold text-primary-foreground mb-1">{college.name}</h1>
-                <div className="flex flex-wrap items-center gap-3 text-primary-foreground/80 text-sm">
-                  <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {college.city}, {college.state}</span>
-                  <Badge className="bg-primary-foreground/15 text-primary-foreground border-none text-xs">{college.type}</Badge>
-                  {college.established && <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> Est. {college.established}</span>}
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-wrap gap-3 mt-4">
-              {[
-                { label: "NIRF Ranking", value: college.ranking ? `#${college.ranking}` : fallbackText(null, { kind: "ranking", tier: college.tier }), source: "NIRF", year: new Date().getFullYear().toString() },
-                { label: "Fees", value: fallbackText(college.fees, { kind: "fees_text", tier: college.tier }), source: "Brochure", year: new Date().getFullYear().toString() },
-                { label: "Avg Package", value: fallbackText(placementData.avg_package || college.placement_avg, { kind: "placement_avg", tier: college.tier }), source: "Placement Report", year: `${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}` },
-                { label: "Highest Package", value: fallbackText(placementData.highest_package || college.placement_highest, { kind: "placement_highest", tier: college.tier }), source: "Placement Report", year: `${new Date().getFullYear() - 1}-${String(new Date().getFullYear()).slice(-2)}` },
-              ].map(s => (
-                <div key={s.label} className="bg-primary-foreground/10 backdrop-blur-sm rounded-lg px-4 py-2">
-                  <div className="text-xs text-primary-foreground/70 flex items-center gap-1">
-                    {s.label}
-                    <CitationLink source={s.source} year={s.year} className="!bg-primary-foreground/15 !border-primary-foreground/25 !text-primary-foreground/90" />
-                  </div>
-                  <div className="font-heading font-bold text-primary-foreground text-sm">{s.value}</div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3">
               <LastUpdatedBadge
                 date={(college as any).last_seo_refresh || (college as any).updated_at}
-                className="!bg-primary-foreground/10 !border-primary-foreground/20 !text-primary-foreground/80"
+                className="!bg-white/10 !border-white/20 !text-primary-foreground/85 ml-auto"
               />
             </div>
-            {rankAccreditations.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-4">
-                {rankAccreditations.map((a: string) => <Badge key={a} className="bg-primary-foreground/20 text-primary-foreground border-none text-xs">{a}</Badge>)}
-              </div>
-            )}
           </motion.div>
         </div>
+
+        {/* Subtle bottom curve */}
+        <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-b from-transparent to-background/60" />
       </div>
 
-      {/* Sticky Tab Nav */}
-      <div className="sticky top-16 z-40 bg-card/95 backdrop-blur-md border-b border-border">
+      {/* Sticky Tab Nav — Premium pill style */}
+      <div className="sticky top-16 z-40 bg-card/95 backdrop-blur-xl border-b border-border shadow-sm">
         <div className="container mx-auto px-4">
-          <div className="flex overflow-x-auto gap-1 py-2 scrollbar-hide">
+          <div className="flex overflow-x-auto gap-1.5 py-2.5 scrollbar-hide">
             {tabItems.map(t => (
-              <button key={t.value} onClick={() => scrollToSection(t.value)} className="whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-muted">{t.label}</button>
+              <button
+                key={t.value}
+                onClick={() => scrollToSection(t.value)}
+                className="group relative whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all text-muted-foreground hover:text-primary hover:bg-primary/8 border border-transparent hover:border-primary/15"
+              >
+                {t.label}
+              </button>
             ))}
           </div>
         </div>

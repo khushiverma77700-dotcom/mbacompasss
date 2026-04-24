@@ -28,9 +28,17 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
     >
       <Link
         to={`/college/${college.slug}`}
-        className="group relative block bg-card rounded-2xl border border-border hover:border-primary/40 hover:shadow-[0_8px_30px_-10px_hsl(var(--primary)/0.25)] transition-all duration-300 overflow-hidden"
+        className="group relative block bg-card rounded-2xl border border-border hover:border-primary/40 hover:shadow-[0_20px_50px_-15px_hsl(var(--primary)/0.3)] hover:-translate-y-1 transition-all duration-500 overflow-hidden"
       >
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/60 to-primary/30 opacity-0 group-hover:opacity-100 transition-opacity" />
+        {/* Top accent bar */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-primary/70 to-primary/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+        {/* Top-3 corner ribbon */}
+        {displayRank && displayRank <= 3 && (
+          <div className="absolute -right-12 top-5 rotate-45 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[10px] font-extrabold uppercase tracking-wider px-12 py-1 shadow-lg z-10">
+            TOP {displayRank}
+          </div>
+        )}
 
         <div className="flex flex-col md:flex-row">
           {/* ===== LEFT: Identity ===== */}
@@ -201,15 +209,15 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
           </div>
 
           {/* ===== RIGHT: CTA ===== */}
-          <div className="flex md:flex-col items-center justify-between md:justify-center gap-3 p-5 md:w-48 flex-shrink-0 md:border-l border-t md:border-t-0 border-border bg-muted/20">
+          <div className="flex md:flex-col items-center justify-between md:justify-center gap-3 p-5 md:w-48 flex-shrink-0 md:border-l border-t md:border-t-0 border-border bg-gradient-to-br from-primary/5 via-muted/20 to-transparent">
             <div className="text-center">
               {college.fees_lakhs ? (
                 <>
                   <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold block">Total Fees</span>
-                  <span className="font-heading font-extrabold text-foreground text-xl block leading-none mt-1">
+                  <span className="font-heading font-extrabold bg-gradient-to-br from-primary to-primary/70 bg-clip-text text-transparent text-2xl block leading-none mt-1">
                     ₹{college.fees_lakhs}L
                   </span>
-                  <span className="text-[10px] text-muted-foreground block mt-1">Program</span>
+                  <span className="text-[10px] text-muted-foreground block mt-1">Full Program</span>
                 </>
               ) : (
                 <>
@@ -220,11 +228,11 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
             </div>
 
             <div className="flex flex-col items-stretch gap-2 w-full max-w-[160px]">
-              <div className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-bold text-xs group-hover:bg-primary/90 transition-all shadow-sm">
+              <div className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-gradient-to-r from-primary to-primary/85 text-primary-foreground font-bold text-xs group-hover:shadow-lg group-hover:shadow-primary/30 transition-all">
                 View Details <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
               </div>
-              <span className="text-[10px] text-muted-foreground flex items-center justify-center gap-1">
-                <BadgeCheck className="w-2.5 h-2.5" /> Free Brochure
+              <span className="text-[10px] text-muted-foreground flex items-center justify-center gap-1 font-medium">
+                <BadgeCheck className="w-2.5 h-2.5 text-primary" /> Free Brochure
               </span>
             </div>
           </div>
