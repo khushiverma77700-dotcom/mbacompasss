@@ -24,6 +24,8 @@ import { enhanceAIContent } from "@/lib/aiContentEnhancer";
 import { fallbackText } from "@/lib/contentFallback";
 import MobileActionBar from "@/components/mobile/MobileActionBar";
 import FloatingTOC from "@/components/mobile/FloatingTOC";
+import ProgrammePortfolioTable from "@/components/college/ProgrammePortfolioTable";
+import { useProgrammeCourses } from "@/hooks/useProgrammeCourses";
 import { Share2, Phone } from "lucide-react";
 
 // ── Fallback data used when no DB sections exist ──
