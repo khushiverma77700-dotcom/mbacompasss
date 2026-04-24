@@ -44,7 +44,7 @@ function detectTruncation(response: string): boolean {
 
 // ── Schema markup generator (AI-powered) ──
 async function generateSchemaMarkup(
-  LOVABLE_API_KEY: string, contentType: string, data: Record<string, any>, siteUrl: string
+  GEMINI_API_KEY: string, contentType: string, data: Record<string, any>, siteUrl: string
 ): Promise<any[]> {
   const contentTypePaths: Record<string, string> = {
     article: "article", institute: "institute", college: "college", exam: "exam", cityPage: "colleges",
@@ -189,8 +189,8 @@ Deno.serve(async (req) => {
     if (authFail) return authFail;
 
     const startTime = Date.now();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
 
     const { contentType, data, pageUrl } = await req.json();
     console.log(`[ai-seo-enhance] Starting deep analysis for ${contentType}: ${data?.name || data?.title || 'unknown'}`);
@@ -204,7 +204,7 @@ Deno.serve(async (req) => {
     const siteUrl = "https://mbacompass.in";
 
     // Generate AI-powered schema markup in parallel with main analysis
-    const schemaPromise = generateSchemaMarkup(LOVABLE_API_KEY, contentType, data, siteUrl);
+    const schemaPromise = generateSchemaMarkup(GEMINI_API_KEY, contentType, data, siteUrl);
 
     // Extract and analyze ALL content deeply
     const allContent = [

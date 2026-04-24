@@ -355,8 +355,8 @@ function generateTips(college: any, profile: UserProfile, bucket: string): strin
 
 // ─── AI ENRICH ACTION ───────────────────────────────────────
 async function handleEnrich(collegeName: string) {
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-  if (!LOVABLE_API_KEY) return { enriched: null };
+  const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+  if (!GEMINI_API_KEY) return { enriched: null };
 
   const aiResponse = await callAIGateway({
       model: "google/gemini-2.5-flash",
@@ -509,11 +509,11 @@ Deno.serve(async (req) => {
     }
 
     // AI insights
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
     let aiInsights = "";
     let strategy = "";
 
-    if (LOVABLE_API_KEY && shortlisted.length > 0) {
+    if (GEMINI_API_KEY && shortlisted.length > 0) {
       try {
         const dreamList = dream.map(c => `${c.name} (${c.chancePercent}%)`).join(", ");
         const targetList = target.map(c => `${c.name} (${c.chancePercent}%)`).join(", ");

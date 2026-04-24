@@ -370,8 +370,8 @@ Deno.serve(async (req) => {
     if (authFail) return authFail;
 
     const startTime = Date.now();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
 
     const { mode, query, niche, competitors, existingKeywords } = await req.json();
     console.log(`[ai-keyword-research] mode=${mode}, query=${query || niche || 'default'}`);

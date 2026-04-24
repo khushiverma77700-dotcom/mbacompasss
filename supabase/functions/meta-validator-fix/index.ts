@@ -104,8 +104,8 @@ async function requireAdmin(req: Request) {
 }
 
 async function callAI(samples: UrlSample[]): Promise<AiFix[]> {
-  const apiKey = Deno.env.get("LOVABLE_API_KEY");
-  if (!apiKey) throw new Error("LOVABLE_API_KEY missing");
+  const apiKey = Deno.env.get("GEMINI_API_KEY");
+  if (!apiKey) throw new Error("GEMINI_API_KEY missing");
 
   const failingOnly = samples.filter((s) => s.checks.some((c) => !c.ok));
   const target = failingOnly.length ? failingOnly : samples;
