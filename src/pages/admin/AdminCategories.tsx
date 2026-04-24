@@ -123,6 +123,19 @@ const AdminCategories = () => {
         <h1 className="font-heading text-2xl font-bold text-foreground">Manage Categories</h1>
         <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Category</Button>
       </div>
+      <AdminFilterBar
+        searchValue={filters.search}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search by name, slug, description…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        filters={examTypeOptions.length > 0 ? [
+          { type: "select", key: "exam_type", label: "Exam Type", width: "w-44", options: [{ label: "All Types", value: "all" }, ...examTypeOptions] },
+        ] : []}
+        resultsHint={`${sortedCategories.length} of ${categories.length} categories`}
+      />
       <Card><CardContent className="p-0">
         <Table>
           <TableHeader><TableRow>
@@ -143,8 +156,8 @@ const AdminCategories = () => {
                 </TableCell>
               </TableRow>
             ))}
-            {categories.length === 0 && (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No categories yet</TableCell></TableRow>
+            {sortedCategories.length === 0 && (
+              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">{categories.length === 0 ? "No categories yet" : "No categories match the current filters"}</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
