@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1";
 
+import { callAIGateway } from "../_shared/aiGateway.ts";
 async function logAIUsage(feature: string, model: string, aiData: any, status = "success", errorMsg?: string) {
   try {
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -71,10 +72,7 @@ Generate: WebPage, ItemList (MBA coaching institutes in ${data.name}), Breadcrum
   const prompt = schemaContext[contentType] || schemaContext.article;
 
   try {
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const response = await callAIGateway({
         // COST OPT: schema generation is templated; flash-lite is sufficient and ~7× cheaper.
         model: "google/gemini-2.5-flash-lite",
         max_tokens: 2500,
@@ -95,8 +93,7 @@ RULES:
           },
           { role: "user", content: prompt },
         ],
-      }),
-    });
+      });
 
     if (!response.ok) {
       console.error("Schema generation failed:", response.status);
@@ -348,10 +345,7 @@ Perform COMPREHENSIVE, DEEP SEO analysis. Score the CURRENT state honestly. Show
 
     console.log(`[ai-seo-enhance] Calling AI with deep analysis prompt...`);
     const aiStartTime = Date.now();
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const response = await callAIGateway({
         // COST OPT: gemini-3-flash-preview is preview-tier and pricier; the SEO
         // suggestion schema is fully tool-constrained, so 2.5-flash matches quality
         // at production-tier cost. Cap completion to 4K tokens (the schema asks for
@@ -444,8 +438,7 @@ Perform COMPREHENSIVE, DEEP SEO analysis. Score the CURRENT state honestly. Show
           },
         }],
         tool_choice: { type: "function", function: { name: "seo_suggestions" } },
-      }),
-    });
+      });
 
     if (!response.ok) {
       if (response.status === 429) {

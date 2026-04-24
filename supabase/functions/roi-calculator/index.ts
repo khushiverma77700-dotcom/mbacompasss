@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
+import { callAIGateway } from "../_shared/aiGateway.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -329,10 +330,7 @@ SAFE: ${safe.slice(0, 4).map(c => `${c.name} (Payback ${c.payback_years}y, ROI $
 
 Write a deeply personalized, long-form, advisor-style report. Address ${studentName} by first name throughout. Reference specific numbers. Be honest about risks. Provide clear, actionable guidance.`;
 
-    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const aiResp = await callAIGateway({
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: "You are 'B School Buzz ROI Advisor' — a warm, data-driven MBA financial counselor. Always address the student by first name. Use specific numbers from their profile. Write in a long, detailed, premium-advisor tone. Never use generic phrasing." },
@@ -390,8 +388,7 @@ Write a deeply personalized, long-form, advisor-style report. Address ${studentN
           },
         }],
         tool_choice: { type: "function", function: { name: "generate_roi_report" } },
-      }),
-    });
+      });
 
     if (!aiResp.ok) {
       const t = await aiResp.text();

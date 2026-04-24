@@ -3,6 +3,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
+import { callAIGateway } from "../_shared/aiGateway.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -88,13 +89,7 @@ async function logStep(runId: string, r: StepResult) {
 // ---- AI helper ----
 async function aiRewrite(prompt: string, system: string): Promise<string | null> {
   try {
-    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    const res = await callAIGateway({
         // COST OPT: meta-rewrite is structured/short — flash-lite gives identical
         // results for ~1/7 the cost. Cap to 300 tokens (titles/descriptions are <60 + <160 chars).
         model: "google/gemini-2.5-flash-lite",
@@ -103,8 +98,7 @@ async function aiRewrite(prompt: string, system: string): Promise<string | null>
           { role: "system", content: system },
           { role: "user", content: prompt },
         ],
-      }),
-    });
+      });
     if (!res.ok) return null;
     const data = await res.json();
     return data.choices?.[0]?.message?.content?.trim() ?? null;

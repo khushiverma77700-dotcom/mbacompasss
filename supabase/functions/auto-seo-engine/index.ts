@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1";
 
+import { callAIGateway } from "../_shared/aiGateway.ts";
 async function logAIUsage(feature: string, model: string, aiData: any, status = "success", errorMsg?: string) {
   try {
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -185,10 +186,7 @@ Deno.serve(async (req) => {
           // ─── COST OPT: Truncate input content for AI (saves ~50% input tokens) ───
           const truncatedContent = truncateForAI(contentText, 1500);
 
-          const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
+          const aiResponse = await callAIGateway({
               model: STANDARD_MODEL,
               generationConfig: { maxOutputTokens: 2048 },
               max_tokens: 2048,
@@ -242,8 +240,7 @@ Generate unique, page-specific SEO optimization.`,
                 },
               }],
               tool_choice: { type: "function", function: { name: "page_seo" } },
-            }),
-          });
+            });
 
           if (!aiResponse.ok) {
             if (aiResponse.status === 429) {
@@ -382,10 +379,7 @@ Generate unique, page-specific SEO optimization.`,
         contentSummary.push(`${ct}: ${names.length} pages. Sample: ${names.slice(0, 10).join(", ")}. Keywords: ${[...new Set(keywords)].slice(0, 20).join(", ")}`);
       }
 
-      const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const aiResp = await callAIGateway({
           model: CHEAP_MODEL,
           generationConfig: { maxOutputTokens: 6144 },
           messages: [
@@ -412,8 +406,7 @@ Generate unique, page-specific SEO optimization.`,
             },
           }],
           tool_choice: { type: "function", function: { name: "content_gap_analysis" } },
-        }),
-      });
+        });
 
       if (!aiResp.ok) throw new Error(`AI error: ${aiResp.status}`);
       const aiJson = await aiResp.json();
@@ -438,10 +431,7 @@ Generate unique, page-specific SEO optimization.`,
 
       const pageList = allPages.map(p => `[${p.contentType}] ${p.name} → ${p.path} (kw: ${p.keywords.slice(0, 5).join(", ")})`).join("\n");
 
-      const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const aiResp = await callAIGateway({
           model: STANDARD_MODEL,
           generationConfig: { maxOutputTokens: 8192 },
           messages: [
@@ -481,8 +471,7 @@ Generate unique, page-specific SEO optimization.`,
             },
           }],
           tool_choice: { type: "function", function: { name: "interlink_suggestions" } },
-        }),
-      });
+        });
 
       if (!aiResp.ok) throw new Error(`AI error: ${aiResp.status}`);
       const result = extractToolResult(await aiResp.json());
@@ -612,10 +601,7 @@ Generate unique, page-specific SEO optimization.`,
 
       if (fixableChecks.length > 0) {
         try {
-          const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
+          const aiResp = await callAIGateway({
               model: CHEAP_MODEL,
               generationConfig: { maxOutputTokens: 4096 },
               messages: [
@@ -671,8 +657,7 @@ RULES:
                 },
               }],
               tool_choice: { type: "function", function: { name: "seo_fixes" } },
-            }),
-          });
+            });
 
           if (aiResp.ok) {
             const aiData = await aiResp.json();
@@ -762,10 +747,7 @@ RULES:
       for (let i = 0; i < Math.min(pagesNeedingKeywords.length, 20); i++) {
         const page = pagesNeedingKeywords[i];
         try {
-          const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-            method: "POST",
-            headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-            body: JSON.stringify({
+          const aiResp = await callAIGateway({
               model: "google/gemini-2.5-flash-lite",
               messages: [
                 { role: "system", content: "Generate SEO keywords for Indian MBA education pages. Return short-tail (1-2 words) and long-tail (3-6 words) keywords students search for." },
@@ -787,8 +769,7 @@ RULES:
                 },
               }],
               tool_choice: { type: "function", function: { name: "keywords" } },
-            }),
-          });
+            });
 
           if (aiResp.ok) {
             const kws = extractToolResult(await aiResp.json());
@@ -925,10 +906,7 @@ RULES:
       const { data: page } = await supabase.from(config.table).select("*").eq("id", pageId).maybeSingle();
       if (!page) return new Response(JSON.stringify({ error: "Page not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-      const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const aiResp = await callAIGateway({
           // COST OPT: FAQ generation is structured tool-calling — flash-lite is enough.
           model: CHEAP_MODEL,
           max_tokens: 2000,
@@ -951,8 +929,7 @@ RULES:
             },
           }],
           tool_choice: { type: "function", function: { name: "faqs" } },
-        }),
-      });
+        });
       if (!aiResp.ok) throw new Error(`AI error ${aiResp.status}`);
       const aiJson = await aiResp.json();
       await logAIUsage("faq-generate", CHEAP_MODEL, aiJson);

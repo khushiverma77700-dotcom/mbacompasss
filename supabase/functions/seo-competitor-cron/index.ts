@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1";
 
+import { callAIGateway } from "../_shared/aiGateway.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
@@ -42,10 +43,7 @@ Deno.serve(async (req) => {
     }
 
     // AI competitor analysis
-    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const aiResp = await callAIGateway({
         model: "google/gemini-2.5-flash",
         messages: [
           {
@@ -124,8 +122,7 @@ Prioritize actions by impact. Focus on what we can implement TODAY.`,
           },
         }],
         tool_choice: { type: "function", function: { name: "competitor_report" } },
-      }),
-    });
+      });
 
     if (!aiResp.ok) {
       if (aiResp.status === 429) {

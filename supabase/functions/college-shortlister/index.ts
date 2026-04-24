@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
+import { callAIGateway } from "../_shared/aiGateway.ts";
 async function logAIUsage(feature: string, model: string, aiData: any, status = "success", errorMsg?: string) {
   try {
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -357,10 +358,7 @@ async function handleEnrich(collegeName: string) {
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) return { enriched: null };
 
-  const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
+  const aiResponse = await callAIGateway({
       model: "google/gemini-2.5-flash",
       messages: [
         { role: "system", content: "You are a database of Indian MBA colleges. Return ONLY valid JSON, no markdown." },
@@ -384,8 +382,7 @@ async function handleEnrich(collegeName: string) {
 }
 Only return the JSON object.` },
       ],
-    }),
-  });
+    });
 
   if (!aiResponse.ok) return { enriched: null };
   const aiData = await aiResponse.json();
@@ -523,13 +520,7 @@ Deno.serve(async (req) => {
         const safeList = safe.map(c => `${c.name} (${c.chancePercent}%)`).join(", ");
         const workYrs = (profile.workExperienceMonths / 12).toFixed(1);
 
-        const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
+        const aiResponse = await callAIGateway({
             model: "google/gemini-3-flash-preview",
             messages: [
               {
@@ -571,8 +562,7 @@ Write 3-4 short paragraphs: what's working in their favor, what needs work, and 
 Give exactly 4 numbered action items. Each should be one concrete step (e.g., "Fill the XAT form before Dec 15", "Start WAT practice with 2 essays/week"). End with one motivational line.`,
               },
             ],
-          }),
-        });
+          });
 
         if (aiResponse.ok) {
           const aiData = await aiResponse.json();

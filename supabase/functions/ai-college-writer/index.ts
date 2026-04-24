@@ -2,6 +2,7 @@
 // using Lovable AI Gateway (google/gemini-2.5-flash) via tool-calling for structured output.
 // Public endpoint (verify_jwt = false in supabase/config.toml is the project default).
 
+import { callAIGateway } from "../_shared/aiGateway.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -167,13 +168,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       },
     };
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    const aiRes = await callAIGateway({
         // COST OPT: gemini-2.5-flash matches preview tier quality for tool-calling at ~30% lower cost.
         model: "google/gemini-2.5-flash",
         messages: [
@@ -183,8 +178,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
         tools: [tool],
         tool_choice: { type: "function", function: { name: "publish_college_profile" } },
         max_tokens: 4000,
-      }),
-    });
+      });
 
     if (!aiRes.ok) {
       const txt = await aiRes.text();
@@ -353,10 +347,7 @@ RULES:
 
     let factCheck: any = { confidence: {}, warnings: [], omit_fields: [] };
     try {
-      const auditRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const auditRes = await callAIGateway({
           model: "google/gemini-2.5-flash",
           messages: [
             { role: "system", content: "You are a meticulous fact-checker for Indian MBA / B-school profiles. You only confirm facts you are confident about; otherwise you flag them." },
@@ -365,8 +356,7 @@ RULES:
           tools: [factCheckTool],
           tool_choice: { type: "function", function: { name: "audit_college_facts" } },
           max_tokens: 2000,
-        }),
-      });
+        });
       if (auditRes.ok) {
         const auditJson = await auditRes.json();
         const auditArgs = auditJson?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;

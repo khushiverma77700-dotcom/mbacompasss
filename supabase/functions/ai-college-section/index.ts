@@ -8,6 +8,7 @@
 //  • HTML sanitization (strips inline `style=` and font/size tags so typography stays uniform)
 //  • Anchor-fact propagation so the same establishment year / ranking / fees are reused across every section
 
+import { callAIGateway } from "../_shared/aiGateway.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -610,13 +611,7 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
       },
     };
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    const aiRes = await callAIGateway({
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
@@ -625,8 +620,7 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
         tools: [tool],
         tool_choice: { type: "function", function: { name: spec.name } },
         max_tokens: 3000,
-      }),
-    });
+      });
 
     if (!aiRes.ok) {
       const txt = await aiRes.text();
