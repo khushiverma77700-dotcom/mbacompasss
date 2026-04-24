@@ -344,7 +344,28 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
 
 // ── Cloud Usage Tab ──
 
-function CloudUsageTab() {
+// Recursively walk a storage bucket to count every file (not just top-level).
+async function countBucketFiles(bucket: string): Promise<number> {
+  let total = 0;
+  const walk = async (prefix: string) => {
+    const { data, error } = await supabase.storage.from(bucket).list(prefix, { limit: 1000 });
+    if (error || !data) return;
+    for (const item of data) {
+      // Folders have null id and no metadata; files have an id.
+      if (item.id) total++;
+      else await walk(prefix ? `${prefix}/${item.name}` : item.name);
+    }
+  };
+  try { await walk(""); } catch { /* ignore */ }
+  return total;
+}
+
+interface CloudUsageTabProps {
+  registerRefresh?: (fn: () => Promise<void>) => void;
+  registerLoading?: (loading: boolean) => void;
+}
+
+function CloudUsageTab({ registerRefresh, registerLoading }: CloudUsageTabProps) {
   const [edgeLogs, setEdgeLogs] = useState<EdgeLog[]>([]);
   const [authLogs, setAuthLogs] = useState<AuthLog[]>([]);
   const [, setDbLogs] = useState<DbLog[]>([]);
@@ -356,7 +377,21 @@ function CloudUsageTab() {
   const fetchCloudData = useCallback(async () => {
     setLoading(true);
     try {
-      const tables = ["institutes", "colleges", "articles", "exams", "city_pages", "categories", "banners", "testimonials", "inquiries", "courses", "reviews", "profiles", "coupons", "comparisons", "site_settings", "newsletter_subscribers", "faculty", "coaching_of_week", "coaching_results", "institute_results", "college_sections", "business_inquiries", "profile_analyses", "analysis_results", "saved_institutes", "coupon_claims", "admin_permissions", "user_roles", "ai_usage_logs"];
+      // Actual tables that exist in the public schema (verified against the
+      // generated Supabase types). Removes legacy/never-created tables that
+      // silently failed and adds tables that were missing — so totals match
+      // the real database.
+      const tables = [
+        "admin_permissions", "ai_usage_logs", "analysis_results", "articles",
+        "audit_runs", "audit_step_logs", "banners", "business_inquiries",
+        "cat_score_submissions", "categories", "city_pages", "coaching_of_week",
+        "coaching_results", "college_sections", "colleges", "comparisons",
+        "content_refreshes", "coupon_claims", "coupons", "course_categories",
+        "courses", "exams", "faculty", "indexing_logs", "indexing_urls",
+        "inquiries", "institute_results", "institutes", "listing_change_requests",
+        "mega_menu_items", "newsletter_subscribers", "page_summary_cache",
+        "phone_otps", "profile_analyses", "profiles", "user_roles",
+      ];
 
       let totalRows = 0;
       const tableCounts: { name: string; count: number }[] = [];
@@ -372,12 +407,12 @@ function CloudUsageTab() {
 
       await Promise.all(countPromises);
 
-      // Storage files count
-      let storageFiles = 0;
-      try {
-        const { data: files } = await supabase.storage.from("uploads").list("", { limit: 1000 });
-        storageFiles = files?.length || 0;
-      } catch {}
+      // Count files across BOTH storage buckets, recursing into subfolders.
+      const [uploadsCount, listingCount] = await Promise.all([
+        countBucketFiles("uploads"),
+        countBucketFiles("listing-uploads"),
+      ]);
+      const storageFiles = uploadsCount + listingCount;
 
       setDbStats({ tables: tables.length, totalRows, storageFiles });
 
@@ -433,6 +468,8 @@ function CloudUsageTab() {
   }, []);
 
   useEffect(() => { fetchCloudData(); }, [fetchCloudData]);
+  useEffect(() => { registerRefresh?.(fetchCloudData); }, [registerRefresh, fetchCloudData]);
+  useEffect(() => { registerLoading?.(loading); }, [registerLoading, loading]);
 
   const cloudCost = useMemo(() => estimateCloudCost({
     totalRows: dbStats.totalRows,
@@ -695,6 +732,8 @@ export default function AdminAIUsage() {
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState("7d");
   const [mainTab, setMainTab] = useState("ai");
+  const [cloudRefresh, setCloudRefresh] = useState<(() => Promise<void>) | null>(null);
+  const [cloudLoading, setCloudLoading] = useState(false);
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
@@ -708,6 +747,18 @@ export default function AdminAIUsage() {
   }, [range]);
 
   useEffect(() => { fetchLogs(); }, [fetchLogs]);
+
+  const handleRefresh = useCallback(async () => {
+    if (mainTab === "ai") {
+      await fetchLogs();
+      toast.success("AI usage refreshed");
+    } else if (cloudRefresh) {
+      await cloudRefresh();
+      toast.success("Cloud usage refreshed");
+    }
+  }, [mainTab, fetchLogs, cloudRefresh]);
+
+  const isLoading = mainTab === "ai" ? loading : cloudLoading;
 
   return (
     <div className="space-y-6">
@@ -727,8 +778,8 @@ export default function AdminAIUsage() {
               </SelectContent>
             </Select>
           )}
-          <Button variant="outline" size="sm" onClick={mainTab === "ai" ? fetchLogs : () => setMainTab("cloud")} disabled={loading}>
-            <RefreshCw className={`w-4 h-4 mr-1 ${loading ? "animate-spin" : ""}`} /> Refresh
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
+            <RefreshCw className={`w-4 h-4 mr-1 ${isLoading ? "animate-spin" : ""}`} /> Refresh
           </Button>
         </div>
       </div>
@@ -748,7 +799,10 @@ export default function AdminAIUsage() {
         </TabsContent>
 
         <TabsContent value="cloud" className="mt-4">
-          <CloudUsageTab />
+          <CloudUsageTab
+            registerRefresh={(fn) => setCloudRefresh(() => fn)}
+            registerLoading={setCloudLoading}
+          />
         </TabsContent>
       </Tabs>
     </div>
