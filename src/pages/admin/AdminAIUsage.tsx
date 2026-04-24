@@ -473,6 +473,7 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
           </Card>
         </TabsContent>
 
+        <TabsContent value="trend" className="mt-4">
           <Card><CardHeader><CardTitle className="text-sm">Daily AI Usage Trend</CardTitle></CardHeader>
             <CardContent className="h-[350px]">
               {dailyTrend.length ? (
