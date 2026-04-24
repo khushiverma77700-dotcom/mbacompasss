@@ -117,6 +117,8 @@ const AdminWriteCollege = lazyWithPreload(() => import("./pages/admin/AdminWrite
 const AdminWriteInstitute = lazyWithPreload(() => import("./pages/admin/AdminWriteInstitute"));
 const AdminWriteCourses = lazyWithPreload(() => import("./pages/admin/AdminWriteCourses"));
 const AdminWebsiteOptimizer = lazyWithPreload(() => import("./pages/admin/AdminWebsiteOptimizer"));
+const AdminMockTests = lazyWithPreload(() => import("./pages/admin/AdminMockTests"));
+const AdminMockBuilder = lazyWithPreload(() => import("./pages/admin/AdminMockBuilder"));
 
 // Lazy load heavy popups
 const OnboardingDialog = lazyWithPreload(() => import("@/components/OnboardingDialog"));
@@ -448,6 +450,8 @@ const App = () => (
               <Route path="institutes/generate-ai" element={<LazyPage><AdminWriteInstitute /></LazyPage>} />
               <Route path="courses/generate-ai" element={<LazyPage><AdminWriteCourses /></LazyPage>} />
               <Route path="website-optimizer" element={<LazyPage><AdminWebsiteOptimizer /></LazyPage>} />
+              <Route path="mock-tests" element={<LazyPage><AdminMockTests /></LazyPage>} />
+              <Route path="mock-tests/:testId/builder" element={<LazyPage><AdminMockBuilder /></LazyPage>} />
             </Route>
 
             {/* Home eager; rest lazy with invisible fallback */}
