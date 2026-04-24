@@ -502,31 +502,39 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
                 <TableHeader><TableRow>
                   <TableHead>Time</TableHead>
                   <TableHead>Feature</TableHead>
+                  <TableHead>Provider</TableHead>
                   <TableHead>Model</TableHead>
                   <TableHead className="text-right">Tokens</TableHead>
                   <TableHead className="text-right">Cost</TableHead>
+                  <TableHead className="text-right">Latency</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
-                  {enriched.slice(0, 100).map(l => (
-                    <TableRow key={l.id}>
-                      <TableCell className="text-xs whitespace-nowrap">
-                        <Clock className="w-3 h-3 inline mr-1" />
-                        {new Date(l.created_at).toLocaleString()}
-                      </TableCell>
-                      <TableCell><Badge variant="secondary" className="text-xs">{FEATURE_LABELS[l.feature] || l.feature}</Badge></TableCell>
-                      <TableCell className="text-xs font-mono">{modelLabel(l.model)}</TableCell>
-                      <TableCell className="text-right font-mono text-xs">{(l.total_tokens || 0).toLocaleString()}</TableCell>
-                      <TableCell className="text-right font-mono text-xs">{formatUsd(l.cost, 5)}</TableCell>
-                      <TableCell>
-                        {l.status === "success" ? (
-                          <Badge className="bg-primary/10 text-primary border-primary/20">OK</Badge>
-                        ) : (
-                          <Badge variant="destructive" className="text-xs">{l.error_message?.slice(0, 30) || "Error"}</Badge>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {enriched.slice(0, 100).map(l => {
+                    const pColor = PROVIDER_COLORS[l.providerKey] || "#94a3b8";
+                    const pLabel = PROVIDER_LABELS[l.providerKey] || l.providerKey;
+                    return (
+                      <TableRow key={l.id}>
+                        <TableCell className="text-xs whitespace-nowrap">
+                          <Clock className="w-3 h-3 inline mr-1" />
+                          {new Date(l.created_at).toLocaleString()}
+                        </TableCell>
+                        <TableCell><Badge variant="secondary" className="text-xs">{FEATURE_LABELS[l.feature] || l.feature}</Badge></TableCell>
+                        <TableCell><Badge variant="outline" className="text-xs" style={{ borderColor: pColor, color: pColor }}>{pLabel}</Badge></TableCell>
+                        <TableCell className="text-xs font-mono">{modelLabel(l.model)}</TableCell>
+                        <TableCell className="text-right font-mono text-xs">{(l.total_tokens || 0).toLocaleString()}</TableCell>
+                        <TableCell className="text-right font-mono text-xs">{formatUsd(l.cost, 5)}</TableCell>
+                        <TableCell className="text-right font-mono text-xs">{l.latency_ms ? `${l.latency_ms}ms` : "—"}</TableCell>
+                        <TableCell>
+                          {l.status === "success" ? (
+                            <Badge className="bg-primary/10 text-primary border-primary/20">OK</Badge>
+                          ) : (
+                            <Badge variant="destructive" className="text-xs">{l.error_message?.slice(0, 30) || "Error"}</Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
               {logs.length === 0 && !loading && (
