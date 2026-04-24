@@ -305,10 +305,10 @@ const AdminLayout = () => {
 
       {sidebarOpen && <div className="fixed inset-0 bg-foreground/20 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-      <aside className={`${sidebarOpen ? "fixed inset-y-0 left-0 z-50" : "hidden"} lg:flex lg:sticky lg:top-0 lg:h-screen w-64 bg-card border-r border-border p-4 flex-col overflow-y-auto`}>
+      <aside className={`${sidebarOpen ? "fixed inset-y-0 left-0 z-50" : "hidden"} lg:flex lg:fixed lg:top-0 lg:left-0 lg:h-screen w-64 bg-card border-r border-border p-4 flex-col overflow-y-auto`}>
         <SidebarContent />
       </aside>
-      <main className="flex-1 p-6 overflow-auto lg:ml-0">
+      <main className="flex-1 p-6 overflow-auto lg:ml-64">
         {currentRouteAllowed ? (
           <Outlet />
         ) : (
