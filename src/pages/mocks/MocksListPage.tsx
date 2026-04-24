@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, FileText, IndianRupee, Layers } from "lucide-react";
+import { MockCheckoutDialog } from "@/components/mock/MockCheckoutDialog";
+import { toast } from "sonner";
 
 
 interface MockTest {
@@ -24,6 +26,25 @@ export default function MocksListPage() {
   const navigate = useNavigate();
   const [tests, setTests] = useState<MockTest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [enrolled, setEnrolled] = useState<Set<string>>(new Set());
+  const [checkoutTest, setCheckoutTest] = useState<MockTest | null>(null);
+
+  const loadEnrollments = async () => {
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return;
+    const { data } = await supabase
+      .from("mock_enrollments")
+      .select("test_id, expires_at")
+      .eq("user_id", u.user.id);
+    const now = new Date();
+    setEnrolled(
+      new Set(
+        (data ?? [])
+          .filter((r: any) => !r.expires_at || new Date(r.expires_at) > now)
+          .map((r: any) => r.test_id),
+      ),
+    );
+  };
 
   useEffect(() => {
     (async () => {
@@ -33,9 +54,24 @@ export default function MocksListPage() {
         .eq("is_published", true)
         .order("created_at", { ascending: false });
       setTests((data ?? []) as MockTest[]);
+      await loadEnrollments();
       setLoading(false);
     })();
   }, []);
+
+  const handleCta = async (t: MockTest) => {
+    if (t.pricing_type === "free" || enrolled.has(t.id)) {
+      navigate(`/mocks/${t.slug}`);
+      return;
+    }
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) {
+      toast.error("Please sign in to enroll");
+      navigate(`/auth?redirect=/mocks`);
+      return;
+    }
+    setCheckoutTest(t);
+  };
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
@@ -70,14 +106,27 @@ export default function MocksListPage() {
                 <span className="flex items-center gap-1"><Layers className="h-3.5 w-3.5" />{t.test_type.replace("_", " ")}</span>
                 <span className="flex items-center gap-1"><FileText className="h-3.5 w-3.5" />{t.difficulty}</span>
               </div>
-              <Button onClick={() => navigate(`/mocks/${t.slug}`)} className="mt-auto">
-                {t.pricing_type === "free" ? "Start Mock" : (
-                  <span className="flex items-center gap-1"><IndianRupee className="h-4 w-4" />Enroll</span>
+              <Button onClick={() => handleCta(t)} className="mt-auto">
+                {t.pricing_type === "free" || enrolled.has(t.id) ? (
+                  "Start Mock"
+                ) : (
+                  <span className="flex items-center gap-1"><IndianRupee className="h-4 w-4" />Enroll · ₹{t.price_inr}</span>
                 )}
               </Button>
             </Card>
           ))}
         </div>
+      )}
+
+      {checkoutTest && (
+        <MockCheckoutDialog
+          open={!!checkoutTest}
+          onOpenChange={(o) => !o && setCheckoutTest(null)}
+          testId={checkoutTest.id}
+          testName={checkoutTest.name}
+          priceInr={Number(checkoutTest.price_inr)}
+          onEnrolled={() => loadEnrollments()}
+        />
       )}
     </div>
   );
