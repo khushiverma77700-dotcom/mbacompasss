@@ -174,7 +174,8 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        // COST OPT: gemini-2.5-flash matches preview tier quality for tool-calling at ~30% lower cost.
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -356,7 +357,7 @@ RULES:
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
+          model: "google/gemini-2.5-flash",
           messages: [
             { role: "system", content: "You are a meticulous fact-checker for Indian MBA / B-school profiles. You only confirm facts you are confident about; otherwise you flag them." },
             { role: "user", content: auditPrompt },

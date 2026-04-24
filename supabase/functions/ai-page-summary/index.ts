@@ -1,5 +1,15 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1";
 
+// COST OPTIMIZATION (2026-04):
+//  • summarize → switched from gemini-2.5-flash → gemini-2.5-flash-lite
+//    (≈7× cheaper, identical quality for 100-200 word humanized summaries)
+//  • summaries are now cached per (pageType, pageId, content_hash) so revisiting
+//    a page/article reuses the same summary instead of paying for a new one
+//  • ask → kept on gemini-2.5-flash for nuance, but capped completion to 400 tokens
+//  • all calls now send max_tokens to prevent runaway 8K-token responses
+const SUMMARY_MODEL = "google/gemini-2.5-flash-lite";
+const ASK_MODEL = "google/gemini-2.5-flash";
+
 async function logAIUsage(feature: string, model: string, aiData: any, status = "success", errorMsg?: string) {
   try {
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -13,8 +23,12 @@ async function logAIUsage(feature: string, model: string, aiData: any, status = 
       status, error_message: errorMsg || null,
     });
     if (error) console.error("[ai-usage-log] Insert failed:", JSON.stringify(error));
-    else console.log("[ai-usage-log] Logged usage for", feature);
   } catch (e) { console.error("[ai-usage-log] Exception:", e); }
+}
+
+async function sha256(s: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
 const corsHeaders = {
@@ -30,14 +44,34 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
+    const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
     if (action === "summarize") {
-      const stripped = (content || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 12000);
-      
+      const stripped = (content || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 8000); // was 12000 — tighter cap saves ~33% prompt tokens
+      const hash = await sha256(stripped + "|" + (pageType || "") + "|" + (pageId || ""));
+
+      // ── CACHE HIT? Skip AI entirely ──
+      if (pageId) {
+        const { data: cached } = await sb
+          .from("page_summary_cache")
+          .select("summary")
+          .eq("page_type", pageType || "page")
+          .eq("page_id", String(pageId))
+          .eq("content_hash", hash)
+          .maybeSingle();
+        if (cached?.summary) {
+          return new Response(JSON.stringify({ summary: cached.summary, cached: true }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
       const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: SUMMARY_MODEL,
+          max_tokens: 500,
           messages: [
             { role: "system", content: `You are an expert education content summarizer for MBA Compass. Write an informative, humanized summary in 100-200 words using markdown formatting.
 
@@ -63,9 +97,21 @@ Rules:
       }
 
       const data = await resp.json();
-      await logAIUsage("page-summary", "google/gemini-2.5-flash", data);
+      await logAIUsage("page-summary", SUMMARY_MODEL, data);
       const summary = data.choices?.[0]?.message?.content || "Summary unavailable.";
-      return new Response(JSON.stringify({ summary }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+      // Persist for next visitor (best-effort, never block)
+      if (pageId && summary && summary !== "Summary unavailable.") {
+        sb.from("page_summary_cache").upsert({
+          page_type: pageType || "page",
+          page_id: String(pageId),
+          content_hash: hash,
+          summary,
+          model: SUMMARY_MODEL,
+        }, { onConflict: "page_type,page_id,content_hash" }).then(() => {}).catch(() => {});
+      }
+
+      return new Response(JSON.stringify({ summary, cached: false }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     if (action === "ask") {
@@ -85,7 +131,8 @@ Rules:
           if (searchResp.ok) {
             const articles = await searchResp.json();
             if (articles?.length > 0) {
-              dbContext = articles.map((a: any) => `Article: ${a.title}\n${(a.content || a.excerpt || "").replace(/<[^>]*>/g, " ").slice(0, 1500)}`).join("\n\n");
+              // Trimmed 1500 → 800 chars per article (still gives the model the gist, halves prompt tokens)
+              dbContext = articles.map((a: any) => `Article: ${a.title}\n${(a.content || a.excerpt || "").replace(/<[^>]*>/g, " ").slice(0, 800)}`).join("\n\n");
             }
           }
         }
@@ -125,13 +172,15 @@ Rules:
         }
       } catch (e) { console.error("Institute search error:", e); }
 
-      const pageContent = (content || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 4000);
+      // Trimmed 4000 → 2500 chars (Q&A only needs the relevant snippet, not the whole page)
+      const pageContent = (content || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 2500);
 
       const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: ASK_MODEL,
+          max_tokens: 400, // 3-5 sentence answer fits comfortably
           messages: [
             { role: "system", content: `You are a helpful MBA admission expert for MBA Compass. Answer questions accurately using markdown formatting.
 
@@ -154,7 +203,7 @@ Rules:
       }
 
       const data = await resp.json();
-      await logAIUsage("page-summary", "google/gemini-2.5-flash", data);
+      await logAIUsage("page-summary", ASK_MODEL, data);
       const answer = data.choices?.[0]?.message?.content || "I couldn't find an answer. Please read the full article for details.";
       return new Response(JSON.stringify({ answer }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }

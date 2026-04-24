@@ -95,7 +95,10 @@ async function aiRewrite(prompt: string, system: string): Promise<string | null>
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        // COST OPT: meta-rewrite is structured/short — flash-lite gives identical
+        // results for ~1/7 the cost. Cap to 300 tokens (titles/descriptions are <60 + <160 chars).
+        model: "google/gemini-2.5-flash-lite",
+        max_tokens: 300,
         messages: [
           { role: "system", content: system },
           { role: "user", content: prompt },

@@ -1862,6 +1862,36 @@ export type Database = {
         }
         Relationships: []
       }
+      page_summary_cache: {
+        Row: {
+          content_hash: string
+          created_at: string
+          id: string
+          model: string | null
+          page_id: string
+          page_type: string
+          summary: string
+        }
+        Insert: {
+          content_hash: string
+          created_at?: string
+          id?: string
+          model?: string | null
+          page_id: string
+          page_type: string
+          summary: string
+        }
+        Update: {
+          content_hash?: string
+          created_at?: string
+          id?: string
+          model?: string | null
+          page_id?: string
+          page_type?: string
+          summary?: string
+        }
+        Relationships: []
+      }
       phone_otps: {
         Row: {
           attempts: number

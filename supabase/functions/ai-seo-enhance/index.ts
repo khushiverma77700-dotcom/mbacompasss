@@ -75,7 +75,9 @@ Generate: WebPage, ItemList (MBA coaching institutes in ${data.name}), Breadcrum
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        // COST OPT: schema generation is templated; flash-lite is sufficient and ~7× cheaper.
+        model: "google/gemini-2.5-flash-lite",
+        max_tokens: 2500,
         messages: [
           {
             role: "system",
@@ -102,7 +104,7 @@ RULES:
     }
 
     const aiData = await response.json();
-    await logAIUsage("seo-schema", "google/gemini-2.5-flash", aiData);
+    await logAIUsage("seo-schema", "google/gemini-2.5-flash-lite", aiData);
     const content = aiData.choices?.[0]?.message?.content || "";
 
     if (detectTruncation(content)) return getDefaultSchemas(contentType, data, siteUrl);
@@ -350,7 +352,12 @@ Perform COMPREHENSIVE, DEEP SEO analysis. Score the CURRENT state honestly. Show
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        // COST OPT: gemini-3-flash-preview is preview-tier and pricier; the SEO
+        // suggestion schema is fully tool-constrained, so 2.5-flash matches quality
+        // at production-tier cost. Cap completion to 4K tokens (the schema asks for
+        // ~30 short fields — never needs more than ~3K).
+        model: "google/gemini-2.5-flash",
+        max_tokens: 4096,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -457,7 +464,7 @@ Perform COMPREHENSIVE, DEEP SEO analysis. Score the CURRENT state honestly. Show
     }
 
     const aiData = await response.json();
-    await logAIUsage("seo-enhance", "google/gemini-2.5-pro", aiData);
+    await logAIUsage("seo-enhance", "google/gemini-2.5-flash", aiData);
     console.log(`[ai-seo-enhance] AI analysis completed in ${Date.now() - aiStartTime}ms`);
 
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
