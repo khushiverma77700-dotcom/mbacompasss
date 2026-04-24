@@ -216,11 +216,14 @@ const AdminAllLinks = () => {
       {/* Links by type */}
       {Object.entries(groupedLinks).map(([type, items]) => (
         <Card key={type}>
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
             <CardTitle className="text-lg flex items-center gap-2">
               <Link2 className="w-4 h-4" />
               {type} ({items.length})
             </CardTitle>
+            <Button size="sm" variant="outline" onClick={() => copySection(type, items)}>
+              <Copy className="w-3.5 h-3.5 mr-1.5" /> Copy {type}
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="space-y-1.5 max-h-[300px] overflow-y-auto">
