@@ -12,6 +12,9 @@ import { Plus, Pencil, Trash2, Eye, ArrowLeft } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import SortableTableHead from "@/components/admin/SortableTableHead";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import { useFilteredList } from "@/hooks/useFilteredList";
+import { useMemo } from "react";
 
 type Coupon = {
   id: string; code: string; description: string | null; discount_text: string | null;
