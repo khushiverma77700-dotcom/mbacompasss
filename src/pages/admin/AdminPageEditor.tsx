@@ -16,7 +16,7 @@ import {
   Sparkles, Loader2, ExternalLink, Save, RefreshCw, FileText, GraduationCap, Building2,
   CheckCircle2, AlertTriangle, XCircle, Search, Eye, Code, Globe,
 } from "lucide-react";
-import { buildStoredSeoSnapshot, saveSeoSnapshot, type SEOContentType } from "@/lib/seoAutomation";
+import { buildStoredSeoSnapshot, saveSeoSnapshot, getSeoSnapshotKey, type SEOContentType } from "@/lib/seoAutomation";
 
 type EntityKind = "college" | "institute" | "article";
 
@@ -145,7 +145,7 @@ const PageEditorWorkspace = () => {
     });
   }, [items, filter, kindFilter, completionFilter]);
 
-  // Load draft when selecting
+  // Load draft + existing snapshot when selecting
   const selectItem = async (it: ListedItem) => {
     setSelected(it);
     setAuditResult(null);
@@ -157,6 +157,51 @@ const PageEditorWorkspace = () => {
       return;
     }
     setDraft(data);
+
+    // Hydrate previously-saved snapshot so Schema tab is never empty
+    try {
+      const key = getSeoSnapshotKey(KIND_TO_SEO_TYPE[it.kind], it.id);
+      const { data: snapRow } = await supabase
+        .from("site_settings")
+        .select("value, updated_at")
+        .eq("key", key)
+        .limit(1)
+        .maybeSingle();
+      if (snapRow?.value) {
+        const snap = snapRow.value as any;
+        // Reconstruct an "auditResult-shaped" object so the UI panels render existing data
+        setAuditResult({
+          fromSnapshot: true,
+          savedAt: snapRow.updated_at,
+          assembled: {
+            pageUrl: snap.canonicalUrl,
+            pageTitle: snap.h1_tag || it.name,
+            wordCount: 0,
+            sectionsCount: 0,
+            coursesCount: 0,
+          },
+          suggestions: {
+            meta_title: snap.meta_title,
+            meta_description: snap.meta_description,
+            h1_tag: snap.h1_tag,
+            primary_keyword: snap.keywordBuckets?.primary?.[0],
+            keywords: snap.keywordBuckets,
+            onPageTips: snap.onPageTips || [],
+            technicalSEO: snap.technicalSEO,
+            socialMeta: snap.socialMeta,
+            internalLinks: snap.internalLinks,
+            contentSuggestions: snap.contentSuggestions || [],
+            competitorInsights: snap.competitorInsights || [],
+            schemaMarkup: snap.schemaMarkup,
+            seoScore: snap.seoScore,
+            faqs: snap.faqs,
+          },
+          competitors: [],
+        });
+      }
+    } catch (e) {
+      console.warn("snapshot hydrate failed", e);
+    }
   };
 
   const saveDraft = async () => {
@@ -215,15 +260,20 @@ const PageEditorWorkspace = () => {
 
   const applyAudit = async () => {
     if (!selected || !auditResult?.suggestions || !draft) return;
+    if (auditResult.fromSnapshot) {
+      toast({ title: "Re-run audit first", description: "This view shows the last saved snapshot. Click 'Run Audit' to regenerate, then Apply.", variant: "destructive" });
+      return;
+    }
     setSavingAudit(true);
     const s = auditResult.suggestions;
     const table = TABLE_BY_KIND[selected.kind];
 
-    const flatKeywords = [
+    const flatKeywords = Array.from(new Set([
       ...(s.keywords?.primary || []),
       ...(s.keywords?.shortTail || []),
       ...(s.keywords?.longTail || []),
-    ].slice(0, 30);
+      ...(s.keywords?.lsi || []),
+    ])).slice(0, 30);
 
     const patch: Record<string, any> = {
       meta_title: s.meta_title,
@@ -240,16 +290,30 @@ const PageEditorWorkspace = () => {
       return;
     }
 
-    // Save snapshot for runtime SEOHead consumption
+    // Save the COMPLETE snapshot — meta + all keyword buckets + schema + social + technical + internal links + FAQs
     try {
       const snap = buildStoredSeoSnapshot(KIND_TO_SEO_TYPE[selected.kind], { ...draft, ...patch }, s);
-      await saveSeoSnapshot(snap);
+      // Attach FAQs explicitly (used by useResolvedSeo to auto-inject FAQ JSON-LD)
+      const faqs =
+        s.faqs ||
+        (Array.isArray(s.schemaMarkup)
+          ? s.schemaMarkup.find((x: any) => x?.["@type"] === "FAQPage")?.mainEntity?.map((q: any) => ({
+              question: q?.name,
+              answer: q?.acceptedAnswer?.text,
+            }))
+          : null);
+      const enriched = { ...snap, faqs: faqs || [] };
+      await saveSeoSnapshot(enriched as any);
     } catch (e) {
       console.error("snapshot save", e);
+      toast({ title: "Snapshot save failed", description: "Meta saved but JSON-LD/social may not appear. Check console.", variant: "destructive" });
     }
 
     setSavingAudit(false);
-    toast({ title: "Applied", description: "Meta + snapshot updated. Live page reflects new SEO." });
+    toast({
+      title: "Applied to live page",
+      description: `Meta, ${flatKeywords.length} keywords, JSON-LD schema (${Array.isArray(s.schemaMarkup) ? s.schemaMarkup.length : s.schemaMarkup ? 1 : 0} blocks), Open Graph & technical SEO saved.`,
+    });
     setDraft({ ...draft, ...patch });
     setItems((prev) => prev.map((it) => it.id === selected.id ? {
       ...it,
@@ -509,6 +573,13 @@ const PageEditorWorkspace = () => {
 
                   {auditResult && (
                     <CardContent className="space-y-4">
+                      {auditResult.fromSnapshot && (
+                        <div className="border border-amber-500/30 bg-amber-500/5 rounded-md p-2 text-[11px] text-amber-700 dark:text-amber-400 flex items-center gap-2">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          <span>Showing the last saved SEO snapshot {auditResult.savedAt && `(${new Date(auditResult.savedAt).toLocaleString()})`}. Click <strong>Run Audit</strong> to regenerate before applying.</span>
+                        </div>
+                      )}
+
                       {/* Score */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <ScoreCard label="Current Score" value={auditResult.suggestions?.seoScore?.overall ?? 0} />
@@ -535,11 +606,11 @@ const PageEditorWorkspace = () => {
 
                       {/* Keywords */}
                       <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5">Keyword Buckets</h4>
+                        <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5">Keyword Buckets (all 6 saved on Apply)</h4>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-[11px]">
                           {(["primary","shortTail","longTail","faq","trending","lsi"] as const).map((k) => (
                             <div key={k} className="border border-border rounded-md p-2 bg-muted/20">
-                              <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-1">{k}</p>
+                              <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-1">{k} ({(auditResult.suggestions?.keywords?.[k] || []).length})</p>
                               <div className="flex flex-wrap gap-1">
                                 {(auditResult.suggestions?.keywords?.[k] || []).slice(0, 12).map((kw: string, idx: number) => (
                                   <Badge key={idx} variant="secondary" className="text-[10px] font-normal">{kw}</Badge>
@@ -549,6 +620,46 @@ const PageEditorWorkspace = () => {
                           ))}
                         </div>
                       </div>
+
+                      {/* Open Graph / Social */}
+                      {auditResult.suggestions?.socialMeta && (
+                        <div>
+                          <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5">Open Graph & Twitter</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
+                            <KVRow k="OG Title" v={auditResult.suggestions.socialMeta.ogTitle} />
+                            <KVRow k="OG Description" v={auditResult.suggestions.socialMeta.ogDescription} />
+                            <KVRow k="Twitter Title" v={auditResult.suggestions.socialMeta.twitterTitle} />
+                            <KVRow k="Twitter Description" v={auditResult.suggestions.socialMeta.twitterDescription} />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Technical SEO */}
+                      {auditResult.suggestions?.technicalSEO && (
+                        <div>
+                          <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5">Technical SEO</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
+                            <KVRow k="Canonical URL" v={auditResult.suggestions.technicalSEO.canonicalUrl} />
+                            <KVRow k="URL Slug" v={auditResult.suggestions.technicalSEO.urlSlugSuggestion} />
+                            <KVRow k="Word Count Verdict" v={auditResult.suggestions.technicalSEO.contentLengthAnalysis?.verdict} />
+                            <KVRow k="Recommended Min Words" v={String(auditResult.suggestions.technicalSEO.contentLengthAnalysis?.recommendedMinimum ?? "")} />
+                          </div>
+                          {auditResult.suggestions.technicalSEO.keywordPlacementTips?.length > 0 && (
+                            <IssueList title="Keyword Placement Tips" items={auditResult.suggestions.technicalSEO.keywordPlacementTips} tone="default" />
+                          )}
+                          {auditResult.suggestions.technicalSEO.pagespeedTips?.length > 0 && (
+                            <IssueList title="PageSpeed Tips" items={auditResult.suggestions.technicalSEO.pagespeedTips} tone="default" />
+                          )}
+                          {auditResult.suggestions.technicalSEO.backlinkIdeas?.length > 0 && (
+                            <IssueList title="Backlink Ideas" items={auditResult.suggestions.technicalSEO.backlinkIdeas} tone="default" />
+                          )}
+                        </div>
+                      )}
+
+                      {/* Internal links */}
+                      {auditResult.suggestions?.internalLinks?.suggested?.length > 0 && (
+                        <IssueList title="Suggested Internal Links" items={auditResult.suggestions.internalLinks.suggested} tone="default" />
+                      )}
 
                       {/* Competitors */}
                       {auditResult.competitors?.length > 0 && (
@@ -572,13 +683,30 @@ const PageEditorWorkspace = () => {
                         <IssueList title="Content Suggestions" items={auditResult.suggestions?.contentSuggestions || []} tone="default" />
                       </div>
 
+                      {/* Schema preview inline */}
+                      {auditResult.suggestions?.schemaMarkup && (
+                        <div>
+                          <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5">
+                            JSON-LD Schema ({Array.isArray(auditResult.suggestions.schemaMarkup) ? auditResult.suggestions.schemaMarkup.length : 1} blocks — auto-injected on Apply)
+                          </h4>
+                          <pre className="text-[10px] bg-muted/40 p-2 rounded-md overflow-auto max-h-[30vh] border border-border">
+                            {JSON.stringify(auditResult.suggestions.schemaMarkup, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+
                       {/* Apply */}
-                      <div className="flex items-center justify-end gap-2 pt-2 border-t">
-                        <Button variant="outline" size="sm" onClick={() => setAuditResult(null)}>Discard</Button>
-                        <Button onClick={applyAudit} disabled={savingAudit} size="sm">
-                          {savingAudit ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-1.5" />}
-                          Apply Meta + Save Snapshot
-                        </Button>
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t flex-wrap">
+                        <p className="text-[11px] text-muted-foreground">
+                          Apply will save: meta title/description, H1, primary keyword, all 6 keyword buckets, Open Graph, Twitter, JSON-LD schema, technical SEO, internal links & FAQs to the live page.
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm" onClick={() => setAuditResult(null)}>Discard</Button>
+                          <Button onClick={applyAudit} disabled={savingAudit || auditResult.fromSnapshot} size="sm">
+                            {savingAudit ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-1.5" />}
+                            Apply Full SEO to Live Page
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   )}
@@ -589,14 +717,30 @@ const PageEditorWorkspace = () => {
               <TabsContent value="schema" className="m-0">
                 <Card>
                   <CardHeader className="py-3">
-                    <CardTitle className="text-sm">JSON-LD Schema (from latest audit)</CardTitle>
-                    <CardDescription className="text-xs">Auto-applied to the live page when you click "Apply" on the SEO Audit tab.</CardDescription>
+                    <CardTitle className="text-sm">JSON-LD Schema {auditResult?.fromSnapshot && <Badge variant="outline" className="ml-2 text-[9px]">From saved snapshot</Badge>}</CardTitle>
+                    <CardDescription className="text-xs">
+                      This is what gets injected into the live page's &lt;head&gt; via the SEO snapshot. Auto-applied when you click "Apply Full SEO" on the SEO Audit tab.
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     {auditResult?.suggestions?.schemaMarkup ? (
-                      <pre className="text-[10px] bg-muted/40 p-3 rounded-md overflow-auto max-h-[60vh]">
-                        {JSON.stringify(auditResult.suggestions.schemaMarkup, null, 2)}
-                      </pre>
+                      <>
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="text-[11px] text-muted-foreground">
+                            {Array.isArray(auditResult.suggestions.schemaMarkup) ? auditResult.suggestions.schemaMarkup.length : 1} schema block(s)
+                            {Array.isArray(auditResult.suggestions.schemaMarkup) && auditResult.suggestions.schemaMarkup.length > 0 && (
+                              <> — types: {auditResult.suggestions.schemaMarkup.map((b: any) => b?.["@type"]).filter(Boolean).join(", ")}</>
+                            )}
+                          </p>
+                          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => {
+                            navigator.clipboard.writeText(JSON.stringify(auditResult.suggestions.schemaMarkup, null, 2));
+                            toast({ title: "Copied", description: "JSON-LD copied to clipboard." });
+                          }}>Copy</Button>
+                        </div>
+                        <pre className="text-[10px] bg-muted/40 p-3 rounded-md overflow-auto max-h-[60vh] border border-border">
+                          {JSON.stringify(auditResult.suggestions.schemaMarkup, null, 2)}
+                        </pre>
+                      </>
                     ) : (
                       <p className="text-xs text-muted-foreground">Run an SEO audit first to generate schema.</p>
                     )}
@@ -649,5 +793,12 @@ const IssueList = ({ icon, title, items, tone }: { icon?: React.ReactNode; title
     </div>
   );
 };
+
+const KVRow = ({ k, v }: { k: string; v?: string }) => (
+  <div className="border border-border rounded-md p-2 bg-muted/20">
+    <p className="text-[9px] uppercase tracking-wide text-muted-foreground font-semibold">{k}</p>
+    <p className="text-[11px] text-foreground break-words">{v || <span className="text-muted-foreground italic">not set</span>}</p>
+  </div>
+);
 
 export default PageEditorWorkspace;
