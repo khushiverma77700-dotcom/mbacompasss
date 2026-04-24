@@ -8,11 +8,12 @@ import { Download, Trash2 } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import SortableTableHead from "@/components/admin/SortableTableHead";
 import { format } from "date-fns";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import { useFilteredList } from "@/hooks/useFilteredList";
 
 const AdminSubscribers = () => {
   const [subscribers, setSubscribers] = useState<any[]>([]);
   const { toast } = useToast();
-  const { sortedItems: sortedSubscribers, sortConfig, handleSort } = useTableSort(subscribers);
 
   const fetchSubscribers = async () => {
     const { data } = await supabase.from("newsletter_subscribers").select("*").order("created_at", { ascending: false });
@@ -21,8 +22,16 @@ const AdminSubscribers = () => {
 
   useEffect(() => { fetchSubscribers(); }, []);
 
+  const { filtered, filters, setFilter, clearAll, activeCount } = useFilteredList(subscribers, {
+    storageKey: "admin.subscribers.filters",
+    defaults: { search: "" },
+    searchFields: [(s) => s.email],
+  });
+
+  const { sortedItems: sortedSubscribers, sortConfig, handleSort } = useTableSort(filtered);
+
   const exportCSV = () => {
-    const csv = "Email,Subscribed At\n" + subscribers.map(s => `${s.email},${s.created_at}`).join("\n");
+    const csv = "Email,Subscribed At\n" + filtered.map(s => `${s.email},${s.created_at}`).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -43,10 +52,21 @@ const AdminSubscribers = () => {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-heading text-2xl font-bold text-foreground">Newsletter Subscribers</h1>
-        <Button variant="outline" onClick={exportCSV} disabled={subscribers.length === 0}>
+        <Button variant="outline" onClick={exportCSV} disabled={filtered.length === 0}>
           <Download className="w-4 h-4 mr-2" /> Export CSV
         </Button>
       </div>
+
+      <AdminFilterBar
+        searchValue={filters.search ?? ""}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search by email…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        resultsHint={`${filtered.length} of ${subscribers.length} shown`}
+      />
 
       <Card>
         <CardContent className="p-0">
@@ -70,8 +90,8 @@ const AdminSubscribers = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {subscribers.length === 0 && (
-                <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-8">No subscribers yet</TableCell></TableRow>
+              {filtered.length === 0 && (
+                <TableRow><TableCell colSpan={3} className="text-center text-muted-foreground py-8">No subscribers found</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
