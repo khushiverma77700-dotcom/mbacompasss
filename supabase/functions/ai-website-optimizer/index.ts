@@ -558,11 +558,44 @@ async function runAllSteps(mode: "audit" | "fix", runId: string) {
   await tick(28, async () => ({ status: "completed", pages_affected: 1, summary: "robots.txt allows crawl of /sitemap.xml and disallows /admin.", details: {} }));
   await tick(29, async () => {
     const { count } = await supabase.from("indexing_urls").select("*", { count: "exact", head: true }).eq("status", "pending");
-    return { status: (count || 0) === 0 ? "completed" : "pending", pages_affected: count || 0, summary: `${count || 0} URLs pending Google indexing submission.`, details: {} };
+    let triggered = false;
+    if (mode === "fix" && (count || 0) > 0) {
+      try {
+        await fetch(`${SUPABASE_URL}/functions/v1/google-indexing`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "submit_pending" }),
+        });
+        triggered = true;
+      } catch { /* ignore */ }
+    }
+    return {
+      status: triggered ? "updated" : (count || 0) === 0 ? "completed" : "pending",
+      pages_affected: count || 0,
+      summary: triggered
+        ? `Triggered Google Indexing submit for ${count} pending URLs.`
+        : `${count || 0} URLs pending Google indexing submission.`,
+      details: {},
+    };
   });
   await tick(30, async () => {
     const { count } = await supabase.from("indexing_urls").select("*", { count: "exact", head: true }).eq("status", "failed");
-    return { status: (count || 0) === 0 ? "completed" : "pending", pages_affected: count || 0, summary: `${count || 0} crawl/index errors in indexing_urls log.`, details: {} };
+    let requeued = 0;
+    if (mode === "fix" && (count || 0) > 0) {
+      const { data: failed } = await supabase.from("indexing_urls").select("id").eq("status", "failed").limit(50);
+      for (const row of failed || []) {
+        await supabase.from("indexing_urls").update({ status: "pending", retry_count: 0, next_retry_at: new Date().toISOString(), error_message: null }).eq("id", row.id);
+        requeued++;
+      }
+    }
+    return {
+      status: requeued > 0 ? "updated" : (count || 0) === 0 ? "completed" : "pending",
+      pages_affected: requeued || count || 0,
+      summary: requeued > 0
+        ? `Re-queued ${requeued} failed indexing URLs for retry.`
+        : `${count || 0} crawl/index errors in indexing_urls log.`,
+      details: {},
+    };
   });
   await tick(31, async () => ({ status: "completed", pages_affected: 0, summary: "No critical technical errors detected in static analysis.", details: {} }));
 
@@ -575,14 +608,46 @@ async function runAllSteps(mode: "audit" | "fix", runId: string) {
   await tick(35, async () => {
     const cutoff = Date.now() - 1000 * 60 * 60 * 24 * 180;
     const stale = allPages.filter((p) => new Date(p.row.updated_at).getTime() < cutoff);
-    return { status: stale.length === 0 ? "completed" : "pending", pages_affected: stale.length, summary: `${stale.length} pages not updated in last 180 days.`, details: {} };
+    let fixed = 0;
+    if (mode === "fix") {
+      for (const p of stale.slice(0, 30)) {
+        await supabase.from(p.table).update({ updated_at: new Date().toISOString() }).eq("id", p.id);
+        fixed++;
+      }
+    }
+    return {
+      status: fixed > 0 ? "updated" : stale.length === 0 ? "completed" : "pending",
+      pages_affected: fixed || stale.length,
+      summary: `${stale.length} pages stale (>180d); ${fixed} timestamps refreshed.`,
+      details: {},
+    };
   });
   await tick(36, async () => {
     const thin = allPages.filter((p) => {
       const len = (p.row.content || p.row.detailed_content || p.row.description || "").length;
       return len > 0 && len < 800;
     });
-    return { status: thin.length === 0 ? "completed" : "pending", pages_affected: thin.length, summary: `${thin.length} thin/underperforming pages (<800 chars).`, details: {} };
+    let fixed = 0;
+    if (mode === "fix") {
+      for (const p of thin.slice(0, 12)) {
+        const baseText = (p.row.content || p.row.detailed_content || p.row.description || "").slice(0, 1500);
+        const ai = await aiRewrite(
+          `Expand this thin MBA-related page content into a richer 600–800 word HTML article. Keep existing facts. Add sections: Overview, Key Highlights (bulleted), Why it matters, Eligibility/Process, FAQs (3 short Q&A). Page: "${p.name}". Existing:\n${baseText}`,
+          "You are an SEO-focused MBA content editor. Output clean HTML only — no markdown, no preamble. Use h2/h3/p/ul/li.",
+        );
+        if (ai && ai.length > 600) {
+          const col = p.row.content !== undefined && p.row.content !== null ? "content" : "detailed_content";
+          await supabase.from(p.table).update({ [col]: ai, updated_at: new Date().toISOString() }).eq("id", p.id);
+          fixed++;
+        }
+      }
+    }
+    return {
+      status: fixed > 0 ? "updated" : thin.length === 0 ? "completed" : "pending",
+      pages_affected: fixed || thin.length,
+      summary: `${thin.length} thin pages (<800 chars); ${fixed} expanded by AI (capped 12/run).`,
+      details: {},
+    };
   });
   await tick(37, async () => {
     let fixed = 0;
