@@ -29,7 +29,7 @@ interface SectionGroup {
   samples: { url: string; expectedCanonical: string; context: any }[];
 }
 
-const buildSections = (): SectionGroup[] => {
+const buildAnalyzerSections = (): SectionGroup[] => {
   const plain: SectionGroup = {
     key: "plain",
     label: "Plain Profile-Analyzer",
@@ -41,8 +41,8 @@ const buildSections = (): SectionGroup[] => {
     }],
   };
   const exams: SectionGroup = {
-    key: "exam",
-    label: "Per-Exam variants",
+    key: "exam_analyzer",
+    label: "Analyzer · Per-Exam variants",
     description: `Filtered by exam (${SAMPLE_EXAMS.length} URLs)`,
     samples: SAMPLE_EXAMS.map((e) => ({
       url: buildAnalyzerCanonical({ exam: e }),
@@ -51,8 +51,8 @@ const buildSections = (): SectionGroup[] => {
     })),
   };
   const cities: SectionGroup = {
-    key: "city",
-    label: "Per-City variants",
+    key: "city_analyzer",
+    label: "Analyzer · Per-City variants",
     description: `Filtered by city (${SAMPLE_CITIES.length} URLs)`,
     samples: SAMPLE_CITIES.map((c) => ({
       url: buildAnalyzerCanonical({ city: c }),
@@ -61,8 +61,8 @@ const buildSections = (): SectionGroup[] => {
     })),
   };
   const combined: SectionGroup = {
-    key: "combined",
-    label: "Combined exam + city + course",
+    key: "combined_analyzer",
+    label: "Analyzer · Combined exam + city + course",
     description: `Long-tail combinations (${SAMPLE_COURSES.length} URLs)`,
     samples: SAMPLE_COURSES.map((course, i) => ({
       url: buildAnalyzerCanonical({
@@ -83,6 +83,70 @@ const buildSections = (): SectionGroup[] => {
     })),
   };
   return [plain, exams, cities, combined];
+};
+
+const STATIC_SECTION: SectionGroup = {
+  key: "static",
+  label: "Static pages",
+  description: "Homepage, listing pages, tools",
+  samples: [
+    "/", "/colleges", "/coaching", "/blog", "/compare",
+    "/profile-analyzer", "/college-shortlister", "/mba-roi-calculator",
+    "/cat-score-calculator", "/about", "/contact",
+  ].map((p) => {
+    const url = `${SITE_URL}${p}`;
+    return { url, expectedCanonical: url, context: { path: p } };
+  }),
+};
+
+/**
+ * Pulls every real URL on the site (colleges, institutes, exams, articles,
+ * city pages, categories) plus the static pages and the Profile-Analyzer
+ * sample space. This is what makes the validator audit the *whole* site.
+ */
+const loadAllSections = async (): Promise<SectionGroup[]> => {
+  const sections: SectionGroup[] = [STATIC_SECTION, ...buildAnalyzerSections()];
+
+  const tableMap: Array<{
+    table: "colleges" | "institutes" | "exams" | "articles" | "city_pages" | "categories";
+    prefix: string;
+    key: string;
+    label: string;
+    extraFilter?: (q: any) => any;
+  }> = [
+    { table: "colleges", prefix: "/college/", key: "colleges", label: "Colleges" },
+    { table: "institutes", prefix: "/institute/", key: "institutes", label: "Coaching Institutes" },
+    { table: "exams", prefix: "/exam/", key: "exams", label: "Exams" },
+    {
+      table: "articles", prefix: "/article/", key: "articles", label: "Articles / Blog",
+      extraFilter: (q) => q.eq("published", true),
+    },
+    {
+      table: "city_pages", prefix: "/colleges/", key: "city_pages", label: "City pages",
+      extraFilter: (q) => q.eq("active", true),
+    },
+    { table: "categories", prefix: "/category/", key: "categories", label: "Categories" },
+  ];
+
+  for (const m of tableMap) {
+    let q = supabase.from(m.table).select("slug, name").not("slug", "is", null).limit(500);
+    if (m.extraFilter) q = m.extraFilter(q);
+    const { data, error } = await q;
+    if (error || !data) continue;
+    const samples = (data as Array<{ slug: string }>).filter((r) => r.slug).map((r) => {
+      const url = `${SITE_URL}${m.prefix}${r.slug}`;
+      return { url, expectedCanonical: url, context: { table: m.table, slug: r.slug } };
+    });
+    if (samples.length === 0) continue;
+    sections.push({
+      key: m.key,
+      label: m.label,
+      description: `${samples.length} live URL${samples.length > 1 ? "s" : ""} from the database`,
+      samples,
+    });
+  }
+
+  return sections;
 };
 
 // ---------- Per-row check engine ----------
