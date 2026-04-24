@@ -168,6 +168,9 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
+        // COST OPT: Cap to 6K tokens — a full blog article (~1500 words) fits in
+        // ~4K tokens; without the cap Gemini sometimes returns 8K+ of filler.
+        max_tokens: 6000,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },

@@ -16,7 +16,11 @@ const corsHeaders = {
 };
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const MODEL = "google/gemini-2.5-pro"; // accuracy-first
+// COST OPT (2026-04): downgraded from gemini-2.5-pro → gemini-2.5-flash.
+// Course discovery + content generation is structured tool-calling work; flash
+// produces equivalent results at ~1/4 the cost. Pro is reserved for true deep
+// reasoning tasks only (e.g. premium profile reports).
+const MODEL = "google/gemini-2.5-flash";
 
 interface InstituteCtx {
   name: string;
