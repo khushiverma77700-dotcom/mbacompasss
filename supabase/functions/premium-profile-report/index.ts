@@ -3,6 +3,7 @@
 // Cached to analysis_results.ai_summary so subsequent calls are free.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
+import { callAIGateway } from "../_shared/aiGateway.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -78,13 +79,7 @@ Rules:
 - section_insights: short insight strings for keys: academics, work_ex, college_strategy, exam_prep, roi.
 No fluff. No generic advice. Reference numbers from the input.`;
 
-    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
+    const aiResp = await callAIGateway({
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: "You write extremely concise, quantitative McKinsey-style narrative for MBA candidates. No hedging." },
@@ -127,51 +122,4 @@ No fluff. No generic advice. Reference numbers from the input.`;
           },
         }],
         tool_choice: { type: "function", function: { name: "premium_narrative" } },
-      }),
-    });
-
-    if (!aiResp.ok) {
-      if (aiResp.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limited. Please try again in a moment." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (aiResp.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Add credits in Lovable workspace." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const t = await aiResp.text();
-      console.error("[premium-profile-report] gateway error", aiResp.status, t);
-      throw new Error("AI gateway error");
-    }
-
-    const json = await aiResp.json();
-    const args = json?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
-    if (!args) throw new Error("No tool call output");
-    const parsed = JSON.parse(args);
-
-    // Cache by upserting/inserting into analysis_results
-    try {
-      const { data: existing } = await supabase
-        .from("analysis_results")
-        .select("id")
-        .eq("profile_analysis_id", body.profile_id)
-        .maybeSingle();
-      if (existing) {
-        await supabase.from("analysis_results").update({ ai_summary: JSON.stringify(parsed) }).eq("id", existing.id);
-      } else {
-        await supabase.from("analysis_results").insert({ profile_analysis_id: body.profile_id, ai_summary: JSON.stringify(parsed) });
-      }
-    } catch (e) { console.error("[premium-profile-report] cache write failed", e); }
-
-    return new Response(JSON.stringify({ ...parsed, cached: false }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (e) {
-    console.error("[premium-profile-report] error", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-});
+      });
