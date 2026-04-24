@@ -126,6 +126,7 @@ const MockResultPage = lazyWithPreload(() => import("./pages/mocks/MockResultPag
 const MyMocksPage = lazyWithPreload(() => import("./pages/mocks/MyMocksPage"));
 const MockReviewPage = lazyWithPreload(() => import("./pages/mocks/MockReviewPage"));
 const MockLeaderboardPage = lazyWithPreload(() => import("./pages/mocks/MockLeaderboardPage"));
+const MockCheckoutReturnPage = lazyWithPreload(() => import("./pages/mocks/MockCheckoutReturnPage"));
 
 // Lazy load heavy popups
 const OnboardingDialog = lazyWithPreload(() => import("@/components/OnboardingDialog"));
@@ -499,6 +500,7 @@ const App = () => (
             <Route path="/mocks/result/:attemptId" element={<PublicLayout><LazyPage><MockResultPage /></LazyPage></PublicLayout>} />
             <Route path="/mocks/review/:attemptId" element={<PublicLayout><LazyPage><MockReviewPage /></LazyPage></PublicLayout>} />
             <Route path="/mocks/leaderboard/:slug" element={<PublicLayout><LazyPage><MockLeaderboardPage /></LazyPage></PublicLayout>} />
+            <Route path="/mocks/checkout/return" element={<LazyPage><MockCheckoutReturnPage /></LazyPage>} />
             <Route path="/dashboard/mocks" element={<PublicLayout><LazyPage><MyMocksPage /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />
           </Routes>
