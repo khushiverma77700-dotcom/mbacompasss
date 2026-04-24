@@ -450,7 +450,7 @@ const AdminCollegeSections = () => {
 
       <div className="mb-4">
         <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Filter by College</Label>
-        <select className="border border-border rounded-md p-2 text-sm bg-background w-64" value={selectedCollege} onChange={(e) => setSelectedCollege(e.target.value)}>
+        <select className="border border-border rounded-md p-2 text-sm bg-background w-64" value={selectedCollege} onChange={(e) => setFilter("college", e.target.value || "all")}>
           <option value="">All Colleges</option>
           {colleges.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
