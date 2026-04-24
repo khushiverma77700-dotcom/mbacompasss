@@ -38,8 +38,12 @@ interface CheckResult {
 }
 
 const queryDoh = async (resolverUrl: string, host: string): Promise<string[]> => {
-  const res = await fetch(`${resolverUrl}?name=${encodeURIComponent(host)}&type=A`, {
+  // Cache-bust so "Re-check now" actually hits the resolver instead of the browser/CDN cache
+  const bust = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const url = `${resolverUrl}?name=${encodeURIComponent(host)}&type=A&_=${bust}`;
+  const res = await fetch(url, {
     headers: { Accept: "application/dns-json" },
+    cache: "no-store",
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const json = await res.json();
