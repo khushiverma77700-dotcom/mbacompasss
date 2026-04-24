@@ -12,6 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, X, ArrowLeft, Sparkles } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
+import { useAdminFilters } from "@/hooks/useAdminFilters";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import { useMemo } from "react";
 import SortableTableHead from "@/components/admin/SortableTableHead";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import StateCitySelect from "@/components/admin/StateCitySelect";
@@ -50,10 +53,48 @@ const AdminColleges = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [tagInputs, setTagInputs] = useState({ courses: "", accreditations: "", exams_accepted: "", top_recruiters: "", keywords: "" });
   const { toast } = useToast();
-  const { sortedItems: sortedColleges, sortConfig, handleSort } = useTableSort(colleges);
   const { data: specializationOptions = [] } = useSpecializations("college");
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  const { filters, setFilter, clearAll, activeCount } = useAdminFilters({
+    storageKey: "admin.colleges.filters",
+    defaults: { search: "", tier: "all", category: "all", type: "all", state: "all", city: "all" },
+    preserveKeys: ["edit"],
+  });
+
+  const stateOptions = useMemo(() => {
+    const s = new Set<string>();
+    colleges.forEach((c: any) => c.state && s.add(c.state));
+    return Array.from(s).sort();
+  }, [colleges]);
+  const cityOptions = useMemo(() => {
+    const s = new Set<string>();
+    colleges.forEach((c: any) => {
+      if (c.city && (filters.state === "all" || c.state === filters.state)) s.add(c.city);
+    });
+    return Array.from(s).sort();
+  }, [colleges, filters.state]);
+  const typeOptions = useMemo(() => {
+    const s = new Set<string>();
+    colleges.forEach((c: any) => c.type && s.add(c.type));
+    return Array.from(s).sort();
+  }, [colleges]);
+
+  const filteredColleges = useMemo(() => {
+    const q = filters.search.trim().toLowerCase();
+    return colleges.filter((c: any) => {
+      if (q && !(c.name?.toLowerCase().includes(q) || c.slug?.toLowerCase().includes(q) || c.city?.toLowerCase().includes(q))) return false;
+      if (filters.tier !== "all" && c.tier !== filters.tier) return false;
+      if (filters.category !== "all" && c.college_category !== filters.category) return false;
+      if (filters.type !== "all" && c.type !== filters.type) return false;
+      if (filters.state !== "all" && c.state !== filters.state) return false;
+      if (filters.city !== "all" && c.city !== filters.city) return false;
+      return true;
+    });
+  }, [colleges, filters]);
+
+  const { sortedItems: sortedColleges, sortConfig, handleSort } = useTableSort(filteredColleges);
 
   const fetchColleges = async () => {
     const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, tier, college_category, ranking, established, created_at, source, last_updated_by").order("ranking", { ascending: true });
@@ -342,6 +383,24 @@ const AdminColleges = () => {
         </div>
       </div>
 
+      <AdminFilterBar
+        searchValue={filters.search}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search by name, slug, or city…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        resultsHint={`${sortedColleges.length} of ${colleges.length} colleges`}
+        filters={[
+          { type: "select", key: "tier", label: "Tier", width: "w-32", options: [{ label: "All Tiers", value: "all" }, ...TIER_OPTIONS.map(t => ({ label: t, value: t }))] },
+          { type: "select", key: "category", label: "Category", width: "w-36", options: [{ label: "All", value: "all" }, ...CATEGORY_OPTIONS.map(c => ({ label: c, value: c }))] },
+          { type: "select", key: "type", label: "Type", width: "w-36", options: [{ label: "All Types", value: "all" }, ...typeOptions.map(t => ({ label: t, value: t }))] },
+          { type: "select", key: "state", label: "State", width: "w-44", options: [{ label: "All States", value: "all" }, ...stateOptions.map(s => ({ label: s, value: s }))] },
+          { type: "select", key: "city", label: "City", width: "w-44", options: [{ label: "All Cities", value: "all" }, ...cityOptions.map(c => ({ label: c, value: c }))] },
+        ]}
+      />
+
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -387,8 +446,8 @@ const AdminColleges = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {colleges.length === 0 && (
-                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No colleges yet</TableCell></TableRow>
+              {sortedColleges.length === 0 && (
+                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">{colleges.length === 0 ? "No colleges yet" : "No colleges match your filters"}</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
