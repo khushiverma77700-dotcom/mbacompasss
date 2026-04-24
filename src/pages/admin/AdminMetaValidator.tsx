@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +29,7 @@ interface SectionGroup {
   samples: { url: string; expectedCanonical: string; context: any }[];
 }
 
-const buildSections = (): SectionGroup[] => {
+const buildAnalyzerSections = (): SectionGroup[] => {
   const plain: SectionGroup = {
     key: "plain",
     label: "Plain Profile-Analyzer",
@@ -41,8 +41,8 @@ const buildSections = (): SectionGroup[] => {
     }],
   };
   const exams: SectionGroup = {
-    key: "exam",
-    label: "Per-Exam variants",
+    key: "exam_analyzer",
+    label: "Analyzer · Per-Exam variants",
     description: `Filtered by exam (${SAMPLE_EXAMS.length} URLs)`,
     samples: SAMPLE_EXAMS.map((e) => ({
       url: buildAnalyzerCanonical({ exam: e }),
@@ -51,8 +51,8 @@ const buildSections = (): SectionGroup[] => {
     })),
   };
   const cities: SectionGroup = {
-    key: "city",
-    label: "Per-City variants",
+    key: "city_analyzer",
+    label: "Analyzer · Per-City variants",
     description: `Filtered by city (${SAMPLE_CITIES.length} URLs)`,
     samples: SAMPLE_CITIES.map((c) => ({
       url: buildAnalyzerCanonical({ city: c }),
@@ -61,8 +61,8 @@ const buildSections = (): SectionGroup[] => {
     })),
   };
   const combined: SectionGroup = {
-    key: "combined",
-    label: "Combined exam + city + course",
+    key: "combined_analyzer",
+    label: "Analyzer · Combined exam + city + course",
     description: `Long-tail combinations (${SAMPLE_COURSES.length} URLs)`,
     samples: SAMPLE_COURSES.map((course, i) => ({
       url: buildAnalyzerCanonical({
@@ -83,6 +83,71 @@ const buildSections = (): SectionGroup[] => {
     })),
   };
   return [plain, exams, cities, combined];
+};
+
+const STATIC_SECTION: SectionGroup = {
+  key: "static",
+  label: "Static pages",
+  description: "Homepage, listing pages, tools",
+  samples: [
+    "/", "/colleges", "/coaching", "/blog", "/compare",
+    "/profile-analyzer", "/college-shortlister", "/mba-roi-calculator",
+    "/cat-score-calculator", "/about", "/contact",
+  ].map((p) => {
+    const url = `${SITE_URL}${p}`;
+    return { url, expectedCanonical: url, context: { path: p } };
+  }),
+};
+
+/**
+ * Pulls every real URL on the site (colleges, institutes, exams, articles,
+ * city pages, categories) plus the static pages and the Profile-Analyzer
+ * sample space. This is what makes the validator audit the *whole* site.
+ */
+const loadAllSections = async (): Promise<SectionGroup[]> => {
+  const sections: SectionGroup[] = [STATIC_SECTION, ...buildAnalyzerSections()];
+
+  const tableMap: Array<{
+    table: "colleges" | "institutes" | "exams" | "articles" | "city_pages" | "categories";
+    prefix: string;
+    key: string;
+    label: string;
+    extraFilter?: (q: any) => any;
+  }> = [
+    { table: "colleges", prefix: "/college/", key: "colleges", label: "Colleges" },
+    { table: "institutes", prefix: "/institute/", key: "institutes", label: "Coaching Institutes" },
+    { table: "exams", prefix: "/exam/", key: "exams", label: "Exams" },
+    {
+      table: "articles", prefix: "/article/", key: "articles", label: "Articles / Blog",
+      extraFilter: (q) => q.eq("published", true),
+    },
+    {
+      table: "city_pages", prefix: "/colleges/", key: "city_pages", label: "City pages",
+      extraFilter: (q) => q.eq("active", true),
+    },
+    { table: "categories", prefix: "/category/", key: "categories", label: "Categories" },
+  ];
+
+  for (const m of tableMap) {
+    let q: any = supabase.from(m.table).select("slug").not("slug", "is", null).limit(500);
+    if (m.extraFilter) q = m.extraFilter(q);
+    const { data, error } = await q;
+    if (error || !data) continue;
+    const rows = (data as unknown as Array<{ slug: string | null }>) || [];
+    const samples = rows.filter((r) => !!r.slug).map((r) => {
+      const url = `${SITE_URL}${m.prefix}${r.slug}`;
+      return { url, expectedCanonical: url, context: { table: m.table, slug: r.slug } };
+    });
+    if (samples.length === 0) continue;
+    sections.push({
+      key: m.key,
+      label: m.label,
+      description: `${samples.length} live URL${samples.length > 1 ? "s" : ""} from the database`,
+      samples,
+    });
+  }
+
+  return sections;
 };
 
 // ---------- Per-row check engine ----------
@@ -183,11 +248,12 @@ const runChecksForUrl = async (s: { url: string; expectedCanonical: string; cont
 type Phase = "idle" | "scanning" | "researching" | "executing";
 
 export default function AdminMetaValidator() {
-  const sections = useMemo(() => buildSections(), []);
+  const [sections, setSections] = useState<SectionGroup[]>(() => [STATIC_SECTION, ...buildAnalyzerSections()]);
+  const [loadingSections, setLoadingSections] = useState(true);
   const [results, setResults] = useState<Record<string, RowResult[]>>({});
   const [phase, setPhase] = useState<Phase>("idle");
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    plain: true, exam: true, city: true, combined: true,
+    static: true, plain: true, exam_analyzer: true, city_analyzer: true, combined_analyzer: true,
   });
 
   // Bulk fix dialog
@@ -195,17 +261,40 @@ export default function AdminMetaValidator() {
   const [selectedSections, setSelectedSections] = useState<Record<string, boolean>>({});
   const [proposedFixes, setProposedFixes] = useState<any[] | null>(null);
 
+  // Load every real URL from the DB on mount
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const all = await loadAllSections();
+        if (active) setSections(all);
+      } catch (e) {
+        console.error("loadAllSections failed", e);
+      } finally {
+        if (active) setLoadingSections(false);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
   const totalRows = Object.values(results).reduce((a, b) => a + b.length, 0);
   const okRows = Object.values(results).flat().filter((r) => r.overallOk).length;
   const badRows = totalRows - okRows;
+  const totalSampledUrls = useMemo(() => sections.reduce((a, s) => a + s.samples.length, 0), [sections]);
 
   const runValidation = async () => {
     setPhase("scanning");
     setResults({});
+    // Always re-fetch the latest URL space before validating, so newly-added
+    // colleges / articles are picked up without a page reload.
+    const fresh = await loadAllSections().catch(() => sections);
+    setSections(fresh);
     const out: Record<string, RowResult[]> = {};
-    for (const sec of sections) {
+    for (const sec of fresh) {
       const rows: RowResult[] = [];
-      for (const s of sec.samples) {
+      // Cap per-section to avoid hammering the network on huge tables
+      const capped = sec.samples.slice(0, 100);
+      for (const s of capped) {
         const r = await runChecksForUrl(s);
         r.sectionKey = sec.key;
         rows.push(r);
@@ -214,9 +303,10 @@ export default function AdminMetaValidator() {
     }
     setResults(out);
     setPhase("idle");
-    const bad = Object.values(out).flat().filter((r) => !r.overallOk).length;
-    if (bad === 0) toast.success(`All ${Object.values(out).flat().length} URLs passed every check.`);
-    else toast.warning(`${bad} URL(s) need attention.`);
+    const flat = Object.values(out).flat();
+    const bad = flat.filter((r) => !r.overallOk).length;
+    if (bad === 0) toast.success(`All ${flat.length} URLs passed every check.`);
+    else toast.warning(`${bad} of ${flat.length} URL(s) need attention.`);
   };
 
   const fixSingleRow = async (row: RowResult) => {
@@ -311,10 +401,10 @@ export default function AdminMetaValidator() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Profile-Analyzer Meta Tag Validator</h1>
+          <h1 className="text-2xl font-bold text-foreground">Site-wide Meta Tag Validator</h1>
           <p className="text-muted-foreground text-sm mt-1 max-w-2xl">
-            Per-check audit across {sections.reduce((a, s) => a + s.samples.length, 0)} URL variants.
-            Each row shows pass/fail for title, description, canonical, HTTP status & JSON-LD — with one-click AI fix per row or bulk AI fix across selected sections.
+            Per-check audit across <strong>{totalSampledUrls}</strong> live URLs — colleges, institutes, exams, articles, city pages, categories, static pages and Profile-Analyzer variants.
+            {loadingSections && " Loading URL list…"}
           </p>
         </div>
         <div className="flex gap-2">
