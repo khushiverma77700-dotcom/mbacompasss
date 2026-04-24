@@ -351,11 +351,12 @@ Perform COMPREHENSIVE, DEEP SEO analysis. Score the CURRENT state honestly. Show
         // at production-tier cost. Cap completion to 4K tokens (the schema asks for
         // ~30 short fields — never needs more than ~3K).
         model: "google/gemini-2.5-flash",
-        max_tokens: 4096,
+        max_tokens: 8192,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
+        tool_choice: { type: "function", function: { name: "seo_suggestions" } },
         tools: [{
           type: "function",
           function: {
