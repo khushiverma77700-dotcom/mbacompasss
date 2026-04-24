@@ -136,6 +136,22 @@ const AdminCollegeSections = () => {
   const fetchColleges = async () => { const { data } = await supabase.from("colleges").select("id, name, city, state, type, tier, established").order("name"); if (data) setColleges(data); };
   const fetchSections = async () => { let query = supabase.from("college_sections").select("*, colleges(name)").order("sort_order"); if (selectedCollege) query = query.eq("college_id", selectedCollege); const { data } = await query; if (data) setSections(data); };
 
+  const filteredSections = useMemo(() => {
+    const search = (filters.search || "").trim().toLowerCase();
+    const sectionType = filters.section;
+    return sections.filter((s) => {
+      if (sectionType && sectionType !== "all" && s.section_type !== sectionType) return false;
+      if (!search) return true;
+      const hay = [
+        s.title,
+        s.content,
+        (s as any).colleges?.name,
+        SECTION_TYPES.find((t) => t.value === s.section_type)?.label,
+      ].filter(Boolean).join(" ").toLowerCase();
+      return hay.includes(search);
+    });
+  }, [sections, filters.search, filters.section]);
+
   // Fetch the FULL college row so we can pass shared anchor facts (established year, ranking,
   // fees, placements, exams, accreditations) into every section call. This keeps the same
   // facts consistent across every generated section for one college.
