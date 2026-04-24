@@ -14,6 +14,9 @@ import { Plus, Pencil, Trash2, X, GripVertical, ArrowLeft, Sparkles, Loader2, Ch
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FileUpload from "@/components/admin/FileUpload";
 import { Progress } from "@/components/ui/progress";
+import { useAdminFilters } from "@/hooks/useAdminFilters";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import { useMemo } from "react";
 
 const SECTION_TYPES = [
   { value: "courses_fees", label: "Courses & Fee Structure" },
@@ -117,10 +120,15 @@ const SectionFormRenderer = ({ type, data, onChange, content, onContentChange }:
 const AdminCollegeSections = () => {
   const [sections, setSections] = useState<any[]>([]);
   const [colleges, setColleges] = useState<{ id: string; name: string; city?: string | null; state?: string | null; type?: string | null; tier?: string | null; established?: number | null }[]>([]);
-  const [selectedCollege, setSelectedCollege] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
+
+  const { filters, setFilter, clearAll, activeCount } = useAdminFilters({
+    storageKey: "admin.collegeSections.filters",
+    defaults: { search: "", college: "all", section: "all" },
+  });
+  const selectedCollege = filters.college === "all" ? "" : filters.college;
   const [aiBusy, setAiBusy] = useState<string | null>(null); // section_type currently generating, or "form" / "bulk:<id>"
   const [bulkProgress, setBulkProgress] = useState<{ total: number; done: number; ok: number; fail: number; current: string; results: { type: string; label: string; status: "pending" | "ok" | "fail"; error?: string }[] } | null>(null);
   const { toast } = useToast();
