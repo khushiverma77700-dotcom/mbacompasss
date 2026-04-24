@@ -85,17 +85,14 @@ const Index = () => {
         jsonLd={jsonLdSchemas}
       />
       
-      {/* Above-the-fold: loaded eagerly */}
+      {/* Above-the-fold: only Hero loads eagerly for fastest LCP */}
       <HeroSection />
-      <Suspense fallback={null}>
-        <StatsCounterSection />
-        
-        <CategoryCards />
-      </Suspense>
 
-      {/* Below-the-fold: mount after first paint so hero appears immediately */}
+      {/* Everything else: mount after first paint */}
       {showDeferredSections && (
         <Suspense fallback={null}>
+          <StatsCounterSection />
+          <CategoryCards />
           <AIToolsSection />
           <CoachingOfWeekSection />
           <OfferBanners />
