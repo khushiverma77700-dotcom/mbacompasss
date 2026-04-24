@@ -106,6 +106,23 @@ const AdminBanners = () => {
         <h1 className="font-heading text-2xl font-bold text-foreground">Manage Banners</h1>
         <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Banner</Button>
       </div>
+      <AdminFilterBar
+        searchValue={filters.search}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search title, subtitle, CTA, link…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        filters={[
+          { type: "select", key: "active", label: "Status", width: "w-36", options: [
+            { label: "All", value: "all" },
+            { label: "Active only", value: "active" },
+            { label: "Inactive only", value: "inactive" },
+          ]},
+        ]}
+        resultsHint={`${sortedBanners.length} of ${banners.length} banners`}
+      />
       <Card><CardContent className="p-0">
         <Table>
            <TableHeader><TableRow>
@@ -126,8 +143,8 @@ const AdminBanners = () => {
                 </TableCell>
               </TableRow>
             ))}
-            {banners.length === 0 && (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No banners yet</TableCell></TableRow>
+            {sortedBanners.length === 0 && (
+              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">{banners.length === 0 ? "No banners yet" : "No banners match the current filters"}</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
