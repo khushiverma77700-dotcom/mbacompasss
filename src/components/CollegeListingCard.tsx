@@ -209,15 +209,15 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
           </div>
 
           {/* ===== RIGHT: CTA ===== */}
-          <div className="flex md:flex-col items-center justify-between md:justify-center gap-3 p-5 md:w-48 flex-shrink-0 md:border-l border-t md:border-t-0 border-border bg-muted/20">
+          <div className="flex md:flex-col items-center justify-between md:justify-center gap-3 p-5 md:w-48 flex-shrink-0 md:border-l border-t md:border-t-0 border-border bg-gradient-to-br from-primary/5 via-muted/20 to-transparent">
             <div className="text-center">
               {college.fees_lakhs ? (
                 <>
                   <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold block">Total Fees</span>
-                  <span className="font-heading font-extrabold text-foreground text-xl block leading-none mt-1">
+                  <span className="font-heading font-extrabold bg-gradient-to-br from-primary to-primary/70 bg-clip-text text-transparent text-2xl block leading-none mt-1">
                     ₹{college.fees_lakhs}L
                   </span>
-                  <span className="text-[10px] text-muted-foreground block mt-1">Program</span>
+                  <span className="text-[10px] text-muted-foreground block mt-1">Full Program</span>
                 </>
               ) : (
                 <>
@@ -228,11 +228,11 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
             </div>
 
             <div className="flex flex-col items-stretch gap-2 w-full max-w-[160px]">
-              <div className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-bold text-xs group-hover:bg-primary/90 transition-all shadow-sm">
+              <div className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-gradient-to-r from-primary to-primary/85 text-primary-foreground font-bold text-xs group-hover:shadow-lg group-hover:shadow-primary/30 transition-all">
                 View Details <ChevronRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
               </div>
-              <span className="text-[10px] text-muted-foreground flex items-center justify-center gap-1">
-                <BadgeCheck className="w-2.5 h-2.5" /> Free Brochure
+              <span className="text-[10px] text-muted-foreground flex items-center justify-center gap-1 font-medium">
+                <BadgeCheck className="w-2.5 h-2.5 text-primary" /> Free Brochure
               </span>
             </div>
           </div>
