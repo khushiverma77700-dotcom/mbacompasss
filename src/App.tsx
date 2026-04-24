@@ -123,6 +123,9 @@ const MocksListPage = lazyWithPreload(() => import("./pages/mocks/MocksListPage"
 const MockTestIntroPage = lazyWithPreload(() => import("./pages/mocks/MockTestIntroPage"));
 const MockTestRunnerPage = lazyWithPreload(() => import("./pages/mocks/MockTestRunnerPage"));
 const MockResultPage = lazyWithPreload(() => import("./pages/mocks/MockResultPage"));
+const MyMocksPage = lazyWithPreload(() => import("./pages/mocks/MyMocksPage"));
+const MockReviewPage = lazyWithPreload(() => import("./pages/mocks/MockReviewPage"));
+const MockLeaderboardPage = lazyWithPreload(() => import("./pages/mocks/MockLeaderboardPage"));
 
 // Lazy load heavy popups
 const OnboardingDialog = lazyWithPreload(() => import("@/components/OnboardingDialog"));
