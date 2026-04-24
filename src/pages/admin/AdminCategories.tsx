@@ -22,7 +22,18 @@ const AdminCategories = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const { toast } = useToast();
-  const { sortedItems: sortedCategories, sortConfig, handleSort } = useTableSort(categories);
+  const examTypeOptions = useMemo(() => {
+    const set = new Set<string>();
+    categories.forEach((c) => { if (c.exam_type) set.add(c.exam_type); });
+    return Array.from(set).sort().map((v) => ({ label: v, value: v }));
+  }, [categories]);
+  const { filtered, filters, setFilter, clearAll, activeCount } = useFilteredList(categories, {
+    storageKey: "admin.categories.filters",
+    defaults: { search: "", exam_type: "all" },
+    searchFields: [(c) => c.name, (c) => c.slug, (c) => c.description, (c) => c.exam_type],
+    fieldFilters: { exam_type: (c) => c.exam_type },
+  });
+  const { sortedItems: sortedCategories, sortConfig, handleSort } = useTableSort(filtered);
 
   const fetchCategories = async () => {
     const { data } = await supabase.from("categories").select("*").order("name");
