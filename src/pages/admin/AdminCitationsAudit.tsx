@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ExternalLink, RefreshCw, Search, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ExternalLink, RefreshCw, Search, AlertTriangle, CheckCircle2, Pencil } from "lucide-react";
 
 type PageType = "article" | "college" | "institute" | "college_section";
 
