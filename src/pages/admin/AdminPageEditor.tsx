@@ -16,7 +16,7 @@ import {
   Sparkles, Loader2, ExternalLink, Save, RefreshCw, FileText, GraduationCap, Building2,
   CheckCircle2, AlertTriangle, XCircle, Search, Eye, Code, Globe,
 } from "lucide-react";
-import { buildStoredSeoSnapshot, saveSeoSnapshot, type SEOContentType } from "@/lib/seoAutomation";
+import { buildStoredSeoSnapshot, saveSeoSnapshot, getSeoSnapshotKey, type SEOContentType } from "@/lib/seoAutomation";
 
 type EntityKind = "college" | "institute" | "article";
 
