@@ -73,7 +73,7 @@ export default function AdminContentRefreshes() {
   const [selectedFields, setSelectedFields] = useState<Set<string>>(new Set());
   const [acting, setActing] = useState(false);
 
-  const load = async () => {
+  const load = async (showToast = false) => {
     setLoading(true);
     const { data, error } = await supabase
       .from("content_refreshes")
@@ -83,7 +83,16 @@ export default function AdminContentRefreshes() {
     if (error) {
       toast({ title: "Load failed", description: error.message, variant: "destructive" });
     } else {
-      setRows((data as unknown as RefreshRow[]) || []);
+      const list = (data as unknown as RefreshRow[]) || [];
+      setRows(list);
+      if (showToast) {
+        toast({
+          title: "Refreshed",
+          description: list.length === 0
+            ? "Queue is empty. Trigger a refresh from any College/Institute/Blog/Course admin page."
+            : `Loaded ${list.length} refresh request${list.length === 1 ? "" : "s"}.`,
+        });
+      }
     }
     setLoading(false);
   };
@@ -92,7 +101,7 @@ export default function AdminContentRefreshes() {
     load();
     const ch = supabase
       .channel("content_refreshes_admin")
-      .on("postgres_changes", { event: "*", schema: "public", table: "content_refreshes" }, load)
+      .on("postgres_changes" as any, { event: "*", schema: "public", table: "content_refreshes" }, () => load())
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
@@ -167,9 +176,9 @@ export default function AdminContentRefreshes() {
             Review AI-refreshed content side-by-side. Approve to publish to the live page.
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+        <Button variant="outline" size="sm" onClick={() => load(true)} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-          Reload
+          {loading ? "Reloading..." : "Reload"}
         </Button>
       </div>
 
