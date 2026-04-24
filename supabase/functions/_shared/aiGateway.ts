@@ -1,19 +1,35 @@
+// AI Gateway — original Lovable AI Gateway path (FAST, warm pool) with automatic
+// fallback to the direct Google Gemini OpenAI-compatible endpoint when the
+// Lovable gateway is unavailable or returns an error.
+//
+// Behaviour matches the original Lovable AI Gateway exactly:
+//   • POST https://ai.gateway.lovable.dev/v1/chat/completions
+//   • Authorization: Bearer ${LOVABLE_API_KEY}
+//   • OpenAI-compatible payload (messages, tools, tool_choice, response_format, stream, …)
+//   • Same model IDs (google/gemini-3-flash-preview, openai/gpt-5, …)
+//
+// If LOVABLE_API_KEY is missing OR the gateway returns 5xx / network error,
+// we transparently retry against Gemini using GEMINI_API_KEY so generations
+// never break.
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
-const OPENAI_COMPAT_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+const LOVABLE_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const GEMINI_OPENAI_COMPAT_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
 
 const PRICING: Record<string, { input: number; output: number }> = {
-  "gemini-3.1-pro-preview": { input: 1.25, output: 10.0 },
-  "gemini-3-flash-preview": { input: 0.3, output: 2.5 },
-  "gemini-2.5-pro": { input: 1.25, output: 10.0 },
-  "gemini-2.5-flash": { input: 0.3, output: 2.5 },
-  "gemini-2.5-flash-lite": { input: 0.1, output: 0.4 },
-  "gemini-2.0-flash": { input: 0.1, output: 0.4 },
-  "gemini-1.5-flash": { input: 0.075, output: 0.3 },
-  "gemini-1.5-pro": { input: 1.25, output: 5.0 },
+  "google/gemini-3.1-pro-preview": { input: 1.25, output: 10.0 },
+  "google/gemini-3-flash-preview": { input: 0.3, output: 2.5 },
+  "google/gemini-2.5-pro": { input: 1.25, output: 10.0 },
+  "google/gemini-2.5-flash": { input: 0.3, output: 2.5 },
+  "google/gemini-2.5-flash-lite": { input: 0.1, output: 0.4 },
+  "openai/gpt-5": { input: 1.25, output: 10.0 },
+  "openai/gpt-5-mini": { input: 0.25, output: 2.0 },
+  "openai/gpt-5-nano": { input: 0.05, output: 0.4 },
 };
 
-const MODEL_ALIASES: Record<string, string> = {
+// For direct-Gemini fallback we have to strip the "google/" prefix.
+const GEMINI_DIRECT_ALIASES: Record<string, string> = {
   "google/gemini-3-flash-preview": "gemini-3-flash-preview",
   "google/gemini-3.1-pro-preview": "gemini-3.1-pro-preview",
   "google/gemini-3-pro-image-preview": "gemini-3-pro-image-preview",
@@ -28,12 +44,6 @@ const MODEL_ALIASES: Record<string, string> = {
   "openai/gpt-5.2": "gemini-2.5-pro",
 };
 
-function resolveModelId(model?: string): string {
-  const raw = (model || "google/gemini-3-flash-preview").trim();
-  if (MODEL_ALIASES[raw]) return MODEL_ALIASES[raw];
-  return raw.replace(/^google\//, "");
-}
-
 interface ChatBody {
   model: string;
   messages: Array<{ role: string; content: any }>;
@@ -44,10 +54,7 @@ interface ChatBody {
   temperature?: number;
   response_format?: any;
   reasoning?: any;
-  generationConfig?: {
-    maxOutputTokens?: number;
-    temperature?: number;
-  };
+  generationConfig?: { maxOutputTokens?: number; temperature?: number };
   top_p?: number;
   frequency_penalty?: number;
   presence_penalty?: number;
@@ -74,28 +81,24 @@ interface LogParams {
 }
 
 export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Promise<Response> {
-  const { signal, feature = "unknown", userId = null, maxRetries = 3, skipLog = false } = opts;
+  const { signal, feature = "unknown", userId = null, maxRetries = 2, skipLog = false } = opts;
+  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
   const geminiKey = Deno.env.get("GEMINI_API_KEY");
   const isStream = body.stream === true;
-  const resolvedModel = resolveModelId(body.model);
+  const startedAt = Date.now();
 
-  if (!geminiKey) {
-    const err = "GEMINI_API_KEY is not configured.";
+  if (!lovableKey && !geminiKey) {
+    const err = "No AI key configured (LOVABLE_API_KEY or GEMINI_API_KEY).";
     console.error(`[aiGateway][${feature}] ${err}`);
     if (!skipLog) {
       await logUsage({
-        feature,
-        model: resolvedModel,
-        userId,
-        provider: "gemini-openai-compat",
-        status: "error",
-        errorMessage: err,
-        latencyMs: 0,
+        feature, model: body.model, userId,
+        provider: "none", status: "error",
+        errorMessage: err, latencyMs: 0,
       });
     }
     return new Response(JSON.stringify({ error: err }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
+      status: 500, headers: { "Content-Type": "application/json" },
     });
   }
 
@@ -106,101 +109,109 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
       console.error(`[aiGateway][${feature}] ${err}`);
       if (!skipLog) {
         await logUsage({
-          feature,
-          model: resolvedModel,
-          userId,
-          provider: "validation",
-          status: "error",
-          errorMessage: err,
-          latencyMs: 0,
+          feature, model: body.model, userId,
+          provider: "validation", status: "error",
+          errorMessage: err, latencyMs: 0,
         });
       }
       return new Response(JSON.stringify({ error: err }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
+        status: 400, headers: { "Content-Type": "application/json" },
       });
     }
   }
 
-  const payload = buildOpenAICompatPayload(body, resolvedModel);
-  const startedAt = Date.now();
+  // ── PATH 1: Lovable AI Gateway (preferred — original fast path) ─────────
+  if (lovableKey) {
+    try {
+      const payload = buildOpenAICompatPayload(body, body.model);
+      const resp = await withRetry(
+        () => callUpstream(LOVABLE_GATEWAY_URL, lovableKey, payload, signal),
+        { maxRetries, label: `lovable-gateway[${feature}]` },
+      );
+
+      // 2xx — success, return immediately
+      if (resp.ok) {
+        if (!skipLog) logSuccess(resp, isStream, feature, body.model, userId, "lovable-gateway", startedAt);
+        return resp;
+      }
+
+      // Non-retryable client errors (400, 401, 403, 404) — also return as-is
+      // EXCEPT when we have a Gemini fallback available and want to try it
+      if (resp.status === 402 || resp.status === 429) {
+        // Credits exhausted / rate limited — log and return so the UI can show it
+        if (!skipLog) await logErrorFromResp(resp, feature, body.model, userId, "lovable-gateway", startedAt);
+        return resp;
+      }
+
+      // For 5xx or other errors, fall through to Gemini fallback if we have it
+      console.warn(`[aiGateway][${feature}] Lovable gateway returned ${resp.status}; falling back to direct Gemini.`);
+      if (!geminiKey) {
+        if (!skipLog) await logErrorFromResp(resp, feature, body.model, userId, "lovable-gateway", startedAt);
+        return resp;
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.warn(`[aiGateway][${feature}] Lovable gateway threw: ${msg}; trying Gemini fallback.`);
+      if (!geminiKey) {
+        if (!skipLog) {
+          await logUsage({
+            feature, model: body.model, userId,
+            provider: "lovable-gateway", status: "error",
+            errorMessage: msg, latencyMs: Date.now() - startedAt,
+          });
+        }
+        return new Response(JSON.stringify({ error: msg }), {
+          status: 502, headers: { "Content-Type": "application/json" },
+        });
+      }
+    }
+  }
+
+  // ── PATH 2: Direct Gemini OpenAI-compatible endpoint (fallback) ────────
+  const fallbackStarted = Date.now();
+  const geminiModel = resolveGeminiModel(body.model);
+  const geminiPayload = buildOpenAICompatPayload(body, geminiModel);
 
   try {
     const resp = await withRetry(
-      () => callGeminiOpenAICompat(payload, geminiKey, signal),
-      { maxRetries, label: `gemini-openai-compat[${feature}]` },
+      () => callUpstream(GEMINI_OPENAI_COMPAT_URL, geminiKey!, geminiPayload, signal),
+      { maxRetries, label: `gemini-direct[${feature}]` },
     );
 
     if (!skipLog) {
-      if (resp.ok && !isStream) {
-        const cloned = resp.clone();
-        cloned.text()
-          .then((text) => {
-            const data = parseJSONSafely(text);
-            return logUsage({
-              feature,
-              model: resolvedModel,
-              userId,
-              provider: "gemini-openai-compat",
-              status: "success",
-              latencyMs: Date.now() - startedAt,
-              usage: data?.usage,
-            });
-          })
-          .catch(() => {});
-      } else if (resp.ok && isStream) {
-        logUsage({
-          feature,
-          model: resolvedModel,
-          userId,
-          provider: "gemini-openai-compat-stream",
-          status: "success",
-          latencyMs: Date.now() - startedAt,
-        }).catch(() => {});
+      if (resp.ok) {
+        logSuccess(resp, isStream, feature, geminiModel, userId, "gemini-direct", fallbackStarted);
       } else {
-        const cloned = resp.clone();
-        cloned.text()
-          .then((text) => logUsage({
-            feature,
-            model: resolvedModel,
-            userId,
-            provider: "gemini-openai-compat",
-            status: "error",
-            errorMessage: `${resp.status}: ${extractErrorMessage(text)}`,
-            latencyMs: Date.now() - startedAt,
-          }))
-          .catch(() => {});
+        await logErrorFromResp(resp, feature, geminiModel, userId, "gemini-direct", fallbackStarted);
       }
     }
-
     return resp;
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    console.error(`[aiGateway][${feature}] Gemini call threw:`, msg);
+    console.error(`[aiGateway][${feature}] Gemini fallback threw:`, msg);
     if (!skipLog) {
       await logUsage({
-        feature,
-        model: resolvedModel,
-        userId,
-        provider: "gemini-openai-compat",
-        status: "error",
-        errorMessage: msg,
-        latencyMs: Date.now() - startedAt,
+        feature, model: geminiModel, userId,
+        provider: "gemini-direct", status: "error",
+        errorMessage: msg, latencyMs: Date.now() - fallbackStarted,
       });
     }
     return new Response(JSON.stringify({ error: msg }), {
-      status: 502,
-      headers: { "Content-Type": "application/json" },
+      status: 502, headers: { "Content-Type": "application/json" },
     });
   }
+}
+
+function resolveGeminiModel(model?: string): string {
+  const raw = (model || "google/gemini-3-flash-preview").trim();
+  if (GEMINI_DIRECT_ALIASES[raw]) return GEMINI_DIRECT_ALIASES[raw];
+  return raw.replace(/^google\//, "");
 }
 
 function buildOpenAICompatPayload(body: ChatBody, model: string) {
   const maxTokens = body.max_tokens ?? body.generationConfig?.maxOutputTokens;
   const temperature = body.temperature ?? body.generationConfig?.temperature;
-  const reasoningEffort = typeof body.reasoning?.effort === "string"
-    ? body.reasoning.effort
-    : undefined;
+  const reasoningEffort = typeof body.reasoning?.effort === "string" ? body.reasoning.effort : undefined;
 
   const payload: Record<string, unknown> = {
     model,
@@ -221,12 +232,13 @@ function buildOpenAICompatPayload(body: ChatBody, model: string) {
   return payload;
 }
 
-async function callGeminiOpenAICompat(
-  payload: Record<string, unknown>,
+async function callUpstream(
+  url: string,
   apiKey: string,
+  payload: Record<string, unknown>,
   signal?: AbortSignal,
 ): Promise<Response> {
-  const upstream = await fetch(OPENAI_COMPAT_URL, {
+  const upstream = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -244,7 +256,6 @@ async function callGeminiOpenAICompat(
         headers: { "Content-Type": "application/json" },
       });
     }
-
     return new Response(upstream.body, {
       status: 200,
       headers: {
@@ -268,11 +279,11 @@ async function withRetry(
   fn: () => Promise<Response>,
   opts: { maxRetries: number; label: string },
 ): Promise<Response> {
-  const RETRYABLE = new Set([408, 425, 429, 500, 502, 503, 504]);
+  const RETRYABLE = new Set([408, 425, 500, 502, 503, 504]);
   let lastResp: Response | undefined;
   let lastErr: unknown;
 
-  for (let attempt = 0; attempt < opts.maxRetries; attempt++) {
+  for (let attempt = 0; attempt <= opts.maxRetries; attempt++) {
     try {
       const resp = await fn();
       if (!RETRYABLE.has(resp.status)) return resp;
@@ -283,9 +294,9 @@ async function withRetry(
       console.warn(`[aiGateway:retry] ${opts.label} attempt ${attempt + 1} threw: ${e instanceof Error ? e.message : e}`);
     }
 
-    if (attempt < opts.maxRetries - 1) {
-      const base = 500 * Math.pow(3, attempt);
-      const jitter = Math.random() * 300;
+    if (attempt < opts.maxRetries) {
+      const base = 400 * Math.pow(2, attempt);
+      const jitter = Math.random() * 200;
       await new Promise((resolve) => setTimeout(resolve, base + jitter));
     }
   }
@@ -296,7 +307,6 @@ async function withRetry(
 
 function validateToolSpec(tools: any[]): { ok: true } | { ok: false; error: string } {
   if (!Array.isArray(tools)) return { ok: false, error: "tools must be an array" };
-
   for (let i = 0; i < tools.length; i++) {
     const t = tools[i];
     if (!t || typeof t !== "object") return { ok: false, error: `tools[${i}] is not an object` };
@@ -309,22 +319,60 @@ function validateToolSpec(tools: any[]): { ok: true } | { ok: false; error: stri
       return { ok: false, error: `tools[${i}].function.parameters must be an object` };
     }
   }
-
   return { ok: true };
 }
 
 function parseJSONSafely(text: string): any | null {
-  try {
-    return JSON.parse(text);
-  } catch {
-    return null;
-  }
+  try { return JSON.parse(text); } catch { return null; }
 }
 
 function extractErrorMessage(text: string): string {
   const parsed = parseJSONSafely(text);
   const message = parsed?.error?.message || parsed?.error || text;
   return String(message).slice(0, 500);
+}
+
+function logSuccess(
+  resp: Response, isStream: boolean,
+  feature: string, model: string, userId: string | null,
+  provider: string, startedAt: number,
+) {
+  if (isStream) {
+    logUsage({
+      feature, model, userId,
+      provider: `${provider}-stream`, status: "success",
+      latencyMs: Date.now() - startedAt,
+    }).catch(() => {});
+    return;
+  }
+  const cloned = resp.clone();
+  cloned.text()
+    .then((text) => {
+      const data = parseJSONSafely(text);
+      return logUsage({
+        feature, model, userId,
+        provider, status: "success",
+        latencyMs: Date.now() - startedAt,
+        usage: data?.usage,
+      });
+    })
+    .catch(() => {});
+}
+
+async function logErrorFromResp(
+  resp: Response,
+  feature: string, model: string, userId: string | null,
+  provider: string, startedAt: number,
+) {
+  try {
+    const cloned = resp.clone();
+    const text = await cloned.text();
+    await logUsage({
+      feature, model, userId, provider, status: "error",
+      errorMessage: `${resp.status}: ${extractErrorMessage(text)}`,
+      latencyMs: Date.now() - startedAt,
+    });
+  } catch { /* swallow */ }
 }
 
 async function logUsage(p: LogParams): Promise<void> {
