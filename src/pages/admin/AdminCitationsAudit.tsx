@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ExternalLink, RefreshCw, Search, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ExternalLink, RefreshCw, Search, AlertTriangle, CheckCircle2, Pencil } from "lucide-react";
 
 type PageType = "article" | "college" | "institute" | "college_section";
 
@@ -18,6 +18,7 @@ interface PageRow {
   title: string;
   slug: string;
   url: string;
+  editUrl: string;
   updatedAt: string | null;
   contentLength: number;
   citations: { source: string; year?: string }[];
@@ -84,6 +85,7 @@ const AdminCitationsAudit = () => {
         title: a.title,
         slug: a.slug,
         url: `/article/${a.slug}`,
+        editUrl: `/admin/articles?edit=${a.id}`,
         updatedAt: a.updated_at,
         contentLength: a.content?.length || 0,
         citations,
@@ -98,6 +100,7 @@ const AdminCitationsAudit = () => {
         title: c.name,
         slug: c.slug,
         url: `/college/${c.slug}`,
+        editUrl: `/admin/colleges?edit=${c.id}`,
         updatedAt: c.updated_at,
         contentLength: c.description?.length || 0,
         citations,
@@ -112,6 +115,7 @@ const AdminCitationsAudit = () => {
         title: i.name,
         slug: i.slug,
         url: `/institute/${i.slug}`,
+        editUrl: `/admin/institutes?edit=${i.id}`,
         updatedAt: i.updated_at,
         contentLength: i.description?.length || 0,
         citations,
@@ -132,6 +136,7 @@ const AdminCitationsAudit = () => {
         title: `${s.title || s.section_type} (section)`,
         slug: cSlug || s.college_id,
         url: cSlug ? `/college/${cSlug}` : "#",
+        editUrl: `/admin/college-sections?college=${s.college_id}&section=${s.id}`,
         updatedAt: s.updated_at,
         contentLength: s.content?.length || 0,
         citations,
@@ -287,7 +292,7 @@ const AdminCitationsAudit = () => {
                 <TableHead>Type</TableHead>
                 <TableHead>Citations</TableHead>
                 <TableHead>Last updated</TableHead>
-                <TableHead className="text-right">Open</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -327,9 +332,16 @@ const AdminCitationsAudit = () => {
                     {r.updatedAt ? new Date(r.updatedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Link to={r.url} target="_blank" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                      View <ExternalLink className="w-3 h-3" />
-                    </Link>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button asChild size="sm" variant="default" className="h-7 px-2 text-xs">
+                        <Link to={r.editUrl}>
+                          <Pencil className="w-3 h-3 mr-1" /> Edit
+                        </Link>
+                      </Button>
+                      <Link to={r.url} target="_blank" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                        View <ExternalLink className="w-3 h-3" />
+                      </Link>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
