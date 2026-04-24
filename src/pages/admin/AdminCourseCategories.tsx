@@ -11,6 +11,8 @@ import { Plus, Pencil, Trash2, GripVertical, ArrowLeft } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import SortableTableHead from "@/components/admin/SortableTableHead";
 import { Badge } from "@/components/ui/badge";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import { useFilteredList } from "@/hooks/useFilteredList";
 
 const emptyForm = { name: "", slug: "", sort_order: 0, active: true };
 
@@ -20,7 +22,13 @@ const AdminCourseCategories = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const { toast } = useToast();
-  const { sortedItems: sortedCategories, sortConfig, handleSort } = useTableSort(categories);
+  const { filtered, filters, setFilter, clearAll, activeCount } = useFilteredList(categories, {
+    storageKey: "admin.courseCategories.filters",
+    defaults: { search: "", active: "all" },
+    searchFields: [(c) => c.name, (c) => c.slug],
+    fieldFilters: { active: (c) => (c.active ? "active" : "inactive") },
+  });
+  const { sortedItems: sortedCategories, sortConfig, handleSort } = useTableSort(filtered);
 
   const fetchCategories = async () => {
     const { data } = await supabase.from("course_categories").select("*").order("sort_order").order("name");
@@ -104,6 +112,26 @@ const AdminCourseCategories = () => {
         </div>
         <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Category</Button>
       </div>
+      <AdminFilterBar
+        searchValue={filters.search ?? ""}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search name or slug…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        resultsHint={`${filtered.length} of ${categories.length} shown`}
+        filters={[
+          {
+            type: "select", key: "active", label: "Status", width: "w-36",
+            options: [
+              { label: "All", value: "all" },
+              { label: "Active", value: "active" },
+              { label: "Inactive", value: "inactive" },
+            ],
+          },
+        ]}
+      />
       <Card><CardContent className="p-0">
         <Table>
           <TableHeader><TableRow>
@@ -126,8 +154,8 @@ const AdminCourseCategories = () => {
                 </TableCell>
               </TableRow>
             ))}
-            {categories.length === 0 && (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No course categories yet. Add categories like "CAT 2026", "OMETs", "Mocks", "GDPI".</TableCell></TableRow>
+            {filtered.length === 0 && (
+              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No course categories match your filters.</TableCell></TableRow>
             )}
           </TableBody>
         </Table>

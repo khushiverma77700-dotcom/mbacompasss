@@ -11,6 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, ArrowLeft } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import SortableTableHead from "@/components/admin/SortableTableHead";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import { useFilteredList } from "@/hooks/useFilteredList";
 
 const emptyForm = { title: "", description: "", link: "/blog", sort_order: 0, active: true };
 
@@ -20,7 +22,13 @@ const AdminComparisons = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const { toast } = useToast();
-  const { sortedItems: sortedItems, sortConfig, handleSort } = useTableSort(items);
+  const { filtered, filters, setFilter, clearAll, activeCount } = useFilteredList(items, {
+    storageKey: "admin.comparisons.filters",
+    defaults: { search: "", active: "all" },
+    searchFields: [(i) => i.title, (i) => i.description, (i) => i.link],
+    fieldFilters: { active: (i) => (i.active ? "active" : "inactive") },
+  });
+  const { sortedItems: sortedItems, sortConfig, handleSort } = useTableSort(filtered);
 
   const fetch = async () => {
     const { data } = await supabase.from("comparisons").select("*").order("sort_order");
@@ -91,6 +99,26 @@ const AdminComparisons = () => {
         <h1 className="font-heading text-2xl font-bold text-foreground">Popular Comparisons</h1>
         <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Comparison</Button>
       </div>
+      <AdminFilterBar
+        searchValue={filters.search ?? ""}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search title, description, link…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        resultsHint={`${filtered.length} of ${items.length} shown`}
+        filters={[
+          {
+            type: "select", key: "active", label: "Status", width: "w-36",
+            options: [
+              { label: "All", value: "all" },
+              { label: "Active", value: "active" },
+              { label: "Inactive", value: "inactive" },
+            ],
+          },
+        ]}
+      />
       <Card><CardContent className="p-0">
         <Table>
           <TableHeader><TableRow>
@@ -111,7 +139,7 @@ const AdminComparisons = () => {
                 </TableCell>
               </TableRow>
             ))}
-            {items.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No comparisons yet. Fallback data will show on frontend.</TableCell></TableRow>}
+            {filtered.length === 0 && <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No comparisons match your filters.</TableCell></TableRow>}
           </TableBody>
         </Table>
       </CardContent></Card>
