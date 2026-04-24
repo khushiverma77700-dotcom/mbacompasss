@@ -217,7 +217,9 @@ async function logUsage(p: LogParams): Promise<void> {
       : totalTokens * 0.000002; // fallback estimate
 
     await sb.from("ai_usage_logs").insert({
-      feature: `${p.feature}::${p.provider}`,
+      feature: p.feature,
+      provider: p.provider,
+      latency_ms: p.latencyMs,
       model: p.model,
       user_id: p.userId,
       prompt_tokens: promptTokens,

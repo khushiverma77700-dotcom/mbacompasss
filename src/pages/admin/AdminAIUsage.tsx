@@ -18,6 +18,8 @@ interface UsageLog {
   id: string;
   feature: string;
   model: string | null;
+  provider: string | null;
+  latency_ms: number | null;
   prompt_tokens: number;
   completion_tokens: number;
   total_tokens: number;
@@ -25,6 +27,37 @@ interface UsageLog {
   status: string;
   error_message: string | null;
   created_at: string;
+}
+
+const PROVIDER_COLORS: Record<string, string> = {
+  "gemini-direct": "#4285f4",
+  "lovable-gateway": "#8b5cf6",
+  "validation": "#ef4444",
+  "none": "#6b7280",
+  "unknown": "#94a3b8",
+};
+
+const PROVIDER_LABELS: Record<string, string> = {
+  "gemini-direct": "Gemini Direct",
+  "lovable-gateway": "Lovable Gateway",
+  "validation": "Validation Error",
+  "none": "No Provider",
+  "unknown": "Unknown / Legacy",
+};
+
+// Strip "-stream" suffix and legacy "feature::provider" encoding
+function normalizeProvider(p: string | null | undefined, feature?: string): string {
+  let raw = p;
+  if (!raw && feature && feature.includes("::")) {
+    raw = feature.split("::").pop() || null;
+  }
+  if (!raw) return "unknown";
+  return raw.replace(/-stream$/, "");
+}
+
+function normalizeFeature(f: string): string {
+  // Legacy rows stored "feature::provider"
+  return f.includes("::") ? f.split("::")[0] : f;
 }
 
 interface EdgeLog {
@@ -104,6 +137,8 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
   // written with a flat rate that does not reflect actual per-model pricing).
   const enriched = useMemo(() => logs.map(l => ({
     ...l,
+    feature: normalizeFeature(l.feature),
+    providerKey: normalizeProvider(l.provider, l.feature),
     cost: computeAICost({
       model: l.model,
       promptTokens: l.prompt_tokens,
@@ -119,7 +154,11 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
     const errors = enriched.filter(l => l.status === "error").length;
     const successRate = totalCalls ? ((totalCalls - errors) / totalCalls * 100).toFixed(1) : "0";
     const avgCostPerCall = totalCalls ? totalCost / totalCalls : 0;
-    return { totalCalls, totalTokens, totalCost, errors, successRate, avgCostPerCall };
+    const latencies = enriched.map(l => l.latency_ms).filter((n): n is number => typeof n === "number" && n > 0);
+    const avgLatency = latencies.length ? Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length) : 0;
+    const sorted = [...latencies].sort((a, b) => a - b);
+    const p95Latency = sorted.length ? sorted[Math.floor(sorted.length * 0.95)] : 0;
+    return { totalCalls, totalTokens, totalCost, errors, successRate, avgCostPerCall, avgLatency, p95Latency };
   }, [enriched]);
 
   const byFeature = useMemo(() => {
@@ -137,6 +176,33 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
     })).sort((a, b) => b.cost - a.cost);
   }, [enriched]);
 
+  const byProvider = useMemo(() => {
+    const map: Record<string, { calls: number; tokens: number; cost: number; errors: number; latencySum: number; latencyCount: number }> = {};
+    enriched.forEach(l => {
+      const k = l.providerKey;
+      if (!map[k]) map[k] = { calls: 0, tokens: 0, cost: 0, errors: 0, latencySum: 0, latencyCount: 0 };
+      map[k].calls++;
+      map[k].tokens += l.total_tokens || 0;
+      map[k].cost += l.cost;
+      if (l.status === "error") map[k].errors++;
+      if (typeof l.latency_ms === "number" && l.latency_ms > 0) {
+        map[k].latencySum += l.latency_ms;
+        map[k].latencyCount++;
+      }
+    });
+    return Object.entries(map).map(([key, d]) => ({
+      key,
+      name: PROVIDER_LABELS[key] || key,
+      color: PROVIDER_COLORS[key] || "#94a3b8",
+      calls: d.calls,
+      tokens: d.tokens,
+      cost: d.cost,
+      errors: d.errors,
+      successRate: d.calls ? Number(((d.calls - d.errors) / d.calls * 100).toFixed(1)) : 0,
+      avgLatency: d.latencyCount ? Math.round(d.latencySum / d.latencyCount) : 0,
+    })).sort((a, b) => b.calls - a.calls);
+  }, [enriched]);
+
   const dailyTrend = useMemo(() => {
     const map: Record<string, { date: string; calls: number; tokens: number; cost: number }> = {};
     enriched.forEach(l => {
@@ -150,23 +216,35 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
   }, [enriched]);
 
   const byModel = useMemo(() => {
-    const map: Record<string, { calls: number; cost: number }> = {};
+    const map: Record<string, { calls: number; cost: number; tokens: number; errors: number; latencySum: number; latencyCount: number }> = {};
     enriched.forEach(l => {
       const m = l.model || "unknown";
-      if (!map[m]) map[m] = { calls: 0, cost: 0 };
+      if (!map[m]) map[m] = { calls: 0, cost: 0, tokens: 0, errors: 0, latencySum: 0, latencyCount: 0 };
       map[m].calls++;
       map[m].cost += l.cost;
+      map[m].tokens += l.total_tokens || 0;
+      if (l.status === "error") map[m].errors++;
+      if (typeof l.latency_ms === "number" && l.latency_ms > 0) {
+        map[m].latencySum += l.latency_ms;
+        map[m].latencyCount++;
+      }
     });
     return Object.entries(map).map(([name, v]) => ({
+      raw: name,
       name: modelLabel(name),
       value: v.calls,
+      calls: v.calls,
+      tokens: v.tokens,
       cost: v.cost,
-    }));
+      errors: v.errors,
+      successRate: v.calls ? Number(((v.calls - v.errors) / v.calls * 100).toFixed(1)) : 0,
+      avgLatency: v.latencyCount ? Math.round(v.latencySum / v.latencyCount) : 0,
+    })).sort((a, b) => b.calls - a.calls);
   }, [enriched]);
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
         <Card><CardContent className="pt-4 text-center">
           <Zap className="w-5 h-5 mx-auto mb-1 text-primary" />
           <p className="text-2xl font-bold">{stats.totalCalls}</p>
@@ -197,6 +275,16 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
           <p className="text-2xl font-bold">{stats.errors}</p>
           <p className="text-xs text-muted-foreground">Errors</p>
         </CardContent></Card>
+        <Card><CardContent className="pt-4 text-center">
+          <Clock className="w-5 h-5 mx-auto mb-1 text-primary" />
+          <p className="text-2xl font-bold">{stats.avgLatency}<span className="text-sm font-normal text-muted-foreground">ms</span></p>
+          <p className="text-xs text-muted-foreground">Avg Latency</p>
+        </CardContent></Card>
+        <Card><CardContent className="pt-4 text-center">
+          <Server className="w-5 h-5 mx-auto mb-1 text-muted-foreground" />
+          <p className="text-2xl font-bold">{stats.p95Latency}<span className="text-sm font-normal text-muted-foreground">ms</span></p>
+          <p className="text-xs text-muted-foreground">P95 Latency</p>
+        </CardContent></Card>
       </div>
 
       <Card className="border-primary/20 bg-primary/5">
@@ -210,6 +298,7 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
       <Tabs defaultValue="breakdown">
         <TabsList>
           <TabsTrigger value="breakdown">Feature Breakdown</TabsTrigger>
+          <TabsTrigger value="providers">Providers & Models</TabsTrigger>
           <TabsTrigger value="trend">Daily Trend</TabsTrigger>
           <TabsTrigger value="logs">Raw Logs</TabsTrigger>
         </TabsList>
@@ -275,6 +364,115 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
           </Card>
         </TabsContent>
 
+        <TabsContent value="providers" className="space-y-6 mt-4">
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card><CardHeader><CardTitle className="text-sm">Calls by Provider</CardTitle></CardHeader>
+              <CardContent className="h-[300px]">
+                {byProvider.length ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={byProvider} dataKey="calls" nameKey="name" cx="50%" cy="50%" outerRadius={90}
+                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}>
+                        {byProvider.map((p) => <Cell key={p.key} fill={p.color} />)}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : <p className="text-center text-muted-foreground pt-20">No data yet</p>}
+              </CardContent>
+            </Card>
+            <Card><CardHeader><CardTitle className="text-sm">Avg Latency by Provider (ms)</CardTitle></CardHeader>
+              <CardContent className="h-[300px]">
+                {byProvider.some(p => p.avgLatency > 0) ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={byProvider}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                      <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${v}ms`} />
+                      <Tooltip formatter={(v: number) => `${v} ms`} />
+                      <Bar dataKey="avgLatency" radius={[4, 4, 0, 0]}>
+                        {byProvider.map((p) => <Cell key={p.key} fill={p.color} />)}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : <p className="text-center text-muted-foreground pt-20">Latency data will populate as new AI calls are made</p>}
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card><CardHeader><CardTitle className="text-sm">Provider Performance</CardTitle></CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Provider</TableHead>
+                  <TableHead className="text-right">Calls</TableHead>
+                  <TableHead className="text-right">Tokens</TableHead>
+                  <TableHead className="text-right">Cost</TableHead>
+                  <TableHead className="text-right">Errors</TableHead>
+                  <TableHead className="text-right">Success Rate</TableHead>
+                  <TableHead className="text-right">Avg Latency</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {byProvider.map(p => (
+                    <TableRow key={p.key}>
+                      <TableCell><Badge variant="outline" style={{ borderColor: p.color, color: p.color }}>{p.name}</Badge></TableCell>
+                      <TableCell className="text-right font-mono">{p.calls}</TableCell>
+                      <TableCell className="text-right font-mono">{p.tokens.toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono">${p.cost.toFixed(4)}</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {p.errors > 0 ? <span className="text-destructive">{p.errors}</span> : p.errors}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        <span className={p.successRate >= 95 ? "text-primary" : p.successRate >= 80 ? "text-amber-600" : "text-destructive"}>
+                          {p.successRate}%
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right font-mono">{p.avgLatency ? `${p.avgLatency}ms` : "—"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {byProvider.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">No provider data yet.</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card><CardHeader><CardTitle className="text-sm">Model Performance</CardTitle></CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Model</TableHead>
+                  <TableHead className="text-right">Calls</TableHead>
+                  <TableHead className="text-right">Tokens</TableHead>
+                  <TableHead className="text-right">Cost</TableHead>
+                  <TableHead className="text-right">Success Rate</TableHead>
+                  <TableHead className="text-right">Avg Latency</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {byModel.map(m => (
+                    <TableRow key={m.raw}>
+                      <TableCell className="font-mono text-xs">{m.name}</TableCell>
+                      <TableCell className="text-right font-mono">{m.calls}</TableCell>
+                      <TableCell className="text-right font-mono">{m.tokens.toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono">${m.cost.toFixed(4)}</TableCell>
+                      <TableCell className="text-right font-mono">
+                        <span className={m.successRate >= 95 ? "text-primary" : m.successRate >= 80 ? "text-amber-600" : "text-destructive"}>
+                          {m.successRate}%
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right font-mono">{m.avgLatency ? `${m.avgLatency}ms` : "—"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {byModel.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">No model data yet.</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="trend" className="mt-4">
           <Card><CardHeader><CardTitle className="text-sm">Daily AI Usage Trend</CardTitle></CardHeader>
             <CardContent className="h-[350px]">
@@ -304,31 +502,39 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
                 <TableHeader><TableRow>
                   <TableHead>Time</TableHead>
                   <TableHead>Feature</TableHead>
+                  <TableHead>Provider</TableHead>
                   <TableHead>Model</TableHead>
                   <TableHead className="text-right">Tokens</TableHead>
                   <TableHead className="text-right">Cost</TableHead>
+                  <TableHead className="text-right">Latency</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
-                  {enriched.slice(0, 100).map(l => (
-                    <TableRow key={l.id}>
-                      <TableCell className="text-xs whitespace-nowrap">
-                        <Clock className="w-3 h-3 inline mr-1" />
-                        {new Date(l.created_at).toLocaleString()}
-                      </TableCell>
-                      <TableCell><Badge variant="secondary" className="text-xs">{FEATURE_LABELS[l.feature] || l.feature}</Badge></TableCell>
-                      <TableCell className="text-xs font-mono">{modelLabel(l.model)}</TableCell>
-                      <TableCell className="text-right font-mono text-xs">{(l.total_tokens || 0).toLocaleString()}</TableCell>
-                      <TableCell className="text-right font-mono text-xs">{formatUsd(l.cost, 5)}</TableCell>
-                      <TableCell>
-                        {l.status === "success" ? (
-                          <Badge className="bg-primary/10 text-primary border-primary/20">OK</Badge>
-                        ) : (
-                          <Badge variant="destructive" className="text-xs">{l.error_message?.slice(0, 30) || "Error"}</Badge>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {enriched.slice(0, 100).map(l => {
+                    const pColor = PROVIDER_COLORS[l.providerKey] || "#94a3b8";
+                    const pLabel = PROVIDER_LABELS[l.providerKey] || l.providerKey;
+                    return (
+                      <TableRow key={l.id}>
+                        <TableCell className="text-xs whitespace-nowrap">
+                          <Clock className="w-3 h-3 inline mr-1" />
+                          {new Date(l.created_at).toLocaleString()}
+                        </TableCell>
+                        <TableCell><Badge variant="secondary" className="text-xs">{FEATURE_LABELS[l.feature] || l.feature}</Badge></TableCell>
+                        <TableCell><Badge variant="outline" className="text-xs" style={{ borderColor: pColor, color: pColor }}>{pLabel}</Badge></TableCell>
+                        <TableCell className="text-xs font-mono">{modelLabel(l.model)}</TableCell>
+                        <TableCell className="text-right font-mono text-xs">{(l.total_tokens || 0).toLocaleString()}</TableCell>
+                        <TableCell className="text-right font-mono text-xs">{formatUsd(l.cost, 5)}</TableCell>
+                        <TableCell className="text-right font-mono text-xs">{l.latency_ms ? `${l.latency_ms}ms` : "—"}</TableCell>
+                        <TableCell>
+                          {l.status === "success" ? (
+                            <Badge className="bg-primary/10 text-primary border-primary/20">OK</Badge>
+                          ) : (
+                            <Badge variant="destructive" className="text-xs">{l.error_message?.slice(0, 30) || "Error"}</Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
               {logs.length === 0 && !loading && (
