@@ -708,12 +708,12 @@ async function persistSubmissionResult(
     console.error("Failed to insert indexing log:", logError);
   }
 
-  return record as StoredIndexingUrl;
+  return record as unknown as StoredIndexingUrl;
 }
 
 function normalizeBatchEntries(rawEntries: unknown[]): BatchEntry[] {
   return rawEntries
-    .map((entry) => {
+    .map((entry): BatchEntry | null => {
       if (typeof entry === "string") {
         const url = entry.trim();
         return url ? { url } : null;
@@ -738,7 +738,7 @@ function normalizeBatchEntries(rawEntries: unknown[]): BatchEntry[] {
 
       return null;
     })
-    .filter((entry): entry is BatchEntry => Boolean(entry));
+    .filter((entry): entry is BatchEntry => entry !== null);
 }
 
 async function delay(ms: number) {

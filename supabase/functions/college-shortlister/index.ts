@@ -492,7 +492,7 @@ Deno.serve(async (req) => {
       };
     });
 
-    const bucketOrder = { dream: 0, target: 1, safe: 2 };
+    const bucketOrder: Record<string, number> = { dream: 0, target: 1, safe: 2 };
     results.sort((a: any, b: any) => {
       if (a.bucket !== b.bucket) return bucketOrder[a.bucket] - bucketOrder[b.bucket];
       return b.chancePercent - a.chancePercent;

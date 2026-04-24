@@ -99,13 +99,15 @@ Rules:
 
       // Persist for next visitor (best-effort, never block)
       if (pageId && summary && summary !== "Summary unavailable.") {
-        sb.from("page_summary_cache").upsert({
-          page_type: pageType || "page",
-          page_id: String(pageId),
-          content_hash: hash,
-          summary,
-          model: SUMMARY_MODEL,
-        }, { onConflict: "page_type,page_id,content_hash" }).then(() => {}).catch(() => {});
+        try {
+          await sb.from("page_summary_cache").upsert({
+            page_type: pageType || "page",
+            page_id: String(pageId),
+            content_hash: hash,
+            summary,
+            model: SUMMARY_MODEL,
+          }, { onConflict: "page_type,page_id,content_hash" });
+        } catch { /* best-effort */ }
       }
 
       return new Response(JSON.stringify({ summary, cached: false }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -119,9 +121,9 @@ Rules:
       
       // Search articles
       try {
-        const searchTerms = (question || "").split(" ").filter(w => w.length > 2).slice(0, 4);
+        const searchTerms = (question || "").split(" ").filter((w: string) => w.length > 2).slice(0, 4);
         if (searchTerms.length > 0) {
-          const orFilter = searchTerms.map(t => `title.ilike.*${t}*,content.ilike.*${t}*`).join(",");
+          const orFilter = searchTerms.map((t: string) => `title.ilike.*${t}*,content.ilike.*${t}*`).join(",");
           const searchResp = await fetch(`${SUPABASE_URL}/rest/v1/articles?published=eq.true&select=title,content,excerpt&limit=3&or=(${encodeURIComponent(orFilter)})`, {
             headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` },
           });

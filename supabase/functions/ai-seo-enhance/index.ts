@@ -434,11 +434,10 @@ Perform COMPREHENSIVE, DEEP SEO analysis. Score the CURRENT state honestly. Show
                   },
                 },
               },
-              required: ["meta_title", "meta_description", "h1_tag", "keywords", "onPageTips", "technicalSEO", "socialMeta", "internalLinks", "contentSuggestions", "competitorInsights", "seoScore"],
+          required: ["meta_title", "meta_description", "h1_tag", "keywords", "onPageTips", "technicalSEO", "socialMeta", "internalLinks", "contentSuggestions", "competitorInsights", "seoScore"],
             },
           },
         }],
-        tool_choice: { type: "function", function: { name: "seo_suggestions" } },
       });
 
     if (!response.ok) {
