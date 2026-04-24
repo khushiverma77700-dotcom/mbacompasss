@@ -224,6 +224,18 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Strip stray "\n" / "\\n" / "/n" escape artifacts the model sometimes leaks as visible text.
+    const stripEscapeArtifacts = (s: string): string =>
+      String(s)
+        .replace(/\\+n/gi, " ")
+        .replace(/(^|[\s>])\/n(?=[\s<]|$)/gi, "$1 ")
+        .replace(/<p>\s*(?:\\n|\/n|\s)*\s*<\/p>/gi, "")
+        .replace(/<li>\s*(?:\\n|\/n|\s)*\s*<\/li>/gi, "")
+        .replace(/[ \t]{2,}/g, " ");
+    for (const k of ["intro", "content"]) {
+      if (typeof article[k] === "string") article[k] = stripEscapeArtifacts(article[k]);
+    }
+
     // Best-effort sanitisation
     const slug = String(article.slug || "")
       .toLowerCase()
