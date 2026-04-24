@@ -18,6 +18,8 @@ interface UsageLog {
   id: string;
   feature: string;
   model: string | null;
+  provider: string | null;
+  latency_ms: number | null;
   prompt_tokens: number;
   completion_tokens: number;
   total_tokens: number;
@@ -25,6 +27,37 @@ interface UsageLog {
   status: string;
   error_message: string | null;
   created_at: string;
+}
+
+const PROVIDER_COLORS: Record<string, string> = {
+  "gemini-direct": "#4285f4",
+  "lovable-gateway": "#8b5cf6",
+  "validation": "#ef4444",
+  "none": "#6b7280",
+  "unknown": "#94a3b8",
+};
+
+const PROVIDER_LABELS: Record<string, string> = {
+  "gemini-direct": "Gemini Direct",
+  "lovable-gateway": "Lovable Gateway",
+  "validation": "Validation Error",
+  "none": "No Provider",
+  "unknown": "Unknown / Legacy",
+};
+
+// Strip "-stream" suffix and legacy "feature::provider" encoding
+function normalizeProvider(p: string | null | undefined, feature?: string): string {
+  let raw = p;
+  if (!raw && feature && feature.includes("::")) {
+    raw = feature.split("::").pop() || null;
+  }
+  if (!raw) return "unknown";
+  return raw.replace(/-stream$/, "");
+}
+
+function normalizeFeature(f: string): string {
+  // Legacy rows stored "feature::provider"
+  return f.includes("::") ? f.split("::")[0] : f;
 }
 
 interface EdgeLog {
