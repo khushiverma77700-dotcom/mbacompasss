@@ -364,7 +364,115 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
           </Card>
         </TabsContent>
 
-        <TabsContent value="trend" className="mt-4">
+        <TabsContent value="providers" className="space-y-6 mt-4">
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card><CardHeader><CardTitle className="text-sm">Calls by Provider</CardTitle></CardHeader>
+              <CardContent className="h-[300px]">
+                {byProvider.length ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={byProvider} dataKey="calls" nameKey="name" cx="50%" cy="50%" outerRadius={90}
+                        label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}>
+                        {byProvider.map((p) => <Cell key={p.key} fill={p.color} />)}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : <p className="text-center text-muted-foreground pt-20">No data yet</p>}
+              </CardContent>
+            </Card>
+            <Card><CardHeader><CardTitle className="text-sm">Avg Latency by Provider (ms)</CardTitle></CardHeader>
+              <CardContent className="h-[300px]">
+                {byProvider.some(p => p.avgLatency > 0) ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={byProvider}>
+                      <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                      <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                      <YAxis tick={{ fontSize: 11 }} tickFormatter={v => `${v}ms`} />
+                      <Tooltip formatter={(v: number) => `${v} ms`} />
+                      <Bar dataKey="avgLatency" radius={[4, 4, 0, 0]}>
+                        {byProvider.map((p) => <Cell key={p.key} fill={p.color} />)}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : <p className="text-center text-muted-foreground pt-20">Latency data will populate as new AI calls are made</p>}
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card><CardHeader><CardTitle className="text-sm">Provider Performance</CardTitle></CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Provider</TableHead>
+                  <TableHead className="text-right">Calls</TableHead>
+                  <TableHead className="text-right">Tokens</TableHead>
+                  <TableHead className="text-right">Cost</TableHead>
+                  <TableHead className="text-right">Errors</TableHead>
+                  <TableHead className="text-right">Success Rate</TableHead>
+                  <TableHead className="text-right">Avg Latency</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {byProvider.map(p => (
+                    <TableRow key={p.key}>
+                      <TableCell><Badge variant="outline" style={{ borderColor: p.color, color: p.color }}>{p.name}</Badge></TableCell>
+                      <TableCell className="text-right font-mono">{p.calls}</TableCell>
+                      <TableCell className="text-right font-mono">{p.tokens.toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono">${p.cost.toFixed(4)}</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {p.errors > 0 ? <span className="text-destructive">{p.errors}</span> : p.errors}
+                      </TableCell>
+                      <TableCell className="text-right font-mono">
+                        <span className={p.successRate >= 95 ? "text-primary" : p.successRate >= 80 ? "text-amber-600" : "text-destructive"}>
+                          {p.successRate}%
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right font-mono">{p.avgLatency ? `${p.avgLatency}ms` : "—"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {byProvider.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">No provider data yet.</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card><CardHeader><CardTitle className="text-sm">Model Performance</CardTitle></CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead>Model</TableHead>
+                  <TableHead className="text-right">Calls</TableHead>
+                  <TableHead className="text-right">Tokens</TableHead>
+                  <TableHead className="text-right">Cost</TableHead>
+                  <TableHead className="text-right">Success Rate</TableHead>
+                  <TableHead className="text-right">Avg Latency</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {byModel.map(m => (
+                    <TableRow key={m.raw}>
+                      <TableCell className="font-mono text-xs">{m.name}</TableCell>
+                      <TableCell className="text-right font-mono">{m.calls}</TableCell>
+                      <TableCell className="text-right font-mono">{m.tokens.toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-mono">${m.cost.toFixed(4)}</TableCell>
+                      <TableCell className="text-right font-mono">
+                        <span className={m.successRate >= 95 ? "text-primary" : m.successRate >= 80 ? "text-amber-600" : "text-destructive"}>
+                          {m.successRate}%
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right font-mono">{m.avgLatency ? `${m.avgLatency}ms` : "—"}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              {byModel.length === 0 && (
+                <p className="text-center text-muted-foreground py-8">No model data yet.</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
           <Card><CardHeader><CardTitle className="text-sm">Daily AI Usage Trend</CardTitle></CardHeader>
             <CardContent className="h-[350px]">
               {dailyTrend.length ? (
