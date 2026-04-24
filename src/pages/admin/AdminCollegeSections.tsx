@@ -136,6 +136,22 @@ const AdminCollegeSections = () => {
   const fetchColleges = async () => { const { data } = await supabase.from("colleges").select("id, name, city, state, type, tier, established").order("name"); if (data) setColleges(data); };
   const fetchSections = async () => { let query = supabase.from("college_sections").select("*, colleges(name)").order("sort_order"); if (selectedCollege) query = query.eq("college_id", selectedCollege); const { data } = await query; if (data) setSections(data); };
 
+  const filteredSections = useMemo(() => {
+    const search = (filters.search || "").trim().toLowerCase();
+    const sectionType = filters.section;
+    return sections.filter((s) => {
+      if (sectionType && sectionType !== "all" && s.section_type !== sectionType) return false;
+      if (!search) return true;
+      const hay = [
+        s.title,
+        s.content,
+        (s as any).colleges?.name,
+        SECTION_TYPES.find((t) => t.value === s.section_type)?.label,
+      ].filter(Boolean).join(" ").toLowerCase();
+      return hay.includes(search);
+    });
+  }, [sections, filters.search, filters.section]);
+
   // Fetch the FULL college row so we can pass shared anchor facts (established year, ranking,
   // fees, placements, exams, accreditations) into every section call. This keeps the same
   // facts consistent across every generated section for one college.
@@ -448,20 +464,39 @@ const AdminCollegeSections = () => {
         </Card>
       )}
 
-      <div className="mb-4">
-        <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Filter by College</Label>
-        <select className="border border-border rounded-md p-2 text-sm bg-background w-64" value={selectedCollege} onChange={(e) => setFilter("college", e.target.value || "all")}>
-          <option value="">All Colleges</option>
-          {colleges.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
-      </div>
+      <AdminFilterBar
+        searchValue={filters.search}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search by title, content, college…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        filters={[
+          {
+            type: "select",
+            key: "college",
+            label: "College",
+            width: "w-56",
+            options: [{ label: "All Colleges", value: "all" }, ...colleges.map((c) => ({ label: c.name, value: c.id }))],
+          },
+          {
+            type: "select",
+            key: "section",
+            label: "Section Type",
+            width: "w-52",
+            options: [{ label: "All Sections", value: "all" }, ...SECTION_TYPES.map((s) => ({ label: s.label, value: s.value }))],
+          },
+        ]}
+        resultsHint={`${filteredSections.length} of ${sections.length} sections`}
+      />
 
       <Card>
         <CardContent className="p-0">
           <Table>
             <TableHeader><TableRow><TableHead>College</TableHead><TableHead>Section</TableHead><TableHead>Title</TableHead><TableHead>Order</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
             <TableBody>
-              {sections.map((s) => (
+              {filteredSections.map((s) => (
                 <TableRow key={s.id}>
                   <TableCell className="font-medium">{(s as any).colleges?.name || "—"}</TableCell>
                   <TableCell><Badge variant="outline">{SECTION_TYPES.find((t) => t.value === s.section_type)?.label || s.section_type}</Badge></TableCell>
@@ -476,7 +511,7 @@ const AdminCollegeSections = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {sections.length === 0 && (<TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No sections yet. Select a college and click "Quick Add All Missing" to scaffold all sections.</TableCell></TableRow>)}
+              {filteredSections.length === 0 && (<TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">{sections.length === 0 ? 'No sections yet. Select a college and click "Quick Add All Missing" to scaffold all sections.' : "No sections match the current filters."}</TableCell></TableRow>)}
             </TableBody>
           </Table>
         </CardContent>
