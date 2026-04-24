@@ -70,6 +70,7 @@
     "framer-motion": "^12.38.0",
     "html2canvas": "^1.4.1",
     "input-otp": "^1.4.2",
+    "isomorphic-dompurify": "^3.10.0",
     "jspdf": "^4.2.1",
     "katex": "^0.16.45",
     "lucide-react": "^0.462.0",
