@@ -294,8 +294,8 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
+    const apiKey = Deno.env.get("GEMINI_API_KEY");
+    if (!apiKey) throw new Error("GEMINI_API_KEY is not configured");
 
     const body = (await req.json()) as Body;
     if (!body || !body.mode) throw new Error("mode is required");

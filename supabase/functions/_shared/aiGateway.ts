@@ -1,30 +1,52 @@
-// Shared AI Gateway helper.
+// Shared AI Gateway helper — GEMINI-DIRECT ONLY.
+//
+// Policy: 100% Google Gemini API. NO Lovable AI Gateway fallback.
+// All AI calls across the platform route through this helper, which calls
+// Google's Generative Language API directly using GEMINI_API_KEY.
 //
 // Features:
-//  1. Routes google/gemini-* calls to Google's direct Generative Language API
-//     when GEMINI_API_KEY is configured (cheaper, user-owned billing).
-//  2. Falls back to Lovable AI Gateway (LOVABLE_API_KEY) automatically.
-//  3. Streaming support — Gemini streamGenerateContent → OpenAI-style SSE.
-//  4. Auto-retry with exponential backoff + jitter on 429/500/502/503/504.
-//  5. Auto-logs token usage to ai_usage_logs table.
-//  6. Validates OpenAI tool/function schemas before sending to Gemini.
+//  1. Direct calls to Gemini (cheapest, user-owned billing).
+//  2. Streaming support — Gemini streamGenerateContent → OpenAI-style SSE.
+//  3. Auto-retry with exponential backoff + jitter on 429/500/502/503/504.
+//  4. Auto-logs token usage to ai_usage_logs table.
+//  5. Validates OpenAI tool/function schemas before sending to Gemini.
+//  6. Normalizes Lovable-style model aliases (e.g. google/gemini-3-flash-preview)
+//     to real Google API model IDs so legacy callers keep working.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
-const LOVABLE_GATEWAY = "https://ai.gateway.lovable.dev/v1/chat/completions";
-
 // ─── Approximate per-1M-token pricing (USD) for cost estimation ──────────────
-// Updated 2026-04. Used for `estimated_cost` column in ai_usage_logs.
 const PRICING: Record<string, { input: number; output: number }> = {
-  "google/gemini-2.5-pro":            { input: 1.25,  output: 10.00 },
-  "google/gemini-2.5-flash":          { input: 0.30,  output: 2.50 },
-  "google/gemini-2.5-flash-lite":     { input: 0.10,  output: 0.40 },
-  "google/gemini-3-flash-preview":    { input: 0.30,  output: 2.50 },
-  "google/gemini-3.1-pro-preview":    { input: 1.25,  output: 10.00 },
-  "openai/gpt-5":                     { input: 5.00,  output: 15.00 },
-  "openai/gpt-5-mini":                { input: 1.00,  output: 4.00 },
-  "openai/gpt-5-nano":                { input: 0.20,  output: 0.80 },
+  "gemini-2.5-pro":         { input: 1.25, output: 10.00 },
+  "gemini-2.5-flash":       { input: 0.30, output:  2.50 },
+  "gemini-2.5-flash-lite":  { input: 0.10, output:  0.40 },
+  "gemini-2.0-flash":       { input: 0.10, output:  0.40 },
+  "gemini-1.5-flash":       { input: 0.075, output: 0.30 },
+  "gemini-1.5-pro":         { input: 1.25, output:  5.00 },
 };
+
+// Map Lovable AI Gateway aliases / preview names → real Google API model IDs.
+// Anything not in this map is passed through (after stripping the "google/" prefix).
+const MODEL_ALIASES: Record<string, string> = {
+  "google/gemini-3-flash-preview":    "gemini-2.5-flash",
+  "google/gemini-3.1-pro-preview":    "gemini-2.5-pro",
+  "google/gemini-3-pro-image-preview":"gemini-2.5-flash-image",
+  "google/gemini-3.1-flash-image-preview": "gemini-2.5-flash-image",
+  "google/gemini-2.5-pro":            "gemini-2.5-pro",
+  "google/gemini-2.5-flash":          "gemini-2.5-flash",
+  "google/gemini-2.5-flash-lite":     "gemini-2.5-flash-lite",
+  "google/gemini-2.5-flash-image":    "gemini-2.5-flash-image",
+  // OpenAI aliases — remap to closest Gemini equivalent (Gemini-only policy).
+  "openai/gpt-5":         "gemini-2.5-pro",
+  "openai/gpt-5-mini":    "gemini-2.5-flash",
+  "openai/gpt-5-nano":    "gemini-2.5-flash-lite",
+  "openai/gpt-5.2":       "gemini-2.5-pro",
+};
+
+function resolveModelId(model: string): string {
+  if (MODEL_ALIASES[model]) return MODEL_ALIASES[model];
+  return model.replace(/^google\//, "");
+}
 
 interface ChatBody {
   model: string;
@@ -41,100 +63,71 @@ interface ChatBody {
 
 interface CallOptions {
   signal?: AbortSignal;
-  /** Feature/handler name for logs (e.g. "blog-writer"). Defaults to "unknown". */
   feature?: string;
-  /** Optional user_id for log attribution. */
   userId?: string | null;
-  /** Max retry attempts on transient failures. Default 3. */
   maxRetries?: number;
-  /** Skip DB logging (e.g. for tests). */
   skipLog?: boolean;
 }
 
 /**
  * Drop-in replacement for `fetch("https://ai.gateway.lovable.dev/v1/chat/completions", ...)`.
- * Same OpenAI-style request body, same OpenAI-style response shape.
+ * Routes 100% of traffic to Google Gemini directly. NO Lovable fallback.
  */
 export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Promise<Response> {
   const { signal, feature = "unknown", userId = null, maxRetries = 3, skipLog = false } = opts;
   const geminiKey = Deno.env.get("GEMINI_API_KEY");
-  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-  const isGemini = typeof body.model === "string" && body.model.startsWith("google/gemini");
   const isStream = body.stream === true;
+  const resolvedModel = resolveModelId(body.model || "gemini-2.5-flash");
 
-  // ─── Validate tool/function schemas if present ──────────────
+  if (!geminiKey) {
+    const err = "GEMINI_API_KEY is not configured. This platform is Gemini-only — Lovable AI is disabled.";
+    console.error(`[aiGateway][${feature}] ${err}`);
+    if (!skipLog) await logUsage({ feature, model: resolvedModel, userId, provider: "none", status: "error", errorMessage: err, latencyMs: 0 });
+    return new Response(JSON.stringify({ error: err }), { status: 500, headers: { "Content-Type": "application/json" } });
+  }
+
+  // Validate tool/function schemas if present
   if (Array.isArray(body.tools)) {
     const validation = validateToolSpec(body.tools);
     if (!validation.ok) {
       const err = `Invalid tool spec: ${validation.error}`;
       console.error(`[aiGateway][${feature}] ${err}`);
-      if (!skipLog) await logUsage({ feature, model: body.model, userId, provider: "validation", status: "error", errorMessage: err, latencyMs: 0 });
+      if (!skipLog) await logUsage({ feature, model: resolvedModel, userId, provider: "validation", status: "error", errorMessage: err, latencyMs: 0 });
       return new Response(JSON.stringify({ error: err }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
   }
 
   const startedAt = Date.now();
 
-  // ─── Try direct Gemini if user supplied their own key ──────
-  if (isGemini && geminiKey) {
-    try {
-      const direct = await withRetry(
-        () => callGeminiDirect(body, geminiKey, signal, isStream),
-        { maxRetries, label: `gemini-direct[${feature}]` },
-      );
-      if (direct.ok) {
-        // Log usage (non-blocking — clone if streaming so we don't drain body)
-        if (!skipLog && !isStream) {
-          const cloned = direct.clone();
-          cloned.json()
-            .then((data) => logUsage({ feature, model: body.model, userId, provider: "gemini-direct", status: "success", latencyMs: Date.now() - startedAt, usage: data?.usage }))
-            .catch(() => {});
-        } else if (!skipLog && isStream) {
-          // Streaming — log without token counts (Gemini stream doesn't include usage in every chunk)
-          logUsage({ feature, model: body.model, userId, provider: "gemini-direct-stream", status: "success", latencyMs: Date.now() - startedAt }).catch(() => {});
-        }
-        return direct;
+  try {
+    const resp = await withRetry(
+      () => callGeminiDirect(body, resolvedModel, geminiKey, signal, isStream),
+      { maxRetries, label: `gemini-direct[${feature}]` },
+    );
+
+    if (!skipLog) {
+      if (resp.ok && !isStream) {
+        const cloned = resp.clone();
+        cloned.json()
+          .then((data) => logUsage({ feature, model: resolvedModel, userId, provider: "gemini-direct", status: "success", latencyMs: Date.now() - startedAt, usage: data?.usage }))
+          .catch(() => {});
+      } else if (resp.ok && isStream) {
+        logUsage({ feature, model: resolvedModel, userId, provider: "gemini-direct-stream", status: "success", latencyMs: Date.now() - startedAt }).catch(() => {});
+      } else {
+        const cloned = resp.clone();
+        cloned.text()
+          .then((t) => logUsage({ feature, model: resolvedModel, userId, provider: "gemini-direct", status: "error", errorMessage: `${resp.status}: ${t.slice(0, 200)}`, latencyMs: Date.now() - startedAt }))
+          .catch(() => {});
       }
-      console.warn(`[aiGateway][${feature}] Direct Gemini failed (${direct.status}) after retries, falling back to Lovable Gateway`);
-    } catch (e) {
-      console.warn(`[aiGateway][${feature}] Direct Gemini threw, falling back:`, e instanceof Error ? e.message : e);
     }
+
+    return resp;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error(`[aiGateway][${feature}] Gemini call threw:`, msg);
+    if (!skipLog) await logUsage({ feature, model: resolvedModel, userId, provider: "gemini-direct", status: "error", errorMessage: msg, latencyMs: Date.now() - startedAt });
+    return new Response(JSON.stringify({ error: msg }), { status: 502, headers: { "Content-Type": "application/json" } });
   }
-
-  // ─── Fallback: Lovable AI Gateway ──────────────────────────
-  if (!lovableKey) {
-    const err = "No AI provider key configured (set GEMINI_API_KEY or LOVABLE_API_KEY)";
-    if (!skipLog) await logUsage({ feature, model: body.model, userId, provider: "none", status: "error", errorMessage: err, latencyMs: Date.now() - startedAt });
-    return new Response(JSON.stringify({ error: err }), { status: 500, headers: { "Content-Type": "application/json" } });
-  }
-
-  const resp = await withRetry(
-    () => fetch(LOVABLE_GATEWAY, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${lovableKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal,
-    }),
-    { maxRetries, label: `lovable-gateway[${feature}]` },
-  );
-
-  if (!skipLog) {
-    if (resp.ok && !isStream) {
-      const cloned = resp.clone();
-      cloned.json()
-        .then((data) => logUsage({ feature, model: body.model, userId, provider: "lovable-gateway", status: "success", latencyMs: Date.now() - startedAt, usage: data?.usage }))
-        .catch(() => {});
-    } else if (resp.ok && isStream) {
-      logUsage({ feature, model: body.model, userId, provider: "lovable-gateway-stream", status: "success", latencyMs: Date.now() - startedAt }).catch(() => {});
-    } else {
-      const cloned = resp.clone();
-      cloned.text()
-        .then((t) => logUsage({ feature, model: body.model, userId, provider: "lovable-gateway", status: "error", errorMessage: `${resp.status}: ${t.slice(0, 200)}`, latencyMs: Date.now() - startedAt }))
-        .catch(() => {});
-    }
-  }
-
-  return resp;
 }
 
 // ─── Retry with exponential backoff + jitter ──────────────────
@@ -149,14 +142,13 @@ async function withRetry(
   for (let attempt = 0; attempt < opts.maxRetries; attempt++) {
     try {
       const resp = await fn();
-      if (!RETRYABLE.has(resp.status)) return resp; // success or non-retryable client error
+      if (!RETRYABLE.has(resp.status)) return resp;
       lastResp = resp;
       console.warn(`[aiGateway:retry] ${opts.label} attempt ${attempt + 1} got ${resp.status}`);
     } catch (e) {
       lastErr = e;
       console.warn(`[aiGateway:retry] ${opts.label} attempt ${attempt + 1} threw: ${e instanceof Error ? e.message : e}`);
     }
-    // Backoff: 500ms, 1.5s, 4s + jitter
     if (attempt < opts.maxRetries - 1) {
       const base = 500 * Math.pow(3, attempt);
       const jitter = Math.random() * 300;
@@ -189,12 +181,24 @@ function validateToolSpec(tools: any[]): { ok: true } | { ok: false; error: stri
   return { ok: true };
 }
 
+// ─── Recursively strip JSON-Schema fields Gemini's API rejects ────────────────
+function sanitizeSchema(schema: any): any {
+  if (!schema || typeof schema !== "object") return schema;
+  if (Array.isArray(schema)) return schema.map(sanitizeSchema);
+  const cleaned: any = {};
+  for (const [k, v] of Object.entries(schema)) {
+    if (k === "additionalProperties" || k === "$schema" || k === "$id") continue;
+    cleaned[k] = sanitizeSchema(v);
+  }
+  return cleaned;
+}
+
 // ─── DB logging ───────────────────────────────────────────────
 interface LogParams {
   feature: string;
   model: string;
   userId?: string | null;
-  provider: string; // "gemini-direct" | "lovable-gateway" | "validation" | "none"
+  provider: string;
   status: "success" | "error";
   errorMessage?: string;
   latencyMs: number;
@@ -214,7 +218,7 @@ async function logUsage(p: LogParams): Promise<void> {
     const pricing = PRICING[p.model];
     const cost = pricing
       ? (promptTokens * pricing.input + completionTokens * pricing.output) / 1_000_000
-      : totalTokens * 0.000002; // fallback estimate
+      : totalTokens * 0.000002;
 
     await sb.from("ai_usage_logs").insert({
       feature: p.feature,
@@ -237,12 +241,11 @@ async function logUsage(p: LogParams): Promise<void> {
 // ─── Direct Google Generative Language API call ───────────────
 async function callGeminiDirect(
   body: ChatBody,
+  modelId: string,
   apiKey: string,
   signal?: AbortSignal,
   stream = false,
 ): Promise<Response> {
-  const modelId = body.model.replace(/^google\//, "");
-
   const systemMessages = body.messages.filter((m) => m.role === "system");
   const otherMessages = body.messages.filter((m) => m.role !== "system");
 
@@ -266,7 +269,7 @@ async function callGeminiDirect(
         .map((t: any) => ({
           name: t.function.name,
           description: t.function.description,
-          parameters: t.function.parameters,
+          parameters: sanitizeSchema(t.function.parameters),
         })),
     }];
     if (body.tool_choice && typeof body.tool_choice === "object" && body.tool_choice.function?.name) {
@@ -279,7 +282,10 @@ async function callGeminiDirect(
   const generationConfig: any = {};
   if (typeof body.max_tokens === "number") generationConfig.maxOutputTokens = body.max_tokens;
   if (typeof body.temperature === "number") generationConfig.temperature = body.temperature;
-  if (body.response_format?.type === "json_object") generationConfig.responseMimeType = "application/json";
+  // Only request JSON MIME when no tools are present (Gemini rejects mixing tools + json mime).
+  if (body.response_format?.type === "json_object" && !geminiBody.tools) {
+    generationConfig.responseMimeType = "application/json";
+  }
   if (Object.keys(generationConfig).length > 0) geminiBody.generationConfig = generationConfig;
 
   // ─── Streaming: use streamGenerateContent → bridge to OpenAI SSE ──
@@ -400,7 +406,7 @@ function bridgeGeminiStreamToOpenAI(upstream: ReadableStream<Uint8Array>, modelN
                 };
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify(finalChunk)}\n\n`));
               }
-            } catch (_) { /* skip malformed chunks */ }
+            } catch (_) { /* skip malformed */ }
           }
         }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
