@@ -123,9 +123,10 @@ No fluff. No generic advice. Reference numbers from the input.`;
       }],
       tool_choice: { type: "function", function: { name: "premium_narrative" } },
     });
+    const aiJson: any = await aiResp.json().catch(() => ({}));
 
     // Extract tool call arguments
-    const toolCall = aiResp?.choices?.[0]?.message?.tool_calls?.[0];
+    const toolCall = aiJson?.choices?.[0]?.message?.tool_calls?.[0];
     let narrative: any = null;
     if (toolCall?.function?.arguments) {
       try {
@@ -139,14 +140,14 @@ No fluff. No generic advice. Reference numbers from the input.`;
 
     // Fallback: try parsing message content
     if (!narrative) {
-      const content = aiResp?.choices?.[0]?.message?.content;
+      const content = aiJson?.choices?.[0]?.message?.content;
       if (content) {
         try { narrative = JSON.parse(content); } catch { /* ignore */ }
       }
     }
 
     if (!narrative?.one_line_summary) {
-      return new Response(JSON.stringify({ error: "AI did not return a valid narrative", raw: aiResp }), {
+      return new Response(JSON.stringify({ error: "AI did not return a valid narrative", raw: aiJson }), {
         status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
