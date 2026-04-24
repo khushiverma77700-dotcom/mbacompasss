@@ -101,13 +101,26 @@
   .ai-content,
   .prose {
     max-width: 100%;
+    min-width: 0;
     overflow-wrap: break-word;
     word-wrap: break-word;
+  }
+  .ai-content *,
+  .prose * {
+    max-width: 100%;
   }
   .ai-content pre,
   .prose pre {
     overflow-x: auto;
     max-width: 100%;
+  }
+  /* Bare tables inside ai-content (no wrapper) should scroll horizontally
+     instead of pushing the page width. */
+  .ai-content > table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 

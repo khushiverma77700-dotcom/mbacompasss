@@ -105,8 +105,8 @@ const ProgrammeDetailPage = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-10 grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
+      <main className="container mx-auto px-4 py-10 grid gap-8 lg:grid-cols-3 min-w-0">
+        <div className="lg:col-span-2 space-y-6 min-w-0">
           <EligibilityChecklist programme={programme} />
 
           {/* Specialisations */}
