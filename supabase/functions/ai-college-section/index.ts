@@ -427,6 +427,10 @@ function sanitizeHtml(html: string): string {
 function stripToPlainText(s: unknown): string {
   if (s == null) return "";
   let out = String(s);
+  // Remove literal escape artifacts the model sometimes outputs as visible text
+  out = out.replace(/\\+n/gi, " ");
+  out = out.replace(/(^|[\s])\/n(?=[\s]|$)/gi, "$1 ");
+  out = out.replace(/\r\n|\r|\n|\t/g, " ");
   // Remove [src:...] citation markers
   out = out.replace(/\[src:[^\]]*\]/gi, "");
   // Remove "Last updated: YYYY-MM-DD" wrapper variants (with or without tags)
