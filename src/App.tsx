@@ -201,8 +201,9 @@ const GlobalNavigationPrefetch = () => {
     };
 
     const handlePointer = (event: Event) => {
-      const target = event.target as HTMLElement | null;
-      const anchor = target?.closest("a[href]") as HTMLAnchorElement | null;
+      const target = event.target as Element | null;
+      if (!target || typeof (target as Element).closest !== "function") return;
+      const anchor = target.closest("a[href]") as HTMLAnchorElement | null;
       if (!anchor) return;
       schedulePrefetch(anchor.href);
     };
