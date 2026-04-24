@@ -572,7 +572,6 @@ const CollegeDetailPage = () => {
                 <ProgrammePortfolioTable
                   programmes={programmes}
                   collegeSlug={college.slug}
-                  collegeName={college.name}
                 />
               ) : coursesFeesList.length > 0 ? (
                 <Card>
