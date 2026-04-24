@@ -108,6 +108,18 @@ const AdminAllLinks = () => {
     toast({ title: `${newLinks.length} new link(s) copied!` });
   };
 
+  const copySection = (type: string, items: LinkItem[]) => {
+    const text = items.map((l) => `${SITE_URL}${l.url}`).join("\n");
+    navigator.clipboard.writeText(text);
+    toast({ title: `${items.length} ${type} link(s) copied!` });
+  };
+
+  const copyNewSection = (type: string, items: LinkItem[]) => {
+    const text = items.map((l) => `${SITE_URL}${l.url}`).join("\n");
+    navigator.clipboard.writeText(text);
+    toast({ title: `${items.length} new ${type} link(s) copied!` });
+  };
+
   const groupedLinks = links.reduce<Record<string, LinkItem[]>>((acc, link) => {
     if (!acc[link.type]) acc[link.type] = [];
     acc[link.type].push(link);
