@@ -2087,6 +2087,135 @@ export type Database = {
         }
         Relationships: []
       }
+      programme_courses: {
+        Row: {
+          accepts_cat: boolean | null
+          accepts_cmat: boolean | null
+          accepts_gmat: boolean | null
+          accepts_gre: boolean | null
+          accepts_iift: boolean | null
+          accepts_nmat: boolean | null
+          accepts_other_exams: string[] | null
+          accepts_snap: boolean | null
+          accepts_xat: boolean | null
+          active: boolean | null
+          cat_percentile_target: string | null
+          college_id: string
+          created_at: string
+          duration: string | null
+          duration_months: number | null
+          evidence_snippet: string | null
+          fees_breakdown: string | null
+          fees_total_lakhs: number | null
+          fees_year: string | null
+          gmat_score_target: string | null
+          highlights: string[] | null
+          id: string
+          intake_seats: number | null
+          max_age: number | null
+          max_work_ex_months: number | null
+          min_age: number | null
+          min_graduation_percent: number | null
+          min_work_ex_months: number | null
+          mode: string | null
+          name: string
+          programme_type: string
+          short_name: string | null
+          slug: string
+          sort_order: number | null
+          source_brochure_url: string | null
+          source_url: string | null
+          source_verified_at: string | null
+          specializations: string[] | null
+          updated_at: string
+          xat_percentile_target: string | null
+        }
+        Insert: {
+          accepts_cat?: boolean | null
+          accepts_cmat?: boolean | null
+          accepts_gmat?: boolean | null
+          accepts_gre?: boolean | null
+          accepts_iift?: boolean | null
+          accepts_nmat?: boolean | null
+          accepts_other_exams?: string[] | null
+          accepts_snap?: boolean | null
+          accepts_xat?: boolean | null
+          active?: boolean | null
+          cat_percentile_target?: string | null
+          college_id: string
+          created_at?: string
+          duration?: string | null
+          duration_months?: number | null
+          evidence_snippet?: string | null
+          fees_breakdown?: string | null
+          fees_total_lakhs?: number | null
+          fees_year?: string | null
+          gmat_score_target?: string | null
+          highlights?: string[] | null
+          id?: string
+          intake_seats?: number | null
+          max_age?: number | null
+          max_work_ex_months?: number | null
+          min_age?: number | null
+          min_graduation_percent?: number | null
+          min_work_ex_months?: number | null
+          mode?: string | null
+          name: string
+          programme_type?: string
+          short_name?: string | null
+          slug: string
+          sort_order?: number | null
+          source_brochure_url?: string | null
+          source_url?: string | null
+          source_verified_at?: string | null
+          specializations?: string[] | null
+          updated_at?: string
+          xat_percentile_target?: string | null
+        }
+        Update: {
+          accepts_cat?: boolean | null
+          accepts_cmat?: boolean | null
+          accepts_gmat?: boolean | null
+          accepts_gre?: boolean | null
+          accepts_iift?: boolean | null
+          accepts_nmat?: boolean | null
+          accepts_other_exams?: string[] | null
+          accepts_snap?: boolean | null
+          accepts_xat?: boolean | null
+          active?: boolean | null
+          cat_percentile_target?: string | null
+          college_id?: string
+          created_at?: string
+          duration?: string | null
+          duration_months?: number | null
+          evidence_snippet?: string | null
+          fees_breakdown?: string | null
+          fees_total_lakhs?: number | null
+          fees_year?: string | null
+          gmat_score_target?: string | null
+          highlights?: string[] | null
+          id?: string
+          intake_seats?: number | null
+          max_age?: number | null
+          max_work_ex_months?: number | null
+          min_age?: number | null
+          min_graduation_percent?: number | null
+          min_work_ex_months?: number | null
+          mode?: string | null
+          name?: string
+          programme_type?: string
+          short_name?: string | null
+          slug?: string
+          sort_order?: number | null
+          source_brochure_url?: string | null
+          source_url?: string | null
+          source_verified_at?: string | null
+          specializations?: string[] | null
+          updated_at?: string
+          xat_percentile_target?: string | null
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           admin_reply: string | null

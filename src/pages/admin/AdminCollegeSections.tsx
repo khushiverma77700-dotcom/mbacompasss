@@ -174,6 +174,7 @@ const AdminCollegeSections = () => {
     const cy = new Date().getFullYear();
     const { data, error } = await supabase.functions.invoke("ai-college-section", {
       body: {
+        collegeId,
         collegeName: college.name,
         city: college.city,
         state: college.state,

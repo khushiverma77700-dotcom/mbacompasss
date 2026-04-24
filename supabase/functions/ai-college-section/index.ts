@@ -29,6 +29,7 @@ interface AnchorFacts {
 }
 
 interface SectionBrief {
+  collegeId?: string;          // optional — when provided, programmes auto-sync into programme_courses
   collegeName: string;
   city?: string | null;
   state?: string | null;
@@ -47,27 +48,63 @@ const SECTION_TOOLS: Record<string, any> = {
     name: "courses_fees_payload",
     fields: {
       title: { type: "string" },
-      content: { type: "string", description: "HTML intro (220-350 words). Mention the college name 4-6 times. Cover the FULL programme portfolio (flagship 2-yr, 1-yr, executive, part-time, online, doctoral-management, dual-degree, exchange), fee philosophy, what's included in fees (tuition, hostel, mess, books, alumni), instalment options, and the ROI angle." },
+      content: { type: "string", description: "HTML intro (260-400 words). Mention the college name 5-7 times. Cover the FULL programme portfolio (flagship 2-yr, 1-yr, executive, part-time, online, doctoral-management, dual-degree, exchange), fee philosophy, what's included in fees (tuition, hostel, mess, books, alumni), instalment options, scholarship anchors, and the ROI angle for the 2025-2026 cycle." },
       courses: {
         type: "array",
         minItems: 6,
+        description: "Authoritative portfolio — every MBA / Masters-in-Management programme the college actually runs. Aim for 6-12 entries. NEVER collapse into a single 'MBA' row. Each row MUST include source verification (official URL + evidence snippet quoting the page). The frontend persists this directly into a verified portfolio table.",
         items: {
           type: "object",
           properties: {
             name: { type: "string", description: "Exact official programme name, e.g. 'Post Graduate Programme in Management (PGP)', 'PGPX - One-Year Full-Time MBA for Executives', 'ePGP - Executive Post Graduate Programme', 'PGP-FABM', 'MBA (Business Analytics)', 'MBA (HRM)', 'Fellow Programme in Management (FPM)', 'PGPpro', 'Blended Learning MBA', 'MDP Certificate Programmes'." },
+            short_name: { type: "string", description: "Short label / abbreviation, e.g. 'PGP', 'PGPX', 'EPGP', 'FPM', 'PGP-ABM'." },
+            programme_type: { type: "string", description: "One of: 'MBA', 'PGDM', 'Executive MBA', '1-Year MBA', 'Online MBA', 'PGPpro', 'Sectoral MBA', 'Fellow / Doctoral', 'Dual Degree'." },
             duration: { type: "string", description: "e.g. '2 years (full-time)', '1 year (full-time residential)', '15 months (weekend)', '3-5 years (doctoral)'." },
-            eligibility: { type: "string", description: "Real eligibility — graduation %, exam (CAT/XAT/GMAT/GRE/EA), minimum work-ex, age cap if any." },
+            duration_months: { type: "number", description: "Programme duration in months as a plain integer." },
+            mode: { type: "string", description: "'Full-time' | 'Part-time' | 'Online' | 'Hybrid' | 'Weekend'." },
+            eligibility: { type: "string", description: "Plain-text eligibility paragraph — graduation %, exam (CAT/XAT/GMAT/GRE/EA), minimum work-ex, age cap if any." },
+            min_graduation_percent: { type: "number", description: "Minimum graduation percentage required (e.g. 50, 60). Use 50 if standard." },
+            accepts_cat: { type: "boolean", description: "True if CAT score is accepted." },
+            accepts_xat: { type: "boolean", description: "True if XAT score is accepted." },
+            accepts_gmat: { type: "boolean", description: "True if GMAT score is accepted." },
+            accepts_gre: { type: "boolean", description: "True if GRE score is accepted." },
+            accepts_cmat: { type: "boolean", description: "True if CMAT is accepted." },
+            accepts_nmat: { type: "boolean", description: "True if NMAT is accepted." },
+            accepts_snap: { type: "boolean", description: "True if SNAP is accepted." },
+            accepts_iift: { type: "boolean", description: "True if IIFT exam is accepted." },
+            cat_percentile_target: { type: "string", description: "Realistic CAT percentile band needed (e.g. '99+', '95-97', 'NA' if not accepted)." },
+            xat_percentile_target: { type: "string", description: "Realistic XAT percentile band (e.g. '95+', 'NA')." },
+            gmat_score_target: { type: "string", description: "Realistic GMAT score band (e.g. '700+', '680-720', 'NA')." },
+            min_work_ex_months: { type: "number", description: "Minimum required work experience in months. 0 if no requirement." },
+            max_work_ex_months: { type: "number", description: "Maximum work-ex limit in months for this programme. 0 or omit if no upper cap." },
+            min_age: { type: "number", description: "Minimum age in years. 0 if no requirement." },
+            max_age: { type: "number", description: "Maximum age in years. 0 if no requirement." },
             fees: { type: "string", description: "Latest 2025-2026 total programme fee in INR Lakhs (tuition + hostel where applicable). Use a tight realistic range if exact figure unknown." },
-            specializations: { type: "string", description: "4-8 real specialisations / electives / majors offered within this programme (Finance, Marketing, Operations, Strategy, Business Analytics, HR, Consulting, Entrepreneurship, etc.)." },
+            fees_total_lakhs: { type: "number", description: "Numeric total fees in lakhs (midpoint if range), e.g. 28.5." },
+            fees_breakdown: { type: "string", description: "Short fees breakdown — what's included (tuition, hostel, mess, alumni, books, deposits)." },
+            fees_year: { type: "string", description: "Fee cycle year, e.g. '2025-2026'." },
+            specializations: { type: "array", minItems: 4, items: { type: "string" }, description: "4-8 real specialisations / electives / majors offered within this programme (Finance, Marketing, Operations, Strategy, Business Analytics, HR, Consulting, Entrepreneurship, etc.)." },
+            highlights: { type: "array", items: { type: "string" }, description: "3-6 selling points specific to this programme (international immersion, exchange partners, capstone, dual-degree, signature electives, scholarship pool)." },
+            intake_seats: { type: "number", description: "Approximate annual intake / seats." },
+            source_url: { type: "string", description: "MANDATORY — the exact official college webpage URL where this programme is listed (admissions / programmes / brochure landing page on the college's own domain). Never fabricate — use the most authoritative public URL you can verify." },
+            source_brochure_url: { type: "string", description: "Optional direct PDF brochure URL if available, otherwise empty string." },
+            evidence_snippet: { type: "string", description: "MANDATORY — a short 12-30 word quote / paraphrase from the source page that proves the programme name and fee/duration figures (e.g. 'IIM Indore PGP — 2-year full-time residential, fee INR 23.06 lakhs (2025-27 batch).')." },
           },
-          required: ["name", "duration", "eligibility", "fees", "specializations"],
+          required: [
+            "name", "short_name", "programme_type", "duration", "mode", "eligibility",
+            "min_graduation_percent", "accepts_cat", "accepts_xat", "accepts_gmat", "accepts_gre",
+            "accepts_cmat", "accepts_nmat", "accepts_snap", "accepts_iift",
+            "cat_percentile_target", "xat_percentile_target", "gmat_score_target",
+            "min_work_ex_months", "fees", "fees_total_lakhs", "fees_breakdown", "fees_year",
+            "specializations", "source_url", "evidence_snippet",
+          ],
           additionalProperties: false,
         },
       },
     },
     required: ["title", "content", "courses"],
     instructions:
-      "DEEP RESEARCH MODE — list EVERY MBA / Masters-in-Management programme the college actually runs. Aim for 6-12 entries. Always include the flagship 2-year programme PLUS every variant the college offers: 1-Year MBA / PGPX / EPGP / PGPpro, Executive MBA, Part-time / Weekend MBA, Blended / Online MBA, sectoral MBAs (PGP-ABM, PGP-FABM, PGP-HRM, PGP-BA, MBA in Digital Business, MBA in Healthcare, MBA in Sustainability, etc.), dual-degree / exchange programmes (LBS, ESSEC, Yale), and Fellow / Doctoral Programme in Management (FPM/PhD). For top schools (IIM-A, IIM-B, IIM-C, IIM-L, IIM-K, IIM-I, XLRI, FMS, MDI, SPJIMR, IIFT, NMIMS, ISB, Great Lakes) verify the exact official portfolio from your training data — DO NOT collapse everything into a single 'MBA' entry. Each programme must use its real official name, real duration, real eligibility (CAT/XAT/GMAT/GRE/EA bands + work-ex), latest 2025-2026 total fees, and 4-8 real specialisations.",
+      "DEEP RESEARCH MODE — list EVERY MBA / Masters-in-Management programme the college actually runs. Aim for 6-12 entries. Always include the flagship 2-year programme PLUS every variant the college offers: 1-Year MBA / PGPX / EPGP / PGPpro, Executive MBA, Part-time / Weekend MBA, Blended / Online MBA, sectoral MBAs (PGP-ABM, PGP-FABM, PGP-HRM, PGP-BA, MBA in Digital Business, MBA in Healthcare, MBA in Sustainability, etc.), dual-degree / exchange programmes (LBS, ESSEC, Yale), and Fellow / Doctoral Programme in Management (FPM/PhD). For top schools (IIM-A, IIM-B, IIM-C, IIM-L, IIM-K, IIM-I, XLRI, FMS, MDI, SPJIMR, IIFT, NMIMS, ISB, Great Lakes) verify the exact official portfolio from your training data — DO NOT collapse everything into a single 'MBA' entry. Each programme MUST include: real official name, short name, programme_type, real duration + duration_months, mode, full eligibility (graduation %, accepted exams as booleans, CAT/XAT/GMAT score targets, work-ex band, age band), latest 2025-2026 total fees (string + numeric fees_total_lakhs + fees_breakdown + fees_year), 4-8 real specialisations, 3-6 highlights, intake_seats, AND a verifiable source_url on the college's own domain plus a 12-30 word evidence_snippet quoting the source page. NEVER fabricate URLs — always use the actual official admissions / programmes / brochure URL.",
   },
   admission: {
     name: "admission_payload",
@@ -742,6 +779,81 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
 
     // Map structured payload back into the form shape used by AdminCollegeSections
     const { title, content, meta_title, meta_description, canonical_slug, ...dataRest } = payload;
+
+    // ── Auto-sync verified programme portfolio into programme_courses table ──
+    // Only fires for the courses_fees section AND when the caller passed brief.collegeId.
+    let portfolio_synced = 0;
+    if (brief.sectionType === "courses_fees" && brief.collegeId && Array.isArray(payload.courses) && payload.courses.length) {
+      try {
+        const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+        const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const slugify = (s: string) =>
+          String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80) || "programme";
+        const seen = new Set<string>();
+        const rows = (payload.courses as any[]).map((c, i) => {
+          let slug = slugify(c.short_name || c.name || `programme-${i}`);
+          let suffix = 1;
+          while (seen.has(slug)) slug = `${slugify(c.short_name || c.name || "p")}-${++suffix}`;
+          seen.add(slug);
+          return {
+            college_id: brief.collegeId,
+            slug,
+            name: String(c.name || "").slice(0, 200),
+            short_name: c.short_name ? String(c.short_name).slice(0, 60) : null,
+            programme_type: c.programme_type ? String(c.programme_type).slice(0, 60) : "MBA",
+            duration: c.duration ? String(c.duration).slice(0, 100) : null,
+            duration_months: typeof c.duration_months === "number" ? Math.round(c.duration_months) : null,
+            mode: c.mode ? String(c.mode).slice(0, 40) : "Full-time",
+            fees_total_lakhs: typeof c.fees_total_lakhs === "number" ? c.fees_total_lakhs : null,
+            fees_breakdown: c.fees_breakdown ? String(c.fees_breakdown).slice(0, 500) : null,
+            fees_year: c.fees_year ? String(c.fees_year).slice(0, 20) : `${currentYear}-${currentYear + 1}`,
+            min_graduation_percent: typeof c.min_graduation_percent === "number" ? c.min_graduation_percent : 50,
+            accepts_cat: !!c.accepts_cat,
+            accepts_xat: !!c.accepts_xat,
+            accepts_gmat: !!c.accepts_gmat,
+            accepts_gre: !!c.accepts_gre,
+            accepts_cmat: !!c.accepts_cmat,
+            accepts_nmat: !!c.accepts_nmat,
+            accepts_snap: !!c.accepts_snap,
+            accepts_iift: !!c.accepts_iift,
+            cat_percentile_target: c.cat_percentile_target ? String(c.cat_percentile_target).slice(0, 30) : null,
+            xat_percentile_target: c.xat_percentile_target ? String(c.xat_percentile_target).slice(0, 30) : null,
+            gmat_score_target: c.gmat_score_target ? String(c.gmat_score_target).slice(0, 30) : null,
+            min_work_ex_months: typeof c.min_work_ex_months === "number" ? Math.max(0, c.min_work_ex_months) : 0,
+            max_work_ex_months: typeof c.max_work_ex_months === "number" && c.max_work_ex_months > 0 ? c.max_work_ex_months : null,
+            min_age: typeof c.min_age === "number" && c.min_age > 0 ? c.min_age : null,
+            max_age: typeof c.max_age === "number" && c.max_age > 0 ? c.max_age : null,
+            specializations: Array.isArray(c.specializations) ? c.specializations.map((s: any) => String(s).slice(0, 80)) : [],
+            highlights: Array.isArray(c.highlights) ? c.highlights.map((s: any) => String(s).slice(0, 200)) : null,
+            intake_seats: typeof c.intake_seats === "number" ? c.intake_seats : null,
+            source_url: c.source_url ? String(c.source_url).slice(0, 500) : null,
+            source_brochure_url: c.source_brochure_url ? String(c.source_brochure_url).slice(0, 500) : null,
+            evidence_snippet: c.evidence_snippet ? String(c.evidence_snippet).slice(0, 500) : null,
+            source_verified_at: new Date().toISOString(),
+            sort_order: i,
+            active: true,
+          };
+        });
+        const upsertRes = await fetch(`${SUPABASE_URL}/rest/v1/programme_courses?on_conflict=college_id,slug`, {
+          method: "POST",
+          headers: {
+            apikey: SERVICE_ROLE,
+            Authorization: `Bearer ${SERVICE_ROLE}`,
+            "Content-Type": "application/json",
+            Prefer: "resolution=merge-duplicates,return=minimal",
+          },
+          body: JSON.stringify(rows),
+        });
+        if (upsertRes.ok) {
+          portfolio_synced = rows.length;
+        } else {
+          console.error("programme_courses upsert failed:", upsertRes.status, await upsertRes.text());
+        }
+      } catch (syncErr) {
+        console.error("programme_courses sync error:", syncErr);
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -758,6 +870,7 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
           freshness_window: freshness,
         },
         faq_schema,
+        portfolio_synced,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
