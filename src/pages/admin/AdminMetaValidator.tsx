@@ -386,11 +386,26 @@ export default function AdminMetaValidator() {
       });
       if (error) throw error;
       if (!data?.ok) throw new Error(data?.error || "Execute failed");
-      toast.success(`Applied ${data.applied} meta overrides. Re-run validation to confirm.`);
+
+      const dbCount = data.dbUpdates ?? 0;
+      const ovCount = data.overrides ?? 0;
+      const errCount = (data.errors || []).length;
+
+      if (errCount > 0) {
+        toast.warning(
+          `Applied ${data.applied} fix(es) — ${dbCount} DB update(s), ${ovCount} override(s). ${errCount} failed: ${(data.errors || []).slice(0, 2).join("; ")}`,
+          { duration: 8000 },
+        );
+      } else {
+        toast.success(
+          `✅ Applied ${data.applied} fix(es) — ${dbCount} written to database, ${ovCount} as overrides. Re-running validation…`,
+        );
+      }
       setBulkOpen(false);
       setProposedFixes(null);
       await runValidation();
     } catch (e: any) {
+      console.error("executeFixes failed", e);
       toast.error(e?.message || "Execute failed");
     } finally {
       setPhase("idle");
@@ -608,17 +623,37 @@ export default function AdminMetaValidator() {
 
           {proposedFixes && (
             <div className="space-y-3 py-2">
-              {proposedFixes.map((f, i) => (
-                <Card key={i} className="p-3 space-y-2">
-                  <div className="text-xs font-mono text-primary break-all">{f.url.replace(SITE_URL, "") || "/"}</div>
-                  <div className="grid gap-1.5 text-xs">
-                    <div><span className="font-semibold">Title ({f.title.length}):</span> {f.title}</div>
-                    <div><span className="font-semibold">Desc ({f.description.length}):</span> {f.description}</div>
-                    <div><span className="font-semibold">OG Title:</span> {f.ogTitle}</div>
-                    <div className="text-muted-foreground italic"><span className="not-italic font-semibold text-foreground">Why:</span> {f.reasoning}</div>
-                  </div>
-                </Card>
-              ))}
+              {proposedFixes.map((f, i) => {
+                const isDb = ["/college/", "/institute/", "/exam/", "/article/", "/category/"].some((p) =>
+                  (f.canonical || f.url).includes(p),
+                ) || (f.canonical || f.url).match(/\/colleges\/[^/]+$/);
+                return (
+                  <Card key={i} className="p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-xs font-mono text-primary break-all">{(f.canonical || f.url).replace(SITE_URL, "") || "/"}</div>
+                      <Badge variant={isDb ? "default" : "secondary"} className="shrink-0">
+                        {isDb ? "→ DB update" : "→ Override"}
+                      </Badge>
+                    </div>
+                    <div className="grid gap-1.5 text-xs">
+                      <div><span className="font-semibold">Title ({f.title?.length || 0}):</span> {f.title}</div>
+                      <div><span className="font-semibold">Desc ({f.description?.length || 0}):</span> {f.description}</div>
+                      <div><span className="font-semibold">H1:</span> {f.h1Tag || <span className="text-muted-foreground italic">—</span>}</div>
+                      <div><span className="font-semibold">Primary KW:</span> {f.primaryKeyword || <span className="text-muted-foreground italic">—</span>}</div>
+                      {Array.isArray(f.keywords) && f.keywords.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          <span className="font-semibold">Keywords:</span>
+                          {f.keywords.map((k: string, ki: number) => (
+                            <Badge key={ki} variant="outline" className="text-[10px] py-0 px-1.5">{k}</Badge>
+                          ))}
+                        </div>
+                      )}
+                      <div><span className="font-semibold">OG Title:</span> {f.ogTitle}</div>
+                      <div className="text-muted-foreground italic"><span className="not-italic font-semibold text-foreground">Why:</span> {f.reasoning}</div>
+                    </div>
+                  </Card>
+                );
+              })}
             </div>
           )}
 
