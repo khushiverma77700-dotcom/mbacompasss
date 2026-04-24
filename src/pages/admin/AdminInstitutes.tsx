@@ -469,8 +469,8 @@ const AdminInstitutes = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {institutes.length === 0 && (
-                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">No institutes yet</TableCell></TableRow>
+              {sortedInstitutes.length === 0 && (
+                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">{institutes.length === 0 ? "No institutes yet" : "No institutes match your filters"}</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
