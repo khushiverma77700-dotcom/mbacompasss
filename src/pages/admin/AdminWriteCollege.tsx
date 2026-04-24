@@ -143,6 +143,27 @@ const AdminWriteCollege = () => {
         finalSlug = `${finalSlug}-${Date.now().toString(36).slice(-4)}`;
       }
 
+      // Coerce AI-returned values into safe integer/numeric values.
+      // The model sometimes returns strings like "15-18 (NIRF Management 2026)"
+      // or "2,500 students" — we extract the first number so Postgres int
+      // columns don't error out.
+      const toInt = (v: any): number | null => {
+        if (v === null || v === undefined || v === "") return null;
+        if (typeof v === "number" && Number.isFinite(v)) return Math.round(v);
+        const m = String(v).replace(/,/g, "").match(/-?\d+/);
+        if (!m) return null;
+        const n = parseInt(m[0], 10);
+        return Number.isFinite(n) ? n : null;
+      };
+      const toNum = (v: any): number | null => {
+        if (v === null || v === undefined || v === "") return null;
+        if (typeof v === "number" && Number.isFinite(v)) return v;
+        const m = String(v).replace(/,/g, "").match(/-?\d+(?:\.\d+)?/);
+        if (!m) return null;
+        const n = parseFloat(m[0]);
+        return Number.isFinite(n) ? n : null;
+      };
+
       const insertPayload: any = {
         name: c.name || name,
         slug: finalSlug,
@@ -152,16 +173,16 @@ const AdminWriteCollege = () => {
         type: c.type || type,
         tier: c.tier || tier,
         college_category: c.college_category || category,
-        established: c.established || null,
-        ranking: c.ranking || null,
+        established: toInt(c.established),
+        ranking: toInt(c.ranking),
         fees: c.fees || null,
-        fees_lakhs: c.fees_lakhs || null,
+        fees_lakhs: toNum(c.fees_lakhs),
         website: c.website || null,
         placement_avg: c.placement_avg || null,
         placement_highest: c.placement_highest || null,
         placement_median: c.placement_median || null,
         campus_size: c.campus_size || null,
-        total_students: c.total_students || null,
+        total_students: toInt(c.total_students),
         admission_process: c.admission_process || null,
         courses: Array.isArray(c.courses) && c.courses.length ? c.courses : null,
         accreditations: Array.isArray(c.accreditations) && c.accreditations.length ? c.accreditations : null,
