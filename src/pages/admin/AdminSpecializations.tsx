@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, ArrowLeft, Tag } from "lucide-react";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import { useFilteredList } from "@/hooks/useFilteredList";
 
 type SpecRow = {
   id: string;
@@ -30,6 +32,16 @@ const AdminSpecializations = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const { toast } = useToast();
+
+  const { filtered, filters, setFilter, clearAll, activeCount } = useFilteredList(items, {
+    storageKey: "admin.specializations.filters",
+    defaults: { search: "", type: "all", active: "all" },
+    searchFields: [(s) => s.name, (s) => s.slug],
+    fieldFilters: {
+      type: (s) => s.type,
+      active: (s) => (s.active ? "active" : "hidden"),
+    },
+  });
 
   const fetchItems = async () => {
     const { data, error } = await (supabase as any)
@@ -157,6 +169,36 @@ const AdminSpecializations = () => {
         </Button>
       </div>
 
+      <AdminFilterBar
+        searchValue={filters.search ?? ""}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search name or slug…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        resultsHint={`${filtered.length} of ${items.length} shown`}
+        filters={[
+          {
+            type: "select", key: "type", label: "Applies To", width: "w-44",
+            options: [
+              { label: "All", value: "all" },
+              { label: "Both", value: "both" },
+              { label: "Colleges only", value: "college" },
+              { label: "Coaching only", value: "coaching" },
+            ],
+          },
+          {
+            type: "select", key: "active", label: "Status", width: "w-36",
+            options: [
+              { label: "All", value: "all" },
+              { label: "Active", value: "active" },
+              { label: "Hidden", value: "hidden" },
+            ],
+          },
+        ]}
+      />
+
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -172,7 +214,7 @@ const AdminSpecializations = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((row, idx) => (
+              {filtered.map((row, idx) => (
                 <TableRow key={row.id}>
                   <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell className="font-medium">{row.name}</TableCell>
@@ -190,8 +232,8 @@ const AdminSpecializations = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {items.length === 0 && (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No specializations yet — add your first one</TableCell></TableRow>
+              {filtered.length === 0 && (
+                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No specializations match your filters.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>

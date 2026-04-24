@@ -9,12 +9,13 @@ import { Eye, EyeOff, CheckCheck, Phone } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useTableSort } from "@/hooks/useTableSort";
 import SortableTableHead from "@/components/admin/SortableTableHead";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import { useFilteredList } from "@/hooks/useFilteredList";
 
 const AdminCallbacks = () => {
   const [callbacks, setCallbacks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { sortedItems, sortConfig, handleSort } = useTableSort(callbacks);
 
   const fetchCallbacks = async () => {
     const { data } = await supabase
@@ -27,6 +28,15 @@ const AdminCallbacks = () => {
   };
 
   useEffect(() => { fetchCallbacks(); }, []);
+
+  const { filtered, filters, setFilter, clearAll, activeCount } = useFilteredList(callbacks, {
+    storageKey: "admin.callbacks.filters",
+    defaults: { search: "", read: "all" },
+    searchFields: [(c) => c.name, (c) => c.email, (c) => c.phone, (c) => c.message],
+    fieldFilters: { read: (c) => (c.read ? "read" : "unread") },
+  });
+
+  const { sortedItems, sortConfig, handleSort } = useTableSort(filtered);
 
   const markAsRead = async (id: string) => {
     const { error } = await supabase.from("inquiries").update({ read: true } as any).eq("id", id);
@@ -70,6 +80,27 @@ const AdminCallbacks = () => {
           </Button>
         )}
       </div>
+
+      <AdminFilterBar
+        searchValue={filters.search ?? ""}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search name, email, phone, message…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        resultsHint={`${filtered.length} of ${callbacks.length} shown`}
+        filters={[
+          {
+            type: "select", key: "read", label: "Status", width: "w-36",
+            options: [
+              { label: "All", value: "all" },
+              { label: "Unread", value: "unread" },
+              { label: "Read", value: "read" },
+            ],
+          },
+        ]}
+      />
 
       <Card>
         <CardContent className="p-0">
@@ -116,10 +147,10 @@ const AdminCallbacks = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {!loading && callbacks.length === 0 && (
+              {!loading && sortedItems.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center text-muted-foreground py-12">
-                    No callback requests yet. They'll appear here when visitors submit the contact form.
+                    No callback requests match your filters.
                   </TableCell>
                 </TableRow>
               )}
