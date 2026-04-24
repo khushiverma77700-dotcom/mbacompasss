@@ -101,7 +101,7 @@ export default function AdminContentRefreshes() {
     load();
     const ch = supabase
       .channel("content_refreshes_admin")
-      .on("postgres_changes", { event: "*", schema: "public", table: "content_refreshes" }, load)
+      .on("postgres_changes" as any, { event: "*", schema: "public", table: "content_refreshes" }, () => load())
       .subscribe();
     return () => {
       supabase.removeChannel(ch);
