@@ -137,6 +137,8 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
   // written with a flat rate that does not reflect actual per-model pricing).
   const enriched = useMemo(() => logs.map(l => ({
     ...l,
+    feature: normalizeFeature(l.feature),
+    providerKey: normalizeProvider(l.provider, l.feature),
     cost: computeAICost({
       model: l.model,
       promptTokens: l.prompt_tokens,
@@ -152,7 +154,11 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
     const errors = enriched.filter(l => l.status === "error").length;
     const successRate = totalCalls ? ((totalCalls - errors) / totalCalls * 100).toFixed(1) : "0";
     const avgCostPerCall = totalCalls ? totalCost / totalCalls : 0;
-    return { totalCalls, totalTokens, totalCost, errors, successRate, avgCostPerCall };
+    const latencies = enriched.map(l => l.latency_ms).filter((n): n is number => typeof n === "number" && n > 0);
+    const avgLatency = latencies.length ? Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length) : 0;
+    const sorted = [...latencies].sort((a, b) => a - b);
+    const p95Latency = sorted.length ? sorted[Math.floor(sorted.length * 0.95)] : 0;
+    return { totalCalls, totalTokens, totalCost, errors, successRate, avgCostPerCall, avgLatency, p95Latency };
   }, [enriched]);
 
   const byFeature = useMemo(() => {
@@ -170,6 +176,33 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
     })).sort((a, b) => b.cost - a.cost);
   }, [enriched]);
 
+  const byProvider = useMemo(() => {
+    const map: Record<string, { calls: number; tokens: number; cost: number; errors: number; latencySum: number; latencyCount: number }> = {};
+    enriched.forEach(l => {
+      const k = l.providerKey;
+      if (!map[k]) map[k] = { calls: 0, tokens: 0, cost: 0, errors: 0, latencySum: 0, latencyCount: 0 };
+      map[k].calls++;
+      map[k].tokens += l.total_tokens || 0;
+      map[k].cost += l.cost;
+      if (l.status === "error") map[k].errors++;
+      if (typeof l.latency_ms === "number" && l.latency_ms > 0) {
+        map[k].latencySum += l.latency_ms;
+        map[k].latencyCount++;
+      }
+    });
+    return Object.entries(map).map(([key, d]) => ({
+      key,
+      name: PROVIDER_LABELS[key] || key,
+      color: PROVIDER_COLORS[key] || "#94a3b8",
+      calls: d.calls,
+      tokens: d.tokens,
+      cost: d.cost,
+      errors: d.errors,
+      successRate: d.calls ? Number(((d.calls - d.errors) / d.calls * 100).toFixed(1)) : 0,
+      avgLatency: d.latencyCount ? Math.round(d.latencySum / d.latencyCount) : 0,
+    })).sort((a, b) => b.calls - a.calls);
+  }, [enriched]);
+
   const dailyTrend = useMemo(() => {
     const map: Record<string, { date: string; calls: number; tokens: number; cost: number }> = {};
     enriched.forEach(l => {
@@ -183,18 +216,30 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
   }, [enriched]);
 
   const byModel = useMemo(() => {
-    const map: Record<string, { calls: number; cost: number }> = {};
+    const map: Record<string, { calls: number; cost: number; tokens: number; errors: number; latencySum: number; latencyCount: number }> = {};
     enriched.forEach(l => {
       const m = l.model || "unknown";
-      if (!map[m]) map[m] = { calls: 0, cost: 0 };
+      if (!map[m]) map[m] = { calls: 0, cost: 0, tokens: 0, errors: 0, latencySum: 0, latencyCount: 0 };
       map[m].calls++;
       map[m].cost += l.cost;
+      map[m].tokens += l.total_tokens || 0;
+      if (l.status === "error") map[m].errors++;
+      if (typeof l.latency_ms === "number" && l.latency_ms > 0) {
+        map[m].latencySum += l.latency_ms;
+        map[m].latencyCount++;
+      }
     });
     return Object.entries(map).map(([name, v]) => ({
+      raw: name,
       name: modelLabel(name),
       value: v.calls,
+      calls: v.calls,
+      tokens: v.tokens,
       cost: v.cost,
-    }));
+      errors: v.errors,
+      successRate: v.calls ? Number(((v.calls - v.errors) / v.calls * 100).toFixed(1)) : 0,
+      avgLatency: v.latencyCount ? Math.round(v.latencySum / v.latencyCount) : 0,
+    })).sort((a, b) => b.calls - a.calls);
   }, [enriched]);
 
   return (
