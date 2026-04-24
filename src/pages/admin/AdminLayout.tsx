@@ -1,6 +1,6 @@
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp, Sparkles, ShieldCheck, Lock, Briefcase, Target, PhoneCall, Database, Activity, Calculator, ChevronDown, Bell, RefreshCw, PenLine } from "lucide-react";
+import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp, Sparkles, ShieldCheck, Lock, Briefcase, Target, PhoneCall, Database, Activity, Calculator, ChevronDown, Bell, RefreshCw, PenLine, ClipboardList } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -33,6 +33,12 @@ const adminNavGroups = [
       { label: "Exams", path: "/admin/exams", icon: FileText },
       { label: "Categories", path: "/admin/categories", icon: Tag },
       { label: "Specializations", path: "/admin/specializations", icon: Tag },
+    ],
+  },
+  {
+    label: "CAT Mock Tests",
+    items: [
+      { label: "Mock Tests", path: "/admin/mock-tests", icon: ClipboardList },
     ],
   },
   {
