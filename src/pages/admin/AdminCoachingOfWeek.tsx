@@ -11,6 +11,8 @@ import { Plus, Pencil, Trash2, Tag, ArrowLeft } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import SortableTableHead from "@/components/admin/SortableTableHead";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import { useFilteredList } from "@/hooks/useFilteredList";
 import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 
 const emptyForm = {
@@ -116,7 +118,21 @@ const AdminCoachingOfWeek = () => {
     );
   }
 
-  const { sortedItems: sortedItems, sortConfig, handleSort } = useTableSort(items);
+  const { filtered, filters, setFilter, clearAll, activeCount } = useFilteredList(items, {
+    storageKey: "admin.coachingOfWeek.filters",
+    defaults: { search: "", institute: "all", active: "all" },
+    searchFields: [
+      (i) => i.headline,
+      (i) => (i as any).institutes?.name,
+      (i) => i.offer_text,
+      (i) => (i as any).coupon_code,
+    ],
+    fieldFilters: {
+      institute: (i) => i.institute_id,
+      active: (i) => (i.active ? "active" : "inactive"),
+    },
+  });
+  const { sortedItems: sortedItems, sortConfig, handleSort } = useTableSort(filtered);
 
   return (
     <div>
@@ -124,6 +140,30 @@ const AdminCoachingOfWeek = () => {
         <h1 className="font-heading text-2xl font-bold text-foreground">Coaching of the Week</h1>
         <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Entry</Button>
       </div>
+      <AdminFilterBar
+        searchValue={filters.search ?? ""}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search headline, institute, coupon…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        resultsHint={`${filtered.length} of ${items.length} shown`}
+        filters={[
+          {
+            type: "select", key: "institute", label: "Institute", width: "w-56",
+            options: [{ label: "All institutes", value: "all" }, ...institutes.map((i) => ({ label: i.name, value: i.id }))],
+          },
+          {
+            type: "select", key: "active", label: "Status", width: "w-36",
+            options: [
+              { label: "All", value: "all" },
+              { label: "Active", value: "active" },
+              { label: "Inactive", value: "inactive" },
+            ],
+          },
+        ]}
+      />
       <Card><CardContent className="p-0">
         <Table>
           <TableHeader><TableRow>
@@ -150,7 +190,7 @@ const AdminCoachingOfWeek = () => {
                 </TableCell>
               </TableRow>
             ))}
-            {items.length === 0 && (<TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No entries yet</TableCell></TableRow>)}
+            {filtered.length === 0 && (<TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No entries match your filters.</TableCell></TableRow>)}
           </TableBody>
         </Table>
       </CardContent></Card>
