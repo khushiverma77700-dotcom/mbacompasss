@@ -134,24 +134,6 @@ const AdminCoachingResults = () => {
     );
   }
 
-  const yearOptions = useMemo(() => {
-    const years = Array.from(new Set(items.map((i) => String(i.year)))).filter(Boolean).sort((a, b) => Number(b) - Number(a));
-    return [{ label: "All years", value: "all" }, ...years.map((y) => ({ label: y, value: y }))];
-  }, [items]);
-
-  const { filtered, filters, setFilter, clearAll, activeCount } = useFilteredList(items, {
-    storageKey: "admin.coachingResults.filters",
-    defaults: { search: "", coaching: "all", year: "all" },
-    searchFields: [
-      (i) => getLabel(i),
-      (i) => (i as any).coaching_of_week?.headline,
-      (i) => (i as any).coaching_of_week?.institutes?.name,
-    ],
-    fieldFilters: {
-      coaching: (i) => i.coaching_of_week_id,
-      year: (i) => String(i.year),
-    },
-  });
 
   return (
     <div>
