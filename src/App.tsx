@@ -350,10 +350,7 @@ const OAuthRedirectHandler = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Suspense fallback={null}>
-        <Toaster />
-        <Sonner />
-      </Suspense>
+      <DeferredToasters />
       <SettingsPrefetcher />
       <BrowserRouter>
         <GlobalNavigationPrefetch />
