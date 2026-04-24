@@ -106,14 +106,27 @@ export default function MocksListPage() {
                 <span className="flex items-center gap-1"><Layers className="h-3.5 w-3.5" />{t.test_type.replace("_", " ")}</span>
                 <span className="flex items-center gap-1"><FileText className="h-3.5 w-3.5" />{t.difficulty}</span>
               </div>
-              <Button onClick={() => navigate(`/mocks/${t.slug}`)} className="mt-auto">
-                {t.pricing_type === "free" ? "Start Mock" : (
-                  <span className="flex items-center gap-1"><IndianRupee className="h-4 w-4" />Enroll</span>
+              <Button onClick={() => handleCta(t)} className="mt-auto">
+                {t.pricing_type === "free" || enrolled.has(t.id) ? (
+                  "Start Mock"
+                ) : (
+                  <span className="flex items-center gap-1"><IndianRupee className="h-4 w-4" />Enroll · ₹{t.price_inr}</span>
                 )}
               </Button>
             </Card>
           ))}
         </div>
+      )}
+
+      {checkoutTest && (
+        <MockCheckoutDialog
+          open={!!checkoutTest}
+          onOpenChange={(o) => !o && setCheckoutTest(null)}
+          testId={checkoutTest.id}
+          testName={checkoutTest.name}
+          priceInr={Number(checkoutTest.price_inr)}
+          onEnrolled={() => loadEnrollments()}
+        />
       )}
     </div>
   );
