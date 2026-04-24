@@ -809,19 +809,21 @@ const CollegeDetailPage = () => {
               <Card>
                 <CardHeader><CardTitle className="font-heading flex items-center gap-2"><MessageSquare className="w-5 h-5 text-primary" /> Student Reviews</CardTitle></CardHeader>
                 <CardContent>
-                  <div className="flex items-center gap-6 mb-6 p-4 bg-secondary/30 rounded-lg">
-                    <div className="text-center">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-6 p-4 bg-secondary/30 rounded-lg">
+                    <div className="text-center self-center sm:self-auto flex-shrink-0">
                       <div className="text-4xl font-heading font-bold text-primary">{overallRating}</div>
                       <div className="flex items-center gap-0.5 justify-center mt-1">
                         {[...Array(5)].map((_, i) => <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(Number(overallRating)) ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`} />)}
                       </div>
                     </div>
-                    <div className="flex-1 space-y-1.5">
+                    <div className="flex-1 w-full space-y-2 min-w-0">
                       {ratingAspects.slice(0, 5).map((a: any) => (
-                        <div key={a.label} className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground w-24">{a.label}</span>
-                          <Progress value={Number(a.score) * 20} className="flex-1 h-2" />
-                          <span className="text-xs font-semibold w-6">{a.score}</span>
+                        <div key={a.label}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-muted-foreground truncate pr-2">{a.label}</span>
+                            <span className="text-xs font-semibold flex-shrink-0">{a.score}/5</span>
+                          </div>
+                          <Progress value={Number(a.score) * 20} className="h-2" />
                         </div>
                       ))}
                     </div>
