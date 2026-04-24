@@ -65,6 +65,9 @@ const CollegeDetailPage = () => {
     enabled: !!college?.id,
   });
 
+  // Fetch verified MBA programme portfolio for this college
+  const { data: programmes = [] } = useProgrammeCourses(college?.id);
+
   // Helper to get section data
   const getSection = (type: string) => dbSections?.find((s: any) => s.section_type === type);
   const getSectionData = (type: string) => {
@@ -563,12 +566,18 @@ const CollegeDetailPage = () => {
               </Card>
             </div>
 
-            {/* Courses & Fees */}
+            {/* Courses & Fees — verified MBA programme portfolio */}
             <div id="courses" ref={el => { sectionRefs.current["courses"] = el; }} className="scroll-mt-32">
-              <Card>
-                <CardHeader><CardTitle className="font-heading">Courses & Fee Structure</CardTitle></CardHeader>
-                <CardContent>
-                  {coursesFeesList.length > 0 ? (
+              {programmes.length > 0 ? (
+                <ProgrammePortfolioTable
+                  programmes={programmes}
+                  collegeSlug={college.slug}
+                  collegeName={college.name}
+                />
+              ) : coursesFeesList.length > 0 ? (
+                <Card>
+                  <CardHeader><CardTitle className="font-heading">Courses & Fee Structure</CardTitle></CardHeader>
+                  <CardContent>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm border-collapse">
                         <thead><tr className="bg-muted/50">
@@ -589,11 +598,19 @@ const CollegeDetailPage = () => {
                         </tbody>
                       </table>
                     </div>
-                  ) : (
+                    <div className="mt-4 flex justify-end">
+                      <Link to="/mba-programme-compare" className="text-xs text-primary hover:underline">Compare MBA programmes across colleges →</Link>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardHeader><CardTitle className="font-heading">Courses & Fee Structure</CardTitle></CardHeader>
+                  <CardContent>
                     <div className="text-center py-8"><BookOpen className="w-10 h-10 text-muted-foreground mx-auto mb-3" /><p className="text-muted-foreground">Course details coming soon.</p></div>
-                  )}
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* Admissions */}
