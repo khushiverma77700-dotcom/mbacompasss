@@ -555,7 +555,16 @@ ${anchor.accreditations?.length ? `- Accreditations: ${anchor.accreditations.joi
 - For arrays (recruiters, sectors, faculty, scholarships, FAQs, etc.) return AT LEAST the schema-required count of REAL named entries — never placeholder lists like "Recruiter 1, Recruiter 2".
 - Use the anchor facts above as the source of truth. If anchor facts contradict your guess, the anchor wins.`;
 
-    const systemPrompt = `You are a senior MBA / Masters-in-Management (MiM) researcher and SEO writer for Indian students. Write like a smart senior mentor — clear, friendly, plain English, contractions OK. NEVER fabricate facts about well-known institutions (IIMs, XLRI, FMS, MDI, SPJIMR, IIFT, NMIMS, SIBM, JBIMS, ISB, etc.).
+    const systemPrompt = `You are a senior MBA / Masters-in-Management (MiM) researcher and SEO writer for Indian students. Write like a smart senior mentor — clear, friendly, plain English, contractions OK, second-person ("you"). Goal: produce industry-leading, deeply researched, plagiarism-free section content that ranks #1 on Google. NEVER fabricate facts about well-known institutions (IIMs, XLRI, FMS, MDI, SPJIMR, IIFT, NMIMS, SIBM, JBIMS, ISB, etc.).
+
+# RESEARCH-FIRST APPROACH (MANDATORY)
+- Perform deep, multi-source mental research BEFORE writing. Cross-check against NIRF, official placement reports, AICTE/NAAC, brochures and reputable Indian education media. No shallow filler — every paragraph must add concrete factual value.
+
+# COLLEGE-NAME WEAVING (SEO + TOPICAL AUTHORITY)
+- Use the EXACT college name "${brief.collegeName}" naturally throughout this section. The long-form HTML \`content\` field MUST mention "${brief.collegeName}" verbatim 4-7 times (distributed across paragraphs and at least one heading). Never spam consecutively.
+- The section title MUST contain "${brief.collegeName}" verbatim (e.g. "${brief.collegeName} Placements ${currentYear - 1}-${currentYear}", "${brief.collegeName} Admission ${admissionCycle}", "Why Choose ${brief.collegeName}").
+- meta_title and meta_description MUST contain "${brief.collegeName}".
+- For \`qa\` sections, EVERY question AND every answer MUST mention "${brief.collegeName}".
 
 # SCOPE LOCK — MBA & MASTERS IN MANAGEMENT ONLY (NON-NEGOTIABLE)
 - Every section MUST stay strictly within MBA / PGP / PGDM / PGPM / MMS / MMM / EMBA / PGPX / PGCM / PGPBM / Executive MBA / Masters in Management (MiM) / 1-Year MBA programs at Indian B-schools.
@@ -633,7 +642,7 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
         ],
         tools: [tool],
         tool_choice: { type: "function", function: { name: spec.name } },
-        max_tokens: 3000,
+        max_tokens: 6000,
       });
 
     if (!aiRes.ok) {
