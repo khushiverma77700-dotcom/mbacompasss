@@ -391,6 +391,14 @@ const SEO_REQUIRED = ["meta_title", "meta_description", "canonical_slug"];
 function sanitizeHtml(html: string): string {
   if (!html || typeof html !== "string") return "";
   let out = html;
+  // Strip literal escape artifacts the model sometimes leaks ("\n", "\\n", "/n", "\t")
+  // Convert real escape sequences to spaces, then nuke the visible "\n" / "/n" text.
+  out = out.replace(/\r\n|\r|\n|\t/g, " ");
+  out = out.replace(/\\+n/gi, " ");      // "\n", "\\n", "\\\\n" → space
+  out = out.replace(/(^|[\s>])\/n(?=[\s<]|$)/gi, "$1 "); // stray "/n" tokens
+  // Collapse paragraphs/list items that became empty after stripping
+  out = out.replace(/<p>\s*<\/p>/gi, "");
+  out = out.replace(/<li>\s*<\/li>/gi, "");
   // Remove <style> blocks entirely
   out = out.replace(/<style[\s\S]*?<\/style>/gi, "");
   // Remove <script> blocks entirely
