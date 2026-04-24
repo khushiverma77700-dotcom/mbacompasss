@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -112,19 +112,55 @@ const AdminCoachingResults = () => {
     );
   }
 
+  const yearOptions = useMemo(() => {
+    const years = Array.from(new Set(items.map((i) => String(i.year)))).filter(Boolean).sort((a, b) => Number(b) - Number(a));
+    return [{ label: "All years", value: "all" }, ...years.map((y) => ({ label: y, value: y }))];
+  }, [items]);
+
+  const { filtered, filters, setFilter, clearAll, activeCount } = useFilteredList(items, {
+    storageKey: "admin.coachingResults.filters",
+    defaults: { search: "", coaching: "all", year: "all" },
+    searchFields: [
+      (i) => getLabel(i),
+      (i) => (i as any).coaching_of_week?.headline,
+      (i) => (i as any).coaching_of_week?.institutes?.name,
+    ],
+    fieldFilters: {
+      coaching: (i) => i.coaching_of_week_id,
+      year: (i) => String(i.year),
+    },
+  });
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-heading text-2xl font-bold text-foreground">Coaching Results (Yearly)</h1>
         <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Result</Button>
       </div>
+      <AdminFilterBar
+        searchValue={filters.search ?? ""}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search institute, headline…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        resultsHint={`${filtered.length} of ${items.length} shown`}
+        filters={[
+          {
+            type: "select", key: "coaching", label: "Coaching Entry", width: "w-60",
+            options: [{ label: "All", value: "all" }, ...cotwOptions.map((c: any) => ({ label: `${c.institutes?.name || "?"} — ${c.headline || ""}`, value: c.id }))],
+          },
+          { type: "select", key: "year", label: "Year", width: "w-28", options: yearOptions },
+        ]}
+      />
       <Card><CardContent className="p-0">
         <Table>
           <TableHeader><TableRow>
             <TableHead>Coaching</TableHead><TableHead>Year</TableHead><TableHead>Calls</TableHead><TableHead>Conv%</TableHead><TableHead>Placed</TableHead><TableHead>IIM-A</TableHead><TableHead>IIM-B</TableHead><TableHead>CAT 99+</TableHead><TableHead className="text-right">Actions</TableHead>
           </TableRow></TableHeader>
           <TableBody>
-            {items.map((item) => (
+            {filtered.map((item) => (
               <TableRow key={item.id}>
                 <TableCell className="font-medium max-w-[150px] truncate">{getLabel(item)}</TableCell>
                 <TableCell>{item.year}</TableCell><TableCell>{item.total_calls}</TableCell><TableCell>{item.conversions}%</TableCell>
@@ -136,7 +172,7 @@ const AdminCoachingResults = () => {
                 </TableCell>
               </TableRow>
             ))}
-            {items.length === 0 && <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No results yet</TableCell></TableRow>}
+            {filtered.length === 0 && <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No results match your filters.</TableCell></TableRow>}
           </TableBody>
         </Table>
       </CardContent></Card>
