@@ -115,7 +115,7 @@ You MUST respond in valid JSON with this exact structure:
 - Include ALL available fields (established, campus_size, total_students, accreditations, top_recruiters) from the database
 - Ensure valid JSON output with no markdown formatting`;
 
-    const aiData = await callAIGateway({
+    const aiResp = await callAIGateway({
       model: "google/gemini-3-flash-preview",
       messages: [
         { role: "system", content: systemPrompt },
@@ -123,6 +123,7 @@ You MUST respond in valid JSON with this exact structure:
       ],
       response_format: { type: "json_object" },
     });
+    const aiData: any = await aiResp.json().catch(() => ({}));
 
     const content = aiData?.choices?.[0]?.message?.content || "{}";
     let result;

@@ -646,7 +646,7 @@ function isIndexedInInspectionResult(data: unknown) {
 }
 
 async function persistSubmissionResult(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   options: {
     url: string;
     pageType?: string;
