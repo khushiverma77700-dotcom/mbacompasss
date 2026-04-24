@@ -160,7 +160,7 @@ const AdminCollegeSections = () => {
   useEffect(() => {
     const collegeParam = searchParams.get("college");
     if (collegeParam && collegeParam !== selectedCollege) {
-      setSelectedCollege(collegeParam);
+      setFilter("college", collegeParam);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
