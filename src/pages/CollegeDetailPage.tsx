@@ -394,14 +394,16 @@ const CollegeDetailPage = () => {
               ].map(s => {
                 const Icon = s.icon;
                 return (
-                  <div key={s.label} className="group relative bg-white/10 backdrop-blur-md rounded-xl px-4 py-3 border border-white/15 hover:bg-white/15 hover:border-white/25 transition-all">
+                  <div key={s.label} className="group relative bg-white/10 backdrop-blur-md rounded-xl px-3 py-3 sm:px-4 border border-white/15 hover:bg-white/15 hover:border-white/25 transition-all min-w-0">
                     <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <Icon className="w-3.5 h-3.5 text-primary-foreground/70" />
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/70">{s.label}</span>
-                      <CitationLink source={s.source} year={s.year} className="!bg-white/10 !border-white/20 !text-primary-foreground/80 ml-auto" />
+                    <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
+                      <Icon className="w-3.5 h-3.5 text-primary-foreground/70 flex-shrink-0" />
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/70 truncate">{s.label}</span>
                     </div>
-                    <div className="font-heading font-extrabold text-primary-foreground text-base md:text-lg leading-tight">{s.value}</div>
+                    <div className="font-heading font-extrabold text-primary-foreground text-base md:text-lg leading-tight break-words">{s.value}</div>
+                    <div className="mt-1.5">
+                      <CitationLink source={s.source} year={s.year} className="!bg-white/10 !border-white/20 !text-primary-foreground/80" />
+                    </div>
                   </div>
                 );
               })}
