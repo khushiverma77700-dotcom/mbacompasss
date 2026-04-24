@@ -385,18 +385,27 @@ async function runAllSteps(mode: "audit" | "fix", runId: string) {
     details: {},
   }));
 
-  // 11. Structured headings (What/How/Why/Best)
+  // 11. Structured headings (What/How/Why/Best) — auto-prepend an intro section
   await tick(10, async () => {
-    let weak = 0;
-    for (const p of allPages) {
+    const weakPages = allPages.filter((p) => {
       const html = p.row.content || p.row.detailed_content || "";
-      if (!html) continue;
-      if (!/(What|How|Why|Best)\b/i.test(html)) weak++;
+      return html && !/(What|How|Why|Best)\b/i.test(html);
+    });
+    let fixed = 0;
+    if (mode === "fix") {
+      for (const p of weakPages.slice(0, 20)) {
+        const html = p.row.content || p.row.detailed_content || "";
+        const inject = `<h2>What is ${p.name}?</h2><p>${p.name} is an essential resource for MBA aspirants — covering admissions, fees, placements, and outcomes.</p><h2>Why it matters</h2><p>Choosing the right ${p.table === "colleges" ? "college" : p.table === "exams" ? "exam" : "option"} shapes your career trajectory and ROI.</p><h2>How to use this page</h2><p>Scan the highlights, review the data, and use our AI tools to map your fit.</p>\n`;
+        const newHtml = inject + html;
+        const col = p.row.content !== undefined && p.row.content !== null ? "content" : "detailed_content";
+        await supabase.from(p.table).update({ [col]: newHtml }).eq("id", p.id);
+        fixed++;
+      }
     }
     return {
-      status: weak === 0 ? "completed" : "pending",
-      pages_affected: weak,
-      summary: `${weak} pages lack What/How/Why/Best heading patterns.`,
+      status: fixed > 0 ? "updated" : weakPages.length === 0 ? "completed" : "pending",
+      pages_affected: fixed || weakPages.length,
+      summary: `${weakPages.length} pages lacked What/How/Why patterns; ${fixed} got auto-prepended structured intro.`,
       details: {},
     };
   });
@@ -425,21 +434,33 @@ async function runAllSteps(mode: "audit" | "fix", runId: string) {
     details: { strategy: "SEOHead canonical from window.location" },
   }));
 
-  // 14. Keyword cannibalization
+  // 14. Keyword cannibalization — auto-disambiguate by appending entity context
   await tick(13, async () => {
-    const map = new Map<string, string[]>();
+    const map = new Map<string, { table: string; id: string; slug: string; name: string; row: any }[]>();
     for (const p of allPages) {
       const k = (p.row.primary_keyword || "").toLowerCase().trim();
       if (!k) continue;
       const arr = map.get(k) || [];
-      arr.push(`${p.table}/${p.slug}`);
+      arr.push(p);
       map.set(k, arr);
     }
-    const conflicts = [...map.values()].filter((a) => a.length > 1).length;
+    const conflicts = [...map.entries()].filter(([, a]) => a.length > 1);
+    let fixed = 0;
+    if (mode === "fix") {
+      for (const [_kw, pages] of conflicts.slice(0, 15)) {
+        // keep first; disambiguate the rest
+        for (const p of pages.slice(1)) {
+          const suffix = p.row.city || p.table.replace(/s$/, "");
+          const newKw = `${p.row.primary_keyword} ${suffix}`.trim();
+          await supabase.from(p.table).update({ primary_keyword: newKw }).eq("id", p.id);
+          fixed++;
+        }
+      }
+    }
     return {
-      status: conflicts === 0 ? "completed" : "pending",
-      pages_affected: conflicts,
-      summary: `${conflicts} keywords mapped to multiple pages.`,
+      status: fixed > 0 ? "updated" : conflicts.length === 0 ? "completed" : "pending",
+      pages_affected: fixed || conflicts.length,
+      summary: `${conflicts.length} keywords mapped to multiple pages; ${fixed} disambiguated with city/type suffix.`,
       details: {},
     };
   });
@@ -460,18 +481,32 @@ async function runAllSteps(mode: "audit" | "fix", runId: string) {
     };
   });
 
-  // 17. Internal links
+  // 17. Internal links — auto-append a related-links block
   await tick(16, async () => {
-    let weak = 0;
-    for (const p of allPages) {
+    const weakPages = allPages.filter((p) => {
       const html = p.row.content || p.row.detailed_content || "";
-      const links = (html.match(/<a\b[^>]*href=/gi) || []).length;
-      if (links < 2) weak++;
+      return html && (html.match(/<a\b[^>]*href=/gi) || []).length < 2;
+    });
+    let fixed = 0;
+    if (mode === "fix") {
+      // Build a small pool of related links per table
+      const collegeLinks = (colleges.data || []).slice(0, 5).map((c: any) => `<li><a href="/college/${c.slug}">${c.name}</a></li>`).join("");
+      const examLinks = (exams.data || []).slice(0, 5).map((e: any) => `<li><a href="/exam/${e.slug}">${e.name}</a></li>`).join("");
+      const articleLinks = (articles.data || []).slice(0, 5).map((a: any) => `<li><a href="/article/${a.slug}">${a.title}</a></li>`).join("");
+      for (const p of weakPages.slice(0, 25)) {
+        const html = p.row.content || p.row.detailed_content || "";
+        if (/<!--auto-related-->/.test(html)) continue;
+        const block = `\n<!--auto-related--><h2>Related Resources</h2><ul>${collegeLinks}${examLinks}${articleLinks}<li><a href="/profile-analyzer">AI Profile Analyzer</a></li><li><a href="/college-shortlister">College Shortlister</a></li></ul>\n`;
+        const newHtml = html + block;
+        const col = p.row.content !== undefined && p.row.content !== null ? "content" : "detailed_content";
+        await supabase.from(p.table).update({ [col]: newHtml }).eq("id", p.id);
+        fixed++;
+      }
     }
     return {
-      status: weak === 0 ? "completed" : "pending",
-      pages_affected: weak,
-      summary: `${weak} pages have fewer than 2 internal links.`,
+      status: fixed > 0 ? "updated" : weakPages.length === 0 ? "completed" : "pending",
+      pages_affected: fixed || weakPages.length,
+      summary: `${weakPages.length} pages had <2 internal links; ${fixed} got auto-related links block (capped 25/run).`,
       details: {},
     };
   });
