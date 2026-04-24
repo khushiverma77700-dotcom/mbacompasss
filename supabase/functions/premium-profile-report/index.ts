@@ -80,46 +80,90 @@ Rules:
 No fluff. No generic advice. Reference numbers from the input.`;
 
     const aiResp = await callAIGateway({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: "You write extremely concise, quantitative McKinsey-style narrative for MBA candidates. No hedging." },
-          { role: "user", content: prompt },
-        ],
-        tools: [{
-          type: "function",
-          function: {
-            name: "premium_narrative",
-            description: "Return a structured executive narrative for the report",
-            parameters: {
-              type: "object",
-              properties: {
-                one_line_summary: { type: "string" },
-                final_verdict: { type: "string" },
-                top_advantages: {
-                  type: "array",
-                  items: { type: "object", properties: { title: { type: "string" }, why: { type: "string" } }, required: ["title", "why"] },
-                  minItems: 3, maxItems: 3,
-                },
-                top_risks: {
-                  type: "array",
-                  items: { type: "object", properties: { title: { type: "string" }, mitigation: { type: "string" } }, required: ["title", "mitigation"] },
-                  minItems: 3, maxItems: 3,
-                },
-                section_insights: {
-                  type: "object",
-                  properties: {
-                    academics: { type: "string" },
-                    work_ex: { type: "string" },
-                    college_strategy: { type: "string" },
-                    exam_prep: { type: "string" },
-                    roi: { type: "string" },
-                  },
-                  required: ["academics", "work_ex", "college_strategy", "exam_prep", "roi"],
-                },
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: "You write extremely concise, quantitative McKinsey-style narrative for MBA candidates. No hedging." },
+        { role: "user", content: prompt },
+      ],
+      tools: [{
+        type: "function",
+        function: {
+          name: "premium_narrative",
+          description: "Return a structured executive narrative for the report",
+          parameters: {
+            type: "object",
+            properties: {
+              one_line_summary: { type: "string" },
+              final_verdict: { type: "string" },
+              top_advantages: {
+                type: "array",
+                items: { type: "object", properties: { title: { type: "string" }, why: { type: "string" } }, required: ["title", "why"] },
+                minItems: 3, maxItems: 3,
               },
-              required: ["one_line_summary", "final_verdict", "top_advantages", "top_risks", "section_insights"],
+              top_risks: {
+                type: "array",
+                items: { type: "object", properties: { title: { type: "string" }, mitigation: { type: "string" } }, required: ["title", "mitigation"] },
+                minItems: 3, maxItems: 3,
+              },
+              section_insights: {
+                type: "object",
+                properties: {
+                  academics: { type: "string" },
+                  work_ex: { type: "string" },
+                  college_strategy: { type: "string" },
+                  exam_prep: { type: "string" },
+                  roi: { type: "string" },
+                },
+                required: ["academics", "work_ex", "college_strategy", "exam_prep", "roi"],
+              },
             },
+            required: ["one_line_summary", "final_verdict", "top_advantages", "top_risks", "section_insights"],
           },
-        }],
-        tool_choice: { type: "function", function: { name: "premium_narrative" } },
+        },
+      }],
+      tool_choice: { type: "function", function: { name: "premium_narrative" } },
+    });
+
+    // Extract tool call arguments
+    const toolCall = aiResp?.choices?.[0]?.message?.tool_calls?.[0];
+    let narrative: any = null;
+    if (toolCall?.function?.arguments) {
+      try {
+        narrative = typeof toolCall.function.arguments === "string"
+          ? JSON.parse(toolCall.function.arguments)
+          : toolCall.function.arguments;
+      } catch (e) {
+        console.error("[premium-profile-report] arg parse failed:", e);
+      }
+    }
+
+    // Fallback: try parsing message content
+    if (!narrative) {
+      const content = aiResp?.choices?.[0]?.message?.content;
+      if (content) {
+        try { narrative = JSON.parse(content); } catch { /* ignore */ }
+      }
+    }
+
+    if (!narrative?.one_line_summary) {
+      return new Response(JSON.stringify({ error: "AI did not return a valid narrative", raw: aiResp }), {
+        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Cache the result
+    await supabase.from("analysis_results").upsert({
+      profile_analysis_id: body.profile_id,
+      ai_summary: JSON.stringify(narrative),
+    }, { onConflict: "profile_analysis_id" });
+
+    return new Response(JSON.stringify({ ...narrative, cached: false }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error: any) {
+    console.error("[premium-profile-report] Error:", error);
+    return new Response(JSON.stringify({ error: error?.message || "Internal error" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
