@@ -465,11 +465,26 @@ Perform COMPREHENSIVE, DEEP SEO analysis. Score the CURRENT state honestly. Show
     let suggestions: any;
     if (toolCall?.function?.arguments) {
       const args = toolCall.function.arguments;
-      suggestions = typeof args === "string" ? JSON.parse(args) : args;
+      try {
+        suggestions = typeof args === "string" ? JSON.parse(args) : args;
+      } catch (e) {
+        console.error("[ai-seo-enhance] tool_call args parse failed:", e, "raw:", String(args).slice(0, 500));
+        throw new Error("AI returned malformed tool arguments. Please retry.");
+      }
     } else {
       const content = aiData.choices?.[0]?.message?.content || "";
+      if (!content.trim()) {
+        const finishReason = aiData.choices?.[0]?.finish_reason;
+        console.error("[ai-seo-enhance] Empty AI response. finish_reason:", finishReason, "full:", JSON.stringify(aiData).slice(0, 800));
+        throw new Error(`AI returned empty response (finish_reason: ${finishReason || "unknown"}). The model may have hit its token/safety limit. Please retry.`);
+      }
       if (detectTruncation(content)) console.warn("AI response appears truncated");
-      suggestions = extractJsonFromResponse(content);
+      try {
+        suggestions = extractJsonFromResponse(content);
+      } catch (e) {
+        console.error("[ai-seo-enhance] JSON extract failed. Content preview:", content.slice(0, 500));
+        throw new Error("AI did not return valid JSON. Please retry — this is usually transient.");
+      }
     }
 
     // Wait for schema markup
