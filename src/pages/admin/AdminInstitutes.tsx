@@ -35,6 +35,7 @@ type Institute = {
   students_count: number | null; success_rate: number | null;
   created_at: string;
   source?: string | null; last_updated_by?: string | null;
+  category_id?: string | null;
 };
 
 const emptyForm = {
