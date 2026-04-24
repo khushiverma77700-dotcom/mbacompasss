@@ -671,12 +671,14 @@ const CollegeDetailPage = () => {
                     ))}
                   </div>
                   <h3 className="font-heading font-semibold text-foreground mb-3">Sector-wise Placements</h3>
-                  <div className="space-y-2 mb-6">
+                  <div className="space-y-3 mb-6">
                     {placementSectors.map((s: any) => (
-                      <div key={s.sector} className="flex items-center gap-3">
-                        <span className="text-sm text-muted-foreground w-36 flex-shrink-0">{s.sector}</span>
-                        <Progress value={s.pct} className="flex-1 h-3" />
-                        <span className="text-sm font-semibold text-foreground w-10 text-right">{s.pct}%</span>
+                      <div key={s.sector}>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-sm text-foreground font-medium truncate pr-2">{s.sector}</span>
+                          <span className="text-sm font-bold text-primary flex-shrink-0">{s.pct}%</span>
+                        </div>
+                        <Progress value={s.pct} className="h-2.5" />
                       </div>
                     ))}
                   </div>
@@ -703,36 +705,39 @@ const CollegeDetailPage = () => {
                 <CardHeader><CardTitle className="font-heading">Cutoff Details</CardTitle></CardHeader>
                 <CardContent>
                   {cutoffData.cutoffs?.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm border-collapse">
-                        <thead><tr className="bg-muted/50">
-                          <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Category</th>
-                          <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Exam</th>
-                          <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Year</th>
-                          <th className="text-right py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Percentile</th>
-                        </tr></thead>
-                        <tbody>
-                          {cutoffData.cutoffs.map((c: any, i: number) => (
-                            <tr key={i} className="border-b border-border">
-                              <td className="py-3 px-3 font-medium text-foreground">{c.category}</td>
-                              <td className="py-3 px-3 text-muted-foreground">{c.exam}</td>
-                              <td className="py-3 px-3 text-muted-foreground">{c.year}</td>
-                              <td className="py-3 px-3 text-right font-heading font-bold text-primary">{c.percentile}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                    <div className="-mx-6 px-6">
+                      <div className="overflow-x-auto rounded-lg border border-border bg-card">
+                        <table className="w-full text-sm border-collapse min-w-[480px]">
+                          <thead><tr className="bg-muted/50">
+                            <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border whitespace-nowrap">Category</th>
+                            <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border whitespace-nowrap">Exam</th>
+                            <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border whitespace-nowrap">Year</th>
+                            <th className="text-right py-3 px-3 font-heading font-semibold text-foreground border-b border-border whitespace-nowrap">Percentile</th>
+                          </tr></thead>
+                          <tbody>
+                            {cutoffData.cutoffs.map((c: any, i: number) => (
+                              <tr key={i} className="border-b border-border last:border-0">
+                                <td className="py-3 px-3 font-medium text-foreground whitespace-nowrap">{c.category}</td>
+                                <td className="py-3 px-3 text-muted-foreground whitespace-nowrap">{c.exam}</td>
+                                <td className="py-3 px-3 text-muted-foreground whitespace-nowrap">{c.year}</td>
+                                <td className="py-3 px-3 text-right font-heading font-bold text-primary whitespace-nowrap">{c.percentile}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-2 sm:hidden">← Swipe to view all columns →</p>
                     </div>
                   ) : cutoffInfo ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm border-collapse">
+                    <div className="overflow-x-auto rounded-lg border border-border">
+                      <table className="w-full text-sm border-collapse min-w-[320px]">
                         <thead><tr className="bg-muted/50">
                           <th className="text-left py-3 px-3 font-heading font-semibold border-b border-border">Category</th>
                           <th className="text-right py-3 px-3 font-heading font-semibold border-b border-border">Cutoff</th>
                         </tr></thead>
                         <tbody>
                           {Object.entries(cutoffInfo).map(([cat, val]) => (
-                            <tr key={cat} className="border-b border-border">
+                            <tr key={cat} className="border-b border-border last:border-0">
                               <td className="py-3 px-3 font-medium capitalize">{cat}</td>
                               <td className="py-3 px-3 text-right font-bold text-primary">{String(val)}</td>
                             </tr>
