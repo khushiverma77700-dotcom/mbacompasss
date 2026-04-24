@@ -794,4 +794,11 @@ const IssueList = ({ icon, title, items, tone }: { icon?: React.ReactNode; title
   );
 };
 
+const KVRow = ({ k, v }: { k: string; v?: string }) => (
+  <div className="border border-border rounded-md p-2 bg-muted/20">
+    <p className="text-[9px] uppercase tracking-wide text-muted-foreground font-semibold">{k}</p>
+    <p className="text-[11px] text-foreground break-words">{v || <span className="text-muted-foreground italic">not set</span>}</p>
+  </div>
+);
+
 export default PageEditorWorkspace;
