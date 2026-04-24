@@ -47,7 +47,7 @@ const SECTION_TOOLS: Record<string, any> = {
     name: "courses_fees_payload",
     fields: {
       title: { type: "string" },
-      content: { type: "string", description: "Short HTML intro paragraph (60-100 words)." },
+      content: { type: "string", description: "HTML intro (180-280 words). Mention the college name 3-5 times. Cover programme mix, fee philosophy, ROI angle." },
       courses: {
         type: "array",
         items: {
@@ -66,7 +66,7 @@ const SECTION_TOOLS: Record<string, any> = {
     },
     required: ["title", "content", "courses"],
     instructions:
-      "List 3-6 real flagship MBA / PGDM / Executive programs with REAL durations, eligibility (CAT/XAT etc.), latest 2025-2026 fee figures, and 3-5 specializations each.",
+      "List 5-8 real flagship MBA / PGDM / Executive programmes with REAL durations, eligibility (CAT/XAT etc.), latest 2025-2026 fee figures, and 4-6 specializations each.",
   },
   admission: {
     name: "admission_payload",
@@ -75,7 +75,7 @@ const SECTION_TOOLS: Record<string, any> = {
       content: {
         type: "string",
         description:
-          "HTML overview (180-280 words). Declarative, not question-based. Mentions latest 2025-2026 admission cycle.",
+          "HTML overview (350-500 words). Declarative, not question-based. Mention the college name 4-6 times. Cover the latest 2025-2026 admission cycle in depth (eligibility, exams, weightage, dates, application fee, documents).",
       },
       steps: {
         type: "array",
@@ -97,13 +97,13 @@ const SECTION_TOOLS: Record<string, any> = {
       },
     },
     required: ["title", "content", "steps", "eligibility"],
-    instructions: "5-7 sequential admission steps + 4-6 eligibility criteria. Real exams, real cutoffs.",
+    instructions: "7-9 sequential admission steps + 6-8 eligibility criteria. Real exams, real cutoff bands, real shortlisting weightage.",
   },
   placements: {
     name: "placements_payload",
     fields: {
       title: { type: "string" },
-      content: { type: "string", description: "HTML 80-150 words narrative on latest 2024-2025 placement cycle." },
+      content: { type: "string", description: "HTML 250-400 words narrative on the latest 2024-2025 placement cycle. Mention the college name 4-6 times. Cover roles, recruiter mix, sectoral trend vs prior years, international offers, summer-internship stipends." },
       avg_package: { type: "string", description: "e.g. INR 25 LPA" },
       highest_package: { type: "string" },
       median_package: { type: "string" },
@@ -132,13 +132,13 @@ const SECTION_TOOLS: Record<string, any> = {
       "placement_rate", "sectors", "recruiters",
     ],
     instructions:
-      "Use latest 2024-2025 placement report figures. 5-7 sectors with realistic % shares (sum ~100). 10-15 real recruiters.",
+      "Use latest 2024-2025 placement report figures. 6-8 sectors with realistic % shares (sum ~100). 15-25 real recruiters.",
   },
   cutoff: {
     name: "cutoff_payload",
     fields: {
       title: { type: "string" },
-      content: { type: "string", description: "HTML 80-150 words explaining cutoff trends for 2025-2026 cycle." },
+      content: { type: "string", description: "HTML 220-350 words explaining cutoff trends across the last 3 admission cycles for the 2025-2026 cycle. Mention the college name 3-5 times." },
       cutoffs: {
         type: "array",
         items: {
@@ -155,7 +155,7 @@ const SECTION_TOOLS: Record<string, any> = {
       },
     },
     required: ["title", "content", "cutoffs"],
-    instructions: "Cover General/OBC/SC/ST/EWS for the main exam(s) accepted. Use latest 2025 cycle cutoffs.",
+    instructions: "Cover General/OBC/SC/ST/EWS/PwD across the main exam(s) accepted. Use latest 2025 cycle cutoffs and add the prior 2 years for trend.",
   },
   rankings: {
     name: "rankings_payload",
@@ -182,7 +182,7 @@ const SECTION_TOOLS: Record<string, any> = {
     },
     required: ["title", "rankings", "accreditations"],
     instructions:
-      "3-6 ranking bodies (NIRF, Outlook, Business Today, The Week, QS, FT) with latest 2025 ranks. Real accreditations only (AACSB/AMBA/EQUIS/NBA/NAAC).",
+      "5-8 ranking bodies (NIRF, Outlook, Business Today, The Week, QS, FT, Bloomberg, ET) with latest 2025 ranks. Real accreditations only (AACSB/AMBA/EQUIS/NBA/NAAC).",
   },
   reviews: {
     name: "reviews_payload",
@@ -216,7 +216,7 @@ const SECTION_TOOLS: Record<string, any> = {
     },
     required: ["title", "overall_rating", "aspects", "reviews"],
     instructions:
-      "5 rating aspects (Academics, Faculty, Infrastructure, Placements, Campus Life). 3-5 realistic anonymised student reviews from 2023-2025 batches.",
+      "6 rating aspects (Academics, Faculty, Infrastructure, Placements, Campus Life, Value-for-Money). 5-7 realistic anonymised student reviews from 2023-2025 batches; positives/negatives 35-60 words each, mention the college name.",
   },
   scholarships: {
     name: "scholarships_payload",
@@ -238,7 +238,7 @@ const SECTION_TOOLS: Record<string, any> = {
       },
     },
     required: ["title", "scholarships"],
-    instructions: "3-6 realistic scholarships (merit, need-based, diversity, corporate-sponsored).",
+    instructions: "5-8 realistic scholarships (merit, need-based, diversity, corporate-sponsored, alumni-funded). Description 35-60 words each, mention the college name.",
   },
   faculty: {
     name: "faculty_payload",
@@ -262,13 +262,13 @@ const SECTION_TOOLS: Record<string, any> = {
     },
     required: ["title", "faculty"],
     instructions:
-      "5-8 plausible faculty profiles. Leave photo_url as empty string ''. Use realistic Indian academic credentials (PhD IIM/IIT/foreign B-school).",
+      "8-12 plausible faculty profiles. Leave photo_url as empty string ''. Use realistic Indian academic credentials (PhD IIM/IIT/foreign B-school) and concrete years of experience.",
   },
   hostel: {
     name: "hostel_payload",
     fields: {
       title: { type: "string" },
-      content: { type: "string", description: "HTML 100-180 words on campus + hostel life." },
+      content: { type: "string", description: "HTML 250-380 words on campus + hostel life at the college. Mention the college name 4-6 times. Cover residential experience, dining, safety, sports, clubs." },
       campus_size: { type: "string" },
       total_students: { type: "string" },
       hostel_rooms: { type: "string" },
@@ -284,7 +284,7 @@ const SECTION_TOOLS: Record<string, any> = {
       },
     },
     required: ["title", "content", "campus_size", "total_students", "hostel_rooms", "library", "facilities"],
-    instructions: "8-14 real campus facilities. Realistic numbers based on the actual college.",
+    instructions: "12-18 real campus facilities. Realistic numbers based on the actual college.",
   },
   qa: {
     name: "qa_payload",
@@ -302,13 +302,13 @@ const SECTION_TOOLS: Record<string, any> = {
     },
     required: ["title", "questions"],
     instructions:
-      "6-10 high-intent FAQs (fees, eligibility, cutoff, placements, hostel, scholarships, ranking, application deadline 2025-2026). Answers 40-80 words each, declarative, factually correct.",
+      "10-14 high-intent FAQs (fees, eligibility, cutoff, placements, hostel, scholarships, ranking, application deadline 2025-2026, ROI, alumni, comparison). EVERY question AND every answer MUST mention the college name verbatim. Answers 60-110 words each, declarative, factually correct.",
   },
   why_join: {
     name: "why_join_payload",
     fields: {
       title: { type: "string" },
-      content: { type: "string", description: "HTML 150-250 words explaining the USPs." },
+      content: { type: "string", description: "HTML 300-450 words explaining USPs. Mention the college name 5-7 times. Cover legacy, ranking, peer-set, recruiters, alumni, ROI, ecosystem." },
       ratings: {
         type: "array",
         items: {
@@ -320,7 +320,7 @@ const SECTION_TOOLS: Record<string, any> = {
       },
     },
     required: ["title", "content", "ratings"],
-    instructions: "5 rating aspects (out of 5) + clear 'why join' narrative. No question headings.",
+    instructions: "6 rating aspects (out of 5) + clear 'why join' narrative. No question headings.",
   },
   quick_info: {
     name: "quick_info_payload",
@@ -338,7 +338,7 @@ const SECTION_TOOLS: Record<string, any> = {
     },
     required: ["title", "items"],
     instructions:
-      "8-12 quick-info rows: Location, Established, Type, NIRF Rank, Total Fees, Avg Package, Highest Package, Exams Accepted, Accreditation, Application Deadline (2025-2026), Programs Offered, Website.",
+      "12-16 quick-info rows: Location, Established, Type, NIRF Rank, Total Fees, Avg Package, Median Package, Highest Package, Placement Rate, Exams Accepted, Accreditation, Application Deadline (2025-2026), Programs Offered, Campus Size, Total Students, Website.",
   },
   news: {
     name: "news_payload",
@@ -356,7 +356,7 @@ const SECTION_TOOLS: Record<string, any> = {
     },
     required: ["title", "links"],
     instructions:
-      "5-8 plausible recent news headlines from 2025 (admissions opening, placement results, ranking updates). Use relative URLs like /article/<slug>.",
+      "6-10 plausible recent news headlines from 2025 (admissions opening, placement results, ranking updates, partnerships, new programmes). Use relative URLs like /article/<slug> and include the college name in each headline.",
   },
   gallery: {
     name: "gallery_payload",
@@ -374,7 +374,7 @@ const SECTION_TOOLS: Record<string, any> = {
     },
     required: ["title", "images"],
     instructions:
-      "Return 6 image placeholders with empty url '' and meaningful captions (Main Building, Library, Auditorium, Hostel, Sports Complex, Convocation). The user will upload images themselves.",
+      "Return 6 image placeholders with empty url '' and meaningful captions (Main Building, Library, Auditorium, Hostel, Sports Complex, Convocation), each prefixed with the college name. The user will upload images themselves.",
   },
 };
 
@@ -555,7 +555,16 @@ ${anchor.accreditations?.length ? `- Accreditations: ${anchor.accreditations.joi
 - For arrays (recruiters, sectors, faculty, scholarships, FAQs, etc.) return AT LEAST the schema-required count of REAL named entries — never placeholder lists like "Recruiter 1, Recruiter 2".
 - Use the anchor facts above as the source of truth. If anchor facts contradict your guess, the anchor wins.`;
 
-    const systemPrompt = `You are a senior MBA / Masters-in-Management (MiM) researcher and SEO writer for Indian students. Write like a smart senior mentor — clear, friendly, plain English, contractions OK. NEVER fabricate facts about well-known institutions (IIMs, XLRI, FMS, MDI, SPJIMR, IIFT, NMIMS, SIBM, JBIMS, ISB, etc.).
+    const systemPrompt = `You are a senior MBA / Masters-in-Management (MiM) researcher and SEO writer for Indian students. Write like a smart senior mentor — clear, friendly, plain English, contractions OK, second-person ("you"). Goal: produce industry-leading, deeply researched, plagiarism-free section content that ranks #1 on Google. NEVER fabricate facts about well-known institutions (IIMs, XLRI, FMS, MDI, SPJIMR, IIFT, NMIMS, SIBM, JBIMS, ISB, etc.).
+
+# RESEARCH-FIRST APPROACH (MANDATORY)
+- Perform deep, multi-source mental research BEFORE writing. Cross-check against NIRF, official placement reports, AICTE/NAAC, brochures and reputable Indian education media. No shallow filler — every paragraph must add concrete factual value.
+
+# COLLEGE-NAME WEAVING (SEO + TOPICAL AUTHORITY)
+- Use the EXACT college name "${brief.collegeName}" naturally throughout this section. The long-form HTML \`content\` field MUST mention "${brief.collegeName}" verbatim 4-7 times (distributed across paragraphs and at least one heading). Never spam consecutively.
+- The section title MUST contain "${brief.collegeName}" verbatim (e.g. "${brief.collegeName} Placements ${currentYear - 1}-${currentYear}", "${brief.collegeName} Admission ${admissionCycle}", "Why Choose ${brief.collegeName}").
+- meta_title and meta_description MUST contain "${brief.collegeName}".
+- For \`qa\` sections, EVERY question AND every answer MUST mention "${brief.collegeName}".
 
 # SCOPE LOCK — MBA & MASTERS IN MANAGEMENT ONLY (NON-NEGOTIABLE)
 - Every section MUST stay strictly within MBA / PGP / PGDM / PGPM / MMS / MMM / EMBA / PGPX / PGCM / PGPBM / Executive MBA / Masters in Management (MiM) / 1-Year MBA programs at Indian B-schools.
@@ -633,7 +642,7 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
         ],
         tools: [tool],
         tool_choice: { type: "function", function: { name: spec.name } },
-        max_tokens: 3000,
+        max_tokens: 6000,
       });
 
     if (!aiRes.ok) {
