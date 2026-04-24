@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, FileText, IndianRupee, Layers } from "lucide-react";
-import { useEffect as useDocTitle } from "react";
+
 
 interface MockTest {
   id: string;
@@ -39,10 +39,7 @@ export default function MocksListPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
-      <Helmet>
-        <title>CAT Mock Tests | MBA Compass</title>
-        <meta name="description" content="Practice CAT with full-length mocks, sectionals & topic tests. Real CAT interface, server-side timer, percentile & detailed analytics." />
-      </Helmet>
+      
 
       <header className="mb-8">
         <h1 className="text-3xl md:text-4xl font-bold">CAT Mock Tests</h1>

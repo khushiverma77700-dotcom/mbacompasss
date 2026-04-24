@@ -87,9 +87,7 @@ export default function MockTestIntroPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <Helmet>
-        <title>{test.name} — Instructions | CAT Mock</title>
-      </Helmet>
+      
       <Card className="p-6 md:p-8">
         <div className="flex items-start justify-between flex-wrap gap-3 mb-4">
           <div>
