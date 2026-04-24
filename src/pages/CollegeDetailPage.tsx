@@ -605,20 +605,28 @@ const CollegeDetailPage = () => {
 
             {/* Placements */}
             <div id="placements" ref={el => { sectionRefs.current["placements"] = el; }} className="scroll-mt-32">
-              <Card>
-                <CardHeader><CardTitle className="font-heading">Placement Statistics</CardTitle></CardHeader>
+              <Card className="overflow-hidden border-border/60 shadow-md">
+                <div className="h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-transparent" />
+                <CardHeader>
+                  <CardTitle className="font-heading flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center">
+                      <TrendingUp className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    Placement Statistics
+                  </CardTitle>
+                </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                     {[
-                      { label: "Average Package", value: placementData.avg_package || college.placement_avg || "N/A", icon: TrendingUp },
-                      { label: "Highest Package", value: placementData.highest_package || college.placement_highest || "N/A", icon: Award },
-                      { label: "Median Package", value: placementData.median_package || college.placement_median || "N/A", icon: Star },
-                      { label: "Placement Rate", value: placementData.placement_rate || "98%", icon: CheckCircle },
+                      { label: "Average Package", value: placementData.avg_package || college.placement_avg || "N/A", icon: TrendingUp, color: "from-blue-500/15 to-blue-500/5", iconColor: "text-blue-600" },
+                      { label: "Highest Package", value: placementData.highest_package || college.placement_highest || "N/A", icon: Award, color: "from-amber-500/15 to-amber-500/5", iconColor: "text-amber-600" },
+                      { label: "Median Package", value: placementData.median_package || college.placement_median || "N/A", icon: Star, color: "from-purple-500/15 to-purple-500/5", iconColor: "text-purple-600" },
+                      { label: "Placement Rate", value: placementData.placement_rate || "98%", icon: CheckCircle, color: "from-emerald-500/15 to-emerald-500/5", iconColor: "text-emerald-600" },
                     ].map(s => (
-                      <div key={s.label} className="bg-secondary/50 rounded-lg p-4 text-center">
-                        <s.icon className="w-6 h-6 text-primary mx-auto mb-2" />
-                        <div className="font-heading text-lg font-bold text-primary">{s.value}</div>
-                        <div className="text-xs text-muted-foreground">{s.label}</div>
+                      <div key={s.label} className={`relative bg-gradient-to-br ${s.color} rounded-xl p-4 text-center border border-border/40 hover:shadow-md hover:-translate-y-0.5 transition-all`}>
+                        <s.icon className={`w-5 h-5 ${s.iconColor} mx-auto mb-2`} />
+                        <div className="font-heading text-lg font-extrabold text-foreground leading-tight">{s.value}</div>
+                        <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mt-1">{s.label}</div>
                       </div>
                     ))}
                   </div>
