@@ -18,6 +18,7 @@ interface PageRow {
   title: string;
   slug: string;
   url: string;
+  editUrl: string;
   updatedAt: string | null;
   contentLength: number;
   citations: { source: string; year?: string }[];
