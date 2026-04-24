@@ -278,6 +278,27 @@ const DeferredChrome = () => {
   );
 };
 
+// Same idle-mount strategy for toaster providers (not needed for first paint)
+const DeferredToasters = () => {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const w = window as any;
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 2000));
+    const handle = schedule(() => setShow(true), { timeout: 4000 });
+    return () => {
+      const cancel = w.cancelIdleCallback ?? window.clearTimeout;
+      try { cancel(handle); } catch {}
+    };
+  }, []);
+  if (!show) return null;
+  return (
+    <Suspense fallback={null}>
+      <Toaster />
+      <Sonner />
+    </Suspense>
+  );
+};
+
 const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   <>
     <Navbar />
