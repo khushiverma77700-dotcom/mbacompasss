@@ -139,9 +139,9 @@ Rules:
 
       // Search colleges
       try {
-        const searchTerms = (question || "").split(" ").filter(w => w.length > 2).slice(0, 3);
+        const searchTerms = (question || "").split(" ").filter((w: string) => w.length > 2).slice(0, 3);
         if (searchTerms.length > 0) {
-          const orFilter = searchTerms.map(t => `name.ilike.*${t}*,description.ilike.*${t}*`).join(",");
+          const orFilter = searchTerms.map((t: string) => `name.ilike.*${t}*,description.ilike.*${t}*`).join(",");
           const collegeResp = await fetch(`${SUPABASE_URL}/rest/v1/colleges?select=name,description,fees,placement_avg,courses&limit=3&or=(${encodeURIComponent(orFilter)})`, {
             headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` },
           });
@@ -156,9 +156,9 @@ Rules:
 
       // Search institutes
       try {
-        const searchTerms = (question || "").split(" ").filter(w => w.length > 2).slice(0, 3);
+        const searchTerms = (question || "").split(" ").filter((w: string) => w.length > 2).slice(0, 3);
         if (searchTerms.length > 0) {
-          const orFilter = searchTerms.map(t => `name.ilike.*${t}*,description.ilike.*${t}*`).join(",");
+          const orFilter = searchTerms.map((t: string) => `name.ilike.*${t}*,description.ilike.*${t}*`).join(",");
           const instResp = await fetch(`${SUPABASE_URL}/rest/v1/institutes?select=name,description,city,rating,success_rate,features&limit=3&or=(${encodeURIComponent(orFilter)})`, {
             headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` },
           });
