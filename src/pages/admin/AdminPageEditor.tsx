@@ -145,7 +145,7 @@ const PageEditorWorkspace = () => {
     });
   }, [items, filter, kindFilter, completionFilter]);
 
-  // Load draft when selecting
+  // Load draft + existing snapshot when selecting
   const selectItem = async (it: ListedItem) => {
     setSelected(it);
     setAuditResult(null);
@@ -157,6 +157,51 @@ const PageEditorWorkspace = () => {
       return;
     }
     setDraft(data);
+
+    // Hydrate previously-saved snapshot so Schema tab is never empty
+    try {
+      const key = getSeoSnapshotKey(KIND_TO_SEO_TYPE[it.kind], it.id);
+      const { data: snapRow } = await supabase
+        .from("site_settings")
+        .select("value, updated_at")
+        .eq("key", key)
+        .limit(1)
+        .maybeSingle();
+      if (snapRow?.value) {
+        const snap = snapRow.value as any;
+        // Reconstruct an "auditResult-shaped" object so the UI panels render existing data
+        setAuditResult({
+          fromSnapshot: true,
+          savedAt: snapRow.updated_at,
+          assembled: {
+            pageUrl: snap.canonicalUrl,
+            pageTitle: snap.h1_tag || it.name,
+            wordCount: 0,
+            sectionsCount: 0,
+            coursesCount: 0,
+          },
+          suggestions: {
+            meta_title: snap.meta_title,
+            meta_description: snap.meta_description,
+            h1_tag: snap.h1_tag,
+            primary_keyword: snap.keywordBuckets?.primary?.[0],
+            keywords: snap.keywordBuckets,
+            onPageTips: snap.onPageTips || [],
+            technicalSEO: snap.technicalSEO,
+            socialMeta: snap.socialMeta,
+            internalLinks: snap.internalLinks,
+            contentSuggestions: snap.contentSuggestions || [],
+            competitorInsights: snap.competitorInsights || [],
+            schemaMarkup: snap.schemaMarkup,
+            seoScore: snap.seoScore,
+            faqs: snap.faqs,
+          },
+          competitors: [],
+        });
+      }
+    } catch (e) {
+      console.warn("snapshot hydrate failed", e);
+    }
   };
 
   const saveDraft = async () => {
