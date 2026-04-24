@@ -10,6 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, ArrowLeft } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import SortableTableHead from "@/components/admin/SortableTableHead";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import { useFilteredList } from "@/hooks/useFilteredList";
+import { useMemo } from "react";
 
 const emptyForm = { name: "", slug: "", description: "", icon: "BookOpen", exam_type: "" };
 
