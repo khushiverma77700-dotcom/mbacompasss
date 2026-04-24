@@ -296,32 +296,32 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       primary_keyword: targetKw,
     };
 
-    const descriptionSystem = `${systemPrompt}\n\nWrite ONLY one JSON object shaped as {"html":"..."}. The html field must contain the full long-form college description only.`;
-    const admissionSystem = `${systemPrompt}\n\nWrite ONLY one JSON object shaped as {"html":"..."}. The html field must contain the admission process section only.`;
+    const descriptionSystem = `${systemPrompt}\n\nReturn ONLY plain semantic HTML for the long-form college description. No JSON. No markdown fences. No commentary before or after the HTML.`;
+    const admissionSystem = `${systemPrompt}\n\nReturn ONLY plain semantic HTML for the admission_process section. No JSON. No markdown fences. No commentary before or after the HTML.`;
 
-    let descriptionPayload: any;
-    let admissionPayload: any;
+    let descriptionHtml = "";
+    let admissionHtml = "";
     try {
-      [descriptionPayload, admissionPayload] = await Promise.all([
-        callJsonModel({
+      [descriptionHtml, admissionHtml] = await Promise.all([
+        callTextModel({
           label: "college description",
           maxTokens: 4200,
           system: descriptionSystem,
-          user: `Using the structured profile below, write the complete long-form HTML description for ${brief.name}.\n\nSTRUCTURED PROFILE:\n${JSON.stringify(contentSeed, null, 2)}\n\nRequirements:\n- 900-1300 words\n- start with <p><strong>Quick Summary:</strong> ...</p>\n- 6-8 <h2> sections\n- at least 2 <table>s\n- final FAQ section with 5-6 Q&A pairs\n- include citation markers like [src:NIRF ${currentYear}]\n- end with <p><em>Last updated: ${todayIso}</em></p>\n\nReturn valid JSON only as {"html":"..."}.`,
+          user: `Using the structured profile below, write the complete long-form HTML description for ${brief.name}.\n\nSTRUCTURED PROFILE:\n${JSON.stringify(contentSeed, null, 2)}\n\nRequirements:\n- 900-1300 words\n- start with <p><strong>Quick Summary:</strong> ...</p>\n- 6-8 <h2> sections\n- at least 2 <table>s\n- final FAQ section with 5-6 Q&A pairs\n- include citation markers like [src:NIRF ${currentYear}]\n- end with <p><em>Last updated: ${todayIso}</em></p>`,
         }),
-        callJsonModel({
+        callTextModel({
           label: "college admission process",
           maxTokens: 2600,
           system: admissionSystem,
-          user: `Using the structured profile below, write the HTML admission_process field for ${brief.name}.\n\nSTRUCTURED PROFILE:\n${JSON.stringify(contentSeed, null, 2)}\n\nRequirements:\n- 450-700 words\n- cover eligibility, exams accepted, selection steps, dates, fees, documents, tips\n- use <h3> subsections, bullet lists, and at least 2 <table>s\n- mention ${brief.name} at least 6 times naturally\n- end with a short freshness line for ${admissionCycle}\n\nReturn valid JSON only as {"html":"..."}.`,
+          user: `Using the structured profile below, write the HTML admission_process field for ${brief.name}.\n\nSTRUCTURED PROFILE:\n${JSON.stringify(contentSeed, null, 2)}\n\nRequirements:\n- 450-700 words\n- cover eligibility, exams accepted, selection steps, dates, fees, documents, tips\n- use <h3> subsections, bullet lists, and at least 2 <table>s\n- mention ${brief.name} at least 6 times naturally\n- end with a short freshness line for ${admissionCycle}`,
         }),
       ]);
     } catch (error) {
       return handleModelError(error);
     }
 
-    profile.description = typeof descriptionPayload?.html === "string" ? descriptionPayload.html.trim() : "";
-    profile.admission_process = typeof admissionPayload?.html === "string" ? admissionPayload.html.trim() : "";
+    profile.description = descriptionHtml.trim();
+    profile.admission_process = admissionHtml.trim();
 
     if (!profile.description || !profile.admission_process) {
       return new Response(
