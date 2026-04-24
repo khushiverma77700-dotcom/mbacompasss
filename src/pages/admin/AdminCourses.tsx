@@ -37,7 +37,7 @@ const AdminCourses = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [curriculumInput, setCurriculumInput] = useState("");
   const [highlightInput, setHighlightInput] = useState("");
-  const [search, setSearch] = useState("");
+  
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -286,7 +286,26 @@ const AdminCourses = () => {
         </div>
       </div>
 
-      <div className="mb-4"><Input placeholder="Search courses or institutes..." value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-sm" /></div>
+      <AdminFilterBar
+        searchValue={filters.search}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search courses or institutes…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        resultsHint={`${sortedCourses.length} of ${courses.length} courses`}
+        filters={[
+          { type: "select", key: "institute", label: "Institute", width: "w-52", options: [{ label: "All Institutes", value: "all" }, ...institutes.map(i => ({ label: i.name, value: i.id }))], formatChip: (v) => institutes.find(i => i.id === v)?.name ?? v },
+          { type: "select", key: "category", label: "Category", width: "w-44", options: [{ label: "All Categories", value: "all" }, ...courseCategories.map(cc => ({ label: cc.name, value: cc.id }))], formatChip: (v) => courseCategories.find(cc => cc.id === v)?.name ?? v },
+          { type: "select", key: "mode", label: "Mode", width: "w-32", options: [{ label: "All Modes", value: "all" }, { label: "Online", value: "Online" }, { label: "Offline", value: "Offline" }, { label: "Hybrid", value: "Hybrid" }] },
+          { type: "select", key: "fees", label: "Fees", width: "w-40", options: [
+            { label: "All Fees", value: "all" }, { label: "Free", value: "free" },
+            { label: "Up to ₹25,000", value: "0-25k" }, { label: "₹25K – ₹50K", value: "25k-50k" },
+            { label: "₹50K – ₹1L", value: "50k-1l" }, { label: "Above ₹1L", value: "1l+" },
+          ] },
+        ]}
+      />
 
       <Card>
         <CardContent className="p-0">
