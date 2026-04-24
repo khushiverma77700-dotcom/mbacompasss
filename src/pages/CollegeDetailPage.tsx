@@ -425,12 +425,18 @@ const CollegeDetailPage = () => {
         <div className="absolute bottom-0 left-0 right-0 h-6 bg-gradient-to-b from-transparent to-background/60" />
       </div>
 
-      {/* Sticky Tab Nav */}
-      <div className="sticky top-16 z-40 bg-card/95 backdrop-blur-md border-b border-border">
+      {/* Sticky Tab Nav — Premium pill style */}
+      <div className="sticky top-16 z-40 bg-card/95 backdrop-blur-xl border-b border-border shadow-sm">
         <div className="container mx-auto px-4">
-          <div className="flex overflow-x-auto gap-1 py-2 scrollbar-hide">
+          <div className="flex overflow-x-auto gap-1.5 py-2.5 scrollbar-hide">
             {tabItems.map(t => (
-              <button key={t.value} onClick={() => scrollToSection(t.value)} className="whitespace-nowrap px-3 py-1.5 rounded-md text-xs font-medium transition-colors text-muted-foreground hover:text-foreground hover:bg-muted">{t.label}</button>
+              <button
+                key={t.value}
+                onClick={() => scrollToSection(t.value)}
+                className="group relative whitespace-nowrap px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all text-muted-foreground hover:text-primary hover:bg-primary/8 border border-transparent hover:border-primary/15"
+              >
+                {t.label}
+              </button>
             ))}
           </div>
         </div>
