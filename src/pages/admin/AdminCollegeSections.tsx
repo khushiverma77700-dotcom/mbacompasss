@@ -508,20 +508,10 @@ const AdminCollegeSections = () => {
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(s.id)}><Pencil className="w-4 h-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(s.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
-                  <TableCell className="font-medium">{(s as any).colleges?.name || "—"}</TableCell>
-                  <TableCell><Badge variant="outline">{SECTION_TYPES.find((t) => t.value === s.section_type)?.label || s.section_type}</Badge></TableCell>
-                  <TableCell>{s.title || "—"}</TableCell>
-                  <TableCell>{s.sort_order}</TableCell>
-                  <TableCell className="text-right space-x-1">
-                    <Button variant="ghost" size="sm" onClick={() => handleAIGenerateRow(s)} disabled={aiBusy === `row:${s.id}`} title="Regenerate with AI">
-                      {aiBusy === `row:${s.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-primary" />}
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(s.id)}><Pencil className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(s.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                   </TableCell>
                 </TableRow>
               ))}
-              {sections.length === 0 && (<TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No sections yet. Select a college and click "Quick Add All Missing" to scaffold all sections.</TableCell></TableRow>)}
+              {filteredSections.length === 0 && (<TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">{sections.length === 0 ? 'No sections yet. Select a college and click "Quick Add All Missing" to scaffold all sections.' : "No sections match the current filters."}</TableCell></TableRow>)}
             </TableBody>
           </Table>
         </CardContent>
