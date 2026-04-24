@@ -578,6 +578,8 @@ ACCURACY RULES:
 - End every long-form HTML content field with a small italic line: <p><em>Last updated: ${todayIso}</em></p>
 - HTML output uses ONLY: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. No <html>/<head>/<body>/<h1>/markdown fences.
 - ABSOLUTELY NO inline style="" attributes, NO <font> tags, NO class="" / id="" attributes, NO width/height/color attributes. Plain semantic HTML only — the platform applies uniform typography.
+- CRITICAL OUTPUT HYGIENE: NEVER write the literal characters "\\n", "\n", "/n", "\\t" or any visible escape sequences inside the HTML or any field — use real <p>, <br>, list tags or actual line breaks. The frontend will display "\\n" as raw text and break the page.
+- DEEP-RESEARCH FIRST: Before writing, mentally verify rankings, fees, placements, recruiters and dates against the most authoritative public sources (NIRF, official school placement reports, brochures). Never guess shallow filler — every paragraph must add factual value.
 - Headings & opening sentences must be DECLARATIVE — never start with a question.
 - Avoid AI clichés: "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving".
 - Reading level ~grade 8. Use real numbers, real names, contractions.${factSafetyRules}`;
