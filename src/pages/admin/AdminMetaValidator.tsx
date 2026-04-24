@@ -129,11 +129,12 @@ const loadAllSections = async (): Promise<SectionGroup[]> => {
   ];
 
   for (const m of tableMap) {
-    let q = supabase.from(m.table).select("slug, name").not("slug", "is", null).limit(500);
+    let q: any = supabase.from(m.table).select("slug").not("slug", "is", null).limit(500);
     if (m.extraFilter) q = m.extraFilter(q);
     const { data, error } = await q;
     if (error || !data) continue;
-    const samples = (data as Array<{ slug: string }>).filter((r) => r.slug).map((r) => {
+    const rows = (data as unknown as Array<{ slug: string | null }>) || [];
+    const samples = rows.filter((r) => !!r.slug).map((r) => {
       const url = `${SITE_URL}${m.prefix}${r.slug}`;
       return { url, expectedCanonical: url, context: { table: m.table, slug: r.slug } };
     });
