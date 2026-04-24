@@ -298,6 +298,7 @@ function AIUsageTab({ logs, loading }: { logs: UsageLog[]; loading: boolean }) {
       <Tabs defaultValue="breakdown">
         <TabsList>
           <TabsTrigger value="breakdown">Feature Breakdown</TabsTrigger>
+          <TabsTrigger value="providers">Providers & Models</TabsTrigger>
           <TabsTrigger value="trend">Daily Trend</TabsTrigger>
           <TabsTrigger value="logs">Raw Logs</TabsTrigger>
         </TabsList>
