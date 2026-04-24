@@ -573,6 +573,13 @@ const PageEditorWorkspace = () => {
 
                   {auditResult && (
                     <CardContent className="space-y-4">
+                      {auditResult.fromSnapshot && (
+                        <div className="border border-amber-500/30 bg-amber-500/5 rounded-md p-2 text-[11px] text-amber-700 dark:text-amber-400 flex items-center gap-2">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          <span>Showing the last saved SEO snapshot {auditResult.savedAt && `(${new Date(auditResult.savedAt).toLocaleString()})`}. Click <strong>Run Audit</strong> to regenerate before applying.</span>
+                        </div>
+                      )}
+
                       {/* Score */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         <ScoreCard label="Current Score" value={auditResult.suggestions?.seoScore?.overall ?? 0} />
@@ -599,11 +606,11 @@ const PageEditorWorkspace = () => {
 
                       {/* Keywords */}
                       <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5">Keyword Buckets</h4>
+                        <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5">Keyword Buckets (all 6 saved on Apply)</h4>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-[11px]">
                           {(["primary","shortTail","longTail","faq","trending","lsi"] as const).map((k) => (
                             <div key={k} className="border border-border rounded-md p-2 bg-muted/20">
-                              <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-1">{k}</p>
+                              <p className="text-[10px] font-semibold uppercase text-muted-foreground mb-1">{k} ({(auditResult.suggestions?.keywords?.[k] || []).length})</p>
                               <div className="flex flex-wrap gap-1">
                                 {(auditResult.suggestions?.keywords?.[k] || []).slice(0, 12).map((kw: string, idx: number) => (
                                   <Badge key={idx} variant="secondary" className="text-[10px] font-normal">{kw}</Badge>
@@ -613,6 +620,46 @@ const PageEditorWorkspace = () => {
                           ))}
                         </div>
                       </div>
+
+                      {/* Open Graph / Social */}
+                      {auditResult.suggestions?.socialMeta && (
+                        <div>
+                          <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5">Open Graph & Twitter</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
+                            <KVRow k="OG Title" v={auditResult.suggestions.socialMeta.ogTitle} />
+                            <KVRow k="OG Description" v={auditResult.suggestions.socialMeta.ogDescription} />
+                            <KVRow k="Twitter Title" v={auditResult.suggestions.socialMeta.twitterTitle} />
+                            <KVRow k="Twitter Description" v={auditResult.suggestions.socialMeta.twitterDescription} />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Technical SEO */}
+                      {auditResult.suggestions?.technicalSEO && (
+                        <div>
+                          <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5">Technical SEO</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
+                            <KVRow k="Canonical URL" v={auditResult.suggestions.technicalSEO.canonicalUrl} />
+                            <KVRow k="URL Slug" v={auditResult.suggestions.technicalSEO.urlSlugSuggestion} />
+                            <KVRow k="Word Count Verdict" v={auditResult.suggestions.technicalSEO.contentLengthAnalysis?.verdict} />
+                            <KVRow k="Recommended Min Words" v={String(auditResult.suggestions.technicalSEO.contentLengthAnalysis?.recommendedMinimum ?? "")} />
+                          </div>
+                          {auditResult.suggestions.technicalSEO.keywordPlacementTips?.length > 0 && (
+                            <IssueList title="Keyword Placement Tips" items={auditResult.suggestions.technicalSEO.keywordPlacementTips} tone="default" />
+                          )}
+                          {auditResult.suggestions.technicalSEO.pagespeedTips?.length > 0 && (
+                            <IssueList title="PageSpeed Tips" items={auditResult.suggestions.technicalSEO.pagespeedTips} tone="default" />
+                          )}
+                          {auditResult.suggestions.technicalSEO.backlinkIdeas?.length > 0 && (
+                            <IssueList title="Backlink Ideas" items={auditResult.suggestions.technicalSEO.backlinkIdeas} tone="default" />
+                          )}
+                        </div>
+                      )}
+
+                      {/* Internal links */}
+                      {auditResult.suggestions?.internalLinks?.suggested?.length > 0 && (
+                        <IssueList title="Suggested Internal Links" items={auditResult.suggestions.internalLinks.suggested} tone="default" />
+                      )}
 
                       {/* Competitors */}
                       {auditResult.competitors?.length > 0 && (
@@ -636,13 +683,30 @@ const PageEditorWorkspace = () => {
                         <IssueList title="Content Suggestions" items={auditResult.suggestions?.contentSuggestions || []} tone="default" />
                       </div>
 
+                      {/* Schema preview inline */}
+                      {auditResult.suggestions?.schemaMarkup && (
+                        <div>
+                          <h4 className="text-xs font-bold uppercase tracking-wide text-muted-foreground mb-1.5">
+                            JSON-LD Schema ({Array.isArray(auditResult.suggestions.schemaMarkup) ? auditResult.suggestions.schemaMarkup.length : 1} blocks — auto-injected on Apply)
+                          </h4>
+                          <pre className="text-[10px] bg-muted/40 p-2 rounded-md overflow-auto max-h-[30vh] border border-border">
+                            {JSON.stringify(auditResult.suggestions.schemaMarkup, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+
                       {/* Apply */}
-                      <div className="flex items-center justify-end gap-2 pt-2 border-t">
-                        <Button variant="outline" size="sm" onClick={() => setAuditResult(null)}>Discard</Button>
-                        <Button onClick={applyAudit} disabled={savingAudit} size="sm">
-                          {savingAudit ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-1.5" />}
-                          Apply Meta + Save Snapshot
-                        </Button>
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t flex-wrap">
+                        <p className="text-[11px] text-muted-foreground">
+                          Apply will save: meta title/description, H1, primary keyword, all 6 keyword buckets, Open Graph, Twitter, JSON-LD schema, technical SEO, internal links & FAQs to the live page.
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm" onClick={() => setAuditResult(null)}>Discard</Button>
+                          <Button onClick={applyAudit} disabled={savingAudit || auditResult.fromSnapshot} size="sm">
+                            {savingAudit ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-1.5" />}
+                            Apply Full SEO to Live Page
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   )}
