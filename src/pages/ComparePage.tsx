@@ -203,6 +203,24 @@ const ComparePage = () => {
 
       {/* AI Coaching Finder */}
       <section className="container mx-auto px-4 py-8 md:py-12">
+        {/* Cross-link to MBA Programme Compare */}
+        <div className="max-w-3xl mx-auto mb-6">
+          <Link
+            to="/mba-programme-compare"
+            className="group flex items-center justify-between gap-4 p-4 rounded-xl border border-primary/20 bg-gradient-to-r from-primary/5 via-primary/0 to-primary/5 hover:border-primary/40 hover:bg-primary/10 transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Scale className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <div className="font-heading font-semibold text-foreground text-sm">Looking to compare MBA programmes?</div>
+                <div className="text-xs text-muted-foreground">IIM-A vs ISB vs XLRI · fees, eligibility, exams accepted — side by side</div>
+              </div>
+            </div>
+            <span className="text-xs font-semibold text-primary group-hover:underline whitespace-nowrap">Open MBA Compare →</span>
+          </Link>
+        </div>
         <div className="max-w-3xl mx-auto mb-8">
           <AICoachingFinder onTryManually={scrollToManualCompare} />
         </div>

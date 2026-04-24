@@ -51,6 +51,8 @@ const CollegeFinderPage = lazyWithPreload(() => import("./pages/CollegeFinderPag
 const CollegeShortlisterPage = lazyWithPreload(() => import("./pages/CollegeShortlisterPage"));
 const BusinessInquiryPage = lazyWithPreload(() => import("./pages/BusinessInquiryPage"));
 const NotFound = lazyWithPreload(() => import("./pages/NotFound"));
+const ProgrammeDetailPage = lazyWithPreload(() => import("./pages/ProgrammeDetailPage"));
+const MBAProgrammeComparePage = lazyWithPreload(() => import("./pages/MBAProgrammeComparePage"));
 
 // Lazy-loaded admin pages
 const AdminLayout = lazyWithPreload(() => import("./pages/admin/AdminLayout"));
@@ -414,6 +416,8 @@ const App = () => (
             <Route path="/list-your-business/poc" element={<PublicLayout><LazyPage><ListingPocPage /></LazyPage></PublicLayout>} />
             <Route path="/list-your-business/:type/:id" element={<PublicLayout><LazyPage><ListingFormPage /></LazyPage></PublicLayout>} />
             <Route path="/my-listings" element={<PublicLayout><LazyPage><MyListingsPage /></LazyPage></PublicLayout>} />
+            <Route path="/college/:slug/programme/:programmeSlug" element={<PublicLayout><LazyPage><ProgrammeDetailPage /></LazyPage></PublicLayout>} />
+            <Route path="/mba-programme-compare" element={<PublicLayout><LazyPage><MBAProgrammeComparePage /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />
           </Routes>
         </AuthProvider>
