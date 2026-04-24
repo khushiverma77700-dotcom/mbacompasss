@@ -930,12 +930,19 @@ const CollegeDetailPage = () => {
             </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-4">
-            <Card>
+          {/* ===== Premium Sidebar ===== */}
+          <div className="space-y-4 lg:sticky lg:top-32 lg:self-start">
+            {/* Quick Info Card */}
+            <Card className="overflow-hidden border-border/60 shadow-lg shadow-primary/5">
+              <div className="h-1.5 bg-gradient-to-r from-primary via-primary/80 to-primary/40" />
               <CardContent className="pt-6">
-                <h3 className="font-heading font-semibold text-foreground mb-4">Quick Info</h3>
-                <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Building className="w-4 h-4 text-primary" />
+                  </div>
+                  <h3 className="font-heading font-bold text-foreground">Quick Info</h3>
+                </div>
+                <div className="space-y-2.5">
                   {[
                     { icon: MapPin, label: "Location", value: `${college.city}, ${college.state}` },
                     { icon: Award, label: "Ranking", value: college.ranking ? `#${college.ranking} (NIRF)` : "N/A" },
@@ -944,46 +951,112 @@ const CollegeDetailPage = () => {
                     { icon: Building, label: "Campus", value: college.campus_size || "N/A" },
                     { icon: Calendar, label: "Established", value: college.established ? String(college.established) : "N/A" },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center"><item.icon className="w-4 h-4 text-primary" /></div>
-                      <div><div className="text-xs text-muted-foreground">{item.label}</div><div className="font-semibold text-foreground text-sm">{item.value}</div></div>
+                    <div key={i} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/40 transition-colors">
+                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center flex-shrink-0">
+                        <item.icon className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{item.label}</div>
+                        <div className="font-bold text-foreground text-sm truncate">{item.value}</div>
+                      </div>
                     </div>
                   ))}
                 </div>
                 {college.website && (
                   <a href={college.website} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" className="w-full mt-4 gap-1"><Globe className="w-4 h-4" /> Visit Website</Button>
+                    <Button variant="outline" className="w-full mt-4 gap-1.5 font-semibold border-primary/30 hover:bg-primary/5 hover:border-primary/50">
+                      <Globe className="w-4 h-4" /> Visit Official Site
+                    </Button>
                   </a>
                 )}
               </CardContent>
             </Card>
 
-            <Card className="border-primary/30 bg-secondary/50">
-              <CardContent className="pt-6 text-center">
-                <GraduationCap className="w-8 h-8 text-primary mx-auto mb-3" />
-                <h4 className="font-heading font-semibold text-foreground mb-1">Total Fees</h4>
-                <p className="font-heading text-2xl font-bold text-primary">{college.fees || "Contact College"}</p>
-                <p className="text-xs text-muted-foreground mt-1">For full program duration</p>
-                <Button className="w-full mt-4" onClick={handleDownloadBrochure}><Download className="w-4 h-4 mr-1" /> Download Brochure</Button>
+            {/* Premium Fees + Brochure Card */}
+            <Card className="overflow-hidden border-0 shadow-2xl shadow-primary/15 bg-gradient-to-br from-primary via-primary/95 to-primary/85 text-primary-foreground relative">
+              <div className="absolute -top-12 -right-12 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+              <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-white/5 rounded-full blur-2xl" />
+              <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: 'radial-gradient(hsl(0 0% 100%) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
+              <CardContent className="pt-6 relative z-10">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider bg-amber-400 text-amber-950 px-2 py-0.5 rounded-md shadow-md">
+                    ★ Featured
+                  </span>
+                  <span className="text-[10px] uppercase tracking-wider text-primary-foreground/70 font-semibold">Total Program Fees</span>
+                </div>
+                <p className="font-heading text-4xl font-extrabold leading-none mb-1 [text-shadow:_0_2px_8px_rgb(0_0_0_/_0.15)]">
+                  {college.fees_lakhs ? `₹${college.fees_lakhs}L` : (college.fees || "Contact College")}
+                </p>
+                <p className="text-xs text-primary-foreground/75 mb-5">For complete 2-year program · GST inclusive</p>
+
+                <Button onClick={handleDownloadBrochure} size="lg" className="w-full bg-white text-primary hover:bg-white/95 font-bold gap-2 shadow-xl mb-2">
+                  <Download className="w-4 h-4" /> Download Brochure
+                </Button>
+                <Button onClick={() => sectionRefs.current["admission"]?.scrollIntoView({ behavior: "smooth" })} variant="outline" className="w-full bg-white/10 backdrop-blur-sm border-white/30 text-primary-foreground hover:bg-white/20 hover:text-primary-foreground hover:border-white/50 font-semibold gap-2">
+                  <GraduationCap className="w-4 h-4" /> Apply Now
+                </Button>
+
+                {/* Trust strip */}
+                <div className="mt-5 pt-4 border-t border-white/20 grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <div className="text-base font-extrabold">100%</div>
+                    <div className="text-[9px] text-primary-foreground/70 uppercase tracking-wider">Verified</div>
+                  </div>
+                  <div className="border-x border-white/20">
+                    <div className="text-base font-extrabold">Free</div>
+                    <div className="text-[9px] text-primary-foreground/70 uppercase tracking-wider">Brochure</div>
+                  </div>
+                  <div>
+                    <div className="text-base font-extrabold">24h</div>
+                    <div className="text-[9px] text-primary-foreground/70 uppercase tracking-wider">Response</div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
-            <Card>
+            {/* Compare Card */}
+            <Card className="overflow-hidden border-border/60 hover:border-primary/30 transition-colors group">
               <CardContent className="pt-6">
-                <h4 className="font-heading font-semibold text-foreground mb-3">Compare Colleges</h4>
-                <Link to="/compare"><Button variant="outline" className="w-full">Compare with Other Colleges</Button></Link>
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                    <TrendingUp className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-heading font-bold text-foreground text-sm">Compare Colleges</h4>
+                    <p className="text-xs text-muted-foreground">Side-by-side analysis of fees, placements & more.</p>
+                  </div>
+                </div>
+                <Link to="/compare">
+                  <Button variant="outline" className="w-full font-semibold border-primary/30 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all">
+                    Open Compare Tool
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
+            {/* Suggested Colleges */}
             {suggestedColleges.length > 0 && (
-              <Card>
+              <Card className="overflow-hidden border-border/60">
                 <CardContent className="pt-6">
-                  <h4 className="font-heading font-semibold text-foreground mb-3">Suggested Colleges</h4>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                      <Star className="w-4 h-4 text-amber-500" />
+                    </div>
+                    <h4 className="font-heading font-bold text-foreground">You May Also Like</h4>
+                  </div>
                   <div className="space-y-2">
                     {suggestedColleges.slice(0, 5).map((sc) => (
-                      <Link key={sc.slug} to={`/college/${sc.slug}`} className="block p-3 rounded-lg hover:bg-muted/50 border border-border transition-colors">
-                        <div className="font-semibold text-foreground text-sm">{sc.name}</div>
-                        <div className="text-xs text-muted-foreground">{sc.city} · Rank #{sc.ranking} · {sc.fees}</div>
+                      <Link key={sc.slug} to={`/college/${sc.slug}`} className="block p-3 rounded-xl hover:bg-primary/5 border border-border hover:border-primary/30 transition-all group/sc">
+                        <div className="flex items-start gap-2">
+                          {sc.ranking && (
+                            <span className="text-[10px] font-extrabold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded flex-shrink-0">#{sc.ranking}</span>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <div className="font-bold text-foreground text-sm group-hover/sc:text-primary transition-colors line-clamp-1">{sc.name}</div>
+                            <div className="text-[11px] text-muted-foreground line-clamp-1">{sc.city} · {sc.fees}</div>
+                          </div>
+                          <ChevronUp className="w-3.5 h-3.5 text-muted-foreground rotate-90 group-hover/sc:text-primary group-hover/sc:translate-x-0.5 transition-all flex-shrink-0" />
+                        </div>
                       </Link>
                     ))}
                   </div>
