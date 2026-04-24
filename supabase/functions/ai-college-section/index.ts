@@ -391,6 +391,14 @@ const SEO_REQUIRED = ["meta_title", "meta_description", "canonical_slug"];
 function sanitizeHtml(html: string): string {
   if (!html || typeof html !== "string") return "";
   let out = html;
+  // Strip literal escape artifacts the model sometimes leaks ("\n", "\\n", "/n", "\t")
+  // Convert real escape sequences to spaces, then nuke the visible "\n" / "/n" text.
+  out = out.replace(/\r\n|\r|\n|\t/g, " ");
+  out = out.replace(/\\+n/gi, " ");      // "\n", "\\n", "\\\\n" → space
+  out = out.replace(/(^|[\s>])\/n(?=[\s<]|$)/gi, "$1 "); // stray "/n" tokens
+  // Collapse paragraphs/list items that became empty after stripping
+  out = out.replace(/<p>\s*<\/p>/gi, "");
+  out = out.replace(/<li>\s*<\/li>/gi, "");
   // Remove <style> blocks entirely
   out = out.replace(/<style[\s\S]*?<\/style>/gi, "");
   // Remove <script> blocks entirely
@@ -419,6 +427,10 @@ function sanitizeHtml(html: string): string {
 function stripToPlainText(s: unknown): string {
   if (s == null) return "";
   let out = String(s);
+  // Remove literal escape artifacts the model sometimes outputs as visible text
+  out = out.replace(/\\+n/gi, " ");
+  out = out.replace(/(^|[\s])\/n(?=[\s]|$)/gi, "$1 ");
+  out = out.replace(/\r\n|\r|\n|\t/g, " ");
   // Remove [src:...] citation markers
   out = out.replace(/\[src:[^\]]*\]/gi, "");
   // Remove "Last updated: YYYY-MM-DD" wrapper variants (with or without tags)
@@ -566,6 +578,8 @@ ACCURACY RULES:
 - End every long-form HTML content field with a small italic line: <p><em>Last updated: ${todayIso}</em></p>
 - HTML output uses ONLY: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. No <html>/<head>/<body>/<h1>/markdown fences.
 - ABSOLUTELY NO inline style="" attributes, NO <font> tags, NO class="" / id="" attributes, NO width/height/color attributes. Plain semantic HTML only — the platform applies uniform typography.
+- CRITICAL OUTPUT HYGIENE: NEVER write the literal characters "\\n", "\n", "/n", "\\t" or any visible escape sequences inside the HTML or any field — use real <p>, <br>, list tags or actual line breaks. The frontend will display "\\n" as raw text and break the page.
+- DEEP-RESEARCH FIRST: Before writing, mentally verify rankings, fees, placements, recruiters and dates against the most authoritative public sources (NIRF, official school placement reports, brochures). Never guess shallow filler — every paragraph must add factual value.
 - Headings & opening sentences must be DECLARATIVE — never start with a question.
 - Avoid AI clichés: "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving".
 - Reading level ~grade 8. Use real numbers, real names, contractions.${factSafetyRules}`;

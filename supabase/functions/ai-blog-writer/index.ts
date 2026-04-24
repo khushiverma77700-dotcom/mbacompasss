@@ -75,7 +75,14 @@ Deno.serve(async (req) => {
 - End the article with a small italic line: <p><em>Last updated: ${todayIso}</em></p>.
 
 # OUTPUT FORMAT
-- Valid HTML using only these tags: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>, <blockquote>. Do NOT include <html>, <head>, <body>, <h1>, or markdown fences. NO inline style="", NO <font>, NO class/id attributes — plain semantic HTML only so typography stays uniform.`;
+- Valid HTML using only these tags: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>, <blockquote>. Do NOT include <html>, <head>, <body>, <h1>, or markdown fences. NO inline style="", NO <font>, NO class/id attributes — plain semantic HTML only so typography stays uniform.
+
+# CRITICAL OUTPUT HYGIENE
+- NEVER write the literal characters "\\n", "\n", "/n", "\\t" or any visible escape sequence inside any field. Use real <p>, <br>, <li> tags or actual line breaks — the frontend renders "\\n" as raw text and breaks the page.
+- Do NOT wrap output in markdown code fences. Return clean JSON via the tool call.
+
+# DEEP-RESEARCH MODE (RESEARCH-FIRST)
+- Before writing each section, mentally verify facts against the most authoritative public sources (NIRF, official school placement reports, exam-conducting body notifications, AICTE/NAAC). Every paragraph must add concrete data, named recruiters/colleges, real numbers or specific dates — never shallow filler.`;
 
     const userPrompt = `Write a complete, ready-to-publish SEO blog article.
 
@@ -222,6 +229,18 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: "AI output was truncated or malformed JSON. Try again or reduce word count.", detail: String(e).slice(0, 200) }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Strip stray "\n" / "\\n" / "/n" escape artifacts the model sometimes leaks as visible text.
+    const stripEscapeArtifacts = (s: string): string =>
+      String(s)
+        .replace(/\\+n/gi, " ")
+        .replace(/(^|[\s>])\/n(?=[\s<]|$)/gi, "$1 ")
+        .replace(/<p>\s*(?:\\n|\/n|\s)*\s*<\/p>/gi, "")
+        .replace(/<li>\s*(?:\\n|\/n|\s)*\s*<\/li>/gi, "")
+        .replace(/[ \t]{2,}/g, " ");
+    for (const k of ["intro", "content"]) {
+      if (typeof article[k] === "string") article[k] = stripEscapeArtifacts(article[k]);
     }
 
     // Best-effort sanitisation
