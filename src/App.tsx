@@ -119,6 +119,10 @@ const AdminWriteCourses = lazyWithPreload(() => import("./pages/admin/AdminWrite
 const AdminWebsiteOptimizer = lazyWithPreload(() => import("./pages/admin/AdminWebsiteOptimizer"));
 const AdminMockTests = lazyWithPreload(() => import("./pages/admin/AdminMockTests"));
 const AdminMockBuilder = lazyWithPreload(() => import("./pages/admin/AdminMockBuilder"));
+const MocksListPage = lazyWithPreload(() => import("./pages/mocks/MocksListPage"));
+const MockTestIntroPage = lazyWithPreload(() => import("./pages/mocks/MockTestIntroPage"));
+const MockTestRunnerPage = lazyWithPreload(() => import("./pages/mocks/MockTestRunnerPage"));
+const MockResultPage = lazyWithPreload(() => import("./pages/mocks/MockResultPage"));
 
 // Lazy load heavy popups
 const OnboardingDialog = lazyWithPreload(() => import("@/components/OnboardingDialog"));
@@ -486,6 +490,10 @@ const App = () => (
             <Route path="/my-listings" element={<PublicLayout><LazyPage><MyListingsPage /></LazyPage></PublicLayout>} />
             <Route path="/college/:slug/programme/:programmeSlug" element={<PublicLayout><LazyPage><ProgrammeDetailPage /></LazyPage></PublicLayout>} />
             <Route path="/mba-programme-compare" element={<PublicLayout><LazyPage><MBAProgrammeComparePage /></LazyPage></PublicLayout>} />
+            <Route path="/mocks" element={<PublicLayout><LazyPage><MocksListPage /></LazyPage></PublicLayout>} />
+            <Route path="/mocks/:slug" element={<PublicLayout><LazyPage><MockTestIntroPage /></LazyPage></PublicLayout>} />
+            <Route path="/mocks/attempt/:attemptId" element={<LazyPage><MockTestRunnerPage /></LazyPage>} />
+            <Route path="/mocks/result/:attemptId" element={<PublicLayout><LazyPage><MockResultPage /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />
           </Routes>
         </AuthProvider>
