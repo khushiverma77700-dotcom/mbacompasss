@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +69,17 @@ const AdminInstitutes = () => {
   };
 
   useEffect(() => { fetchData(); }, []);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const editParam = searchParams.get("edit");
+    if (!editParam || !institutes.length || showForm) return;
+    handleEdit(editParam);
+    const next = new URLSearchParams(searchParams);
+    next.delete("edit");
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [institutes, searchParams]);
 
   const addTag = (field: "keywords" | "features") => {
     const val = tagInput[field].trim();
