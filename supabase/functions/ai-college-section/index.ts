@@ -47,17 +47,18 @@ const SECTION_TOOLS: Record<string, any> = {
     name: "courses_fees_payload",
     fields: {
       title: { type: "string" },
-      content: { type: "string", description: "HTML intro (180-280 words). Mention the college name 3-5 times. Cover programme mix, fee philosophy, ROI angle." },
+      content: { type: "string", description: "HTML intro (220-350 words). Mention the college name 4-6 times. Cover the FULL programme portfolio (flagship 2-yr, 1-yr, executive, part-time, online, doctoral-management, dual-degree, exchange), fee philosophy, what's included in fees (tuition, hostel, mess, books, alumni), instalment options, and the ROI angle." },
       courses: {
         type: "array",
+        minItems: 6,
         items: {
           type: "object",
           properties: {
-            name: { type: "string" },
-            duration: { type: "string" },
-            eligibility: { type: "string" },
-            fees: { type: "string" },
-            specializations: { type: "string" },
+            name: { type: "string", description: "Exact official programme name, e.g. 'Post Graduate Programme in Management (PGP)', 'PGPX - One-Year Full-Time MBA for Executives', 'ePGP - Executive Post Graduate Programme', 'PGP-FABM', 'MBA (Business Analytics)', 'MBA (HRM)', 'Fellow Programme in Management (FPM)', 'PGPpro', 'Blended Learning MBA', 'MDP Certificate Programmes'." },
+            duration: { type: "string", description: "e.g. '2 years (full-time)', '1 year (full-time residential)', '15 months (weekend)', '3-5 years (doctoral)'." },
+            eligibility: { type: "string", description: "Real eligibility — graduation %, exam (CAT/XAT/GMAT/GRE/EA), minimum work-ex, age cap if any." },
+            fees: { type: "string", description: "Latest 2025-2026 total programme fee in INR Lakhs (tuition + hostel where applicable). Use a tight realistic range if exact figure unknown." },
+            specializations: { type: "string", description: "4-8 real specialisations / electives / majors offered within this programme (Finance, Marketing, Operations, Strategy, Business Analytics, HR, Consulting, Entrepreneurship, etc.)." },
           },
           required: ["name", "duration", "eligibility", "fees", "specializations"],
           additionalProperties: false,
@@ -66,7 +67,7 @@ const SECTION_TOOLS: Record<string, any> = {
     },
     required: ["title", "content", "courses"],
     instructions:
-      "List 5-8 real flagship MBA / PGDM / Executive programmes with REAL durations, eligibility (CAT/XAT etc.), latest 2025-2026 fee figures, and 4-6 specializations each.",
+      "DEEP RESEARCH MODE — list EVERY MBA / Masters-in-Management programme the college actually runs. Aim for 6-12 entries. Always include the flagship 2-year programme PLUS every variant the college offers: 1-Year MBA / PGPX / EPGP / PGPpro, Executive MBA, Part-time / Weekend MBA, Blended / Online MBA, sectoral MBAs (PGP-ABM, PGP-FABM, PGP-HRM, PGP-BA, MBA in Digital Business, MBA in Healthcare, MBA in Sustainability, etc.), dual-degree / exchange programmes (LBS, ESSEC, Yale), and Fellow / Doctoral Programme in Management (FPM/PhD). For top schools (IIM-A, IIM-B, IIM-C, IIM-L, IIM-K, IIM-I, XLRI, FMS, MDI, SPJIMR, IIFT, NMIMS, ISB, Great Lakes) verify the exact official portfolio from your training data — DO NOT collapse everything into a single 'MBA' entry. Each programme must use its real official name, real duration, real eligibility (CAT/XAT/GMAT/GRE/EA bands + work-ex), latest 2025-2026 total fees, and 4-8 real specialisations.",
   },
   admission: {
     name: "admission_payload",
