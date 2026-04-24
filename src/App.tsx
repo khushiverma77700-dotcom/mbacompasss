@@ -239,8 +239,22 @@ const PageLoader = () => (
   </div>
 );
 
-// Prefetch all site settings in one batch on app mount
+// Prefetch all site settings in one batch — but only after first paint to keep
+// Supabase calls off the LCP critical path.
 const SettingsPrefetcher = () => {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    const w = window as any;
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 800));
+    const handle = schedule(() => setReady(true), { timeout: 2500 });
+    return () => {
+      const cancel = w.cancelIdleCallback ?? window.clearTimeout;
+      try { cancel(handle); } catch {}
+    };
+  }, []);
+  return ready ? <SettingsPrefetcherInner /> : null;
+};
+const SettingsPrefetcherInner = () => {
   useAllSiteSettings();
   return null;
 };
