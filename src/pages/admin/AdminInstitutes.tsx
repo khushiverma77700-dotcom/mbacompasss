@@ -405,6 +405,23 @@ const AdminInstitutes = () => {
         </div>
       </div>
 
+      <AdminFilterBar
+        searchValue={filters.search}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search by name, slug, or city…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        resultsHint={`${sortedInstitutes.length} of ${institutes.length} institutes`}
+        filters={[
+          { type: "select", key: "mode", label: "Mode", width: "w-32", options: [{ label: "All Modes", value: "all" }, { label: "Online", value: "Online" }, { label: "Offline", value: "Offline" }, { label: "Hybrid", value: "Hybrid" }] },
+          { type: "select", key: "featured", label: "Featured", width: "w-32", options: [{ label: "All", value: "all" }, { label: "Featured only", value: "yes" }, { label: "Not featured", value: "no" }] },
+          { type: "select", key: "category", label: "Category", width: "w-44", options: [{ label: "All Categories", value: "all" }, ...categories.map((c: any) => ({ label: c.name, value: c.id }))], formatChip: (v) => categories.find((c: any) => c.id === v)?.name ?? v },
+          { type: "select", key: "city", label: "City", width: "w-44", options: [{ label: "All Cities", value: "all" }, ...cityOptions.map(c => ({ label: c, value: c }))] },
+        ]}
+      />
+
       <Card>
         <CardContent className="p-0">
           <Table>
