@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, FileText, IndianRupee, Layers } from "lucide-react";
-import { Helmet } from "react-helmet-async";
+import { useEffect as useDocTitle } from "react";
 
 interface MockTest {
   id: string;

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Clock, AlertTriangle, Layers, ShieldAlert } from "lucide-react";
-import { Helmet } from "react-helmet-async";
+
 
 export default function MockTestIntroPage() {
   const { slug } = useParams();
