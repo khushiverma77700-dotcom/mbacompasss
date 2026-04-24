@@ -369,7 +369,7 @@ const CollegeDetailPage = () => {
                     </span>
                   )}
                 </div>
-                <h1 className="font-heading text-3xl md:text-5xl font-extrabold text-primary-foreground leading-tight tracking-tight mb-2 [text-shadow:_0_2px_8px_rgb(0_0_0_/_0.2)]">
+                <h1 className="font-heading text-2xl sm:text-3xl md:text-5xl font-extrabold text-primary-foreground leading-tight tracking-tight mb-2 break-words [text-shadow:_0_2px_8px_rgb(0_0_0_/_0.2)]">
                   {college.name}
                 </h1>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-primary-foreground/90 text-sm">
