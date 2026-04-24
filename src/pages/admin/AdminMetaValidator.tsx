@@ -401,10 +401,10 @@ export default function AdminMetaValidator() {
     <div className="space-y-6">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Profile-Analyzer Meta Tag Validator</h1>
+          <h1 className="text-2xl font-bold text-foreground">Site-wide Meta Tag Validator</h1>
           <p className="text-muted-foreground text-sm mt-1 max-w-2xl">
-            Per-check audit across {sections.reduce((a, s) => a + s.samples.length, 0)} URL variants.
-            Each row shows pass/fail for title, description, canonical, HTTP status & JSON-LD — with one-click AI fix per row or bulk AI fix across selected sections.
+            Per-check audit across <strong>{totalSampledUrls}</strong> live URLs — colleges, institutes, exams, articles, city pages, categories, static pages and Profile-Analyzer variants.
+            {loadingSections && " Loading URL list…"}
           </p>
         </div>
         <div className="flex gap-2">
