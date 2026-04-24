@@ -137,6 +137,25 @@ const AdminCoupons = () => {
         <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Coupon</Button>
       </div>
 
+      <AdminFilterBar
+        searchValue={filters.search}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search code, description, discount, institute…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        filters={[
+          { type: "select", key: "active", label: "Status", width: "w-36", options: [
+            { label: "All", value: "all" },
+            { label: "Active only", value: "active" },
+            { label: "Inactive only", value: "inactive" },
+          ]},
+          ...(institutes.length > 0 ? [{ type: "select" as const, key: "institute_id", label: "Institute", width: "w-56", options: [{ label: "All Institutes", value: "all" }, { label: "Not linked", value: "" }, ...institutes.map((i) => ({ label: i.name, value: i.id }))] }] : []),
+        ]}
+        resultsHint={`${sortedCoupons.length} of ${coupons.length} coupons`}
+      />
+
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -163,7 +182,7 @@ const AdminCoupons = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {coupons.length === 0 && (<TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No coupons yet</TableCell></TableRow>)}
+              {sortedCoupons.length === 0 && (<TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">{coupons.length === 0 ? "No coupons yet" : "No coupons match the current filters"}</TableCell></TableRow>)}
             </TableBody>
           </Table>
         </CardContent>
