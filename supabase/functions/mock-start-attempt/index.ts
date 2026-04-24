@@ -154,13 +154,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Increment counter
-    await admin.rpc("noop").catch(() => {});
-    await admin
-      .from("mock_tests")
-      .update({ total_attempts: (test as any).total_attempts ? undefined : undefined })
-      .eq("id", test_id);
-
     return new Response(JSON.stringify({ attempt, resumed: false }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
