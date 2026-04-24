@@ -464,21 +464,50 @@ const AdminCollegeSections = () => {
         </Card>
       )}
 
-      <div className="mb-4">
-        <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">Filter by College</Label>
-        <select className="border border-border rounded-md p-2 text-sm bg-background w-64" value={selectedCollege} onChange={(e) => setFilter("college", e.target.value || "all")}>
-          <option value="">All Colleges</option>
-          {colleges.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
-      </div>
+      <AdminFilterBar
+        searchValue={filters.search}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search by title, content, college…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        filters={[
+          {
+            type: "select",
+            key: "college",
+            label: "College",
+            width: "w-56",
+            options: [{ label: "All Colleges", value: "all" }, ...colleges.map((c) => ({ label: c.name, value: c.id }))],
+          },
+          {
+            type: "select",
+            key: "section",
+            label: "Section Type",
+            width: "w-52",
+            options: [{ label: "All Sections", value: "all" }, ...SECTION_TYPES.map((s) => ({ label: s.label, value: s.value }))],
+          },
+        ]}
+        resultsHint={`${filteredSections.length} of ${sections.length} sections`}
+      />
 
       <Card>
         <CardContent className="p-0">
           <Table>
             <TableHeader><TableRow><TableHead>College</TableHead><TableHead>Section</TableHead><TableHead>Title</TableHead><TableHead>Order</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
             <TableBody>
-              {sections.map((s) => (
+              {filteredSections.map((s) => (
                 <TableRow key={s.id}>
+                  <TableCell className="font-medium">{(s as any).colleges?.name || "—"}</TableCell>
+                  <TableCell><Badge variant="outline">{SECTION_TYPES.find((t) => t.value === s.section_type)?.label || s.section_type}</Badge></TableCell>
+                  <TableCell>{s.title || "—"}</TableCell>
+                  <TableCell>{s.sort_order}</TableCell>
+                  <TableCell className="text-right space-x-1">
+                    <Button variant="ghost" size="sm" onClick={() => handleAIGenerateRow(s)} disabled={aiBusy === `row:${s.id}`} title="Regenerate with AI">
+                      {aiBusy === `row:${s.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-primary" />}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(s.id)}><Pencil className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(s.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
                   <TableCell className="font-medium">{(s as any).colleges?.name || "—"}</TableCell>
                   <TableCell><Badge variant="outline">{SECTION_TYPES.find((t) => t.value === s.section_type)?.label || s.section_type}</Badge></TableCell>
                   <TableCell>{s.title || "—"}</TableCell>
