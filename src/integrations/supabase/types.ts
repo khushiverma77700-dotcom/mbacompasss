@@ -1850,6 +1850,635 @@ export type Database = {
         }
         Relationships: []
       }
+      mock_attempts: {
+        Row: {
+          accuracy: number | null
+          all_india_rank: number | null
+          auto_submitted_reason: string | null
+          created_at: string
+          current_section_id: string | null
+          fullscreen_exits: number
+          id: string
+          max_score: number | null
+          overall_deadline: string | null
+          percentile: number | null
+          section_deadlines: Json
+          sectional_scores: Json | null
+          started_at: string
+          status: Database["public"]["Enums"]["mock_attempt_status"]
+          submitted_at: string | null
+          tab_switch_count: number
+          test_id: string
+          topic_breakdown: Json | null
+          total_attempted: number | null
+          total_correct: number | null
+          total_incorrect: number | null
+          total_score: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          all_india_rank?: number | null
+          auto_submitted_reason?: string | null
+          created_at?: string
+          current_section_id?: string | null
+          fullscreen_exits?: number
+          id?: string
+          max_score?: number | null
+          overall_deadline?: string | null
+          percentile?: number | null
+          section_deadlines?: Json
+          sectional_scores?: Json | null
+          started_at?: string
+          status?: Database["public"]["Enums"]["mock_attempt_status"]
+          submitted_at?: string | null
+          tab_switch_count?: number
+          test_id: string
+          topic_breakdown?: Json | null
+          total_attempted?: number | null
+          total_correct?: number | null
+          total_incorrect?: number | null
+          total_score?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          all_india_rank?: number | null
+          auto_submitted_reason?: string | null
+          created_at?: string
+          current_section_id?: string | null
+          fullscreen_exits?: number
+          id?: string
+          max_score?: number | null
+          overall_deadline?: string | null
+          percentile?: number | null
+          section_deadlines?: Json
+          sectional_scores?: Json | null
+          started_at?: string
+          status?: Database["public"]["Enums"]["mock_attempt_status"]
+          submitted_at?: string | null
+          tab_switch_count?: number
+          test_id?: string
+          topic_breakdown?: Json | null
+          total_attempted?: number | null
+          total_correct?: number | null
+          total_incorrect?: number | null
+          total_score?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_attempts_current_section_id_fkey"
+            columns: ["current_section_id"]
+            isOneToOne: false
+            referencedRelation: "mock_sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mock_attempts_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "mock_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mock_bookmarks: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          question_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          question_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          question_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_bookmarks_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "mock_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mock_coupons: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          current_uses: number
+          discount_flat_inr: number | null
+          discount_percent: number | null
+          id: string
+          max_uses: number | null
+          test_id: string | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          current_uses?: number
+          discount_flat_inr?: number | null
+          discount_percent?: number | null
+          id?: string
+          max_uses?: number | null
+          test_id?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          current_uses?: number
+          discount_flat_inr?: number | null
+          discount_percent?: number | null
+          id?: string
+          max_uses?: number | null
+          test_id?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_coupons_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "mock_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mock_enrollments: {
+        Row: {
+          coupon_code: string | null
+          enrolled_at: string
+          expires_at: string | null
+          id: string
+          source: string
+          test_id: string
+          user_id: string
+        }
+        Insert: {
+          coupon_code?: string | null
+          enrolled_at?: string
+          expires_at?: string | null
+          id?: string
+          source?: string
+          test_id: string
+          user_id: string
+        }
+        Update: {
+          coupon_code?: string | null
+          enrolled_at?: string
+          expires_at?: string | null
+          id?: string
+          source?: string
+          test_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_enrollments_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "mock_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mock_passages: {
+        Row: {
+          content_html: string
+          created_at: string
+          id: string
+          image_urls: string[] | null
+          section_id: string
+          sort_order: number
+          title: string | null
+        }
+        Insert: {
+          content_html: string
+          created_at?: string
+          id?: string
+          image_urls?: string[] | null
+          section_id: string
+          sort_order?: number
+          title?: string | null
+        }
+        Update: {
+          content_html?: string
+          created_at?: string
+          id?: string
+          image_urls?: string[] | null
+          section_id?: string
+          sort_order?: number
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_passages_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "mock_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mock_payments: {
+        Row: {
+          amount_inr: number
+          coupon_code: string | null
+          created_at: string
+          currency: string
+          discount_inr: number | null
+          id: string
+          status: Database["public"]["Enums"]["mock_payment_status"]
+          stripe_payment_intent: string | null
+          stripe_session_id: string | null
+          test_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_inr: number
+          coupon_code?: string | null
+          created_at?: string
+          currency?: string
+          discount_inr?: number | null
+          id?: string
+          status?: Database["public"]["Enums"]["mock_payment_status"]
+          stripe_payment_intent?: string | null
+          stripe_session_id?: string | null
+          test_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount_inr?: number
+          coupon_code?: string | null
+          created_at?: string
+          currency?: string
+          discount_inr?: number | null
+          id?: string
+          status?: Database["public"]["Enums"]["mock_payment_status"]
+          stripe_payment_intent?: string | null
+          stripe_session_id?: string | null
+          test_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_payments_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "mock_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mock_question_options: {
+        Row: {
+          id: string
+          is_correct: boolean
+          option_html: string
+          option_label: string
+          question_id: string
+          sort_order: number
+        }
+        Insert: {
+          id?: string
+          is_correct?: boolean
+          option_html: string
+          option_label: string
+          question_id: string
+          sort_order?: number
+        }
+        Update: {
+          id?: string
+          is_correct?: boolean
+          option_html?: string
+          option_label?: string
+          question_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_question_options_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "mock_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mock_questions: {
+        Row: {
+          created_at: string
+          difficulty: Database["public"]["Enums"]["mock_difficulty"]
+          explanation_html: string | null
+          id: string
+          image_urls: string[] | null
+          negative_marks: number
+          passage_id: string | null
+          past_year_reference: string | null
+          positive_marks: number
+          question_html: string
+          question_number: number
+          question_type: Database["public"]["Enums"]["mock_question_type"]
+          section_id: string
+          solution_video_url: string | null
+          subtopic: string | null
+          tita_correct_answers: string[] | null
+          tita_numeric_tolerance: number | null
+          topic: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty?: Database["public"]["Enums"]["mock_difficulty"]
+          explanation_html?: string | null
+          id?: string
+          image_urls?: string[] | null
+          negative_marks?: number
+          passage_id?: string | null
+          past_year_reference?: string | null
+          positive_marks?: number
+          question_html: string
+          question_number: number
+          question_type?: Database["public"]["Enums"]["mock_question_type"]
+          section_id: string
+          solution_video_url?: string | null
+          subtopic?: string | null
+          tita_correct_answers?: string[] | null
+          tita_numeric_tolerance?: number | null
+          topic?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          difficulty?: Database["public"]["Enums"]["mock_difficulty"]
+          explanation_html?: string | null
+          id?: string
+          image_urls?: string[] | null
+          negative_marks?: number
+          passage_id?: string | null
+          past_year_reference?: string | null
+          positive_marks?: number
+          question_html?: string
+          question_number?: number
+          question_type?: Database["public"]["Enums"]["mock_question_type"]
+          section_id?: string
+          solution_video_url?: string | null
+          subtopic?: string | null
+          tita_correct_answers?: string[] | null
+          tita_numeric_tolerance?: number | null
+          topic?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_questions_passage_id_fkey"
+            columns: ["passage_id"]
+            isOneToOne: false
+            referencedRelation: "mock_passages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mock_questions_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "mock_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mock_responses: {
+        Row: {
+          attempt_id: string
+          first_visited_at: string | null
+          id: string
+          is_correct: boolean | null
+          last_updated_at: string
+          marks_awarded: number | null
+          question_id: string
+          section_id: string
+          selected_option_id: string | null
+          status: Database["public"]["Enums"]["mock_response_status"]
+          time_spent_seconds: number
+          tita_answer: string | null
+          visit_count: number
+        }
+        Insert: {
+          attempt_id: string
+          first_visited_at?: string | null
+          id?: string
+          is_correct?: boolean | null
+          last_updated_at?: string
+          marks_awarded?: number | null
+          question_id: string
+          section_id: string
+          selected_option_id?: string | null
+          status?: Database["public"]["Enums"]["mock_response_status"]
+          time_spent_seconds?: number
+          tita_answer?: string | null
+          visit_count?: number
+        }
+        Update: {
+          attempt_id?: string
+          first_visited_at?: string | null
+          id?: string
+          is_correct?: boolean | null
+          last_updated_at?: string
+          marks_awarded?: number | null
+          question_id?: string
+          section_id?: string
+          selected_option_id?: string | null
+          status?: Database["public"]["Enums"]["mock_response_status"]
+          time_spent_seconds?: number
+          tita_answer?: string | null
+          visit_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_responses_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "mock_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mock_responses_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "mock_leaderboard"
+            referencedColumns: ["attempt_id"]
+          },
+          {
+            foreignKeyName: "mock_responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "mock_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mock_responses_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "mock_sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mock_responses_selected_option_id_fkey"
+            columns: ["selected_option_id"]
+            isOneToOne: false
+            referencedRelation: "mock_question_options"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mock_sections: {
+        Row: {
+          code: Database["public"]["Enums"]["mock_section_code"]
+          created_at: string
+          duration_minutes: number
+          id: string
+          name: string
+          sort_order: number
+          test_id: string
+          total_questions: number
+        }
+        Insert: {
+          code: Database["public"]["Enums"]["mock_section_code"]
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          name: string
+          sort_order?: number
+          test_id: string
+          total_questions?: number
+        }
+        Update: {
+          code?: Database["public"]["Enums"]["mock_section_code"]
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          name?: string
+          sort_order?: number
+          test_id?: string
+          total_questions?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_sections_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "mock_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mock_tests: {
+        Row: {
+          access_validity_days: number
+          banner_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          difficulty: Database["public"]["Enums"]["mock_difficulty"]
+          id: string
+          is_live: boolean
+          is_published: boolean
+          keywords: string[] | null
+          meta_description: string | null
+          meta_title: string | null
+          name: string
+          price_inr: number
+          pricing_type: Database["public"]["Enums"]["mock_pricing_type"]
+          scheduled_end_at: string | null
+          scheduled_start_at: string | null
+          slug: string
+          stripe_price_id: string | null
+          test_type: Database["public"]["Enums"]["mock_test_type"]
+          total_attempts: number
+          total_duration_minutes: number
+          total_takers: number
+          updated_at: string
+        }
+        Insert: {
+          access_validity_days?: number
+          banner_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty?: Database["public"]["Enums"]["mock_difficulty"]
+          id?: string
+          is_live?: boolean
+          is_published?: boolean
+          keywords?: string[] | null
+          meta_description?: string | null
+          meta_title?: string | null
+          name: string
+          price_inr?: number
+          pricing_type?: Database["public"]["Enums"]["mock_pricing_type"]
+          scheduled_end_at?: string | null
+          scheduled_start_at?: string | null
+          slug: string
+          stripe_price_id?: string | null
+          test_type?: Database["public"]["Enums"]["mock_test_type"]
+          total_attempts?: number
+          total_duration_minutes?: number
+          total_takers?: number
+          updated_at?: string
+        }
+        Update: {
+          access_validity_days?: number
+          banner_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          difficulty?: Database["public"]["Enums"]["mock_difficulty"]
+          id?: string
+          is_live?: boolean
+          is_published?: boolean
+          keywords?: string[] | null
+          meta_description?: string | null
+          meta_title?: string | null
+          name?: string
+          price_inr?: number
+          pricing_type?: Database["public"]["Enums"]["mock_pricing_type"]
+          scheduled_end_at?: string | null
+          scheduled_start_at?: string | null
+          slug?: string
+          stripe_price_id?: string | null
+          test_type?: Database["public"]["Enums"]["mock_test_type"]
+          total_attempts?: number
+          total_duration_minutes?: number
+          total_takers?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           created_at: string
@@ -2653,7 +3282,27 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      mock_leaderboard: {
+        Row: {
+          all_india_rank: number | null
+          attempt_id: string | null
+          percentile: number | null
+          rank: number | null
+          submitted_at: string | null
+          test_id: string | null
+          total_score: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_attempts_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "mock_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       assign_admin_by_email: { Args: { _email: string }; Returns: string }
@@ -2665,6 +3314,10 @@ export type Database = {
         Returns: boolean
       }
       is_admin_email: { Args: { _email: string }; Returns: boolean }
+      user_has_mock_access: {
+        Args: { _test_id: string; _user_id: string }
+        Returns: boolean
+      }
       user_owns_listing: {
         Args: { _target_id: string; _target_table: string; _user_id: string }
         Returns: boolean
@@ -2672,6 +3325,23 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
+      mock_attempt_status:
+        | "in_progress"
+        | "submitted"
+        | "auto_submitted"
+        | "abandoned"
+      mock_difficulty: "easy" | "medium" | "hard"
+      mock_payment_status: "pending" | "paid" | "failed" | "refunded"
+      mock_pricing_type: "free" | "paid"
+      mock_question_type: "mcq" | "tita"
+      mock_response_status:
+        | "not_visited"
+        | "not_answered"
+        | "answered"
+        | "marked"
+        | "answered_marked"
+      mock_section_code: "VARC" | "DILR" | "QA"
+      mock_test_type: "full_length" | "sectional" | "topic"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2800,6 +3470,25 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
+      mock_attempt_status: [
+        "in_progress",
+        "submitted",
+        "auto_submitted",
+        "abandoned",
+      ],
+      mock_difficulty: ["easy", "medium", "hard"],
+      mock_payment_status: ["pending", "paid", "failed", "refunded"],
+      mock_pricing_type: ["free", "paid"],
+      mock_question_type: ["mcq", "tita"],
+      mock_response_status: [
+        "not_visited",
+        "not_answered",
+        "answered",
+        "marked",
+        "answered_marked",
+      ],
+      mock_section_code: ["VARC", "DILR", "QA"],
+      mock_test_type: ["full_length", "sectional", "topic"],
     },
   },
 } as const
