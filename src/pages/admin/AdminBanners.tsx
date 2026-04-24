@@ -9,6 +9,8 @@ import { Plus, Pencil, Trash2, ArrowLeft } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import SortableTableHead from "@/components/admin/SortableTableHead";
 import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import { useFilteredList } from "@/hooks/useFilteredList";
 
 const emptyForm = { title: "", subtitle: "", image_url: "", mobile_image_url: "", link_url: "", cta_text: "Learn More", active: true, sort_order: 0 };
 
