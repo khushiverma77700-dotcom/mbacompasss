@@ -220,18 +220,76 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
     }
 
     const aiJson = await aiRes.json();
-    console.log("AI finish_reason:", aiJson?.choices?.[0]?.finish_reason);
+    const finishReason = aiJson?.choices?.[0]?.finish_reason;
+    console.log("AI finish_reason:", finishReason);
     const message = aiJson?.choices?.[0]?.message;
     const toolCall = message?.tool_calls?.[0];
-    const rawArgs = toolCall?.function?.arguments;
+    let rawPayload = toolCall?.function?.arguments as string | undefined;
 
-    if (!rawArgs) {
+    const extractJSON = (raw: string) => {
+      let cleaned = String(raw)
+        .replace(/^```json\s*/im, "")
+        .replace(/^```\s*/im, "")
+        .replace(/```\s*$/im, "")
+        .trim();
+
+      if (!cleaned.startsWith("{") && !cleaned.startsWith("[")) {
+        const objStart = cleaned.indexOf("{");
+        const arrStart = cleaned.indexOf("[");
+        const isArray = arrStart !== -1 && (objStart === -1 || arrStart < objStart);
+        const start = isArray ? arrStart : objStart;
+        const end = isArray ? cleaned.lastIndexOf("]") : cleaned.lastIndexOf("}");
+        if (start !== -1 && end > start) {
+          cleaned = cleaned.slice(start, end + 1);
+        }
+      }
+
+      return JSON.parse(cleaned);
+    };
+
+    if (!rawPayload) {
+      console.warn("Primary structured response missing tool arguments. finish_reason:", finishReason);
+
+      if (finishReason === "malformed_function_call" || finishReason === "tool_calls" || typeof message?.content === "string") {
+        const fallbackRes = await callAIGateway({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            {
+              role: "system",
+              content: `${systemPrompt}\n\nCRITICAL: Return ONLY one raw JSON object. Do not use tool calling. Do not wrap the response in markdown fences.`,
+            },
+            {
+              role: "user",
+              content: `${userPrompt}\n\nReturn exactly one valid JSON object containing the full college profile fields. No prose before or after the JSON.`,
+            },
+          ],
+          response_format: { type: "json_object" },
+          max_tokens: 8000,
+        });
+
+        if (fallbackRes.ok) {
+          const fallbackJson = await fallbackRes.json();
+          const fallbackContent = fallbackJson?.choices?.[0]?.message?.content;
+          if (typeof fallbackContent === "string" && fallbackContent.trim()) {
+            rawPayload = fallbackContent;
+            console.log("Recovered college profile via JSON fallback");
+          } else {
+            console.error("JSON fallback returned empty content");
+          }
+        } else {
+          const fallbackText = await fallbackRes.text();
+          console.error("JSON fallback failed:", fallbackRes.status, fallbackText.slice(0, 500));
+        }
+      }
+    }
+
+    if (!rawPayload) {
       console.error("No tool call. Message preview:", JSON.stringify(message)?.slice(0, 800));
       return new Response(
         JSON.stringify({
           error: "AI did not return a structured college profile",
           detail: message?.content?.slice(0, 300) || "no content returned",
-          finish_reason: aiJson?.choices?.[0]?.finish_reason,
+          finish_reason: finishReason,
         }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
@@ -239,9 +297,9 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
 
     let profile: any;
     try {
-      profile = JSON.parse(rawArgs);
+      profile = extractJSON(rawPayload);
     } catch (e) {
-      console.error("Parse fail. Length:", rawArgs.length, "Tail:", rawArgs.slice(-300));
+      console.error("Parse fail. Length:", rawPayload.length, "Tail:", rawPayload.slice(-300));
       return new Response(
         JSON.stringify({ error: "AI output was truncated or malformed JSON. Try again.", detail: String(e).slice(0, 200) }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
