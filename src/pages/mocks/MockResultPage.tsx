@@ -72,9 +72,13 @@ export default function MockResultPage() {
         </div>
       </Card>
 
-      <div className="flex gap-3">
-        <Button variant="outline" onClick={() => navigate("/mocks")}>Back to Mocks</Button>
-        <Button onClick={() => navigate("/dashboard")}>Go to Dashboard</Button>
+      <div className="flex gap-3 flex-wrap">
+        <Button onClick={() => navigate(`/mocks/review/${attempt.id}`)}>Question-by-question Review</Button>
+        {test?.slug && (
+          <Button variant="outline" onClick={() => navigate(`/mocks/leaderboard/${test.slug}`)}>Leaderboard</Button>
+        )}
+        <Button variant="outline" onClick={() => navigate("/dashboard/mocks")}>My Mocks</Button>
+        <Button variant="ghost" onClick={() => navigate("/mocks")}>All Mocks</Button>
       </div>
     </div>
   );

@@ -123,6 +123,9 @@ const MocksListPage = lazyWithPreload(() => import("./pages/mocks/MocksListPage"
 const MockTestIntroPage = lazyWithPreload(() => import("./pages/mocks/MockTestIntroPage"));
 const MockTestRunnerPage = lazyWithPreload(() => import("./pages/mocks/MockTestRunnerPage"));
 const MockResultPage = lazyWithPreload(() => import("./pages/mocks/MockResultPage"));
+const MyMocksPage = lazyWithPreload(() => import("./pages/mocks/MyMocksPage"));
+const MockReviewPage = lazyWithPreload(() => import("./pages/mocks/MockReviewPage"));
+const MockLeaderboardPage = lazyWithPreload(() => import("./pages/mocks/MockLeaderboardPage"));
 
 // Lazy load heavy popups
 const OnboardingDialog = lazyWithPreload(() => import("@/components/OnboardingDialog"));
@@ -494,6 +497,9 @@ const App = () => (
             <Route path="/mocks/:slug" element={<PublicLayout><LazyPage><MockTestIntroPage /></LazyPage></PublicLayout>} />
             <Route path="/mocks/attempt/:attemptId" element={<LazyPage><MockTestRunnerPage /></LazyPage>} />
             <Route path="/mocks/result/:attemptId" element={<PublicLayout><LazyPage><MockResultPage /></LazyPage></PublicLayout>} />
+            <Route path="/mocks/review/:attemptId" element={<PublicLayout><LazyPage><MockReviewPage /></LazyPage></PublicLayout>} />
+            <Route path="/mocks/leaderboard/:slug" element={<PublicLayout><LazyPage><MockLeaderboardPage /></LazyPage></PublicLayout>} />
+            <Route path="/dashboard/mocks" element={<PublicLayout><LazyPage><MyMocksPage /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />
           </Routes>
         </AuthProvider>
