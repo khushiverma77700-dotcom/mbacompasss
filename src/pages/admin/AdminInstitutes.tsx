@@ -91,7 +91,7 @@ const AdminInstitutes = () => {
 
   const fetchData = async () => {
     const [i, c] = await Promise.all([
-      supabase.from("institutes").select("id, name, slug, city, rating, featured, mode, students_count, success_rate, created_at, source, last_updated_by").order("created_at", { ascending: false }),
+      supabase.from("institutes").select("id, name, slug, city, rating, featured, mode, students_count, success_rate, created_at, source, last_updated_by, category_id").order("created_at", { ascending: false }),
       supabase.from("categories").select("id, name").order("name"),
     ]);
     if (i.data) setInstitutes(i.data);
