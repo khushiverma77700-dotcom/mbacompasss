@@ -315,19 +315,21 @@ const AdminArticles = () => {
         <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> New Article</Button>
       </div>
 
-      <div className="flex gap-3 mb-4 flex-wrap">
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input placeholder="Search articles..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-9" />
-        </div>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            {statusOptions.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
-      </div>
+      <AdminFilterBar
+        searchValue={filters.search}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search articles by title or slug…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        resultsHint={`${sortedArticles.length} of ${articles.length} articles`}
+        filters={[
+          { type: "select", key: "status", label: "Status", width: "w-32", options: [{ label: "All Status", value: "all" }, ...statusOptions.map(s => ({ label: s.label, value: s.value }))] },
+          { type: "select", key: "category", label: "Category", width: "w-44", options: [{ label: "All Categories", value: "all" }, ...categories.map(c => ({ label: c.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()), value: c }))] },
+          { type: "select", key: "featured", label: "Featured", width: "w-32", options: [{ label: "All", value: "all" }, { label: "Featured", value: "yes" }, { label: "Not featured", value: "no" }] },
+        ]}
+      />
 
       <Card>
         <CardContent className="p-0">
