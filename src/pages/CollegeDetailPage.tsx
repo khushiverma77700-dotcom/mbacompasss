@@ -394,14 +394,16 @@ const CollegeDetailPage = () => {
               ].map(s => {
                 const Icon = s.icon;
                 return (
-                  <div key={s.label} className="group relative bg-white/10 backdrop-blur-md rounded-xl px-4 py-3 border border-white/15 hover:bg-white/15 hover:border-white/25 transition-all">
+                  <div key={s.label} className="group relative bg-white/10 backdrop-blur-md rounded-xl px-3 py-3 sm:px-4 border border-white/15 hover:bg-white/15 hover:border-white/25 transition-all min-w-0">
                     <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-                    <div className="flex items-center gap-1.5 mb-1.5">
-                      <Icon className="w-3.5 h-3.5 text-primary-foreground/70" />
-                      <span className="text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/70">{s.label}</span>
-                      <CitationLink source={s.source} year={s.year} className="!bg-white/10 !border-white/20 !text-primary-foreground/80 ml-auto" />
+                    <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
+                      <Icon className="w-3.5 h-3.5 text-primary-foreground/70 flex-shrink-0" />
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-primary-foreground/70 truncate">{s.label}</span>
                     </div>
-                    <div className="font-heading font-extrabold text-primary-foreground text-base md:text-lg leading-tight">{s.value}</div>
+                    <div className="font-heading font-extrabold text-primary-foreground text-base md:text-lg leading-tight break-words">{s.value}</div>
+                    <div className="mt-1.5">
+                      <CitationLink source={s.source} year={s.year} className="!bg-white/10 !border-white/20 !text-primary-foreground/80" />
+                    </div>
                   </div>
                 );
               })}
@@ -544,20 +546,22 @@ const CollegeDetailPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex items-center gap-6 mb-6">
-                    <div className="text-center flex-shrink-0 p-4 rounded-2xl bg-gradient-to-br from-amber-500/15 to-amber-500/5 border border-amber-200/40 dark:border-amber-900/30 min-w-[100px]">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-6">
+                    <div className="text-center flex-shrink-0 p-4 rounded-2xl bg-gradient-to-br from-amber-500/15 to-amber-500/5 border border-amber-200/40 dark:border-amber-900/30 self-center sm:self-auto min-w-[120px]">
                       <div className="text-4xl font-heading font-extrabold bg-gradient-to-br from-amber-600 to-amber-500 bg-clip-text text-transparent">{overallRating}</div>
                       <div className="flex items-center gap-0.5 justify-center mt-1">
                         {[...Array(5)].map((_, i) => <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(Number(overallRating)) ? "fill-amber-500 text-amber-500" : "text-muted-foreground/40"}`} />)}
                       </div>
                       <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mt-1">Overall</div>
                     </div>
-                    <div className="flex-1 space-y-2.5">
+                    <div className="flex-1 w-full space-y-2.5 min-w-0">
                       {whyJoinRatings.map((a: any) => (
-                        <div key={a.label} className="flex items-center gap-3">
-                          <span className="text-xs font-semibold text-foreground w-28 flex-shrink-0">{a.label}</span>
-                          <Progress value={Number(a.score) * 20} className="flex-1 h-2" />
-                          <span className="text-xs font-extrabold text-foreground w-10 text-right">{a.score}</span>
+                        <div key={a.label}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-semibold text-foreground truncate pr-2">{a.label}</span>
+                            <span className="text-xs font-extrabold text-foreground flex-shrink-0">{a.score}/5</span>
+                          </div>
+                          <Progress value={Number(a.score) * 20} className="h-2" />
                         </div>
                       ))}
                     </div>
@@ -805,19 +809,21 @@ const CollegeDetailPage = () => {
               <Card>
                 <CardHeader><CardTitle className="font-heading flex items-center gap-2"><MessageSquare className="w-5 h-5 text-primary" /> Student Reviews</CardTitle></CardHeader>
                 <CardContent>
-                  <div className="flex items-center gap-6 mb-6 p-4 bg-secondary/30 rounded-lg">
-                    <div className="text-center">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 mb-6 p-4 bg-secondary/30 rounded-lg">
+                    <div className="text-center self-center sm:self-auto flex-shrink-0">
                       <div className="text-4xl font-heading font-bold text-primary">{overallRating}</div>
                       <div className="flex items-center gap-0.5 justify-center mt-1">
                         {[...Array(5)].map((_, i) => <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(Number(overallRating)) ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`} />)}
                       </div>
                     </div>
-                    <div className="flex-1 space-y-1.5">
+                    <div className="flex-1 w-full space-y-2 min-w-0">
                       {ratingAspects.slice(0, 5).map((a: any) => (
-                        <div key={a.label} className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground w-24">{a.label}</span>
-                          <Progress value={Number(a.score) * 20} className="flex-1 h-2" />
-                          <span className="text-xs font-semibold w-6">{a.score}</span>
+                        <div key={a.label}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-muted-foreground truncate pr-2">{a.label}</span>
+                            <span className="text-xs font-semibold flex-shrink-0">{a.score}/5</span>
+                          </div>
+                          <Progress value={Number(a.score) * 20} className="h-2" />
                         </div>
                       ))}
                     </div>
@@ -877,13 +883,17 @@ const CollegeDetailPage = () => {
                 <CardContent>
                   <div className="space-y-4">
                     {scholarships.map((s: any, i: number) => (
-                      <div key={i} className="border border-border rounded-lg p-4">
-                        <div className="flex items-start justify-between mb-2">
-                          <h4 className="font-heading font-semibold text-foreground">{s.name}</h4>
-                          <Badge className="bg-primary/10 text-primary border-none text-xs">{s.amount}</Badge>
+                      <div key={i} className="border border-border rounded-lg p-4 min-w-0">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
+                          <h4 className="font-heading font-semibold text-foreground text-base leading-snug break-words">{s.name}</h4>
+                          {s.amount && (
+                            <span className="inline-flex max-w-full bg-primary/10 text-primary text-xs font-medium px-2.5 py-1 rounded-md break-words whitespace-normal text-left sm:text-right sm:flex-shrink-0 sm:max-w-[55%] leading-snug">
+                              {s.amount}
+                            </span>
+                          )}
                         </div>
-                        <p className="text-sm text-muted-foreground mb-1">{s.description}</p>
-                        <p className="text-xs text-primary font-medium">Criteria: {s.criteria}</p>
+                        {s.description && <p className="text-sm text-muted-foreground mb-1 break-words">{s.description}</p>}
+                        {s.criteria && <p className="text-xs text-primary font-medium break-words">Criteria: {s.criteria}</p>}
                       </div>
                     ))}
                   </div>
