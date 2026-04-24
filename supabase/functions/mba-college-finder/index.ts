@@ -115,11 +115,35 @@ You MUST respond in valid JSON with this exact structure:
 - Include ALL available fields (established, campus_size, total_students, accreditations, top_recruiters) from the database
 - Ensure valid JSON output with no markdown formatting`;
 
-    const response = await callAIGateway({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `Find the best MBA colleges for me based on my preferences. Return JSON only.` },
-        ],
-        response_format: { type: "json_object" },
-      });
+    const aiData = await callAIGateway({
+      model: "google/gemini-3-flash-preview",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Find the best MBA colleges for me based on my preferences. Return JSON only.` },
+      ],
+      response_format: { type: "json_object" },
+    });
+
+    const content = aiData?.choices?.[0]?.message?.content || "{}";
+    let result;
+    try {
+      result = JSON.parse(content);
+    } catch (e) {
+      console.error("[mba-college-finder] JSON parse error:", e, "content:", content);
+      result = { error: "Failed to parse AI response", raw: content };
+    }
+
+    await logAIUsage("mba-college-finder", "google/gemini-3-flash-preview", aiData);
+
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error: any) {
+    console.error("[mba-college-finder] Error:", error);
+    await logAIUsage("mba-college-finder", "google/gemini-3-flash-preview", null, "error", error?.message);
+    return new Response(JSON.stringify({ error: error?.message || "Internal error" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
