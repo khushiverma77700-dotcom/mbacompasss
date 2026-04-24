@@ -71,16 +71,17 @@ const ProfileAnalyzerPopup = () => {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleDismiss(); }}>
-      <DialogContent className="max-w-[900px] w-[95vw] md:w-[90vw] p-0 overflow-hidden border-0 shadow-2xl rounded-2xl [&>button]:hidden gap-0 max-h-[90vh] overflow-y-auto">
-        {/* Close button */}
+      <DialogContent className="max-w-[900px] w-[95vw] md:w-[90vw] p-0 border-0 shadow-2xl rounded-2xl [&>button]:hidden gap-0 max-h-[92dvh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+        {/* Sticky close button — always reachable on small screens */}
         <button
           onClick={handleDismiss}
-          className="absolute top-3 right-3 z-20 w-8 h-8 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-sm border border-border/50"
+          aria-label="Close"
+          className="fixed sm:absolute top-3 right-3 z-30 w-9 h-9 rounded-full bg-white shadow-lg flex items-center justify-center hover:bg-white transition-colors border border-border"
         >
-          <X className="w-4 h-4 text-muted-foreground" />
+          <X className="w-4 h-4 text-foreground" />
         </button>
 
-        <div className="flex flex-col md:flex-row">
+        <div className="flex flex-col md:flex-row overflow-y-auto overscroll-contain">
           {/* Left Panel — Info */}
           <div className="relative md:w-[45%] p-4 md:p-8 overflow-hidden" style={{ background: "var(--hero-gradient)" }}>
             {/* Decorative circles */}

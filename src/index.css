@@ -68,6 +68,11 @@
     @apply border-border;
   }
 
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body);
@@ -75,12 +80,34 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+
+  /* Prevent long words/URLs from overflowing on mobile */
+  p, li, span, a, h1, h2, h3, h4, h5, h6 {
+    overflow-wrap: break-word;
+    word-wrap: break-word;
   }
 
   /* Global responsive images – ensure they scale properly */
   img:not([class*="object-"]) {
     max-width: 100%;
     height: auto;
+  }
+
+  /* Long content blocks (article/prose) should never push horizontal scroll.
+     Tables inside .ai-content already have their own scroll wrapper. */
+  .ai-content,
+  .prose {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+  }
+  .ai-content pre,
+  .prose pre {
+    overflow-x: auto;
+    max-width: 100%;
   }
 }
 
