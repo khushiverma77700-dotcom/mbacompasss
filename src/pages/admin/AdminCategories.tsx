@@ -10,6 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, ArrowLeft } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import SortableTableHead from "@/components/admin/SortableTableHead";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import { useFilteredList } from "@/hooks/useFilteredList";
+import { useMemo } from "react";
 
 const emptyForm = { name: "", slug: "", description: "", icon: "BookOpen", exam_type: "" };
 
@@ -19,7 +22,18 @@ const AdminCategories = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const { toast } = useToast();
-  const { sortedItems: sortedCategories, sortConfig, handleSort } = useTableSort(categories);
+  const examTypeOptions = useMemo(() => {
+    const set = new Set<string>();
+    categories.forEach((c) => { if (c.exam_type) set.add(c.exam_type); });
+    return Array.from(set).sort().map((v) => ({ label: v, value: v }));
+  }, [categories]);
+  const { filtered, filters, setFilter, clearAll, activeCount } = useFilteredList(categories, {
+    storageKey: "admin.categories.filters",
+    defaults: { search: "", exam_type: "all" },
+    searchFields: [(c) => c.name, (c) => c.slug, (c) => c.description, (c) => c.exam_type],
+    fieldFilters: { exam_type: (c) => c.exam_type },
+  });
+  const { sortedItems: sortedCategories, sortConfig, handleSort } = useTableSort(filtered);
 
   const fetchCategories = async () => {
     const { data } = await supabase.from("categories").select("*").order("name");
@@ -109,6 +123,19 @@ const AdminCategories = () => {
         <h1 className="font-heading text-2xl font-bold text-foreground">Manage Categories</h1>
         <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Category</Button>
       </div>
+      <AdminFilterBar
+        searchValue={filters.search}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search by name, slug, description…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        filters={examTypeOptions.length > 0 ? [
+          { type: "select", key: "exam_type", label: "Exam Type", width: "w-44", options: [{ label: "All Types", value: "all" }, ...examTypeOptions] },
+        ] : []}
+        resultsHint={`${sortedCategories.length} of ${categories.length} categories`}
+      />
       <Card><CardContent className="p-0">
         <Table>
           <TableHeader><TableRow>
@@ -129,8 +156,8 @@ const AdminCategories = () => {
                 </TableCell>
               </TableRow>
             ))}
-            {categories.length === 0 && (
-              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No categories yet</TableCell></TableRow>
+            {sortedCategories.length === 0 && (
+              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">{categories.length === 0 ? "No categories yet" : "No categories match the current filters"}</TableCell></TableRow>
             )}
           </TableBody>
         </Table>

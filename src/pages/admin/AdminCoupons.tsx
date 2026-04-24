@@ -12,6 +12,9 @@ import { Plus, Pencil, Trash2, Eye, ArrowLeft } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import SortableTableHead from "@/components/admin/SortableTableHead";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import AdminFilterBar from "@/components/admin/AdminFilterBar";
+import { useFilteredList } from "@/hooks/useFilteredList";
+import { useMemo } from "react";
 
 type Coupon = {
   id: string; code: string; description: string | null; discount_text: string | null;
@@ -40,7 +43,17 @@ const AdminCoupons = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const { toast } = useToast();
-  const { sortedItems: sortedCoupons, sortConfig, handleSort } = useTableSort(coupons);
+  const instituteMap = useMemo(() => Object.fromEntries(institutes.map((i) => [i.id, i.name])), [institutes]);
+  const { filtered, filters, setFilter, clearAll, activeCount } = useFilteredList(coupons, {
+    storageKey: "admin.coupons.filters",
+    defaults: { search: "", active: "all", institute_id: "all" },
+    searchFields: [(c) => c.code, (c) => c.description, (c) => c.discount_text, (c) => instituteMap[c.institute_id || ""]],
+    fieldFilters: { institute_id: (c) => c.institute_id ?? "" },
+    customPredicates: {
+      active: (val, c) => (val === "active" ? !!c.active : val === "inactive" ? !c.active : true),
+    },
+  });
+  const { sortedItems: sortedCoupons, sortConfig, handleSort } = useTableSort(filtered);
 
   const fetchCoupons = async () => { const { data } = await supabase.from("coupons").select("*").order("created_at", { ascending: false }); if (data) setCoupons(data); };
   const fetchInstitutes = async () => { const { data } = await supabase.from("institutes").select("id, name").order("name"); if (data) setInstitutes(data); };
@@ -124,6 +137,25 @@ const AdminCoupons = () => {
         <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}><Plus className="w-4 h-4 mr-2" /> Add Coupon</Button>
       </div>
 
+      <AdminFilterBar
+        searchValue={filters.search}
+        onSearchChange={(v) => setFilter("search", v)}
+        searchPlaceholder="Search code, description, discount, institute…"
+        values={filters}
+        onFilterChange={setFilter}
+        onClearAll={clearAll}
+        activeCount={activeCount}
+        filters={[
+          { type: "select", key: "active", label: "Status", width: "w-36", options: [
+            { label: "All", value: "all" },
+            { label: "Active only", value: "active" },
+            { label: "Inactive only", value: "inactive" },
+          ]},
+          ...(institutes.length > 0 ? [{ type: "select" as const, key: "institute_id", label: "Institute", width: "w-56", options: [{ label: "All Institutes", value: "all" }, { label: "Not linked", value: "" }, ...institutes.map((i) => ({ label: i.name, value: i.id }))] }] : []),
+        ]}
+        resultsHint={`${sortedCoupons.length} of ${coupons.length} coupons`}
+      />
+
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -150,7 +182,7 @@ const AdminCoupons = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {coupons.length === 0 && (<TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No coupons yet</TableCell></TableRow>)}
+              {sortedCoupons.length === 0 && (<TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">{coupons.length === 0 ? "No coupons yet" : "No coupons match the current filters"}</TableCell></TableRow>)}
             </TableBody>
           </Table>
         </CardContent>
