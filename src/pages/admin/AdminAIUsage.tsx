@@ -468,6 +468,8 @@ function CloudUsageTab({ registerRefresh, registerLoading }: CloudUsageTabProps)
   }, []);
 
   useEffect(() => { fetchCloudData(); }, [fetchCloudData]);
+  useEffect(() => { registerRefresh?.(fetchCloudData); }, [registerRefresh, fetchCloudData]);
+  useEffect(() => { registerLoading?.(loading); }, [registerLoading, loading]);
 
   const cloudCost = useMemo(() => estimateCloudCost({
     totalRows: dbStats.totalRows,
