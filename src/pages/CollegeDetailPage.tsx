@@ -402,6 +402,45 @@ const CollegeDetailPage = () => {
               })}
             </div>
 
+            {/* Premium Action Row */}
+            <div className="flex flex-wrap items-center gap-3 mb-5">
+              <Button
+                onClick={handleDownloadBrochure}
+                size="lg"
+                className="bg-white text-primary hover:bg-white/95 font-bold shadow-2xl hover:shadow-white/20 hover:scale-[1.02] transition-all gap-2 px-6"
+              >
+                <Download className="w-4 h-4" /> Download Brochure
+              </Button>
+              <Button
+                onClick={() => sectionRefs.current["admission"]?.scrollIntoView({ behavior: "smooth" })}
+                size="lg"
+                variant="outline"
+                className="bg-white/10 backdrop-blur-md border-white/30 text-primary-foreground hover:bg-white/20 hover:border-white/50 hover:text-primary-foreground font-bold gap-2"
+              >
+                <GraduationCap className="w-4 h-4" /> Apply Now
+              </Button>
+              <Link to="/compare">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="bg-white/10 backdrop-blur-md border-white/30 text-primary-foreground hover:bg-white/20 hover:border-white/50 hover:text-primary-foreground font-bold gap-2"
+                >
+                  <TrendingUp className="w-4 h-4" /> Compare
+                </Button>
+              </Link>
+              {college.website && (
+                <a href={college.website} target="_blank" rel="noopener noreferrer">
+                  <Button
+                    size="lg"
+                    variant="ghost"
+                    className="text-primary-foreground hover:bg-white/10 hover:text-primary-foreground font-semibold gap-2"
+                  >
+                    <Globe className="w-4 h-4" /> Visit Website
+                  </Button>
+                </a>
+              )}
+            </div>
+
             {/* Footer row: Accreditations + Last Updated */}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               {rankAccreditations.length > 0 && (
@@ -454,8 +493,16 @@ const CollegeDetailPage = () => {
 
             {/* Overview */}
             <div id="overview" ref={el => { sectionRefs.current["overview"] = el; }} className="scroll-mt-32">
-              <Card>
-                <CardHeader><CardTitle className="font-heading">About {college.name}</CardTitle></CardHeader>
+              <Card className="overflow-hidden border-border/60 shadow-md">
+                <div className="h-1 bg-gradient-to-r from-primary via-primary/70 to-transparent" />
+                <CardHeader>
+                  <CardTitle className="font-heading flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                      <BookOpen className="w-5 h-5 text-primary" />
+                    </div>
+                    About {college.name}
+                  </CardTitle>
+                </CardHeader>
                 <CardContent>
                   {getSectionContent("why_join") ? (
                     <div className="text-muted-foreground leading-relaxed ai-content max-w-none" dangerouslySetInnerHTML={{ __html: enhanceAIContent(getSectionContent("why_join")) }} />
@@ -463,11 +510,16 @@ const CollegeDetailPage = () => {
                     <div className="text-muted-foreground leading-relaxed ai-content max-w-none" dangerouslySetInnerHTML={{ __html: enhanceAIContent(college.description || `${college.name} is a premier ${college.type} institute in ${college.city}.`) }} />
                   )}
                   {highlights && (
-                    <div className="mt-6">
-                      <h3 className="font-heading font-semibold text-foreground mb-3">Key Highlights</h3>
-                      <div className="grid sm:grid-cols-2 gap-2">
+                    <div className="mt-6 pt-6 border-t border-dashed border-border">
+                      <h3 className="font-heading font-bold text-foreground mb-4 flex items-center gap-2">
+                        <Star className="w-4 h-4 text-amber-500 fill-amber-500" /> Key Highlights
+                      </h3>
+                      <div className="grid sm:grid-cols-2 gap-2.5">
                         {(Array.isArray(highlights) ? highlights : Object.entries(highlights).map(([k, v]) => `${k}: ${v}`)).map((h: string, i: number) => (
-                          <div key={i} className="flex items-center gap-2 text-sm text-foreground"><CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />{h}</div>
+                          <div key={i} className="flex items-start gap-2.5 text-sm text-foreground p-2.5 rounded-lg bg-gradient-to-br from-primary/5 to-transparent border border-border/40">
+                            <CheckCircle className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                            <span>{h}</span>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -476,22 +528,31 @@ const CollegeDetailPage = () => {
               </Card>
 
               {/* Why Join Ratings */}
-              <Card className="border-primary/30 mt-6">
-                <CardHeader><CardTitle className="font-heading flex items-center gap-2"><Star className="w-5 h-5 text-primary" /> Why Join {college.name}?</CardTitle></CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="text-center">
-                      <div className="text-4xl font-heading font-bold text-primary">{overallRating}</div>
-                      <div className="flex items-center gap-0.5 justify-center mt-1">
-                        {[...Array(5)].map((_, i) => <Star key={i} className={`w-4 h-4 ${i < Math.round(Number(overallRating)) ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`} />)}
-                      </div>
+              <Card className="overflow-hidden border-amber-200/50 dark:border-amber-900/30 shadow-md mt-6 bg-gradient-to-br from-amber-50/30 to-transparent dark:from-amber-950/10">
+                <div className="h-1 bg-gradient-to-r from-amber-400 via-amber-500 to-transparent" />
+                <CardHeader>
+                  <CardTitle className="font-heading flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400/30 to-amber-500/10 flex items-center justify-center">
+                      <Star className="w-5 h-5 text-amber-600 fill-amber-500" />
                     </div>
-                    <div className="flex-1 space-y-2">
+                    Why Join {college.name}?
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-6 mb-6">
+                    <div className="text-center flex-shrink-0 p-4 rounded-2xl bg-gradient-to-br from-amber-500/15 to-amber-500/5 border border-amber-200/40 dark:border-amber-900/30 min-w-[100px]">
+                      <div className="text-4xl font-heading font-extrabold bg-gradient-to-br from-amber-600 to-amber-500 bg-clip-text text-transparent">{overallRating}</div>
+                      <div className="flex items-center gap-0.5 justify-center mt-1">
+                        {[...Array(5)].map((_, i) => <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(Number(overallRating)) ? "fill-amber-500 text-amber-500" : "text-muted-foreground/40"}`} />)}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mt-1">Overall</div>
+                    </div>
+                    <div className="flex-1 space-y-2.5">
                       {whyJoinRatings.map((a: any) => (
-                        <div key={a.label} className="flex items-center gap-2">
-                          <span className="text-xs text-muted-foreground w-24 flex-shrink-0">{a.label}</span>
+                        <div key={a.label} className="flex items-center gap-3">
+                          <span className="text-xs font-semibold text-foreground w-28 flex-shrink-0">{a.label}</span>
                           <Progress value={Number(a.score) * 20} className="flex-1 h-2" />
-                          <span className="text-xs font-semibold text-foreground w-8">{a.score}</span>
+                          <span className="text-xs font-extrabold text-foreground w-10 text-right">{a.score}</span>
                         </div>
                       ))}
                     </div>
@@ -566,20 +627,28 @@ const CollegeDetailPage = () => {
 
             {/* Placements */}
             <div id="placements" ref={el => { sectionRefs.current["placements"] = el; }} className="scroll-mt-32">
-              <Card>
-                <CardHeader><CardTitle className="font-heading">Placement Statistics</CardTitle></CardHeader>
+              <Card className="overflow-hidden border-border/60 shadow-md">
+                <div className="h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-transparent" />
+                <CardHeader>
+                  <CardTitle className="font-heading flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center">
+                      <TrendingUp className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    Placement Statistics
+                  </CardTitle>
+                </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
                     {[
-                      { label: "Average Package", value: placementData.avg_package || college.placement_avg || "N/A", icon: TrendingUp },
-                      { label: "Highest Package", value: placementData.highest_package || college.placement_highest || "N/A", icon: Award },
-                      { label: "Median Package", value: placementData.median_package || college.placement_median || "N/A", icon: Star },
-                      { label: "Placement Rate", value: placementData.placement_rate || "98%", icon: CheckCircle },
+                      { label: "Average Package", value: placementData.avg_package || college.placement_avg || "N/A", icon: TrendingUp, color: "from-blue-500/15 to-blue-500/5", iconColor: "text-blue-600" },
+                      { label: "Highest Package", value: placementData.highest_package || college.placement_highest || "N/A", icon: Award, color: "from-amber-500/15 to-amber-500/5", iconColor: "text-amber-600" },
+                      { label: "Median Package", value: placementData.median_package || college.placement_median || "N/A", icon: Star, color: "from-purple-500/15 to-purple-500/5", iconColor: "text-purple-600" },
+                      { label: "Placement Rate", value: placementData.placement_rate || "98%", icon: CheckCircle, color: "from-emerald-500/15 to-emerald-500/5", iconColor: "text-emerald-600" },
                     ].map(s => (
-                      <div key={s.label} className="bg-secondary/50 rounded-lg p-4 text-center">
-                        <s.icon className="w-6 h-6 text-primary mx-auto mb-2" />
-                        <div className="font-heading text-lg font-bold text-primary">{s.value}</div>
-                        <div className="text-xs text-muted-foreground">{s.label}</div>
+                      <div key={s.label} className={`relative bg-gradient-to-br ${s.color} rounded-xl p-4 text-center border border-border/40 hover:shadow-md hover:-translate-y-0.5 transition-all`}>
+                        <s.icon className={`w-5 h-5 ${s.iconColor} mx-auto mb-2`} />
+                        <div className="font-heading text-lg font-extrabold text-foreground leading-tight">{s.value}</div>
+                        <div className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mt-1">{s.label}</div>
                       </div>
                     ))}
                   </div>
@@ -665,23 +734,41 @@ const CollegeDetailPage = () => {
 
             {/* Rankings */}
             <div id="rankings" ref={el => { sectionRefs.current["rankings"] = el; }} className="scroll-mt-32">
-              <Card>
-                <CardHeader><CardTitle className="font-heading flex items-center gap-2"><Medal className="w-5 h-5 text-primary" /> Rankings & Accreditations</CardTitle></CardHeader>
+              <Card className="overflow-hidden border-border/60 shadow-md">
+                <div className="h-1 bg-gradient-to-r from-amber-500 via-amber-400 to-transparent" />
+                <CardHeader>
+                  <CardTitle className="font-heading flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400/30 to-amber-500/10 flex items-center justify-center">
+                      <Medal className="w-5 h-5 text-amber-600" />
+                    </div>
+                    Rankings & Accreditations
+                  </CardTitle>
+                </CardHeader>
                 <CardContent>
-                  <div className="grid sm:grid-cols-2 gap-4 mb-6">
+                  <div className="grid sm:grid-cols-2 gap-3 mb-6">
                     {rankingsList.map((r: any, i: number) => (
-                      <div key={i} className="bg-secondary/50 rounded-lg p-4 flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-lg hero-gradient flex items-center justify-center text-primary-foreground font-bold text-sm flex-shrink-0">{r.rank}</div>
-                        <div><div className="font-semibold text-foreground">{r.body}</div><div className="text-xs text-muted-foreground">{r.year} Ranking</div></div>
+                      <div key={i} className="relative bg-gradient-to-br from-amber-50/40 to-transparent dark:from-amber-950/10 rounded-xl p-4 flex items-center gap-4 border border-amber-200/40 dark:border-amber-900/30 hover:shadow-md hover:-translate-y-0.5 transition-all">
+                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 flex items-center justify-center text-white font-extrabold text-base flex-shrink-0 shadow-lg shadow-amber-500/30">
+                          {r.rank}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-bold text-foreground text-sm">{r.body}</div>
+                          <div className="text-[11px] text-muted-foreground uppercase tracking-wider font-semibold mt-0.5">{r.year} Ranking</div>
+                        </div>
                       </div>
                     ))}
                   </div>
                   {rankAccreditations.length > 0 && (
-                    <div>
-                      <h3 className="font-heading font-semibold text-foreground mb-3">Accreditations</h3>
-                      <div className="flex flex-wrap gap-3">
+                    <div className="pt-4 border-t border-dashed border-border">
+                      <h3 className="font-heading font-bold text-foreground mb-3 flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-emerald-600" /> Accreditations
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
                         {rankAccreditations.map((a: string) => (
-                          <div key={a} className="flex items-center gap-2 bg-primary/10 rounded-lg px-4 py-2"><Award className="w-4 h-4 text-primary" /><span className="text-sm font-medium text-foreground">{a}</span></div>
+                          <div key={a} className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-500/15 to-emerald-500/5 border border-emerald-200/50 dark:border-emerald-900/30 rounded-lg px-3 py-1.5">
+                            <Award className="w-3.5 h-3.5 text-emerald-600" />
+                            <span className="text-xs font-bold text-foreground">{a}</span>
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -891,12 +978,19 @@ const CollegeDetailPage = () => {
             </div>
           </div>
 
-          {/* Sidebar */}
-          <div className="space-y-4">
-            <Card>
+          {/* ===== Premium Sidebar ===== */}
+          <div className="space-y-4 lg:sticky lg:top-32 lg:self-start">
+            {/* Quick Info Card */}
+            <Card className="overflow-hidden border-border/60 shadow-lg shadow-primary/5">
+              <div className="h-1.5 bg-gradient-to-r from-primary via-primary/80 to-primary/40" />
               <CardContent className="pt-6">
-                <h3 className="font-heading font-semibold text-foreground mb-4">Quick Info</h3>
-                <div className="space-y-3">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Building className="w-4 h-4 text-primary" />
+                  </div>
+                  <h3 className="font-heading font-bold text-foreground">Quick Info</h3>
+                </div>
+                <div className="space-y-2.5">
                   {[
                     { icon: MapPin, label: "Location", value: `${college.city}, ${college.state}` },
                     { icon: Award, label: "Ranking", value: college.ranking ? `#${college.ranking} (NIRF)` : "N/A" },
@@ -905,46 +999,112 @@ const CollegeDetailPage = () => {
                     { icon: Building, label: "Campus", value: college.campus_size || "N/A" },
                     { icon: Calendar, label: "Established", value: college.established ? String(college.established) : "N/A" },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center"><item.icon className="w-4 h-4 text-primary" /></div>
-                      <div><div className="text-xs text-muted-foreground">{item.label}</div><div className="font-semibold text-foreground text-sm">{item.value}</div></div>
+                    <div key={i} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/40 transition-colors">
+                      <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center flex-shrink-0">
+                        <item.icon className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{item.label}</div>
+                        <div className="font-bold text-foreground text-sm truncate">{item.value}</div>
+                      </div>
                     </div>
                   ))}
                 </div>
                 {college.website && (
                   <a href={college.website} target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" className="w-full mt-4 gap-1"><Globe className="w-4 h-4" /> Visit Website</Button>
+                    <Button variant="outline" className="w-full mt-4 gap-1.5 font-semibold border-primary/30 hover:bg-primary/5 hover:border-primary/50">
+                      <Globe className="w-4 h-4" /> Visit Official Site
+                    </Button>
                   </a>
                 )}
               </CardContent>
             </Card>
 
-            <Card className="border-primary/30 bg-secondary/50">
-              <CardContent className="pt-6 text-center">
-                <GraduationCap className="w-8 h-8 text-primary mx-auto mb-3" />
-                <h4 className="font-heading font-semibold text-foreground mb-1">Total Fees</h4>
-                <p className="font-heading text-2xl font-bold text-primary">{college.fees || "Contact College"}</p>
-                <p className="text-xs text-muted-foreground mt-1">For full program duration</p>
-                <Button className="w-full mt-4" onClick={handleDownloadBrochure}><Download className="w-4 h-4 mr-1" /> Download Brochure</Button>
+            {/* Premium Fees + Brochure Card */}
+            <Card className="overflow-hidden border-0 shadow-2xl shadow-primary/15 bg-gradient-to-br from-primary via-primary/95 to-primary/85 text-primary-foreground relative">
+              <div className="absolute -top-12 -right-12 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+              <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-white/5 rounded-full blur-2xl" />
+              <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: 'radial-gradient(hsl(0 0% 100%) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
+              <CardContent className="pt-6 relative z-10">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider bg-amber-400 text-amber-950 px-2 py-0.5 rounded-md shadow-md">
+                    ★ Featured
+                  </span>
+                  <span className="text-[10px] uppercase tracking-wider text-primary-foreground/70 font-semibold">Total Program Fees</span>
+                </div>
+                <p className="font-heading text-4xl font-extrabold leading-none mb-1 [text-shadow:_0_2px_8px_rgb(0_0_0_/_0.15)]">
+                  {college.fees_lakhs ? `₹${college.fees_lakhs}L` : (college.fees || "Contact College")}
+                </p>
+                <p className="text-xs text-primary-foreground/75 mb-5">For complete 2-year program · GST inclusive</p>
+
+                <Button onClick={handleDownloadBrochure} size="lg" className="w-full bg-white text-primary hover:bg-white/95 font-bold gap-2 shadow-xl mb-2">
+                  <Download className="w-4 h-4" /> Download Brochure
+                </Button>
+                <Button onClick={() => sectionRefs.current["admission"]?.scrollIntoView({ behavior: "smooth" })} variant="outline" className="w-full bg-white/10 backdrop-blur-sm border-white/30 text-primary-foreground hover:bg-white/20 hover:text-primary-foreground hover:border-white/50 font-semibold gap-2">
+                  <GraduationCap className="w-4 h-4" /> Apply Now
+                </Button>
+
+                {/* Trust strip */}
+                <div className="mt-5 pt-4 border-t border-white/20 grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <div className="text-base font-extrabold">100%</div>
+                    <div className="text-[9px] text-primary-foreground/70 uppercase tracking-wider">Verified</div>
+                  </div>
+                  <div className="border-x border-white/20">
+                    <div className="text-base font-extrabold">Free</div>
+                    <div className="text-[9px] text-primary-foreground/70 uppercase tracking-wider">Brochure</div>
+                  </div>
+                  <div>
+                    <div className="text-base font-extrabold">24h</div>
+                    <div className="text-[9px] text-primary-foreground/70 uppercase tracking-wider">Response</div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
-            <Card>
+            {/* Compare Card */}
+            <Card className="overflow-hidden border-border/60 hover:border-primary/30 transition-colors group">
               <CardContent className="pt-6">
-                <h4 className="font-heading font-semibold text-foreground mb-3">Compare Colleges</h4>
-                <Link to="/compare"><Button variant="outline" className="w-full">Compare with Other Colleges</Button></Link>
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                    <TrendingUp className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-heading font-bold text-foreground text-sm">Compare Colleges</h4>
+                    <p className="text-xs text-muted-foreground">Side-by-side analysis of fees, placements & more.</p>
+                  </div>
+                </div>
+                <Link to="/compare">
+                  <Button variant="outline" className="w-full font-semibold border-primary/30 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all">
+                    Open Compare Tool
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
 
+            {/* Suggested Colleges */}
             {suggestedColleges.length > 0 && (
-              <Card>
+              <Card className="overflow-hidden border-border/60">
                 <CardContent className="pt-6">
-                  <h4 className="font-heading font-semibold text-foreground mb-3">Suggested Colleges</h4>
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                      <Star className="w-4 h-4 text-amber-500" />
+                    </div>
+                    <h4 className="font-heading font-bold text-foreground">You May Also Like</h4>
+                  </div>
                   <div className="space-y-2">
                     {suggestedColleges.slice(0, 5).map((sc) => (
-                      <Link key={sc.slug} to={`/college/${sc.slug}`} className="block p-3 rounded-lg hover:bg-muted/50 border border-border transition-colors">
-                        <div className="font-semibold text-foreground text-sm">{sc.name}</div>
-                        <div className="text-xs text-muted-foreground">{sc.city} · Rank #{sc.ranking} · {sc.fees}</div>
+                      <Link key={sc.slug} to={`/college/${sc.slug}`} className="block p-3 rounded-xl hover:bg-primary/5 border border-border hover:border-primary/30 transition-all group/sc">
+                        <div className="flex items-start gap-2">
+                          {sc.ranking && (
+                            <span className="text-[10px] font-extrabold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded flex-shrink-0">#{sc.ranking}</span>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <div className="font-bold text-foreground text-sm group-hover/sc:text-primary transition-colors line-clamp-1">{sc.name}</div>
+                            <div className="text-[11px] text-muted-foreground line-clamp-1">{sc.city} · {sc.fees}</div>
+                          </div>
+                          <ChevronUp className="w-3.5 h-3.5 text-muted-foreground rotate-90 group-hover/sc:text-primary group-hover/sc:translate-x-0.5 transition-all flex-shrink-0" />
+                        </div>
                       </Link>
                     ))}
                   </div>
