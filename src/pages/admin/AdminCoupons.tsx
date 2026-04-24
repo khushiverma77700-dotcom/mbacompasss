@@ -43,7 +43,17 @@ const AdminCoupons = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const { toast } = useToast();
-  const { sortedItems: sortedCoupons, sortConfig, handleSort } = useTableSort(coupons);
+  const instituteMap = useMemo(() => Object.fromEntries(institutes.map((i) => [i.id, i.name])), [institutes]);
+  const { filtered, filters, setFilter, clearAll, activeCount } = useFilteredList(coupons, {
+    storageKey: "admin.coupons.filters",
+    defaults: { search: "", active: "all", institute_id: "all" },
+    searchFields: [(c) => c.code, (c) => c.description, (c) => c.discount_text, (c) => instituteMap[c.institute_id || ""]],
+    fieldFilters: { institute_id: (c) => c.institute_id ?? "" },
+    customPredicates: {
+      active: (val, c) => (val === "active" ? !!c.active : val === "inactive" ? !c.active : true),
+    },
+  });
+  const { sortedItems: sortedCoupons, sortConfig, handleSort } = useTableSort(filtered);
 
   const fetchCoupons = async () => { const { data } = await supabase.from("coupons").select("*").order("created_at", { ascending: false }); if (data) setCoupons(data); };
   const fetchInstitutes = async () => { const { data } = await supabase.from("institutes").select("id, name").order("name"); if (data) setInstitutes(data); };
