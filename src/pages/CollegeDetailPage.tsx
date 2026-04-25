@@ -55,26 +55,41 @@ const CollegeDetailPage = () => {
   const galleryRef = useRef<ReturnType<typeof setInterval>>();
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Fetch college sections from DB
+  // Fetch college sections from DB (only active rows render publicly)
   const { data: dbSections } = useQuery({
     queryKey: ["college-sections", college?.id],
     queryFn: async () => {
-      const { data } = await supabase.from("college_sections").select("*").eq("college_id", college!.id).order("sort_order");
+      const { data } = await supabase
+        .from("college_sections")
+        .select("*")
+        .eq("college_id", college!.id)
+        .eq("is_active", true)
+        .order("sort_order");
       return data || [];
     },
     enabled: !!college?.id,
   });
 
-  // Fetch verified MBA programme portfolio for this college
-  const { data: programmes = [] } = useProgrammeCourses(college?.id);
-
-  // Helper to get section data
-  const getSection = (type: string) => dbSections?.find((s: any) => s.section_type === type);
+  // Helpers — original content is preferred (preserves SEO authority).
+  // AI versions are exposed separately so we can render them as ADDITIONAL extension blocks.
+  const getOriginalSection = (type: string) =>
+    dbSections?.find((s: any) => s.section_type === type && (s.version === "original" || !s.version));
+  const getAISection = (type: string) =>
+    dbSections?.find((s: any) => s.section_type === type && s.version && s.version !== "original");
+  // For data fields (structured data like recruiters, courses) we prefer original; if missing fall back to AI.
+  const getSection = (type: string) => getOriginalSection(type) || getAISection(type);
   const getSectionData = (type: string) => {
     const sec = getSection(type);
-    return sec?.data as any || {};
+    return (sec?.data as any) || {};
   };
   const getSectionContent = (type: string) => getSection(type)?.content || "";
+  const getAIExtension = (type: string) => {
+    const ai = getAISection(type);
+    if (!ai) return null;
+    // Only show as "extension" when an original also exists. Otherwise it's already the primary content.
+    const hasOriginal = !!getOriginalSection(type);
+    return hasOriginal ? ai : null;
+  };
 
   const scrollToSection = useCallback((sectionId: string) => {
     if (!user) { setShowLoginDialog(true); return; }
