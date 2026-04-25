@@ -18,7 +18,7 @@ const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const CONCURRENCY = 1;
 const AI_WRITER_MAX_ATTEMPTS = 1;
 const AI_RETRY_BASE_DELAY_MS = 2500;
-const ROWS_PER_INVOCATION = 1;
+const ROWS_PER_INVOCATION = 10; // matches POOL_MAX so live concurrency 1–10 has real effect
 const AI_WRITER_TIMEOUT_MS = 125_000;
 const STALE_PROCESSING_MS = 4 * 60_000;
 
