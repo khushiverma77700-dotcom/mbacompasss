@@ -239,13 +239,13 @@ const AdminBulkCreateColleges = () => {
       toast({ title: "Restart failed", description: fetchErr?.message || "Job not found", variant: "destructive" });
       return;
     }
-    const resetRows = (j.rows as RowState[]).map(r =>
+    const resetRows = ((j.rows as unknown) as RowState[]).map(r =>
       r.status === "succeeded" || r.status === "duplicate"
         ? r
         : { ...r, status: "pending" as const, step: undefined, error: undefined }
     );
     await supabase.from("bulk_college_jobs").update({
-      rows: resetRows,
+      rows: resetRows as any,
       status: "pending",
       current_activity: "Restarting…",
       finished_at: null,
