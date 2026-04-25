@@ -88,10 +88,12 @@ export default function AdminBulkGenerateSections() {
 
   useEffect(() => { loadRecent(); }, []);
 
-  // Poll active job every 2s
+  // Poll active job every 2s — re-arms whenever status flips back to active
   useEffect(() => {
     if (!job) return;
-    if (pollRef.current) window.clearInterval(pollRef.current);
+    const isTerminal = job.status === "completed" || job.status === "failed" || job.status === "cancelled";
+    if (pollRef.current) { window.clearInterval(pollRef.current); pollRef.current = null; }
+    if (isTerminal) { loadRecent(); return; }
     const tick = async () => {
       const { data } = await supabase
         .from("bulk_section_jobs").select("*").eq("id", job.id).maybeSingle();
@@ -105,7 +107,7 @@ export default function AdminBulkGenerateSections() {
     pollRef.current = window.setInterval(tick, 2000);
     tick();
     return () => { if (pollRef.current) window.clearInterval(pollRef.current); };
-  }, [job?.id]);
+  }, [job?.id, job?.status]);
 
   const handleSubmit = async () => {
     if (parsedNames.length === 0) {
@@ -206,6 +208,9 @@ export default function AdminBulkGenerateSections() {
       toast({ title: "Restart failed", description: error.message, variant: "destructive" });
       return;
     }
+    const { data: refreshed } = await supabase
+      .from("bulk_section_jobs").select("*").eq("id", jobId).maybeSingle();
+    if (refreshed) setJob(refreshed as any);
     toast({ title: "Job restarted", description: "Pending colleges/sections are being processed again." });
   };
 
@@ -314,6 +319,10 @@ export default function AdminBulkGenerateSections() {
     }
     const recoveredMsg = Object.keys(rematched).length > 0 ? ` · ${Object.keys(rematched).length} not-found recovered` : "";
     const stillMsg = stillNotFound > 0 ? ` · ${stillNotFound} still not found` : "";
+    // Immediately refresh local job state so the UI re-arms polling and shows progress
+    const { data: refreshed } = await supabase
+      .from("bulk_section_jobs").select("*").eq("id", jobId).maybeSingle();
+    if (refreshed) setJob(refreshed as any);
     toast({
       title: "Started All",
       description: `${requeuedRows} college(s) · ${requeuedSteps} section(s) re-queued${recoveredMsg}${stillMsg}`,
@@ -362,6 +371,9 @@ export default function AdminBulkGenerateSections() {
       toast({ title: "Retry failed", description: error.message, variant: "destructive" });
       return;
     }
+    const { data: refreshed } = await supabase
+      .from("bulk_section_jobs").select("*").eq("id", jobId).maybeSingle();
+    if (refreshed) setJob(refreshed as any);
     toast({ title: "Retrying failed sections", description: `${failedSteps} section${failedSteps === 1 ? "" : "s"} re-queued.` });
   };
 
