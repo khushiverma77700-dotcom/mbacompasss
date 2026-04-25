@@ -91,26 +91,11 @@ interface LogParams {
 }
 
 export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Promise<Response> {
-  const { signal, feature = "unknown", userId = null, maxRetries = 2, skipLog = false } = opts;
-  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+  const { signal, feature = "unknown", userId = null, maxRetries = 2, skipLog = false, provider = "gemini" } = opts;
   const isStream = body.stream === true;
   const startedAt = Date.now();
 
-  if (!geminiKey) {
-    const err = "GEMINI_API_KEY is not configured.";
-    console.error(`[aiGateway][${feature}] ${err}`);
-    if (!skipLog) {
-      await logUsage({
-        feature, model: body.model, userId,
-        provider: "none", status: "error",
-        errorMessage: err, latencyMs: 0,
-      });
-    }
-    return new Response(JSON.stringify({ error: err }), {
-      status: 500, headers: { "Content-Type": "application/json" },
-    });
-  }
-
+  // Validate tools spec early — same for both providers.
   if (Array.isArray(body.tools)) {
     const validation = validateToolSpec(body.tools);
     if (!validation.ok) {
@@ -127,6 +112,52 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
         status: 400, headers: { "Content-Type": "application/json" },
       });
     }
+  }
+
+  // ── Provider: Lovable AI Gateway ─────────────────────────────────────────────
+  if (provider === "lovable") {
+    const lovableKey = Deno.env.get("LOVABLE_API_KEY");
+    if (!lovableKey) {
+      const err = "LOVABLE_API_KEY is not configured.";
+      console.error(`[aiGateway][${feature}] ${err}`);
+      if (!skipLog) {
+        await logUsage({ feature, model: body.model, userId, provider: "none", status: "error", errorMessage: err, latencyMs: 0 });
+      }
+      return new Response(JSON.stringify({ error: err }), { status: 500, headers: { "Content-Type": "application/json" } });
+    }
+
+    // Lovable AI accepts the model IDs as-is (e.g. "google/gemini-3-flash-preview")
+    // so we pass body.model unchanged. We still strip Gemini-only fields just in case.
+    const payload = buildLovablePayload(body);
+    try {
+      const resp = await withRetry(
+        () => callUpstream(LOVABLE_GATEWAY_URL, lovableKey, payload, signal),
+        { maxRetries, label: `lovable[${feature}]` },
+      );
+      if (!skipLog) {
+        if (resp.ok) logSuccess(resp, isStream, feature, body.model, userId, "lovable", startedAt);
+        else await logErrorFromResp(resp, feature, body.model, userId, "lovable", startedAt);
+      }
+      return resp;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error(`[aiGateway][${feature}] Lovable call threw:`, msg);
+      if (!skipLog) {
+        await logUsage({ feature, model: body.model, userId, provider: "lovable", status: "error", errorMessage: msg, latencyMs: Date.now() - startedAt });
+      }
+      return new Response(JSON.stringify({ error: msg }), { status: 502, headers: { "Content-Type": "application/json" } });
+    }
+  }
+
+  // ── Provider: Direct Gemini (default) ────────────────────────────────────────
+  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+  if (!geminiKey) {
+    const err = "GEMINI_API_KEY is not configured.";
+    console.error(`[aiGateway][${feature}] ${err}`);
+    if (!skipLog) {
+      await logUsage({ feature, model: body.model, userId, provider: "none", status: "error", errorMessage: err, latencyMs: 0 });
+    }
+    return new Response(JSON.stringify({ error: err }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 
   const geminiModel = resolveGeminiModel(body.model);
@@ -162,11 +193,28 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
   }
 }
 
-function resolveGeminiModel(model?: string): string {
-  const raw = (model || "gemini-3-flash-preview").trim();
-  if (MODEL_ALIASES[raw]) return MODEL_ALIASES[raw];
-  return raw.replace(/^google\//, "").replace(/^openai\//, "");
+function buildLovablePayload(body: ChatBody) {
+  // Mirror buildOpenAICompatPayload but keep the model ID as-is (Lovable expects "google/..." or "openai/...").
+  const maxTokens = body.max_tokens ?? body.generationConfig?.maxOutputTokens;
+  const temperature = body.temperature ?? body.generationConfig?.temperature;
+  const reasoningEffort = typeof body.reasoning?.effort === "string" ? body.reasoning.effort : undefined;
+  const payload: Record<string, unknown> = {
+    model: body.model || "google/gemini-3-flash-preview",
+    messages: body.messages,
+  };
+  if (typeof body.stream === "boolean") payload.stream = body.stream;
+  if (typeof maxTokens === "number") payload.max_tokens = maxTokens;
+  if (typeof temperature === "number") payload.temperature = temperature;
+  if (typeof body.top_p === "number") payload.top_p = body.top_p;
+  if (typeof body.frequency_penalty === "number") payload.frequency_penalty = body.frequency_penalty;
+  if (typeof body.presence_penalty === "number") payload.presence_penalty = body.presence_penalty;
+  if (body.response_format) payload.response_format = body.response_format;
+  if (Array.isArray(body.tools) && body.tools.length > 0) payload.tools = body.tools;
+  if (body.tool_choice) payload.tool_choice = body.tool_choice;
+  if (reasoningEffort) payload.reasoning = { effort: reasoningEffort };
+  return payload;
 }
+
 
 function buildOpenAICompatPayload(body: ChatBody, model: string) {
   const maxTokens = body.max_tokens ?? body.generationConfig?.maxOutputTokens;
