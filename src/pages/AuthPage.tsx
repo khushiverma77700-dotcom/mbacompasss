@@ -348,6 +348,24 @@ const AuthPage = () => {
               {isLogin ? "Sign up" : "Sign in"}
             </button>
           </div>
+
+          {/* Trust footer — reduces "deceptive page" false positives by clearly identifying brand + policies */}
+          <div className="pt-4 mt-2 border-t border-border space-y-2 text-center">
+            <p className="text-xs text-muted-foreground flex items-center justify-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              Secure sign-in by <span className="font-semibold text-foreground">MBA Compass</span> — an Indian MBA discovery platform.
+            </p>
+            <div className="flex items-center justify-center gap-3 text-xs text-muted-foreground">
+              <Link to="/page/privacy-policy" className="hover:text-primary hover:underline">Privacy Policy</Link>
+              <span>•</span>
+              <Link to="/page/terms-and-conditions" className="hover:text-primary hover:underline">Terms</Link>
+              <span>•</span>
+              <Link to="/contact" className="hover:text-primary hover:underline">Contact</Link>
+            </div>
+            <p className="text-[10px] text-muted-foreground/70">
+              We never ask for payment, OTPs, or banking details on this page.
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
