@@ -45,6 +45,9 @@ interface Job {
   started_at: string | null;
   finished_at: string | null;
   created_at: string;
+  paused?: boolean;
+  concurrency?: number;
+  updated_at?: string | null;
 }
 
 const PER_STEP_SECONDS = 35; // rough estimate per AI section call (single safe worker)
