@@ -594,19 +594,19 @@ export default function AdminBulkGenerateSections() {
               </div>
               <div className="rounded-md border border-border bg-background p-2">
                 <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Steps Done</div>
-                <div className="text-base font-bold text-primary">{job.steps_done} / {job.total_steps}</div>
+                <div className="text-base font-bold text-primary">{liveMetrics.stepsDone} / {liveMetrics.totalSteps}</div>
               </div>
               <div className="rounded-md border border-emerald-200 bg-emerald-50 p-2">
                 <div className="text-[10px] uppercase tracking-wide text-emerald-700">Succeeded</div>
-                <div className="text-base font-bold text-emerald-700">{job.succeeded}</div>
+                <div className="text-base font-bold text-emerald-700">{liveMetrics.succeeded}</div>
               </div>
               <div className="rounded-md border border-destructive/30 bg-destructive/5 p-2">
                 <div className="text-[10px] uppercase tracking-wide text-destructive">Failed</div>
-                <div className="text-base font-bold text-destructive">{job.failed}</div>
+                <div className="text-base font-bold text-destructive">{liveMetrics.failed}</div>
               </div>
               <div className="rounded-md border border-amber-200 bg-amber-50 p-2">
                 <div className="text-[10px] uppercase tracking-wide text-amber-700">Not Found</div>
-                <div className="text-base font-bold text-amber-700">{job.not_found}</div>
+                <div className="text-base font-bold text-amber-700">{liveMetrics.notFound}</div>
               </div>
               <div className="rounded-md border border-border bg-background p-2">
                 <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1 justify-center"><Clock className="w-3 h-3" /> ETA</div>
