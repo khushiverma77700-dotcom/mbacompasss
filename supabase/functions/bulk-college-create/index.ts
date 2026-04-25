@@ -15,7 +15,15 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-const CONCURRENCY = 2;
+const CONCURRENCY = 1;
+const AI_WRITER_MAX_ATTEMPTS = 3;
+const AI_RETRY_BASE_DELAY_MS = 2500;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isRetryableAIWriterFailure = (status: number, text: string) =>
+  status === 408 || status === 429 || status >= 500 ||
+  /malformed json|unterminated string|unexpected end|truncated|ai generation failed|empty college/i.test(text);
 
 const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
