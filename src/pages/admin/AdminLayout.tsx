@@ -82,6 +82,7 @@ const adminNavGroups = [
       { label: "MBA ROI Analyses", path: "/admin/roi-analyses", icon: TrendingUp },
       { label: "Citation Sources Audit", path: "/admin/citations-audit", icon: Link2 },
       { label: "Content Refresh Queue", path: "/admin/content-refreshes", icon: RefreshCw },
+      { label: "Hyperlink Update", path: "/admin/hyperlink-update", icon: Link2 },
     ],
   },
   {
