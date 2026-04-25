@@ -82,6 +82,8 @@ class TelemetryTracker {
         recent: Array.isArray(network.recent) ? network.recent.slice(-25) : [],
       },
       db: { writes: Number(initial?.db?.writes || 0) },
+      workerSlots: Array.isArray(initial?.workerSlots) ? initial.workerSlots.slice(-10) : [],
+      healthTimeline: Array.isArray(initial?.healthTimeline) ? initial.healthTimeline.slice(-100) : [],
       timeline: Array.isArray(initial?.timeline) ? initial.timeline.slice(-TELEMETRY_LIMIT) : [],
       events: Array.isArray(initial?.events) ? initial.events.slice(-12) : [],
     };
@@ -91,6 +93,30 @@ class TelemetryTracker {
   setActive(n: number) {
     this.state.activeWorkers = n;
     this.state.peakActiveWorkers = Math.max(this.state.peakActiveWorkers || 0, n);
+  }
+
+  updateSlot(slotIndex: number, patch: Record<string, unknown>) {
+    const now = new Date().toISOString();
+    const slots = Array.isArray(this.state.workerSlots) ? [...this.state.workerSlots] : [];
+    slots[slotIndex] = {
+      slot: slotIndex + 1,
+      slot_id: `${this.state.workerId}:slot-${slotIndex + 1}`,
+      job_id: patch.job_id || slots[slotIndex]?.job_id || null,
+      state: patch.state || slots[slotIndex]?.state || "idle",
+      last_heartbeat: now,
+      last_processed_at: patch.last_processed_at || slots[slotIndex]?.last_processed_at || null,
+      current_item: patch.current_item ?? slots[slotIndex]?.current_item ?? null,
+      current_step: patch.current_step ?? slots[slotIndex]?.current_step ?? null,
+      enabled: patch.enabled ?? slots[slotIndex]?.enabled ?? true,
+    };
+    this.state.workerSlots = slots.slice(0, 10);
+  }
+
+  addHealth(state: string, label: string, meta: Record<string, unknown> = {}) {
+    this.state.healthTimeline = [
+      ...(this.state.healthTimeline || []),
+      { ts: Date.now(), state, label, job_id: meta.job_id || null, worker_id: this.state.workerId, ...meta },
+    ].slice(-100);
   }
   addBusy(ms: number) {
     this.state.cpu.busyMs += Math.max(0, ms);
@@ -638,6 +664,7 @@ async function runJob(job_id: string, authHeader: string) {
     return;
   }
   const tracker = new TelemetryTracker((job as any).telemetry, workerId);
+  tracker.addHealth("locked", "Worker lock acquired", { job_id });
 
   try {
     const rows = (job.rows as RowState[]).map((r) => {
@@ -657,6 +684,7 @@ async function runJob(job_id: string, authHeader: string) {
       };
     });
     const rowsRef = { value: rows };
+    tracker.addHealth("queued", `${computeSectionMetrics(rows).pending_steps} section step(s) queued`, { job_id, queued: computeSectionMetrics(rows).pending_steps });
 
     await updateBulkJob(admin, "bulk_section_jobs", job_id, workerId, tracker, {
       status: "running",
@@ -687,16 +715,26 @@ async function runJob(job_id: string, authHeader: string) {
     const slots = 10;
     const workers = Array.from({ length: slots }, async (_, slotIdx) => {
       while (true) {
-        if (cancelFlag.v || pauseFlag.v) return;
+        tracker.updateSlot(slotIdx, { job_id, enabled: slotIdx < concurrencyRef.v, state: slotIdx < concurrencyRef.v ? "idle" : "disabled" });
+        if (cancelFlag.v || pauseFlag.v) {
+          tracker.updateSlot(slotIdx, { job_id, state: pauseFlag.v ? "paused" : "cancelled", enabled: slotIdx < concurrencyRef.v });
+          return;
+        }
         if (slotIdx >= concurrencyRef.v) {
+          tracker.updateSlot(slotIdx, { job_id, state: "disabled", enabled: false });
           if (cursor >= slots || !hasPendingStep()) return;
           await sleep(500);
           continue;
         }
         const myIdx = cursor++;
-        if (myIdx >= slots || !hasPendingStep()) return;
+        if (myIdx >= slots || !hasPendingStep()) {
+          tracker.updateSlot(slotIdx, { job_id, state: "idle", enabled: true });
+          return;
+        }
         activeRef.n += 1;
         tracker.setActive(activeRef.n);
+        tracker.updateSlot(slotIdx, { job_id, state: "processing", current_item: "section work unit", current_step: `slot ${slotIdx + 1}` });
+        tracker.addHealth("processing", `Slot ${slotIdx + 1} processing a section step`, { job_id, slot: slotIdx + 1 });
         const busyStarted = Date.now();
         try {
           const didWork = await processOneSectionStep(admin, authHeader, job_id, rowsRef, cancelFlag, tracker, workerId);
@@ -707,6 +745,7 @@ async function runJob(job_id: string, authHeader: string) {
           tracker.addBusy(Date.now() - busyStarted);
           activeRef.n = Math.max(0, activeRef.n - 1);
           tracker.setActive(activeRef.n);
+          tracker.updateSlot(slotIdx, { job_id, state: "idle", current_item: "section work unit", current_step: "completed or no work", last_processed_at: new Date().toISOString() });
         }
       }
     });
@@ -741,6 +780,7 @@ async function runJob(job_id: string, authHeader: string) {
     const { data: latest } = await admin.from("bulk_section_jobs")
       .select("paused,status").eq("id", job_id).maybeSingle();
     if ((latest as any)?.paused) {
+      tracker.addHealth("paused", "Worker parked after admin pause", { job_id });
       await releaseWorkerLock(admin, "bulk_section_jobs", job_id, workerId, tracker, {
         status: "running",
         rows: rowsRef.value,
@@ -753,6 +793,7 @@ async function runJob(job_id: string, authHeader: string) {
     const remaining = rowsRef.value.filter(r => r.status === "pending" && (r.steps || []).some(s => s.status === "pending")).length;
 
     if (remaining > 0) {
+      tracker.addHealth("resumed", `Worker run complete; scheduling next chunk with ${remaining} college(s) pending`, { job_id, remaining });
       await releaseWorkerLock(admin, "bulk_section_jobs", job_id, workerId, tracker, {
         status: "running",
         rows: rowsRef.value,
@@ -773,6 +814,7 @@ async function runJob(job_id: string, authHeader: string) {
       return;
     }
 
+    tracker.addHealth("completed", "All section steps completed", { job_id });
     await releaseWorkerLock(admin, "bulk_section_jobs", job_id, workerId, tracker, {
       status: "completed",
       finished_at: new Date().toISOString(),

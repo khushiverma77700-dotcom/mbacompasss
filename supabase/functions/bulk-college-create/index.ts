@@ -102,6 +102,8 @@ class TelemetryTracker {
         recent: Array.isArray(network.recent) ? network.recent.slice(-25) : [],
       },
       db: { writes: Number(initial?.db?.writes || 0) },
+      workerSlots: Array.isArray(initial?.workerSlots) ? initial.workerSlots.slice(-10) : [],
+      healthTimeline: Array.isArray(initial?.healthTimeline) ? initial.healthTimeline.slice(-80) : [],
       timeline: Array.isArray(initial?.timeline) ? initial.timeline.slice(-TELEMETRY_LIMIT) : [],
       events: Array.isArray(initial?.events) ? initial.events.slice(-12) : [],
     };
@@ -114,6 +116,30 @@ class TelemetryTracker {
   setActive(n: number) {
     this.state.activeWorkers = n;
     this.state.peakActiveWorkers = Math.max(this.state.peakActiveWorkers || 0, n);
+  }
+
+  updateSlot(slotIndex: number, patch: Record<string, unknown>) {
+    const now = new Date().toISOString();
+    const slots = Array.isArray(this.state.workerSlots) ? [...this.state.workerSlots] : [];
+    slots[slotIndex] = {
+      slot: slotIndex + 1,
+      slot_id: `${this.state.workerId}:slot-${slotIndex + 1}`,
+      job_id: patch.job_id || slots[slotIndex]?.job_id || null,
+      state: patch.state || slots[slotIndex]?.state || "idle",
+      last_heartbeat: now,
+      last_processed_at: patch.last_processed_at || slots[slotIndex]?.last_processed_at || null,
+      current_item: patch.current_item ?? slots[slotIndex]?.current_item ?? null,
+      current_step: patch.current_step ?? slots[slotIndex]?.current_step ?? null,
+      enabled: patch.enabled ?? slots[slotIndex]?.enabled ?? true,
+    };
+    this.state.workerSlots = slots.slice(0, 10);
+  }
+
+  addHealth(state: string, label: string, meta: Record<string, unknown> = {}) {
+    this.state.healthTimeline = [
+      ...(this.state.healthTimeline || []),
+      { ts: Date.now(), state, label, job_id: meta.job_id || null, worker_id: this.state.workerId, ...meta },
+    ].slice(-80);
   }
 
   addBusy(ms: number) {
@@ -471,6 +497,7 @@ async function runJob(job_id: string, authHeader: string) {
   }
 
   const tracker = new TelemetryTracker((job as any).telemetry, workerId);
+    tracker.addHealth("locked", "Worker lock acquired", { job_id });
 
   try {
     const allRows: RowState[] = (job.rows as RowState[]).map((r) => {
@@ -495,6 +522,7 @@ async function runJob(job_id: string, authHeader: string) {
       .sort((a, b) => a.index - b.index)
       .slice(0, ROWS_PER_INVOCATION);
     const rowsRef = { value: allRows };
+    tracker.addHealth("queued", `${pending.length} row(s) queued for this worker run`, { job_id, queued: pending.length });
 
     const cancelFlag = { v: false };
     const pauseFlag = { v: false };
@@ -517,23 +545,34 @@ async function runJob(job_id: string, authHeader: string) {
     const slots = 10;
     const workers = Array.from({ length: slots }, async (_, slotIdx) => {
       while (true) {
-        if (cancelFlag.v || pauseFlag.v) return;
+        tracker.updateSlot(slotIdx, { job_id, enabled: slotIdx < concurrencyRef.v, state: slotIdx < concurrencyRef.v ? "idle" : "disabled" });
+        if (cancelFlag.v || pauseFlag.v) {
+          tracker.updateSlot(slotIdx, { job_id, state: pauseFlag.v ? "paused" : "cancelled", enabled: slotIdx < concurrencyRef.v });
+          return;
+        }
         if (slotIdx >= concurrencyRef.v) {
+          tracker.updateSlot(slotIdx, { job_id, state: "disabled", enabled: false });
           if (cursor >= pending.length) return;
           await sleep(500);
           continue;
         }
         const myIdx = cursor++;
-        if (myIdx >= pending.length) return;
+        if (myIdx >= pending.length) {
+          tracker.updateSlot(slotIdx, { job_id, state: "idle", enabled: true });
+          return;
+        }
         const row = pending[myIdx];
         const input = inputsByIndex[row.index];
         if (!input) {
           row.status = "failed";
           row.error = "Missing input";
+          tracker.updateSlot(slotIdx, { job_id, state: "failed", current_item: row.name, current_step: "missing input", last_processed_at: new Date().toISOString() });
           continue;
         }
         activeRef.n += 1;
         tracker.setActive(activeRef.n);
+        tracker.updateSlot(slotIdx, { job_id, state: "processing", current_item: row.name, current_step: "starting" });
+        tracker.addHealth("processing", `Slot ${slotIdx + 1} processing ${row.name}`, { job_id, slot: slotIdx + 1, row: row.index + 1 });
         const busyStarted = Date.now();
         try {
           await processOne(admin, authHeader, job_id, allRows, rowsRef, row, input, cancelFlag, tracker, workerId);
@@ -541,6 +580,7 @@ async function runJob(job_id: string, authHeader: string) {
           tracker.addBusy(Date.now() - busyStarted);
           activeRef.n = Math.max(0, activeRef.n - 1);
           tracker.setActive(activeRef.n);
+          tracker.updateSlot(slotIdx, { job_id, state: "idle", current_item: row.name, current_step: row.step || row.status, last_processed_at: new Date().toISOString() });
         }
 
         const liveMetrics = computeCollegeMetrics(rowsRef.value);
@@ -579,6 +619,7 @@ async function runJob(job_id: string, authHeader: string) {
     const { data: latest } = await admin.from("bulk_college_jobs")
       .select("paused,status").eq("id", job_id).maybeSingle();
     if ((latest as any)?.paused) {
+      tracker.addHealth("paused", "Worker parked after admin pause", { job_id });
       await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
         status: "running",
         rows: rowsRef.value,
@@ -591,6 +632,7 @@ async function runJob(job_id: string, authHeader: string) {
     const remaining = finalMetrics.pending;
 
     if (remaining > 0) {
+      tracker.addHealth("resumed", `Worker run complete; scheduling next chunk with ${remaining} pending`, { job_id, remaining });
       await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
         status: "running",
         rows: rowsRef.value,
@@ -611,6 +653,7 @@ async function runJob(job_id: string, authHeader: string) {
       return;
     }
 
+    tracker.addHealth("completed", "All rows completed", { job_id });
     await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
       status: "completed",
       finished_at: new Date().toISOString(),
