@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft, Upload, Sparkles, FileSpreadsheet, Download, AlertCircle,
-  CheckCircle2, XCircle, Loader2, Copy, ExternalLink, Pause,
+  CheckCircle2, XCircle, Loader2, Copy, ExternalLink, Pause, Ban, RotateCw,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -118,6 +118,9 @@ const statusBadge = (s: RowState["status"]) => {
     duplicate: "bg-amber-100 text-amber-800 border-amber-300",
     succeeded: "bg-emerald-100 text-emerald-800 border-emerald-300",
     failed: "bg-red-100 text-red-800 border-red-300",
+    cancelled: "bg-orange-100 text-orange-800 border-orange-300",
+    completed: "bg-emerald-100 text-emerald-800 border-emerald-300",
+    running: "bg-blue-100 text-blue-800 border-blue-300",
   };
   return map[s] || map.pending;
 };
@@ -217,6 +220,51 @@ const AdminBulkCreateColleges = () => {
 
   const progressPct = job ? Math.round((job.completed / Math.max(job.total_rows, 1)) * 100) : 0;
   const isActive = job?.status === "running" || job?.status === "pending";
+
+  const cancelJob = async (jobId: string) => {
+    if (!confirm("Cancel this job? Rows already processed will keep their results.")) return;
+    const { error } = await supabase
+      .from("bulk_college_jobs")
+      .update({ status: "cancelled", current_activity: "Cancelling…" })
+      .eq("id", jobId);
+    if (error) {
+      toast({ title: "Cancel failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Cancelling…", description: "Worker will stop after the current row." });
+  };
+
+  const restartJob = async (jobId: string) => {
+    if (!confirm("Restart this job? All pending/failed/cancelled rows will be re-queued.")) return;
+    const { data: j, error: fetchErr } = await supabase
+      .from("bulk_college_jobs").select("rows").eq("id", jobId).maybeSingle();
+    if (fetchErr || !j) {
+      toast({ title: "Restart failed", description: fetchErr?.message || "Job not found", variant: "destructive" });
+      return;
+    }
+    const resetRows = ((j.rows as unknown) as RowState[]).map(r =>
+      r.status === "succeeded" || r.status === "duplicate"
+        ? r
+        : { ...r, status: "pending" as const, step: undefined, error: undefined }
+    );
+    await supabase.from("bulk_college_jobs").update({
+      rows: resetRows as any,
+      status: "pending",
+      current_activity: "Restarting…",
+      finished_at: null,
+    }).eq("id", jobId);
+
+    const { data: { session } } = await supabase.auth.getSession();
+    const { error } = await supabase.functions.invoke("bulk-college-create", {
+      body: { action: "resume", job_id: jobId },
+      headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
+    });
+    if (error) {
+      toast({ title: "Restart failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Job restarted", description: "Pending rows are being processed again." });
+  };
 
   return (
     <div className="space-y-6 max-w-6xl">
@@ -416,6 +464,18 @@ const AdminBulkCreateColleges = () => {
                 {job.duplicates_skipped > 0 && <span className="text-amber-600 font-medium">⊘ {job.duplicates_skipped} duplicate</span>}
                 <span className="font-bold text-primary text-base">{progressPct}%</span>
               </div>
+            </div>
+            <div className="flex items-center gap-2 mt-3">
+              {isActive && (
+                <Button size="sm" variant="destructive" onClick={() => cancelJob(job.id)}>
+                  <Ban className="h-3.5 w-3.5 mr-1.5" /> Cancel
+                </Button>
+              )}
+              {!isActive && (job.failed > 0 || job.completed < job.total_rows - job.duplicates_skipped) && (
+                <Button size="sm" variant="outline" onClick={() => restartJob(job.id)}>
+                  <RotateCw className="h-3.5 w-3.5 mr-1.5" /> Restart pending/failed
+                </Button>
+              )}
             </div>
           </CardHeader>
           <CardContent className="space-y-4">

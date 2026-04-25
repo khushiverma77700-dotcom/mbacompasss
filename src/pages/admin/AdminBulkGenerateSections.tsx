@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft, Sparkles, Loader2, CheckCircle2, XCircle, AlertTriangle,
-  ChevronDown, ChevronRight, Clock, ListChecks, Play,
+  ChevronDown, ChevronRight, Clock, ListChecks, Play, Ban, RotateCw,
 } from "lucide-react";
 
 interface SectionStep {
@@ -96,7 +96,7 @@ export default function AdminBulkGenerateSections() {
       const { data } = await supabase
         .from("bulk_section_jobs").select("*").eq("id", job.id).maybeSingle();
       if (data) setJob(data as any);
-      if (data && (data.status === "completed" || data.status === "failed")) {
+      if (data && (data.status === "completed" || data.status === "failed" || data.status === "cancelled")) {
         if (pollRef.current) window.clearInterval(pollRef.current);
         pollRef.current = null;
         loadRecent();
@@ -158,6 +158,57 @@ export default function AdminBulkGenerateSections() {
     const end = job.finished_at ? new Date(job.finished_at).getTime() : Date.now();
     return (end - new Date(job.started_at).getTime()) / 1000;
   }, [job]);
+
+  const cancelJob = async (jobId: string) => {
+    if (!confirm("Cancel this job? The current college will finish, then the worker stops.")) return;
+    const { error } = await supabase
+      .from("bulk_section_jobs")
+      .update({ status: "cancelled", current_activity: "Cancelling…" })
+      .eq("id", jobId);
+    if (error) {
+      toast({ title: "Cancel failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Cancelling…", description: "Worker will stop after the current college." });
+  };
+
+  const restartJob = async (jobId: string) => {
+    if (!confirm("Restart this job? Pending and failed colleges/sections will be re-queued.")) return;
+    const { data: j, error: fetchErr } = await supabase
+      .from("bulk_section_jobs").select("rows").eq("id", jobId).maybeSingle();
+    if (fetchErr || !j) {
+      toast({ title: "Restart failed", description: fetchErr?.message || "Job not found", variant: "destructive" });
+      return;
+    }
+    const resetRows = ((j.rows as unknown) as RowState[]).map(r => {
+      if (r.status === "succeeded" || r.status === "not_found") return r;
+      return {
+        ...r,
+        status: "pending" as const,
+        error: undefined,
+        steps: (r.steps || []).map(s =>
+          s.status === "succeeded" ? s : { ...s, status: "pending" as const, error: undefined }
+        ),
+      };
+    });
+    await supabase.from("bulk_section_jobs").update({
+      rows: resetRows as any,
+      status: "pending",
+      current_activity: "Restarting…",
+      finished_at: null,
+    }).eq("id", jobId);
+
+    const { data: { session } } = await supabase.auth.getSession();
+    const { error } = await supabase.functions.invoke("bulk-section-create", {
+      body: { action: "resume", job_id: jobId },
+      headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
+    });
+    if (error) {
+      toast({ title: "Restart failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Job restarted", description: "Pending colleges/sections are being processed again." });
+  };
 
   return (
     <div className="space-y-6">
@@ -226,7 +277,19 @@ export default function AdminBulkGenerateSections() {
                     : <AlertTriangle className="w-4 h-4 text-amber-600" />}
                 Job · {job.status}
               </CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => setJob(null)}>New job</Button>
+              <div className="flex items-center gap-2">
+                {(job.status === "running" || job.status === "pending") && (
+                  <Button size="sm" variant="destructive" onClick={() => cancelJob(job.id)}>
+                    <Ban className="w-3.5 h-3.5 mr-1.5" /> Cancel
+                  </Button>
+                )}
+                {(job.status === "completed" || job.status === "failed" || job.status === "cancelled") && (
+                  <Button size="sm" variant="outline" onClick={() => restartJob(job.id)}>
+                    <RotateCw className="w-3.5 h-3.5 mr-1.5" /> Restart
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={() => setJob(null)}>New job</Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
