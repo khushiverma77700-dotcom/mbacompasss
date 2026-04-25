@@ -165,6 +165,69 @@ const BulkLiveControlPanel = ({
   const cpuHistory = useRolling(browserCpu);
   const loadHistory = useRolling(serverLoad);
 
+  // Per-second ops history (for heatmap) — tracks delta of (succeeded+failed)
+  const [opsHistory, setOpsHistory] = useState<number[]>([]);
+  const lastTotalRef = useRef(succeeded + failed);
+  useEffect(() => {
+    const t = setInterval(() => {
+      const cur = succeeded + failed;
+      const delta = Math.max(0, cur - lastTotalRef.current);
+      lastTotalRef.current = cur;
+      setOpsHistory((h) => [...h, delta].slice(-60));
+    }, 1000);
+    return () => clearInterval(t);
+  }, [succeeded, failed]);
+
+  // Live event ticker (last 8)
+  const [events, setEvents] = useState<{ ts: number; kind: "ok" | "fail" | "info"; msg: string }[]>([]);
+  const lastSucc = useRef(succeeded);
+  const lastFail = useRef(failed);
+  useEffect(() => {
+    const newOk = Math.max(0, succeeded - lastSucc.current);
+    const newFail = Math.max(0, failed - lastFail.current);
+    if (newOk > 0 || newFail > 0) {
+      setEvents((prev) => {
+        const add: typeof prev = [];
+        if (newOk > 0) add.push({ ts: Date.now(), kind: "ok", msg: `${newOk} item${newOk > 1 ? "s" : ""} completed by worker` });
+        if (newFail > 0) add.push({ ts: Date.now(), kind: "fail", msg: `${newFail} item${newFail > 1 ? "s" : ""} failed — check logs` });
+        return [...add, ...prev].slice(0, 8);
+      });
+    }
+    lastSucc.current = succeeded;
+    lastFail.current = failed;
+  }, [succeeded, failed]);
+
+  useEffect(() => {
+    setEvents((p) => [{ ts: Date.now(), kind: "info", msg: paused ? "Job paused by admin" : "Job resumed — workers warming up" }, ...p].slice(0, 8));
+  }, [paused]);
+
+  // Approximate AI gateway latency (ms) — derived from throughput per slot
+  const latencyMs = useMemo(() => {
+    if (tickRate <= 0 || active === 0) return 0;
+    // each active slot completes (tickRate/active) items per minute → ms per item
+    const perSlotPerMin = tickRate / Math.max(1, active);
+    if (perSlotPerMin <= 0) return 0;
+    return Math.round((60_000 / perSlotPerMin));
+  }, [tickRate, active]);
+
+  // ETA
+  const remaining = Math.max(0, total - succeeded - failed);
+  const etaSec = tickRate > 0 ? Math.round((remaining / tickRate) * 60) : 0;
+  const fmtEta = (s: number) => {
+    if (!s) return "—";
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
+    return h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${ss}s` : `${ss}s`;
+  };
+
+  // Progress %
+  const completedAll = succeeded + failed;
+  const progressPct = total > 0 ? Math.round((completedAll / total) * 100) : 0;
+  const successRate = completedAll > 0 ? (succeeded / completedAll) * 100 : 0;
+  const failureRatePct = completedAll > 0 ? (failed / completedAll) * 100 : 0;
+
+  // Synthetic network I/O (KB/s) based on throughput — purely visualisation
+  const netIO = Math.round(tickRate * 18); // ~18 KB per AI completion ballpark
+
   const loadTone =
     serverLoad >= 80 ? { color: "text-destructive", bg: "bg-destructive/10", border: "border-destructive/40", label: "Critical" }
     : serverLoad >= 55 ? { color: "text-amber-700", bg: "bg-amber-500/10", border: "border-amber-500/40", label: "Heavy" }
