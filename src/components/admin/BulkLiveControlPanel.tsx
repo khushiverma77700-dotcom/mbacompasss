@@ -153,9 +153,13 @@ const BulkLiveControlPanel = ({
   const [saving, setSaving] = useState(false);
   const [waking, setWaking] = useState(false);
   const [restarting, setRestarting] = useState(false);
+  const [autoWakeCount, setAutoWakeCount] = useState(0);
+  const [lastAutoWakeAt, setLastAutoWakeAt] = useState<number | null>(null);
   const [browserCpu, setBrowserCpu] = useState(0); // 0..100
   const [tickRate, setTickRate] = useState(0); // throughput units/min approx
   const [clockTick, setClockTick] = useState(Date.now());
+  const autoWakeInFlightRef = useRef(false);
+  const lastAutoWakeAtRef = useRef(0);
   const processedUnits = Math.max(0, Number(processed ?? (succeeded + failed)));
   const totalUnits = Math.max(0, Number(total || 0));
   const lastProcessed = useRef(processedUnits);
@@ -403,15 +407,18 @@ const BulkLiveControlPanel = ({
     });
   };
 
-  const wakeWorkersNow = async () => {
-    setWaking(true);
+  const wakeWorkersNow = async (mode: "manual" | "auto" = "manual") => {
+    const isAuto = mode === "auto";
+    if (isAuto && autoWakeInFlightRef.current) return;
+    if (isAuto) autoWakeInFlightRef.current = true;
+    else setWaking(true);
     const fn = table === "bulk_college_jobs" ? "bulk-college-create" : "bulk-section-create";
     try {
       const { error: updateError } = await (supabase as any).from(table).update({
         status: "running",
         paused: false,
         worker_lock_until: null,
-        current_activity: "Manual wake requested — worker slots are restarting now",
+        current_activity: isAuto ? "Auto wake requested — idle worker slots are restarting now" : "Manual wake requested — worker slots are restarting now",
         updated_at: new Date().toISOString(),
       }).eq("id", jobId);
 
@@ -423,13 +430,28 @@ const BulkLiveControlPanel = ({
 
       if (invokeError) throw invokeError;
       await onRefresh?.();
-      toast({ title: "Wake request sent", description: "Workers are being resumed now. Idle slots should start picking pending work immediately." });
+      if (isAuto) {
+        lastAutoWakeAtRef.current = Date.now();
+        setLastAutoWakeAt(lastAutoWakeAtRef.current);
+        setAutoWakeCount((count) => count + 1);
+      } else {
+        toast({ title: "Wake request sent", description: "Workers are being resumed now. Idle slots should start picking pending work immediately." });
+      }
     } catch (e: any) {
-      toast({ title: "Couldn't wake workers", description: e?.message || "Resume request failed", variant: "destructive" });
+      if (!isAuto) toast({ title: "Couldn't wake workers", description: e?.message || "Resume request failed", variant: "destructive" });
     } finally {
-      setWaking(false);
+      if (isAuto) autoWakeInFlightRef.current = false;
+      else setWaking(false);
     }
   };
+
+  useEffect(() => {
+    if (isTerminal || paused || pending <= 0 || stuckIdleSlots.length === 0) return;
+    if (autoWakeInFlightRef.current) return;
+    const now = Date.now();
+    if (now - lastAutoWakeAtRef.current < 25_000) return;
+    wakeWorkersNow("auto");
+  }, [stuckIdleSlots.length, pending, paused, isTerminal, telemetry?.updatedAt, clockTick]);
 
   const restartStuckWorkers = async () => {
     setRestarting(true);
