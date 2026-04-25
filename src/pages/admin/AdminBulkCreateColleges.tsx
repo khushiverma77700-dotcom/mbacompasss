@@ -52,6 +52,7 @@ interface JobState {
   paused?: boolean;
   concurrency?: number;
   updated_at?: string | null;
+  telemetry?: any;
 }
 
 const REQUIRED = ["name", "city", "state", "primaryKeyword"];
@@ -139,6 +140,7 @@ const AdminBulkCreateColleges = () => {
   const [submitting, setSubmitting] = useState(false);
   const [job, setJob] = useState<JobState | null>(null);
   const [recentJobs, setRecentJobs] = useState<JobState[]>([]);
+  const [refreshingJob, setRefreshingJob] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const pollRef = useRef<number | null>(null);
 
@@ -309,6 +311,25 @@ const AdminBulkCreateColleges = () => {
       .from("bulk_college_jobs").select("*").eq("id", jobId).maybeSingle();
     if (refreshed) setJob(refreshed as any);
     toast({ title: "Retrying failed rows", description: `${failedCount} row${failedCount === 1 ? "" : "s"} re-queued.` });
+  };
+
+  const refreshAndResume = async (jobId: string) => {
+    setRefreshingJob(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      await supabase.functions.invoke("bulk-college-create", {
+        body: { action: "auto_retry_stale", job_id: jobId, threshold_ms: 60_000 },
+        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
+      });
+      const { data: refreshed } = await supabase
+        .from("bulk_college_jobs").select("*").eq("id", jobId).maybeSingle();
+      if (refreshed) setJob(refreshed as any);
+      toast({ title: "Refreshed", description: "Worker has been resumed from the saved queue state." });
+    } catch (e: any) {
+      toast({ title: "Refresh failed", description: e?.message || "Could not resume job", variant: "destructive" });
+    } finally {
+      setRefreshingJob(false);
+    }
   };
 
   return (
@@ -502,9 +523,12 @@ const AdminBulkCreateColleges = () => {
           active={(job.rows || []).filter((r: any) => r.status === "processing").length}
           succeeded={job.succeeded}
           failed={job.failed}
-          pending={Math.max(0, job.total_rows - job.completed)}
+          pending={(job.rows || []).filter((r: any) => r.status === "pending").length}
           total={job.total_rows}
           updatedAt={(job as any).updated_at}
+          telemetry={(job as any).telemetry}
+          onRefresh={() => refreshAndResume(job.id)}
+          refreshing={refreshingJob}
         />
         <JobHealthReport
           workflow="Bulk Colleges"
