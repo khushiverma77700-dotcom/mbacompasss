@@ -18,7 +18,16 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-const COLLEGE_CONCURRENCY = 2;
+const COLLEGE_CONCURRENCY = 1;
+const AI_SECTION_MAX_ATTEMPTS = 3;
+const AI_SECTION_RETRY_BASE_DELAY_MS = 2500;
+const SECTION_PAUSE_MS = 1200;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isRetryableAISectionFailure = (status: number, text: string) =>
+  status === 408 || status === 429 || status >= 500 ||
+  /malformed json|unterminated string|unexpected end|truncated|ai generation failed|empty section|did not return a structured/i.test(text);
 
 const SECTION_TYPES: { value: string; label: string }[] = [
   { value: "courses_fees", label: "Courses & Fee Structure" },
