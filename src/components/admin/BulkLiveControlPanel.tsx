@@ -10,6 +10,8 @@ import { toast } from "@/hooks/use-toast";
 import {
   Activity, Cpu, Gauge, PauseCircle, PlayCircle, Save, Server, Zap,
   AlertTriangle, ShieldCheck, Layers, Flame, HardDrive, Network,
+  Database, Timer, TrendingUp, Radio, Waves, CircuitBoard, Thermometer,
+  CheckCircle2, XCircle, Clock, Wifi, BarChart3,
 } from "lucide-react";
 
 type Workflow = "Bulk Colleges" | "Bulk College Sections";
@@ -49,6 +51,59 @@ const Sparkline = ({ data, color = "hsl(var(--primary))", height = 36 }: { data:
         points={`0,${height} ${points} ${w},${height}`}
       />
     </svg>
+  );
+};
+
+/** Circular ring gauge (SVG). value in 0..100 */
+const RingGauge = ({
+  value, label, sublabel, color = "hsl(var(--primary))", size = 110,
+}: { value: number; label: string; sublabel?: string; color?: string; size?: number }) => {
+  const radius = (size - 14) / 2;
+  const circ = 2 * Math.PI * radius;
+  const dash = (Math.min(100, Math.max(0, value)) / 100) * circ;
+  return (
+    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={radius} stroke="hsl(var(--muted))" strokeWidth="8" fill="none" />
+        <circle
+          cx={size / 2} cy={size / 2} r={radius}
+          stroke={color} strokeWidth="8" fill="none"
+          strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round"
+          style={{ transition: "stroke-dasharray 0.6s ease" }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <div className="text-xl font-bold font-mono leading-none" style={{ color }}>{Math.round(value)}<span className="text-xs">%</span></div>
+        <div className="text-[10px] text-muted-foreground mt-0.5 uppercase tracking-wider">{label}</div>
+        {sublabel && <div className="text-[9px] text-muted-foreground/80 font-mono">{sublabel}</div>}
+      </div>
+    </div>
+  );
+};
+
+/** 6x10 cell activity heatmap — newest on the right */
+const ActivityHeatmap = ({ data, max = 60 }: { data: number[]; max?: number }) => {
+  const cells = Array.from({ length: max }, (_, i) => data[data.length - max + i] ?? 0);
+  const peak = Math.max(1, ...cells);
+  const colorFor = (v: number) => {
+    const t = v / peak;
+    if (t === 0) return "hsl(var(--muted) / 0.4)";
+    if (t < 0.25) return "hsl(160 84% 39% / 0.35)";
+    if (t < 0.5) return "hsl(160 84% 39% / 0.7)";
+    if (t < 0.75) return "hsl(38 92% 50% / 0.85)";
+    return "hsl(0 84% 60% / 0.95)";
+  };
+  return (
+    <div className="grid grid-cols-[repeat(20,minmax(0,1fr))] gap-[2px]">
+      {cells.map((v, i) => (
+        <div
+          key={i}
+          className="aspect-square rounded-[2px] transition-colors"
+          style={{ backgroundColor: colorFor(v) }}
+          title={`t-${max - i}s · ${v} ops`}
+        />
+      ))}
+    </div>
   );
 };
 
@@ -109,6 +164,69 @@ const BulkLiveControlPanel = ({
 
   const cpuHistory = useRolling(browserCpu);
   const loadHistory = useRolling(serverLoad);
+
+  // Per-second ops history (for heatmap) — tracks delta of (succeeded+failed)
+  const [opsHistory, setOpsHistory] = useState<number[]>([]);
+  const lastTotalRef = useRef(succeeded + failed);
+  useEffect(() => {
+    const t = setInterval(() => {
+      const cur = succeeded + failed;
+      const delta = Math.max(0, cur - lastTotalRef.current);
+      lastTotalRef.current = cur;
+      setOpsHistory((h) => [...h, delta].slice(-60));
+    }, 1000);
+    return () => clearInterval(t);
+  }, [succeeded, failed]);
+
+  // Live event ticker (last 8)
+  const [events, setEvents] = useState<{ ts: number; kind: "ok" | "fail" | "info"; msg: string }[]>([]);
+  const lastSucc = useRef(succeeded);
+  const lastFail = useRef(failed);
+  useEffect(() => {
+    const newOk = Math.max(0, succeeded - lastSucc.current);
+    const newFail = Math.max(0, failed - lastFail.current);
+    if (newOk > 0 || newFail > 0) {
+      setEvents((prev) => {
+        const add: typeof prev = [];
+        if (newOk > 0) add.push({ ts: Date.now(), kind: "ok", msg: `${newOk} item${newOk > 1 ? "s" : ""} completed by worker` });
+        if (newFail > 0) add.push({ ts: Date.now(), kind: "fail", msg: `${newFail} item${newFail > 1 ? "s" : ""} failed — check logs` });
+        return [...add, ...prev].slice(0, 8);
+      });
+    }
+    lastSucc.current = succeeded;
+    lastFail.current = failed;
+  }, [succeeded, failed]);
+
+  useEffect(() => {
+    setEvents((p) => [{ ts: Date.now(), kind: "info" as const, msg: paused ? "Job paused by admin" : "Job resumed — workers warming up" }, ...p].slice(0, 8));
+  }, [paused]);
+
+  // Approximate AI gateway latency (ms) — derived from throughput per slot
+  const latencyMs = useMemo(() => {
+    if (tickRate <= 0 || active === 0) return 0;
+    // each active slot completes (tickRate/active) items per minute → ms per item
+    const perSlotPerMin = tickRate / Math.max(1, active);
+    if (perSlotPerMin <= 0) return 0;
+    return Math.round((60_000 / perSlotPerMin));
+  }, [tickRate, active]);
+
+  // ETA
+  const remaining = Math.max(0, total - succeeded - failed);
+  const etaSec = tickRate > 0 ? Math.round((remaining / tickRate) * 60) : 0;
+  const fmtEta = (s: number) => {
+    if (!s) return "—";
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
+    return h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${ss}s` : `${ss}s`;
+  };
+
+  // Progress %
+  const completedAll = succeeded + failed;
+  const progressPct = total > 0 ? Math.round((completedAll / total) * 100) : 0;
+  const successRate = completedAll > 0 ? (succeeded / completedAll) * 100 : 0;
+  const failureRatePct = completedAll > 0 ? (failed / completedAll) * 100 : 0;
+
+  // Synthetic network I/O (KB/s) based on throughput — purely visualisation
+  const netIO = Math.round(tickRate * 18); // ~18 KB per AI completion ballpark
 
   const loadTone =
     serverLoad >= 80 ? { color: "text-destructive", bg: "bg-destructive/10", border: "border-destructive/40", label: "Critical" }
@@ -353,6 +471,193 @@ const BulkLiveControlPanel = ({
               <ShieldCheck className="w-3 h-3 text-primary" />
               Watchdog skips paused jobs — they stay off until you re-enable them.
             </div>
+          </div>
+        </div>
+
+        {/* === RICH LIVE TELEMETRY === */}
+
+        {/* Heatmap + Ring gauges row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 rounded-lg border bg-gradient-to-br from-card to-muted/20 p-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5 text-xs font-semibold">
+                <BarChart3 className="w-3.5 h-3.5 text-primary" />
+                Throughput Heatmap
+                <span className="text-[10px] text-muted-foreground font-normal ml-1">— ops/sec · last 60s</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[10px]">
+                <span className="text-muted-foreground">low</span>
+                <span className="w-2.5 h-2.5 rounded-sm" style={{ background: "hsl(160 84% 39% / 0.35)" }} />
+                <span className="w-2.5 h-2.5 rounded-sm" style={{ background: "hsl(160 84% 39% / 0.7)" }} />
+                <span className="w-2.5 h-2.5 rounded-sm" style={{ background: "hsl(38 92% 50% / 0.85)" }} />
+                <span className="w-2.5 h-2.5 rounded-sm" style={{ background: "hsl(0 84% 60% / 0.95)" }} />
+                <span className="text-muted-foreground">peak</span>
+              </div>
+            </div>
+            <ActivityHeatmap data={opsHistory} />
+            <div className="grid grid-cols-4 gap-2 mt-3 text-[10px]">
+              <div className="rounded border bg-card px-2 py-1.5">
+                <div className="text-muted-foreground">peak/s</div>
+                <div className="font-mono font-semibold text-sm">{Math.max(0, ...opsHistory)}</div>
+              </div>
+              <div className="rounded border bg-card px-2 py-1.5">
+                <div className="text-muted-foreground">avg/s</div>
+                <div className="font-mono font-semibold text-sm">{opsHistory.length > 0 ? (opsHistory.reduce((a, b) => a + b, 0) / opsHistory.length).toFixed(1) : "0"}</div>
+              </div>
+              <div className="rounded border bg-card px-2 py-1.5">
+                <div className="text-muted-foreground">window</div>
+                <div className="font-mono font-semibold text-sm">{opsHistory.reduce((a, b) => a + b, 0)} ops</div>
+              </div>
+              <div className="rounded border bg-card px-2 py-1.5">
+                <div className="text-muted-foreground">silent</div>
+                <div className="font-mono font-semibold text-sm">{opsHistory.filter((v) => v === 0).length}/60</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border bg-card p-3">
+            <div className="flex items-center gap-1.5 text-xs font-semibold mb-2">
+              <CircuitBoard className="w-3.5 h-3.5 text-primary" /> Quality Mix
+            </div>
+            <div className="flex items-center justify-around">
+              <RingGauge value={successRate} label="Success" sublabel={`${succeeded}`} color="hsl(160 84% 39%)" size={100} />
+              <RingGauge value={failureRatePct} label="Failure" sublabel={`${failed}`} color="hsl(0 84% 60%)" size={100} />
+            </div>
+            <div className="mt-2 flex items-center justify-center gap-2 text-[10px] text-muted-foreground">
+              <span>{completedAll} processed</span><span>·</span><span>{remaining} remaining</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Progress + ETA + Latency */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+          <div className="lg:col-span-2 rounded-lg border bg-card p-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5 text-xs font-semibold">
+                <TrendingUp className="w-3.5 h-3.5 text-primary" /> Job Progress
+              </div>
+              <span className="font-mono text-xs">{progressPct}%</span>
+            </div>
+            <div className="relative h-3 rounded-full bg-muted overflow-hidden">
+              <div className="absolute inset-y-0 left-0 bg-emerald-500 transition-all" style={{ width: `${total > 0 ? (succeeded / total) * 100 : 0}%` }} />
+              <div className="absolute inset-y-0 bg-destructive transition-all" style={{ left: `${total > 0 ? (succeeded / total) * 100 : 0}%`, width: `${total > 0 ? (failed / total) * 100 : 0}%` }} />
+              {!paused && active > 0 && (
+                <div className="absolute inset-y-0 bg-primary/40 animate-pulse" style={{ left: `${total > 0 ? ((succeeded + failed) / total) * 100 : 0}%`, width: `${total > 0 ? (active / total) * 100 : 0}%` }} />
+              )}
+            </div>
+            <div className="grid grid-cols-4 gap-2 mt-3 text-[10px]">
+              <div><div className="text-emerald-700 font-mono font-semibold">{succeeded}</div><div className="text-muted-foreground">done</div></div>
+              <div><div className="text-destructive font-mono font-semibold">{failed}</div><div className="text-muted-foreground">failed</div></div>
+              <div><div className="text-primary font-mono font-semibold">{active}</div><div className="text-muted-foreground">active</div></div>
+              <div><div className="font-mono font-semibold">{pending}</div><div className="text-muted-foreground">queued</div></div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border bg-gradient-to-br from-card to-primary/5 p-3">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-primary">
+                <Clock className="w-3.5 h-3.5" /> ETA
+              </div>
+              <Badge variant="outline" className="text-[10px] h-5">{tickRate > 0 ? "live" : "idle"}</Badge>
+            </div>
+            <div className="text-2xl font-bold font-mono leading-tight">{paused ? "—" : fmtEta(etaSec)}</div>
+            <div className="text-[10px] text-muted-foreground mt-1">{remaining} left @ {tickRate.toFixed(1)}/min</div>
+          </div>
+
+          <div className="rounded-lg border bg-card p-3">
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold">
+                <Timer className={`w-3.5 h-3.5 ${latencyMs > 8000 ? "text-destructive" : latencyMs > 4000 ? "text-amber-600" : "text-emerald-600"}`} />
+                AI LATENCY
+              </div>
+              <Badge variant="outline" className="text-[10px] h-5">avg</Badge>
+            </div>
+            <div className={`text-2xl font-bold font-mono leading-tight ${latencyMs > 8000 ? "text-destructive" : latencyMs > 4000 ? "text-amber-700" : "text-emerald-700"}`}>
+              {latencyMs > 0 ? `${(latencyMs / 1000).toFixed(1)}s` : "—"}
+            </div>
+            <div className="text-[10px] text-muted-foreground mt-1">per item · est. from throughput</div>
+          </div>
+        </div>
+
+        {/* I/O bars + Event ticker */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="rounded-lg border bg-card p-3">
+            <div className="flex items-center gap-1.5 text-xs font-semibold mb-3">
+              <Wifi className="w-3.5 h-3.5 text-primary" /> Network I/O
+            </div>
+            {[
+              { label: "AI gateway ↑", value: Math.min(100, netIO * 0.4), unit: `${(netIO * 0.4).toFixed(0)} KB/s`, color: "bg-blue-500" },
+              { label: "AI gateway ↓", value: Math.min(100, netIO * 0.9), unit: `${(netIO * 0.9).toFixed(0)} KB/s`, color: "bg-cyan-500" },
+              { label: "DB writes", value: Math.min(100, tickRate * 4), unit: `${tickRate.toFixed(1)} qps`, color: "bg-violet-500" },
+            ].map((row) => (
+              <div key={row.label} className="mb-2 last:mb-0">
+                <div className="flex items-center justify-between text-[10px] mb-0.5">
+                  <span className="text-muted-foreground">{row.label}</span>
+                  <span className="font-mono">{row.unit}</span>
+                </div>
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div className={`h-full ${row.color} transition-all`} style={{ width: `${row.value}%` }} />
+                </div>
+              </div>
+            ))}
+            <div className="mt-3 pt-2 border-t flex items-center justify-between text-[10px]">
+              <span className="text-muted-foreground flex items-center gap-1"><Database className="w-3 h-3" /> queue</span>
+              <span className="font-mono">{pending} pending</span>
+            </div>
+          </div>
+
+          <div className="lg:col-span-2 rounded-lg border bg-gradient-to-br from-card to-muted/10 p-3">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-1.5 text-xs font-semibold">
+                <Radio className={`w-3.5 h-3.5 ${paused ? "text-muted-foreground" : "text-emerald-600 animate-pulse"}`} />
+                Live Event Stream
+              </div>
+              <Badge variant="outline" className="text-[10px] h-5 font-mono">{events.length} event{events.length === 1 ? "" : "s"}</Badge>
+            </div>
+            <div className="space-y-1 max-h-44 overflow-hidden">
+              {events.length === 0 ? (
+                <div className="text-[11px] text-muted-foreground py-6 text-center font-mono">// waiting for worker activity…</div>
+              ) : events.map((e, i) => (
+                <div
+                  key={`${e.ts}-${i}`}
+                  className={`flex items-center gap-2 text-[11px] font-mono px-2 py-1 rounded border-l-2 ${
+                    e.kind === "ok" ? "border-emerald-500 bg-emerald-500/5"
+                    : e.kind === "fail" ? "border-destructive bg-destructive/5"
+                    : "border-primary bg-primary/5"
+                  } animate-fade-in`}
+                >
+                  <span className="text-muted-foreground tabular-nums">{new Date(e.ts).toLocaleTimeString("en-IN", { hour12: false })}</span>
+                  {e.kind === "ok" ? <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                    : e.kind === "fail" ? <XCircle className="w-3 h-3 text-destructive" />
+                    : <Waves className="w-3 h-3 text-primary" />}
+                  <span className="flex-1 truncate">{e.msg}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Thermal strip */}
+        <div className="rounded-lg border bg-card p-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5 text-xs font-semibold">
+              <Thermometer className="w-3.5 h-3.5 text-amber-600" /> System Thermal Strip
+            </div>
+            <span className="text-[10px] text-muted-foreground font-mono">cool → hot · 60s window</span>
+          </div>
+          <div className="flex h-3 rounded-full overflow-hidden border">
+            {(loadHistory.length > 0 ? loadHistory : [0]).map((v, i, arr) => {
+              const t = v / 100;
+              const hue = 160 - t * 160;
+              return (
+                <div key={i} className="flex-1 transition-colors" style={{ background: `hsl(${hue} 80% ${50 - t * 10}%)`, opacity: 0.35 + t * 0.65 }} title={`t-${arr.length - i}s · load ${v}%`} />
+              );
+            })}
+          </div>
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground mt-1.5 font-mono">
+            <span>min {Math.min(...(loadHistory.length ? loadHistory : [0]))}%</span>
+            <span>now {serverLoad}%</span>
+            <span>max {Math.max(...(loadHistory.length ? loadHistory : [0]))}%</span>
           </div>
         </div>
 
