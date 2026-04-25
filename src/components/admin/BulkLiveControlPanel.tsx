@@ -154,6 +154,7 @@ const BulkLiveControlPanel = ({
   const [waking, setWaking] = useState(false);
   const [browserCpu, setBrowserCpu] = useState(0); // 0..100
   const [tickRate, setTickRate] = useState(0); // throughput units/min approx
+  const [clockTick, setClockTick] = useState(Date.now());
   const processedUnits = Math.max(0, Number(processed ?? (succeeded + failed)));
   const totalUnits = Math.max(0, Number(total || 0));
   const lastProcessed = useRef(processedUnits);
@@ -287,6 +288,50 @@ const BulkLiveControlPanel = ({
   }, [paused]);
 
   const latencyMs = realLatencyMs;
+
+  useEffect(() => {
+    const t = setInterval(() => setClockTick(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const workerSlots = useMemo<WorkerSlotView[]>(() => {
+    const fromTelemetry = Array.isArray(telemetry?.workerSlots) ? telemetry.workerSlots : [];
+    return Array.from({ length: 10 }).map((_, i) => {
+      const slot = fromTelemetry.find((s: any) => Number(s?.slot) === i + 1) || fromTelemetry[i] || {};
+      const enabled = i < concurrency;
+      const rawState = String(slot?.state || (paused ? "paused" : enabled ? (i < liveActiveWorkers ? "active" : "idle") : "disabled"));
+      return {
+        slot: i + 1,
+        slot_id: slot?.slot_id,
+        state: !enabled && rawState !== "processing" ? "disabled" : rawState === "processing" ? "active" : rawState,
+        job_id: slot?.job_id || jobId,
+        last_heartbeat: slot?.last_heartbeat || telemetry?.updatedAt || updatedAt || null,
+        last_processed_at: slot?.last_processed_at || null,
+        current_item: slot?.current_item || null,
+        current_step: slot?.current_step || null,
+        enabled,
+      };
+    });
+  }, [telemetry?.workerSlots, telemetry?.updatedAt, updatedAt, concurrency, paused, liveActiveWorkers, jobId]);
+
+  const stuckIdleSlots = useMemo(() => workerSlots.filter((slot) => {
+    if (isTerminal || paused || !slot.enabled || slot.state !== "idle" || pending <= 0) return false;
+    const heartbeatAge = ageSeconds(slot.last_heartbeat, clockTick);
+    const processedAge = ageSeconds(slot.last_processed_at, clockTick);
+    return (heartbeatAge === null || heartbeatAge > 45) && (processedAge === null || processedAge > 90);
+  }), [workerSlots, isTerminal, paused, pending, clockTick]);
+
+  const healthTimeline = useMemo<HealthEventView[]>(() => {
+    const real = Array.isArray(telemetry?.healthTimeline) ? telemetry.healthTimeline : [];
+    const synthetic = [
+      { ts: updatedAt ? new Date(updatedAt).getTime() : Date.now(), state: paused ? "paused" : status, label: paused ? "Job paused" : `Database status: ${status}`, job_id: jobId },
+    ];
+    return [...real, ...synthetic]
+      .filter((e: any) => Number(e?.ts || 0) > 0)
+      .sort((a: any, b: any) => Number(b.ts) - Number(a.ts))
+      .slice(0, 20)
+      .map((e: any) => ({ ts: Number(e.ts), state: String(e.state || "info"), label: String(e.label || e.state || "Job event"), job_id: e.job_id || jobId, worker_id: e.worker_id || null }));
+  }, [telemetry?.healthTimeline, updatedAt, paused, status, jobId]);
 
   // ETA
   const remaining = Math.max(0, totalUnits - processedUnits);
