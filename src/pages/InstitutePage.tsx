@@ -594,7 +594,7 @@ const InstitutePage = () => {
                                 {/* Description */}
                                 {course.description && (
                                   <div className="bg-muted/20 rounded-xl p-4 border border-border/30">
-                                    <div className="ai-content text-sm text-muted-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: enhanceAIContent(course.description) }} />
+                                    <div className="ai-content text-sm text-muted-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: enhanceAIContent(course.description, { entityName: institute.name, entityWebsite: (institute as any).website }) }} />
                                     <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
                                       <div className="rounded-md border border-border bg-card px-2 py-1.5">
                                         <div className="text-muted-foreground">Fees</div>
