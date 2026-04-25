@@ -68,7 +68,16 @@ interface CallOptions {
   userId?: string | null;
   maxRetries?: number;
   skipLog?: boolean;
+  /**
+   * Which upstream to use:
+   *   "gemini"  → call Google's OpenAI-compatible Gemini endpoint with GEMINI_API_KEY (default).
+   *   "lovable" → call the Lovable AI gateway with LOVABLE_API_KEY (legacy fallback).
+   * Pick is dashboard-driven for bulk jobs.
+   */
+  provider?: "gemini" | "lovable";
 }
+
+const LOVABLE_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
 interface LogParams {
   feature: string;
