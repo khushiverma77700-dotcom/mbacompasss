@@ -466,6 +466,7 @@ export type Database = {
           failed: number
           finished_at: string | null
           id: string
+          request_inputs: Json
           rows: Json
           started_at: string | null
           status: string
@@ -483,6 +484,7 @@ export type Database = {
           failed?: number
           finished_at?: string | null
           id?: string
+          request_inputs?: Json
           rows?: Json
           started_at?: string | null
           status?: string
@@ -500,6 +502,7 @@ export type Database = {
           failed?: number
           finished_at?: string | null
           id?: string
+          request_inputs?: Json
           rows?: Json
           started_at?: string | null
           status?: string
