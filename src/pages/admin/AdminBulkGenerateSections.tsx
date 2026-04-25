@@ -53,6 +53,25 @@ interface Job {
 
 const PER_STEP_SECONDS = 35; // rough estimate per AI section call (single safe worker)
 
+const getSectionJobMetrics = (job: Job | null) => {
+  const rows = job?.rows || [];
+  const succeeded = rows.filter((r: any) => r.status === "succeeded").length;
+  const failed = rows.filter((r: any) => r.status === "failed").length;
+  const notFound = rows.filter((r: any) => r.status === "not_found").length;
+  const activeRows = rows.filter((r: any) => r.status === "processing").length;
+  const pendingRows = rows.filter((r: any) => ["pending", "processing", "matched"].includes(r.status)).length;
+  const stepsDone = rows.reduce(
+    (acc: number, r: any) => acc + (r.steps || []).filter((s: any) => s.status === "succeeded" || s.status === "failed").length,
+    0,
+  );
+  const totalSteps = rows.reduce((acc: number, r: any) => acc + (r.steps || []).length, 0) || job?.total_steps || 0;
+  const pendingSteps = rows.reduce(
+    (acc: number, r: any) => acc + (r.steps || []).filter((s: any) => s.status === "pending" || s.status === "processing").length,
+    0,
+  );
+  return { succeeded, failed, notFound, activeRows, pendingRows, stepsDone, totalSteps, pendingSteps };
+};
+
 const formatDuration = (s: number) => {
   if (!isFinite(s) || s <= 0) return "—";
   const m = Math.floor(s / 60);
@@ -151,7 +170,7 @@ export default function AdminBulkGenerateSections() {
   };
 
   const overallPct = job
-    ? Math.round((job.steps_done / Math.max(job.total_steps, 1)) * 100)
+    ? Math.round((liveMetrics.stepsDone / Math.max(liveMetrics.totalSteps, 1)) * 100)
     : 0;
 
   const eta = useMemo(() => {
