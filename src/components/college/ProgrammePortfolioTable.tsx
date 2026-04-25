@@ -246,7 +246,7 @@ const ProgrammePortfolioTable = ({ collegeSlug, programmes, fallbackCourses }: P
           </div>
 
           <Button asChild variant="outline" className="mt-6 w-full">
-            <Link to={`/compare/programmes?from=${collegeSlug}`}>
+            <Link to={`/mba-programme-compare?from=${collegeSlug}`}>
               <Banknote className="w-4 h-4 mr-2" /> Compare these programmes side-by-side
             </Link>
           </Button>
