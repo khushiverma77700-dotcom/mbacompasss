@@ -43,6 +43,13 @@ const computeCollegeMetrics = (rows: RowState[]) => {
   };
 };
 
+const collegeMetricPatch = (metrics: ReturnType<typeof computeCollegeMetrics>) => ({
+  succeeded: metrics.succeeded,
+  failed: metrics.failed,
+  duplicates_skipped: metrics.duplicates_skipped,
+  completed: metrics.completed,
+});
+
 const textBytes = (value: string) => new TextEncoder().encode(value || "").length;
 
 const memorySnapshot = () => {
@@ -535,7 +542,7 @@ async function runJob(job_id: string, authHeader: string) {
         const liveMetrics = computeCollegeMetrics(rowsRef.value);
         tracker.recordProgress(liveMetrics.completed, row.name);
         await updateBulkJob(admin, "bulk_college_jobs", job_id, workerId, tracker, {
-          ...liveMetrics,
+          ...collegeMetricPatch(liveMetrics),
         });
       }
     });
@@ -558,7 +565,7 @@ async function runJob(job_id: string, authHeader: string) {
       await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
         rows: rowsRef.value,
         status: "cancelled",
-        ...computeCollegeMetrics(rowsRef.value),
+        ...collegeMetricPatch(computeCollegeMetrics(rowsRef.value)),
         finished_at: new Date().toISOString(),
         current_activity: "Cancelled by admin",
       });
@@ -571,7 +578,7 @@ async function runJob(job_id: string, authHeader: string) {
       await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
         status: "running",
         rows: rowsRef.value,
-        ...finalMetrics,
+        ...collegeMetricPatch(finalMetrics),
         current_activity: "Paused — worker parked safely",
       });
       return;
@@ -583,7 +590,7 @@ async function runJob(job_id: string, authHeader: string) {
       await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
         status: "running",
         rows: rowsRef.value,
-        ...finalMetrics,
+        ...collegeMetricPatch(finalMetrics),
         current_activity: `Continuing… ${remaining} colleges remaining`,
       });
 
@@ -604,7 +611,7 @@ async function runJob(job_id: string, authHeader: string) {
       status: "completed",
       finished_at: new Date().toISOString(),
       rows: rowsRef.value,
-      ...finalMetrics,
+      ...collegeMetricPatch(finalMetrics),
       current_activity: "All done",
     });
   } catch (err) {
