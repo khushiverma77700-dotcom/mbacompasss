@@ -251,25 +251,24 @@ async function processCollege(
       return;
     }
 
-    // Create only the current section placeholder, so cancellation never leaves empty rows behind.
-    const { data: existingRows } = await admin
-      .from("college_sections").select("id, section_type, title, content, data")
-      .eq("college_id", college.id);
-    const existingTypes = new Set((existingRows || []).map((r: any) => r.section_type));
-    if (!existingTypes.has(step.type)) {
-      const orderIndex = SECTION_TYPES.findIndex((s) => s.value === step.type);
-      const { data: insertedRow } = await admin
-        .from("college_sections")
-        .insert({ college_id: college.id, section_type: step.type, title: step.label, sort_order: Math.max(orderIndex, 0) * 10, data: {} })
-        .select("id")
-        .single();
-      if (insertedRow?.id) freshlyInsertedIds = [insertedRow.id];
-    }
-    const { data: allRows } = await admin
-      .from("college_sections").select("id, section_type, title, content, data")
-      .eq("college_id", college.id);
-    const byType: Record<string, any> = {};
-    (allRows || []).forEach((r: any) => { byType[r.section_type] = r; });
+    // PRESERVATION MODEL: never modify the original section row.
+    // AI content is written to a separate row with version='ai_v1'.
+    // We look up an existing AI version (to update) or create a fresh one — the
+    // original (version='original') row stays untouched so SEO/indexed content remains intact.
+    const { data: originalRow } = await admin
+      .from("college_sections")
+      .select("id, section_type, title, content, data, sort_order")
+      .eq("college_id", college.id)
+      .eq("section_type", step.type)
+      .eq("version", "original")
+      .maybeSingle();
+    const { data: aiRow } = await admin
+      .from("college_sections")
+      .select("id, title, content, data, sort_order")
+      .eq("college_id", college.id)
+      .eq("section_type", step.type)
+      .eq("version", "ai_v1")
+      .maybeSingle();
 
     if (cancelFlag.v) { await cleanupOnCancel(); return; }
     step.status = "processing";
@@ -280,14 +279,37 @@ async function processCollege(
     try {
       const sec = await generateOneSection(authHeader, college, step.type, anchorFacts, cancelFlag);
       if (cancelFlag.v) { await cleanupOnCancel(); return; }
-      const target = byType[step.type];
-      if (target) {
+
+      const orderIndex = SECTION_TYPES.findIndex((s) => s.value === step.type);
+      const sortBase = (originalRow?.sort_order ?? Math.max(orderIndex, 0) * 10);
+
+      if (aiRow?.id) {
+        // Update the existing AI version only — original row is never touched
         await admin.from("college_sections").update({
-          title: sec.title || target.title,
-          content: sec.content || target.content,
+          title: sec.title || aiRow.title,
+          content: sec.content || aiRow.content,
           data: sec.data || {},
-        }).eq("id", target.id);
-        freshlyInsertedIds = freshlyInsertedIds.filter(id => id !== target.id);
+          is_active: true,
+          source: "ai",
+        }).eq("id", aiRow.id);
+      } else {
+        const { data: insertedAi } = await admin
+          .from("college_sections")
+          .insert({
+            college_id: college.id,
+            section_type: step.type,
+            title: sec.title || step.label,
+            content: sec.content || null,
+            data: sec.data || {},
+            sort_order: sortBase + 1, // render right after original
+            version: "ai_v1",
+            is_active: true,
+            source: "ai",
+            parent_section_id: originalRow?.id || null,
+          })
+          .select("id")
+          .single();
+        if (insertedAi?.id) freshlyInsertedIds = [insertedAi.id];
       }
       step.status = "succeeded";
       step.startedAt = undefined;
