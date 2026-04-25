@@ -467,6 +467,25 @@ export default function AdminBulkGenerateSections() {
 
       {/* Live progress panel */}
       {job && (
+        <>
+        <JobHealthReport
+          workflow="Bulk College Sections"
+          jobId={job.id}
+          status={job.status}
+          startedAt={(job as any).started_at}
+          finishedAt={(job as any).finished_at}
+          updatedAt={(job as any).updated_at}
+          total={job.total_rows}
+          succeeded={job.succeeded}
+          failed={job.failed}
+          notFound={(job as any).not_found || 0}
+          pending={Math.max(0, (job.rows || []).filter((r: any) => r.status === "pending" || r.status === "processing" || r.status === "matched").length)}
+          rows={(job.rows || []).map((r: any) => ({
+            name: r.name || r.slug || `Row ${r.index}`,
+            status: r.status,
+            detail: r.error || (r.steps || []).filter((s: any) => s.status === "failed").map((s: any) => s.label).join(", ") || undefined,
+          }))}
+        />
         <Card className="border-primary/30">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between flex-wrap gap-2">
