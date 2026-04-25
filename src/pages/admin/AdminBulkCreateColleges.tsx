@@ -10,6 +10,7 @@ import {
   CheckCircle2, XCircle, Loader2, Copy, ExternalLink, Pause, Ban, RotateCw,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import JobHealthReport from "@/components/admin/JobHealthReport";
 
 interface CsvRow {
   name: string;
