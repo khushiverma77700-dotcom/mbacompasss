@@ -654,7 +654,7 @@ async function runJob(job_id: string, authHeader: string) {
   } catch (err) {
     console.error("bulk section runJob failed", err);
     await releaseWorkerLock(admin, "bulk_section_jobs", job_id, workerId, tracker, {
-      status: "pending",
+        status: "running",
       current_activity: `Worker recovered from error: ${err instanceof Error ? err.message : String(err)}`,
     }).catch(() => {});
   }
@@ -746,7 +746,7 @@ Deno.serve(async (req) => {
 
       const { data: job, error: insErr } = await admin.from("bulk_section_jobs").insert({
         created_by: user.id,
-        status: "pending",
+        status: "running",
         total_rows: rows.length,
         total_steps: totalSteps,
         steps_done: 0,
@@ -824,7 +824,7 @@ Deno.serve(async (req) => {
       }
 
       if (stepsRequeued === 0 && rowsRequeued === 0) {
-        await admin.from("bulk_section_jobs").update({ status: "pending", paused: false, current_activity: "Retry Stuck: no stale items, worker resumed", updated_at: new Date().toISOString() }).eq("id", job_id);
+        await admin.from("bulk_section_jobs").update({ status: "running", paused: false, current_activity: "Retry Stuck: no stale items, worker resumed", updated_at: new Date().toISOString() }).eq("id", job_id);
         EdgeRuntime.waitUntil(fetch(`${SUPABASE_URL}/functions/v1/bulk-section-create`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: authHeader || `Bearer ${ANON_KEY}`, apikey: ANON_KEY, "x-worker-key": SERVICE_ROLE },
@@ -837,7 +837,7 @@ Deno.serve(async (req) => {
 
       await admin.from("bulk_section_jobs").update({
         rows,
-        status: "pending",
+        status: "running",
         paused: false,
         current_activity: `Auto-retry: re-queued ${stepsRequeued} stuck step(s) across ${requeued.length} college(s)`,
         updated_at: new Date().toISOString(),
