@@ -823,6 +823,7 @@ const CollegeDetailPage = () => {
                       </div>
                     </div>
                   )}
+                  <AIExtensionBlock section={getAIExtension("rankings")} extensionLabel="Rankings Context & Recognition" />
                 </CardContent>
               </Card>
             </div>
@@ -871,6 +872,7 @@ const CollegeDetailPage = () => {
                       </div>
                     </div>
                   ))}
+                  <AIExtensionBlock section={getAIExtension("reviews")} extensionLabel="Aggregated Student Sentiment" />
                 </CardContent>
               </Card>
             </div>
@@ -920,6 +922,7 @@ const CollegeDetailPage = () => {
                       </div>
                     ))}
                   </div>
+                  <AIExtensionBlock section={getAIExtension("scholarships")} extensionLabel="Scholarship Eligibility Guide" />
                 </CardContent>
               </Card>
             </div>
@@ -947,6 +950,7 @@ const CollegeDetailPage = () => {
                       </div>
                     ))}
                   </div>
+                  <AIExtensionBlock section={getAIExtension("faculty")} extensionLabel="Faculty & Research Strengths" />
                 </CardContent>
               </Card>
             </div>
