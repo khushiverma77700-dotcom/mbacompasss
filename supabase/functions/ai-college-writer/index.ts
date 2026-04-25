@@ -448,8 +448,11 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       primary_keyword: targetKw,
     };
 
-    const descriptionSystem = `${systemPrompt}\n\nReturn ONLY plain semantic HTML for the long-form college description. No JSON. No markdown fences. No commentary before or after the HTML.`;
-    const admissionSystem = `${systemPrompt}\n\nReturn ONLY plain semantic HTML for the admission_process section. No JSON. No markdown fences. No commentary before or after the HTML.`;
+    const bulkOverride = bulkMode
+      ? "\n\nBULK MODE OVERRIDE: Keep this response compact and complete. Follow the shorter word counts in the user request even if earlier rules ask for longer content."
+      : "";
+    const descriptionSystem = `${systemPrompt}${bulkOverride}\n\nReturn ONLY plain semantic HTML for the long-form college description. No JSON. No markdown fences. No commentary before or after the HTML.`;
+    const admissionSystem = `${systemPrompt}${bulkOverride}\n\nReturn ONLY plain semantic HTML for the admission_process section. No JSON. No markdown fences. No commentary before or after the HTML.`;
 
     let descriptionHtml = "";
     let admissionHtml = "";
@@ -614,6 +617,7 @@ RULES:
 
     let factCheck: any = { confidence: {}, warnings: [], omit_fields: [] };
     try {
+      if (bulkMode) throw new Error("SKIP_BULK_FACT_CHECK");
       const auditRes = await callAIGateway({
           model: "google/gemini-2.5-flash",
           messages: [
