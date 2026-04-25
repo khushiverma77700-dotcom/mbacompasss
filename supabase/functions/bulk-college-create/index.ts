@@ -15,7 +15,15 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-const CONCURRENCY = 2;
+const CONCURRENCY = 1;
+const AI_WRITER_MAX_ATTEMPTS = 3;
+const AI_RETRY_BASE_DELAY_MS = 2500;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isRetryableAIWriterFailure = (status: number, text: string) =>
+  status === 408 || status === 429 || status >= 500 ||
+  /malformed json|unterminated string|unexpected end|truncated|ai generation failed|empty college/i.test(text);
 
 const slugify = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
@@ -92,33 +100,57 @@ async function processOne(
     const y = new Date().getFullYear();
     const dateContext = `Use ONLY the most recent verified data: ${y}-${y + 1} admission cycle, ${y - 1}-${y} placement reports. All fees, placement figures, ranking and seat numbers MUST reflect the latest published year.`;
 
-    // Call ai-college-writer (same as manual flow)
-    const aiRes = await fetch(`${SUPABASE_URL}/functions/v1/ai-college-writer`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: authHeader,
-        apikey: ANON_KEY,
-      },
-      body: JSON.stringify({
-        name: input.name,
-        slug: input.slug || slugify(input.name),
-        city: input.city || undefined,
-        state: input.state || undefined,
-        type: input.type || "Private",
-        tier: input.tier || "Tier 2",
-        category: input.category || "Non-IIM",
-        targetKeyword: input.primaryKeyword || input.name,
-        secondaryKeywords: [],
-        contentDateContext: dateContext,
-      }),
-    });
+    const aiBody = {
+      name: input.name,
+      slug: input.slug || slugify(input.name),
+      city: input.city || undefined,
+      state: input.state || undefined,
+      type: input.type || "Private",
+      tier: input.tier || "Tier 2",
+      category: input.category || "Non-IIM",
+      targetKeyword: input.primaryKeyword || input.name,
+      secondaryKeywords: [],
+      contentDateContext: dateContext,
+    };
 
-    if (!aiRes.ok) {
+    let data: any = null;
+    let lastAiError = "";
+    for (let attempt = 1; attempt <= AI_WRITER_MAX_ATTEMPTS; attempt++) {
+      if (cancelFlag.v) {
+        await updateRow({ status: "failed", step: "cancelled", error: "Cancelled by admin" });
+        return;
+      }
+      await updateRow({ step: attempt === 1 ? "researching" : `retrying AI writer (${attempt}/${AI_WRITER_MAX_ATTEMPTS})` });
+
+      const aiRes = await fetch(`${SUPABASE_URL}/functions/v1/ai-college-writer`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: authHeader,
+          apikey: ANON_KEY,
+        },
+        body: JSON.stringify(aiBody),
+      });
+
       const txt = await aiRes.text();
-      throw new Error(`AI writer failed (${aiRes.status}): ${txt.slice(0, 200)}`);
+      if (aiRes.ok) {
+        try {
+          data = JSON.parse(txt);
+          break;
+        } catch (parseErr) {
+          lastAiError = `AI writer returned invalid response JSON: ${parseErr instanceof Error ? parseErr.message : String(parseErr)}`;
+        }
+      } else {
+        lastAiError = `AI writer failed (${aiRes.status}): ${txt.slice(0, 300)}`;
+        if (!isRetryableAIWriterFailure(aiRes.status, txt)) break;
+      }
+
+      if (attempt < AI_WRITER_MAX_ATTEMPTS) {
+        await sleep(AI_RETRY_BASE_DELAY_MS * attempt);
+      }
     }
-    const data = await aiRes.json();
+
+    if (!data) throw new Error(lastAiError || "AI writer failed after retries");
     if (data?.error) throw new Error(data.error);
     if (!data?.college) throw new Error("AI returned empty college");
 

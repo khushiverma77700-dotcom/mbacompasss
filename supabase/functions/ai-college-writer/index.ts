@@ -244,7 +244,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
     }) => {
       let lastParseError = "";
 
-      for (let attempt = 0; attempt < 2; attempt++) {
+      for (let attempt = 0; attempt < 3; attempt++) {
         const res = await callAIGateway({
           model: "google/gemini-2.5-flash",
           messages: [
@@ -253,7 +253,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
               role: "user",
               content: attempt === 0
                 ? user
-                : `${user}\n\nRETRY: Your previous function arguments were not valid JSON (${lastParseError}). Call the function again with short, valid, escaped string values. Do not include unescaped quotes or raw line breaks inside strings.`,
+                : `${user}\n\nRETRY ${attempt + 1}: Your previous function arguments were not valid JSON (${lastParseError}). Call the function again with shorter, valid, escaped string values. Keep arrays concise. Do not include unescaped quotes or raw line breaks inside strings.`,
             },
           ],
           tools: [tool],
@@ -290,6 +290,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
         } catch (parseError) {
           lastParseError = parseError instanceof Error ? parseError.message : String(parseError);
           console.warn(`${label} parse attempt ${attempt + 1} failed:`, lastParseError);
+          if (attempt < 2) await new Promise((resolve) => setTimeout(resolve, 900 * (attempt + 1)));
         }
       }
 
