@@ -234,7 +234,7 @@ async function processCollege(
       await persist();
 
       try {
-        const sec = await generateOneSection(authHeader, college, step.type, anchorFacts);
+        const sec = await generateOneSection(authHeader, college, step.type, anchorFacts, cancelFlag);
         // Re-check after the (potentially long) AI call — discard result if cancelled
         if (cancelFlag.v) { await cleanupOnCancel(); return; }
         const target = byType[step.type];
@@ -255,7 +255,7 @@ async function processCollege(
       rowsRef.value = [...rowsRef.value];
       await persist();
       // small pause to avoid burst rate-limits
-      await new Promise(r => setTimeout(r, 600));
+      await sleep(SECTION_PAUSE_MS);
     }
 
     const anyFailed = row.steps.some(s => s.status === "failed");
