@@ -337,20 +337,11 @@ async function processCollege(
   workerId: string,
 ) {
   const persist = async () => {
-    const stepsDone = rowsRef.value.reduce(
-      (acc, r) => acc + r.steps.filter(s => s.status === "succeeded" || s.status === "failed").length,
-      0,
-    );
-    const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
-    const failed = rowsRef.value.filter(r => r.status === "failed").length;
-    const not_found = rowsRef.value.filter(r => r.status === "not_found").length;
-    tracker.recordProgress(stepsDone, `${row.inputName} — ${row.status}`);
+    const metrics = computeSectionMetrics(rowsRef.value);
+    tracker.recordProgress(metrics.steps_done, `${row.inputName} — ${row.status}`);
     await updateBulkJob(admin, "bulk_section_jobs", job_id, workerId, tracker, {
       rows: rowsRef.value,
-      steps_done: stepsDone,
-      succeeded,
-      failed,
-      not_found,
+      ...sectionMetricPatch(metrics),
       current_activity: `Row ${row.index + 1}: ${row.inputName} — ${row.status}`,
     });
   };
