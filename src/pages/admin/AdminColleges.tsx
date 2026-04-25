@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, X, ArrowLeft, Sparkles } from "lucide-react";
+import { Plus, Pencil, Trash2, X, ArrowLeft, Sparkles, Upload } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import { useAdminFilters } from "@/hooks/useAdminFilters";
 import AdminFilterBar from "@/components/admin/AdminFilterBar";
@@ -369,7 +369,14 @@ const AdminColleges = () => {
     <div>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="font-heading text-2xl font-bold text-foreground">Manage Colleges</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            onClick={() => navigate("/admin/colleges/bulk-create")}
+            className="border-emerald-500/40 text-emerald-700 hover:bg-emerald-50"
+          >
+            <Upload className="w-4 h-4 mr-2" /> Bulk Create (CSV + AI)
+          </Button>
           <Button
             variant="outline"
             onClick={() => navigate("/admin/colleges/generate-ai")}

@@ -116,6 +116,7 @@ const AdminUserSubmissions = lazyWithPreload(() => import("./pages/admin/AdminUs
 const AdminListingChangeRequests = lazyWithPreload(() => import("./pages/admin/AdminListingChangeRequests"));
 const AdminWriteBlog = lazyWithPreload(() => import("./pages/admin/AdminWriteBlog"));
 const AdminWriteCollege = lazyWithPreload(() => import("./pages/admin/AdminWriteCollege"));
+const AdminBulkCreateColleges = lazyWithPreload(() => import("./pages/admin/AdminBulkCreateColleges"));
 const AdminWriteInstitute = lazyWithPreload(() => import("./pages/admin/AdminWriteInstitute"));
 const AdminWriteCourses = lazyWithPreload(() => import("./pages/admin/AdminWriteCourses"));
 const AdminWebsiteOptimizer = lazyWithPreload(() => import("./pages/admin/AdminWebsiteOptimizer"));
@@ -484,6 +485,7 @@ const App = () => (
               <Route path="listing-change-requests" element={<LazyPage><AdminListingChangeRequests /></LazyPage>} />
               <Route path="seo/write-blog" element={<LazyPage><AdminWriteBlog /></LazyPage>} />
               <Route path="colleges/generate-ai" element={<LazyPage><AdminWriteCollege /></LazyPage>} />
+              <Route path="colleges/bulk-create" element={<LazyPage><AdminBulkCreateColleges /></LazyPage>} />
               <Route path="institutes/generate-ai" element={<LazyPage><AdminWriteInstitute /></LazyPage>} />
               <Route path="courses/generate-ai" element={<LazyPage><AdminWriteCourses /></LazyPage>} />
               <Route path="website-optimizer" element={<LazyPage><AdminWebsiteOptimizer /></LazyPage>} />
