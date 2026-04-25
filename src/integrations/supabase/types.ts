@@ -473,8 +473,11 @@ export type Database = {
           started_at: string | null
           status: string
           succeeded: number
+          telemetry: Json
           total_rows: number
           updated_at: string
+          worker_id: string | null
+          worker_lock_until: string | null
         }
         Insert: {
           completed?: number
@@ -493,8 +496,11 @@ export type Database = {
           started_at?: string | null
           status?: string
           succeeded?: number
+          telemetry?: Json
           total_rows?: number
           updated_at?: string
+          worker_id?: string | null
+          worker_lock_until?: string | null
         }
         Update: {
           completed?: number
@@ -513,8 +519,11 @@ export type Database = {
           started_at?: string | null
           status?: string
           succeeded?: number
+          telemetry?: Json
           total_rows?: number
           updated_at?: string
+          worker_id?: string | null
+          worker_lock_until?: string | null
         }
         Relationships: []
       }
@@ -535,9 +544,12 @@ export type Database = {
           status: string
           steps_done: number
           succeeded: number
+          telemetry: Json
           total_rows: number
           total_steps: number
           updated_at: string
+          worker_id: string | null
+          worker_lock_until: string | null
         }
         Insert: {
           concurrency?: number
@@ -555,9 +567,12 @@ export type Database = {
           status?: string
           steps_done?: number
           succeeded?: number
+          telemetry?: Json
           total_rows?: number
           total_steps?: number
           updated_at?: string
+          worker_id?: string | null
+          worker_lock_until?: string | null
         }
         Update: {
           concurrency?: number
@@ -575,9 +590,12 @@ export type Database = {
           status?: string
           steps_done?: number
           succeeded?: number
+          telemetry?: Json
           total_rows?: number
           total_steps?: number
           updated_at?: string
+          worker_id?: string | null
+          worker_lock_until?: string | null
         }
         Relationships: []
       }
