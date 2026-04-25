@@ -9,6 +9,10 @@ interface AIExtensionBlockProps {
   } | null;
   /** Friendly label for what the AI extends — e.g. "Placement Insights" */
   extensionLabel: string;
+  /** Name of the college — used to deep-link inline citations to the college's site. */
+  entityName?: string;
+  /** Official website URL — used to deep-link citations like "Placement Report" via site:domain queries. */
+  entityWebsite?: string;
 }
 
 /**
@@ -18,7 +22,7 @@ interface AIExtensionBlockProps {
  * clearly marked as additional in-depth coverage. The original section is never
  * replaced; both are stored independently in the database.
  */
-const AIExtensionBlock = ({ section, extensionLabel }: AIExtensionBlockProps) => {
+const AIExtensionBlock = ({ section, extensionLabel, entityName, entityWebsite }: AIExtensionBlockProps) => {
   if (!section) return null;
   const html = section.content || "";
   const hasContent = html.trim().length > 0;
@@ -39,7 +43,7 @@ const AIExtensionBlock = ({ section, extensionLabel }: AIExtensionBlockProps) =>
       </div>
       <div
         className="ai-content max-w-none text-muted-foreground leading-relaxed"
-        dangerouslySetInnerHTML={{ __html: enhanceAIContent(html) }}
+        dangerouslySetInnerHTML={{ __html: enhanceAIContent(html, { entityName, entityWebsite }) }}
       />
     </div>
   );

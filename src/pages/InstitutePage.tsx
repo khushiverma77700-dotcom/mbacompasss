@@ -244,7 +244,7 @@ const InstitutePage = () => {
                 <div key={s.label} className="bg-primary-foreground/10 backdrop-blur-sm rounded-lg px-4 py-2">
                   <div className="text-xs text-primary-foreground/70 flex items-center gap-1">
                     {s.label}
-                    <CitationLink source={s.source} year={s.year} className="!bg-primary-foreground/15 !border-primary-foreground/25 !text-primary-foreground/90" />
+                    <CitationLink source={s.source} year={s.year} entityName={institute.name} entityWebsite={(institute as any).website} className="!bg-primary-foreground/15 !border-primary-foreground/25 !text-primary-foreground/90" />
                   </div>
                   <div className="font-heading font-bold text-primary-foreground">{s.value}</div>
                 </div>
@@ -300,7 +300,7 @@ const InstitutePage = () => {
             <Card id="institute-about" className="scroll-mt-24">
               <CardHeader><CardTitle className="font-heading">About {institute.name}</CardTitle></CardHeader>
               <CardContent>
-                <div className="ai-content max-w-none text-muted-foreground leading-relaxed mb-4" dangerouslySetInnerHTML={{ __html: enhanceAIContent(institute.description || '') }} />
+                <div className="ai-content max-w-none text-muted-foreground leading-relaxed mb-4" dangerouslySetInnerHTML={{ __html: enhanceAIContent(institute.description || '', { entityName: institute.name, entityWebsite: (institute as any).website }) }} />
                 <div className="mb-3">
                   <LastUpdatedBadge date={(institute as any).last_seo_refresh || (institute as any).updated_at} variant="subtle" />
                 </div>
@@ -594,7 +594,7 @@ const InstitutePage = () => {
                                 {/* Description */}
                                 {course.description && (
                                   <div className="bg-muted/20 rounded-xl p-4 border border-border/30">
-                                    <div className="ai-content text-sm text-muted-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: enhanceAIContent(course.description) }} />
+                                    <div className="ai-content text-sm text-muted-foreground leading-relaxed" dangerouslySetInnerHTML={{ __html: enhanceAIContent(course.description, { entityName: institute.name, entityWebsite: (institute as any).website }) }} />
                                     <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
                                       <div className="rounded-md border border-border bg-card px-2 py-1.5">
                                         <div className="text-muted-foreground">Fees</div>
