@@ -537,16 +537,35 @@ const AdminCollegeSections = () => {
       <Card>
         <CardContent className="p-0">
           <Table>
-            <TableHeader><TableRow><TableHead>College</TableHead><TableHead>Section</TableHead><TableHead>Title</TableHead><TableHead>Order</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead>College</TableHead><TableHead>Section</TableHead><TableHead>Version</TableHead><TableHead>Title</TableHead><TableHead>Active</TableHead><TableHead>Order</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
             <TableBody>
               {filteredSections.map((s) => (
-                <TableRow key={s.id}>
+                <TableRow key={s.id} className={s.version && s.version !== "original" ? "bg-primary/[0.03]" : ""}>
                   <TableCell className="font-medium">{(s as any).colleges?.name || "—"}</TableCell>
                   <TableCell><Badge variant="outline">{SECTION_TYPES.find((t) => t.value === s.section_type)?.label || s.section_type}</Badge></TableCell>
+                  <TableCell>
+                    {s.version === "original" || !s.version ? (
+                      <Badge variant="secondary" className="text-[10px]">Original</Badge>
+                    ) : (
+                      <Badge className="text-[10px] bg-primary/15 text-primary hover:bg-primary/15"><Sparkles className="w-2.5 h-2.5 mr-1" />{s.version.toUpperCase()}</Badge>
+                    )}
+                  </TableCell>
                   <TableCell>{s.title || "—"}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost" size="sm" className="h-7 px-2 text-xs"
+                      onClick={async () => {
+                        await supabase.from("college_sections").update({ is_active: !s.is_active }).eq("id", s.id);
+                        toast({ title: !s.is_active ? "Section activated" : "Section hidden" });
+                        fetchSections();
+                      }}
+                    >
+                      {s.is_active === false ? <XCircle className="w-3.5 h-3.5 text-muted-foreground" /> : <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                    </Button>
+                  </TableCell>
                   <TableCell>{s.sort_order}</TableCell>
                   <TableCell className="text-right space-x-1">
-                    <Button variant="ghost" size="sm" onClick={() => handleAIGenerateRow(s)} disabled={aiBusy === `row:${s.id}`} title="Regenerate with AI">
+                    <Button variant="ghost" size="sm" onClick={() => handleAIGenerateRow(s)} disabled={aiBusy === `row:${s.id}`} title="Generate / refresh AI version (original is preserved)">
                       {aiBusy === `row:${s.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-primary" />}
                     </Button>
                     <Button variant="ghost" size="sm" onClick={() => handleEdit(s.id)}><Pencil className="w-4 h-4" /></Button>
@@ -554,7 +573,7 @@ const AdminCollegeSections = () => {
                   </TableCell>
                 </TableRow>
               ))}
-              {filteredSections.length === 0 && (<TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">{sections.length === 0 ? 'No sections yet. Select a college and click "Quick Add All Missing" to scaffold all sections.' : "No sections match the current filters."}</TableCell></TableRow>)}
+              {filteredSections.length === 0 && (<TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">{sections.length === 0 ? 'No sections yet. Select a college and click "Quick Add All Missing" to scaffold all sections.' : "No sections match the current filters."}</TableCell></TableRow>)}
             </TableBody>
           </Table>
         </CardContent>
