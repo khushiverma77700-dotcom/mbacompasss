@@ -410,6 +410,11 @@ const AdminCollegeSections = () => {
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="font-heading text-2xl font-bold text-foreground">College Sections</h1>
         <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" asChild>
+            <a href="/admin/college-sections/bulk-generate">
+              <Sparkles className="w-4 h-4 mr-1" /> Bulk Generate (Paste Names)
+            </a>
+          </Button>
           {selectedCollege && (
             <Button variant="outline" onClick={handleAIGenerateAll} disabled={aiBusy === "bulk"}>
               {aiBusy === "bulk" ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Generating all…</> : <><Sparkles className="w-4 h-4 mr-1" /> Generate ALL via AI</>}

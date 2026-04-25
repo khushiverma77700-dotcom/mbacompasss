@@ -512,6 +512,63 @@ export type Database = {
         }
         Relationships: []
       }
+      bulk_section_jobs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          current_activity: string | null
+          error_message: string | null
+          failed: number
+          finished_at: string | null
+          id: string
+          not_found: number
+          rows: Json
+          started_at: string | null
+          status: string
+          steps_done: number
+          succeeded: number
+          total_rows: number
+          total_steps: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          current_activity?: string | null
+          error_message?: string | null
+          failed?: number
+          finished_at?: string | null
+          id?: string
+          not_found?: number
+          rows?: Json
+          started_at?: string | null
+          status?: string
+          steps_done?: number
+          succeeded?: number
+          total_rows?: number
+          total_steps?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          current_activity?: string | null
+          error_message?: string | null
+          failed?: number
+          finished_at?: string | null
+          id?: string
+          not_found?: number
+          rows?: Json
+          started_at?: string | null
+          status?: string
+          steps_done?: number
+          succeeded?: number
+          total_rows?: number
+          total_steps?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       business_inquiries: {
         Row: {
           contact_number: string
