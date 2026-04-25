@@ -178,14 +178,13 @@ const BulkLiveControlPanel = ({
 
   // Server pressure now comes from real worker telemetry when available.
   const serverLoad = useMemo(() => {
-    if (serverCpu > 0) return Math.min(100, Math.round(serverCpu));
     const utilisation = concurrency > 0 ? Math.min(1, active / concurrency) : 0;
     const completed = succeeded + failed;
     const failureRate = completed > 0 ? failed / completed : 0;
     const idleMin = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 60000 : 0;
     const idlePenalty = Math.min(1, Math.max(0, idleMin - 1) / 5);
-    const score = utilisation * 60 + failureRate * 30 + idlePenalty * 10;
-    return Math.min(100, Math.round(score));
+    const workerPressure = utilisation * 70 + failureRate * 20 + idlePenalty * 10;
+    return Math.min(100, Math.round(Math.max(serverCpu, workerPressure)));
   }, [serverCpu, active, concurrency, succeeded, failed, updatedAt]);
 
   const cpuHistory = useRolling(browserCpu);
