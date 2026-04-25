@@ -169,16 +169,18 @@ export default function AdminBulkGenerateSections() {
     if (data) setJob(data as any);
   };
 
+  const liveMetrics = useMemo(() => getSectionJobMetrics(job), [job]);
+
   const overallPct = job
     ? Math.round((liveMetrics.stepsDone / Math.max(liveMetrics.totalSteps, 1)) * 100)
     : 0;
 
   const eta = useMemo(() => {
     if (!job || job.status !== "running") return null;
-    const remaining = Math.max(job.total_steps - job.steps_done, 0);
+    const remaining = Math.max(liveMetrics.totalSteps - liveMetrics.stepsDone, 0);
     const seconds = remaining * PER_STEP_SECONDS;
     return seconds;
-  }, [job]);
+  }, [job, liveMetrics.totalSteps, liveMetrics.stepsDone]);
 
   const elapsed = useMemo(() => {
     if (!job?.started_at) return null;
