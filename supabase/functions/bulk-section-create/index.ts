@@ -73,6 +73,7 @@ interface SectionStep {
   label: string;
   status: "pending" | "processing" | "succeeded" | "failed";
   error?: string;
+  startedAt?: string;
 }
 
 interface RowState {
