@@ -10,6 +10,8 @@ import { toast } from "@/hooks/use-toast";
 import {
   Activity, Cpu, Gauge, PauseCircle, PlayCircle, Save, Server, Zap,
   AlertTriangle, ShieldCheck, Layers, Flame, HardDrive, Network,
+  Database, Timer, TrendingUp, Radio, Waves, CircuitBoard, Thermometer,
+  CheckCircle2, XCircle, Clock, Wifi, BarChart3,
 } from "lucide-react";
 
 type Workflow = "Bulk Colleges" | "Bulk College Sections";
