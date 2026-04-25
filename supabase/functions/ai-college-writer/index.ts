@@ -229,6 +229,73 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       }
     };
 
+    const callToolModel = async ({
+      system,
+      user,
+      maxTokens,
+      label,
+      tool,
+    }: {
+      system: string;
+      user: string;
+      maxTokens: number;
+      label: string;
+      tool: any;
+    }) => {
+      let lastParseError = "";
+
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const res = await callAIGateway({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: `${system}\n\nYou MUST respond by calling the provided function only. Do not write raw JSON in message.content.` },
+            {
+              role: "user",
+              content: attempt === 0
+                ? user
+                : `${user}\n\nRETRY: Your previous function arguments were not valid JSON (${lastParseError}). Call the function again with short, valid, escaped string values. Do not include unescaped quotes or raw line breaks inside strings.`,
+            },
+          ],
+          tools: [tool],
+          tool_choice: { type: "function", function: { name: tool.function.name } },
+          max_tokens: maxTokens,
+        });
+
+        if (!res.ok) {
+          const txt = await res.text();
+          console.error(`${label} AI error:`, res.status, txt);
+          if (res.status === 429) throw new Error("RATE_LIMIT");
+          if (res.status === 402) throw new Error("GEMINI_QUOTA");
+          throw new Error(`${label} failed: ${txt.slice(0, 500)}`);
+        }
+
+        const payload = await res.json();
+        const message = payload?.choices?.[0]?.message;
+        const args = message?.tool_calls?.[0]?.function?.arguments;
+        const content = message?.content;
+
+        if (args && typeof args === "object") return args;
+
+        const raw = typeof args === "string" && args.trim()
+          ? args
+          : (typeof content === "string" ? content : "");
+
+        if (!raw.trim()) {
+          lastParseError = "empty function arguments";
+          continue;
+        }
+
+        try {
+          return extractJSON(raw);
+        } catch (parseError) {
+          lastParseError = parseError instanceof Error ? parseError.message : String(parseError);
+          console.warn(`${label} parse attempt ${attempt + 1} failed:`, lastParseError);
+        }
+      }
+
+      throw new Error(`${label} returned malformed JSON after retry: ${lastParseError}`);
+    };
+
     const callTextModel = async ({
       system,
       user,
