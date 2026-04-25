@@ -11,7 +11,7 @@ import {
   Activity, Cpu, Gauge, PauseCircle, PlayCircle, Save, Server, Zap,
   AlertTriangle, ShieldCheck, Layers, Flame, HardDrive, Network,
   Database, Timer, TrendingUp, Radio, Waves, CircuitBoard, Thermometer,
-  CheckCircle2, XCircle, Clock, Wifi, BarChart3,
+  CheckCircle2, XCircle, Clock, Wifi, BarChart3, RefreshCw,
 } from "lucide-react";
 
 type Workflow = "Bulk Colleges" | "Bulk College Sections";
@@ -30,6 +30,9 @@ interface Props {
   pending: number;
   total: number;
   updatedAt?: string | null;
+  telemetry?: any;
+  onRefresh?: () => void | Promise<void>;
+  refreshing?: boolean;
 }
 
 /** Simple rolling buffer for sparkline rendering */
@@ -109,7 +112,7 @@ const ActivityHeatmap = ({ data, max = 60 }: { data: number[]; max?: number }) =
 
 const BulkLiveControlPanel = ({
   workflow, table, jobId, status, paused, concurrency,
-  active, succeeded, failed, pending, total, updatedAt,
+  active, succeeded, failed, pending, total, updatedAt, telemetry, onRefresh, refreshing,
 }: Props) => {
   const [draftConcurrency, setDraftConcurrency] = useState(concurrency);
   const [saving, setSaving] = useState(false);
@@ -117,6 +120,25 @@ const BulkLiveControlPanel = ({
   const [tickRate, setTickRate] = useState(0); // throughput items/min approx
   const lastSucceeded = useRef(succeeded);
   const lastTime = useRef(Date.now());
+
+  const networkStats = telemetry?.network || {};
+  const serverCpu = Number(telemetry?.cpu?.loadPct || 0);
+  const memory = telemetry?.memory || null;
+  const memoryUsedMb = Number(memory?.heapUsed || memory?.rss || 0);
+  const memoryTotalMb = Number(memory?.heapTotal || memory?.rss || 0);
+  const memoryPct = memoryTotalMb > 0 ? Math.min(100, Math.round((memoryUsedMb / memoryTotalMb) * 100)) : 0;
+  const requestBytes = Number(networkStats.requestBytes || 0);
+  const responseBytes = Number(networkStats.responseBytes || 0);
+  const networkRequests = Number(networkStats.requests || 0);
+  const networkFailures = Number(networkStats.failed || 0);
+  const networkSuccess = Number(networkStats.success || 0);
+  const realLatencyMs = Number(networkStats.avgLatencyMs || 0);
+  const formatBytes = (bytes: number) => {
+    if (!bytes) return "0 B";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  };
 
   useEffect(() => { setDraftConcurrency(concurrency); }, [concurrency]);
 
@@ -151,32 +173,45 @@ const BulkLiveControlPanel = ({
     }
   }, [succeeded]);
 
-  // Server load proxy: combines active utilisation + failure rate + idle time
+  // Server pressure now comes from real worker telemetry when available.
   const serverLoad = useMemo(() => {
+    if (serverCpu > 0) return Math.min(100, Math.round(serverCpu));
     const utilisation = concurrency > 0 ? Math.min(1, active / concurrency) : 0;
     const completed = succeeded + failed;
     const failureRate = completed > 0 ? failed / completed : 0;
     const idleMin = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 60000 : 0;
-    const idlePenalty = Math.min(1, Math.max(0, idleMin - 1) / 5); // grows after 1m idle
+    const idlePenalty = Math.min(1, Math.max(0, idleMin - 1) / 5);
     const score = utilisation * 60 + failureRate * 30 + idlePenalty * 10;
     return Math.min(100, Math.round(score));
-  }, [active, concurrency, succeeded, failed, updatedAt]);
+  }, [serverCpu, active, concurrency, succeeded, failed, updatedAt]);
 
   const cpuHistory = useRolling(browserCpu);
   const loadHistory = useRolling(serverLoad);
 
-  // Per-second ops history (for heatmap) — tracks delta of (succeeded+failed)
-  const [opsHistory, setOpsHistory] = useState<number[]>([]);
+  // Per-second ops history for heatmap — driven by real worker telemetry events.
+  const [opsHistory, setOpsHistory] = useState<number[]>(Array.from({ length: 60 }, () => 0));
   const lastTotalRef = useRef(succeeded + failed);
   useEffect(() => {
-    const t = setInterval(() => {
+    const buildBins = () => {
+      const now = Date.now();
+      const bins = Array.from({ length: 60 }, () => 0);
+      const timeline = Array.isArray(telemetry?.timeline) ? telemetry.timeline : [];
+      for (const point of timeline) {
+        const ts = Number(point?.ts || 0);
+        if (!ts) continue;
+        const age = Math.floor((now - ts) / 1000);
+        if (age >= 0 && age < 60) bins[59 - age] += Math.max(1, Number(point?.ops || 1));
+      }
       const cur = succeeded + failed;
       const delta = Math.max(0, cur - lastTotalRef.current);
       lastTotalRef.current = cur;
-      setOpsHistory((h) => [...h, delta].slice(-60));
-    }, 1000);
+      if (delta > 0) bins[59] += delta;
+      setOpsHistory(bins);
+    };
+    buildBins();
+    const t = setInterval(buildBins, 1000);
     return () => clearInterval(t);
-  }, [succeeded, failed]);
+  }, [telemetry, succeeded, failed]);
 
   // Live event ticker (last 8)
   const [events, setEvents] = useState<{ ts: number; kind: "ok" | "fail" | "info"; msg: string }[]>([]);
@@ -198,17 +233,17 @@ const BulkLiveControlPanel = ({
   }, [succeeded, failed]);
 
   useEffect(() => {
+    const realEvents = Array.isArray(telemetry?.events)
+      ? telemetry.events.map((e: any) => ({ ts: Number(e.ts) || Date.now(), kind: e.kind === "fail" ? "fail" as const : e.kind === "ok" ? "ok" as const : "info" as const, msg: String(e.msg || "Worker event") }))
+      : [];
+    if (realEvents.length) setEvents((p) => [...realEvents, ...p].slice(0, 8));
+  }, [telemetry?.updatedAt]);
+
+  useEffect(() => {
     setEvents((p) => [{ ts: Date.now(), kind: "info" as const, msg: paused ? "Job paused by admin" : "Job resumed — workers warming up" }, ...p].slice(0, 8));
   }, [paused]);
 
-  // Approximate AI gateway latency (ms) — derived from throughput per slot
-  const latencyMs = useMemo(() => {
-    if (tickRate <= 0 || active === 0) return 0;
-    // each active slot completes (tickRate/active) items per minute → ms per item
-    const perSlotPerMin = tickRate / Math.max(1, active);
-    if (perSlotPerMin <= 0) return 0;
-    return Math.round((60_000 / perSlotPerMin));
-  }, [tickRate, active]);
+  const latencyMs = realLatencyMs;
 
   // ETA
   const remaining = Math.max(0, total - succeeded - failed);
@@ -224,9 +259,6 @@ const BulkLiveControlPanel = ({
   const progressPct = total > 0 ? Math.round((completedAll / total) * 100) : 0;
   const successRate = completedAll > 0 ? (succeeded / completedAll) * 100 : 0;
   const failureRatePct = completedAll > 0 ? (failed / completedAll) * 100 : 0;
-
-  // Synthetic network I/O (KB/s) based on throughput — purely visualisation
-  const netIO = Math.round(tickRate * 18); // ~18 KB per AI completion ballpark
 
   const loadTone =
     serverLoad >= 80 ? { color: "text-destructive", bg: "bg-destructive/10", border: "border-destructive/40", label: "Critical" }
@@ -298,6 +330,9 @@ const BulkLiveControlPanel = ({
             </Badge>
           </CardTitle>
           <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={onRefresh} disabled={!!refreshing} className="h-7 gap-1.5">
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} /> Refresh / Resume
+            </Button>
             {!isTerminal && (
               <Button size="sm" variant="destructive" onClick={stopAll} className="h-7 gap-1.5">
                 <Flame className="w-3.5 h-3.5" /> Emergency Stop ALL
@@ -314,13 +349,14 @@ const BulkLiveControlPanel = ({
           <div className={`rounded-lg border ${loadTone.border} ${loadTone.bg} p-3`}>
             <div className="flex items-center justify-between mb-1.5">
               <div className={`flex items-center gap-1.5 text-[11px] font-semibold ${loadTone.color}`}>
-                <Gauge className="w-3.5 h-3.5" /> SERVER LOAD
+                <Gauge className="w-3.5 h-3.5" /> SERVER CPU
               </div>
               <Badge variant="outline" className={`${loadTone.color} border-current text-[10px] h-5`}>{loadTone.label}</Badge>
             </div>
             <div className={`text-2xl font-bold font-mono leading-tight ${loadTone.color}`}>{serverLoad}%</div>
             <Sparkline data={loadHistory} color={serverLoad >= 80 ? "hsl(var(--destructive))" : serverLoad >= 55 ? "rgb(217 119 6)" : "rgb(5 150 105)"} />
-            <div className="text-[10px] text-muted-foreground mt-0.5">util · failures · idle</div>
+            <div className="text-[10px] text-muted-foreground mt-0.5">worker runtime · real telemetry</div>
+            {memory && <div className="text-[10px] text-muted-foreground font-mono mt-1">mem {memoryUsedMb}/{memoryTotalMb || "?"} MB · {memoryPct}%</div>}
           </div>
 
           {/* Browser CPU */}
@@ -342,7 +378,7 @@ const BulkLiveControlPanel = ({
               <div className="flex items-center gap-1.5 text-[11px] font-semibold text-primary">
                 <Zap className="w-3.5 h-3.5" /> THROUGHPUT
               </div>
-              <Badge variant="outline" className="text-[10px] h-5 border-primary/40 text-primary">items/min</Badge>
+              <Badge variant="outline" className="text-[10px] h-5 border-primary/40 text-primary">{networkRequests} req</Badge>
             </div>
             <div className="text-2xl font-bold font-mono leading-tight text-primary">{tickRate.toFixed(1)}</div>
             <div className="grid grid-cols-3 gap-1 mt-2 text-[10px]">
@@ -575,7 +611,7 @@ const BulkLiveControlPanel = ({
             <div className={`text-2xl font-bold font-mono leading-tight ${latencyMs > 8000 ? "text-destructive" : latencyMs > 4000 ? "text-amber-700" : "text-emerald-700"}`}>
               {latencyMs > 0 ? `${(latencyMs / 1000).toFixed(1)}s` : "—"}
             </div>
-            <div className="text-[10px] text-muted-foreground mt-1">per item · est. from throughput</div>
+            <div className="text-[10px] text-muted-foreground mt-1">real avg · worker HTTP</div>
           </div>
         </div>
 
@@ -586,9 +622,9 @@ const BulkLiveControlPanel = ({
               <Wifi className="w-3.5 h-3.5 text-primary" /> Network I/O
             </div>
             {[
-              { label: "AI gateway ↑", value: Math.min(100, netIO * 0.4), unit: `${(netIO * 0.4).toFixed(0)} KB/s`, color: "bg-blue-500" },
-              { label: "AI gateway ↓", value: Math.min(100, netIO * 0.9), unit: `${(netIO * 0.9).toFixed(0)} KB/s`, color: "bg-cyan-500" },
-              { label: "DB writes", value: Math.min(100, tickRate * 4), unit: `${tickRate.toFixed(1)} qps`, color: "bg-violet-500" },
+              { label: "Request payload ↑", value: Math.min(100, requestBytes / 1024), unit: formatBytes(requestBytes), color: "bg-primary" },
+              { label: "Response payload ↓", value: Math.min(100, responseBytes / 1024), unit: formatBytes(responseBytes), color: "bg-accent" },
+              { label: "DB writes", value: Math.min(100, Number(telemetry?.db?.writes || 0) * 2), unit: `${Number(telemetry?.db?.writes || 0)} writes`, color: "bg-secondary" },
             ].map((row) => (
               <div key={row.label} className="mb-2 last:mb-0">
                 <div className="flex items-center justify-between text-[10px] mb-0.5">
@@ -600,9 +636,10 @@ const BulkLiveControlPanel = ({
                 </div>
               </div>
             ))}
-            <div className="mt-3 pt-2 border-t flex items-center justify-between text-[10px]">
-              <span className="text-muted-foreground flex items-center gap-1"><Database className="w-3 h-3" /> queue</span>
-              <span className="font-mono">{pending} pending</span>
+            <div className="mt-3 pt-2 border-t grid grid-cols-3 gap-2 text-[10px]">
+              <div><span className="text-muted-foreground">ok</span><div className="font-mono text-emerald-700">{networkSuccess}</div></div>
+              <div><span className="text-muted-foreground">fail</span><div className="font-mono text-destructive">{networkFailures}</div></div>
+              <div><span className="text-muted-foreground flex items-center gap-1"><Database className="w-3 h-3" /> queue</span><div className="font-mono">{pending}</div></div>
             </div>
           </div>
 
