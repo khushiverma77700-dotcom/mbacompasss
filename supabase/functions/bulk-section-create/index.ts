@@ -577,8 +577,8 @@ async function runJob(job_id: string, authHeader: string) {
         const busyStarted = Date.now();
         try {
           await processCollege(admin, authHeader, job_id, rowsRef, eligible[myIdx], cancelFlag, tracker, workerId);
-          const stepsDoneNow = rowsRef.value.reduce((acc, r) => acc + (r.steps || []).filter(s => s.status === "succeeded" || s.status === "failed").length, 0);
-          tracker.recordProgress(stepsDoneNow, eligible[myIdx].matchedName || eligible[myIdx].inputName);
+          const metricsNow = computeSectionMetrics(rowsRef.value);
+          tracker.recordProgress(metricsNow.steps_done, eligible[myIdx].matchedName || eligible[myIdx].inputName);
         } finally {
           tracker.addBusy(Date.now() - busyStarted);
           activeRef.n = Math.max(0, activeRef.n - 1);
@@ -590,13 +590,7 @@ async function runJob(job_id: string, authHeader: string) {
     pollerStop = true;
     await poller.catch(() => {});
 
-    const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
-    const failed = rowsRef.value.filter(r => r.status === "failed").length;
-    const not_found = rowsRef.value.filter(r => r.status === "not_found").length;
-    const steps_done = rowsRef.value.reduce(
-      (acc, r) => acc + (r.steps || []).filter(s => s.status === "succeeded" || s.status === "failed").length,
-      0,
-    );
+    const finalMetrics = computeSectionMetrics(rowsRef.value);
 
     if (cancelFlag.v) {
       for (const r of rowsRef.value) {
@@ -613,6 +607,7 @@ async function runJob(job_id: string, authHeader: string) {
       await releaseWorkerLock(admin, "bulk_section_jobs", job_id, workerId, tracker, {
         rows: rowsRef.value,
         status: "cancelled",
+        ...sectionMetricPatch(computeSectionMetrics(rowsRef.value)),
         finished_at: new Date().toISOString(),
         current_activity: "Cancelled by admin",
       });
@@ -625,10 +620,7 @@ async function runJob(job_id: string, authHeader: string) {
       await releaseWorkerLock(admin, "bulk_section_jobs", job_id, workerId, tracker, {
         status: "running",
         rows: rowsRef.value,
-        steps_done,
-        succeeded,
-        failed,
-        not_found,
+        ...sectionMetricPatch(finalMetrics),
         current_activity: "Paused — worker parked safely",
       });
       return;
@@ -640,10 +632,7 @@ async function runJob(job_id: string, authHeader: string) {
       await releaseWorkerLock(admin, "bulk_section_jobs", job_id, workerId, tracker, {
         status: "running",
         rows: rowsRef.value,
-        steps_done,
-        succeeded,
-        failed,
-        not_found,
+        ...sectionMetricPatch(finalMetrics),
         current_activity: `Continuing… ${remaining} college(s) remaining`,
       });
 
@@ -664,10 +653,7 @@ async function runJob(job_id: string, authHeader: string) {
       status: "completed",
       finished_at: new Date().toISOString(),
       rows: rowsRef.value,
-      steps_done,
-      succeeded,
-      failed,
-      not_found,
+      ...sectionMetricPatch(finalMetrics),
       current_activity: "All done",
     });
   } catch (err) {
