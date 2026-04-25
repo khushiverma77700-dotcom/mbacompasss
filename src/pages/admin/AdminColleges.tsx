@@ -409,8 +409,8 @@ const AdminColleges = () => {
       />
 
       <Card>
-        <CardContent className="p-0">
-          <Table>
+        <CardContent className="p-0 overflow-x-auto">
+          <Table className="min-w-[1100px]">
             <TableHeader>
               <TableRow>
                 <TableHead className="w-12">S.No</TableHead>
@@ -421,7 +421,7 @@ const AdminColleges = () => {
                 <SortableTableHead label="City" sortKey="city" sortConfig={sortConfig} onSort={handleSort} />
                 <SortableTableHead label="Type" sortKey="type" sortConfig={sortConfig} onSort={handleSort} />
                 <SortableTableHead label="Created" sortKey="created_at" sortConfig={sortConfig} onSort={handleSort} />
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-right w-[280px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -445,11 +445,13 @@ const AdminColleges = () => {
                   <TableCell>{c.city ?? "—"}</TableCell>
                   <TableCell><Badge variant="secondary">{c.type ?? "—"}</Badge></TableCell>
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{c.created_at ? new Date(c.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}<br/><span className="text-[10px]">{c.created_at ? new Date(c.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }) : ""}</span></TableCell>
-                  <TableCell className="text-right space-x-2">
-                    <FullPageReauditButton kind="college" entityId={c.id} entityName={c.name} />
-                    <RefreshContentButton entityType="college" entityId={c.id} entityName={c.name} />
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(c.id)}><Pencil className="w-4 h-4" /></Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(c.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1 flex-nowrap whitespace-nowrap">
+                      <FullPageReauditButton kind="college" entityId={c.id} entityName={c.name} />
+                      <RefreshContentButton entityType="college" entityId={c.id} entityName={c.name} />
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleEdit(c.id)}><Pencil className="w-4 h-4" /></Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => handleDelete(c.id)}><Trash2 className="w-4 h-4 text-destructive" /></Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
