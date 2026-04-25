@@ -228,14 +228,31 @@ async function runJob(job_id: string, authHeader: string) {
   const eligible = rows.filter(r => r.status === "pending");
 
   let cursor = 0;
+  let cancelled = false;
+  const checkCancelled = async (): Promise<boolean> => {
+    if (cancelled) return true;
+    const { data: cur } = await admin.from("bulk_section_jobs").select("status").eq("id", job_id).maybeSingle();
+    if (cur?.status === "cancelled") { cancelled = true; return true; }
+    return false;
+  };
   const workers = Array.from({ length: COLLEGE_CONCURRENCY }, async () => {
     while (true) {
+      if (await checkCancelled()) return;
       const myIdx = cursor++;
       if (myIdx >= eligible.length) return;
       await processCollege(admin, authHeader, job_id, rowsRef, eligible[myIdx]);
     }
   });
   await Promise.all(workers);
+
+  if (cancelled) {
+    await admin.from("bulk_section_jobs").update({
+      status: "cancelled",
+      finished_at: new Date().toISOString(),
+      current_activity: "Cancelled by admin",
+    }).eq("id", job_id);
+    return;
+  }
 
   await admin.from("bulk_section_jobs").update({
     status: "completed",
