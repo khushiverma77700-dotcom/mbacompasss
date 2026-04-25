@@ -300,6 +300,9 @@ const AdminBulkCreateColleges = () => {
       toast({ title: "Retry failed", description: error.message, variant: "destructive" });
       return;
     }
+    const { data: refreshed } = await supabase
+      .from("bulk_college_jobs").select("*").eq("id", jobId).maybeSingle();
+    if (refreshed) setJob(refreshed as any);
     toast({ title: "Retrying failed rows", description: `${failedCount} row${failedCount === 1 ? "" : "s"} re-queued.` });
   };
 
