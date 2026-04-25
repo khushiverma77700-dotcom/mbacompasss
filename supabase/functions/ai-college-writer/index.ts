@@ -630,7 +630,7 @@ RULES:
           tools: [factCheckTool],
           tool_choice: { type: "function", function: { name: "audit_college_facts" } },
           max_tokens: 2000,
-        }, { feature: "ai-college-writer", provider });
+        }, { feature: "ai-college-writer", provider, purpose: "structured" });
       if (auditRes.ok) {
         const auditJson = await auditRes.json();
         const auditArgs = auditJson?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
