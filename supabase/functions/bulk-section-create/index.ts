@@ -18,7 +18,16 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-const COLLEGE_CONCURRENCY = 2;
+const COLLEGE_CONCURRENCY = 1;
+const AI_SECTION_MAX_ATTEMPTS = 3;
+const AI_SECTION_RETRY_BASE_DELAY_MS = 2500;
+const SECTION_PAUSE_MS = 1200;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isRetryableAISectionFailure = (status: number, text: string) =>
+  status === 408 || status === 429 || status >= 500 ||
+  /malformed json|unterminated string|unexpected end|truncated|ai generation failed|empty section|did not return a structured/i.test(text);
 
 const SECTION_TYPES: { value: string; label: string }[] = [
   { value: "courses_fees", label: "Courses & Fee Structure" },
@@ -61,37 +70,57 @@ async function generateOneSection(
   college: any,
   sectionType: string,
   anchorFacts: any,
+  cancelFlag?: { v: boolean },
 ) {
   const cy = new Date().getFullYear();
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/ai-college-section`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: authHeader,
-      apikey: ANON_KEY,
-    },
-    body: JSON.stringify({
-      collegeId: college.id,
-      collegeName: college.name,
-      city: college.city,
-      state: college.state,
-      type: college.type,
-      tier: college.tier,
-      established: college.established,
-      sectionType,
-      anchorFacts,
-      factSafety: true,
-      freshnessWindow: `${cy - 1}-${cy + 1}`,
-    }),
-  });
-  if (!res.ok) {
+  const body = {
+    collegeId: college.id,
+    collegeName: college.name,
+    city: college.city,
+    state: college.state,
+    type: college.type,
+    tier: college.tier,
+    established: college.established,
+    sectionType,
+    anchorFacts,
+    factSafety: true,
+    freshnessWindow: `${cy - 1}-${cy + 1}`,
+  };
+
+  let lastError = "";
+  for (let attempt = 1; attempt <= AI_SECTION_MAX_ATTEMPTS; attempt++) {
+    if (cancelFlag?.v) throw new Error("Cancelled by admin");
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/ai-college-section`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authHeader,
+        apikey: ANON_KEY,
+      },
+      body: JSON.stringify(body),
+    });
+
     const txt = await res.text();
-    throw new Error(`AI section failed (${res.status}): ${txt.slice(0, 200)}`);
+    if (res.ok) {
+      try {
+        const data = JSON.parse(txt);
+        if (data?.error) throw new Error(data.error);
+        if (!data?.section) throw new Error("AI returned empty section");
+        return data.section as { title: string | null; content: string; data: any };
+      } catch (e: any) {
+        lastError = e?.message || "AI section returned invalid response JSON";
+      }
+    } else {
+      lastError = `AI section failed (${res.status}): ${txt.slice(0, 300)}`;
+      if (!isRetryableAISectionFailure(res.status, txt)) break;
+    }
+
+    if (attempt < AI_SECTION_MAX_ATTEMPTS) {
+      await sleep(AI_SECTION_RETRY_BASE_DELAY_MS * attempt);
+    }
   }
-  const data = await res.json();
-  if (data?.error) throw new Error(data.error);
-  if (!data?.section) throw new Error("AI returned empty section");
-  return data.section as { title: string | null; content: string; data: any };
+
+  throw new Error(lastError || "AI section failed after retries");
 }
 
 async function processCollege(
@@ -205,7 +234,7 @@ async function processCollege(
       await persist();
 
       try {
-        const sec = await generateOneSection(authHeader, college, step.type, anchorFacts);
+        const sec = await generateOneSection(authHeader, college, step.type, anchorFacts, cancelFlag);
         // Re-check after the (potentially long) AI call — discard result if cancelled
         if (cancelFlag.v) { await cleanupOnCancel(); return; }
         const target = byType[step.type];
@@ -226,7 +255,7 @@ async function processCollege(
       rowsRef.value = [...rowsRef.value];
       await persist();
       // small pause to avoid burst rate-limits
-      await new Promise(r => setTimeout(r, 600));
+      await sleep(SECTION_PAUSE_MS);
     }
 
     const anyFailed = row.steps.some(s => s.status === "failed");
