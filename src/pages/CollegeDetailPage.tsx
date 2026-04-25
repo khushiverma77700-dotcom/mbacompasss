@@ -55,6 +55,9 @@ const CollegeDetailPage = () => {
   const galleryRef = useRef<ReturnType<typeof setInterval>>();
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  // Fetch verified MBA programme portfolio for this college
+  const { data: programmes = [] } = useProgrammeCourses(college?.id);
+
   // Fetch college sections from DB (only active rows render publicly)
   const { data: dbSections } = useQuery({
     queryKey: ["college-sections", college?.id],
