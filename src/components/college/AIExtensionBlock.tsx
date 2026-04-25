@@ -9,6 +9,10 @@ interface AIExtensionBlockProps {
   } | null;
   /** Friendly label for what the AI extends — e.g. "Placement Insights" */
   extensionLabel: string;
+  /** Name of the college — used to deep-link inline citations to the college's site. */
+  entityName?: string;
+  /** Official website URL — used to deep-link citations like "Placement Report" via site:domain queries. */
+  entityWebsite?: string;
 }
 
 /**
