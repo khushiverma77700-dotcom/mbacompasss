@@ -22,7 +22,7 @@ interface AIExtensionBlockProps {
  * clearly marked as additional in-depth coverage. The original section is never
  * replaced; both are stored independently in the database.
  */
-const AIExtensionBlock = ({ section, extensionLabel }: AIExtensionBlockProps) => {
+const AIExtensionBlock = ({ section, extensionLabel, entityName, entityWebsite }: AIExtensionBlockProps) => {
   if (!section) return null;
   const html = section.content || "";
   const hasContent = html.trim().length > 0;
