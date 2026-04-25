@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import FlaggedUrlsTracker from "@/components/admin/FlaggedUrlsTracker";
+import StackSpecificAudit from "@/components/admin/StackSpecificAudit";
 
 const DOMAIN = "mbacompass.in";
 const SEARCH_CONSOLE_URL = `https://search.google.com/search-console?resource_id=sc-domain%3A${DOMAIN}`;
@@ -360,6 +361,9 @@ const AdminSafeBrowsingGuide = () => {
 
       {/* Flagged URLs tracker */}
       <FlaggedUrlsTracker />
+
+      {/* Stack-specific audit (Lovable equivalent of WordPress checks) */}
+      <StackSpecificAudit />
 
       {/* Review template preview */}
       <Card>
