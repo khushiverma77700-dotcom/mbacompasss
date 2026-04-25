@@ -462,6 +462,18 @@ const AdminBulkCreateColleges = () => {
                 <span className="font-bold text-primary text-base">{progressPct}%</span>
               </div>
             </div>
+            <div className="flex items-center gap-2 mt-3">
+              {isActive && (
+                <Button size="sm" variant="destructive" onClick={() => cancelJob(job.id)}>
+                  <Ban className="h-3.5 w-3.5 mr-1.5" /> Cancel
+                </Button>
+              )}
+              {!isActive && (job.failed > 0 || job.completed < job.total_rows - job.duplicates_skipped) && (
+                <Button size="sm" variant="outline" onClick={() => restartJob(job.id)}>
+                  <RotateCw className="h-3.5 w-3.5 mr-1.5" /> Restart pending/failed
+                </Button>
+              )}
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             <Progress value={progressPct} className="h-3" />
