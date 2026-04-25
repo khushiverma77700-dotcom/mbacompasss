@@ -616,8 +616,7 @@ RULES:
 - Add the field to omit_fields ONLY when severity is high AND you have no confident correction.`;
 
     let factCheck: any = { confidence: {}, warnings: [], omit_fields: [] };
-    try {
-      if (bulkMode) throw new Error("SKIP_BULK_FACT_CHECK");
+    if (!bulkMode) try {
       const auditRes = await callAIGateway({
           model: "google/gemini-2.5-flash",
           messages: [
