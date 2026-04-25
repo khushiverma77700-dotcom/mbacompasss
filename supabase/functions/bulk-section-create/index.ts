@@ -659,6 +659,7 @@ async function runJob(job_id: string, authHeader: string) {
     await admin.from("bulk_section_jobs").update({ status: "running", current_activity: "Paused — waiting for admin resume", updated_at: new Date().toISOString() }).eq("id", job_id);
     return;
   }
+  const aiProvider: "gemini" | "lovable" = ((job as any).ai_provider === "lovable") ? "lovable" : "gemini";
 
   const workerId = crypto.randomUUID();
   const claimed = await claimWorkerLock(admin, "bulk_section_jobs", job_id, workerId);
