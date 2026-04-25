@@ -64,26 +64,24 @@ const buildBestUrl = (
   entityWebsite?: string,
 ): string => {
   const key = source.toLowerCase().trim();
+  // 1. Recognised national portals — always official.
   if (GLOBAL_SOURCE_URLS[key]) return GLOBAL_SOURCE_URLS[key];
 
   const domain = extractDomain(entityWebsite);
-  const hint = COLLEGE_SITE_HINTS[key];
+  const hint = COLLEGE_SITE_HINTS[key] || source;
 
-  if (hint) {
-    if (domain) {
-      return `https://www.google.com/search?q=${encodeURIComponent(`site:${domain} ${hint} ${year || ""}`.trim())}`;
-    }
-    if (entityName) {
-      return `https://www.google.com/search?q=${encodeURIComponent(`${entityName} ${hint} ${year || ""} official`.trim())}`;
-    }
-  }
-
+  // 2. Known official domain → deep-link via site:domain (guarantees the user
+  //    lands on the institution's OWN site, not a partner/listing site).
   if (domain) {
-    return `https://www.google.com/search?q=${encodeURIComponent(`site:${domain} ${source} ${year || ""}`.trim())}`;
+    return `https://www.google.com/search?q=${encodeURIComponent(`site:${domain} ${hint} ${year || ""}`.trim())}`;
   }
+
+  // 3. Domain unknown → bias the query strongly toward the official site.
   if (entityName) {
-    return `https://www.google.com/search?q=${encodeURIComponent(`${entityName} ${source} ${year || ""} official`.trim())}`;
+    return `https://www.google.com/search?q=${encodeURIComponent(`${entityName} official site ${hint} ${year || ""}`.trim())}`;
   }
+
+  // 4. Last-resort fallback.
   return `https://www.google.com/search?q=${encodeURIComponent(`${source} ${year || ""} official source India MBA`.trim())}`;
 };
 

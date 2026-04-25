@@ -69,32 +69,29 @@ const extractDomain = (website?: string): string | undefined => {
 const buildUrl = (source: string, year?: string, ctx?: CitationContext): string => {
   const key = source.toLowerCase().trim();
 
-  // 1. Always-global sources (NIRF, AICTE, NAAC, CAT, etc.)
+  // 1. Always-global sources (NIRF, AICTE, NAAC, CAT, etc.) — official portals only.
   if (GLOBAL_SOURCE_URLS[key]) return GLOBAL_SOURCE_URLS[key];
 
   const domain = extractDomain(ctx?.entityWebsite);
-  const hint = COLLEGE_SITE_HINTS[key];
+  const hint = COLLEGE_SITE_HINTS[key] || source;
 
-  // 2. College-site sources (placements, brochure, fees, faculty, …)
-  if (hint) {
-    if (domain) {
-      // site:domain query reliably lands on the official page even when
-      // we don't know the exact path.
-      return `https://www.google.com/search?q=${encodeURIComponent(`site:${domain} ${hint} ${year || ""}`.trim())}`;
-    }
-    if (ctx?.entityName) {
-      return `https://www.google.com/search?q=${encodeURIComponent(`${ctx.entityName} ${hint} ${year || ""} official`.trim())}`;
-    }
-  }
-
-  // 3. Unknown source — restrict the Google query to the college's site/name when possible.
+  // 2. If we know the official college domain, ALWAYS deep-link into it via
+  //    a site:domain Google query. Guarantees the user lands on the official
+  //    college page — never a third-party / partner / aggregator site.
   if (domain) {
-    return `https://www.google.com/search?q=${encodeURIComponent(`site:${domain} ${source} ${year || ""}`.trim())}`;
+    return `https://www.google.com/search?q=${encodeURIComponent(`site:${domain} ${hint} ${year || ""}`.trim())}`;
   }
+
+  // 3. No website on file — fall back to the college's OWN site via a
+  //    Google "I'm Feeling Lucky" style query restricted to the official name.
+  //    We append "official site" so Google prioritises the institution's
+  //    own domain over partner/listing sites.
   if (ctx?.entityName) {
-    return `https://www.google.com/search?q=${encodeURIComponent(`${ctx.entityName} ${source} ${year || ""} official`.trim())}`;
+    return `https://www.google.com/search?q=${encodeURIComponent(`${ctx.entityName} official site ${hint} ${year || ""}`.trim())}`;
   }
-  return `https://www.google.com/search?q=${encodeURIComponent(`${source} ${year || ""} official India MBA`.trim())}`;
+
+  // 4. Last resort — generic official-source query (no entity context).
+  return `https://www.google.com/search?q=${encodeURIComponent(`${source} ${year || ""} official source India MBA`.trim())}`;
 };
 
 const buildPill = (source: string, year?: string, ctx?: CitationContext) => {
