@@ -59,11 +59,17 @@ Deno.serve(async (req) => {
   };
 
   try {
+    const { data: recovered, error: recoverError } = await admin.rpc("recover_stale_bulk_jobs", {
+      _threshold_minutes: STUCK_MINUTES,
+    });
+    report.database_recovery = recovered || null;
+    if (recoverError) (report.errors as string[]).push(`database recovery: ${recoverError.message}`);
+
     // ---- bulk_college_jobs ---- (skip paused jobs)
     const { data: stuckColleges, error: e1 } = await admin
       .from("bulk_college_jobs")
       .select("id,status,updated_at,current_activity,paused")
-      .in("status", ["pending", "processing"])
+      .in("status", ["pending", "running", "processing"])
       .eq("paused", false)
       .lt("updated_at", cutoff);
 
@@ -89,7 +95,7 @@ Deno.serve(async (req) => {
     const { data: stuckSections, error: e2 } = await admin
       .from("bulk_section_jobs")
       .select("id,status,updated_at,current_activity,paused")
-      .in("status", ["pending", "processing"])
+      .in("status", ["pending", "running", "processing"])
       .eq("paused", false)
       .lt("updated_at", cutoff);
 
