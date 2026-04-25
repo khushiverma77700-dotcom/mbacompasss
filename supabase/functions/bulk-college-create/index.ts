@@ -4,7 +4,7 @@
 // Runs in background via EdgeRuntime.waitUntil so the HTTP response returns immediately
 // and the job continues even if the admin closes the tab.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0?target=denonext";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +18,9 @@ const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const CONCURRENCY = 1;
 const AI_WRITER_MAX_ATTEMPTS = 3;
 const AI_RETRY_BASE_DELAY_MS = 2500;
+const ROWS_PER_INVOCATION = 1;
+const AI_WRITER_TIMEOUT_MS = 85_000;
+const STALE_PROCESSING_MS = 4 * 60_000;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -65,9 +68,20 @@ interface RowState {
   state: string;
   status: "pending" | "processing" | "duplicate" | "succeeded" | "failed";
   step?: string;
+  attemptStartedAt?: string;
   collegeId?: string;
   error?: string;
   finalSlug?: string;
+}
+
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function processOne(
