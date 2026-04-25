@@ -500,7 +500,7 @@ const BulkLiveControlPanel = ({
             </Badge>
           </CardTitle>
           <div className="flex items-center gap-2">
-            <Button size="sm" onClick={wakeWorkersNow} disabled={waking || isTerminal} className="h-7 gap-1.5">
+            <Button size="sm" onClick={() => wakeWorkersNow()} disabled={waking || isTerminal} className="h-7 gap-1.5">
               <Zap className={`w-3.5 h-3.5 ${waking ? "animate-pulse" : ""}`} /> {waking ? "Waking…" : "Wake workers now"}
             </Button>
             <Button size="sm" variant="outline" onClick={onRefresh} disabled={!!refreshing} className="h-7 gap-1.5">
@@ -649,7 +649,7 @@ const BulkLiveControlPanel = ({
             <Button
               type="button"
               variant="secondary"
-              onClick={wakeWorkersNow}
+              onClick={() => wakeWorkersNow()}
               disabled={waking || isTerminal}
               className="mt-3 w-full gap-1.5"
             >
@@ -703,7 +703,7 @@ const BulkLiveControlPanel = ({
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <Button size="sm" variant="secondary" onClick={wakeWorkersNow} disabled={waking || isTerminal} className="h-7 gap-1.5">
+              <Button size="sm" variant="secondary" onClick={() => wakeWorkersNow()} disabled={waking || isTerminal} className="h-7 gap-1.5">
                 <Zap className={`w-3.5 h-3.5 ${waking ? "animate-pulse" : ""}`} /> Wake
               </Button>
               <Button size="sm" onClick={restartStuckWorkers} disabled={restarting || isTerminal} className="h-7 gap-1.5">
