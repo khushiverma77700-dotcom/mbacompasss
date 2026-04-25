@@ -113,7 +113,9 @@ async function generateOneSection(
   let lastError = "";
   for (let attempt = 1; attempt <= AI_SECTION_MAX_ATTEMPTS; attempt++) {
     if (cancelFlag?.v) throw new Error("Cancelled by admin");
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/ai-college-section`, {
+      let res: Response;
+      try {
+        res = await fetchWithTimeoutAndCancel(`${SUPABASE_URL}/functions/v1/ai-college-section`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -121,7 +123,18 @@ async function generateOneSection(
         apikey: ANON_KEY,
       },
       body: JSON.stringify(body),
-    });
+        }, AI_SECTION_TIMEOUT_MS, cancelFlag);
+      } catch (err) {
+        if (cancelFlag?.v) throw new Error("Cancelled by admin");
+        lastError = err instanceof DOMException && err.name === "AbortError"
+          ? `AI section timed out after ${Math.round(AI_SECTION_TIMEOUT_MS / 1000)}s`
+          : `AI section request failed: ${err instanceof Error ? err.message : String(err)}`;
+        if (attempt < AI_SECTION_MAX_ATTEMPTS) {
+          await sleep(AI_SECTION_RETRY_BASE_DELAY_MS * attempt);
+          continue;
+        }
+        break;
+      }
 
     const txt = await res.text();
     if (res.ok) {
