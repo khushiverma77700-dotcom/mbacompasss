@@ -88,10 +88,12 @@ export default function AdminBulkGenerateSections() {
 
   useEffect(() => { loadRecent(); }, []);
 
-  // Poll active job every 2s
+  // Poll active job every 2s — re-arms whenever status flips back to active
   useEffect(() => {
     if (!job) return;
-    if (pollRef.current) window.clearInterval(pollRef.current);
+    const isTerminal = job.status === "completed" || job.status === "failed" || job.status === "cancelled";
+    if (pollRef.current) { window.clearInterval(pollRef.current); pollRef.current = null; }
+    if (isTerminal) { loadRecent(); return; }
     const tick = async () => {
       const { data } = await supabase
         .from("bulk_section_jobs").select("*").eq("id", job.id).maybeSingle();
@@ -105,7 +107,7 @@ export default function AdminBulkGenerateSections() {
     pollRef.current = window.setInterval(tick, 2000);
     tick();
     return () => { if (pollRef.current) window.clearInterval(pollRef.current); };
-  }, [job?.id]);
+  }, [job?.id, job?.status]);
 
   const handleSubmit = async () => {
     if (parsedNames.length === 0) {
