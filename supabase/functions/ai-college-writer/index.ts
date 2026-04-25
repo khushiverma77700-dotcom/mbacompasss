@@ -265,7 +265,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
           tools: [tool],
           tool_choice: { type: "function", function: { name: tool.function.name } },
           max_tokens: maxTokens,
-        }, { feature: "ai-college-writer", provider });
+        }, { feature: "ai-college-writer", provider, purpose: "structured" });
 
         if (!res.ok) {
           const txt = await res.text();
