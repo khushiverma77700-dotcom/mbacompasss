@@ -125,7 +125,9 @@ const BulkLiveControlPanel = ({
   const lastTime = useRef(Date.now());
 
   const networkStats = telemetry?.network || {};
-  const serverCpu = Number(telemetry?.cpu?.loadPct || 0);
+  const telemetryAgeSec = telemetry?.updatedAt ? Math.max(0, (Date.now() - new Date(telemetry.updatedAt).getTime()) / 1000) : null;
+  const isTelemetryFresh = telemetryAgeSec !== null && telemetryAgeSec <= 90 && !paused && !isTerminal;
+  const serverCpu = isTelemetryFresh ? Number(telemetry?.cpu?.loadPct || 0) : 0;
   const memory = telemetry?.memory || null;
   const memoryUsedMb = Number(memory?.heapUsed || memory?.rss || 0);
   const memoryTotalMb = Number(memory?.heapTotal || memory?.rss || 0);
@@ -182,10 +184,10 @@ const BulkLiveControlPanel = ({
     const completed = succeeded + failed;
     const failureRate = completed > 0 ? failed / completed : 0;
     const idleMin = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 60000 : 0;
-    const idlePenalty = Math.min(1, Math.max(0, idleMin - 1) / 5);
+    const idlePenalty = !paused && !isTerminal ? Math.min(1, Math.max(0, idleMin - 1) / 5) : 0;
     const workerPressure = utilisation * 70 + failureRate * 20 + idlePenalty * 10;
     return Math.min(100, Math.round(Math.max(serverCpu, workerPressure)));
-  }, [serverCpu, active, concurrency, succeeded, failed, updatedAt]);
+  }, [serverCpu, active, concurrency, succeeded, failed, updatedAt, paused, isTerminal]);
 
   const cpuHistory = useRolling(browserCpu);
   const loadHistory = useRolling(serverLoad);
