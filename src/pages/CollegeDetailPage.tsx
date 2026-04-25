@@ -1040,7 +1040,25 @@ const CollegeDetailPage = () => {
           </div>
 
           {/* ===== Premium Sidebar ===== */}
-          <div className="space-y-4 lg:sticky lg:top-32 lg:self-start">
+          <div className="space-y-4 lg:self-start">
+            {/* Sticky on-page navigation — helps users (and Google) discover all 14+ sections */}
+            <CollegeSectionNav
+              items={[
+                { id: "overview", label: "Overview", icon: <BookOpen className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("why_join") },
+                { id: "courses", label: "Courses & Fees", icon: <GraduationCap className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("courses_fees") },
+                { id: "admission", label: "Admissions", icon: <CheckCircle className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("admission") },
+                { id: "placements", label: "Placements", icon: <TrendingUp className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("placements") },
+                { id: "cutoff", label: "Cut-offs", icon: <Award className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("cutoff") },
+                { id: "rankings", label: "Rankings", icon: <Medal className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("rankings") },
+                { id: "reviews", label: "Reviews", icon: <MessageSquare className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("reviews") },
+                { id: "gallery", label: "Gallery", icon: <Image className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("gallery") },
+                { id: "scholarships", label: "Scholarships", icon: <Banknote className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("scholarships") },
+                { id: "faculty", label: "Faculty", icon: <Users className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("faculty") },
+                { id: "hostel", label: "Hostel & Campus", icon: <Home className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("hostel") },
+                { id: "qa", label: "FAQs", icon: <HelpCircle className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("qa") },
+                { id: "news", label: "News", icon: <Star className="w-3.5 h-3.5" />, hasAI: false },
+              ]}
+            />
             {/* Quick Info Card */}
             <Card className="overflow-hidden border-border/60 shadow-lg shadow-primary/5">
               <div className="h-1.5 bg-gradient-to-r from-primary via-primary/80 to-primary/40" />
