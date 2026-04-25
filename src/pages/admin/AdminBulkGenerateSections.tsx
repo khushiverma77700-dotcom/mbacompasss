@@ -209,6 +209,117 @@ export default function AdminBulkGenerateSections() {
     toast({ title: "Job restarted", description: "Pending colleges/sections are being processed again." });
   };
 
+  const startAll = async (jobId: string) => {
+    if (!confirm("Re-queue ALL non-completed items (pending, failed, cancelled, not-found) and start processing again?")) return;
+    const { data: j, error: fetchErr } = await supabase
+      .from("bulk_section_jobs").select("rows, status").eq("id", jobId).maybeSingle();
+    if (fetchErr || !j) {
+      toast({ title: "Start All failed", description: fetchErr?.message || "Job not found", variant: "destructive" });
+      return;
+    }
+    const rows = ((j.rows as unknown) as RowState[]) || [];
+
+    // Re-match not_found rows against current colleges table (in case colleges were added since)
+    const notFoundNames = rows.filter(r => r.status === "not_found").map(r => r.inputName);
+    const rematched: Record<string, { id: string; name: string }> = {};
+    if (notFoundNames.length > 0) {
+      const { data: matches } = await supabase.from("colleges")
+        .select("id, name").in("name", notFoundNames);
+      (matches || []).forEach((c: any) => { rematched[(c.name || "").toLowerCase()] = c; });
+      const stillUnmatched = notFoundNames.filter(n => !rematched[n.toLowerCase()]);
+      for (const n of stillUnmatched) {
+        const { data: m } = await supabase.from("colleges")
+          .select("id, name").ilike("name", n).limit(1).maybeSingle();
+        if (m) rematched[n.toLowerCase()] = m;
+      }
+    }
+
+    const SECTION_DEFS = [
+      { value: "courses_fees", label: "Courses & Fee Structure" },
+      { value: "admission", label: "Admission Process" },
+      { value: "placements", label: "Placement Statistics" },
+      { value: "cutoff", label: "Cutoff Details" },
+      { value: "rankings", label: "Rankings & Accreditations" },
+      { value: "reviews", label: "Student Reviews" },
+      { value: "gallery", label: "Campus Gallery" },
+      { value: "scholarships", label: "Scholarships" },
+      { value: "faculty", label: "Faculty Profiles" },
+      { value: "hostel", label: "Hostel & Campus Life" },
+      { value: "qa", label: "Frequently Asked Questions" },
+      { value: "quick_info", label: "Quick Info / Sidebar" },
+      { value: "why_join", label: "Why Join (Ratings)" },
+      { value: "news", label: "Latest News & Articles" },
+    ];
+
+    let requeuedRows = 0;
+    let requeuedSteps = 0;
+    let stillNotFound = 0;
+
+    const newRows = rows.map((r: any) => {
+      if (r.status === "not_found") {
+        const m = rematched[(r.inputName || "").toLowerCase()];
+        if (m) {
+          requeuedRows++;
+          return {
+            ...r,
+            collegeId: m.id,
+            matchedName: m.name,
+            status: "pending",
+            error: undefined,
+            steps: SECTION_DEFS.map(s => ({ type: s.value, label: s.label, status: "pending" })),
+          };
+        }
+        stillNotFound++;
+        return r;
+      }
+      if (r.status === "succeeded") return r;
+      requeuedRows++;
+      const newSteps = (r.steps || []).map((s: any) => {
+        if (s.status === "succeeded") return s;
+        requeuedSteps++;
+        return { ...s, status: "pending", error: undefined, startedAt: undefined };
+      });
+      return { ...r, status: "pending", error: undefined, steps: newSteps };
+    });
+
+    const newTotalSteps = newRows.reduce((acc: number, r: any) =>
+      acc + (r.status === "not_found" ? 0 : (r.steps?.length || 0)), 0);
+    const newStepsDone = newRows.reduce((acc: number, r: any) =>
+      acc + (r.steps || []).filter((s: any) => s.status === "succeeded").length, 0);
+
+    if (requeuedRows === 0) {
+      toast({ title: "Nothing to start", description: "All items are already completed." });
+      return;
+    }
+
+    await supabase.from("bulk_section_jobs").update({
+      rows: newRows as any,
+      status: "pending",
+      total_steps: newTotalSteps,
+      steps_done: newStepsDone,
+      not_found: stillNotFound,
+      failed: 0,
+      finished_at: null,
+      current_activity: `Start All: re-queued ${requeuedRows} college(s), ${requeuedSteps} section(s)${Object.keys(rematched).length ? `, recovered ${Object.keys(rematched).length} not-found` : ""}`,
+    }).eq("id", jobId);
+
+    const { data: { session } } = await supabase.auth.getSession();
+    const { error } = await supabase.functions.invoke("bulk-section-create", {
+      body: { action: "resume", job_id: jobId },
+      headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
+    });
+    if (error) {
+      toast({ title: "Start All failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    const recoveredMsg = Object.keys(rematched).length > 0 ? ` · ${Object.keys(rematched).length} not-found recovered` : "";
+    const stillMsg = stillNotFound > 0 ? ` · ${stillNotFound} still not found` : "";
+    toast({
+      title: "Started All",
+      description: `${requeuedRows} college(s) · ${requeuedSteps} section(s) re-queued${recoveredMsg}${stillMsg}`,
+    });
+  };
+
   const retryFailed = async (jobId: string) => {
     const { data: j, error: fetchErr } = await supabase
       .from("bulk_section_jobs").select("rows").eq("id", jobId).maybeSingle();
