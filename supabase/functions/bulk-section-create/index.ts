@@ -741,7 +741,7 @@ async function runJob(job_id: string, authHeader: string) {
         tracker.addHealth("processing", `Slot ${slotIdx + 1} processing a section step`, { job_id, slot: slotIdx + 1 });
         const busyStarted = Date.now();
         try {
-          const didWork = await processOneSectionStep(admin, authHeader, job_id, rowsRef, cancelFlag, tracker, workerId);
+          const didWork = await processOneSectionStep(admin, authHeader, job_id, rowsRef, cancelFlag, tracker, workerId, aiProvider);
           if (!didWork) return;
           const metricsNow = computeSectionMetrics(rowsRef.value);
           tracker.recordProgress(metricsNow.steps_done, `Section step ${myIdx + 1}`);
