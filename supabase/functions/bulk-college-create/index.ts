@@ -276,16 +276,28 @@ async function runJob(job_id: string, authHeader: string) {
     return;
   }
 
-  const allRows: RowState[] = job.rows as RowState[];
+  const allRows: RowState[] = (job.rows as RowState[]).map((r) => {
+    if (r.status !== "processing") return r;
+    const started = r.attemptStartedAt ? new Date(r.attemptStartedAt).getTime() : 0;
+    const isStale = !started || Date.now() - started > STALE_PROCESSING_MS;
+    return isStale
+      ? { ...r, status: "pending", step: "requeued after stale worker", error: undefined, attemptStartedAt: undefined }
+      : r;
+  });
   const inputsByIndex: Record<number, RowInput> = (job.request_inputs as any) || {};
 
   await admin.from("bulk_college_jobs").update({
     status: "running",
     started_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    rows: allRows,
     current_activity: "Starting…",
   }).eq("id", job_id);
 
-  const pending = allRows.filter(r => r.status === "pending");
+  const pending = allRows
+    .filter(r => r.status === "pending")
+    .sort((a, b) => a.index - b.index)
+    .slice(0, ROWS_PER_INVOCATION);
   const rowsRef = { value: allRows };
 
   // Background poller — flips cancelFlag immediately when admin cancels
@@ -322,7 +334,7 @@ async function runJob(job_id: string, authHeader: string) {
       const duplicates = rowsRef.value.filter(r => r.status === "duplicate").length;
       const completed = succeeded + failed + duplicates;
       await admin.from("bulk_college_jobs").update({
-        succeeded, failed, duplicates_skipped: duplicates, completed,
+        succeeded, failed, duplicates_skipped: duplicates, completed, updated_at: new Date().toISOString(),
       }).eq("id", job_id);
     }
   });
@@ -354,9 +366,48 @@ async function runJob(job_id: string, authHeader: string) {
     return;
   }
 
+  const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
+  const failed = rowsRef.value.filter(r => r.status === "failed").length;
+  const duplicates = rowsRef.value.filter(r => r.status === "duplicate").length;
+  const completed = succeeded + failed + duplicates;
+  const remaining = rowsRef.value.filter(r => r.status === "pending").length;
+
+  if (remaining > 0) {
+    await admin.from("bulk_college_jobs").update({
+      status: "pending",
+      rows: rowsRef.value,
+      succeeded,
+      failed,
+      duplicates_skipped: duplicates,
+      completed,
+      updated_at: new Date().toISOString(),
+      current_activity: `Continuing… ${remaining} colleges remaining`,
+    }).eq("id", job_id);
+
+    // Start the next small chunk as a fresh invocation so long batches do not hit runtime limits.
+    // @ts-ignore - EdgeRuntime is provided by Supabase Edge runtime
+    EdgeRuntime.waitUntil(fetch(`${SUPABASE_URL}/functions/v1/bulk-college-create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authHeader,
+        apikey: ANON_KEY,
+        "x-worker-key": SERVICE_ROLE,
+      },
+      body: JSON.stringify({ action: "resume", job_id }),
+    }).catch((e) => console.error("Failed to schedule next bulk college chunk", e)));
+    return;
+  }
+
   await admin.from("bulk_college_jobs").update({
     status: "completed",
     finished_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    rows: rowsRef.value,
+    succeeded,
+    failed,
+    duplicates_skipped: duplicates,
+    completed,
     current_activity: "All done",
   }).eq("id", job_id);
 }
