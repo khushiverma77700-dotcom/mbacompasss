@@ -590,6 +590,83 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "auto_retry_stale") {
+      const job_id = body.job_id;
+      const thresholdMs = Math.max(60_000, Number(body.threshold_ms) || 5 * 60_000);
+      if (!job_id) return new Response(JSON.stringify({ error: "job_id required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+      const { data: jobRow } = await admin.from("bulk_section_jobs")
+        .select("id, status, rows, updated_at").eq("id", job_id).maybeSingle();
+      if (!jobRow) return new Response(JSON.stringify({ error: "Job not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+      const cutoff = Date.now() - thresholdMs;
+      const rows: any[] = Array.isArray(jobRow.rows) ? jobRow.rows : [];
+      const requeued: { college: string; steps: string[] }[] = [];
+      let stepsRequeued = 0;
+      let rowsRequeued = 0;
+
+      for (const r of rows) {
+        if (r.status === "succeeded" || r.status === "not_found") continue;
+        const stuckSteps: string[] = [];
+        if (Array.isArray(r.steps)) {
+          for (const s of r.steps) {
+            if (s.status === "processing") {
+              const started = s.startedAt ? Date.parse(s.startedAt) : 0;
+              if (!started || started < cutoff) {
+                s.status = "pending";
+                s.error = undefined;
+                s.startedAt = undefined;
+                stuckSteps.push(s.label || s.type);
+                stepsRequeued++;
+              }
+            }
+          }
+        }
+        // Row-level stuck (pending/processing with no progress since updated_at)
+        const jobUpdated = jobRow.updated_at ? Date.parse(jobRow.updated_at) : 0;
+        if ((r.status === "processing" || r.status === "pending") && jobUpdated && jobUpdated < cutoff) {
+          r.status = "pending";
+          rowsRequeued++;
+        }
+        if (stuckSteps.length > 0) {
+          requeued.push({ college: r.matchedName || r.inputName, steps: stuckSteps });
+        }
+      }
+
+      if (stepsRequeued === 0 && rowsRequeued === 0) {
+        return new Response(JSON.stringify({ ok: true, requeued: [], steps_requeued: 0, rows_requeued: 0, message: "No stale items found" }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      await admin.from("bulk_section_jobs").update({
+        rows,
+        status: "running",
+        current_activity: `Auto-retry: re-queued ${stepsRequeued} stuck step(s) across ${requeued.length} college(s)`,
+        updated_at: new Date().toISOString(),
+      }).eq("id", job_id);
+
+      // @ts-ignore
+      EdgeRuntime.waitUntil(fetch(`${SUPABASE_URL}/functions/v1/bulk-section-create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: authHeader || `Bearer ${ANON_KEY}`,
+          apikey: ANON_KEY,
+          "x-worker-key": SERVICE_ROLE,
+        },
+        body: JSON.stringify({ action: "resume", job_id }),
+      }).catch((e) => console.error("Failed to resume after auto-retry", e)));
+
+      return new Response(JSON.stringify({
+        ok: true,
+        requeued,
+        steps_requeued: stepsRequeued,
+        rows_requeued: rowsRequeued,
+        threshold_minutes: Math.round(thresholdMs / 60_000),
+      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     return new Response(JSON.stringify({ error: "Unknown action" }), {
       status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

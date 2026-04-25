@@ -254,6 +254,39 @@ export default function AdminBulkGenerateSections() {
     toast({ title: "Retrying failed sections", description: `${failedSteps} section${failedSteps === 1 ? "" : "s"} re-queued.` });
   };
 
+  const autoRetryStale = async (jobId: string, opts: { silent?: boolean } = {}) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const { data, error } = await supabase.functions.invoke("bulk-section-create", {
+      body: { action: "auto_retry_stale", job_id: jobId, threshold_ms: 5 * 60_000 },
+      headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
+    });
+    if (error) {
+      if (!opts.silent) toast({ title: "Auto-retry failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    const stepsRequeued = data?.steps_requeued || 0;
+    const requeued = (data?.requeued || []) as { college: string; steps: string[] }[];
+    if (stepsRequeued === 0) {
+      if (!opts.silent) toast({ title: "Nothing stuck", description: "No items have been pending for >5 minutes." });
+      return;
+    }
+    const summary = requeued.slice(0, 3).map(r => `${r.college} (${r.steps.length})`).join(", ");
+    const more = requeued.length > 3 ? `, +${requeued.length - 3} more` : "";
+    toast({
+      title: `Re-queued ${stepsRequeued} stuck section${stepsRequeued === 1 ? "" : "s"}`,
+      description: `${summary}${more}`,
+    });
+  };
+
+  // Auto-trigger stale retry every 60s while job is active
+  useEffect(() => {
+    if (!job || (job.status !== "running" && job.status !== "pending")) return;
+    const id = window.setInterval(() => {
+      autoRetryStale(job.id, { silent: true });
+    }, 60_000);
+    return () => window.clearInterval(id);
+  }, [job?.id, job?.status]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -323,9 +356,14 @@ export default function AdminBulkGenerateSections() {
               </CardTitle>
               <div className="flex items-center gap-2">
                 {(job.status === "running" || job.status === "pending") && (
-                  <Button size="sm" variant="destructive" onClick={() => cancelJob(job.id)}>
-                    <Ban className="w-3.5 h-3.5 mr-1.5" /> Cancel
-                  </Button>
+                  <>
+                    <Button size="sm" variant="outline" onClick={() => autoRetryStale(job.id)}>
+                      <RotateCw className="w-3.5 h-3.5 mr-1.5" /> Retry Stuck (&gt;5min)
+                    </Button>
+                    <Button size="sm" variant="destructive" onClick={() => cancelJob(job.id)}>
+                      <Ban className="w-3.5 h-3.5 mr-1.5" /> Cancel
+                    </Button>
+                  </>
                 )}
                 {(job.status === "completed" || job.status === "failed" || job.status === "cancelled") && job.failed > 0 && (
                   <Button size="sm" variant="default" onClick={() => retryFailed(job.id)}>
