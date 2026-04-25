@@ -104,6 +104,7 @@ const AdminSpecializations = lazyWithPreload(() => import("./pages/admin/AdminSp
 const AdminDomainAudit = lazyWithPreload(() => import("./pages/admin/AdminDomainAudit"));
 const AdminMetaValidator = lazyWithPreload(() => import("./pages/admin/AdminMetaValidator"));
 const AdminDNSStatus = lazyWithPreload(() => import("./pages/admin/AdminDNSStatus"));
+const AdminSafeBrowsingGuide = lazyWithPreload(() => import("./pages/admin/AdminSafeBrowsingGuide"));
 const CATScoreCalculatorPage = lazyWithPreload(() => import("./pages/CATScoreCalculatorPage"));
 const MBARoiCalculatorPage = lazyWithPreload(() => import("./pages/MBARoiCalculatorPage"));
 const ForgotPasswordPage = lazyWithPreload(() => import("./pages/ForgotPasswordPage"));
@@ -483,6 +484,7 @@ const App = () => (
               <Route path="domain-audit" element={<LazyPage><AdminDomainAudit /></LazyPage>} />
               <Route path="meta-validator" element={<LazyPage><AdminMetaValidator /></LazyPage>} />
               <Route path="dns-status" element={<LazyPage><AdminDNSStatus /></LazyPage>} />
+              <Route path="safe-browsing-guide" element={<LazyPage><AdminSafeBrowsingGuide /></LazyPage>} />
               <Route path="roi-analyses" element={<LazyPage><AdminROIAnalyses /></LazyPage>} />
               <Route path="user-submissions" element={<LazyPage><AdminUserSubmissions /></LazyPage>} />
               <Route path="listing-change-requests" element={<LazyPage><AdminListingChangeRequests /></LazyPage>} />
