@@ -543,6 +543,7 @@ const AdminBulkCreateColleges = () => {
           status={job.status}
           paused={!!job.paused}
           concurrency={Number(job.concurrency) || 1}
+          aiProvider={(job as any).ai_provider === "lovable" ? "lovable" : "gemini"}
           active={liveMetrics.active}
           succeeded={liveMetrics.succeeded}
           failed={liveMetrics.failed}
