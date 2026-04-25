@@ -29,6 +29,7 @@ interface Props {
   failed: number;
   pending: number;
   total: number;
+  processed?: number;
   updatedAt?: string | null;
   telemetry?: any;
   onRefresh?: () => void | Promise<void>;
@@ -112,13 +113,15 @@ const ActivityHeatmap = ({ data, max = 60 }: { data: number[]; max?: number }) =
 
 const BulkLiveControlPanel = ({
   workflow, table, jobId, status, paused, concurrency,
-  active, succeeded, failed, pending, total, updatedAt, telemetry, onRefresh, refreshing,
+  active, succeeded, failed, pending, total, processed, updatedAt, telemetry, onRefresh, refreshing,
 }: Props) => {
   const [draftConcurrency, setDraftConcurrency] = useState(concurrency);
   const [saving, setSaving] = useState(false);
   const [browserCpu, setBrowserCpu] = useState(0); // 0..100
-  const [tickRate, setTickRate] = useState(0); // throughput items/min approx
-  const lastSucceeded = useRef(succeeded);
+  const [tickRate, setTickRate] = useState(0); // throughput units/min approx
+  const processedUnits = Math.max(0, Number(processed ?? (succeeded + failed)));
+  const totalUnits = Math.max(0, Number(total || 0));
+  const lastProcessed = useRef(processedUnits);
   const lastTime = useRef(Date.now());
 
   const networkStats = telemetry?.network || {};
@@ -165,13 +168,13 @@ const BulkLiveControlPanel = ({
     const now = Date.now();
     const dt = (now - lastTime.current) / 1000;
     if (dt > 1) {
-      const delta = Math.max(0, succeeded - lastSucceeded.current);
+      const delta = Math.max(0, processedUnits - lastProcessed.current);
       const rate = (delta / dt) * 60;
       setTickRate((prev) => prev * 0.6 + rate * 0.4);
-      lastSucceeded.current = succeeded;
+      lastProcessed.current = processedUnits;
       lastTime.current = now;
     }
-  }, [succeeded]);
+  }, [processedUnits]);
 
   // Server pressure now comes from real worker telemetry when available.
   const serverLoad = useMemo(() => {
@@ -202,7 +205,7 @@ const BulkLiveControlPanel = ({
         const age = Math.floor((now - ts) / 1000);
         if (age >= 0 && age < 60) bins[59 - age] += Math.max(1, Number(point?.ops || 1));
       }
-      const cur = succeeded + failed;
+      const cur = processedUnits;
       const delta = Math.max(0, cur - lastTotalRef.current);
       lastTotalRef.current = cur;
       if (delta > 0) bins[59] += delta;
@@ -211,7 +214,7 @@ const BulkLiveControlPanel = ({
     buildBins();
     const t = setInterval(buildBins, 1000);
     return () => clearInterval(t);
-  }, [telemetry, succeeded, failed]);
+  }, [telemetry, processedUnits]);
 
   // Live event ticker (last 8)
   const [events, setEvents] = useState<{ ts: number; kind: "ok" | "fail" | "info"; msg: string }[]>([]);
@@ -246,7 +249,7 @@ const BulkLiveControlPanel = ({
   const latencyMs = realLatencyMs;
 
   // ETA
-  const remaining = Math.max(0, total - succeeded - failed);
+  const remaining = Math.max(0, totalUnits - processedUnits);
   const etaSec = tickRate > 0 ? Math.round((remaining / tickRate) * 60) : 0;
   const fmtEta = (s: number) => {
     if (!s) return "—";
@@ -256,7 +259,7 @@ const BulkLiveControlPanel = ({
 
   // Progress %
   const completedAll = succeeded + failed;
-  const progressPct = total > 0 ? Math.round((completedAll / total) * 100) : 0;
+  const progressPct = totalUnits > 0 ? Math.round((processedUnits / totalUnits) * 100) : 0;
   const successRate = completedAll > 0 ? (succeeded / completedAll) * 100 : 0;
   const failureRatePct = completedAll > 0 ? (failed / completedAll) * 100 : 0;
 
