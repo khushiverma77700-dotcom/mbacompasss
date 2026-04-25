@@ -532,9 +532,9 @@ const CollegeDetailPage = () => {
                 </CardHeader>
                 <CardContent>
                   {getSectionContent("why_join") ? (
-                    <div className="text-muted-foreground leading-relaxed ai-content max-w-none" dangerouslySetInnerHTML={{ __html: enhanceAIContent(getSectionContent("why_join")) }} />
+                    <div className="text-muted-foreground leading-relaxed ai-content max-w-none" dangerouslySetInnerHTML={{ __html: enhanceAIContent(getSectionContent("why_join"), { entityName: college.name, entityWebsite: (college as any).website }) }} />
                   ) : (
-                    <div className="text-muted-foreground leading-relaxed ai-content max-w-none" dangerouslySetInnerHTML={{ __html: enhanceAIContent(college.description || `${college.name} is a premier ${college.type} institute in ${college.city}.`) }} />
+                    <div className="text-muted-foreground leading-relaxed ai-content max-w-none" dangerouslySetInnerHTML={{ __html: enhanceAIContent(college.description || `${college.name} is a premier ${college.type} institute in ${college.city}.`, { entityName: college.name, entityWebsite: (college as any).website }) }} />
                   )}
                   {highlights && (
                     <div className="mt-6 pt-6 border-t border-dashed border-border">
