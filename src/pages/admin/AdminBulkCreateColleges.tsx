@@ -64,6 +64,18 @@ XLRI Jamshedpur,Jamshedpur,Jharkhand,XLRI Jamshedpur PGDM,Private,Tier 1,Non-IIM
 SPJIMR Mumbai,Mumbai,Maharashtra,SPJIMR Mumbai PGDM admission,Private,Tier 1,Non-IIM,
 `;
 
+const getCollegeJobMetrics = (job: JobState | null) => {
+  const rows = job?.rows || [];
+  const succeeded = rows.filter((r: any) => r.status === "succeeded").length;
+  const failed = rows.filter((r: any) => r.status === "failed").length;
+  const duplicates = rows.filter((r: any) => r.status === "duplicate").length;
+  const active = rows.filter((r: any) => r.status === "processing").length;
+  const pending = rows.filter((r: any) => r.status === "pending").length;
+  const completed = succeeded + failed + duplicates;
+  const total = rows.length || job?.total_rows || 0;
+  return { succeeded, failed, duplicates, active, pending, completed, total };
+};
+
 function parseCsv(text: string): { rows: CsvRow[]; errors: string[] } {
   const errors: string[] = [];
   const lines = text.replace(/\r\n/g, "\n").split("\n").filter(l => l.trim().length > 0);
@@ -225,7 +237,8 @@ const AdminBulkCreateColleges = () => {
     }
   };
 
-  const progressPct = job ? Math.round((job.completed / Math.max(job.total_rows, 1)) * 100) : 0;
+  const liveMetrics = useMemo(() => getCollegeJobMetrics(job), [job]);
+  const progressPct = job ? Math.round((liveMetrics.completed / Math.max(liveMetrics.total, 1)) * 100) : 0;
   const isActive = job?.status === "running" || job?.status === "pending";
 
   const cancelJob = async (jobId: string) => {
@@ -331,6 +344,16 @@ const AdminBulkCreateColleges = () => {
       setRefreshingJob(false);
     }
   };
+
+  useEffect(() => {
+    if (!job || job.paused || (job.status !== "running" && job.status !== "pending")) return;
+    const id = window.setInterval(() => {
+      supabase.functions.invoke("bulk-college-create", {
+        body: { action: "auto_retry_stale", job_id: job.id, threshold_ms: 90_000 },
+      }).catch(() => {});
+    }, 60_000);
+    return () => window.clearInterval(id);
+  }, [job?.id, job?.status, job?.paused]);
 
   return (
     <div className="space-y-6 max-w-6xl">
