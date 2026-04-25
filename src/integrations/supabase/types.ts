@@ -3222,6 +3222,51 @@ export type Database = {
         }
         Relationships: []
       }
+      safe_browsing_flagged_urls: {
+        Row: {
+          audited_at: string | null
+          category: string
+          created_at: string
+          created_by: string | null
+          flagged_reason: string | null
+          id: string
+          notes: string | null
+          reported_at: string
+          resolved_at: string | null
+          status: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          audited_at?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          flagged_reason?: string | null
+          id?: string
+          notes?: string | null
+          reported_at?: string
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          audited_at?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          flagged_reason?: string | null
+          id?: string
+          notes?: string | null
+          reported_at?: string
+          resolved_at?: string | null
+          status?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       saved_institutes: {
         Row: {
           created_at: string
