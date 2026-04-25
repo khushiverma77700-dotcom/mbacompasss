@@ -129,6 +129,9 @@ const BulkLiveControlPanel = ({
   const telemetryAgeSec = telemetry?.updatedAt ? Math.max(0, (Date.now() - new Date(telemetry.updatedAt).getTime()) / 1000) : null;
   const isTelemetryFresh = telemetryAgeSec !== null && telemetryAgeSec <= 90 && !paused && !isTerminal;
   const serverCpu = isTelemetryFresh ? Number(telemetry?.cpu?.loadPct || 0) : 0;
+  const liveActiveWorkers = isTelemetryFresh
+    ? Math.max(0, Math.min(10, Number(telemetry?.activeWorkers ?? active) || 0))
+    : active;
   const memory = telemetry?.memory || null;
   const memoryUsedMb = Number(memory?.heapUsed || memory?.rss || 0);
   const memoryTotalMb = Number(memory?.heapTotal || memory?.rss || 0);
@@ -181,14 +184,14 @@ const BulkLiveControlPanel = ({
 
   // Server pressure now comes from real worker telemetry when available.
   const serverLoad = useMemo(() => {
-    const utilisation = concurrency > 0 ? Math.min(1, active / concurrency) : 0;
+    const utilisation = concurrency > 0 ? Math.min(1, liveActiveWorkers / concurrency) : 0;
     const completed = succeeded + failed;
     const failureRate = completed > 0 ? failed / completed : 0;
     const idleMin = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 60000 : 0;
     const idlePenalty = !paused && !isTerminal ? Math.min(1, Math.max(0, idleMin - 1) / 5) : 0;
     const workerPressure = utilisation * 70 + failureRate * 20 + idlePenalty * 10;
     return Math.min(100, Math.round(Math.max(serverCpu, workerPressure)));
-  }, [serverCpu, active, concurrency, succeeded, failed, updatedAt, paused, isTerminal]);
+  }, [serverCpu, liveActiveWorkers, concurrency, succeeded, failed, updatedAt, paused, isTerminal]);
 
   const cpuHistory = useRolling(browserCpu);
   const loadHistory = useRolling(serverLoad);
