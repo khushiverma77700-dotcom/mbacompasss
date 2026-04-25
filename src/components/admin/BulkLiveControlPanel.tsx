@@ -147,9 +147,21 @@ const ageSeconds = (value: string | number | null | undefined, nowMs: number) =>
 const fmtAge = (seconds: number | null) => seconds === null ? "—" : seconds < 60 ? `${seconds}s ago` : `${Math.floor(seconds / 60)}m ${seconds % 60}s ago`;
 
 const BulkLiveControlPanel = ({
-  workflow, table, jobId, status, paused, concurrency,
+  workflow, table, jobId, status, paused, concurrency, aiProvider = "gemini",
   active, succeeded, failed, pending, total, processed, updatedAt, telemetry, onRefresh, refreshing,
 }: Props) => {
+  const [savingProvider, setSavingProvider] = useState(false);
+  const switchProvider = async (next: "gemini" | "lovable") => {
+    if (next === aiProvider || savingProvider) return;
+    setSavingProvider(true);
+    const { error } = await supabase.from(table).update({ ai_provider: next, updated_at: new Date().toISOString() } as any).eq("id", jobId);
+    setSavingProvider(false);
+    if (error) {
+      toast({ title: "Couldn't switch AI provider", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "AI provider switched", description: next === "lovable" ? "Now using Lovable AI Gateway" : "Now using your Gemini API key" });
+  };
   const [draftConcurrency, setDraftConcurrency] = useState(concurrency);
   const [saving, setSaving] = useState(false);
   const [waking, setWaking] = useState(false);
