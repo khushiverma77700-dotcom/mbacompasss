@@ -482,9 +482,14 @@ export default function AdminBulkGenerateSections() {
                   </Button>
                 )}
                 {(job.status === "completed" || job.status === "failed" || job.status === "cancelled") && (
-                  <Button size="sm" variant="outline" onClick={() => restartJob(job.id)}>
-                    <RotateCw className="w-3.5 h-3.5 mr-1.5" /> Restart
-                  </Button>
+                  <>
+                    <Button size="sm" variant="default" className="bg-primary" onClick={() => startAll(job.id)}>
+                      <RotateCw className="w-3.5 h-3.5 mr-1.5" /> Start All (Pending + Failed + Cancelled + Not Found)
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => restartJob(job.id)}>
+                      <RotateCw className="w-3.5 h-3.5 mr-1.5" /> Restart
+                    </Button>
+                  </>
                 )}
                 <Button variant="ghost" size="sm" onClick={() => setJob(null)}>New job</Button>
               </div>
