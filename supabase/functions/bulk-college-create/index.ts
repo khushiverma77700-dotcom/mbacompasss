@@ -18,7 +18,7 @@ const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const CONCURRENCY = 1;
 const AI_WRITER_MAX_ATTEMPTS = 1;
 const AI_RETRY_BASE_DELAY_MS = 2500;
-const ROWS_PER_INVOCATION = 1;
+const ROWS_PER_INVOCATION = 10; // matches POOL_MAX so live concurrency 1–10 has real effect
 const AI_WRITER_TIMEOUT_MS = 125_000;
 const STALE_PROCESSING_MS = 4 * 60_000;
 
@@ -301,23 +301,35 @@ async function runJob(job_id: string, authHeader: string) {
     .slice(0, ROWS_PER_INVOCATION);
   const rowsRef = { value: allRows };
 
-  // Background poller — flips cancelFlag immediately when admin cancels
+  // Background poller — flips cancelFlag/pauseFlag based on live DB state
   const cancelFlag = { v: false };
+  const pauseFlag = { v: !!(job as any).paused };
+  const concurrencyRef = { v: Math.max(1, Math.min(10, Number((job as any).concurrency) || 1)) };
   let pollerStop = false;
   const poller = (async () => {
     while (!pollerStop && !cancelFlag.v) {
       const { data: cur } = await admin.from("bulk_college_jobs")
-        .select("status").eq("id", job_id).maybeSingle();
+        .select("status,paused,concurrency").eq("id", job_id).maybeSingle();
       if (cur?.status === "cancelled") { cancelFlag.v = true; break; }
+      pauseFlag.v = !!(cur as any)?.paused;
+      const c = Number((cur as any)?.concurrency);
+      if (c >= 1 && c <= 10) concurrencyRef.v = c;
       await new Promise(r => setTimeout(r, 1500));
     }
   })();
 
-  // Concurrency pool
+  // Dynamic concurrency pool — workers self-park when concurrency shrinks or job is paused
   let cursor = 0;
-  const workers = Array.from({ length: CONCURRENCY }, async () => {
+  const activeRef = { n: 0 };
+  const POOL_MAX = 10;
+  const workers = Array.from({ length: POOL_MAX }, async (_, slotIdx) => {
     while (true) {
       if (cancelFlag.v) return;
+      // Park slot if beyond live concurrency or paused
+      if (slotIdx >= concurrencyRef.v || pauseFlag.v) {
+        await new Promise(r => setTimeout(r, 1500));
+        continue;
+      }
       const myIdx = cursor++;
       if (myIdx >= pending.length) return;
       const row = pending[myIdx];

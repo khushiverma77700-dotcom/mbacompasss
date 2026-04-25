@@ -22,7 +22,7 @@ const COLLEGE_CONCURRENCY = 1;
 const AI_SECTION_MAX_ATTEMPTS = 1;
 const AI_SECTION_RETRY_BASE_DELAY_MS = 2500;
 const SECTION_PAUSE_MS = 1200;
-const ROWS_PER_INVOCATION = 1;
+const ROWS_PER_INVOCATION = 10;
 const AI_SECTION_TIMEOUT_MS = 110_000;
 const STALE_PROCESSING_MS = 4 * 60_000;
 
@@ -375,22 +375,32 @@ async function runJob(job_id: string, authHeader: string) {
     .sort((a, b) => a.index - b.index)
     .slice(0, ROWS_PER_INVOCATION);
 
-  // Background poller — sets cancelFlag.v immediately when admin cancels
+  // Background poller — tracks cancel + live pause + live concurrency
   const cancelFlag = { v: false };
+  const pauseFlag = { v: !!(job as any).paused };
+  const concurrencyRef = { v: Math.max(1, Math.min(10, Number((job as any).concurrency) || 1)) };
   let pollerStop = false;
   const poller = (async () => {
     while (!pollerStop && !cancelFlag.v) {
       const { data: cur } = await admin.from("bulk_section_jobs")
-        .select("status").eq("id", job_id).maybeSingle();
+        .select("status,paused,concurrency").eq("id", job_id).maybeSingle();
       if (cur?.status === "cancelled") { cancelFlag.v = true; break; }
+      pauseFlag.v = !!(cur as any)?.paused;
+      const c = Number((cur as any)?.concurrency);
+      if (c >= 1 && c <= 10) concurrencyRef.v = c;
       await new Promise(r => setTimeout(r, 1500));
     }
   })();
 
   let cursor = 0;
-  const workers = Array.from({ length: COLLEGE_CONCURRENCY }, async () => {
+  const POOL_MAX = 10;
+  const workers = Array.from({ length: POOL_MAX }, async (_, slotIdx) => {
     while (true) {
       if (cancelFlag.v) return;
+      if (slotIdx >= concurrencyRef.v || pauseFlag.v) {
+        await new Promise(r => setTimeout(r, 1500));
+        continue;
+      }
       const myIdx = cursor++;
       if (myIdx >= eligible.length) return;
       await processCollege(admin, authHeader, job_id, rowsRef, eligible[myIdx], cancelFlag);

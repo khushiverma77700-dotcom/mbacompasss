@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import JobHealthReport from "@/components/admin/JobHealthReport";
+import BulkLiveControlPanel from "@/components/admin/BulkLiveControlPanel";
 import {
   ArrowLeft, Sparkles, Loader2, CheckCircle2, XCircle, AlertTriangle,
   ChevronDown, ChevronRight, Clock, ListChecks, Play, Ban, RotateCw,
@@ -44,6 +45,9 @@ interface Job {
   started_at: string | null;
   finished_at: string | null;
   created_at: string;
+  paused?: boolean;
+  concurrency?: number;
+  updated_at?: string | null;
 }
 
 const PER_STEP_SECONDS = 35; // rough estimate per AI section call (single safe worker)
@@ -468,6 +472,20 @@ export default function AdminBulkGenerateSections() {
       {/* Live progress panel */}
       {job && (
         <>
+        <BulkLiveControlPanel
+          workflow="Bulk College Sections"
+          table="bulk_section_jobs"
+          jobId={job.id}
+          status={job.status}
+          paused={!!job.paused}
+          concurrency={Number(job.concurrency) || 1}
+          active={(job.rows || []).filter((r: any) => r.status === "processing").length}
+          succeeded={job.succeeded}
+          failed={job.failed}
+          pending={Math.max(0, (job.rows || []).filter((r: any) => r.status === "pending" || r.status === "processing" || r.status === "matched").length)}
+          total={job.total_rows}
+          updatedAt={(job as any).updated_at}
+        />
         <JobHealthReport
           workflow="Bulk College Sections"
           jobId={job.id}

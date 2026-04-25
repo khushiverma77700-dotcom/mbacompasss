@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import JobHealthReport from "@/components/admin/JobHealthReport";
+import BulkLiveControlPanel from "@/components/admin/BulkLiveControlPanel";
 
 interface CsvRow {
   name: string;
@@ -48,6 +49,9 @@ interface JobState {
   current_activity: string | null;
   started_at: string | null;
   finished_at: string | null;
+  paused?: boolean;
+  concurrency?: number;
+  updated_at?: string | null;
 }
 
 const REQUIRED = ["name", "city", "state", "primaryKeyword"];
@@ -488,6 +492,20 @@ const AdminBulkCreateColleges = () => {
       {/* Live progress */}
       {job && (
         <>
+        <BulkLiveControlPanel
+          workflow="Bulk Colleges"
+          table="bulk_college_jobs"
+          jobId={job.id}
+          status={job.status}
+          paused={!!job.paused}
+          concurrency={Number(job.concurrency) || 1}
+          active={(job.rows || []).filter((r: any) => r.status === "processing").length}
+          succeeded={job.succeeded}
+          failed={job.failed}
+          pending={Math.max(0, job.total_rows - job.completed)}
+          total={job.total_rows}
+          updatedAt={(job as any).updated_at}
+        />
         <JobHealthReport
           workflow="Bulk Colleges"
           jobId={job.id}

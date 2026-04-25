@@ -458,6 +458,7 @@ export type Database = {
       bulk_college_jobs: {
         Row: {
           completed: number
+          concurrency: number
           created_at: string
           created_by: string | null
           current_activity: string | null
@@ -466,6 +467,7 @@ export type Database = {
           failed: number
           finished_at: string | null
           id: string
+          paused: boolean
           request_inputs: Json
           rows: Json
           started_at: string | null
@@ -476,6 +478,7 @@ export type Database = {
         }
         Insert: {
           completed?: number
+          concurrency?: number
           created_at?: string
           created_by?: string | null
           current_activity?: string | null
@@ -484,6 +487,7 @@ export type Database = {
           failed?: number
           finished_at?: string | null
           id?: string
+          paused?: boolean
           request_inputs?: Json
           rows?: Json
           started_at?: string | null
@@ -494,6 +498,7 @@ export type Database = {
         }
         Update: {
           completed?: number
+          concurrency?: number
           created_at?: string
           created_by?: string | null
           current_activity?: string | null
@@ -502,6 +507,7 @@ export type Database = {
           failed?: number
           finished_at?: string | null
           id?: string
+          paused?: boolean
           request_inputs?: Json
           rows?: Json
           started_at?: string | null
@@ -514,6 +520,7 @@ export type Database = {
       }
       bulk_section_jobs: {
         Row: {
+          concurrency: number
           created_at: string
           created_by: string | null
           current_activity: string | null
@@ -522,6 +529,7 @@ export type Database = {
           finished_at: string | null
           id: string
           not_found: number
+          paused: boolean
           rows: Json
           started_at: string | null
           status: string
@@ -532,6 +540,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          concurrency?: number
           created_at?: string
           created_by?: string | null
           current_activity?: string | null
@@ -540,6 +549,7 @@ export type Database = {
           finished_at?: string | null
           id?: string
           not_found?: number
+          paused?: boolean
           rows?: Json
           started_at?: string | null
           status?: string
@@ -550,6 +560,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          concurrency?: number
           created_at?: string
           created_by?: string | null
           current_activity?: string | null
@@ -558,6 +569,7 @@ export type Database = {
           finished_at?: string | null
           id?: string
           not_found?: number
+          paused?: boolean
           rows?: Json
           started_at?: string | null
           status?: string
