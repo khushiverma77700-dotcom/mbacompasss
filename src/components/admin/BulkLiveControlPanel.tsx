@@ -625,6 +625,41 @@ const BulkLiveControlPanel = ({
           </div>
         )}
 
+        {/* AI provider toggle */}
+        <div className="rounded-lg border bg-card p-3 mb-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5 text-xs font-semibold">
+              <CircuitBoard className="w-3.5 h-3.5 text-primary" /> AI Provider (live)
+            </div>
+            <Badge variant={aiProvider === "gemini" ? "default" : "secondary"} className="text-[10px]">
+              {aiProvider === "gemini" ? "My Gemini API Key" : "Lovable AI Gateway"}
+            </Badge>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              size="sm"
+              variant={aiProvider === "gemini" ? "default" : "outline"}
+              disabled={savingProvider || aiProvider === "gemini"}
+              onClick={() => switchProvider("gemini")}
+              className="h-8 text-xs"
+            >
+              My Gemini API
+            </Button>
+            <Button
+              size="sm"
+              variant={aiProvider === "lovable" ? "default" : "outline"}
+              disabled={savingProvider || aiProvider === "lovable"}
+              onClick={() => switchProvider("lovable")}
+              className="h-8 text-xs"
+            >
+              Lovable AI
+            </Button>
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-2">
+            Switch instantly — applies to the next AI call. Use this if one provider is rate-limited or denied.
+          </p>
+        </div>
+
         {/* Controls */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Concurrency slider */}
