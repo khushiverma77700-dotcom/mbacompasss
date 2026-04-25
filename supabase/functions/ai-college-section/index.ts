@@ -748,7 +748,12 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
     }
 
     const repairJSON = (s: string): string => {
-      let out = String(s).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+      let out = String(s)
+        .replace(/^```json\s*/im, "")
+        .replace(/^```\s*/im, "")
+        .replace(/```\s*$/im, "")
+        .trim()
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
       out = out.replace(/,(\s*[}\]])/g, "$1");
       out = out.replace(/([{,]\s*)([A-Za-z_][A-Za-z0-9_\-]*)\s*:/g, '$1"$2":');
       out = out.replace(/:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g, (_m, inner) => {
@@ -758,29 +763,30 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
       return out;
     };
 
+    const extractJSON = (raw: any) => {
+      if (raw && typeof raw === "object") return raw;
+      let cleaned = repairJSON(String(raw || ""));
+      const objStart = cleaned.indexOf("{");
+      const objEnd = cleaned.lastIndexOf("}");
+      if (objStart !== -1 && objEnd > objStart) cleaned = cleaned.slice(objStart, objEnd + 1);
+      try { return JSON.parse(cleaned); } catch (firstErr) {
+        const lastBrace = cleaned.lastIndexOf("}");
+        if (lastBrace > 0) {
+          try { return JSON.parse(repairJSON(cleaned.slice(0, lastBrace + 1))); } catch (_) { /* fall through */ }
+        }
+        throw firstErr;
+      }
+    };
+
     let payload: any;
     try {
-      payload = JSON.parse(rawArgs);
+      payload = extractJSON(rawArgs);
     } catch (e) {
-      try {
-        payload = JSON.parse(repairJSON(rawArgs));
-      } catch (_e2) {
-        const lastBrace = String(rawArgs).lastIndexOf("}");
-        let recovered = false;
-        if (lastBrace > 0) {
-          try {
-            payload = JSON.parse(repairJSON(String(rawArgs).slice(0, lastBrace + 1)));
-            recovered = true;
-          } catch (_e3) { /* noop */ }
-        }
-        if (!recovered) {
-          console.error("Parse fail:", String(e));
-          return new Response(
-            JSON.stringify({ error: "AI output was malformed JSON. Try again.", detail: String(e).slice(0, 200) }),
-            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-          );
-        }
-      }
+      console.error("Parse fail:", String(e));
+      return new Response(
+        JSON.stringify({ error: "AI output was malformed JSON. Try again.", detail: String(e).slice(0, 200) }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     // ── Clean ALL short fields: strip HTML, [src:...] citations, "Last updated" stamps,
