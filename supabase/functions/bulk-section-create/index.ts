@@ -683,6 +683,7 @@ async function runJob(job_id: string, authHeader: string) {
       };
     });
     const rowsRef = { value: rows };
+    tracker.addHealth("queued", `${computeSectionMetrics(rows).pending_steps} section step(s) queued`, { job_id, queued: computeSectionMetrics(rows).pending_steps });
 
     await updateBulkJob(admin, "bulk_section_jobs", job_id, workerId, tracker, {
       status: "running",
@@ -713,16 +714,26 @@ async function runJob(job_id: string, authHeader: string) {
     const slots = 10;
     const workers = Array.from({ length: slots }, async (_, slotIdx) => {
       while (true) {
-        if (cancelFlag.v || pauseFlag.v) return;
+        tracker.updateSlot(slotIdx, { job_id, enabled: slotIdx < concurrencyRef.v, state: slotIdx < concurrencyRef.v ? "idle" : "disabled" });
+        if (cancelFlag.v || pauseFlag.v) {
+          tracker.updateSlot(slotIdx, { job_id, state: pauseFlag.v ? "paused" : "cancelled", enabled: slotIdx < concurrencyRef.v });
+          return;
+        }
         if (slotIdx >= concurrencyRef.v) {
+          tracker.updateSlot(slotIdx, { job_id, state: "disabled", enabled: false });
           if (cursor >= slots || !hasPendingStep()) return;
           await sleep(500);
           continue;
         }
         const myIdx = cursor++;
-        if (myIdx >= slots || !hasPendingStep()) return;
+        if (myIdx >= slots || !hasPendingStep()) {
+          tracker.updateSlot(slotIdx, { job_id, state: "idle", enabled: true });
+          return;
+        }
         activeRef.n += 1;
         tracker.setActive(activeRef.n);
+        tracker.updateSlot(slotIdx, { job_id, state: "processing", current_item: "section work unit", current_step: `slot ${slotIdx + 1}` });
+        tracker.addHealth("processing", `Slot ${slotIdx + 1} processing a section step`, { job_id, slot: slotIdx + 1 });
         const busyStarted = Date.now();
         try {
           const didWork = await processOneSectionStep(admin, authHeader, job_id, rowsRef, cancelFlag, tracker, workerId);
@@ -733,6 +744,7 @@ async function runJob(job_id: string, authHeader: string) {
           tracker.addBusy(Date.now() - busyStarted);
           activeRef.n = Math.max(0, activeRef.n - 1);
           tracker.setActive(activeRef.n);
+          tracker.updateSlot(slotIdx, { job_id, state: "idle", current_item: "section work unit", current_step: "completed or no work", last_processed_at: new Date().toISOString() });
         }
       }
     });
