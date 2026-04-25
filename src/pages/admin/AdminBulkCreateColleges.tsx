@@ -508,6 +508,11 @@ const AdminBulkCreateColleges = () => {
                   <Ban className="h-3.5 w-3.5 mr-1.5" /> Cancel
                 </Button>
               )}
+              {!isActive && job.failed > 0 && (
+                <Button size="sm" variant="default" onClick={() => retryFailed(job.id)}>
+                  <RotateCw className="h-3.5 w-3.5 mr-1.5" /> Retry Failed ({job.failed})
+                </Button>
+              )}
               {!isActive && (job.failed > 0 || job.completed < job.total_rows - job.duplicates_skipped) && (
                 <Button size="sm" variant="outline" onClick={() => restartJob(job.id)}>
                   <RotateCw className="h-3.5 w-3.5 mr-1.5" /> Restart pending/failed
