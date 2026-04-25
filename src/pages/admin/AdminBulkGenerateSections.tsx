@@ -48,6 +48,7 @@ interface Job {
   paused?: boolean;
   concurrency?: number;
   updated_at?: string | null;
+  telemetry?: any;
 }
 
 const PER_STEP_SECONDS = 35; // rough estimate per AI section call (single safe worker)
@@ -71,6 +72,7 @@ export default function AdminBulkGenerateSections() {
   const [job, setJob] = useState<Job | null>(null);
   const [recentJobs, setRecentJobs] = useState<Job[]>([]);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
+  const [refreshingJob, setRefreshingJob] = useState(false);
   const pollRef = useRef<number | null>(null);
 
   const parsedNames = useMemo(() => {
@@ -406,6 +408,19 @@ export default function AdminBulkGenerateSections() {
     });
   };
 
+  const refreshAndResume = async (jobId: string) => {
+    setRefreshingJob(true);
+    try {
+      await autoRetryStale(jobId, { silent: true });
+      const { data: refreshed } = await supabase
+        .from("bulk_section_jobs").select("*").eq("id", jobId).maybeSingle();
+      if (refreshed) setJob(refreshed as any);
+      toast({ title: "Refreshed", description: "Worker has been resumed from the saved queue state." });
+    } finally {
+      setRefreshingJob(false);
+    }
+  };
+
   // Auto-trigger stale retry every 60s while job is active
   useEffect(() => {
     if (!job || (job.status !== "running" && job.status !== "pending")) return;
@@ -485,6 +500,9 @@ export default function AdminBulkGenerateSections() {
           pending={Math.max(0, (job.rows || []).filter((r: any) => r.status === "pending" || r.status === "processing" || r.status === "matched").length)}
           total={job.total_rows}
           updatedAt={(job as any).updated_at}
+          telemetry={(job as any).telemetry}
+          onRefresh={() => refreshAndResume(job.id)}
+          refreshing={refreshingJob}
         />
         <JobHealthReport
           workflow="Bulk College Sections"
