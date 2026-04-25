@@ -26,9 +26,13 @@ interface CollegeBrief {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  // Caller (e.g. bulk dashboard) can pick which AI backend to use via header.
+  const providerHeader = (req.headers.get("X-AI-Provider") || "").toLowerCase();
+  const provider: "gemini" | "lovable" = providerHeader === "lovable" ? "lovable" : "gemini";
+
   try {
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
+    const requiredKey = provider === "lovable" ? "LOVABLE_API_KEY" : "GEMINI_API_KEY";
+    if (!Deno.env.get(requiredKey)) throw new Error(`${requiredKey} is not configured`);
 
     const brief = (await req.json()) as CollegeBrief;
     if (!brief?.name) {
@@ -208,7 +212,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
         ],
         response_format: { type: "json_object" },
         max_tokens: maxTokens,
-      });
+      }, { feature: "ai-college-writer", provider });
 
       if (!res.ok) {
         const txt = await res.text();
@@ -261,7 +265,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
           tools: [tool],
           tool_choice: { type: "function", function: { name: tool.function.name } },
           max_tokens: maxTokens,
-        });
+        }, { feature: "ai-college-writer", provider });
 
         if (!res.ok) {
           const txt = await res.text();
@@ -317,7 +321,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
           { role: "user", content: user },
         ],
         max_tokens: maxTokens,
-      });
+      }, { feature: "ai-college-writer", provider });
 
       if (!res.ok) {
         const txt = await res.text();
@@ -626,7 +630,7 @@ RULES:
           tools: [factCheckTool],
           tool_choice: { type: "function", function: { name: "audit_college_facts" } },
           max_tokens: 2000,
-        });
+        }, { feature: "ai-college-writer", provider });
       if (auditRes.ok) {
         const auditJson = await auditRes.json();
         const auditArgs = auditJson?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;

@@ -291,6 +291,7 @@ async function processOne(
   cancelFlag: { v: boolean },
   tracker: TelemetryTracker,
   workerId: string,
+  aiProvider: "gemini" | "lovable",
 ) {
   const updateRow = async (patch: Partial<RowState>) => {
     Object.assign(row, patch);
@@ -346,6 +347,7 @@ async function processOne(
           "Content-Type": "application/json",
           Authorization: authHeader,
           apikey: ANON_KEY,
+          "X-AI-Provider": aiProvider,
         },
         body: aiRequestBody,
         }, AI_WRITER_TIMEOUT_MS, cancelFlag);
@@ -488,6 +490,7 @@ async function runJob(job_id: string, authHeader: string) {
     await admin.from("bulk_college_jobs").update({ status: "running", current_activity: "Paused — waiting for admin resume", updated_at: new Date().toISOString() }).eq("id", job_id);
     return;
   }
+  const aiProvider: "gemini" | "lovable" = ((job as any).ai_provider === "lovable") ? "lovable" : "gemini";
 
   const workerId = crypto.randomUUID();
   const claimed = await claimWorkerLock(admin, "bulk_college_jobs", job_id, workerId);
@@ -575,7 +578,7 @@ async function runJob(job_id: string, authHeader: string) {
         tracker.addHealth("processing", `Slot ${slotIdx + 1} processing ${row.name}`, { job_id, slot: slotIdx + 1, row: row.index + 1 });
         const busyStarted = Date.now();
         try {
-          await processOne(admin, authHeader, job_id, allRows, rowsRef, row, input, cancelFlag, tracker, workerId);
+          await processOne(admin, authHeader, job_id, allRows, rowsRef, row, input, cancelFlag, tracker, workerId, aiProvider);
         } finally {
           tracker.addBusy(Date.now() - busyStarted);
           activeRef.n = Math.max(0, activeRef.n - 1);

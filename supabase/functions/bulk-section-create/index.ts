@@ -283,6 +283,7 @@ async function generateOneSection(
   anchorFacts: any,
   cancelFlag?: { v: boolean },
   tracker?: TelemetryTracker,
+  aiProvider: "gemini" | "lovable" = "gemini",
 ) {
   const cy = new Date().getFullYear();
   const body = {
@@ -312,6 +313,7 @@ async function generateOneSection(
         "Content-Type": "application/json",
         Authorization: authHeader,
         apikey: ANON_KEY,
+        "X-AI-Provider": aiProvider,
       },
       body: requestBody,
         }, AI_SECTION_TIMEOUT_MS, cancelFlag);
@@ -528,6 +530,7 @@ async function processOneSectionStep(
   cancelFlag: { v: boolean },
   tracker: TelemetryTracker,
   workerId: string,
+  aiProvider: "gemini" | "lovable" = "gemini",
 ): Promise<boolean> {
   const row = rowsRef.value
     .filter(r => r.status !== "not_found" && r.status !== "succeeded")
@@ -593,7 +596,7 @@ async function processOneSectionStep(
       .maybeSingle();
 
     if (cancelFlag.v) throw new Error("Cancelled by admin");
-    const sec = await generateOneSection(authHeader, college, step.type, anchorFacts, cancelFlag, tracker);
+    const sec = await generateOneSection(authHeader, college, step.type, anchorFacts, cancelFlag, tracker, aiProvider);
     if (cancelFlag.v) throw new Error("Cancelled by admin");
 
     const orderIndex = SECTION_TYPES.findIndex((s) => s.value === step.type);
@@ -656,6 +659,7 @@ async function runJob(job_id: string, authHeader: string) {
     await admin.from("bulk_section_jobs").update({ status: "running", current_activity: "Paused — waiting for admin resume", updated_at: new Date().toISOString() }).eq("id", job_id);
     return;
   }
+  const aiProvider: "gemini" | "lovable" = ((job as any).ai_provider === "lovable") ? "lovable" : "gemini";
 
   const workerId = crypto.randomUUID();
   const claimed = await claimWorkerLock(admin, "bulk_section_jobs", job_id, workerId);
@@ -737,7 +741,7 @@ async function runJob(job_id: string, authHeader: string) {
         tracker.addHealth("processing", `Slot ${slotIdx + 1} processing a section step`, { job_id, slot: slotIdx + 1 });
         const busyStarted = Date.now();
         try {
-          const didWork = await processOneSectionStep(admin, authHeader, job_id, rowsRef, cancelFlag, tracker, workerId);
+          const didWork = await processOneSectionStep(admin, authHeader, job_id, rowsRef, cancelFlag, tracker, workerId, aiProvider);
           if (!didWork) return;
           const metricsNow = computeSectionMetrics(rowsRef.value);
           tracker.recordProgress(metricsNow.steps_done, `Section step ${myIdx + 1}`);

@@ -23,6 +23,7 @@ interface Props {
   status: string;
   paused: boolean;
   concurrency: number;
+  aiProvider?: "gemini" | "lovable";
   /** Live stats from parent */
   active: number;
   succeeded: number;
@@ -146,9 +147,21 @@ const ageSeconds = (value: string | number | null | undefined, nowMs: number) =>
 const fmtAge = (seconds: number | null) => seconds === null ? "—" : seconds < 60 ? `${seconds}s ago` : `${Math.floor(seconds / 60)}m ${seconds % 60}s ago`;
 
 const BulkLiveControlPanel = ({
-  workflow, table, jobId, status, paused, concurrency,
+  workflow, table, jobId, status, paused, concurrency, aiProvider = "gemini",
   active, succeeded, failed, pending, total, processed, updatedAt, telemetry, onRefresh, refreshing,
 }: Props) => {
+  const [savingProvider, setSavingProvider] = useState(false);
+  const switchProvider = async (next: "gemini" | "lovable") => {
+    if (next === aiProvider || savingProvider) return;
+    setSavingProvider(true);
+    const { error } = await supabase.from(table).update({ ai_provider: next, updated_at: new Date().toISOString() } as any).eq("id", jobId);
+    setSavingProvider(false);
+    if (error) {
+      toast({ title: "Couldn't switch AI provider", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "AI provider switched", description: next === "lovable" ? "Now using Lovable AI Gateway" : "Now using your Gemini API key" });
+  };
   const [draftConcurrency, setDraftConcurrency] = useState(concurrency);
   const [saving, setSaving] = useState(false);
   const [waking, setWaking] = useState(false);
@@ -611,6 +624,41 @@ const BulkLiveControlPanel = ({
             </Button>
           </div>
         )}
+
+        {/* AI provider toggle */}
+        <div className="rounded-lg border bg-card p-3 mb-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5 text-xs font-semibold">
+              <CircuitBoard className="w-3.5 h-3.5 text-primary" /> AI Provider (live)
+            </div>
+            <Badge variant={aiProvider === "gemini" ? "default" : "secondary"} className="text-[10px]">
+              {aiProvider === "gemini" ? "My Gemini API Key" : "Lovable AI Gateway"}
+            </Badge>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              size="sm"
+              variant={aiProvider === "gemini" ? "default" : "outline"}
+              disabled={savingProvider || aiProvider === "gemini"}
+              onClick={() => switchProvider("gemini")}
+              className="h-8 text-xs"
+            >
+              My Gemini API
+            </Button>
+            <Button
+              size="sm"
+              variant={aiProvider === "lovable" ? "default" : "outline"}
+              disabled={savingProvider || aiProvider === "lovable"}
+              onClick={() => switchProvider("lovable")}
+              className="h-8 text-xs"
+            >
+              Lovable AI
+            </Button>
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-2">
+            Switch instantly — applies to the next AI call. Use this if one provider is rate-limited or denied.
+          </p>
+        </div>
 
         {/* Controls */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

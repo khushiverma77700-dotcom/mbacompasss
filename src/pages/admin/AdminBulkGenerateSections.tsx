@@ -515,6 +515,7 @@ export default function AdminBulkGenerateSections() {
           status={job.status}
           paused={!!job.paused}
           concurrency={Number(job.concurrency) || 1}
+          aiProvider={(job as any).ai_provider === "lovable" ? "lovable" : "gemini"}
           active={liveMetrics.activeRows}
           succeeded={liveMetrics.succeeded}
           failed={liveMetrics.failed}
