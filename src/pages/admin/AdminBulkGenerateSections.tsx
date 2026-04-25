@@ -45,7 +45,7 @@ interface Job {
   created_at: string;
 }
 
-const PER_STEP_SECONDS = 30; // rough estimate per AI section call (concurrency=2)
+const PER_STEP_SECONDS = 35; // rough estimate per AI section call (single safe worker)
 
 const formatDuration = (s: number) => {
   if (!isFinite(s) || s <= 0) return "—";
@@ -148,8 +148,7 @@ export default function AdminBulkGenerateSections() {
   const eta = useMemo(() => {
     if (!job || job.status !== "running") return null;
     const remaining = Math.max(job.total_steps - job.steps_done, 0);
-    // 2 colleges in parallel → effectively 2× throughput
-    const seconds = (remaining * PER_STEP_SECONDS) / 2;
+    const seconds = remaining * PER_STEP_SECONDS;
     return seconds;
   }, [job]);
 
@@ -160,7 +159,7 @@ export default function AdminBulkGenerateSections() {
   }, [job]);
 
   const cancelJob = async (jobId: string) => {
-    if (!confirm("Cancel this job? The current college will finish, then the worker stops.")) return;
+    if (!confirm("Cancel this job now? The active AI request will be stopped and unsaved section placeholders will be removed.")) return;
     const { error } = await supabase
       .from("bulk_section_jobs")
       .update({ status: "cancelled", current_activity: "Cancelling…" })
@@ -169,7 +168,7 @@ export default function AdminBulkGenerateSections() {
       toast({ title: "Cancel failed", description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: "Cancelling…", description: "Worker will stop after the current college." });
+    toast({ title: "Cancelling…", description: "Worker is stopping immediately and clearing unfinished work." });
   };
 
   const restartJob = async (jobId: string) => {
