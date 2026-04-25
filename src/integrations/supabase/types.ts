@@ -455,6 +455,60 @@ export type Database = {
         }
         Relationships: []
       }
+      bulk_college_jobs: {
+        Row: {
+          completed: number
+          created_at: string
+          created_by: string | null
+          current_activity: string | null
+          duplicates_skipped: number
+          error_message: string | null
+          failed: number
+          finished_at: string | null
+          id: string
+          rows: Json
+          started_at: string | null
+          status: string
+          succeeded: number
+          total_rows: number
+          updated_at: string
+        }
+        Insert: {
+          completed?: number
+          created_at?: string
+          created_by?: string | null
+          current_activity?: string | null
+          duplicates_skipped?: number
+          error_message?: string | null
+          failed?: number
+          finished_at?: string | null
+          id?: string
+          rows?: Json
+          started_at?: string | null
+          status?: string
+          succeeded?: number
+          total_rows?: number
+          updated_at?: string
+        }
+        Update: {
+          completed?: number
+          created_at?: string
+          created_by?: string | null
+          current_activity?: string | null
+          duplicates_skipped?: number
+          error_message?: string | null
+          failed?: number
+          finished_at?: string | null
+          id?: string
+          rows?: Json
+          started_at?: string | null
+          status?: string
+          succeeded?: number
+          total_rows?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       business_inquiries: {
         Row: {
           contact_number: string
