@@ -111,6 +111,40 @@ const ActivityHeatmap = ({ data, max = 60 }: { data: number[]; max?: number }) =
   );
 };
 
+type WorkerSlotView = {
+  slot: number;
+  slot_id?: string;
+  state: string;
+  job_id?: string | null;
+  last_heartbeat?: string | null;
+  last_processed_at?: string | null;
+  current_item?: string | null;
+  current_step?: string | null;
+  enabled: boolean;
+};
+
+type HealthEventView = {
+  ts: number;
+  state: string;
+  label: string;
+  job_id?: string | null;
+  worker_id?: string | null;
+};
+
+const shortId = (id?: string | null) => id ? String(id).slice(0, 8) : "—";
+const toTime = (value?: string | number | null) => {
+  if (!value) return "—";
+  const date = typeof value === "number" ? new Date(value) : new Date(value);
+  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleTimeString("en-IN", { hour12: false });
+};
+const ageSeconds = (value: string | number | null | undefined, nowMs: number) => {
+  if (!value) return null;
+  const ts = typeof value === "number" ? value : new Date(value).getTime();
+  if (!Number.isFinite(ts)) return null;
+  return Math.max(0, Math.round((nowMs - ts) / 1000));
+};
+const fmtAge = (seconds: number | null) => seconds === null ? "—" : seconds < 60 ? `${seconds}s ago` : `${Math.floor(seconds / 60)}m ${seconds % 60}s ago`;
+
 const BulkLiveControlPanel = ({
   workflow, table, jobId, status, paused, concurrency,
   active, succeeded, failed, pending, total, processed, updatedAt, telemetry, onRefresh, refreshing,
