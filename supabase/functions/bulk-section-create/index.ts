@@ -19,11 +19,33 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
 const COLLEGE_CONCURRENCY = 1;
-const AI_SECTION_MAX_ATTEMPTS = 3;
+const AI_SECTION_MAX_ATTEMPTS = 1;
 const AI_SECTION_RETRY_BASE_DELAY_MS = 2500;
 const SECTION_PAUSE_MS = 1200;
+const ROWS_PER_INVOCATION = 1;
+const AI_SECTION_TIMEOUT_MS = 110_000;
+const STALE_PROCESSING_MS = 4 * 60_000;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function fetchWithTimeoutAndCancel(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number,
+  cancelFlag?: { v: boolean },
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort("timeout"), timeoutMs);
+  const cancelPoll = setInterval(() => {
+    if (cancelFlag?.v) controller.abort("cancelled");
+  }, 500);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+    clearInterval(cancelPoll);
+  }
+}
 
 const isRetryableAISectionFailure = (status: number, text: string) =>
   status === 408 || status === 429 || status >= 500 ||
