@@ -613,6 +613,7 @@ const AdminBulkCreateColleges = () => {
             </div>
           </CardContent>
         </Card>
+        </>
       )}
 
       {/* Recent jobs */}
