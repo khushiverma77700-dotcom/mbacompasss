@@ -472,6 +472,20 @@ export default function AdminBulkGenerateSections() {
       {/* Live progress panel */}
       {job && (
         <>
+        <BulkLiveControlPanel
+          workflow="Bulk College Sections"
+          table="bulk_section_jobs"
+          jobId={job.id}
+          status={job.status}
+          paused={!!job.paused}
+          concurrency={Number(job.concurrency) || 1}
+          active={(job.rows || []).filter((r: any) => r.status === "processing").length}
+          succeeded={job.succeeded}
+          failed={job.failed}
+          pending={Math.max(0, (job.rows || []).filter((r: any) => r.status === "pending" || r.status === "processing" || r.status === "matched").length)}
+          total={job.total_rows}
+          updatedAt={(job as any).updated_at}
+        />
         <JobHealthReport
           workflow="Bulk College Sections"
           jobId={job.id}
