@@ -70,6 +70,7 @@ async function processOne(
   rowsRef: { value: RowState[] },
   row: RowState,
   input: RowInput,
+  cancelFlag: { v: boolean },
 ) {
   const updateRow = async (patch: Partial<RowState>) => {
     Object.assign(row, patch);
@@ -81,6 +82,11 @@ async function processOne(
   };
 
   try {
+    if (cancelFlag.v) {
+      await updateRow({ status: "failed", step: "cancelled", error: "Cancelled by admin" });
+      return;
+    }
+
     await updateRow({ status: "processing", step: "researching" });
 
     const y = new Date().getFullYear();
@@ -115,6 +121,12 @@ async function processOne(
     const data = await aiRes.json();
     if (data?.error) throw new Error(data.error);
     if (!data?.college) throw new Error("AI returned empty college");
+
+    // Cancelled during the (long) AI call? Discard the result — never save partial work.
+    if (cancelFlag.v) {
+      await updateRow({ status: "failed", step: "cancelled", error: "Cancelled by admin" });
+      return;
+    }
 
     await updateRow({ step: "saving" });
 
@@ -158,13 +170,28 @@ async function processOne(
       last_seo_refresh: new Date().toISOString(),
     };
 
+    // Last-chance cancel check before persisting to DB
+    if (cancelFlag.v) {
+      await updateRow({ status: "failed", step: "cancelled", error: "Cancelled by admin" });
+      return;
+    }
+
     const { data: inserted, error: insertErr } = await admin
       .from("colleges").insert(insertPayload).select("id").single();
     if (insertErr) throw insertErr;
 
-    // Seed FAQs (same as manual)
+    // Cancelled right after insert — roll back so nothing partial remains
+    if (cancelFlag.v) {
+      if (inserted?.id) {
+        await admin.from("colleges").delete().eq("id", inserted.id);
+      }
+      await updateRow({ status: "failed", step: "cancelled", error: "Cancelled by admin" });
+      return;
+    }
+
+    // Seed FAQs (same as manual) — skip if cancelled
     const faqs = Array.isArray(data?.faqs) ? data.faqs : [];
-    if (faqs.length > 0 && inserted?.id) {
+    if (faqs.length > 0 && inserted?.id && !cancelFlag.v) {
       try {
         await fetch(`${SUPABASE_URL}/functions/v1/auto-seo-engine`, {
           method: "POST",
@@ -202,18 +229,23 @@ async function runJob(job_id: string, authHeader: string) {
   const pending = allRows.filter(r => r.status === "pending");
   const rowsRef = { value: allRows };
 
+  // Background poller — flips cancelFlag immediately when admin cancels
+  const cancelFlag = { v: false };
+  let pollerStop = false;
+  const poller = (async () => {
+    while (!pollerStop && !cancelFlag.v) {
+      const { data: cur } = await admin.from("bulk_college_jobs")
+        .select("status").eq("id", job_id).maybeSingle();
+      if (cur?.status === "cancelled") { cancelFlag.v = true; break; }
+      await new Promise(r => setTimeout(r, 1500));
+    }
+  })();
+
   // Concurrency pool
   let cursor = 0;
-  let cancelled = false;
-  const checkCancelled = async (): Promise<boolean> => {
-    if (cancelled) return true;
-    const { data: cur } = await admin.from("bulk_college_jobs").select("status").eq("id", job_id).maybeSingle();
-    if (cur?.status === "cancelled") { cancelled = true; return true; }
-    return false;
-  };
   const workers = Array.from({ length: CONCURRENCY }, async () => {
     while (true) {
-      if (await checkCancelled()) return;
+      if (cancelFlag.v) return;
       const myIdx = cursor++;
       if (myIdx >= pending.length) return;
       const row = pending[myIdx];
@@ -223,7 +255,7 @@ async function runJob(job_id: string, authHeader: string) {
         row.error = "Missing input";
         continue;
       }
-      await processOne(admin, authHeader, job_id, allRows, rowsRef, row, input);
+      await processOne(admin, authHeader, job_id, allRows, rowsRef, row, input, cancelFlag);
 
       // Update aggregate counters
       const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
@@ -237,10 +269,26 @@ async function runJob(job_id: string, authHeader: string) {
   });
 
   await Promise.all(workers);
+  pollerStop = true;
+  await poller.catch(() => {});
 
-  if (cancelled) {
+  if (cancelFlag.v) {
+    // Mark any still-pending rows as cancelled
+    for (const r of rowsRef.value) {
+      if (r.status === "pending" || r.status === "processing") {
+        r.status = "failed";
+        (r as any).step = "cancelled";
+        r.error = "Cancelled by admin";
+      }
+    }
+    const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
+    const failed = rowsRef.value.filter(r => r.status === "failed").length;
+    const duplicates = rowsRef.value.filter(r => r.status === "duplicate").length;
     await admin.from("bulk_college_jobs").update({
+      rows: rowsRef.value,
       status: "cancelled",
+      succeeded, failed, duplicates_skipped: duplicates,
+      completed: succeeded + failed + duplicates,
       finished_at: new Date().toISOString(),
       current_activity: "Cancelled by admin",
     }).eq("id", job_id);
