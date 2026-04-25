@@ -283,6 +283,7 @@ async function generateOneSection(
   anchorFacts: any,
   cancelFlag?: { v: boolean },
   tracker?: TelemetryTracker,
+  aiProvider: "gemini" | "lovable" = "gemini",
 ) {
   const cy = new Date().getFullYear();
   const body = {
