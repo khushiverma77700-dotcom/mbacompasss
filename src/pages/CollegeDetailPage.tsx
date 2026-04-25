@@ -422,7 +422,7 @@ const CollegeDetailPage = () => {
                     </div>
                     <div className="font-heading font-extrabold text-primary-foreground text-base md:text-lg leading-tight break-words">{s.value}</div>
                     <div className="mt-1.5">
-                      <CitationLink source={s.source} year={s.year} className="!bg-white/10 !border-white/20 !text-primary-foreground/80" />
+                      <CitationLink source={s.source} year={s.year} entityName={college.name} entityWebsite={(college as any).website} className="!bg-white/10 !border-white/20 !text-primary-foreground/80" />
                     </div>
                   </div>
                 );
