@@ -487,6 +487,25 @@ const AdminBulkCreateColleges = () => {
 
       {/* Live progress */}
       {job && (
+        <>
+        <JobHealthReport
+          workflow="Bulk Colleges"
+          jobId={job.id}
+          status={job.status}
+          startedAt={(job as any).started_at}
+          finishedAt={(job as any).finished_at}
+          updatedAt={(job as any).updated_at}
+          total={job.total_rows}
+          succeeded={job.succeeded}
+          failed={job.failed}
+          pending={Math.max(0, job.total_rows - job.completed)}
+          duplicates={job.duplicates_skipped}
+          rows={(job.rows || []).map((r: any) => ({
+            name: r.name || r.slug || `Row ${r.index}`,
+            status: r.status,
+            detail: r.error || r.step,
+          }))}
+        />
         <Card className="border-primary/30 bg-primary/5">
           <CardHeader>
             <div className="flex items-center justify-between gap-3 flex-wrap">
