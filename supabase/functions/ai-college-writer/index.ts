@@ -359,11 +359,61 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
 
     let profile: any;
     try {
-      profile = await callJsonModel({
+      const coreFieldsTool = {
+        type: "function",
+        function: {
+          name: "college_core_fields",
+          description: "Return compact structured core fields for one Indian MBA college profile. Do not include long HTML description or admission_process.",
+          parameters: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              slug: { type: "string" },
+              city: { type: "string" },
+              state: { type: "string" },
+              type: { type: "string" },
+              tier: { type: "string" },
+              college_category: { type: "string" },
+              established: { type: "number" },
+              ranking: { type: "number" },
+              fees: { type: "string" },
+              fees_lakhs: { type: "number" },
+              website: { type: "string" },
+              placement_avg: { type: "string" },
+              placement_highest: { type: "string" },
+              placement_median: { type: "string" },
+              campus_size: { type: "string" },
+              total_students: { type: "number" },
+              courses: { type: "array", minItems: 3, items: { type: "string" } },
+              accreditations: { type: "array", minItems: 2, items: { type: "string" } },
+              exams_accepted: { type: "array", minItems: 2, items: { type: "string" } },
+              top_recruiters: { type: "array", minItems: 8, items: { type: "string" } },
+              specializations: { type: "array", minItems: 6, items: { type: "string" } },
+              meta_title: { type: "string" },
+              meta_description: { type: "string" },
+              keywords: { type: "array", minItems: 6, items: { type: "string" } },
+              primary_keyword: { type: "string" },
+              h1_tag: { type: "string" },
+              funnel_stage: { type: "string" },
+            },
+            required: [
+              "name", "slug", "city", "state", "type", "tier", "college_category", "established",
+              "ranking", "fees", "fees_lakhs", "website", "placement_avg", "placement_highest",
+              "placement_median", "campus_size", "total_students", "courses", "accreditations",
+              "exams_accepted", "top_recruiters", "specializations", "meta_title", "meta_description",
+              "keywords", "primary_keyword", "h1_tag", "funnel_stage",
+            ],
+            additionalProperties: false,
+          },
+        },
+      };
+
+      profile = await callToolModel({
         label: "college core fields",
         maxTokens: 3200,
-        system: `${systemPrompt}\n\nReturn ONLY a compact JSON object for the structured college fields. Do NOT include description or admission_process in this response.`,
-        user: `${userPrompt}\n\nReturn exactly one JSON object with ONLY these fields:\n- name\n- slug\n- city\n- state\n- type\n- tier\n- college_category\n- established\n- ranking\n- fees\n- fees_lakhs\n- website\n- placement_avg\n- placement_highest\n- placement_median\n- campus_size\n- total_students\n- courses\n- accreditations\n- exams_accepted\n- top_recruiters\n- specializations\n- meta_title\n- meta_description\n- keywords\n- primary_keyword\n- h1_tag\n- funnel_stage\n\nRules:\n- Return valid JSON only.\n- No markdown fences.\n- Do not include HTML fields in this step.`,
+        system: `${systemPrompt}\n\nReturn compact structured data only through the function call. Do NOT include description or admission_process in this response. Keep every string concise to avoid truncation.`,
+        user: `${userPrompt}\n\nCall college_core_fields with ONLY the requested compact fields. Do not include HTML fields in this step.`,
+        tool: coreFieldsTool,
       });
     } catch (error) {
       return handleModelError(error);
