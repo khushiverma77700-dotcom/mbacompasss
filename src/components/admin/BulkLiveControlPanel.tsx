@@ -289,6 +289,7 @@ const BulkLiveControlPanel = ({
 
   const togglePaused = async (next: boolean) => {
     const { error } = await (supabase as any).from(table).update({
+      status: "running",
       paused: next,
       updated_at: new Date().toISOString(),
       current_activity: next ? "Paused by admin" : "Resumed by admin",
@@ -315,9 +316,16 @@ const BulkLiveControlPanel = ({
       "STOP ALL JOBS?\n\nThis will pause this job AND every other running bulk job (colleges + sections) immediately so the AI gateway and database can cool down.\n\nContinue?"
     );
     if (!ok) return;
-    await (supabase as any).from("bulk_college_jobs").update({ paused: true, current_activity: "Stopped by admin (load too high)" }).in("status", ["pending", "processing"]);
-    await (supabase as any).from("bulk_section_jobs").update({ paused: true, current_activity: "Stopped by admin (load too high)" }).in("status", ["pending", "processing"]);
-    toast({ title: "All bulk jobs paused", description: "Re-enable each job manually when load is healthy again." });
+    const stopPatch = {
+      status: "cancelled",
+      paused: true,
+      worker_lock_until: null,
+      current_activity: "Emergency stopped by admin",
+      updated_at: new Date().toISOString(),
+    };
+    await (supabase as any).from("bulk_college_jobs").update(stopPatch).in("status", ["pending", "running", "processing"]);
+    await (supabase as any).from("bulk_section_jobs").update(stopPatch).in("status", ["pending", "running", "processing"]);
+    toast({ title: "Emergency stop sent", description: "All bulk workers are being cancelled now. Use Restart/Refresh later to continue from saved rows." });
   };
 
   return (
