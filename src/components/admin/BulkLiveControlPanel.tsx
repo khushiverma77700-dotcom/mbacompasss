@@ -278,13 +278,21 @@ const BulkLiveControlPanel = ({
 
   const saveConcurrency = async () => {
     setSaving(true);
+    const previousConcurrency = concurrency;
     const { error } = await (supabase as any).from(table).update({
       concurrency: draftConcurrency,
       updated_at: new Date().toISOString(),
     }).eq("id", jobId);
     setSaving(false);
     if (error) toast({ title: "Couldn't update concurrency", description: error.message, variant: "destructive" });
-    else toast({ title: "Concurrency updated", description: `Worker will use ${draftConcurrency} parallel slot${draftConcurrency > 1 ? "s" : ""} on the next batch tick (~5s).` });
+    else {
+      if (!paused && !isTerminal && draftConcurrency > previousConcurrency) {
+        const fn = table === "bulk_college_jobs" ? "bulk-college-create" : "bulk-section-create";
+        supabase.functions.invoke(fn, { body: { action: "resume", job_id: jobId } }).catch(() => {});
+      }
+      onRefresh?.();
+      toast({ title: "Concurrency updated", description: `Live pool set to ${draftConcurrency}. Idle slots are being woken now.` });
+    }
   };
 
   const togglePaused = async (next: boolean) => {
