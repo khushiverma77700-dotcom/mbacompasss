@@ -198,7 +198,7 @@ const BulkLiveControlPanel = ({
   }, [succeeded, failed]);
 
   useEffect(() => {
-    setEvents((p) => [{ ts: Date.now(), kind: "info", msg: paused ? "Job paused by admin" : "Job resumed — workers warming up" }, ...p].slice(0, 8));
+    setEvents((p) => [{ ts: Date.now(), kind: "info" as const, msg: paused ? "Job paused by admin" : "Job resumed — workers warming up" }, ...p].slice(0, 8));
   }, [paused]);
 
   // Approximate AI gateway latency (ms) — derived from throughput per slot
