@@ -455,7 +455,7 @@ const AdminCollegeSections = () => {
           </Button>
           {selectedCollege && (
             <Button variant="outline" onClick={handleAIGenerateAll} disabled={aiBusy === "bulk"}>
-              {aiBusy === "bulk" ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Generating all…</> : <><Sparkles className="w-4 h-4 mr-1" /> Generate ALL via AI</>}
+              {aiBusy === "bulk" ? <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Generating AI versions…</> : <><Sparkles className="w-4 h-4 mr-1" /> Generate AI version of ALL sections</>}
             </Button>
           )}
           {selectedCollege && (<Button variant="outline" onClick={handleQuickAdd}><Plus className="w-4 h-4 mr-1" /> Quick Add All Missing</Button>)}
