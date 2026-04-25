@@ -14,6 +14,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+declare const EdgeRuntime: { waitUntil: (promise: Promise<unknown>) => void };
 
 const CONCURRENCY = 1;
 const AI_WRITER_MAX_ATTEMPTS = 1;
