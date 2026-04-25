@@ -101,6 +101,10 @@ function extractToolResult(aiData: any): any {
 
 // Verify caller is an authenticated admin. Returns null if authorized, or a Response if not.
 async function requireAdmin(req: Request): Promise<Response | null> {
+  if (req.headers.get("x-worker-key") === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")) {
+    return null;
+  }
+
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {

@@ -4,7 +4,7 @@
 // Runs in background via EdgeRuntime.waitUntil so the HTTP response returns immediately
 // and the job continues even if the admin closes the tab.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0?target=denonext";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,8 +16,11 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
 const CONCURRENCY = 1;
-const AI_WRITER_MAX_ATTEMPTS = 3;
+const AI_WRITER_MAX_ATTEMPTS = 1;
 const AI_RETRY_BASE_DELAY_MS = 2500;
+const ROWS_PER_INVOCATION = 1;
+const AI_WRITER_TIMEOUT_MS = 125_000;
+const STALE_PROCESSING_MS = 4 * 60_000;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -65,9 +68,20 @@ interface RowState {
   state: string;
   status: "pending" | "processing" | "duplicate" | "succeeded" | "failed";
   step?: string;
+  attemptStartedAt?: string;
   collegeId?: string;
   error?: string;
   finalSlug?: string;
+}
+
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 async function processOne(
@@ -85,6 +99,7 @@ async function processOne(
     rowsRef.value = [...rowsRef.value];
     await admin.from("bulk_college_jobs").update({
       rows: rowsRef.value,
+      updated_at: new Date().toISOString(),
       current_activity: `Row ${row.index + 1}: ${row.name} — ${row.step || row.status}`,
     }).eq("id", job_id);
   };
@@ -95,7 +110,7 @@ async function processOne(
       return;
     }
 
-    await updateRow({ status: "processing", step: "researching" });
+    await updateRow({ status: "processing", step: "researching", attemptStartedAt: new Date().toISOString() });
 
     const y = new Date().getFullYear();
     const dateContext = `Use ONLY the most recent verified data: ${y}-${y + 1} admission cycle, ${y - 1}-${y} placement reports. All fees, placement figures, ranking and seat numbers MUST reflect the latest published year.`;
@@ -111,6 +126,7 @@ async function processOne(
       targetKeyword: input.primaryKeyword || input.name,
       secondaryKeywords: [],
       contentDateContext: dateContext,
+      bulkMode: true,
     };
 
     let data: any = null;
@@ -122,7 +138,9 @@ async function processOne(
       }
       await updateRow({ step: attempt === 1 ? "researching" : `retrying AI writer (${attempt}/${AI_WRITER_MAX_ATTEMPTS})` });
 
-      const aiRes = await fetch(`${SUPABASE_URL}/functions/v1/ai-college-writer`, {
+      let aiRes: Response;
+      try {
+        aiRes = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/ai-college-writer`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -130,7 +148,17 @@ async function processOne(
           apikey: ANON_KEY,
         },
         body: JSON.stringify(aiBody),
-      });
+        }, AI_WRITER_TIMEOUT_MS);
+      } catch (err) {
+        lastAiError = err instanceof DOMException && err.name === "AbortError"
+          ? `AI writer timed out after ${Math.round(AI_WRITER_TIMEOUT_MS / 1000)}s`
+          : `AI writer request failed: ${err instanceof Error ? err.message : String(err)}`;
+        if (attempt < AI_WRITER_MAX_ATTEMPTS) {
+          await sleep(AI_RETRY_BASE_DELAY_MS * attempt);
+          continue;
+        }
+        break;
+      }
 
       const txt = await aiRes.text();
       if (aiRes.ok) {
@@ -227,15 +255,15 @@ async function processOne(
       try {
         await fetch(`${SUPABASE_URL}/functions/v1/auto-seo-engine`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: authHeader, apikey: ANON_KEY },
+          headers: { "Content-Type": "application/json", Authorization: authHeader, apikey: ANON_KEY, "x-worker-key": SERVICE_ROLE },
           body: JSON.stringify({ mode: "seed_faqs", contentType: "college", pageId: inserted.id, faqs }),
         });
       } catch (_) { /* non-fatal */ }
     }
 
-    await updateRow({ status: "succeeded", step: "done", collegeId: inserted.id, finalSlug });
+    await updateRow({ status: "succeeded", step: "done", collegeId: inserted.id, finalSlug, attemptStartedAt: undefined });
   } catch (e: any) {
-    await updateRow({ status: "failed", step: "error", error: e?.message || "Unknown error" });
+    await updateRow({ status: "failed", step: "error", error: e?.message || "Unknown error", attemptStartedAt: undefined });
   }
 }
 
@@ -249,16 +277,28 @@ async function runJob(job_id: string, authHeader: string) {
     return;
   }
 
-  const allRows: RowState[] = job.rows as RowState[];
+  const allRows: RowState[] = (job.rows as RowState[]).map((r) => {
+    if (r.status !== "processing") return r;
+    const started = r.attemptStartedAt ? new Date(r.attemptStartedAt).getTime() : 0;
+    const isStale = !started || Date.now() - started > STALE_PROCESSING_MS;
+    return isStale
+      ? { ...r, status: "pending", step: "requeued after stale worker", error: undefined, attemptStartedAt: undefined }
+      : r;
+  });
   const inputsByIndex: Record<number, RowInput> = (job.request_inputs as any) || {};
 
   await admin.from("bulk_college_jobs").update({
     status: "running",
     started_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    rows: allRows,
     current_activity: "Starting…",
   }).eq("id", job_id);
 
-  const pending = allRows.filter(r => r.status === "pending");
+  const pending = allRows
+    .filter(r => r.status === "pending")
+    .sort((a, b) => a.index - b.index)
+    .slice(0, ROWS_PER_INVOCATION);
   const rowsRef = { value: allRows };
 
   // Background poller — flips cancelFlag immediately when admin cancels
@@ -295,7 +335,7 @@ async function runJob(job_id: string, authHeader: string) {
       const duplicates = rowsRef.value.filter(r => r.status === "duplicate").length;
       const completed = succeeded + failed + duplicates;
       await admin.from("bulk_college_jobs").update({
-        succeeded, failed, duplicates_skipped: duplicates, completed,
+        succeeded, failed, duplicates_skipped: duplicates, completed, updated_at: new Date().toISOString(),
       }).eq("id", job_id);
     }
   });
@@ -311,6 +351,7 @@ async function runJob(job_id: string, authHeader: string) {
         r.status = "failed";
         (r as any).step = "cancelled";
         r.error = "Cancelled by admin";
+        r.attemptStartedAt = undefined;
       }
     }
     const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
@@ -322,14 +363,54 @@ async function runJob(job_id: string, authHeader: string) {
       succeeded, failed, duplicates_skipped: duplicates,
       completed: succeeded + failed + duplicates,
       finished_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       current_activity: "Cancelled by admin",
     }).eq("id", job_id);
+    return;
+  }
+
+  const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
+  const failed = rowsRef.value.filter(r => r.status === "failed").length;
+  const duplicates = rowsRef.value.filter(r => r.status === "duplicate").length;
+  const completed = succeeded + failed + duplicates;
+  const remaining = rowsRef.value.filter(r => r.status === "pending").length;
+
+  if (remaining > 0) {
+    await admin.from("bulk_college_jobs").update({
+      status: "pending",
+      rows: rowsRef.value,
+      succeeded,
+      failed,
+      duplicates_skipped: duplicates,
+      completed,
+      updated_at: new Date().toISOString(),
+      current_activity: `Continuing… ${remaining} colleges remaining`,
+    }).eq("id", job_id);
+
+    // Start the next small chunk as a fresh invocation so long batches do not hit runtime limits.
+    // @ts-ignore - EdgeRuntime is provided by Supabase Edge runtime
+    EdgeRuntime.waitUntil(fetch(`${SUPABASE_URL}/functions/v1/bulk-college-create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authHeader,
+        apikey: ANON_KEY,
+        "x-worker-key": SERVICE_ROLE,
+      },
+      body: JSON.stringify({ action: "resume", job_id }),
+    }).catch((e) => console.error("Failed to schedule next bulk college chunk", e)));
     return;
   }
 
   await admin.from("bulk_college_jobs").update({
     status: "completed",
     finished_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    rows: rowsRef.value,
+    succeeded,
+    failed,
+    duplicates_skipped: duplicates,
+    completed,
     current_activity: "All done",
   }).eq("id", job_id);
 }
@@ -338,24 +419,32 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
+    const body = await req.json();
+    const action = body.action || "create";
+    const isInternalResume = action === "resume" && req.headers.get("x-worker-key") === SERVICE_ROLE;
     const authHeader = req.headers.get("Authorization") || "";
-    if (!authHeader) {
+    if (!isInternalResume && !authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    let user: any = null;
+    if (!isInternalResume) {
     const userClient = createClient(SUPABASE_URL, ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: { user } } = await userClient.auth.getUser();
+    const userRes = await userClient.auth.getUser();
+    user = userRes.data.user;
     if (!user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    }
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
+    if (!isInternalResume) {
     const { data: roleRow } = await admin.from("user_roles")
       .select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
     if (!roleRow) {
@@ -363,9 +452,7 @@ Deno.serve(async (req) => {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const body = await req.json();
-    const action = body.action || "create";
+    }
 
     if (action === "create") {
       const inputs: RowInput[] = body.rows || [];
@@ -433,7 +520,7 @@ Deno.serve(async (req) => {
       const job_id = body.job_id;
       if (!job_id) return new Response(JSON.stringify({ error: "job_id required" }), { status: 400, headers: corsHeaders });
       // @ts-ignore
-      EdgeRuntime.waitUntil(runJob(job_id, authHeader));
+      EdgeRuntime.waitUntil(runJob(job_id, isInternalResume ? `Bearer ${ANON_KEY}` : authHeader));
       return new Response(JSON.stringify({ ok: true }), { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
