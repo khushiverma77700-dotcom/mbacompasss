@@ -123,6 +123,7 @@ const BulkLiveControlPanel = ({
   const totalUnits = Math.max(0, Number(total || 0));
   const lastProcessed = useRef(processedUnits);
   const lastTime = useRef(Date.now());
+  const isTerminal = ["completed", "failed", "cancelled"].includes(status);
 
   const networkStats = telemetry?.network || {};
   const telemetryAgeSec = telemetry?.updatedAt ? Math.max(0, (Date.now() - new Date(telemetry.updatedAt).getTime()) / 1000) : null;
@@ -274,8 +275,6 @@ const BulkLiveControlPanel = ({
     browserCpu >= 70 ? { color: "text-destructive", label: "High" }
     : browserCpu >= 35 ? { color: "text-amber-700", label: "Warm" }
     : { color: "text-emerald-700", label: "Cool" };
-
-  const isTerminal = ["completed", "failed", "cancelled"].includes(status);
 
   const saveConcurrency = async () => {
     setSaving(true);
