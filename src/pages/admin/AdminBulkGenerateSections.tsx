@@ -159,6 +159,57 @@ export default function AdminBulkGenerateSections() {
     return (end - new Date(job.started_at).getTime()) / 1000;
   }, [job]);
 
+  const cancelJob = async (jobId: string) => {
+    if (!confirm("Cancel this job? The current college will finish, then the worker stops.")) return;
+    const { error } = await supabase
+      .from("bulk_section_jobs")
+      .update({ status: "cancelled", current_activity: "Cancelling…" })
+      .eq("id", jobId);
+    if (error) {
+      toast({ title: "Cancel failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Cancelling…", description: "Worker will stop after the current college." });
+  };
+
+  const restartJob = async (jobId: string) => {
+    if (!confirm("Restart this job? Pending and failed colleges/sections will be re-queued.")) return;
+    const { data: j, error: fetchErr } = await supabase
+      .from("bulk_section_jobs").select("rows").eq("id", jobId).maybeSingle();
+    if (fetchErr || !j) {
+      toast({ title: "Restart failed", description: fetchErr?.message || "Job not found", variant: "destructive" });
+      return;
+    }
+    const resetRows = ((j.rows as unknown) as RowState[]).map(r => {
+      if (r.status === "succeeded" || r.status === "not_found") return r;
+      return {
+        ...r,
+        status: "pending" as const,
+        error: undefined,
+        steps: (r.steps || []).map(s =>
+          s.status === "succeeded" ? s : { ...s, status: "pending" as const, error: undefined }
+        ),
+      };
+    });
+    await supabase.from("bulk_section_jobs").update({
+      rows: resetRows as any,
+      status: "pending",
+      current_activity: "Restarting…",
+      finished_at: null,
+    }).eq("id", jobId);
+
+    const { data: { session } } = await supabase.auth.getSession();
+    const { error } = await supabase.functions.invoke("bulk-section-create", {
+      body: { action: "resume", job_id: jobId },
+      headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
+    });
+    if (error) {
+      toast({ title: "Restart failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Job restarted", description: "Pending colleges/sections are being processed again." });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
