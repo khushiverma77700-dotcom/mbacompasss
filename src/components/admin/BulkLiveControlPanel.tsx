@@ -152,6 +152,7 @@ const BulkLiveControlPanel = ({
   const [draftConcurrency, setDraftConcurrency] = useState(concurrency);
   const [saving, setSaving] = useState(false);
   const [waking, setWaking] = useState(false);
+  const [restarting, setRestarting] = useState(false);
   const [browserCpu, setBrowserCpu] = useState(0); // 0..100
   const [tickRate, setTickRate] = useState(0); // throughput units/min approx
   const [clockTick, setClockTick] = useState(Date.now());
@@ -427,6 +428,23 @@ const BulkLiveControlPanel = ({
       toast({ title: "Couldn't wake workers", description: e?.message || "Resume request failed", variant: "destructive" });
     } finally {
       setWaking(false);
+    }
+  };
+
+  const restartStuckWorkers = async () => {
+    setRestarting(true);
+    const fn = table === "bulk_college_jobs" ? "bulk-college-create" : "bulk-section-create";
+    try {
+      const { error } = await supabase.functions.invoke(fn, {
+        body: { action: "auto_retry_stale", job_id: jobId, threshold_ms: 60_000 },
+      });
+      if (error) throw error;
+      await onRefresh?.();
+      toast({ title: "Auto-restart sent", description: "Stale processing rows were requeued if needed and workers were resumed." });
+    } catch (e: any) {
+      toast({ title: "Auto-restart failed", description: e?.message || "Could not restart stuck workers", variant: "destructive" });
+    } finally {
+      setRestarting(false);
     }
   };
 
