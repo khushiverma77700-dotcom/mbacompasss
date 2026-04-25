@@ -70,6 +70,7 @@ async function processOne(
   rowsRef: { value: RowState[] },
   row: RowState,
   input: RowInput,
+  cancelFlag: { v: boolean },
 ) {
   const updateRow = async (patch: Partial<RowState>) => {
     Object.assign(row, patch);
