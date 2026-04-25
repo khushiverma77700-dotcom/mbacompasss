@@ -655,6 +655,7 @@ export default function AdminBulkGenerateSections() {
             </div>
           </CardContent>
         </Card>
+        </>
       )}
 
       {/* Recent jobs */}
