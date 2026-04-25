@@ -212,7 +212,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
         ],
         response_format: { type: "json_object" },
         max_tokens: maxTokens,
-      }, { feature: "ai-college-writer", provider });
+      }, { feature: "ai-college-writer", provider, purpose: "structured" });
 
       if (!res.ok) {
         const txt = await res.text();
