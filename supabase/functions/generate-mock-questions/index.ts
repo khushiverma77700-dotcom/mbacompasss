@@ -6,7 +6,7 @@
 //
 // Auth: admin only (verifies JWT in code; verify_jwt = false in config.toml).
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 import { callAIGateway } from "../_shared/aiGateway.ts";
 
 const corsHeaders = {

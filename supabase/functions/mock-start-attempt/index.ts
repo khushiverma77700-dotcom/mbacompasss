@@ -1,5 +1,5 @@
 // Server-authoritative attempt creation: sets section deadlines on the server.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0?target=denonext";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

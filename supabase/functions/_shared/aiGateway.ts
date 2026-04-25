@@ -15,7 +15,7 @@
 //   • Streaming pass-through (no buffering of large generations).
 //   • No artificial timeouts on the upstream call.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 
 const GEMINI_OPENAI_COMPAT_URL =
   "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";

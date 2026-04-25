@@ -13,7 +13,7 @@
 // keywords, ogTitle, reasoning) so a single AI call fixes every meta field, not just title +
 // description.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1?target=denonext";
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
 const corsHeaders = {
