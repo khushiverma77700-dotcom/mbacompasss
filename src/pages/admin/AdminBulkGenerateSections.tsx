@@ -277,7 +277,19 @@ export default function AdminBulkGenerateSections() {
                     : <AlertTriangle className="w-4 h-4 text-amber-600" />}
                 Job · {job.status}
               </CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => setJob(null)}>New job</Button>
+              <div className="flex items-center gap-2">
+                {(job.status === "running" || job.status === "pending") && (
+                  <Button size="sm" variant="destructive" onClick={() => cancelJob(job.id)}>
+                    <Ban className="w-3.5 h-3.5 mr-1.5" /> Cancel
+                  </Button>
+                )}
+                {(job.status === "completed" || job.status === "failed" || job.status === "cancelled") && (
+                  <Button size="sm" variant="outline" onClick={() => restartJob(job.id)}>
+                    <RotateCw className="w-3.5 h-3.5 mr-1.5" /> Restart
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={() => setJob(null)}>New job</Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
