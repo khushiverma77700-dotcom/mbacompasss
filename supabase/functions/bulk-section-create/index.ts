@@ -100,6 +100,7 @@ async function processCollege(
   job_id: string,
   rowsRef: { value: RowState[] },
   row: RowState,
+  cancelFlag: { v: boolean },
 ) {
   const persist = async () => {
     const stepsDone = rowsRef.value.reduce(
@@ -119,7 +120,31 @@ async function processCollege(
     }).eq("id", job_id);
   };
 
+  // Track which section rows were freshly inserted by THIS job for this college,
+  // so we can clean them up if cancelled (don't leave empty placeholders).
+  let freshlyInsertedIds: string[] = [];
+  const cleanupOnCancel = async () => {
+    // Mark in-progress / pending steps as cancelled
+    for (const s of row.steps) {
+      if (s.status === "processing" || s.status === "pending") {
+        s.status = "failed";
+        s.error = "Cancelled";
+      }
+    }
+    row.status = "failed";
+    row.error = "Cancelled by admin";
+    row.finishedAt = new Date().toISOString();
+    // Delete any freshly inserted (empty) section placeholders
+    if (freshlyInsertedIds.length) {
+      await admin.from("college_sections").delete().in("id", freshlyInsertedIds);
+    }
+    rowsRef.value = [...rowsRef.value];
+    await persist();
+  };
+
   try {
+    if (cancelFlag.v) { await cleanupOnCancel(); return; }
+
     row.status = "processing";
     row.startedAt = new Date().toISOString();
     rowsRef.value = [...rowsRef.value];
@@ -147,7 +172,9 @@ async function processCollege(
       admission_cycle: `${cy}-${cy + 1}`,
     };
 
-    // Ensure all section rows exist for this college
+    if (cancelFlag.v) { await cleanupOnCancel(); return; }
+
+    // Ensure all section rows exist for this college (track fresh inserts)
     const { data: existingRows } = await admin
       .from("college_sections").select("id, section_type")
       .eq("college_id", college.id);
@@ -158,7 +185,9 @@ async function processCollege(
         college_id: college.id, section_type: t.value, title: t.label,
         sort_order: ((existingRows?.length || 0) + i) * 10, data: {},
       }));
-      await admin.from("college_sections").insert(inserts);
+      const { data: insertedRows } = await admin
+        .from("college_sections").insert(inserts).select("id");
+      freshlyInsertedIds = (insertedRows || []).map((r: any) => r.id);
     }
     const { data: allRows } = await admin
       .from("college_sections").select("id, section_type, title, content, data")
@@ -168,6 +197,8 @@ async function processCollege(
 
     // Generate each section sequentially for this college
     for (let i = 0; i < row.steps.length; i++) {
+      if (cancelFlag.v) { await cleanupOnCancel(); return; }
+
       const step = row.steps[i];
       step.status = "processing";
       rowsRef.value = [...rowsRef.value];
@@ -175,6 +206,8 @@ async function processCollege(
 
       try {
         const sec = await generateOneSection(authHeader, college, step.type, anchorFacts);
+        // Re-check after the (potentially long) AI call — discard result if cancelled
+        if (cancelFlag.v) { await cleanupOnCancel(); return; }
         const target = byType[step.type];
         if (target) {
           await admin.from("college_sections").update({
@@ -182,6 +215,8 @@ async function processCollege(
             content: sec.content || target.content,
             data: sec.data || {},
           }).eq("id", target.id);
+          // This row now has content — protect from cleanup
+          freshlyInsertedIds = freshlyInsertedIds.filter(id => id !== target.id);
         }
         step.status = "succeeded";
       } catch (e: any) {
