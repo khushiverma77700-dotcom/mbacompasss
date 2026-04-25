@@ -399,9 +399,50 @@ async function runJob(job_id: string, authHeader: string) {
     return;
   }
 
+  const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
+  const failed = rowsRef.value.filter(r => r.status === "failed").length;
+  const not_found = rowsRef.value.filter(r => r.status === "not_found").length;
+  const steps_done = rowsRef.value.reduce(
+    (acc, r) => acc + (r.steps || []).filter(s => s.status === "succeeded" || s.status === "failed").length,
+    0,
+  );
+  const remaining = rowsRef.value.filter(r => r.status === "pending" && (r.steps || []).some(s => s.status === "pending")).length;
+
+  if (remaining > 0) {
+    await admin.from("bulk_section_jobs").update({
+      status: "pending",
+      rows: rowsRef.value,
+      steps_done,
+      succeeded,
+      failed,
+      not_found,
+      updated_at: new Date().toISOString(),
+      current_activity: `Continuing… ${remaining} college section chunks remaining`,
+    }).eq("id", job_id);
+
+    // @ts-ignore - EdgeRuntime is provided by Supabase Edge runtime
+    EdgeRuntime.waitUntil(fetch(`${SUPABASE_URL}/functions/v1/bulk-section-create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authHeader,
+        apikey: ANON_KEY,
+        "x-worker-key": SERVICE_ROLE,
+      },
+      body: JSON.stringify({ action: "resume", job_id }),
+    }).catch((e) => console.error("Failed to schedule next bulk section chunk", e)));
+    return;
+  }
+
   await admin.from("bulk_section_jobs").update({
     status: "completed",
     finished_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    rows: rowsRef.value,
+    steps_done,
+    succeeded,
+    failed,
+    not_found,
     current_activity: "All done",
   }).eq("id", job_id);
 }
