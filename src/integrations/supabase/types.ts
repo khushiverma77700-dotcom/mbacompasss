@@ -457,6 +457,7 @@ export type Database = {
       }
       bulk_college_jobs: {
         Row: {
+          ai_provider: string
           completed: number
           concurrency: number
           created_at: string
@@ -480,6 +481,7 @@ export type Database = {
           worker_lock_until: string | null
         }
         Insert: {
+          ai_provider?: string
           completed?: number
           concurrency?: number
           created_at?: string
@@ -503,6 +505,7 @@ export type Database = {
           worker_lock_until?: string | null
         }
         Update: {
+          ai_provider?: string
           completed?: number
           concurrency?: number
           created_at?: string
@@ -529,6 +532,7 @@ export type Database = {
       }
       bulk_section_jobs: {
         Row: {
+          ai_provider: string
           concurrency: number
           created_at: string
           created_by: string | null
@@ -552,6 +556,7 @@ export type Database = {
           worker_lock_until: string | null
         }
         Insert: {
+          ai_provider?: string
           concurrency?: number
           created_at?: string
           created_by?: string | null
@@ -575,6 +580,7 @@ export type Database = {
           worker_lock_until?: string | null
         }
         Update: {
+          ai_provider?: string
           concurrency?: number
           created_at?: string
           created_by?: string | null
