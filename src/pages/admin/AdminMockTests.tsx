@@ -11,8 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, ArrowLeft, Settings2, ExternalLink, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowLeft, Settings2, ExternalLink, Loader2, Sparkles } from "lucide-react";
 import { slugify } from "@/lib/slugify";
+import AIGenerateMockDialog from "@/components/admin/AIGenerateMockDialog";
 
 const SECTION_DEFAULTS = [
   { code: "VARC" as const, name: "Verbal Ability & Reading Comprehension", duration_minutes: 40, total_questions: 24, sort_order: 0 },
@@ -63,6 +64,8 @@ const AdminMockTests = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Form>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
   const fetchTests = async () => {
     setLoading(true);
@@ -239,15 +242,45 @@ const AdminMockTests = () => {
           <h1 className="font-heading text-2xl font-bold text-foreground">Mock Tests</h1>
           <p className="text-sm text-muted-foreground mt-1">CAT-style mock test management</p>
         </div>
-        <Button onClick={startCreate}><Plus className="w-4 h-4 mr-2" /> New Mock Test</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setAiOpen(true)}>
+            <Sparkles className="w-4 h-4 mr-2 text-primary" /> Generate Mocks From AI
+          </Button>
+          <Button onClick={startCreate}><Plus className="w-4 h-4 mr-2" /> New Mock Test</Button>
+        </div>
       </div>
+
+      <div className="flex flex-wrap gap-2 mb-4">
+        {[
+          { v: "all", l: "All" },
+          { v: "full_length", l: "Full Length" },
+          { v: "sectional", l: "Sectional" },
+          { v: "topic", l: "Topic-wise" },
+          { v: "daily", l: "Daily Test" },
+          { v: "practice", l: "Practice" },
+        ].map((c) => (
+          <Button
+            key={c.v}
+            size="sm"
+            variant={categoryFilter === c.v ? "default" : "outline"}
+            onClick={() => setCategoryFilter(c.v)}
+          >
+            {c.l}
+            <Badge variant="secondary" className="ml-2">
+              {c.v === "all" ? tests.length : tests.filter((t) => (t.category || t.test_type) === c.v).length}
+            </Badge>
+          </Button>
+        ))}
+      </div>
+
       <Card>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Type</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Exam</TableHead>
                 <TableHead>Pricing</TableHead>
                 <TableHead>Duration</TableHead>
                 <TableHead>Status</TableHead>
@@ -256,19 +289,29 @@ const AdminMockTests = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading && (<TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>)}
+              {loading && (<TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>)}
               {!loading && tests.length === 0 && (
-                <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">
-                  No mock tests yet. Click <strong>New Mock Test</strong> to create your first CAT mock.
+                <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                  No mock tests yet. Click <strong>Generate Mocks From AI</strong> or <strong>New Mock Test</strong>.
                 </TableCell></TableRow>
               )}
-              {tests.map((t) => (
+              {tests
+                .filter((t) => categoryFilter === "all" || (t.category || t.test_type) === categoryFilter)
+                .map((t) => (
                 <TableRow key={t.id}>
                   <TableCell>
-                    <div className="font-medium">{t.name}</div>
+                    <div className="font-medium flex items-center gap-1.5">
+                      {t.name}
+                      {t.generated_by_ai && <Sparkles className="w-3 h-3 text-primary" />}
+                    </div>
                     <div className="text-xs text-muted-foreground">/{t.slug}</div>
                   </TableCell>
-                  <TableCell><Badge variant="outline" className="capitalize">{t.test_type.replace("_", " ")}</Badge></TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="capitalize">
+                      {String(t.category || t.test_type).replace("_", " ")}
+                    </Badge>
+                  </TableCell>
+                  <TableCell><Badge variant="secondary">{t.exam_code || "CAT"}</Badge></TableCell>
                   <TableCell>
                     {t.pricing_type === "free" ? (
                       <Badge variant="secondary">Free</Badge>
@@ -302,6 +345,12 @@ const AdminMockTests = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <AIGenerateMockDialog
+        open={aiOpen}
+        onOpenChange={setAiOpen}
+        onCreated={fetchTests}
+      />
     </div>
   );
 };
