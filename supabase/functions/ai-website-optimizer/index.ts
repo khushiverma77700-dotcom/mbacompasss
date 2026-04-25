@@ -1,7 +1,7 @@
 // AI Website Optimization Engine — runs a 40-step audit + auto-fix pass
 // Mode: 'audit' (read-only) | 'fix' (aggressive auto-fixes incl. AI rewrites)
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0?target=denonext";
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
 const corsHeaders = {

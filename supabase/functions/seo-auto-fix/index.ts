@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1?target=denonext";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

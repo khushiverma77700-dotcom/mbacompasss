@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1?target=denonext";
 
 // COST OPTIMIZATION (2026-04):
 //  • summarize → switched from gemini-2.5-flash → gemini-2.5-flash-lite

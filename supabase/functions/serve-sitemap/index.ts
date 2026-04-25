@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2?target=denonext";
 
 const SITE_URL = "https://mbacompass.in";
 const MAX_URLS_PER_SITEMAP = 1000;

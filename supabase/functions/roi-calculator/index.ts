@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3?target=denonext";
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
 const corsHeaders = {

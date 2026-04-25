@@ -1,7 +1,7 @@
 // Premium Profile Report — AI narrative layer.
 // Returns: one_line_summary, final_verdict, top_advantages[], top_risks[], section_insights{}
 // Cached to analysis_results.ai_summary so subsequent calls are free.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
 const corsHeaders = {

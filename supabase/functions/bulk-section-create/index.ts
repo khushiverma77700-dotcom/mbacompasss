@@ -7,7 +7,7 @@
 // Runs in the background via EdgeRuntime.waitUntil so the request returns immediately
 // and the job continues even if the admin closes the tab.
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0?target=denonext";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

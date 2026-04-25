@@ -2,7 +2,7 @@
 // Body: { contentType: "college"|"institute"|"article", recordId: string, runCompetitorScan?: boolean }
 // Returns a complete SEOSuggestionsPayload sized for the FULL assembled page (base + sections/courses/faculty).
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1?target=denonext";
 import { callAIGateway } from "../_shared/aiGateway.ts";
 
 const corsHeaders = {

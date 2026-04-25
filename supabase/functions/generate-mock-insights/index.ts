@@ -1,6 +1,6 @@
 // Generates AI-powered strengths, weaknesses, and study recommendations
 // from a completed mock attempt's topic & section breakdown.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0?target=denonext";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
