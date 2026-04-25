@@ -321,16 +321,36 @@ async function runJob(job_id: string, authHeader: string) {
     return;
   }
 
-  const rows = job.rows as RowState[];
+  const rows = (job.rows as RowState[]).map((r) => {
+    if (r.status !== "processing") return r;
+    const processingStep = (r.steps || []).find((s) => s.status === "processing");
+    const started = processingStep?.startedAt || r.startedAt;
+    const startedAtMs = started ? new Date(started).getTime() : 0;
+    const isStale = !startedAtMs || Date.now() - startedAtMs > STALE_PROCESSING_MS;
+    if (!isStale) return r;
+    return {
+      ...r,
+      status: "pending" as const,
+      error: undefined,
+      steps: (r.steps || []).map((s) => s.status === "processing"
+        ? { ...s, status: "pending" as const, error: undefined, startedAt: undefined }
+        : s),
+    };
+  });
   const rowsRef = { value: rows };
 
   await admin.from("bulk_section_jobs").update({
     status: "running",
     started_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    rows,
     current_activity: "Starting…",
   }).eq("id", job_id);
 
-  const eligible = rows.filter(r => r.status === "pending");
+  const eligible = rows
+    .filter(r => r.status === "pending" && (r.steps || []).some((s) => s.status === "pending"))
+    .sort((a, b) => a.index - b.index)
+    .slice(0, ROWS_PER_INVOCATION);
 
   // Background poller — sets cancelFlag.v immediately when admin cancels
   const cancelFlag = { v: false };
