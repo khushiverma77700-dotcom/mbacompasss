@@ -134,6 +134,22 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
 
 # OUTPUT — return JSON via the tool call below.`;
 
+    const repairJSON = (s: string): string => {
+      let out = s;
+      // strip control chars (except \n \r \t)
+      out = out.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
+      // remove trailing commas before } or ]
+      out = out.replace(/,(\s*[}\]])/g, "$1");
+      // quote unquoted object keys: { foo: ... } or , foo:
+      out = out.replace(/([{,]\s*)([A-Za-z_][A-Za-z0-9_\-]*)\s*:/g, '$1"$2":');
+      // convert single-quoted string values to double-quoted (best-effort)
+      out = out.replace(/:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g, (_m, inner) => {
+        const safe = String(inner).replace(/"/g, '\\"');
+        return `: "${safe}"`;
+      });
+      return out;
+    };
+
     const extractJSON = (raw: string) => {
       let cleaned = String(raw)
         .replace(/^```json\s*/im, "")
@@ -152,7 +168,23 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
         }
       }
 
-      return JSON.parse(cleaned);
+      try {
+        return JSON.parse(cleaned);
+      } catch (firstErr) {
+        // Attempt repair
+        try {
+          return JSON.parse(repairJSON(cleaned));
+        } catch (_e2) {
+          // Try truncating to last balanced brace
+          const lastBrace = cleaned.lastIndexOf("}");
+          if (lastBrace > 0) {
+            try {
+              return JSON.parse(repairJSON(cleaned.slice(0, lastBrace + 1)));
+            } catch (_e3) { /* fall through */ }
+          }
+          throw firstErr;
+        }
+      }
     };
 
     const callJsonModel = async ({
