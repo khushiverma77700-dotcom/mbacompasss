@@ -543,12 +543,12 @@ const AdminBulkCreateColleges = () => {
           status={job.status}
           paused={!!job.paused}
           concurrency={Number(job.concurrency) || 1}
-          active={(job.rows || []).filter((r: any) => r.status === "processing").length}
-          succeeded={job.succeeded}
-          failed={job.failed}
-          pending={(job.rows || []).filter((r: any) => r.status === "pending").length}
-          total={job.total_rows}
-          processed={job.completed}
+          active={liveMetrics.active}
+          succeeded={liveMetrics.succeeded}
+          failed={liveMetrics.failed}
+          pending={liveMetrics.pending}
+          total={liveMetrics.total}
+          processed={liveMetrics.completed}
           updatedAt={(job as any).updated_at}
           telemetry={(job as any).telemetry}
           onRefresh={() => refreshAndResume(job.id)}
@@ -561,11 +561,11 @@ const AdminBulkCreateColleges = () => {
           startedAt={(job as any).started_at}
           finishedAt={(job as any).finished_at}
           updatedAt={(job as any).updated_at}
-          total={job.total_rows}
-          succeeded={job.succeeded}
-          failed={job.failed}
-          pending={Math.max(0, job.total_rows - job.completed)}
-          duplicates={job.duplicates_skipped}
+          total={liveMetrics.total}
+          succeeded={liveMetrics.succeeded}
+          failed={liveMetrics.failed}
+          pending={liveMetrics.pending + liveMetrics.active}
+          duplicates={liveMetrics.duplicates}
           rows={(job.rows || []).map((r: any) => ({
             name: r.name || r.slug || `Row ${r.index}`,
             status: r.status,
@@ -584,10 +584,10 @@ const AdminBulkCreateColleges = () => {
                 Bulk Job — {job.status}
               </CardTitle>
               <div className="flex items-center gap-3 text-xs">
-                <span className="text-muted-foreground">{job.completed} / {job.total_rows}</span>
-                <span className="text-emerald-600 font-medium">✓ {job.succeeded} done</span>
-                {job.failed > 0 && <span className="text-destructive font-medium">✕ {job.failed} failed</span>}
-                {job.duplicates_skipped > 0 && <span className="text-amber-600 font-medium">⊘ {job.duplicates_skipped} duplicate</span>}
+                <span className="text-muted-foreground">{liveMetrics.completed} / {liveMetrics.total}</span>
+                <span className="text-emerald-600 font-medium">✓ {liveMetrics.succeeded} done</span>
+                {liveMetrics.failed > 0 && <span className="text-destructive font-medium">✕ {liveMetrics.failed} failed</span>}
+                {liveMetrics.duplicates > 0 && <span className="text-amber-600 font-medium">⊘ {liveMetrics.duplicates} duplicate</span>}
                 <span className="font-bold text-primary text-base">{progressPct}%</span>
               </div>
             </div>
@@ -597,12 +597,12 @@ const AdminBulkCreateColleges = () => {
                   <Ban className="h-3.5 w-3.5 mr-1.5" /> Cancel
                 </Button>
               )}
-              {!isActive && job.failed > 0 && (
+              {!isActive && liveMetrics.failed > 0 && (
                 <Button size="sm" variant="default" onClick={() => retryFailed(job.id)}>
-                  <RotateCw className="h-3.5 w-3.5 mr-1.5" /> Retry Failed ({job.failed})
+                  <RotateCw className="h-3.5 w-3.5 mr-1.5" /> Retry Failed ({liveMetrics.failed})
                 </Button>
               )}
-              {!isActive && (job.failed > 0 || job.completed < job.total_rows - job.duplicates_skipped) && (
+              {!isActive && (liveMetrics.failed > 0 || liveMetrics.pending > 0) && (
                 <Button size="sm" variant="outline" onClick={() => restartJob(job.id)}>
                   <RotateCw className="h-3.5 w-3.5 mr-1.5" /> Restart pending/failed
                 </Button>
@@ -621,7 +621,7 @@ const AdminBulkCreateColleges = () => {
 
             {!isActive && job.status === "completed" && (
               <div className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded p-2">
-                ✓ All done. {job.succeeded} colleges created, {job.failed} failed, {job.duplicates_skipped} duplicates skipped.
+                ✓ All done. {liveMetrics.succeeded} colleges created, {liveMetrics.failed} failed, {liveMetrics.duplicates} duplicates skipped.
               </div>
             )}
 
