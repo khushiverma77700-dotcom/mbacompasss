@@ -139,6 +139,7 @@ async function claimWorkerLock(admin: any, table: string, jobId: string, workerI
 async function updateBulkJob(admin: any, table: string, jobId: string, workerId: string, tracker: TelemetryTracker, patch: Record<string, unknown>) {
   tracker.incDbWrite();
   return admin.from(table).update({
+    status: "running",
     ...patch,
     telemetry: tracker.snapshot(),
     worker_id: workerId,
@@ -315,6 +316,7 @@ async function processCollege(
     const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
     const failed = rowsRef.value.filter(r => r.status === "failed").length;
     const not_found = rowsRef.value.filter(r => r.status === "not_found").length;
+    tracker.recordProgress(stepsDone, `${row.inputName} — ${row.status}`);
     await updateBulkJob(admin, "bulk_section_jobs", job_id, workerId, tracker, {
       rows: rowsRef.value,
       steps_done: stepsDone,
@@ -483,7 +485,7 @@ async function runJob(job_id: string, authHeader: string) {
   }
   if (["completed", "cancelled"].includes(job.status)) return;
   if ((job as any).paused) {
-    await admin.from("bulk_section_jobs").update({ status: "pending", current_activity: "Paused — waiting for admin resume", updated_at: new Date().toISOString() }).eq("id", job_id);
+    await admin.from("bulk_section_jobs").update({ status: "running", current_activity: "Paused — waiting for admin resume", updated_at: new Date().toISOString() }).eq("id", job_id);
     return;
   }
 
@@ -544,7 +546,7 @@ async function runJob(job_id: string, authHeader: string) {
 
     let cursor = 0;
     const activeRef = { n: 0 };
-    const slots = Math.max(1, Math.min(10, concurrencyRef.v));
+    const slots = 10;
     const workers = Array.from({ length: slots }, async (_, slotIdx) => {
       while (true) {
         if (cancelFlag.v || pauseFlag.v) return;
@@ -602,7 +604,7 @@ async function runJob(job_id: string, authHeader: string) {
       .select("paused,status").eq("id", job_id).maybeSingle();
     if ((latest as any)?.paused) {
       await releaseWorkerLock(admin, "bulk_section_jobs", job_id, workerId, tracker, {
-        status: "pending",
+        status: "running",
         rows: rowsRef.value,
         steps_done,
         succeeded,
@@ -617,7 +619,7 @@ async function runJob(job_id: string, authHeader: string) {
 
     if (remaining > 0) {
       await releaseWorkerLock(admin, "bulk_section_jobs", job_id, workerId, tracker, {
-        status: "pending",
+        status: "running",
         rows: rowsRef.value,
         steps_done,
         succeeded,
@@ -652,7 +654,7 @@ async function runJob(job_id: string, authHeader: string) {
   } catch (err) {
     console.error("bulk section runJob failed", err);
     await releaseWorkerLock(admin, "bulk_section_jobs", job_id, workerId, tracker, {
-      status: "pending",
+        status: "running",
       current_activity: `Worker recovered from error: ${err instanceof Error ? err.message : String(err)}`,
     }).catch(() => {});
   }
@@ -744,7 +746,7 @@ Deno.serve(async (req) => {
 
       const { data: job, error: insErr } = await admin.from("bulk_section_jobs").insert({
         created_by: user.id,
-        status: "pending",
+        status: "running",
         total_rows: rows.length,
         total_steps: totalSteps,
         steps_done: 0,
@@ -772,7 +774,7 @@ Deno.serve(async (req) => {
       const job_id = body.job_id;
       if (!job_id) return new Response(JSON.stringify({ error: "job_id required" }), { status: 400, headers: corsHeaders });
       // @ts-ignore
-      EdgeRuntime.waitUntil(runJob(job_id, isInternalResume ? `Bearer ${ANON_KEY}` : authHeader));
+      EdgeRuntime.waitUntil(runJob(job_id, authHeader || `Bearer ${ANON_KEY}`));
       return new Response(JSON.stringify({ ok: true }), {
         status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -822,7 +824,7 @@ Deno.serve(async (req) => {
       }
 
       if (stepsRequeued === 0 && rowsRequeued === 0) {
-        await admin.from("bulk_section_jobs").update({ status: "pending", paused: false, current_activity: "Retry Stuck: no stale items, worker resumed", updated_at: new Date().toISOString() }).eq("id", job_id);
+        await admin.from("bulk_section_jobs").update({ status: "running", paused: false, current_activity: "Retry Stuck: no stale items, worker resumed", updated_at: new Date().toISOString() }).eq("id", job_id);
         EdgeRuntime.waitUntil(fetch(`${SUPABASE_URL}/functions/v1/bulk-section-create`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: authHeader || `Bearer ${ANON_KEY}`, apikey: ANON_KEY, "x-worker-key": SERVICE_ROLE },
@@ -835,7 +837,7 @@ Deno.serve(async (req) => {
 
       await admin.from("bulk_section_jobs").update({
         rows,
-        status: "pending",
+        status: "running",
         paused: false,
         current_activity: `Auto-retry: re-queued ${stepsRequeued} stuck step(s) across ${requeued.length} college(s)`,
         updated_at: new Date().toISOString(),

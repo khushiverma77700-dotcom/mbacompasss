@@ -498,7 +498,8 @@ export default function AdminBulkGenerateSections() {
           succeeded={job.succeeded}
           failed={job.failed}
           pending={Math.max(0, (job.rows || []).filter((r: any) => r.status === "pending" || r.status === "processing" || r.status === "matched").length)}
-          total={job.total_rows}
+          total={job.total_steps || job.total_rows}
+          processed={job.steps_done}
           updatedAt={(job as any).updated_at}
           telemetry={(job as any).telemetry}
           onRefresh={() => refreshAndResume(job.id)}

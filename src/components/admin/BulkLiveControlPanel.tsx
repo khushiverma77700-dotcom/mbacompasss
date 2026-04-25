@@ -29,6 +29,7 @@ interface Props {
   failed: number;
   pending: number;
   total: number;
+  processed?: number;
   updatedAt?: string | null;
   telemetry?: any;
   onRefresh?: () => void | Promise<void>;
@@ -112,13 +113,15 @@ const ActivityHeatmap = ({ data, max = 60 }: { data: number[]; max?: number }) =
 
 const BulkLiveControlPanel = ({
   workflow, table, jobId, status, paused, concurrency,
-  active, succeeded, failed, pending, total, updatedAt, telemetry, onRefresh, refreshing,
+  active, succeeded, failed, pending, total, processed, updatedAt, telemetry, onRefresh, refreshing,
 }: Props) => {
   const [draftConcurrency, setDraftConcurrency] = useState(concurrency);
   const [saving, setSaving] = useState(false);
   const [browserCpu, setBrowserCpu] = useState(0); // 0..100
-  const [tickRate, setTickRate] = useState(0); // throughput items/min approx
-  const lastSucceeded = useRef(succeeded);
+  const [tickRate, setTickRate] = useState(0); // throughput units/min approx
+  const processedUnits = Math.max(0, Number(processed ?? (succeeded + failed)));
+  const totalUnits = Math.max(0, Number(total || 0));
+  const lastProcessed = useRef(processedUnits);
   const lastTime = useRef(Date.now());
 
   const networkStats = telemetry?.network || {};
@@ -165,24 +168,23 @@ const BulkLiveControlPanel = ({
     const now = Date.now();
     const dt = (now - lastTime.current) / 1000;
     if (dt > 1) {
-      const delta = Math.max(0, succeeded - lastSucceeded.current);
+      const delta = Math.max(0, processedUnits - lastProcessed.current);
       const rate = (delta / dt) * 60;
       setTickRate((prev) => prev * 0.6 + rate * 0.4);
-      lastSucceeded.current = succeeded;
+      lastProcessed.current = processedUnits;
       lastTime.current = now;
     }
-  }, [succeeded]);
+  }, [processedUnits]);
 
   // Server pressure now comes from real worker telemetry when available.
   const serverLoad = useMemo(() => {
-    if (serverCpu > 0) return Math.min(100, Math.round(serverCpu));
     const utilisation = concurrency > 0 ? Math.min(1, active / concurrency) : 0;
     const completed = succeeded + failed;
     const failureRate = completed > 0 ? failed / completed : 0;
     const idleMin = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 60000 : 0;
     const idlePenalty = Math.min(1, Math.max(0, idleMin - 1) / 5);
-    const score = utilisation * 60 + failureRate * 30 + idlePenalty * 10;
-    return Math.min(100, Math.round(score));
+    const workerPressure = utilisation * 70 + failureRate * 20 + idlePenalty * 10;
+    return Math.min(100, Math.round(Math.max(serverCpu, workerPressure)));
   }, [serverCpu, active, concurrency, succeeded, failed, updatedAt]);
 
   const cpuHistory = useRolling(browserCpu);
@@ -190,7 +192,7 @@ const BulkLiveControlPanel = ({
 
   // Per-second ops history for heatmap — driven by real worker telemetry events.
   const [opsHistory, setOpsHistory] = useState<number[]>(Array.from({ length: 60 }, () => 0));
-  const lastTotalRef = useRef(succeeded + failed);
+  const lastTotalRef = useRef(processedUnits);
   useEffect(() => {
     const buildBins = () => {
       const now = Date.now();
@@ -202,7 +204,7 @@ const BulkLiveControlPanel = ({
         const age = Math.floor((now - ts) / 1000);
         if (age >= 0 && age < 60) bins[59 - age] += Math.max(1, Number(point?.ops || 1));
       }
-      const cur = succeeded + failed;
+      const cur = processedUnits;
       const delta = Math.max(0, cur - lastTotalRef.current);
       lastTotalRef.current = cur;
       if (delta > 0) bins[59] += delta;
@@ -211,7 +213,7 @@ const BulkLiveControlPanel = ({
     buildBins();
     const t = setInterval(buildBins, 1000);
     return () => clearInterval(t);
-  }, [telemetry, succeeded, failed]);
+  }, [telemetry, processedUnits]);
 
   // Live event ticker (last 8)
   const [events, setEvents] = useState<{ ts: number; kind: "ok" | "fail" | "info"; msg: string }[]>([]);
@@ -246,7 +248,7 @@ const BulkLiveControlPanel = ({
   const latencyMs = realLatencyMs;
 
   // ETA
-  const remaining = Math.max(0, total - succeeded - failed);
+  const remaining = Math.max(0, totalUnits - processedUnits);
   const etaSec = tickRate > 0 ? Math.round((remaining / tickRate) * 60) : 0;
   const fmtEta = (s: number) => {
     if (!s) return "—";
@@ -256,7 +258,7 @@ const BulkLiveControlPanel = ({
 
   // Progress %
   const completedAll = succeeded + failed;
-  const progressPct = total > 0 ? Math.round((completedAll / total) * 100) : 0;
+  const progressPct = totalUnits > 0 ? Math.round((processedUnits / totalUnits) * 100) : 0;
   const successRate = completedAll > 0 ? (succeeded / completedAll) * 100 : 0;
   const failureRatePct = completedAll > 0 ? (failed / completedAll) * 100 : 0;
 
@@ -286,6 +288,7 @@ const BulkLiveControlPanel = ({
 
   const togglePaused = async (next: boolean) => {
     const { error } = await (supabase as any).from(table).update({
+      status: "running",
       paused: next,
       updated_at: new Date().toISOString(),
       current_activity: next ? "Paused by admin" : "Resumed by admin",
@@ -312,9 +315,16 @@ const BulkLiveControlPanel = ({
       "STOP ALL JOBS?\n\nThis will pause this job AND every other running bulk job (colleges + sections) immediately so the AI gateway and database can cool down.\n\nContinue?"
     );
     if (!ok) return;
-    await (supabase as any).from("bulk_college_jobs").update({ paused: true, current_activity: "Stopped by admin (load too high)" }).in("status", ["pending", "processing"]);
-    await (supabase as any).from("bulk_section_jobs").update({ paused: true, current_activity: "Stopped by admin (load too high)" }).in("status", ["pending", "processing"]);
-    toast({ title: "All bulk jobs paused", description: "Re-enable each job manually when load is healthy again." });
+    const stopPatch = {
+      status: "cancelled",
+      paused: true,
+      worker_lock_until: null,
+      current_activity: "Emergency stopped by admin",
+      updated_at: new Date().toISOString(),
+    };
+    await (supabase as any).from("bulk_college_jobs").update(stopPatch).in("status", ["pending", "running", "processing"]);
+    await (supabase as any).from("bulk_section_jobs").update(stopPatch).in("status", ["pending", "running", "processing"]);
+    toast({ title: "Emergency stop sent", description: "All bulk workers are being cancelled now. Use Restart/Refresh later to continue from saved rows." });
   };
 
   return (
@@ -575,10 +585,10 @@ const BulkLiveControlPanel = ({
               <span className="font-mono text-xs">{progressPct}%</span>
             </div>
             <div className="relative h-3 rounded-full bg-muted overflow-hidden">
-              <div className="absolute inset-y-0 left-0 bg-emerald-500 transition-all" style={{ width: `${total > 0 ? (succeeded / total) * 100 : 0}%` }} />
-              <div className="absolute inset-y-0 bg-destructive transition-all" style={{ left: `${total > 0 ? (succeeded / total) * 100 : 0}%`, width: `${total > 0 ? (failed / total) * 100 : 0}%` }} />
+              <div className="absolute inset-y-0 left-0 bg-emerald-500 transition-all" style={{ width: `${totalUnits > 0 ? (succeeded / totalUnits) * 100 : 0}%` }} />
+              <div className="absolute inset-y-0 bg-destructive transition-all" style={{ left: `${totalUnits > 0 ? (succeeded / totalUnits) * 100 : 0}%`, width: `${totalUnits > 0 ? (failed / totalUnits) * 100 : 0}%` }} />
               {!paused && active > 0 && (
-                <div className="absolute inset-y-0 bg-primary/40 animate-pulse" style={{ left: `${total > 0 ? ((succeeded + failed) / total) * 100 : 0}%`, width: `${total > 0 ? (active / total) * 100 : 0}%` }} />
+                <div className="absolute inset-y-0 bg-primary/40 animate-pulse" style={{ left: `${totalUnits > 0 ? (processedUnits / totalUnits) * 100 : 0}%`, width: `${totalUnits > 0 ? (active / totalUnits) * 100 : 0}%` }} />
               )}
             </div>
             <div className="grid grid-cols-4 gap-2 mt-3 text-[10px]">
@@ -705,7 +715,7 @@ const BulkLiveControlPanel = ({
           <span className="font-mono">{jobId.slice(0, 8)}</span>
           <span className="text-muted-foreground">·</span>
           <HardDrive className="w-3 h-3 text-muted-foreground" />
-          <span className="font-mono">{succeeded + failed}/{total}</span>
+          <span className="font-mono">{processedUnits}/{totalUnits}</span>
           <span className="text-muted-foreground">processed</span>
           <span className="ml-auto text-muted-foreground font-mono">
             tick {((Date.now() / 1000) | 0) % 1000}

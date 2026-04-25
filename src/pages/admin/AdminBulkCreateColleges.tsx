@@ -525,6 +525,7 @@ const AdminBulkCreateColleges = () => {
           failed={job.failed}
           pending={(job.rows || []).filter((r: any) => r.status === "pending").length}
           total={job.total_rows}
+          processed={job.completed}
           updatedAt={(job as any).updated_at}
           telemetry={(job as any).telemetry}
           onRefresh={() => refreshAndResume(job.id)}

@@ -143,6 +143,7 @@ async function claimWorkerLock(admin: any, table: string, jobId: string, workerI
 async function updateBulkJob(admin: any, table: string, jobId: string, workerId: string, tracker: TelemetryTracker, patch: Record<string, unknown>) {
   tracker.incDbWrite();
   return admin.from(table).update({
+    status: "running",
     ...patch,
     telemetry: tracker.snapshot(),
     worker_id: workerId,
@@ -215,13 +216,17 @@ interface RowState {
   finalSlug?: string;
 }
 
-async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
+async function fetchWithTimeoutAndCancel(url: string, init: RequestInit, timeoutMs: number, cancelFlag?: { v: boolean }): Promise<Response> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const cancelPoll = setInterval(() => {
+    if (cancelFlag?.v) controller.abort("cancelled");
+  }, 500);
   try {
     return await fetch(url, { ...init, signal: controller.signal });
   } finally {
     clearTimeout(timeout);
+    clearInterval(cancelPoll);
   }
 }
 
@@ -240,6 +245,7 @@ async function processOne(
   const updateRow = async (patch: Partial<RowState>) => {
     Object.assign(row, patch);
     rowsRef.value = [...rowsRef.value];
+    tracker.recordProgress(rowsRef.value.filter(r => r.status === "succeeded" || r.status === "failed" || r.status === "duplicate").length, `${row.name} — ${row.step || row.status}`);
     await updateBulkJob(admin, "bulk_college_jobs", job_id, workerId, tracker, {
       rows: rowsRef.value,
       current_activity: `Row ${row.index + 1}: ${row.name} — ${row.step || row.status}`,
@@ -284,7 +290,7 @@ async function processOne(
       const aiRequestBody = JSON.stringify(aiBody);
       const aiStarted = Date.now();
       try {
-        aiRes = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/ai-college-writer`, {
+        aiRes = await fetchWithTimeoutAndCancel(`${SUPABASE_URL}/functions/v1/ai-college-writer`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -292,7 +298,7 @@ async function processOne(
           apikey: ANON_KEY,
         },
         body: aiRequestBody,
-        }, AI_WRITER_TIMEOUT_MS);
+        }, AI_WRITER_TIMEOUT_MS, cancelFlag);
       } catch (err) {
         tracker.recordHttp("ai-college-writer", 0, textBytes(aiRequestBody), 0, Date.now() - aiStarted);
         lastAiError = err instanceof DOMException && err.name === "AbortError"
@@ -429,7 +435,7 @@ async function runJob(job_id: string, authHeader: string) {
   }
   if (["completed", "cancelled"].includes(job.status)) return;
   if ((job as any).paused) {
-    await admin.from("bulk_college_jobs").update({ status: "pending", current_activity: "Paused — waiting for admin resume", updated_at: new Date().toISOString() }).eq("id", job_id);
+    await admin.from("bulk_college_jobs").update({ status: "running", current_activity: "Paused — waiting for admin resume", updated_at: new Date().toISOString() }).eq("id", job_id);
     return;
   }
 
@@ -484,7 +490,7 @@ async function runJob(job_id: string, authHeader: string) {
 
     let cursor = 0;
     const activeRef = { n: 0 };
-    const slots = Math.max(1, Math.min(10, concurrencyRef.v));
+    const slots = 10;
     const workers = Array.from({ length: slots }, async (_, slotIdx) => {
       while (true) {
         if (cancelFlag.v || pauseFlag.v) return;
@@ -554,7 +560,7 @@ async function runJob(job_id: string, authHeader: string) {
       .select("paused,status").eq("id", job_id).maybeSingle();
     if ((latest as any)?.paused) {
       await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
-        status: "pending",
+        status: "running",
         rows: rowsRef.value,
         succeeded, failed, duplicates_skipped: duplicates, completed,
         current_activity: "Paused — worker parked safely",
@@ -566,7 +572,7 @@ async function runJob(job_id: string, authHeader: string) {
 
     if (remaining > 0) {
       await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
-        status: "pending",
+        status: "running",
         rows: rowsRef.value,
         succeeded,
         failed,
@@ -601,7 +607,7 @@ async function runJob(job_id: string, authHeader: string) {
   } catch (err) {
     console.error("bulk college runJob failed", err);
     await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
-      status: "pending",
+        status: "running",
       current_activity: `Worker recovered from error: ${err instanceof Error ? err.message : String(err)}`,
     }).catch(() => {});
   }
@@ -688,7 +694,7 @@ Deno.serve(async (req) => {
 
       const { data: job, error: insErr } = await admin.from("bulk_college_jobs").insert({
         created_by: user.id,
-        status: "pending",
+        status: "running",
         total_rows: inputs.length,
         duplicates_skipped: duplicates,
         completed: duplicates,
@@ -712,7 +718,7 @@ Deno.serve(async (req) => {
       const job_id = body.job_id;
       if (!job_id) return new Response(JSON.stringify({ error: "job_id required" }), { status: 400, headers: corsHeaders });
       // @ts-ignore
-      EdgeRuntime.waitUntil(runJob(job_id, isInternalResume ? `Bearer ${ANON_KEY}` : authHeader));
+      EdgeRuntime.waitUntil(runJob(job_id, authHeader || `Bearer ${ANON_KEY}`));
       return new Response(JSON.stringify({ ok: true }), { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
@@ -745,7 +751,7 @@ Deno.serve(async (req) => {
       const pendingRows = rows.filter((r) => r.status === "pending").length;
       await admin.from("bulk_college_jobs").update({
         rows,
-        status: pendingRows > 0 ? "pending" : jobRow.status,
+        status: pendingRows > 0 ? "running" : jobRow.status,
         paused: false,
         current_activity: rowsRequeued > 0
           ? `Retry Stuck: re-queued ${rowsRequeued} stale college row(s)`
