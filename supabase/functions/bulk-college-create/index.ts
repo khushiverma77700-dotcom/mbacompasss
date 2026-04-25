@@ -521,6 +521,7 @@ async function runJob(job_id: string, authHeader: string) {
       .sort((a, b) => a.index - b.index)
       .slice(0, ROWS_PER_INVOCATION);
     const rowsRef = { value: allRows };
+    tracker.addHealth("queued", `${pending.length} row(s) queued for this worker run`, { job_id, queued: pending.length });
 
     const cancelFlag = { v: false };
     const pauseFlag = { v: false };
@@ -543,23 +544,34 @@ async function runJob(job_id: string, authHeader: string) {
     const slots = 10;
     const workers = Array.from({ length: slots }, async (_, slotIdx) => {
       while (true) {
-        if (cancelFlag.v || pauseFlag.v) return;
+        tracker.updateSlot(slotIdx, { job_id, enabled: slotIdx < concurrencyRef.v, state: slotIdx < concurrencyRef.v ? "idle" : "disabled" });
+        if (cancelFlag.v || pauseFlag.v) {
+          tracker.updateSlot(slotIdx, { job_id, state: pauseFlag.v ? "paused" : "cancelled", enabled: slotIdx < concurrencyRef.v });
+          return;
+        }
         if (slotIdx >= concurrencyRef.v) {
+          tracker.updateSlot(slotIdx, { job_id, state: "disabled", enabled: false });
           if (cursor >= pending.length) return;
           await sleep(500);
           continue;
         }
         const myIdx = cursor++;
-        if (myIdx >= pending.length) return;
+        if (myIdx >= pending.length) {
+          tracker.updateSlot(slotIdx, { job_id, state: "idle", enabled: true });
+          return;
+        }
         const row = pending[myIdx];
         const input = inputsByIndex[row.index];
         if (!input) {
           row.status = "failed";
           row.error = "Missing input";
+          tracker.updateSlot(slotIdx, { job_id, state: "failed", current_item: row.name, current_step: "missing input", last_processed_at: new Date().toISOString() });
           continue;
         }
         activeRef.n += 1;
         tracker.setActive(activeRef.n);
+        tracker.updateSlot(slotIdx, { job_id, state: "processing", current_item: row.name, current_step: "starting" });
+        tracker.addHealth("processing", `Slot ${slotIdx + 1} processing ${row.name}`, { job_id, slot: slotIdx + 1, row: row.index + 1 });
         const busyStarted = Date.now();
         try {
           await processOne(admin, authHeader, job_id, allRows, rowsRef, row, input, cancelFlag, tracker, workerId);
@@ -567,6 +579,7 @@ async function runJob(job_id: string, authHeader: string) {
           tracker.addBusy(Date.now() - busyStarted);
           activeRef.n = Math.max(0, activeRef.n - 1);
           tracker.setActive(activeRef.n);
+          tracker.updateSlot(slotIdx, { job_id, state: "idle", current_item: row.name, current_step: row.step || row.status, last_processed_at: new Date().toISOString() });
         }
 
         const liveMetrics = computeCollegeMetrics(rowsRef.value);
