@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import JobHealthReport from "@/components/admin/JobHealthReport";
+import BulkLiveControlPanel from "@/components/admin/BulkLiveControlPanel";
 
 interface CsvRow {
   name: string;
