@@ -718,7 +718,7 @@ Deno.serve(async (req) => {
       const job_id = body.job_id;
       if (!job_id) return new Response(JSON.stringify({ error: "job_id required" }), { status: 400, headers: corsHeaders });
       // @ts-ignore
-      EdgeRuntime.waitUntil(runJob(job_id, isInternalResume ? `Bearer ${ANON_KEY}` : authHeader));
+      EdgeRuntime.waitUntil(runJob(job_id, authHeader || `Bearer ${ANON_KEY}`));
       return new Response(JSON.stringify({ ok: true }), { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
