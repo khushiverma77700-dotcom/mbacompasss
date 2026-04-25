@@ -209,6 +209,51 @@ export default function AdminBulkGenerateSections() {
     toast({ title: "Job restarted", description: "Pending colleges/sections are being processed again." });
   };
 
+  const retryFailed = async (jobId: string) => {
+    const { data: j, error: fetchErr } = await supabase
+      .from("bulk_section_jobs").select("rows").eq("id", jobId).maybeSingle();
+    if (fetchErr || !j) {
+      toast({ title: "Retry failed", description: fetchErr?.message || "Job not found", variant: "destructive" });
+      return;
+    }
+    const rows = ((j.rows as unknown) as RowState[]);
+    let failedSteps = 0;
+    const resetRows = rows.map(r => {
+      const failedInRow = (r.steps || []).filter(s => s.status === "failed").length;
+      if (failedInRow === 0 && r.status !== "failed") return r;
+      failedSteps += failedInRow;
+      return {
+        ...r,
+        status: r.status === "not_found" ? r.status : ("pending" as const),
+        error: undefined,
+        steps: (r.steps || []).map(s =>
+          s.status === "failed" ? { ...s, status: "pending" as const, error: undefined } : s
+        ),
+      };
+    });
+    if (failedSteps === 0) {
+      toast({ title: "Nothing to retry", description: "No failed sections in this job." });
+      return;
+    }
+    await supabase.from("bulk_section_jobs").update({
+      rows: resetRows as any,
+      status: "pending",
+      current_activity: `Retrying ${failedSteps} failed section${failedSteps === 1 ? "" : "s"}…`,
+      finished_at: null,
+    }).eq("id", jobId);
+
+    const { data: { session } } = await supabase.auth.getSession();
+    const { error } = await supabase.functions.invoke("bulk-section-create", {
+      body: { action: "resume", job_id: jobId },
+      headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
+    });
+    if (error) {
+      toast({ title: "Retry failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Retrying failed sections", description: `${failedSteps} section${failedSteps === 1 ? "" : "s"} re-queued.` });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
