@@ -26,9 +26,13 @@ interface CollegeBrief {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  // Caller (e.g. bulk dashboard) can pick which AI backend to use via header.
+  const providerHeader = (req.headers.get("X-AI-Provider") || "").toLowerCase();
+  const provider: "gemini" | "lovable" = providerHeader === "lovable" ? "lovable" : "gemini";
+
   try {
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
-    if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
+    const requiredKey = provider === "lovable" ? "LOVABLE_API_KEY" : "GEMINI_API_KEY";
+    if (!Deno.env.get(requiredKey)) throw new Error(`${requiredKey} is not configured`);
 
     const brief = (await req.json()) as CollegeBrief;
     if (!brief?.name) {
