@@ -665,11 +665,6 @@ async function runJob(job_id: string, authHeader: string) {
       current_activity: "Worker claimed queue…",
     });
 
-    const eligible = rows
-      .filter(r => r.status === "pending" && (r.steps || []).some((s) => s.status === "pending"))
-      .sort((a, b) => a.index - b.index)
-      .slice(0, ROWS_PER_INVOCATION);
-
     const cancelFlag = { v: false };
     const pauseFlag = { v: false };
     const concurrencyRef = { v: Math.max(1, Math.min(10, Number((job as any).concurrency) || 1)) };
@@ -687,25 +682,27 @@ async function runJob(job_id: string, authHeader: string) {
     })();
 
     let cursor = 0;
+    const hasPendingStep = () => rowsRef.value.some(r => (r.steps || []).some(s => s.status === "pending"));
     const activeRef = { n: 0 };
     const slots = 10;
     const workers = Array.from({ length: slots }, async (_, slotIdx) => {
       while (true) {
         if (cancelFlag.v || pauseFlag.v) return;
         if (slotIdx >= concurrencyRef.v) {
-          if (cursor >= eligible.length) return;
+          if (activeRef.n === 0 || !hasPendingStep()) return;
           await sleep(500);
           continue;
         }
         const myIdx = cursor++;
-        if (myIdx >= eligible.length) return;
+        if (myIdx >= slots || !hasPendingStep()) return;
         activeRef.n += 1;
         tracker.setActive(activeRef.n);
         const busyStarted = Date.now();
         try {
-          await processCollege(admin, authHeader, job_id, rowsRef, eligible[myIdx], cancelFlag, tracker, workerId);
+          const didWork = await processOneSectionStep(admin, authHeader, job_id, rowsRef, cancelFlag, tracker, workerId);
+          if (!didWork) return;
           const metricsNow = computeSectionMetrics(rowsRef.value);
-          tracker.recordProgress(metricsNow.steps_done, eligible[myIdx].matchedName || eligible[myIdx].inputName);
+          tracker.recordProgress(metricsNow.steps_done, `Section step ${myIdx + 1}`);
         } finally {
           tracker.addBusy(Date.now() - busyStarted);
           activeRef.n = Math.max(0, activeRef.n - 1);
