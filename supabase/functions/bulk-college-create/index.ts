@@ -435,7 +435,7 @@ async function runJob(job_id: string, authHeader: string) {
   }
   if (["completed", "cancelled"].includes(job.status)) return;
   if ((job as any).paused) {
-    await admin.from("bulk_college_jobs").update({ status: "pending", current_activity: "Paused — waiting for admin resume", updated_at: new Date().toISOString() }).eq("id", job_id);
+    await admin.from("bulk_college_jobs").update({ status: "running", current_activity: "Paused — waiting for admin resume", updated_at: new Date().toISOString() }).eq("id", job_id);
     return;
   }
 
@@ -607,7 +607,7 @@ async function runJob(job_id: string, authHeader: string) {
   } catch (err) {
     console.error("bulk college runJob failed", err);
     await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
-      status: "pending",
+        status: "running",
       current_activity: `Worker recovered from error: ${err instanceof Error ? err.message : String(err)}`,
     }).catch(() => {});
   }
@@ -694,7 +694,7 @@ Deno.serve(async (req) => {
 
       const { data: job, error: insErr } = await admin.from("bulk_college_jobs").insert({
         created_by: user.id,
-        status: "pending",
+        status: "running",
         total_rows: inputs.length,
         duplicates_skipped: duplicates,
         completed: duplicates,
@@ -751,7 +751,7 @@ Deno.serve(async (req) => {
       const pendingRows = rows.filter((r) => r.status === "pending").length;
       await admin.from("bulk_college_jobs").update({
         rows,
-        status: pendingRows > 0 ? "pending" : jobRow.status,
+        status: pendingRows > 0 ? "running" : jobRow.status,
         paused: false,
         current_activity: rowsRequeued > 0
           ? `Retry Stuck: re-queued ${rowsRequeued} stale college row(s)`
