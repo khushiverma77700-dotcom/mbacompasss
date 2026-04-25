@@ -362,6 +362,9 @@ const AdminSafeBrowsingGuide = () => {
       {/* Flagged URLs tracker */}
       <FlaggedUrlsTracker />
 
+      {/* Stack-specific audit (Lovable equivalent of WordPress checks) */}
+      <StackSpecificAudit />
+
       {/* Review template preview */}
       <Card>
         <CardHeader>
