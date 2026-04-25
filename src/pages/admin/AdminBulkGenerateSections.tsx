@@ -45,7 +45,7 @@ interface Job {
   created_at: string;
 }
 
-const PER_STEP_SECONDS = 30; // rough estimate per AI section call (concurrency=2)
+const PER_STEP_SECONDS = 35; // rough estimate per AI section call (single safe worker)
 
 const formatDuration = (s: number) => {
   if (!isFinite(s) || s <= 0) return "—";
@@ -148,8 +148,7 @@ export default function AdminBulkGenerateSections() {
   const eta = useMemo(() => {
     if (!job || job.status !== "running") return null;
     const remaining = Math.max(job.total_steps - job.steps_done, 0);
-    // 2 colleges in parallel → effectively 2× throughput
-    const seconds = (remaining * PER_STEP_SECONDS) / 2;
+    const seconds = remaining * PER_STEP_SECONDS;
     return seconds;
   }, [job]);
 
@@ -160,7 +159,7 @@ export default function AdminBulkGenerateSections() {
   }, [job]);
 
   const cancelJob = async (jobId: string) => {
-    if (!confirm("Cancel this job? The current college will finish, then the worker stops.")) return;
+    if (!confirm("Cancel this job now? The active AI request will be stopped and unsaved section placeholders will be removed.")) return;
     const { error } = await supabase
       .from("bulk_section_jobs")
       .update({ status: "cancelled", current_activity: "Cancelling…" })
@@ -169,7 +168,7 @@ export default function AdminBulkGenerateSections() {
       toast({ title: "Cancel failed", description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: "Cancelling…", description: "Worker will stop after the current college." });
+    toast({ title: "Cancelling…", description: "Worker is stopping immediately and clearing unfinished work." });
   };
 
   const restartJob = async (jobId: string) => {
@@ -237,7 +236,7 @@ export default function AdminBulkGenerateSections() {
               <ul className="list-disc pl-5 space-y-0.5">
                 <li>Paste one college name per line — exactly as stored in the Colleges database (case-insensitive match supported).</li>
                 <li>For each matched college we auto-create the 14 standard section rows (if missing) and call the AI for every section.</li>
-                <li>Two colleges run in parallel; each college generates 14 sections sequentially.</li>
+                <li>One safe worker runs section-by-section and auto-resumes until the full batch is complete.</li>
                 <li>Job runs in the background — feel free to switch tabs or close this page; come back any time to see progress.</li>
                 <li>Unmatched college names are reported separately (no duplicates / not in DB).</li>
               </ul>
@@ -252,7 +251,7 @@ export default function AdminBulkGenerateSections() {
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="text-xs text-muted-foreground">
                 {parsedNames.length} unique college name{parsedNames.length === 1 ? "" : "s"} ready ·
-                Estimated ~{formatDuration((parsedNames.length * 14 * PER_STEP_SECONDS) / 2)} total
+                Estimated ~{formatDuration(parsedNames.length * 14 * PER_STEP_SECONDS)} total
               </div>
               <Button onClick={handleSubmit} disabled={submitting || parsedNames.length === 0}>
                 {submitting

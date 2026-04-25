@@ -19,11 +19,33 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
 const COLLEGE_CONCURRENCY = 1;
-const AI_SECTION_MAX_ATTEMPTS = 3;
+const AI_SECTION_MAX_ATTEMPTS = 1;
 const AI_SECTION_RETRY_BASE_DELAY_MS = 2500;
 const SECTION_PAUSE_MS = 1200;
+const ROWS_PER_INVOCATION = 1;
+const AI_SECTION_TIMEOUT_MS = 110_000;
+const STALE_PROCESSING_MS = 4 * 60_000;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function fetchWithTimeoutAndCancel(
+  url: string,
+  init: RequestInit,
+  timeoutMs: number,
+  cancelFlag?: { v: boolean },
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort("timeout"), timeoutMs);
+  const cancelPoll = setInterval(() => {
+    if (cancelFlag?.v) controller.abort("cancelled");
+  }, 500);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+    clearInterval(cancelPoll);
+  }
+}
 
 const isRetryableAISectionFailure = (status: number, text: string) =>
   status === 408 || status === 429 || status >= 500 ||
@@ -51,6 +73,7 @@ interface SectionStep {
   label: string;
   status: "pending" | "processing" | "succeeded" | "failed";
   error?: string;
+  startedAt?: string;
 }
 
 interface RowState {
@@ -90,7 +113,9 @@ async function generateOneSection(
   let lastError = "";
   for (let attempt = 1; attempt <= AI_SECTION_MAX_ATTEMPTS; attempt++) {
     if (cancelFlag?.v) throw new Error("Cancelled by admin");
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/ai-college-section`, {
+      let res: Response;
+      try {
+        res = await fetchWithTimeoutAndCancel(`${SUPABASE_URL}/functions/v1/ai-college-section`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -98,7 +123,18 @@ async function generateOneSection(
         apikey: ANON_KEY,
       },
       body: JSON.stringify(body),
-    });
+        }, AI_SECTION_TIMEOUT_MS, cancelFlag);
+      } catch (err) {
+        if (cancelFlag?.v) throw new Error("Cancelled by admin");
+        lastError = err instanceof DOMException && err.name === "AbortError"
+          ? `AI section timed out after ${Math.round(AI_SECTION_TIMEOUT_MS / 1000)}s`
+          : `AI section request failed: ${err instanceof Error ? err.message : String(err)}`;
+        if (attempt < AI_SECTION_MAX_ATTEMPTS) {
+          await sleep(AI_SECTION_RETRY_BASE_DELAY_MS * attempt);
+          continue;
+        }
+        break;
+      }
 
     const txt = await res.text();
     if (res.ok) {
@@ -145,6 +181,7 @@ async function processCollege(
       succeeded,
       failed,
       not_found,
+      updated_at: new Date().toISOString(),
       current_activity: `Row ${row.index + 1}: ${row.inputName} — ${row.status}`,
     }).eq("id", job_id);
   };
@@ -203,20 +240,30 @@ async function processCollege(
 
     if (cancelFlag.v) { await cleanupOnCancel(); return; }
 
-    // Ensure all section rows exist for this college (track fresh inserts)
+    const step = row.steps.find((s) => s.status === "pending");
+    if (!step) {
+      const anyFailed = row.steps.some(s => s.status === "failed");
+      row.status = anyFailed ? "failed" : "succeeded";
+      if (anyFailed) row.error = `${row.steps.filter(s => s.status === "failed").length} section(s) failed`;
+      row.finishedAt = new Date().toISOString();
+      rowsRef.value = [...rowsRef.value];
+      await persist();
+      return;
+    }
+
+    // Create only the current section placeholder, so cancellation never leaves empty rows behind.
     const { data: existingRows } = await admin
-      .from("college_sections").select("id, section_type")
+      .from("college_sections").select("id, section_type, title, content, data")
       .eq("college_id", college.id);
     const existingTypes = new Set((existingRows || []).map((r: any) => r.section_type));
-    const missing = SECTION_TYPES.filter(s => !existingTypes.has(s.value));
-    if (missing.length) {
-      const inserts = missing.map((t, i) => ({
-        college_id: college.id, section_type: t.value, title: t.label,
-        sort_order: ((existingRows?.length || 0) + i) * 10, data: {},
-      }));
-      const { data: insertedRows } = await admin
-        .from("college_sections").insert(inserts).select("id");
-      freshlyInsertedIds = (insertedRows || []).map((r: any) => r.id);
+    if (!existingTypes.has(step.type)) {
+      const orderIndex = SECTION_TYPES.findIndex((s) => s.value === step.type);
+      const { data: insertedRow } = await admin
+        .from("college_sections")
+        .insert({ college_id: college.id, section_type: step.type, title: step.label, sort_order: Math.max(orderIndex, 0) * 10, data: {} })
+        .select("id")
+        .single();
+      if (insertedRow?.id) freshlyInsertedIds = [insertedRow.id];
     }
     const { data: allRows } = await admin
       .from("college_sections").select("id, section_type, title, content, data")
@@ -224,44 +271,38 @@ async function processCollege(
     const byType: Record<string, any> = {};
     (allRows || []).forEach((r: any) => { byType[r.section_type] = r; });
 
-    // Generate each section sequentially for this college
-    for (let i = 0; i < row.steps.length; i++) {
+    if (cancelFlag.v) { await cleanupOnCancel(); return; }
+    step.status = "processing";
+    step.startedAt = new Date().toISOString();
+    rowsRef.value = [...rowsRef.value];
+    await persist();
+
+    try {
+      const sec = await generateOneSection(authHeader, college, step.type, anchorFacts, cancelFlag);
       if (cancelFlag.v) { await cleanupOnCancel(); return; }
-
-      const step = row.steps[i];
-      step.status = "processing";
-      rowsRef.value = [...rowsRef.value];
-      await persist();
-
-      try {
-        const sec = await generateOneSection(authHeader, college, step.type, anchorFacts, cancelFlag);
-        // Re-check after the (potentially long) AI call — discard result if cancelled
-        if (cancelFlag.v) { await cleanupOnCancel(); return; }
-        const target = byType[step.type];
-        if (target) {
-          await admin.from("college_sections").update({
-            title: sec.title || target.title,
-            content: sec.content || target.content,
-            data: sec.data || {},
-          }).eq("id", target.id);
-          // This row now has content — protect from cleanup
-          freshlyInsertedIds = freshlyInsertedIds.filter(id => id !== target.id);
-        }
-        step.status = "succeeded";
-      } catch (e: any) {
-        step.status = "failed";
-        step.error = e?.message || "Unknown error";
+      const target = byType[step.type];
+      if (target) {
+        await admin.from("college_sections").update({
+          title: sec.title || target.title,
+          content: sec.content || target.content,
+          data: sec.data || {},
+        }).eq("id", target.id);
+        freshlyInsertedIds = freshlyInsertedIds.filter(id => id !== target.id);
       }
-      rowsRef.value = [...rowsRef.value];
-      await persist();
-      // small pause to avoid burst rate-limits
-      await sleep(SECTION_PAUSE_MS);
+      step.status = "succeeded";
+      step.startedAt = undefined;
+    } catch (e: any) {
+      step.status = "failed";
+      step.error = e?.message || "Unknown error";
+      step.startedAt = undefined;
     }
-
+    const remainingSteps = row.steps.some(s => s.status === "pending");
     const anyFailed = row.steps.some(s => s.status === "failed");
-    row.status = anyFailed ? "failed" : "succeeded";
-    if (anyFailed) row.error = `${row.steps.filter(s => s.status === "failed").length} section(s) failed`;
-    row.finishedAt = new Date().toISOString();
+    row.status = remainingSteps ? "pending" : anyFailed ? "failed" : "succeeded";
+    if (!remainingSteps) row.finishedAt = new Date().toISOString();
+    if (anyFailed && !remainingSteps) row.error = `${row.steps.filter(s => s.status === "failed").length} section(s) failed`;
+    await sleep(SECTION_PAUSE_MS);
+
   } catch (e: any) {
     row.status = "failed";
     row.error = e?.message || "Unknown error";
@@ -279,17 +320,38 @@ async function runJob(job_id: string, authHeader: string) {
     console.error("bulk-section job not found", job_id, error);
     return;
   }
+  if (job.status === "cancelled") return;
 
-  const rows = job.rows as RowState[];
+  const rows = (job.rows as RowState[]).map((r) => {
+    if (r.status !== "processing") return r;
+    const processingStep = (r.steps || []).find((s) => s.status === "processing");
+    const started = processingStep?.startedAt || r.startedAt;
+    const startedAtMs = started ? new Date(started).getTime() : 0;
+    const isStale = !startedAtMs || Date.now() - startedAtMs > STALE_PROCESSING_MS;
+    if (!isStale) return r;
+    return {
+      ...r,
+      status: "pending" as const,
+      error: undefined,
+      steps: (r.steps || []).map((s) => s.status === "processing"
+        ? { ...s, status: "pending" as const, error: undefined, startedAt: undefined }
+        : s),
+    };
+  });
   const rowsRef = { value: rows };
 
   await admin.from("bulk_section_jobs").update({
     status: "running",
     started_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    rows,
     current_activity: "Starting…",
   }).eq("id", job_id);
 
-  const eligible = rows.filter(r => r.status === "pending");
+  const eligible = rows
+    .filter(r => r.status === "pending" && (r.steps || []).some((s) => s.status === "pending"))
+    .sort((a, b) => a.index - b.index)
+    .slice(0, ROWS_PER_INVOCATION);
 
   // Background poller — sets cancelFlag.v immediately when admin cancels
   const cancelFlag = { v: false };
@@ -338,9 +400,50 @@ async function runJob(job_id: string, authHeader: string) {
     return;
   }
 
+  const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
+  const failed = rowsRef.value.filter(r => r.status === "failed").length;
+  const not_found = rowsRef.value.filter(r => r.status === "not_found").length;
+  const steps_done = rowsRef.value.reduce(
+    (acc, r) => acc + (r.steps || []).filter(s => s.status === "succeeded" || s.status === "failed").length,
+    0,
+  );
+  const remaining = rowsRef.value.filter(r => r.status === "pending" && (r.steps || []).some(s => s.status === "pending")).length;
+
+  if (remaining > 0) {
+    await admin.from("bulk_section_jobs").update({
+      status: "pending",
+      rows: rowsRef.value,
+      steps_done,
+      succeeded,
+      failed,
+      not_found,
+      updated_at: new Date().toISOString(),
+      current_activity: `Continuing… ${remaining} college section chunks remaining`,
+    }).eq("id", job_id);
+
+    // @ts-ignore - EdgeRuntime is provided by Supabase Edge runtime
+    EdgeRuntime.waitUntil(fetch(`${SUPABASE_URL}/functions/v1/bulk-section-create`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authHeader,
+        apikey: ANON_KEY,
+        "x-worker-key": SERVICE_ROLE,
+      },
+      body: JSON.stringify({ action: "resume", job_id }),
+    }).catch((e) => console.error("Failed to schedule next bulk section chunk", e)));
+    return;
+  }
+
   await admin.from("bulk_section_jobs").update({
     status: "completed",
     finished_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    rows: rowsRef.value,
+    steps_done,
+    succeeded,
+    failed,
+    not_found,
     current_activity: "All done",
   }).eq("id", job_id);
 }
@@ -349,32 +452,40 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
+    const body = await req.json();
+    const action = body.action || "create";
+    const isInternalResume = action === "resume" && req.headers.get("x-worker-key") === SERVICE_ROLE;
     const authHeader = req.headers.get("Authorization") || "";
-    if (!authHeader) {
+    if (!isInternalResume && !authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const userClient = createClient(SUPABASE_URL, ANON_KEY, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user } } = await userClient.auth.getUser();
-    if (!user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const admin = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
-    const { data: roleRow } = await admin.from("user_roles")
-      .select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
-    if (!roleRow) {
-      return new Response(JSON.stringify({ error: "Admin only" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const body = await req.json();
-    const action = body.action || "create";
+    let user: any = null;
+    if (!isInternalResume) {
+      const userClient = createClient(SUPABASE_URL, ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user: authUser } } = await userClient.auth.getUser();
+      user = authUser;
+      if (!user) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
+    if (!isInternalResume) {
+      const { data: roleRow } = await admin.from("user_roles")
+        .select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
+      if (!roleRow) {
+        return new Response(JSON.stringify({ error: "Admin only" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     if (action === "create") {
       const namesRaw: string[] = Array.isArray(body.names) ? body.names : [];
@@ -451,7 +562,7 @@ Deno.serve(async (req) => {
       const job_id = body.job_id;
       if (!job_id) return new Response(JSON.stringify({ error: "job_id required" }), { status: 400, headers: corsHeaders });
       // @ts-ignore
-      EdgeRuntime.waitUntil(runJob(job_id, authHeader));
+      EdgeRuntime.waitUntil(runJob(job_id, isInternalResume ? `Bearer ${ANON_KEY}` : authHeader));
       return new Response(JSON.stringify({ ok: true }), {
         status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
