@@ -717,6 +717,7 @@ const CollegeDetailPage = () => {
                   {getSectionContent("placements") && (
                     <div className="mt-4 ai-content max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: getSectionContent("placements") }} />
                   )}
+                  <AIExtensionBlock section={getAIExtension("placements")} extensionLabel="Placement Insights & Trends" />
                 </CardContent>
               </Card>
             </div>
