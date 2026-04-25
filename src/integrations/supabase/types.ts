@@ -44,6 +44,74 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_mock_generations: {
+        Row: {
+          ai_model: string | null
+          category: string
+          created_at: string
+          created_by: string | null
+          error_message: string | null
+          exam_code: string
+          finished_at: string | null
+          id: string
+          level: string
+          request: Json
+          result_summary: Json
+          status: string
+          test_id: string | null
+          total_generated: number
+          total_rejected_duplicate: number
+          total_rejected_web_match: number
+          total_requested: number
+        }
+        Insert: {
+          ai_model?: string | null
+          category: string
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          exam_code: string
+          finished_at?: string | null
+          id?: string
+          level: string
+          request?: Json
+          result_summary?: Json
+          status?: string
+          test_id?: string | null
+          total_generated?: number
+          total_rejected_duplicate?: number
+          total_rejected_web_match?: number
+          total_requested?: number
+        }
+        Update: {
+          ai_model?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          error_message?: string | null
+          exam_code?: string
+          finished_at?: string | null
+          id?: string
+          level?: string
+          request?: Json
+          result_summary?: Json
+          status?: string
+          test_id?: string | null
+          total_generated?: number
+          total_rejected_duplicate?: number
+          total_rejected_web_match?: number
+          total_requested?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_mock_generations_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "mock_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_usage_logs: {
         Row: {
           completion_tokens: number | null
@@ -2194,6 +2262,7 @@ export type Database = {
       }
       mock_questions: {
         Row: {
+          content_hash: string | null
           created_at: string
           difficulty: Database["public"]["Enums"]["mock_difficulty"]
           explanation_html: string | null
@@ -2215,6 +2284,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          content_hash?: string | null
           created_at?: string
           difficulty?: Database["public"]["Enums"]["mock_difficulty"]
           explanation_html?: string | null
@@ -2236,6 +2306,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          content_hash?: string | null
           created_at?: string
           difficulty?: Database["public"]["Enums"]["mock_difficulty"]
           explanation_html?: string | null
@@ -2402,14 +2473,19 @@ export type Database = {
         Row: {
           access_validity_days: number
           banner_url: string | null
+          category: string
           created_at: string
           created_by: string | null
           description: string | null
           difficulty: Database["public"]["Enums"]["mock_difficulty"]
+          exam_code: string
+          generated_by_ai: boolean
+          generation_meta: Json
           id: string
           is_live: boolean
           is_published: boolean
           keywords: string[] | null
+          launch_date: string | null
           meta_description: string | null
           meta_title: string | null
           name: string
@@ -2428,14 +2504,19 @@ export type Database = {
         Insert: {
           access_validity_days?: number
           banner_url?: string | null
+          category?: string
           created_at?: string
           created_by?: string | null
           description?: string | null
           difficulty?: Database["public"]["Enums"]["mock_difficulty"]
+          exam_code?: string
+          generated_by_ai?: boolean
+          generation_meta?: Json
           id?: string
           is_live?: boolean
           is_published?: boolean
           keywords?: string[] | null
+          launch_date?: string | null
           meta_description?: string | null
           meta_title?: string | null
           name: string
@@ -2454,14 +2535,19 @@ export type Database = {
         Update: {
           access_validity_days?: number
           banner_url?: string | null
+          category?: string
           created_at?: string
           created_by?: string | null
           description?: string | null
           difficulty?: Database["public"]["Enums"]["mock_difficulty"]
+          exam_code?: string
+          generated_by_ai?: boolean
+          generation_meta?: Json
           id?: string
           is_live?: boolean
           is_published?: boolean
           keywords?: string[] | null
+          launch_date?: string | null
           meta_description?: string | null
           meta_title?: string | null
           name?: string
