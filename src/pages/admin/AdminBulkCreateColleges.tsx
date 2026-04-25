@@ -64,6 +64,18 @@ XLRI Jamshedpur,Jamshedpur,Jharkhand,XLRI Jamshedpur PGDM,Private,Tier 1,Non-IIM
 SPJIMR Mumbai,Mumbai,Maharashtra,SPJIMR Mumbai PGDM admission,Private,Tier 1,Non-IIM,
 `;
 
+const getCollegeJobMetrics = (job: JobState | null) => {
+  const rows = job?.rows || [];
+  const succeeded = rows.filter((r: any) => r.status === "succeeded").length;
+  const failed = rows.filter((r: any) => r.status === "failed").length;
+  const duplicates = rows.filter((r: any) => r.status === "duplicate").length;
+  const active = rows.filter((r: any) => r.status === "processing").length;
+  const pending = rows.filter((r: any) => r.status === "pending").length;
+  const completed = succeeded + failed + duplicates;
+  const total = rows.length || job?.total_rows || 0;
+  return { succeeded, failed, duplicates, active, pending, completed, total };
+};
+
 function parseCsv(text: string): { rows: CsvRow[]; errors: string[] } {
   const errors: string[] = [];
   const lines = text.replace(/\r\n/g, "\n").split("\n").filter(l => l.trim().length > 0);
@@ -225,7 +237,8 @@ const AdminBulkCreateColleges = () => {
     }
   };
 
-  const progressPct = job ? Math.round((job.completed / Math.max(job.total_rows, 1)) * 100) : 0;
+  const liveMetrics = useMemo(() => getCollegeJobMetrics(job), [job]);
+  const progressPct = job ? Math.round((liveMetrics.completed / Math.max(liveMetrics.total, 1)) * 100) : 0;
   const isActive = job?.status === "running" || job?.status === "pending";
 
   const cancelJob = async (jobId: string) => {
@@ -331,6 +344,16 @@ const AdminBulkCreateColleges = () => {
       setRefreshingJob(false);
     }
   };
+
+  useEffect(() => {
+    if (!job || job.paused || (job.status !== "running" && job.status !== "pending")) return;
+    const id = window.setInterval(() => {
+      supabase.functions.invoke("bulk-college-create", {
+        body: { action: "auto_retry_stale", job_id: job.id, threshold_ms: 90_000 },
+      }).catch(() => {});
+    }, 60_000);
+    return () => window.clearInterval(id);
+  }, [job?.id, job?.status, job?.paused]);
 
   return (
     <div className="space-y-6 max-w-6xl">
@@ -520,12 +543,12 @@ const AdminBulkCreateColleges = () => {
           status={job.status}
           paused={!!job.paused}
           concurrency={Number(job.concurrency) || 1}
-          active={(job.rows || []).filter((r: any) => r.status === "processing").length}
-          succeeded={job.succeeded}
-          failed={job.failed}
-          pending={(job.rows || []).filter((r: any) => r.status === "pending").length}
-          total={job.total_rows}
-          processed={job.completed}
+          active={liveMetrics.active}
+          succeeded={liveMetrics.succeeded}
+          failed={liveMetrics.failed}
+          pending={liveMetrics.pending}
+          total={liveMetrics.total}
+          processed={liveMetrics.completed}
           updatedAt={(job as any).updated_at}
           telemetry={(job as any).telemetry}
           onRefresh={() => refreshAndResume(job.id)}
@@ -538,11 +561,11 @@ const AdminBulkCreateColleges = () => {
           startedAt={(job as any).started_at}
           finishedAt={(job as any).finished_at}
           updatedAt={(job as any).updated_at}
-          total={job.total_rows}
-          succeeded={job.succeeded}
-          failed={job.failed}
-          pending={Math.max(0, job.total_rows - job.completed)}
-          duplicates={job.duplicates_skipped}
+          total={liveMetrics.total}
+          succeeded={liveMetrics.succeeded}
+          failed={liveMetrics.failed}
+          pending={liveMetrics.pending + liveMetrics.active}
+          duplicates={liveMetrics.duplicates}
           rows={(job.rows || []).map((r: any) => ({
             name: r.name || r.slug || `Row ${r.index}`,
             status: r.status,
@@ -561,10 +584,10 @@ const AdminBulkCreateColleges = () => {
                 Bulk Job — {job.status}
               </CardTitle>
               <div className="flex items-center gap-3 text-xs">
-                <span className="text-muted-foreground">{job.completed} / {job.total_rows}</span>
-                <span className="text-emerald-600 font-medium">✓ {job.succeeded} done</span>
-                {job.failed > 0 && <span className="text-destructive font-medium">✕ {job.failed} failed</span>}
-                {job.duplicates_skipped > 0 && <span className="text-amber-600 font-medium">⊘ {job.duplicates_skipped} duplicate</span>}
+                <span className="text-muted-foreground">{liveMetrics.completed} / {liveMetrics.total}</span>
+                <span className="text-emerald-600 font-medium">✓ {liveMetrics.succeeded} done</span>
+                {liveMetrics.failed > 0 && <span className="text-destructive font-medium">✕ {liveMetrics.failed} failed</span>}
+                {liveMetrics.duplicates > 0 && <span className="text-amber-600 font-medium">⊘ {liveMetrics.duplicates} duplicate</span>}
                 <span className="font-bold text-primary text-base">{progressPct}%</span>
               </div>
             </div>
@@ -574,12 +597,12 @@ const AdminBulkCreateColleges = () => {
                   <Ban className="h-3.5 w-3.5 mr-1.5" /> Cancel
                 </Button>
               )}
-              {!isActive && job.failed > 0 && (
+              {!isActive && liveMetrics.failed > 0 && (
                 <Button size="sm" variant="default" onClick={() => retryFailed(job.id)}>
-                  <RotateCw className="h-3.5 w-3.5 mr-1.5" /> Retry Failed ({job.failed})
+                  <RotateCw className="h-3.5 w-3.5 mr-1.5" /> Retry Failed ({liveMetrics.failed})
                 </Button>
               )}
-              {!isActive && (job.failed > 0 || job.completed < job.total_rows - job.duplicates_skipped) && (
+              {!isActive && (liveMetrics.failed > 0 || liveMetrics.pending > 0) && (
                 <Button size="sm" variant="outline" onClick={() => restartJob(job.id)}>
                   <RotateCw className="h-3.5 w-3.5 mr-1.5" /> Restart pending/failed
                 </Button>
@@ -598,7 +621,7 @@ const AdminBulkCreateColleges = () => {
 
             {!isActive && job.status === "completed" && (
               <div className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded p-2">
-                ✓ All done. {job.succeeded} colleges created, {job.failed} failed, {job.duplicates_skipped} duplicates skipped.
+                ✓ All done. {liveMetrics.succeeded} colleges created, {liveMetrics.failed} failed, {liveMetrics.duplicates} duplicates skipped.
               </div>
             )}
 

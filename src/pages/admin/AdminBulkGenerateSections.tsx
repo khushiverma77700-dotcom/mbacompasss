@@ -53,6 +53,25 @@ interface Job {
 
 const PER_STEP_SECONDS = 35; // rough estimate per AI section call (single safe worker)
 
+const getSectionJobMetrics = (job: Job | null) => {
+  const rows = job?.rows || [];
+  const succeeded = rows.filter((r: any) => r.status === "succeeded").length;
+  const failed = rows.filter((r: any) => r.status === "failed").length;
+  const notFound = rows.filter((r: any) => r.status === "not_found").length;
+  const activeRows = rows.filter((r: any) => r.status === "processing").length;
+  const pendingRows = rows.filter((r: any) => ["pending", "processing", "matched"].includes(r.status)).length;
+  const stepsDone = rows.reduce(
+    (acc: number, r: any) => acc + (r.steps || []).filter((s: any) => s.status === "succeeded" || s.status === "failed").length,
+    0,
+  );
+  const totalSteps = rows.reduce((acc: number, r: any) => acc + (r.steps || []).length, 0) || job?.total_steps || 0;
+  const pendingSteps = rows.reduce(
+    (acc: number, r: any) => acc + (r.steps || []).filter((s: any) => s.status === "pending" || s.status === "processing").length,
+    0,
+  );
+  return { succeeded, failed, notFound, activeRows, pendingRows, stepsDone, totalSteps, pendingSteps };
+};
+
 const formatDuration = (s: number) => {
   if (!isFinite(s) || s <= 0) return "—";
   const m = Math.floor(s / 60);
@@ -150,16 +169,18 @@ export default function AdminBulkGenerateSections() {
     if (data) setJob(data as any);
   };
 
+  const liveMetrics = useMemo(() => getSectionJobMetrics(job), [job]);
+
   const overallPct = job
-    ? Math.round((job.steps_done / Math.max(job.total_steps, 1)) * 100)
+    ? Math.round((liveMetrics.stepsDone / Math.max(liveMetrics.totalSteps, 1)) * 100)
     : 0;
 
   const eta = useMemo(() => {
     if (!job || job.status !== "running") return null;
-    const remaining = Math.max(job.total_steps - job.steps_done, 0);
+    const remaining = Math.max(liveMetrics.totalSteps - liveMetrics.stepsDone, 0);
     const seconds = remaining * PER_STEP_SECONDS;
     return seconds;
-  }, [job]);
+  }, [job, liveMetrics.totalSteps, liveMetrics.stepsDone]);
 
   const elapsed = useMemo(() => {
     if (!job?.started_at) return null;
@@ -494,12 +515,12 @@ export default function AdminBulkGenerateSections() {
           status={job.status}
           paused={!!job.paused}
           concurrency={Number(job.concurrency) || 1}
-          active={(job.rows || []).filter((r: any) => r.status === "processing").length}
-          succeeded={job.succeeded}
-          failed={job.failed}
-          pending={Math.max(0, (job.rows || []).filter((r: any) => r.status === "pending" || r.status === "processing" || r.status === "matched").length)}
-          total={job.total_steps || job.total_rows}
-          processed={job.steps_done}
+          active={liveMetrics.activeRows}
+          succeeded={liveMetrics.succeeded}
+          failed={liveMetrics.failed}
+          pending={liveMetrics.pendingSteps}
+          total={liveMetrics.totalSteps || job.total_rows}
+          processed={liveMetrics.stepsDone}
           updatedAt={(job as any).updated_at}
           telemetry={(job as any).telemetry}
           onRefresh={() => refreshAndResume(job.id)}
@@ -513,10 +534,10 @@ export default function AdminBulkGenerateSections() {
           finishedAt={(job as any).finished_at}
           updatedAt={(job as any).updated_at}
           total={job.total_rows}
-          succeeded={job.succeeded}
-          failed={job.failed}
-          notFound={(job as any).not_found || 0}
-          pending={Math.max(0, (job.rows || []).filter((r: any) => r.status === "pending" || r.status === "processing" || r.status === "matched").length)}
+          succeeded={liveMetrics.succeeded}
+          failed={liveMetrics.failed}
+          notFound={liveMetrics.notFound}
+          pending={liveMetrics.pendingRows}
           rows={(job.rows || []).map((r: any) => ({
             name: r.name || r.slug || `Row ${r.index}`,
             status: r.status,
@@ -573,19 +594,19 @@ export default function AdminBulkGenerateSections() {
               </div>
               <div className="rounded-md border border-border bg-background p-2">
                 <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Steps Done</div>
-                <div className="text-base font-bold text-primary">{job.steps_done} / {job.total_steps}</div>
+                <div className="text-base font-bold text-primary">{liveMetrics.stepsDone} / {liveMetrics.totalSteps}</div>
               </div>
               <div className="rounded-md border border-emerald-200 bg-emerald-50 p-2">
                 <div className="text-[10px] uppercase tracking-wide text-emerald-700">Succeeded</div>
-                <div className="text-base font-bold text-emerald-700">{job.succeeded}</div>
+                <div className="text-base font-bold text-emerald-700">{liveMetrics.succeeded}</div>
               </div>
               <div className="rounded-md border border-destructive/30 bg-destructive/5 p-2">
                 <div className="text-[10px] uppercase tracking-wide text-destructive">Failed</div>
-                <div className="text-base font-bold text-destructive">{job.failed}</div>
+                <div className="text-base font-bold text-destructive">{liveMetrics.failed}</div>
               </div>
               <div className="rounded-md border border-amber-200 bg-amber-50 p-2">
                 <div className="text-[10px] uppercase tracking-wide text-amber-700">Not Found</div>
-                <div className="text-base font-bold text-amber-700">{job.not_found}</div>
+                <div className="text-base font-bold text-amber-700">{liveMetrics.notFound}</div>
               </div>
               <div className="rounded-md border border-border bg-background p-2">
                 <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1 justify-center"><Clock className="w-3 h-3" /> ETA</div>

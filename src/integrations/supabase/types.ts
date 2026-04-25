@@ -3625,6 +3625,18 @@ export type Database = {
         Returns: boolean
       }
       is_admin_email: { Args: { _email: string }; Returns: boolean }
+      recover_stale_bulk_jobs: {
+        Args: { _threshold_minutes?: number }
+        Returns: Json
+      }
+      refresh_bulk_college_job_metrics: {
+        Args: { _job_id: string }
+        Returns: undefined
+      }
+      refresh_bulk_section_job_metrics: {
+        Args: { _job_id: string }
+        Returns: undefined
+      }
       user_has_mock_access: {
         Args: { _test_id: string; _user_id: string }
         Returns: boolean

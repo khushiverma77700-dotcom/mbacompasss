@@ -26,6 +26,30 @@ const STALE_PROCESSING_MS = 4 * 60_000;
 const LOCK_MS = 3 * 60_000;
 const TELEMETRY_LIMIT = 80;
 
+const computeCollegeMetrics = (rows: RowState[]) => {
+  const succeeded = rows.filter(r => r.status === "succeeded").length;
+  const failed = rows.filter(r => r.status === "failed").length;
+  const duplicates = rows.filter(r => r.status === "duplicate").length;
+  const pending = rows.filter(r => r.status === "pending").length;
+  const processing = rows.filter(r => r.status === "processing").length;
+  return {
+    succeeded,
+    failed,
+    duplicates_skipped: duplicates,
+    completed: succeeded + failed + duplicates,
+    pending,
+    processing,
+    total: rows.length,
+  };
+};
+
+const collegeMetricPatch = (metrics: ReturnType<typeof computeCollegeMetrics>) => ({
+  succeeded: metrics.succeeded,
+  failed: metrics.failed,
+  duplicates_skipped: metrics.duplicates_skipped,
+  completed: metrics.completed,
+});
+
 const textBytes = (value: string) => new TextEncoder().encode(value || "").length;
 
 const memorySnapshot = () => {
@@ -515,13 +539,10 @@ async function runJob(job_id: string, authHeader: string) {
           tracker.setActive(activeRef.n);
         }
 
-        const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
-        const failed = rowsRef.value.filter(r => r.status === "failed").length;
-        const duplicates = rowsRef.value.filter(r => r.status === "duplicate").length;
-        const completed = succeeded + failed + duplicates;
-        tracker.recordProgress(completed, row.name);
+        const liveMetrics = computeCollegeMetrics(rowsRef.value);
+        tracker.recordProgress(liveMetrics.completed, row.name);
         await updateBulkJob(admin, "bulk_college_jobs", job_id, workerId, tracker, {
-          succeeded, failed, duplicates_skipped: duplicates, completed,
+          ...collegeMetricPatch(liveMetrics),
         });
       }
     });
@@ -530,10 +551,7 @@ async function runJob(job_id: string, authHeader: string) {
     pollerStop = true;
     await poller.catch(() => {});
 
-    const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
-    const failed = rowsRef.value.filter(r => r.status === "failed").length;
-    const duplicates = rowsRef.value.filter(r => r.status === "duplicate").length;
-    const completed = succeeded + failed + duplicates;
+    const finalMetrics = computeCollegeMetrics(rowsRef.value);
 
     if (cancelFlag.v) {
       for (const r of rowsRef.value) {
@@ -544,12 +562,10 @@ async function runJob(job_id: string, authHeader: string) {
           r.attemptStartedAt = undefined;
         }
       }
-      const failedAfterCancel = rowsRef.value.filter(r => r.status === "failed").length;
       await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
         rows: rowsRef.value,
         status: "cancelled",
-        succeeded, failed: failedAfterCancel, duplicates_skipped: duplicates,
-        completed: succeeded + failedAfterCancel + duplicates,
+        ...collegeMetricPatch(computeCollegeMetrics(rowsRef.value)),
         finished_at: new Date().toISOString(),
         current_activity: "Cancelled by admin",
       });
@@ -562,22 +578,19 @@ async function runJob(job_id: string, authHeader: string) {
       await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
         status: "running",
         rows: rowsRef.value,
-        succeeded, failed, duplicates_skipped: duplicates, completed,
+        ...collegeMetricPatch(finalMetrics),
         current_activity: "Paused — worker parked safely",
       });
       return;
     }
 
-    const remaining = rowsRef.value.filter(r => r.status === "pending").length;
+    const remaining = finalMetrics.pending;
 
     if (remaining > 0) {
       await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
         status: "running",
         rows: rowsRef.value,
-        succeeded,
-        failed,
-        duplicates_skipped: duplicates,
-        completed,
+        ...collegeMetricPatch(finalMetrics),
         current_activity: `Continuing… ${remaining} colleges remaining`,
       });
 
@@ -598,10 +611,7 @@ async function runJob(job_id: string, authHeader: string) {
       status: "completed",
       finished_at: new Date().toISOString(),
       rows: rowsRef.value,
-      succeeded,
-      failed,
-      duplicates_skipped: duplicates,
-      completed,
+      ...collegeMetricPatch(finalMetrics),
       current_activity: "All done",
     });
   } catch (err) {

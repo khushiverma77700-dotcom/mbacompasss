@@ -123,9 +123,12 @@ const BulkLiveControlPanel = ({
   const totalUnits = Math.max(0, Number(total || 0));
   const lastProcessed = useRef(processedUnits);
   const lastTime = useRef(Date.now());
+  const isTerminal = ["completed", "failed", "cancelled"].includes(status);
 
   const networkStats = telemetry?.network || {};
-  const serverCpu = Number(telemetry?.cpu?.loadPct || 0);
+  const telemetryAgeSec = telemetry?.updatedAt ? Math.max(0, (Date.now() - new Date(telemetry.updatedAt).getTime()) / 1000) : null;
+  const isTelemetryFresh = telemetryAgeSec !== null && telemetryAgeSec <= 90 && !paused && !isTerminal;
+  const serverCpu = isTelemetryFresh ? Number(telemetry?.cpu?.loadPct || 0) : 0;
   const memory = telemetry?.memory || null;
   const memoryUsedMb = Number(memory?.heapUsed || memory?.rss || 0);
   const memoryTotalMb = Number(memory?.heapTotal || memory?.rss || 0);
@@ -182,10 +185,10 @@ const BulkLiveControlPanel = ({
     const completed = succeeded + failed;
     const failureRate = completed > 0 ? failed / completed : 0;
     const idleMin = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 60000 : 0;
-    const idlePenalty = Math.min(1, Math.max(0, idleMin - 1) / 5);
+    const idlePenalty = !paused && !isTerminal ? Math.min(1, Math.max(0, idleMin - 1) / 5) : 0;
     const workerPressure = utilisation * 70 + failureRate * 20 + idlePenalty * 10;
     return Math.min(100, Math.round(Math.max(serverCpu, workerPressure)));
-  }, [serverCpu, active, concurrency, succeeded, failed, updatedAt]);
+  }, [serverCpu, active, concurrency, succeeded, failed, updatedAt, paused, isTerminal]);
 
   const cpuHistory = useRolling(browserCpu);
   const loadHistory = useRolling(serverLoad);
@@ -272,8 +275,6 @@ const BulkLiveControlPanel = ({
     browserCpu >= 70 ? { color: "text-destructive", label: "High" }
     : browserCpu >= 35 ? { color: "text-amber-700", label: "Warm" }
     : { color: "text-emerald-700", label: "Cool" };
-
-  const isTerminal = ["completed", "failed", "cancelled"].includes(status);
 
   const saveConcurrency = async () => {
     setSaving(true);
