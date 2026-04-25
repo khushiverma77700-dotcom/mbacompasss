@@ -515,12 +515,12 @@ export default function AdminBulkGenerateSections() {
           status={job.status}
           paused={!!job.paused}
           concurrency={Number(job.concurrency) || 1}
-          active={(job.rows || []).filter((r: any) => r.status === "processing").length}
-          succeeded={job.succeeded}
-          failed={job.failed}
-          pending={Math.max(0, (job.rows || []).filter((r: any) => r.status === "pending" || r.status === "processing" || r.status === "matched").length)}
-          total={job.total_steps || job.total_rows}
-          processed={job.steps_done}
+          active={liveMetrics.activeRows}
+          succeeded={liveMetrics.succeeded}
+          failed={liveMetrics.failed}
+          pending={liveMetrics.pendingSteps}
+          total={liveMetrics.totalSteps || job.total_rows}
+          processed={liveMetrics.stepsDone}
           updatedAt={(job as any).updated_at}
           telemetry={(job as any).telemetry}
           onRefresh={() => refreshAndResume(job.id)}
@@ -534,10 +534,10 @@ export default function AdminBulkGenerateSections() {
           finishedAt={(job as any).finished_at}
           updatedAt={(job as any).updated_at}
           total={job.total_rows}
-          succeeded={job.succeeded}
-          failed={job.failed}
-          notFound={(job as any).not_found || 0}
-          pending={Math.max(0, (job.rows || []).filter((r: any) => r.status === "pending" || r.status === "processing" || r.status === "matched").length)}
+          succeeded={liveMetrics.succeeded}
+          failed={liveMetrics.failed}
+          notFound={liveMetrics.notFound}
+          pending={liveMetrics.pendingRows}
           rows={(job.rows || []).map((r: any) => ({
             name: r.name || r.slug || `Row ${r.index}`,
             status: r.status,
