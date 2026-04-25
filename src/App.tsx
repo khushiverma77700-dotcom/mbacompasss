@@ -73,6 +73,7 @@ const AdminTestimonials = lazyWithPreload(() => import("./pages/admin/AdminTesti
 const AdminCoupons = lazyWithPreload(() => import("./pages/admin/AdminCoupons"));
 const AdminCoachingOfWeek = lazyWithPreload(() => import("./pages/admin/AdminCoachingOfWeek"));
 const AdminCollegeSections = lazyWithPreload(() => import("./pages/admin/AdminCollegeSections"));
+const AdminBulkGenerateSections = lazyWithPreload(() => import("./pages/admin/AdminBulkGenerateSections"));
 const AdminInstituteResults = lazyWithPreload(() => import("./pages/admin/AdminInstituteResults"));
 const AdminSitemap = lazyWithPreload(() => import("./pages/admin/AdminSitemap"));
 const AdminClearCache = lazyWithPreload(() => import("./pages/admin/AdminClearCache"));
@@ -450,6 +451,7 @@ const App = () => (
               <Route path="coupons" element={<LazyPage><AdminCoupons /></LazyPage>} />
               <Route path="coaching-of-week" element={<LazyPage><AdminCoachingOfWeek /></LazyPage>} />
               <Route path="college-sections" element={<LazyPage><AdminCollegeSections /></LazyPage>} />
+              <Route path="college-sections/bulk-generate" element={<LazyPage><AdminBulkGenerateSections /></LazyPage>} />
               <Route path="institute-results" element={<LazyPage><AdminInstituteResults /></LazyPage>} />
               <Route path="sitemap" element={<LazyPage><AdminSitemap /></LazyPage>} />
               <Route path="clear-cache" element={<LazyPage><AdminClearCache /></LazyPage>} />
