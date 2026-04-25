@@ -215,6 +215,11 @@ function buildLovablePayload(body: ChatBody) {
   return payload;
 }
 
+function resolveGeminiModel(model?: string): string {
+  const raw = (model || "gemini-3-flash-preview").trim();
+  if (MODEL_ALIASES[raw]) return MODEL_ALIASES[raw];
+  return raw.replace(/^google\//, "").replace(/^openai\//, "");
+}
 
 function buildOpenAICompatPayload(body: ChatBody, model: string) {
   const maxTokens = body.max_tokens ?? body.generationConfig?.maxOutputTokens;
