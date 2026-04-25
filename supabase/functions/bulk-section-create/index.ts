@@ -689,7 +689,7 @@ async function runJob(job_id: string, authHeader: string) {
       while (true) {
         if (cancelFlag.v || pauseFlag.v) return;
         if (slotIdx >= concurrencyRef.v) {
-          if (activeRef.n === 0 || !hasPendingStep()) return;
+          if (cursor >= slots || !hasPendingStep()) return;
           await sleep(500);
           continue;
         }
