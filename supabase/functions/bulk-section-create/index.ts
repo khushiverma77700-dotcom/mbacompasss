@@ -569,7 +569,11 @@ async function runJob(job_id: string, authHeader: string) {
     const workers = Array.from({ length: slots }, async (_, slotIdx) => {
       while (true) {
         if (cancelFlag.v || pauseFlag.v) return;
-        if (slotIdx >= concurrencyRef.v) return;
+        if (slotIdx >= concurrencyRef.v) {
+          if (cursor >= eligible.length) return;
+          await sleep(500);
+          continue;
+        }
         const myIdx = cursor++;
         if (myIdx >= eligible.length) return;
         activeRef.n += 1;
