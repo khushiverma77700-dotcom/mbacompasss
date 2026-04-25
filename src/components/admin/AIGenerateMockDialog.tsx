@@ -88,6 +88,23 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
     setTita(Math.max(0, n - m));
   };
 
+  // Keep MCQ + TITA in sync with perSet — when user edits one, auto-adjust the other.
+  const onMcqChange = (n: number) => {
+    const clamped = Math.max(0, Math.min(perSet, n));
+    setMcq(clamped);
+    setTita(Math.max(0, perSet - clamped));
+  };
+  const onTitaChange = (n: number) => {
+    const clamped = Math.max(0, Math.min(perSet, n));
+    setTita(clamped);
+    setMcq(Math.max(0, perSet - clamped));
+  };
+  const autoBalance = () => {
+    const m = Math.round(perSet * 0.85);
+    setMcq(m);
+    setTita(Math.max(0, perSet - m));
+  };
+
   const handleGenerate = async () => {
     if (mcq + tita !== perSet) {
       toast({ title: "MCQ + TITA must equal Questions per set", variant: "destructive" });
