@@ -254,7 +254,7 @@ async function processOne(
       try {
         await fetch(`${SUPABASE_URL}/functions/v1/auto-seo-engine`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: authHeader, apikey: ANON_KEY },
+          headers: { "Content-Type": "application/json", Authorization: authHeader, apikey: ANON_KEY, "x-worker-key": SERVICE_ROLE },
           body: JSON.stringify({ mode: "seed_faqs", contentType: "college", pageId: inserted.id, faqs }),
         });
       } catch (_) { /* non-fatal */ }
@@ -416,24 +416,32 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
+    const body = await req.json();
+    const action = body.action || "create";
+    const isInternalResume = action === "resume" && req.headers.get("x-worker-key") === SERVICE_ROLE;
     const authHeader = req.headers.get("Authorization") || "";
-    if (!authHeader) {
+    if (!isInternalResume && !authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    let user: any = null;
+    if (!isInternalResume) {
     const userClient = createClient(SUPABASE_URL, ANON_KEY, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: { user } } = await userClient.auth.getUser();
+    const userRes = await userClient.auth.getUser();
+    user = userRes.data.user;
     if (!user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    }
 
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
+    if (!isInternalResume) {
     const { data: roleRow } = await admin.from("user_roles")
       .select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
     if (!roleRow) {
@@ -441,9 +449,7 @@ Deno.serve(async (req) => {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
-    const body = await req.json();
-    const action = body.action || "create";
+    }
 
     if (action === "create") {
       const inputs: RowInput[] = body.rows || [];
@@ -511,7 +517,7 @@ Deno.serve(async (req) => {
       const job_id = body.job_id;
       if (!job_id) return new Response(JSON.stringify({ error: "job_id required" }), { status: 400, headers: corsHeaders });
       // @ts-ignore
-      EdgeRuntime.waitUntil(runJob(job_id, authHeader));
+      EdgeRuntime.waitUntil(runJob(job_id, isInternalResume ? `Bearer ${ANON_KEY}` : authHeader));
       return new Response(JSON.stringify({ ok: true }), { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
