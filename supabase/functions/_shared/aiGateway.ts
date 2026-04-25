@@ -123,7 +123,12 @@ interface LogParams {
 }
 
 export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Promise<Response> {
-  const { signal, feature = "unknown", userId = null, maxRetries = 2, skipLog = false, provider = "gemini" } = opts;
+  const { signal, feature = "unknown", userId = null, maxRetries = 2, skipLog = false, provider = "gemini", purpose } = opts;
+  // Cost router: rewrite body.model based on purpose before any downstream logic uses it.
+  const routedModel = routeModelForPurpose(body.model, purpose);
+  if (routedModel !== body.model) {
+    body = { ...body, model: routedModel };
+  }
   const isStream = body.stream === true;
   const startedAt = Date.now();
 
