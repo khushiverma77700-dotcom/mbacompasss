@@ -405,7 +405,24 @@ const OAuthRedirectHandler = () => {
 };
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
+  <PersistQueryClientProvider
+    client={queryClient}
+    persistOptions={{
+      persister: queryPersister!,
+      maxAge: 24 * 60 * 60 * 1000,
+      buster: "v1",
+      dehydrateOptions: {
+        // Only persist successful, "public" data — skip auth/user-specific queries
+        shouldDehydrateQuery: (q) => {
+          if (q.state.status !== "success") return false;
+          const key = JSON.stringify(q.queryKey);
+          // Skip user/auth-specific caches
+          if (/profile|user_role|admin_perm|auth/i.test(key)) return false;
+          return true;
+        },
+      },
+    }}
+  >
     <TooltipProvider>
       <DeferredToasters />
       <SettingsPrefetcher />
