@@ -99,6 +99,7 @@ async function processOne(
     rowsRef.value = [...rowsRef.value];
     await admin.from("bulk_college_jobs").update({
       rows: rowsRef.value,
+      updated_at: new Date().toISOString(),
       current_activity: `Row ${row.index + 1}: ${row.name} — ${row.step || row.status}`,
     }).eq("id", job_id);
   };
@@ -109,7 +110,7 @@ async function processOne(
       return;
     }
 
-    await updateRow({ status: "processing", step: "researching" });
+    await updateRow({ status: "processing", step: "researching", attemptStartedAt: new Date().toISOString() });
 
     const y = new Date().getFullYear();
     const dateContext = `Use ONLY the most recent verified data: ${y}-${y + 1} admission cycle, ${y - 1}-${y} placement reports. All fees, placement figures, ranking and seat numbers MUST reflect the latest published year.`;
@@ -136,7 +137,9 @@ async function processOne(
       }
       await updateRow({ step: attempt === 1 ? "researching" : `retrying AI writer (${attempt}/${AI_WRITER_MAX_ATTEMPTS})` });
 
-      const aiRes = await fetch(`${SUPABASE_URL}/functions/v1/ai-college-writer`, {
+      let aiRes: Response;
+      try {
+        aiRes = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/ai-college-writer`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -144,7 +147,17 @@ async function processOne(
           apikey: ANON_KEY,
         },
         body: JSON.stringify(aiBody),
-      });
+        }, AI_WRITER_TIMEOUT_MS);
+      } catch (err) {
+        lastAiError = err instanceof DOMException && err.name === "AbortError"
+          ? `AI writer timed out after ${Math.round(AI_WRITER_TIMEOUT_MS / 1000)}s`
+          : `AI writer request failed: ${err instanceof Error ? err.message : String(err)}`;
+        if (attempt < AI_WRITER_MAX_ATTEMPTS) {
+          await sleep(AI_RETRY_BASE_DELAY_MS * attempt);
+          continue;
+        }
+        break;
+      }
 
       const txt = await aiRes.text();
       if (aiRes.ok) {
@@ -247,9 +260,9 @@ async function processOne(
       } catch (_) { /* non-fatal */ }
     }
 
-    await updateRow({ status: "succeeded", step: "done", collegeId: inserted.id, finalSlug });
+    await updateRow({ status: "succeeded", step: "done", collegeId: inserted.id, finalSlug, attemptStartedAt: undefined });
   } catch (e: any) {
-    await updateRow({ status: "failed", step: "error", error: e?.message || "Unknown error" });
+    await updateRow({ status: "failed", step: "error", error: e?.message || "Unknown error", attemptStartedAt: undefined });
   }
 }
 
