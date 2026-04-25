@@ -26,7 +26,9 @@ import MobileActionBar from "@/components/mobile/MobileActionBar";
 import FloatingTOC from "@/components/mobile/FloatingTOC";
 import ProgrammePortfolioTable from "@/components/college/ProgrammePortfolioTable";
 import { useProgrammeCourses } from "@/hooks/useProgrammeCourses";
-import { Share2, Phone } from "lucide-react";
+import { Share2, Phone, Sparkles } from "lucide-react";
+import AIExtensionBlock from "@/components/college/AIExtensionBlock";
+import CollegeSectionNav, { type NavItem } from "@/components/college/CollegeSectionNav";
 
 // ── Fallback data used when no DB sections exist ──
 const fallbackRatingAspects = [
