@@ -236,7 +236,7 @@ export default function AdminBulkGenerateSections() {
               <ul className="list-disc pl-5 space-y-0.5">
                 <li>Paste one college name per line — exactly as stored in the Colleges database (case-insensitive match supported).</li>
                 <li>For each matched college we auto-create the 14 standard section rows (if missing) and call the AI for every section.</li>
-                <li>Two colleges run in parallel; each college generates 14 sections sequentially.</li>
+                <li>One safe worker runs section-by-section and auto-resumes until the full batch is complete.</li>
                 <li>Job runs in the background — feel free to switch tabs or close this page; come back any time to see progress.</li>
                 <li>Unmatched college names are reported separately (no duplicates / not in DB).</li>
               </ul>
@@ -251,7 +251,7 @@ export default function AdminBulkGenerateSections() {
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="text-xs text-muted-foreground">
                 {parsedNames.length} unique college name{parsedNames.length === 1 ? "" : "s"} ready ·
-                Estimated ~{formatDuration((parsedNames.length * 14 * PER_STEP_SECONDS) / 2)} total
+                Estimated ~{formatDuration(parsedNames.length * 14 * PER_STEP_SECONDS)} total
               </div>
               <Button onClick={handleSubmit} disabled={submitting || parsedNames.length === 0}>
                 {submitting
