@@ -350,6 +350,7 @@ async function runJob(job_id: string, authHeader: string) {
         r.status = "failed";
         (r as any).step = "cancelled";
         r.error = "Cancelled by admin";
+        r.attemptStartedAt = undefined;
       }
     }
     const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
@@ -361,6 +362,7 @@ async function runJob(job_id: string, authHeader: string) {
       succeeded, failed, duplicates_skipped: duplicates,
       completed: succeeded + failed + duplicates,
       finished_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       current_activity: "Cancelled by admin",
     }).eq("id", job_id);
     return;
