@@ -143,6 +143,7 @@ async function claimWorkerLock(admin: any, table: string, jobId: string, workerI
 async function updateBulkJob(admin: any, table: string, jobId: string, workerId: string, tracker: TelemetryTracker, patch: Record<string, unknown>) {
   tracker.incDbWrite();
   return admin.from(table).update({
+    status: "running",
     ...patch,
     telemetry: tracker.snapshot(),
     worker_id: workerId,
@@ -215,13 +216,17 @@ interface RowState {
   finalSlug?: string;
 }
 
-async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs: number): Promise<Response> {
+async function fetchWithTimeoutAndCancel(url: string, init: RequestInit, timeoutMs: number, cancelFlag?: { v: boolean }): Promise<Response> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const cancelPoll = setInterval(() => {
+    if (cancelFlag?.v) controller.abort("cancelled");
+  }, 500);
   try {
     return await fetch(url, { ...init, signal: controller.signal });
   } finally {
     clearTimeout(timeout);
+    clearInterval(cancelPoll);
   }
 }
 
@@ -240,6 +245,7 @@ async function processOne(
   const updateRow = async (patch: Partial<RowState>) => {
     Object.assign(row, patch);
     rowsRef.value = [...rowsRef.value];
+    tracker.recordProgress(rowsRef.value.filter(r => r.status === "succeeded" || r.status === "failed" || r.status === "duplicate").length, `${row.name} — ${row.step || row.status}`);
     await updateBulkJob(admin, "bulk_college_jobs", job_id, workerId, tracker, {
       rows: rowsRef.value,
       current_activity: `Row ${row.index + 1}: ${row.name} — ${row.step || row.status}`,
@@ -284,7 +290,7 @@ async function processOne(
       const aiRequestBody = JSON.stringify(aiBody);
       const aiStarted = Date.now();
       try {
-        aiRes = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/ai-college-writer`, {
+        aiRes = await fetchWithTimeoutAndCancel(`${SUPABASE_URL}/functions/v1/ai-college-writer`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -292,7 +298,7 @@ async function processOne(
           apikey: ANON_KEY,
         },
         body: aiRequestBody,
-        }, AI_WRITER_TIMEOUT_MS);
+        }, AI_WRITER_TIMEOUT_MS, cancelFlag);
       } catch (err) {
         tracker.recordHttp("ai-college-writer", 0, textBytes(aiRequestBody), 0, Date.now() - aiStarted);
         lastAiError = err instanceof DOMException && err.name === "AbortError"
