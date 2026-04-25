@@ -59,11 +59,12 @@ Deno.serve(async (req) => {
   };
 
   try {
-    // ---- bulk_college_jobs ----
+    // ---- bulk_college_jobs ---- (skip paused jobs)
     const { data: stuckColleges, error: e1 } = await admin
       .from("bulk_college_jobs")
-      .select("id,status,updated_at,current_activity")
+      .select("id,status,updated_at,current_activity,paused")
       .in("status", ["pending", "processing"])
+      .eq("paused", false)
       .lt("updated_at", cutoff);
 
     if (e1) (report.errors as string[]).push(`college fetch: ${e1.message}`);
@@ -84,11 +85,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ---- bulk_section_jobs ----
+    // ---- bulk_section_jobs ---- (skip paused jobs)
     const { data: stuckSections, error: e2 } = await admin
       .from("bulk_section_jobs")
-      .select("id,status,updated_at,current_activity")
+      .select("id,status,updated_at,current_activity,paused")
       .in("status", ["pending", "processing"])
+      .eq("paused", false)
       .lt("updated_at", cutoff);
 
     if (e2) (report.errors as string[]).push(`section fetch: ${e2.message}`);
