@@ -222,6 +222,34 @@ interface RowState {
   finishedAt?: string;
 }
 
+const computeSectionMetrics = (rows: RowState[]) => {
+  const succeeded = rows.filter(r => r.status === "succeeded").length;
+  const failed = rows.filter(r => r.status === "failed").length;
+  const not_found = rows.filter(r => r.status === "not_found").length;
+  const steps_done = rows.reduce(
+    (acc, r) => acc + (r.steps || []).filter(s => s.status === "succeeded" || s.status === "failed").length,
+    0,
+  );
+  const total_steps = rows.reduce((acc, r) => acc + (r.steps || []).length, 0);
+  const pending_steps = rows.reduce(
+    (acc, r) => acc + (r.steps || []).filter(s => s.status === "pending").length,
+    0,
+  );
+  const processing_steps = rows.reduce(
+    (acc, r) => acc + (r.steps || []).filter(s => s.status === "processing").length,
+    0,
+  );
+  return { succeeded, failed, not_found, steps_done, total_steps, pending_steps, processing_steps };
+};
+
+const sectionMetricPatch = (metrics: ReturnType<typeof computeSectionMetrics>) => ({
+  succeeded: metrics.succeeded,
+  failed: metrics.failed,
+  not_found: metrics.not_found,
+  steps_done: metrics.steps_done,
+  total_steps: metrics.total_steps,
+});
+
 async function generateOneSection(
   authHeader: string,
   college: any,
