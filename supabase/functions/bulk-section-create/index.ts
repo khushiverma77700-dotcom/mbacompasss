@@ -70,37 +70,57 @@ async function generateOneSection(
   college: any,
   sectionType: string,
   anchorFacts: any,
+  cancelFlag?: { v: boolean },
 ) {
   const cy = new Date().getFullYear();
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/ai-college-section`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: authHeader,
-      apikey: ANON_KEY,
-    },
-    body: JSON.stringify({
-      collegeId: college.id,
-      collegeName: college.name,
-      city: college.city,
-      state: college.state,
-      type: college.type,
-      tier: college.tier,
-      established: college.established,
-      sectionType,
-      anchorFacts,
-      factSafety: true,
-      freshnessWindow: `${cy - 1}-${cy + 1}`,
-    }),
-  });
-  if (!res.ok) {
+  const body = {
+    collegeId: college.id,
+    collegeName: college.name,
+    city: college.city,
+    state: college.state,
+    type: college.type,
+    tier: college.tier,
+    established: college.established,
+    sectionType,
+    anchorFacts,
+    factSafety: true,
+    freshnessWindow: `${cy - 1}-${cy + 1}`,
+  };
+
+  let lastError = "";
+  for (let attempt = 1; attempt <= AI_SECTION_MAX_ATTEMPTS; attempt++) {
+    if (cancelFlag?.v) throw new Error("Cancelled by admin");
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/ai-college-section`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authHeader,
+        apikey: ANON_KEY,
+      },
+      body: JSON.stringify(body),
+    });
+
     const txt = await res.text();
-    throw new Error(`AI section failed (${res.status}): ${txt.slice(0, 200)}`);
+    if (res.ok) {
+      try {
+        const data = JSON.parse(txt);
+        if (data?.error) throw new Error(data.error);
+        if (!data?.section) throw new Error("AI returned empty section");
+        return data.section as { title: string | null; content: string; data: any };
+      } catch (e: any) {
+        lastError = e?.message || "AI section returned invalid response JSON";
+      }
+    } else {
+      lastError = `AI section failed (${res.status}): ${txt.slice(0, 300)}`;
+      if (!isRetryableAISectionFailure(res.status, txt)) break;
+    }
+
+    if (attempt < AI_SECTION_MAX_ATTEMPTS) {
+      await sleep(AI_SECTION_RETRY_BASE_DELAY_MS * attempt);
+    }
   }
-  const data = await res.json();
-  if (data?.error) throw new Error(data.error);
-  if (!data?.section) throw new Error("AI returned empty section");
-  return data.section as { title: string | null; content: string; data: any };
+
+  throw new Error(lastError || "AI section failed after retries");
 }
 
 async function processCollege(
