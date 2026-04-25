@@ -368,6 +368,9 @@ export default function AdminBulkGenerateSections() {
       toast({ title: "Retry failed", description: error.message, variant: "destructive" });
       return;
     }
+    const { data: refreshed } = await supabase
+      .from("bulk_section_jobs").select("*").eq("id", jobId).maybeSingle();
+    if (refreshed) setJob(refreshed as any);
     toast({ title: "Retrying failed sections", description: `${failedSteps} section${failedSteps === 1 ? "" : "s"} re-queued.` });
   };
 
