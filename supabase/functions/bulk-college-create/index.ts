@@ -497,6 +497,7 @@ async function runJob(job_id: string, authHeader: string) {
   }
 
   const tracker = new TelemetryTracker((job as any).telemetry, workerId);
+    tracker.addHealth("locked", "Worker lock acquired", { job_id });
 
   try {
     const allRows: RowState[] = (job.rows as RowState[]).map((r) => {
@@ -618,6 +619,7 @@ async function runJob(job_id: string, authHeader: string) {
     const { data: latest } = await admin.from("bulk_college_jobs")
       .select("paused,status").eq("id", job_id).maybeSingle();
     if ((latest as any)?.paused) {
+      tracker.addHealth("paused", "Worker parked after admin pause", { job_id });
       await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
         status: "running",
         rows: rowsRef.value,
@@ -630,6 +632,7 @@ async function runJob(job_id: string, authHeader: string) {
     const remaining = finalMetrics.pending;
 
     if (remaining > 0) {
+      tracker.addHealth("resumed", `Worker run complete; scheduling next chunk with ${remaining} pending`, { job_id, remaining });
       await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
         status: "running",
         rows: rowsRef.value,
@@ -657,6 +660,7 @@ async function runJob(job_id: string, authHeader: string) {
       ...collegeMetricPatch(finalMetrics),
       current_activity: "All done",
     });
+    tracker.addHealth("completed", "All rows completed", { job_id });
   } catch (err) {
     console.error("bulk college runJob failed", err);
     await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
