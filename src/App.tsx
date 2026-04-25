@@ -138,12 +138,22 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000,
-      gcTime: 15 * 60 * 1000,
+      gcTime: 24 * 60 * 60 * 1000, // 24h — kept for persistence
       refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
       retry: 1,
     },
   },
 });
+
+// Persist React Query cache to localStorage so repeat visits load instantly from cache
+const queryPersister = typeof window !== "undefined"
+  ? createSyncStoragePersister({
+      storage: window.localStorage,
+      key: "mbc-rq-cache-v1",
+      throttleTime: 1000,
+    })
+  : undefined;
 
 const ROUTE_PREFETCHERS = {
   "/blog": [BlogPage.preload],
