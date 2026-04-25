@@ -423,12 +423,12 @@ export default function AdminBulkGenerateSections() {
 
   // Auto-trigger stale retry every 60s while job is active
   useEffect(() => {
-    if (!job || (job.status !== "running" && job.status !== "pending")) return;
+    if (!job || job.paused || (job.status !== "running" && job.status !== "pending")) return;
     const id = window.setInterval(() => {
       autoRetryStale(job.id, { silent: true });
     }, 60_000);
     return () => window.clearInterval(id);
-  }, [job?.id, job?.status]);
+  }, [job?.id, job?.status, job?.paused]);
 
   return (
     <div className="space-y-6">
