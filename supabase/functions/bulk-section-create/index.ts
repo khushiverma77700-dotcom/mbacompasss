@@ -181,6 +181,7 @@ async function processCollege(
       succeeded,
       failed,
       not_found,
+      updated_at: new Date().toISOString(),
       current_activity: `Row ${row.index + 1}: ${row.inputName} — ${row.status}`,
     }).eq("id", job_id);
   };
@@ -239,20 +240,28 @@ async function processCollege(
 
     if (cancelFlag.v) { await cleanupOnCancel(); return; }
 
-    // Ensure all section rows exist for this college (track fresh inserts)
+    const step = row.steps.find((s) => s.status === "pending");
+    if (!step) {
+      const anyFailed = row.steps.some(s => s.status === "failed");
+      row.status = anyFailed ? "failed" : "succeeded";
+      if (anyFailed) row.error = `${row.steps.filter(s => s.status === "failed").length} section(s) failed`;
+      row.finishedAt = new Date().toISOString();
+      return;
+    }
+
+    // Create only the current section placeholder, so cancellation never leaves empty rows behind.
     const { data: existingRows } = await admin
-      .from("college_sections").select("id, section_type")
+      .from("college_sections").select("id, section_type, title, content, data")
       .eq("college_id", college.id);
     const existingTypes = new Set((existingRows || []).map((r: any) => r.section_type));
-    const missing = SECTION_TYPES.filter(s => !existingTypes.has(s.value));
-    if (missing.length) {
-      const inserts = missing.map((t, i) => ({
-        college_id: college.id, section_type: t.value, title: t.label,
-        sort_order: ((existingRows?.length || 0) + i) * 10, data: {},
-      }));
-      const { data: insertedRows } = await admin
-        .from("college_sections").insert(inserts).select("id");
-      freshlyInsertedIds = (insertedRows || []).map((r: any) => r.id);
+    if (!existingTypes.has(step.type)) {
+      const orderIndex = SECTION_TYPES.findIndex((s) => s.value === step.type);
+      const { data: insertedRow } = await admin
+        .from("college_sections")
+        .insert({ college_id: college.id, section_type: step.type, title: step.label, sort_order: Math.max(orderIndex, 0) * 10, data: {} })
+        .select("id")
+        .single();
+      if (insertedRow?.id) freshlyInsertedIds = [insertedRow.id];
     }
     const { data: allRows } = await admin
       .from("college_sections").select("id, section_type, title, content, data")
@@ -260,44 +269,38 @@ async function processCollege(
     const byType: Record<string, any> = {};
     (allRows || []).forEach((r: any) => { byType[r.section_type] = r; });
 
-    // Generate each section sequentially for this college
-    for (let i = 0; i < row.steps.length; i++) {
+    if (cancelFlag.v) { await cleanupOnCancel(); return; }
+    step.status = "processing";
+    step.startedAt = new Date().toISOString();
+    rowsRef.value = [...rowsRef.value];
+    await persist();
+
+    try {
+      const sec = await generateOneSection(authHeader, college, step.type, anchorFacts, cancelFlag);
       if (cancelFlag.v) { await cleanupOnCancel(); return; }
-
-      const step = row.steps[i];
-      step.status = "processing";
-      rowsRef.value = [...rowsRef.value];
-      await persist();
-
-      try {
-        const sec = await generateOneSection(authHeader, college, step.type, anchorFacts, cancelFlag);
-        // Re-check after the (potentially long) AI call — discard result if cancelled
-        if (cancelFlag.v) { await cleanupOnCancel(); return; }
-        const target = byType[step.type];
-        if (target) {
-          await admin.from("college_sections").update({
-            title: sec.title || target.title,
-            content: sec.content || target.content,
-            data: sec.data || {},
-          }).eq("id", target.id);
-          // This row now has content — protect from cleanup
-          freshlyInsertedIds = freshlyInsertedIds.filter(id => id !== target.id);
-        }
-        step.status = "succeeded";
-      } catch (e: any) {
-        step.status = "failed";
-        step.error = e?.message || "Unknown error";
+      const target = byType[step.type];
+      if (target) {
+        await admin.from("college_sections").update({
+          title: sec.title || target.title,
+          content: sec.content || target.content,
+          data: sec.data || {},
+        }).eq("id", target.id);
+        freshlyInsertedIds = freshlyInsertedIds.filter(id => id !== target.id);
       }
-      rowsRef.value = [...rowsRef.value];
-      await persist();
-      // small pause to avoid burst rate-limits
-      await sleep(SECTION_PAUSE_MS);
+      step.status = "succeeded";
+      step.startedAt = undefined;
+    } catch (e: any) {
+      step.status = "failed";
+      step.error = e?.message || "Unknown error";
+      step.startedAt = undefined;
     }
-
+    const remainingSteps = row.steps.some(s => s.status === "pending");
     const anyFailed = row.steps.some(s => s.status === "failed");
-    row.status = anyFailed ? "failed" : "succeeded";
-    if (anyFailed) row.error = `${row.steps.filter(s => s.status === "failed").length} section(s) failed`;
-    row.finishedAt = new Date().toISOString();
+    row.status = remainingSteps ? "pending" : anyFailed ? "failed" : "succeeded";
+    if (!remainingSteps) row.finishedAt = new Date().toISOString();
+    if (anyFailed && !remainingSteps) row.error = `${row.steps.filter(s => s.status === "failed").length} section(s) failed`;
+    await sleep(SECTION_PAUSE_MS);
+
   } catch (e: any) {
     row.status = "failed";
     row.error = e?.message || "Unknown error";
