@@ -485,6 +485,7 @@ const App = () => (
               <Route path="listing-change-requests" element={<LazyPage><AdminListingChangeRequests /></LazyPage>} />
               <Route path="seo/write-blog" element={<LazyPage><AdminWriteBlog /></LazyPage>} />
               <Route path="colleges/generate-ai" element={<LazyPage><AdminWriteCollege /></LazyPage>} />
+              <Route path="colleges/bulk-create" element={<LazyPage><AdminBulkCreateColleges /></LazyPage>} />
               <Route path="institutes/generate-ai" element={<LazyPage><AdminWriteInstitute /></LazyPage>} />
               <Route path="courses/generate-ai" element={<LazyPage><AdminWriteCourses /></LazyPage>} />
               <Route path="website-optimizer" element={<LazyPage><AdminWebsiteOptimizer /></LazyPage>} />
