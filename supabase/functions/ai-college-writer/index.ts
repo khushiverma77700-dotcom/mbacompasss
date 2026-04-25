@@ -20,6 +20,7 @@ interface CollegeBrief {
   targetKeyword?: string;
   secondaryKeywords?: string[];
   contentDateContext?: string;
+  bulkMode?: boolean;
 }
 
 Deno.serve(async (req) => {
@@ -38,6 +39,7 @@ Deno.serve(async (req) => {
     }
 
     const targetKw = (brief.targetKeyword || brief.name).trim();
+    const bulkMode = brief.bulkMode === true;
     const secKws = (brief.secondaryKeywords || []).filter(Boolean);
     const today = new Date();
     const todayIso = today.toISOString().slice(0, 10);
@@ -455,15 +457,19 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       [descriptionHtml, admissionHtml] = await Promise.all([
         callTextModel({
           label: "college description",
-          maxTokens: 4200,
+          maxTokens: bulkMode ? 2400 : 4200,
           system: descriptionSystem,
-          user: `Using the structured profile below, write the complete long-form HTML description for ${brief.name}.\n\nSTRUCTURED PROFILE:\n${JSON.stringify(contentSeed, null, 2)}\n\nRequirements:\n- 900-1300 words\n- start with <p><strong>Quick Summary:</strong> ...</p>\n- 6-8 <h2> sections\n- at least 2 <table>s\n- final FAQ section with 5-6 Q&A pairs\n- include citation markers like [src:NIRF ${currentYear}]\n- end with <p><em>Last updated: ${todayIso}</em></p>`,
+          user: bulkMode
+            ? `Using the structured profile below, write a concise ready-to-publish HTML description for ${brief.name}.\n\nSTRUCTURED PROFILE:\n${JSON.stringify(contentSeed, null, 2)}\n\nRequirements:\n- 450-650 words\n- start with <p><strong>Quick Summary:</strong> ...</p>\n- 4-5 <h2> sections\n- include 1 compact <table>\n- final FAQ section with 3 Q&A pairs\n- include citation markers like [src:NIRF ${currentYear}]\n- end with <p><em>Last updated: ${todayIso}</em></p>`
+            : `Using the structured profile below, write the complete long-form HTML description for ${brief.name}.\n\nSTRUCTURED PROFILE:\n${JSON.stringify(contentSeed, null, 2)}\n\nRequirements:\n- 900-1300 words\n- start with <p><strong>Quick Summary:</strong> ...</p>\n- 6-8 <h2> sections\n- at least 2 <table>s\n- final FAQ section with 5-6 Q&A pairs\n- include citation markers like [src:NIRF ${currentYear}]\n- end with <p><em>Last updated: ${todayIso}</em></p>`,
         }),
         callTextModel({
           label: "college admission process",
-          maxTokens: 2600,
+          maxTokens: bulkMode ? 1600 : 2600,
           system: admissionSystem,
-          user: `Using the structured profile below, write the HTML admission_process field for ${brief.name}.\n\nSTRUCTURED PROFILE:\n${JSON.stringify(contentSeed, null, 2)}\n\nRequirements:\n- 450-700 words\n- cover eligibility, exams accepted, selection steps, dates, fees, documents, tips\n- use <h3> subsections, bullet lists, and at least 2 <table>s\n- mention ${brief.name} at least 6 times naturally\n- end with a short freshness line for ${admissionCycle}`,
+          user: bulkMode
+            ? `Using the structured profile below, write the HTML admission_process field for ${brief.name}.\n\nSTRUCTURED PROFILE:\n${JSON.stringify(contentSeed, null, 2)}\n\nRequirements:\n- 250-400 words\n- cover eligibility, exams accepted, selection steps, dates, fees, documents, tips\n- use <h3> subsections, bullet list, and 1 compact <table>\n- mention ${brief.name} naturally\n- end with a short freshness line for ${admissionCycle}`
+            : `Using the structured profile below, write the HTML admission_process field for ${brief.name}.\n\nSTRUCTURED PROFILE:\n${JSON.stringify(contentSeed, null, 2)}\n\nRequirements:\n- 450-700 words\n- cover eligibility, exams accepted, selection steps, dates, fees, documents, tips\n- use <h3> subsections, bullet lists, and at least 2 <table>s\n- mention ${brief.name} at least 6 times naturally\n- end with a short freshness line for ${admissionCycle}`,
         }),
       ]);
     } catch (error) {
