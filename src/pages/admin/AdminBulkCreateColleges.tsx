@@ -218,6 +218,51 @@ const AdminBulkCreateColleges = () => {
   const progressPct = job ? Math.round((job.completed / Math.max(job.total_rows, 1)) * 100) : 0;
   const isActive = job?.status === "running" || job?.status === "pending";
 
+  const cancelJob = async (jobId: string) => {
+    if (!confirm("Cancel this job? Rows already processed will keep their results.")) return;
+    const { error } = await supabase
+      .from("bulk_college_jobs")
+      .update({ status: "cancelled", current_activity: "Cancelling…" })
+      .eq("id", jobId);
+    if (error) {
+      toast({ title: "Cancel failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Cancelling…", description: "Worker will stop after the current row." });
+  };
+
+  const restartJob = async (jobId: string) => {
+    if (!confirm("Restart this job? All pending/failed/cancelled rows will be re-queued.")) return;
+    const { data: j, error: fetchErr } = await supabase
+      .from("bulk_college_jobs").select("rows").eq("id", jobId).maybeSingle();
+    if (fetchErr || !j) {
+      toast({ title: "Restart failed", description: fetchErr?.message || "Job not found", variant: "destructive" });
+      return;
+    }
+    const resetRows = (j.rows as RowState[]).map(r =>
+      r.status === "succeeded" || r.status === "duplicate"
+        ? r
+        : { ...r, status: "pending" as const, step: undefined, error: undefined }
+    );
+    await supabase.from("bulk_college_jobs").update({
+      rows: resetRows,
+      status: "pending",
+      current_activity: "Restarting…",
+      finished_at: null,
+    }).eq("id", jobId);
+
+    const { data: { session } } = await supabase.auth.getSession();
+    const { error } = await supabase.functions.invoke("bulk-college-create", {
+      body: { action: "resume", job_id: jobId },
+      headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
+    });
+    if (error) {
+      toast({ title: "Restart failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Job restarted", description: "Pending rows are being processed again." });
+  };
+
   return (
     <div className="space-y-6 max-w-6xl">
       <div className="flex items-center justify-between gap-4 flex-wrap">
