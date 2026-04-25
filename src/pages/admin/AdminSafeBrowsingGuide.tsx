@@ -21,6 +21,7 @@ import {
   ListChecks,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import FlaggedUrlsTracker from "@/components/admin/FlaggedUrlsTracker";
 
 const DOMAIN = "mbacompass.in";
 const SEARCH_CONSOLE_URL = `https://search.google.com/search-console?resource_id=sc-domain%3A${DOMAIN}`;
@@ -356,6 +357,9 @@ const AdminSafeBrowsingGuide = () => {
           );
         })}
       </div>
+
+      {/* Flagged URLs tracker */}
+      <FlaggedUrlsTracker />
 
       {/* Review template preview */}
       <Card>
