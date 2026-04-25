@@ -416,12 +416,12 @@ const BulkLiveControlPanel = ({
               <div className="flex items-center gap-1.5 text-[11px] font-semibold">
                 <Layers className="w-3.5 h-3.5" /> WORKERS
               </div>
-              <Badge variant="outline" className="text-[10px] h-5 font-mono">{active}/{concurrency}</Badge>
+              <Badge variant="outline" className="text-[10px] h-5 font-mono">{liveActiveWorkers}/{concurrency}</Badge>
             </div>
             <div className="grid grid-cols-5 gap-1 mt-1">
               {Array.from({ length: 10 }).map((_, i) => {
                 const isAvailable = i < concurrency;
-                const isBusy = i < active;
+                const isBusy = i < liveActiveWorkers;
                 return (
                   <div
                     key={i}
@@ -440,7 +440,7 @@ const BulkLiveControlPanel = ({
               })}
             </div>
             <div className="text-[10px] text-muted-foreground mt-1.5 font-mono">
-              {paused ? "all slots paused" : `${active} active · ${Math.max(0, concurrency - active)} idle · ${10 - concurrency} disabled`}
+              {paused ? "all slots paused" : `${liveActiveWorkers} active · ${Math.max(0, concurrency - liveActiveWorkers)} idle · ${10 - concurrency} disabled`}
             </div>
           </div>
         </div>
