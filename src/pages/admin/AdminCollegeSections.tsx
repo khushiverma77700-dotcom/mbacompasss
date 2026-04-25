@@ -231,17 +231,44 @@ const AdminCollegeSections = () => {
     }
   };
 
+  // Generate AI for a single row — writes to a SEPARATE ai_v1 row, never modifies the original
   const handleAIGenerateRow = async (row: any) => {
     setAiBusy(`row:${row.id}`);
     try {
       const sec = await generateForSection(row.college_id, row.section_type);
-      const { error } = await supabase.from("college_sections").update({
-        title: sec.title || row.title,
-        content: sec.content || row.content,
-        data: sec.data || row.data || {},
-      }).eq("id", row.id);
-      if (error) throw error;
-      toast({ title: "Section updated by AI" });
+      // upsert ai_v1 row: original (or any other version) is never touched
+      const { data: existingAi } = await supabase
+        .from("college_sections")
+        .select("id")
+        .eq("college_id", row.college_id)
+        .eq("section_type", row.section_type)
+        .eq("version", "ai_v1")
+        .maybeSingle();
+      if (existingAi?.id) {
+        const { error } = await supabase.from("college_sections").update({
+          title: sec.title || row.title,
+          content: sec.content || null,
+          data: sec.data || {},
+          is_active: true,
+          source: "ai",
+        }).eq("id", existingAi.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("college_sections").insert({
+          college_id: row.college_id,
+          section_type: row.section_type,
+          title: sec.title || row.title,
+          content: sec.content || null,
+          data: sec.data || {},
+          sort_order: (row.sort_order ?? 0) + 1,
+          version: "ai_v1",
+          is_active: true,
+          source: "ai",
+          parent_section_id: row.version === "original" ? row.id : (row.parent_section_id || null),
+        });
+        if (error) throw error;
+      }
+      toast({ title: "AI version created", description: "Original section preserved — AI extension saved as a separate version." });
       fetchSections();
     } catch (e: any) {
       toast({ title: "AI generation failed", description: e?.message || "Unknown error", variant: "destructive" });
@@ -252,50 +279,63 @@ const AdminCollegeSections = () => {
 
   const handleAIGenerateAll = async () => {
     if (!selectedCollege) { toast({ title: "Select a college first", variant: "destructive" }); return; }
-    if (!confirm("Generate AI content for ALL sections of this college? Existing content will be replaced.")) return;
+    if (!confirm("Generate AI versions for ALL section types? Original sections will be preserved — AI content is saved as a separate version (ai_v1).")) return;
     setAiBusy("bulk");
     try {
-      // Ensure every section type exists
-      const existingTypes = sections.filter(s => s.college_id === selectedCollege).map(s => s.section_type);
-      const missing = SECTION_TYPES.filter(t => !existingTypes.includes(t.value));
-      if (missing.length) {
-        const inserts = missing.map((t, i) => ({ college_id: selectedCollege, section_type: t.value, title: t.label, sort_order: (existingTypes.length + i) * 10, data: {} }));
-        await supabase.from("college_sections").insert(inserts);
-        await fetchSections();
-      }
-      const { data: rows } = await supabase.from("college_sections").select("*").eq("college_id", selectedCollege).order("sort_order");
-      const list = rows || [];
-
-      // Fetch shared anchor facts ONCE so every section uses the same establishment year,
-      // ranking, fees, exams and accreditations — keeping content consistent across sections.
+      // Build the working list from SECTION_TYPES so every type gets an AI version,
+      // even if an original row doesn't yet exist (we'll create the AI version standalone).
       const sharedFacts = await fetchAnchorFacts(selectedCollege);
+      const list = SECTION_TYPES.map((t, i) => ({
+        section_type: t.value,
+        label: t.label,
+        sort_order: i * 10,
+      }));
 
-      // Initialize progress
       setBulkProgress({
         total: list.length,
         done: 0,
         ok: 0,
         fail: 0,
         current: "",
-        results: list.map(r => ({
-          type: r.section_type,
-          label: SECTION_TYPES.find(t => t.value === r.section_type)?.label || r.section_type,
-          status: "pending",
-        })),
+        results: list.map(r => ({ type: r.section_type, label: r.label, status: "pending" })),
       });
 
       let ok = 0, fail = 0;
       for (let i = 0; i < list.length; i++) {
-        const row = list[i];
-        const label = SECTION_TYPES.find(t => t.value === row.section_type)?.label || row.section_type;
-        setBulkProgress(prev => prev ? { ...prev, current: label } : prev);
+        const item = list[i];
+        setBulkProgress(prev => prev ? { ...prev, current: item.label } : prev);
         try {
-          const sec = await generateForSection(selectedCollege, row.section_type, sharedFacts);
-          await supabase.from("college_sections").update({
-            title: sec.title || row.title,
-            content: sec.content || row.content,
-            data: sec.data || {},
-          }).eq("id", row.id);
+          const sec = await generateForSection(selectedCollege, item.section_type, sharedFacts);
+          // Find original (for parent reference + sort order) and existing AI version
+          const { data: original } = await supabase.from("college_sections")
+            .select("id, sort_order, title, content").eq("college_id", selectedCollege)
+            .eq("section_type", item.section_type).eq("version", "original").maybeSingle();
+          const { data: existingAi } = await supabase.from("college_sections")
+            .select("id, title, content").eq("college_id", selectedCollege)
+            .eq("section_type", item.section_type).eq("version", "ai_v1").maybeSingle();
+          const sortBase = original?.sort_order ?? item.sort_order;
+          if (existingAi?.id) {
+            await supabase.from("college_sections").update({
+              title: sec.title || existingAi.title || item.label,
+              content: sec.content || null,
+              data: sec.data || {},
+              is_active: true,
+              source: "ai",
+            }).eq("id", existingAi.id);
+          } else {
+            await supabase.from("college_sections").insert({
+              college_id: selectedCollege,
+              section_type: item.section_type,
+              title: sec.title || item.label,
+              content: sec.content || null,
+              data: sec.data || {},
+              sort_order: sortBase + 1,
+              version: "ai_v1",
+              is_active: true,
+              source: "ai",
+              parent_section_id: original?.id || null,
+            });
+          }
           ok++;
           setBulkProgress(prev => {
             if (!prev) return prev;
@@ -304,7 +344,7 @@ const AdminCollegeSections = () => {
             return { ...prev, done: prev.done + 1, ok: prev.ok + 1, results };
           });
         } catch (err: any) {
-          console.error("bulk fail for", row.section_type, err);
+          console.error("bulk fail for", item.section_type, err);
           fail++;
           setBulkProgress(prev => {
             if (!prev) return prev;
@@ -313,16 +353,14 @@ const AdminCollegeSections = () => {
             return { ...prev, done: prev.done + 1, fail: prev.fail + 1, results };
           });
         }
-        // tiny pause to avoid burst rate-limits
         await new Promise(r => setTimeout(r, 800));
       }
-      toast({ title: "Bulk AI generation complete", description: `${ok} succeeded, ${fail} failed.` });
+      toast({ title: "Bulk AI generation complete", description: `${ok} succeeded, ${fail} failed. Originals preserved.` });
       fetchSections();
     } catch (e: any) {
       toast({ title: "Bulk generation failed", description: e?.message || "Unknown error", variant: "destructive" });
     } finally {
       setAiBusy(null);
-      // Keep progress panel visible so user can review which succeeded/failed; auto-hide after 30s
       setTimeout(() => setBulkProgress(null), 30000);
     }
   };
