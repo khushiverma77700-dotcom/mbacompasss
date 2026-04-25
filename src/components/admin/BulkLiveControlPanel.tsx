@@ -23,6 +23,7 @@ interface Props {
   status: string;
   paused: boolean;
   concurrency: number;
+  aiProvider?: "gemini" | "lovable";
   /** Live stats from parent */
   active: number;
   succeeded: number;
