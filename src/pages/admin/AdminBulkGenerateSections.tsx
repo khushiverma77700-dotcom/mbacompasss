@@ -477,23 +477,33 @@ export default function AdminBulkGenerateSections() {
           <CardHeader><CardTitle className="text-sm">Recent Jobs</CardTitle></CardHeader>
           <CardContent className="p-0">
             <div className="divide-y divide-border">
-              {recentJobs.map((j) => (
-                <button key={j.id} type="button"
-                  onClick={() => openJob(j.id)}
-                  className="w-full px-4 py-2 text-left hover:bg-muted/40 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 text-sm">
-                    {j.status === "running" && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
-                    {j.status === "completed" && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
-                    {j.status === "failed" && <XCircle className="w-4 h-4 text-destructive" />}
-                    {j.status === "pending" && <Clock className="w-4 h-4 text-muted-foreground" />}
-                    <span className="font-medium text-foreground">{j.total_rows} colleges</span>
-                    <span className="text-xs text-muted-foreground">
-                      · {j.steps_done}/{j.total_steps} steps · {new Date(j.created_at).toLocaleString()}
-                    </span>
+              {recentJobs.map((j) => {
+                const canRetry = j.failed > 0 && (j.status === "completed" || j.status === "failed" || j.status === "cancelled");
+                return (
+                  <div key={j.id} className="w-full px-4 py-2 hover:bg-muted/40 flex items-center justify-between gap-3">
+                    <button type="button" onClick={() => openJob(j.id)} className="flex-1 text-left flex items-center gap-2 text-sm">
+                      {j.status === "running" && <Loader2 className="w-4 h-4 animate-spin text-primary" />}
+                      {j.status === "completed" && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+                      {j.status === "failed" && <XCircle className="w-4 h-4 text-destructive" />}
+                      {j.status === "pending" && <Clock className="w-4 h-4 text-muted-foreground" />}
+                      <span className="font-medium text-foreground">{j.total_rows} colleges</span>
+                      <span className="text-xs text-muted-foreground">
+                        · {j.steps_done}/{j.total_steps} steps
+                        {j.failed > 0 && <span className="text-destructive"> · ✕{j.failed} failed</span>}
+                        · {new Date(j.created_at).toLocaleString()}
+                      </span>
+                    </button>
+                    <div className="flex items-center gap-2">
+                      {canRetry && (
+                        <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); retryFailed(j.id); }}>
+                          <RotateCw className="w-3.5 h-3.5 mr-1.5" /> Retry Failed ({j.failed})
+                        </Button>
+                      )}
+                      <Badge variant="outline" className="text-[10px]">{j.status}</Badge>
+                    </div>
                   </div>
-                  <Badge variant="outline" className="text-[10px]">{j.status}</Badge>
-                </button>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
