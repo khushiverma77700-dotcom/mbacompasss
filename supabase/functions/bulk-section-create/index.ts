@@ -596,7 +596,7 @@ async function processOneSectionStep(
       .maybeSingle();
 
     if (cancelFlag.v) throw new Error("Cancelled by admin");
-    const sec = await generateOneSection(authHeader, college, step.type, anchorFacts, cancelFlag, tracker);
+    const sec = await generateOneSection(authHeader, college, step.type, anchorFacts, cancelFlag, tracker, aiProvider);
     if (cancelFlag.v) throw new Error("Cancelled by admin");
 
     const orderIndex = SECTION_TYPES.findIndex((s) => s.value === step.type);
