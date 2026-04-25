@@ -43,7 +43,7 @@ const AIExtensionBlock = ({ section, extensionLabel, entityName, entityWebsite }
       </div>
       <div
         className="ai-content max-w-none text-muted-foreground leading-relaxed"
-        dangerouslySetInnerHTML={{ __html: enhanceAIContent(html) }}
+        dangerouslySetInnerHTML={{ __html: enhanceAIContent(html, { entityName, entityWebsite }) }}
       />
     </div>
   );
