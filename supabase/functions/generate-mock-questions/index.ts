@@ -304,6 +304,10 @@ Deno.serve(async (req) => {
     }).select("id").single();
     const genId = gen?.id;
 
+    // Long-running generation runs in the background so the HTTP request
+    // returns immediately. The client polls ai_mock_generations for status.
+    const runGeneration = async () => {
+     try {
     for (let setIdx = 1; setIdx <= setsCount; setIdx++) {
       const baseName = test_name_prefix
         ? `${test_name_prefix} #${setIdx}`
