@@ -291,6 +291,7 @@ async function processOne(
   cancelFlag: { v: boolean },
   tracker: TelemetryTracker,
   workerId: string,
+  aiProvider: "gemini" | "lovable",
 ) {
   const updateRow = async (patch: Partial<RowState>) => {
     Object.assign(row, patch);
