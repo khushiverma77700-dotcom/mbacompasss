@@ -347,6 +347,7 @@ async function processOne(
           "Content-Type": "application/json",
           Authorization: authHeader,
           apikey: ANON_KEY,
+          "X-AI-Provider": aiProvider,
         },
         body: aiRequestBody,
         }, AI_WRITER_TIMEOUT_MS, cancelFlag);
