@@ -82,6 +82,8 @@ class TelemetryTracker {
         recent: Array.isArray(network.recent) ? network.recent.slice(-25) : [],
       },
       db: { writes: Number(initial?.db?.writes || 0) },
+      workerSlots: Array.isArray(initial?.workerSlots) ? initial.workerSlots.slice(-10) : [],
+      healthTimeline: Array.isArray(initial?.healthTimeline) ? initial.healthTimeline.slice(-100) : [],
       timeline: Array.isArray(initial?.timeline) ? initial.timeline.slice(-TELEMETRY_LIMIT) : [],
       events: Array.isArray(initial?.events) ? initial.events.slice(-12) : [],
     };
@@ -91,6 +93,30 @@ class TelemetryTracker {
   setActive(n: number) {
     this.state.activeWorkers = n;
     this.state.peakActiveWorkers = Math.max(this.state.peakActiveWorkers || 0, n);
+  }
+
+  updateSlot(slotIndex: number, patch: Record<string, unknown>) {
+    const now = new Date().toISOString();
+    const slots = Array.isArray(this.state.workerSlots) ? [...this.state.workerSlots] : [];
+    slots[slotIndex] = {
+      slot: slotIndex + 1,
+      slot_id: `${this.state.workerId}:slot-${slotIndex + 1}`,
+      job_id: patch.job_id || slots[slotIndex]?.job_id || null,
+      state: patch.state || slots[slotIndex]?.state || "idle",
+      last_heartbeat: now,
+      last_processed_at: patch.last_processed_at || slots[slotIndex]?.last_processed_at || null,
+      current_item: patch.current_item ?? slots[slotIndex]?.current_item ?? null,
+      current_step: patch.current_step ?? slots[slotIndex]?.current_step ?? null,
+      enabled: patch.enabled ?? slots[slotIndex]?.enabled ?? true,
+    };
+    this.state.workerSlots = slots.slice(0, 10);
+  }
+
+  addHealth(state: string, label: string, meta: Record<string, unknown> = {}) {
+    this.state.healthTimeline = [
+      ...(this.state.healthTimeline || []),
+      { ts: Date.now(), state, label, job_id: meta.job_id || null, worker_id: this.state.workerId, ...meta },
+    ].slice(-100);
   }
   addBusy(ms: number) {
     this.state.cpu.busyMs += Math.max(0, ms);
