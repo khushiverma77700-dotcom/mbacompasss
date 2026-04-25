@@ -244,7 +244,7 @@ const InstitutePage = () => {
                 <div key={s.label} className="bg-primary-foreground/10 backdrop-blur-sm rounded-lg px-4 py-2">
                   <div className="text-xs text-primary-foreground/70 flex items-center gap-1">
                     {s.label}
-                    <CitationLink source={s.source} year={s.year} className="!bg-primary-foreground/15 !border-primary-foreground/25 !text-primary-foreground/90" />
+                    <CitationLink source={s.source} year={s.year} entityName={institute.name} entityWebsite={(institute as any).website} className="!bg-primary-foreground/15 !border-primary-foreground/25 !text-primary-foreground/90" />
                   </div>
                   <div className="font-heading font-bold text-primary-foreground">{s.value}</div>
                 </div>
