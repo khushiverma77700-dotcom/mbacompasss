@@ -327,6 +327,11 @@ export default function AdminBulkGenerateSections() {
                     <Ban className="w-3.5 h-3.5 mr-1.5" /> Cancel
                   </Button>
                 )}
+                {(job.status === "completed" || job.status === "failed" || job.status === "cancelled") && job.failed > 0 && (
+                  <Button size="sm" variant="default" onClick={() => retryFailed(job.id)}>
+                    <RotateCw className="w-3.5 h-3.5 mr-1.5" /> Retry Failed ({job.failed})
+                  </Button>
+                )}
                 {(job.status === "completed" || job.status === "failed" || job.status === "cancelled") && (
                   <Button size="sm" variant="outline" onClick={() => restartJob(job.id)}>
                     <RotateCw className="w-3.5 h-3.5 mr-1.5" /> Restart
