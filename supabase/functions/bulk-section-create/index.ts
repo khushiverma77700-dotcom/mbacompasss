@@ -139,6 +139,7 @@ async function claimWorkerLock(admin: any, table: string, jobId: string, workerI
 async function updateBulkJob(admin: any, table: string, jobId: string, workerId: string, tracker: TelemetryTracker, patch: Record<string, unknown>) {
   tracker.incDbWrite();
   return admin.from(table).update({
+    status: "running",
     ...patch,
     telemetry: tracker.snapshot(),
     worker_id: workerId,
@@ -315,6 +316,7 @@ async function processCollege(
     const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
     const failed = rowsRef.value.filter(r => r.status === "failed").length;
     const not_found = rowsRef.value.filter(r => r.status === "not_found").length;
+    tracker.recordProgress(stepsDone, `${row.inputName} — ${row.status}`);
     await updateBulkJob(admin, "bulk_section_jobs", job_id, workerId, tracker, {
       rows: rowsRef.value,
       steps_done: stepsDone,
