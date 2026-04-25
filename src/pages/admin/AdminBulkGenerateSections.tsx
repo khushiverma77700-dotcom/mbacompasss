@@ -96,7 +96,7 @@ export default function AdminBulkGenerateSections() {
       const { data } = await supabase
         .from("bulk_section_jobs").select("*").eq("id", job.id).maybeSingle();
       if (data) setJob(data as any);
-      if (data && (data.status === "completed" || data.status === "failed")) {
+      if (data && (data.status === "completed" || data.status === "failed" || data.status === "cancelled")) {
         if (pollRef.current) window.clearInterval(pollRef.current);
         pollRef.current = null;
         loadRecent();
