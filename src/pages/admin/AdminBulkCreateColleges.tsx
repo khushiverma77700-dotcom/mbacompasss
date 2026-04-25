@@ -48,6 +48,9 @@ interface JobState {
   current_activity: string | null;
   started_at: string | null;
   finished_at: string | null;
+  paused?: boolean;
+  concurrency?: number;
+  updated_at?: string | null;
 }
 
 const REQUIRED = ["name", "city", "state", "primaryKeyword"];
