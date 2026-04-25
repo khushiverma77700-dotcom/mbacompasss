@@ -671,6 +671,105 @@ const BulkLiveControlPanel = ({
           </div>
         </div>
 
+        {stuckIdleSlots.length > 0 && (
+          <div className="rounded-md border border-amber-500/50 bg-amber-500/10 p-3 flex items-start gap-2.5">
+            <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
+            <div className="flex-1 text-sm">
+              <div className="font-semibold text-amber-800">{stuckIdleSlots.length} enabled worker slot{stuckIdleSlots.length === 1 ? "" : "s"} idle without progress</div>
+              <div className="text-xs text-amber-800/80 mt-0.5">
+                Slots {stuckIdleSlots.map((s) => s.slot).join(", ")} have no fresh heartbeat/progress while queued work exists.
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Button size="sm" variant="secondary" onClick={wakeWorkersNow} disabled={waking || isTerminal} className="h-7 gap-1.5">
+                <Zap className={`w-3.5 h-3.5 ${waking ? "animate-pulse" : ""}`} /> Wake
+              </Button>
+              <Button size="sm" onClick={restartStuckWorkers} disabled={restarting || isTerminal} className="h-7 gap-1.5">
+                <RefreshCw className={`w-3.5 h-3.5 ${restarting ? "animate-spin" : ""}`} /> Auto-restart
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 xl:grid-cols-5 gap-4">
+          <div className="xl:col-span-3 rounded-lg border bg-card p-3 overflow-hidden">
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <div className="flex items-center gap-1.5 text-xs font-semibold">
+                <Layers className="w-3.5 h-3.5 text-primary" /> Worker Slot Live Table
+              </div>
+              <Badge variant="outline" className="text-[10px] h-5 font-mono">{liveActiveWorkers} active · {Math.max(0, concurrency - liveActiveWorkers)} idle</Badge>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-[11px]">
+                <thead className="text-muted-foreground border-b">
+                  <tr>
+                    <th className="text-left py-2 pr-3 font-medium">Slot</th>
+                    <th className="text-left py-2 pr-3 font-medium">State</th>
+                    <th className="text-left py-2 pr-3 font-medium">Job</th>
+                    <th className="text-left py-2 pr-3 font-medium">Last heartbeat</th>
+                    <th className="text-left py-2 pr-3 font-medium">Last processed</th>
+                    <th className="text-left py-2 pr-3 font-medium">Current work</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {workerSlots.map((slot) => {
+                    const heartbeatAge = ageSeconds(slot.last_heartbeat, clockTick);
+                    const processedAge = ageSeconds(slot.last_processed_at, clockTick);
+                    const stuck = stuckIdleSlots.some((s) => s.slot === slot.slot);
+                    return (
+                      <tr key={slot.slot} className={stuck ? "bg-amber-500/10" : undefined}>
+                        <td className="py-2 pr-3 font-mono">#{slot.slot}</td>
+                        <td className="py-2 pr-3">
+                          <Badge variant="outline" className={`h-5 text-[10px] ${
+                            stuck ? "border-amber-500/60 text-amber-800 bg-amber-500/10"
+                            : slot.state === "active" ? "border-emerald-500/60 text-emerald-700 bg-emerald-500/10"
+                            : slot.state === "idle" ? "border-primary/40 text-primary bg-primary/5"
+                            : slot.state === "disabled" ? "text-muted-foreground bg-muted/40"
+                            : "border-amber-500/50 text-amber-700 bg-amber-500/10"
+                          }`}>{stuck ? "stuck idle" : slot.state}</Badge>
+                        </td>
+                        <td className="py-2 pr-3 font-mono">{shortId(slot.job_id)}</td>
+                        <td className="py-2 pr-3 font-mono"><span>{toTime(slot.last_heartbeat)}</span><span className="block text-muted-foreground">{fmtAge(heartbeatAge)}</span></td>
+                        <td className="py-2 pr-3 font-mono"><span>{toTime(slot.last_processed_at)}</span><span className="block text-muted-foreground">{fmtAge(processedAge)}</span></td>
+                        <td className="py-2 pr-3 max-w-[220px]"><span className="block truncate">{slot.current_item || "—"}</span><span className="block truncate text-muted-foreground">{slot.current_step || "waiting"}</span></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="xl:col-span-2 rounded-lg border bg-gradient-to-br from-card to-muted/10 p-3">
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <div className="flex items-center gap-1.5 text-xs font-semibold">
+                <Clock className="w-3.5 h-3.5 text-primary" /> Job Health Timeline
+              </div>
+              <Badge variant="outline" className="text-[10px] h-5 font-mono">DB live</Badge>
+            </div>
+            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+              {healthTimeline.map((event, i) => (
+                <div key={`${event.ts}-${i}`} className="relative pl-5 pb-2 last:pb-0">
+                  <span className={`absolute left-0 top-1.5 w-2 h-2 rounded-full ${
+                    event.state === "completed" ? "bg-emerald-500"
+                    : event.state === "processing" || event.state === "locked" ? "bg-primary"
+                    : event.state === "paused" ? "bg-amber-500"
+                    : event.state === "failed" || event.state === "cancelled" ? "bg-destructive"
+                    : "bg-muted-foreground"
+                  }`} />
+                  {i < healthTimeline.length - 1 && <span className="absolute left-[3px] top-4 bottom-0 w-px bg-border" />}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-semibold capitalize">{event.state}</span>
+                    <span className="text-[10px] text-muted-foreground font-mono">{toTime(event.ts)}</span>
+                  </div>
+                  <div className="text-[11px] text-muted-foreground leading-snug">{event.label}</div>
+                  <div className="text-[10px] text-muted-foreground font-mono mt-0.5">job {shortId(event.job_id)} · worker {shortId(event.worker_id)}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* === RICH LIVE TELEMETRY === */}
 
         {/* Heatmap + Ring gauges row */}
