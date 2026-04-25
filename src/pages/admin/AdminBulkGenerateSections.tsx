@@ -316,6 +316,10 @@ export default function AdminBulkGenerateSections() {
     }
     const recoveredMsg = Object.keys(rematched).length > 0 ? ` · ${Object.keys(rematched).length} not-found recovered` : "";
     const stillMsg = stillNotFound > 0 ? ` · ${stillNotFound} still not found` : "";
+    // Immediately refresh local job state so the UI re-arms polling and shows progress
+    const { data: refreshed } = await supabase
+      .from("bulk_section_jobs").select("*").eq("id", jobId).maybeSingle();
+    if (refreshed) setJob(refreshed as any);
     toast({
       title: "Started All",
       description: `${requeuedRows} college(s) · ${requeuedSteps} section(s) re-queued${recoveredMsg}${stillMsg}`,
