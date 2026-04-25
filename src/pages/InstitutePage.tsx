@@ -300,7 +300,7 @@ const InstitutePage = () => {
             <Card id="institute-about" className="scroll-mt-24">
               <CardHeader><CardTitle className="font-heading">About {institute.name}</CardTitle></CardHeader>
               <CardContent>
-                <div className="ai-content max-w-none text-muted-foreground leading-relaxed mb-4" dangerouslySetInnerHTML={{ __html: enhanceAIContent(institute.description || '') }} />
+                <div className="ai-content max-w-none text-muted-foreground leading-relaxed mb-4" dangerouslySetInnerHTML={{ __html: enhanceAIContent(institute.description || '', { entityName: institute.name, entityWebsite: (institute as any).website }) }} />
                 <div className="mb-3">
                   <LastUpdatedBadge date={(institute as any).last_seo_refresh || (institute as any).updated_at} variant="subtle" />
                 </div>
