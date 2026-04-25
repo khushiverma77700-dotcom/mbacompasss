@@ -1,5 +1,7 @@
 import React, { Suspense, useState, lazy, useEffect } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { BrowserRouter, Route, Routes, matchPath, useLocation, useNavigate } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -136,12 +138,22 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000,
-      gcTime: 15 * 60 * 1000,
+      gcTime: 24 * 60 * 60 * 1000, // 24h — kept for persistence
       refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
       retry: 1,
     },
   },
 });
+
+// Persist React Query cache to localStorage so repeat visits load instantly from cache
+const queryPersister = typeof window !== "undefined"
+  ? createSyncStoragePersister({
+      storage: window.localStorage,
+      key: "mbc-rq-cache-v1",
+      throttleTime: 1000,
+    })
+  : undefined;
 
 const ROUTE_PREFETCHERS = {
   "/blog": [BlogPage.preload],
@@ -393,7 +405,24 @@ const OAuthRedirectHandler = () => {
 };
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
+  <PersistQueryClientProvider
+    client={queryClient}
+    persistOptions={{
+      persister: queryPersister!,
+      maxAge: 24 * 60 * 60 * 1000,
+      buster: "v1",
+      dehydrateOptions: {
+        // Only persist successful, "public" data — skip auth/user-specific queries
+        shouldDehydrateQuery: (q) => {
+          if (q.state.status !== "success") return false;
+          const key = JSON.stringify(q.queryKey);
+          // Skip user/auth-specific caches
+          if (/profile|user_role|admin_perm|auth/i.test(key)) return false;
+          return true;
+        },
+      },
+    }}
+  >
     <TooltipProvider>
       <DeferredToasters />
       <SettingsPrefetcher />
@@ -507,7 +536,7 @@ const App = () => (
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
-  </QueryClientProvider>
+  </PersistQueryClientProvider>
 );
 
 export default App;
