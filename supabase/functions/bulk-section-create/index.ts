@@ -320,6 +320,7 @@ async function runJob(job_id: string, authHeader: string) {
     console.error("bulk-section job not found", job_id, error);
     return;
   }
+  if (job.status === "cancelled") return;
 
   const rows = (job.rows as RowState[]).map((r) => {
     if (r.status !== "processing") return r;
