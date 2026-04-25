@@ -16,10 +16,10 @@ const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
 const CONCURRENCY = 1;
-const AI_WRITER_MAX_ATTEMPTS = 3;
+const AI_WRITER_MAX_ATTEMPTS = 1;
 const AI_RETRY_BASE_DELAY_MS = 2500;
 const ROWS_PER_INVOCATION = 1;
-const AI_WRITER_TIMEOUT_MS = 85_000;
+const AI_WRITER_TIMEOUT_MS = 125_000;
 const STALE_PROCESSING_MS = 4 * 60_000;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -126,6 +126,7 @@ async function processOne(
       targetKeyword: input.primaryKeyword || input.name,
       secondaryKeywords: [],
       contentDateContext: dateContext,
+      bulkMode: true,
     };
 
     let data: any = null;
