@@ -11,8 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, ArrowLeft, Settings2, ExternalLink, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowLeft, Settings2, ExternalLink, Loader2, Sparkles } from "lucide-react";
 import { slugify } from "@/lib/slugify";
+import AIGenerateMockDialog from "@/components/admin/AIGenerateMockDialog";
 
 const SECTION_DEFAULTS = [
   { code: "VARC" as const, name: "Verbal Ability & Reading Comprehension", duration_minutes: 40, total_questions: 24, sort_order: 0 },
@@ -63,6 +64,8 @@ const AdminMockTests = () => {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Form>(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [aiOpen, setAiOpen] = useState(false);
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
   const fetchTests = async () => {
     setLoading(true);
@@ -239,8 +242,37 @@ const AdminMockTests = () => {
           <h1 className="font-heading text-2xl font-bold text-foreground">Mock Tests</h1>
           <p className="text-sm text-muted-foreground mt-1">CAT-style mock test management</p>
         </div>
-        <Button onClick={startCreate}><Plus className="w-4 h-4 mr-2" /> New Mock Test</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setAiOpen(true)}>
+            <Sparkles className="w-4 h-4 mr-2 text-primary" /> Generate Mocks From AI
+          </Button>
+          <Button onClick={startCreate}><Plus className="w-4 h-4 mr-2" /> New Mock Test</Button>
+        </div>
       </div>
+
+      <div className="flex flex-wrap gap-2 mb-4">
+        {[
+          { v: "all", l: "All" },
+          { v: "full_length", l: "Full Length" },
+          { v: "sectional", l: "Sectional" },
+          { v: "topic", l: "Topic-wise" },
+          { v: "daily", l: "Daily Test" },
+          { v: "practice", l: "Practice" },
+        ].map((c) => (
+          <Button
+            key={c.v}
+            size="sm"
+            variant={categoryFilter === c.v ? "default" : "outline"}
+            onClick={() => setCategoryFilter(c.v)}
+          >
+            {c.l}
+            <Badge variant="secondary" className="ml-2">
+              {c.v === "all" ? tests.length : tests.filter((t) => (t.category || t.test_type) === c.v).length}
+            </Badge>
+          </Button>
+        ))}
+      </div>
+
       <Card>
         <CardContent className="p-0">
           <Table>
