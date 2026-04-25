@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import JobHealthReport from "@/components/admin/JobHealthReport";
 import {
   ArrowLeft, Sparkles, Loader2, CheckCircle2, XCircle, AlertTriangle,
   ChevronDown, ChevronRight, Clock, ListChecks, Play, Ban, RotateCw,
