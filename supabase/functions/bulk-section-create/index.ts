@@ -262,26 +262,46 @@ async function runJob(job_id: string, authHeader: string) {
 
   const eligible = rows.filter(r => r.status === "pending");
 
+  // Background poller — sets cancelFlag.v immediately when admin cancels
+  const cancelFlag = { v: false };
+  let pollerStop = false;
+  const poller = (async () => {
+    while (!pollerStop && !cancelFlag.v) {
+      const { data: cur } = await admin.from("bulk_section_jobs")
+        .select("status").eq("id", job_id).maybeSingle();
+      if (cur?.status === "cancelled") { cancelFlag.v = true; break; }
+      await new Promise(r => setTimeout(r, 1500));
+    }
+  })();
+
   let cursor = 0;
-  let cancelled = false;
-  const checkCancelled = async (): Promise<boolean> => {
-    if (cancelled) return true;
-    const { data: cur } = await admin.from("bulk_section_jobs").select("status").eq("id", job_id).maybeSingle();
-    if (cur?.status === "cancelled") { cancelled = true; return true; }
-    return false;
-  };
   const workers = Array.from({ length: COLLEGE_CONCURRENCY }, async () => {
     while (true) {
-      if (await checkCancelled()) return;
+      if (cancelFlag.v) return;
       const myIdx = cursor++;
       if (myIdx >= eligible.length) return;
-      await processCollege(admin, authHeader, job_id, rowsRef, eligible[myIdx]);
+      await processCollege(admin, authHeader, job_id, rowsRef, eligible[myIdx], cancelFlag);
     }
   });
   await Promise.all(workers);
+  pollerStop = true;
+  await poller.catch(() => {});
 
-  if (cancelled) {
+  if (cancelFlag.v) {
+    // Mark any still-pending rows as cancelled too (workers exited before reaching them)
+    for (const r of rowsRef.value) {
+      if (r.status === "pending" || r.status === "processing") {
+        r.status = "failed";
+        r.error = "Cancelled by admin";
+        for (const s of r.steps) {
+          if (s.status === "pending" || s.status === "processing") {
+            s.status = "failed"; s.error = "Cancelled";
+          }
+        }
+      }
+    }
     await admin.from("bulk_section_jobs").update({
+      rows: rowsRef.value,
       status: "cancelled",
       finished_at: new Date().toISOString(),
       current_activity: "Cancelled by admin",
