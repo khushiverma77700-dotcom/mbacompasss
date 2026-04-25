@@ -266,6 +266,43 @@ const AdminBulkCreateColleges = () => {
     toast({ title: "Job restarted", description: "Pending rows are being processed again." });
   };
 
+  const retryFailed = async (jobId: string) => {
+    const { data: j, error: fetchErr } = await supabase
+      .from("bulk_college_jobs").select("rows").eq("id", jobId).maybeSingle();
+    if (fetchErr || !j) {
+      toast({ title: "Retry failed", description: fetchErr?.message || "Job not found", variant: "destructive" });
+      return;
+    }
+    const rows = (j.rows as unknown) as RowState[];
+    const failedCount = rows.filter(r => r.status === "failed").length;
+    if (failedCount === 0) {
+      toast({ title: "Nothing to retry", description: "No failed rows in this job." });
+      return;
+    }
+    const resetRows = rows.map(r =>
+      r.status === "failed"
+        ? { ...r, status: "pending" as const, step: undefined, error: undefined }
+        : r
+    );
+    await supabase.from("bulk_college_jobs").update({
+      rows: resetRows as any,
+      status: "pending",
+      current_activity: `Retrying ${failedCount} failed row${failedCount === 1 ? "" : "s"}…`,
+      finished_at: null,
+    }).eq("id", jobId);
+
+    const { data: { session } } = await supabase.auth.getSession();
+    const { error } = await supabase.functions.invoke("bulk-college-create", {
+      body: { action: "resume", job_id: jobId },
+      headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : undefined,
+    });
+    if (error) {
+      toast({ title: "Retry failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Retrying failed rows", description: `${failedCount} row${failedCount === 1 ? "" : "s"} re-queued.` });
+  };
+
   return (
     <div className="space-y-6 max-w-6xl">
       <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -469,6 +506,11 @@ const AdminBulkCreateColleges = () => {
               {isActive && (
                 <Button size="sm" variant="destructive" onClick={() => cancelJob(job.id)}>
                   <Ban className="h-3.5 w-3.5 mr-1.5" /> Cancel
+                </Button>
+              )}
+              {!isActive && job.failed > 0 && (
+                <Button size="sm" variant="default" onClick={() => retryFailed(job.id)}>
+                  <RotateCw className="h-3.5 w-3.5 mr-1.5" /> Retry Failed ({job.failed})
                 </Button>
               )}
               {!isActive && (job.failed > 0 || job.completed < job.total_rows - job.duplicates_skipped) && (
