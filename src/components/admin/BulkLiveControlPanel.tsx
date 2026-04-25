@@ -54,6 +54,59 @@ const Sparkline = ({ data, color = "hsl(var(--primary))", height = 36 }: { data:
   );
 };
 
+/** Circular ring gauge (SVG). value in 0..100 */
+const RingGauge = ({
+  value, label, sublabel, color = "hsl(var(--primary))", size = 110,
+}: { value: number; label: string; sublabel?: string; color?: string; size?: number }) => {
+  const radius = (size - 14) / 2;
+  const circ = 2 * Math.PI * radius;
+  const dash = (Math.min(100, Math.max(0, value)) / 100) * circ;
+  return (
+    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle cx={size / 2} cy={size / 2} r={radius} stroke="hsl(var(--muted))" strokeWidth="8" fill="none" />
+        <circle
+          cx={size / 2} cy={size / 2} r={radius}
+          stroke={color} strokeWidth="8" fill="none"
+          strokeDasharray={`${dash} ${circ - dash}`} strokeLinecap="round"
+          style={{ transition: "stroke-dasharray 0.6s ease" }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <div className="text-xl font-bold font-mono leading-none" style={{ color }}>{Math.round(value)}<span className="text-xs">%</span></div>
+        <div className="text-[10px] text-muted-foreground mt-0.5 uppercase tracking-wider">{label}</div>
+        {sublabel && <div className="text-[9px] text-muted-foreground/80 font-mono">{sublabel}</div>}
+      </div>
+    </div>
+  );
+};
+
+/** 6x10 cell activity heatmap — newest on the right */
+const ActivityHeatmap = ({ data, max = 60 }: { data: number[]; max?: number }) => {
+  const cells = Array.from({ length: max }, (_, i) => data[data.length - max + i] ?? 0);
+  const peak = Math.max(1, ...cells);
+  const colorFor = (v: number) => {
+    const t = v / peak;
+    if (t === 0) return "hsl(var(--muted) / 0.4)";
+    if (t < 0.25) return "hsl(160 84% 39% / 0.35)";
+    if (t < 0.5) return "hsl(160 84% 39% / 0.7)";
+    if (t < 0.75) return "hsl(38 92% 50% / 0.85)";
+    return "hsl(0 84% 60% / 0.95)";
+  };
+  return (
+    <div className="grid grid-cols-[repeat(20,minmax(0,1fr))] gap-[2px]">
+      {cells.map((v, i) => (
+        <div
+          key={i}
+          className="aspect-square rounded-[2px] transition-colors"
+          style={{ backgroundColor: colorFor(v) }}
+          title={`t-${max - i}s · ${v} ops`}
+        />
+      ))}
+    </div>
+  );
+};
+
 const BulkLiveControlPanel = ({
   workflow, table, jobId, status, paused, concurrency,
   active, succeeded, failed, pending, total, updatedAt,
