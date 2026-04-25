@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, X, ArrowLeft, Sparkles } from "lucide-react";
+import { Plus, Pencil, Trash2, X, ArrowLeft, Sparkles, Upload } from "lucide-react";
 import { useTableSort } from "@/hooks/useTableSort";
 import { useAdminFilters } from "@/hooks/useAdminFilters";
 import AdminFilterBar from "@/components/admin/AdminFilterBar";
