@@ -208,6 +208,9 @@ export default function AdminBulkGenerateSections() {
       toast({ title: "Restart failed", description: error.message, variant: "destructive" });
       return;
     }
+    const { data: refreshed } = await supabase
+      .from("bulk_section_jobs").select("*").eq("id", jobId).maybeSingle();
+    if (refreshed) setJob(refreshed as any);
     toast({ title: "Job restarted", description: "Pending colleges/sections are being processed again." });
   };
 
