@@ -713,7 +713,7 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
         tools: [tool],
         tool_choice: { type: "function", function: { name: spec.name } },
         max_tokens: 6000,
-      });
+      }, { feature: "ai-college-section", provider });
 
     if (!aiRes.ok) {
       const txt = await aiRes.text();
