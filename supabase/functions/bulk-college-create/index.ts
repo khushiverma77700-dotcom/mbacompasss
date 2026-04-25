@@ -22,6 +22,146 @@ const ROWS_PER_INVOCATION = 10; // matches POOL_MAX so live concurrency 1–10 h
 const AI_WRITER_TIMEOUT_MS = 125_000;
 const STALE_PROCESSING_MS = 4 * 60_000;
 
+const LOCK_MS = 3 * 60_000;
+const TELEMETRY_LIMIT = 80;
+
+const textBytes = (value: string) => new TextEncoder().encode(value || "").length;
+
+const memorySnapshot = () => {
+  try {
+    const m = (Deno as any).memoryUsage?.();
+    if (!m) return null;
+    return {
+      rss: Math.round((m.rss || 0) / 1024 / 1024),
+      heapTotal: Math.round((m.heapTotal || 0) / 1024 / 1024),
+      heapUsed: Math.round((m.heapUsed || 0) / 1024 / 1024),
+      external: Math.round((m.external || 0) / 1024 / 1024),
+      unit: "MB",
+      sampledAt: new Date().toISOString(),
+    };
+  } catch (_) {
+    return null;
+  }
+};
+
+class TelemetryTracker {
+  state: any;
+  wallStart = Date.now();
+
+  constructor(initial: any, workerId: string) {
+    const network = initial?.network || {};
+    const cpu = initial?.cpu || {};
+    this.state = {
+      ...initial,
+      workerId,
+      startedAt: initial?.startedAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      activeWorkers: 0,
+      peakActiveWorkers: Math.max(initial?.peakActiveWorkers || 0, 0),
+      cpu: {
+        busyMs: Number(cpu.busyMs || 0),
+        wallMs: Number(cpu.wallMs || 0),
+        loadPct: Number(cpu.loadPct || 0),
+      },
+      memory: memorySnapshot() || initial?.memory || null,
+      network: {
+        requests: Number(network.requests || 0),
+        success: Number(network.success || 0),
+        failed: Number(network.failed || 0),
+        requestBytes: Number(network.requestBytes || 0),
+        responseBytes: Number(network.responseBytes || 0),
+        latencyMsTotal: Number(network.latencyMsTotal || 0),
+        avgLatencyMs: Number(network.avgLatencyMs || 0),
+        lastStatus: network.lastStatus || null,
+        statusCounts: network.statusCounts || {},
+        recent: Array.isArray(network.recent) ? network.recent.slice(-25) : [],
+      },
+      db: { writes: Number(initial?.db?.writes || 0) },
+      timeline: Array.isArray(initial?.timeline) ? initial.timeline.slice(-TELEMETRY_LIMIT) : [],
+      events: Array.isArray(initial?.events) ? initial.events.slice(-12) : [],
+    };
+  }
+
+  incDbWrite(n = 1) {
+    this.state.db.writes += n;
+  }
+
+  setActive(n: number) {
+    this.state.activeWorkers = n;
+    this.state.peakActiveWorkers = Math.max(this.state.peakActiveWorkers || 0, n);
+  }
+
+  addBusy(ms: number) {
+    this.state.cpu.busyMs += Math.max(0, ms);
+    this.state.cpu.wallMs += Math.max(1, Date.now() - this.wallStart);
+    this.wallStart = Date.now();
+    this.state.cpu.loadPct = Math.min(100, Math.round((this.state.cpu.busyMs / Math.max(1, this.state.cpu.wallMs)) * 100));
+  }
+
+  recordHttp(label: string, status: number, requestBytes: number, responseBytes: number, latencyMs: number) {
+    const n = this.state.network;
+    n.requests += 1;
+    if (status >= 200 && status < 400) n.success += 1;
+    else n.failed += 1;
+    n.requestBytes += requestBytes;
+    n.responseBytes += responseBytes;
+    n.latencyMsTotal += latencyMs;
+    n.avgLatencyMs = Math.round(n.latencyMsTotal / Math.max(1, n.requests));
+    n.lastStatus = status || "error";
+    n.statusCounts[String(n.lastStatus)] = (n.statusCounts[String(n.lastStatus)] || 0) + 1;
+    const event = { ts: Date.now(), label, status: n.lastStatus, latencyMs, requestBytes, responseBytes };
+    n.recent = [...(n.recent || []), event].slice(-25);
+    this.state.timeline = [...(this.state.timeline || []), { ts: Date.now(), ops: 1, label, status: n.lastStatus }].slice(-TELEMETRY_LIMIT);
+    this.state.events = [{ ts: Date.now(), kind: status >= 200 && status < 400 ? "ok" : "fail", msg: `${label} responded ${n.lastStatus} in ${latencyMs}ms` }, ...(this.state.events || [])].slice(0, 12);
+  }
+
+  recordProgress(completed: number, label: string) {
+    this.state.timeline = [...(this.state.timeline || []), { ts: Date.now(), ops: 1, completed, label, status: "progress" }].slice(-TELEMETRY_LIMIT);
+  }
+
+  snapshot() {
+    this.state.updatedAt = new Date().toISOString();
+    this.state.memory = memorySnapshot() || this.state.memory;
+    return this.state;
+  }
+}
+
+async function claimWorkerLock(admin: any, table: string, jobId: string, workerId: string) {
+  const nowIso = new Date().toISOString();
+  const lockUntil = new Date(Date.now() + LOCK_MS).toISOString();
+  const { data, error } = await admin
+    .from(table)
+    .update({ worker_id: workerId, worker_lock_until: lockUntil, updated_at: nowIso })
+    .eq("id", jobId)
+    .or(`worker_lock_until.is.null,worker_lock_until.lt.${nowIso}`)
+    .select("id");
+  if (error) throw error;
+  return Array.isArray(data) && data.length > 0;
+}
+
+async function updateBulkJob(admin: any, table: string, jobId: string, workerId: string, tracker: TelemetryTracker, patch: Record<string, unknown>) {
+  tracker.incDbWrite();
+  return admin.from(table).update({
+    ...patch,
+    telemetry: tracker.snapshot(),
+    worker_id: workerId,
+    worker_lock_until: new Date(Date.now() + LOCK_MS).toISOString(),
+    updated_at: new Date().toISOString(),
+  }).eq("id", jobId).eq("worker_id", workerId);
+}
+
+async function releaseWorkerLock(admin: any, table: string, jobId: string, workerId: string, tracker: TelemetryTracker, patch: Record<string, unknown>) {
+  tracker.incDbWrite();
+  return admin.from(table).update({
+    ...patch,
+    telemetry: tracker.snapshot(),
+    worker_id: null,
+    worker_lock_until: null,
+    updated_at: new Date().toISOString(),
+  }).eq("id", jobId).eq("worker_id", workerId);
+}
+
+
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const isRetryableAIWriterFailure = (status: number, text: string) =>
@@ -93,15 +233,16 @@ async function processOne(
   row: RowState,
   input: RowInput,
   cancelFlag: { v: boolean },
+  tracker: TelemetryTracker,
+  workerId: string,
 ) {
   const updateRow = async (patch: Partial<RowState>) => {
     Object.assign(row, patch);
     rowsRef.value = [...rowsRef.value];
-    await admin.from("bulk_college_jobs").update({
+    await updateBulkJob(admin, "bulk_college_jobs", job_id, workerId, tracker, {
       rows: rowsRef.value,
-      updated_at: new Date().toISOString(),
       current_activity: `Row ${row.index + 1}: ${row.name} — ${row.step || row.status}`,
-    }).eq("id", job_id);
+    });
   };
 
   try {
@@ -139,6 +280,8 @@ async function processOne(
       await updateRow({ step: attempt === 1 ? "researching" : `retrying AI writer (${attempt}/${AI_WRITER_MAX_ATTEMPTS})` });
 
       let aiRes: Response;
+      const aiRequestBody = JSON.stringify(aiBody);
+      const aiStarted = Date.now();
       try {
         aiRes = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/ai-college-writer`, {
         method: "POST",
@@ -147,9 +290,10 @@ async function processOne(
           Authorization: authHeader,
           apikey: ANON_KEY,
         },
-        body: JSON.stringify(aiBody),
+        body: aiRequestBody,
         }, AI_WRITER_TIMEOUT_MS);
       } catch (err) {
+        tracker.recordHttp("ai-college-writer", 0, textBytes(aiRequestBody), 0, Date.now() - aiStarted);
         lastAiError = err instanceof DOMException && err.name === "AbortError"
           ? `AI writer timed out after ${Math.round(AI_WRITER_TIMEOUT_MS / 1000)}s`
           : `AI writer request failed: ${err instanceof Error ? err.message : String(err)}`;
@@ -161,6 +305,7 @@ async function processOne(
       }
 
       const txt = await aiRes.text();
+      tracker.recordHttp("ai-college-writer", aiRes.status, textBytes(aiRequestBody), textBytes(txt), Date.now() - aiStarted);
       if (aiRes.ok) {
         try {
           data = JSON.parse(txt);
@@ -236,6 +381,7 @@ async function processOne(
       return;
     }
 
+    tracker.incDbWrite();
     const { data: inserted, error: insertErr } = await admin
       .from("colleges").insert(insertPayload).select("id").single();
     if (insertErr) throw insertErr;
@@ -253,11 +399,15 @@ async function processOne(
     const faqs = Array.isArray(data?.faqs) ? data.faqs : [];
     if (faqs.length > 0 && inserted?.id && !cancelFlag.v) {
       try {
-        await fetch(`${SUPABASE_URL}/functions/v1/auto-seo-engine`, {
+        const seoBody = JSON.stringify({ mode: "seed_faqs", contentType: "college", pageId: inserted.id, faqs });
+        const seoStarted = Date.now();
+        const seoRes = await fetch(`${SUPABASE_URL}/functions/v1/auto-seo-engine`, {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: authHeader, apikey: ANON_KEY, "x-worker-key": SERVICE_ROLE },
-          body: JSON.stringify({ mode: "seed_faqs", contentType: "college", pageId: inserted.id, faqs }),
+          body: seoBody,
         });
+        const seoTxt = await seoRes.text().catch(() => "");
+        tracker.recordHttp("auto-seo-engine", seoRes.status, textBytes(seoBody), textBytes(seoTxt), Date.now() - seoStarted);
       } catch (_) { /* non-fatal */ }
     }
 
@@ -276,155 +426,184 @@ async function runJob(job_id: string, authHeader: string) {
     console.error("Job not found", job_id, jobErr);
     return;
   }
-
-  const allRows: RowState[] = (job.rows as RowState[]).map((r) => {
-    if (r.status !== "processing") return r;
-    const started = r.attemptStartedAt ? new Date(r.attemptStartedAt).getTime() : 0;
-    const isStale = !started || Date.now() - started > STALE_PROCESSING_MS;
-    return isStale
-      ? { ...r, status: "pending", step: "requeued after stale worker", error: undefined, attemptStartedAt: undefined }
-      : r;
-  });
-  const inputsByIndex: Record<number, RowInput> = (job.request_inputs as any) || {};
-
-  await admin.from("bulk_college_jobs").update({
-    status: "running",
-    started_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    rows: allRows,
-    current_activity: "Starting…",
-  }).eq("id", job_id);
-
-  const pending = allRows
-    .filter(r => r.status === "pending")
-    .sort((a, b) => a.index - b.index)
-    .slice(0, ROWS_PER_INVOCATION);
-  const rowsRef = { value: allRows };
-
-  // Background poller — flips cancelFlag/pauseFlag based on live DB state
-  const cancelFlag = { v: false };
-  const pauseFlag = { v: !!(job as any).paused };
-  const concurrencyRef = { v: Math.max(1, Math.min(10, Number((job as any).concurrency) || 1)) };
-  let pollerStop = false;
-  const poller = (async () => {
-    while (!pollerStop && !cancelFlag.v) {
-      const { data: cur } = await admin.from("bulk_college_jobs")
-        .select("status,paused,concurrency").eq("id", job_id).maybeSingle();
-      if (cur?.status === "cancelled") { cancelFlag.v = true; break; }
-      pauseFlag.v = !!(cur as any)?.paused;
-      const c = Number((cur as any)?.concurrency);
-      if (c >= 1 && c <= 10) concurrencyRef.v = c;
-      await new Promise(r => setTimeout(r, 1500));
-    }
-  })();
-
-  // Dynamic concurrency pool — workers self-park when concurrency shrinks or job is paused
-  let cursor = 0;
-  const activeRef = { n: 0 };
-  const POOL_MAX = 10;
-  const workers = Array.from({ length: POOL_MAX }, async (_, slotIdx) => {
-    while (true) {
-      if (cancelFlag.v) return;
-      // Park slot if beyond live concurrency or paused
-      if (slotIdx >= concurrencyRef.v || pauseFlag.v) {
-        await new Promise(r => setTimeout(r, 1500));
-        continue;
-      }
-      const myIdx = cursor++;
-      if (myIdx >= pending.length) return;
-      const row = pending[myIdx];
-      const input = inputsByIndex[row.index];
-      if (!input) {
-        row.status = "failed";
-        row.error = "Missing input";
-        continue;
-      }
-      await processOne(admin, authHeader, job_id, allRows, rowsRef, row, input, cancelFlag);
-
-      // Update aggregate counters
-      const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
-      const failed = rowsRef.value.filter(r => r.status === "failed").length;
-      const duplicates = rowsRef.value.filter(r => r.status === "duplicate").length;
-      const completed = succeeded + failed + duplicates;
-      await admin.from("bulk_college_jobs").update({
-        succeeded, failed, duplicates_skipped: duplicates, completed, updated_at: new Date().toISOString(),
-      }).eq("id", job_id);
-    }
-  });
-
-  await Promise.all(workers);
-  pollerStop = true;
-  await poller.catch(() => {});
-
-  if (cancelFlag.v) {
-    // Mark any still-pending rows as cancelled
-    for (const r of rowsRef.value) {
-      if (r.status === "pending" || r.status === "processing") {
-        r.status = "failed";
-        (r as any).step = "cancelled";
-        r.error = "Cancelled by admin";
-        r.attemptStartedAt = undefined;
-      }
-    }
-    const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
-    const failed = rowsRef.value.filter(r => r.status === "failed").length;
-    const duplicates = rowsRef.value.filter(r => r.status === "duplicate").length;
-    await admin.from("bulk_college_jobs").update({
-      rows: rowsRef.value,
-      status: "cancelled",
-      succeeded, failed, duplicates_skipped: duplicates,
-      completed: succeeded + failed + duplicates,
-      finished_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      current_activity: "Cancelled by admin",
-    }).eq("id", job_id);
+  if (["completed", "cancelled"].includes(job.status)) return;
+  if ((job as any).paused) {
+    await admin.from("bulk_college_jobs").update({ status: "pending", current_activity: "Paused — waiting for admin resume", updated_at: new Date().toISOString() }).eq("id", job_id);
     return;
   }
 
-  const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
-  const failed = rowsRef.value.filter(r => r.status === "failed").length;
-  const duplicates = rowsRef.value.filter(r => r.status === "duplicate").length;
-  const completed = succeeded + failed + duplicates;
-  const remaining = rowsRef.value.filter(r => r.status === "pending").length;
+  const workerId = crypto.randomUUID();
+  const claimed = await claimWorkerLock(admin, "bulk_college_jobs", job_id, workerId);
+  if (!claimed) {
+    console.log("bulk college worker already active", job_id);
+    return;
+  }
 
-  if (remaining > 0) {
-    await admin.from("bulk_college_jobs").update({
-      status: "pending",
+  const tracker = new TelemetryTracker((job as any).telemetry, workerId);
+
+  try {
+    const allRows: RowState[] = (job.rows as RowState[]).map((r) => {
+      if (r.status !== "processing") return r;
+      const started = r.attemptStartedAt ? new Date(r.attemptStartedAt).getTime() : 0;
+      const isStale = !started || Date.now() - started > STALE_PROCESSING_MS;
+      return isStale
+        ? { ...r, status: "pending", step: "requeued after stale worker", error: undefined, attemptStartedAt: undefined }
+        : r;
+    });
+    const inputsByIndex: Record<number, RowInput> = (job.request_inputs as any) || {};
+
+    await updateBulkJob(admin, "bulk_college_jobs", job_id, workerId, tracker, {
+      status: "running",
+      started_at: job.started_at || new Date().toISOString(),
+      rows: allRows,
+      current_activity: "Worker claimed queue…",
+    });
+
+    const pending = allRows
+      .filter(r => r.status === "pending")
+      .sort((a, b) => a.index - b.index)
+      .slice(0, ROWS_PER_INVOCATION);
+    const rowsRef = { value: allRows };
+
+    const cancelFlag = { v: false };
+    const pauseFlag = { v: false };
+    const concurrencyRef = { v: Math.max(1, Math.min(10, Number((job as any).concurrency) || 1)) };
+    let pollerStop = false;
+    const poller = (async () => {
+      while (!pollerStop && !cancelFlag.v) {
+        const { data: cur } = await admin.from("bulk_college_jobs")
+          .select("status,paused,concurrency").eq("id", job_id).maybeSingle();
+        if (cur?.status === "cancelled") { cancelFlag.v = true; break; }
+        pauseFlag.v = !!(cur as any)?.paused;
+        const c = Number((cur as any)?.concurrency);
+        if (c >= 1 && c <= 10) concurrencyRef.v = c;
+        await sleep(1500);
+      }
+    })();
+
+    let cursor = 0;
+    const activeRef = { n: 0 };
+    const slots = Math.max(1, Math.min(10, concurrencyRef.v));
+    const workers = Array.from({ length: slots }, async (_, slotIdx) => {
+      while (true) {
+        if (cancelFlag.v || pauseFlag.v) return;
+        if (slotIdx >= concurrencyRef.v) return;
+        const myIdx = cursor++;
+        if (myIdx >= pending.length) return;
+        const row = pending[myIdx];
+        const input = inputsByIndex[row.index];
+        if (!input) {
+          row.status = "failed";
+          row.error = "Missing input";
+          continue;
+        }
+        activeRef.n += 1;
+        tracker.setActive(activeRef.n);
+        const busyStarted = Date.now();
+        try {
+          await processOne(admin, authHeader, job_id, allRows, rowsRef, row, input, cancelFlag, tracker, workerId);
+        } finally {
+          tracker.addBusy(Date.now() - busyStarted);
+          activeRef.n = Math.max(0, activeRef.n - 1);
+          tracker.setActive(activeRef.n);
+        }
+
+        const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
+        const failed = rowsRef.value.filter(r => r.status === "failed").length;
+        const duplicates = rowsRef.value.filter(r => r.status === "duplicate").length;
+        const completed = succeeded + failed + duplicates;
+        tracker.recordProgress(completed, row.name);
+        await updateBulkJob(admin, "bulk_college_jobs", job_id, workerId, tracker, {
+          succeeded, failed, duplicates_skipped: duplicates, completed,
+        });
+      }
+    });
+
+    await Promise.all(workers);
+    pollerStop = true;
+    await poller.catch(() => {});
+
+    const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
+    const failed = rowsRef.value.filter(r => r.status === "failed").length;
+    const duplicates = rowsRef.value.filter(r => r.status === "duplicate").length;
+    const completed = succeeded + failed + duplicates;
+
+    if (cancelFlag.v) {
+      for (const r of rowsRef.value) {
+        if (r.status === "pending" || r.status === "processing") {
+          r.status = "failed";
+          (r as any).step = "cancelled";
+          r.error = "Cancelled by admin";
+          r.attemptStartedAt = undefined;
+        }
+      }
+      const failedAfterCancel = rowsRef.value.filter(r => r.status === "failed").length;
+      await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
+        rows: rowsRef.value,
+        status: "cancelled",
+        succeeded, failed: failedAfterCancel, duplicates_skipped: duplicates,
+        completed: succeeded + failedAfterCancel + duplicates,
+        finished_at: new Date().toISOString(),
+        current_activity: "Cancelled by admin",
+      });
+      return;
+    }
+
+    const { data: latest } = await admin.from("bulk_college_jobs")
+      .select("paused,status").eq("id", job_id).maybeSingle();
+    if ((latest as any)?.paused) {
+      await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
+        status: "pending",
+        rows: rowsRef.value,
+        succeeded, failed, duplicates_skipped: duplicates, completed,
+        current_activity: "Paused — worker parked safely",
+      });
+      return;
+    }
+
+    const remaining = rowsRef.value.filter(r => r.status === "pending").length;
+
+    if (remaining > 0) {
+      await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
+        status: "pending",
+        rows: rowsRef.value,
+        succeeded,
+        failed,
+        duplicates_skipped: duplicates,
+        completed,
+        current_activity: `Continuing… ${remaining} colleges remaining`,
+      });
+
+      EdgeRuntime.waitUntil(fetch(`${SUPABASE_URL}/functions/v1/bulk-college-create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: authHeader,
+          apikey: ANON_KEY,
+          "x-worker-key": SERVICE_ROLE,
+        },
+        body: JSON.stringify({ action: "resume", job_id }),
+      }).catch((e) => console.error("Failed to schedule next bulk college chunk", e)));
+      return;
+    }
+
+    await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
+      status: "completed",
+      finished_at: new Date().toISOString(),
       rows: rowsRef.value,
       succeeded,
       failed,
       duplicates_skipped: duplicates,
       completed,
-      updated_at: new Date().toISOString(),
-      current_activity: `Continuing… ${remaining} colleges remaining`,
-    }).eq("id", job_id);
-
-    // Start the next small chunk as a fresh invocation so long batches do not hit runtime limits.
-    // @ts-ignore - EdgeRuntime is provided by Supabase Edge runtime
-    EdgeRuntime.waitUntil(fetch(`${SUPABASE_URL}/functions/v1/bulk-college-create`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: authHeader,
-        apikey: ANON_KEY,
-        "x-worker-key": SERVICE_ROLE,
-      },
-      body: JSON.stringify({ action: "resume", job_id }),
-    }).catch((e) => console.error("Failed to schedule next bulk college chunk", e)));
-    return;
+      current_activity: "All done",
+    });
+  } catch (err) {
+    console.error("bulk college runJob failed", err);
+    await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
+      status: "pending",
+      current_activity: `Worker recovered from error: ${err instanceof Error ? err.message : String(err)}`,
+    }).catch(() => {});
   }
-
-  await admin.from("bulk_college_jobs").update({
-    status: "completed",
-    finished_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    rows: rowsRef.value,
-    succeeded,
-    failed,
-    duplicates_skipped: duplicates,
-    completed,
-    current_activity: "All done",
-  }).eq("id", job_id);
 }
 
 Deno.serve(async (req) => {
@@ -534,6 +713,64 @@ Deno.serve(async (req) => {
       // @ts-ignore
       EdgeRuntime.waitUntil(runJob(job_id, isInternalResume ? `Bearer ${ANON_KEY}` : authHeader));
       return new Response(JSON.stringify({ ok: true }), { status: 202, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
+
+    if (action === "auto_retry_stale") {
+      const job_id = body.job_id;
+      const thresholdMs = Math.max(30_000, Number(body.threshold_ms) || 60_000);
+      if (!job_id) return new Response(JSON.stringify({ error: "job_id required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+      const { data: jobRow } = await admin.from("bulk_college_jobs")
+        .select("id,status,rows,updated_at,paused").eq("id", job_id).maybeSingle();
+      if (!jobRow) return new Response(JSON.stringify({ error: "Job not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
+      const cutoff = Date.now() - thresholdMs;
+      const rows: any[] = Array.isArray(jobRow.rows) ? jobRow.rows : [];
+      let rowsRequeued = 0;
+      for (const r of rows) {
+        if (r.status !== "processing") continue;
+        const started = r.attemptStartedAt ? Date.parse(r.attemptStartedAt) : 0;
+        const staleByJob = jobRow.updated_at ? Date.parse(jobRow.updated_at) < cutoff : false;
+        if (!started || started < cutoff || staleByJob) {
+          r.status = "pending";
+          r.step = "requeued by Retry Stuck";
+          r.error = undefined;
+          r.attemptStartedAt = undefined;
+          rowsRequeued++;
+        }
+      }
+
+      const pendingRows = rows.filter((r) => r.status === "pending").length;
+      await admin.from("bulk_college_jobs").update({
+        rows,
+        status: pendingRows > 0 ? "pending" : jobRow.status,
+        paused: false,
+        current_activity: rowsRequeued > 0
+          ? `Retry Stuck: re-queued ${rowsRequeued} stale college row(s)`
+          : `Retry Stuck: no stale rows, worker resumed with ${pendingRows} pending row(s)`,
+        updated_at: new Date().toISOString(),
+      }).eq("id", job_id);
+
+      if (pendingRows > 0) {
+        EdgeRuntime.waitUntil(fetch(`${SUPABASE_URL}/functions/v1/bulk-college-create`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: authHeader || `Bearer ${ANON_KEY}`,
+            apikey: ANON_KEY,
+            "x-worker-key": SERVICE_ROLE,
+          },
+          body: JSON.stringify({ action: "resume", job_id }),
+        }).catch((e) => console.error("Failed to resume after college auto-retry", e)));
+      }
+
+      return new Response(JSON.stringify({
+        ok: true,
+        rows_requeued: rowsRequeued,
+        pending_rows: pendingRows,
+        threshold_seconds: Math.round(thresholdMs / 1000),
+      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     return new Response(JSON.stringify({ error: "Unknown action" }), {
