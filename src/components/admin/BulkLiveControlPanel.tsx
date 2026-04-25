@@ -117,6 +117,7 @@ const BulkLiveControlPanel = ({
 }: Props) => {
   const [draftConcurrency, setDraftConcurrency] = useState(concurrency);
   const [saving, setSaving] = useState(false);
+  const [waking, setWaking] = useState(false);
   const [browserCpu, setBrowserCpu] = useState(0); // 0..100
   const [tickRate, setTickRate] = useState(0); // throughput units/min approx
   const processedUnits = Math.max(0, Number(processed ?? (succeeded + failed)));
@@ -322,6 +323,34 @@ const BulkLiveControlPanel = ({
     });
   };
 
+  const wakeWorkersNow = async () => {
+    setWaking(true);
+    const fn = table === "bulk_college_jobs" ? "bulk-college-create" : "bulk-section-create";
+    try {
+      const { error: updateError } = await (supabase as any).from(table).update({
+        status: "running",
+        paused: false,
+        worker_lock_until: null,
+        current_activity: "Manual wake requested — worker slots are restarting now",
+        updated_at: new Date().toISOString(),
+      }).eq("id", jobId);
+
+      if (updateError) throw updateError;
+
+      const { error: invokeError } = await supabase.functions.invoke(fn, {
+        body: { action: "resume", job_id: jobId, wake: true },
+      });
+
+      if (invokeError) throw invokeError;
+      await onRefresh?.();
+      toast({ title: "Wake request sent", description: "Workers are being resumed now. Idle slots should start picking pending work immediately." });
+    } catch (e: any) {
+      toast({ title: "Couldn't wake workers", description: e?.message || "Resume request failed", variant: "destructive" });
+    } finally {
+      setWaking(false);
+    }
+  };
+
   const stopAll = async () => {
     const ok = window.confirm(
       "STOP ALL JOBS?\n\nThis will pause this job AND every other running bulk job (colleges + sections) immediately so the AI gateway and database can cool down.\n\nContinue?"
@@ -352,6 +381,9 @@ const BulkLiveControlPanel = ({
             </Badge>
           </CardTitle>
           <div className="flex items-center gap-2">
+            <Button size="sm" onClick={wakeWorkersNow} disabled={waking || isTerminal} className="h-7 gap-1.5">
+              <Zap className={`w-3.5 h-3.5 ${waking ? "animate-pulse" : ""}`} /> {waking ? "Waking…" : "Wake workers now"}
+            </Button>
             <Button size="sm" variant="outline" onClick={onRefresh} disabled={!!refreshing} className="h-7 gap-1.5">
               <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} /> Refresh / Resume
             </Button>
@@ -495,6 +527,16 @@ const BulkLiveControlPanel = ({
             <div className="text-[10px] text-muted-foreground mt-1.5">
               Applies on the next batch tick (~5s). Already-running items always finish.
             </div>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={wakeWorkersNow}
+              disabled={waking || isTerminal}
+              className="mt-3 w-full gap-1.5"
+            >
+              <Zap className={`w-4 h-4 ${waking ? "animate-pulse" : ""}`} />
+              {waking ? "Waking workers…" : "Wake workers now"}
+            </Button>
           </div>
 
           {/* Pause switch */}
