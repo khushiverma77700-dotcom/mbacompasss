@@ -193,7 +193,7 @@ const BulkLiveControlPanel = ({
 
   // Per-second ops history for heatmap — driven by real worker telemetry events.
   const [opsHistory, setOpsHistory] = useState<number[]>(Array.from({ length: 60 }, () => 0));
-  const lastTotalRef = useRef(succeeded + failed);
+  const lastTotalRef = useRef(processedUnits);
   useEffect(() => {
     const buildBins = () => {
       const now = Date.now();
@@ -578,10 +578,10 @@ const BulkLiveControlPanel = ({
               <span className="font-mono text-xs">{progressPct}%</span>
             </div>
             <div className="relative h-3 rounded-full bg-muted overflow-hidden">
-              <div className="absolute inset-y-0 left-0 bg-emerald-500 transition-all" style={{ width: `${total > 0 ? (succeeded / total) * 100 : 0}%` }} />
-              <div className="absolute inset-y-0 bg-destructive transition-all" style={{ left: `${total > 0 ? (succeeded / total) * 100 : 0}%`, width: `${total > 0 ? (failed / total) * 100 : 0}%` }} />
+              <div className="absolute inset-y-0 left-0 bg-emerald-500 transition-all" style={{ width: `${totalUnits > 0 ? (succeeded / totalUnits) * 100 : 0}%` }} />
+              <div className="absolute inset-y-0 bg-destructive transition-all" style={{ left: `${totalUnits > 0 ? (succeeded / totalUnits) * 100 : 0}%`, width: `${totalUnits > 0 ? (failed / totalUnits) * 100 : 0}%` }} />
               {!paused && active > 0 && (
-                <div className="absolute inset-y-0 bg-primary/40 animate-pulse" style={{ left: `${total > 0 ? ((succeeded + failed) / total) * 100 : 0}%`, width: `${total > 0 ? (active / total) * 100 : 0}%` }} />
+                <div className="absolute inset-y-0 bg-primary/40 animate-pulse" style={{ left: `${totalUnits > 0 ? (processedUnits / totalUnits) * 100 : 0}%`, width: `${totalUnits > 0 ? (active / totalUnits) * 100 : 0}%` }} />
               )}
             </div>
             <div className="grid grid-cols-4 gap-2 mt-3 text-[10px]">
@@ -708,7 +708,7 @@ const BulkLiveControlPanel = ({
           <span className="font-mono">{jobId.slice(0, 8)}</span>
           <span className="text-muted-foreground">·</span>
           <HardDrive className="w-3 h-3 text-muted-foreground" />
-          <span className="font-mono">{succeeded + failed}/{total}</span>
+          <span className="font-mono">{processedUnits}/{totalUnits}</span>
           <span className="text-muted-foreground">processed</span>
           <span className="ml-auto text-muted-foreground font-mono">
             tick {((Date.now() / 1000) | 0) % 1000}
