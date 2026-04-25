@@ -313,6 +313,7 @@ async function generateOneSection(
         "Content-Type": "application/json",
         Authorization: authHeader,
         apikey: ANON_KEY,
+        "X-AI-Provider": aiProvider,
       },
       body: requestBody,
         }, AI_SECTION_TIMEOUT_MS, cancelFlag);
