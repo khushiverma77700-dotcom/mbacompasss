@@ -653,6 +653,7 @@ async function runJob(job_id: string, authHeader: string) {
       return;
     }
 
+    tracker.addHealth("completed", "All rows completed", { job_id });
     await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
       status: "completed",
       finished_at: new Date().toISOString(),
@@ -660,7 +661,6 @@ async function runJob(job_id: string, authHeader: string) {
       ...collegeMetricPatch(finalMetrics),
       current_activity: "All done",
     });
-    tracker.addHealth("completed", "All rows completed", { job_id });
   } catch (err) {
     console.error("bulk college runJob failed", err);
     await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
