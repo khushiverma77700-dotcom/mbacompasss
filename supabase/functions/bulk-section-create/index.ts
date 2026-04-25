@@ -246,6 +246,8 @@ async function processCollege(
       row.status = anyFailed ? "failed" : "succeeded";
       if (anyFailed) row.error = `${row.steps.filter(s => s.status === "failed").length} section(s) failed`;
       row.finishedAt = new Date().toISOString();
+      rowsRef.value = [...rowsRef.value];
+      await persist();
       return;
     }
 
