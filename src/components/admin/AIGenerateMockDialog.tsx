@@ -228,15 +228,22 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
               </div>
               <div>
                 <Label className="text-xs">MCQs per set</Label>
-                <Input type="number" min={0} value={mcq} onChange={(e) => setMcq(parseInt(e.target.value) || 0)} />
+                <Input type="number" min={0} max={perSet} value={mcq} onChange={(e) => onMcqChange(parseInt(e.target.value) || 0)} />
               </div>
               <div>
                 <Label className="text-xs">TITA per set</Label>
-                <Input type="number" min={0} value={tita} onChange={(e) => setTita(parseInt(e.target.value) || 0)} />
+                <Input type="number" min={0} max={perSet} value={tita} onChange={(e) => onTitaChange(parseInt(e.target.value) || 0)} />
               </div>
             </div>
-            <p className="text-[11px] text-muted-foreground -mt-2">
-              MCQ + TITA must equal {perSet}. Currently: <strong>{mcq + tita}</strong>
+            <div className="flex items-center justify-between -mt-2">
+              <p className="text-[11px] text-muted-foreground">
+                MCQ + TITA must equal {perSet}. Currently: <strong className={mcq + tita === perSet ? "text-emerald-600" : "text-destructive"}>{mcq + tita}</strong>
+              </p>
+              {mcq + tita !== perSet && (
+                <Button type="button" size="sm" variant="outline" className="h-7 text-xs" onClick={autoBalance}>
+                  Auto-balance
+                </Button>
+              )}
             </p>
 
             <div className="grid grid-cols-2 gap-3">
