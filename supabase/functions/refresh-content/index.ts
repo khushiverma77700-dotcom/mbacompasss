@@ -69,7 +69,8 @@ async function callAI(systemPrompt: string, userPrompt: string, schema: any): Pr
       ],
       tools: [{ type: "function", function: { name: "emit", description: "Emit refreshed fields", parameters: schema } }],
       tool_choice: { type: "function", function: { name: "emit" } },
-    });
+      max_tokens: 6000,
+    }, { feature: "refresh-content", purpose: "long" });
   if (!resp.ok) {
     const t = await resp.text();
     throw new Error(`AI call failed ${resp.status}: ${t.slice(0, 500)}`);

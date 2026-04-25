@@ -75,6 +75,38 @@ interface CallOptions {
    * Pick is dashboard-driven for bulk jobs.
    */
   provider?: "gemini" | "lovable";
+  /**
+   * Cost-routing hint. The gateway automatically picks the cheapest model that
+   * preserves output quality for that purpose. Caller's `body.model` is only
+   * used when purpose is omitted or set to "long".
+   *
+   *   "short"      → ~200-token rewrites, slugs, classification, meta tags. → flash-lite (~4× cheaper)
+   *   "structured" → tool-calling JSON extraction with small schemas.        → flash-lite
+   *   "long"       → multi-paragraph HTML, descriptions, narratives.         → flash (default quality)
+   *   "premium"    → reserved; uses caller's model as-is.
+   *
+   * Routing only kicks in when the caller passes a Gemini Flash-class model
+   * (or no model). Pro / image / non-Gemini models are never downgraded.
+   */
+  purpose?: "short" | "structured" | "long" | "premium";
+}
+
+// Cost-router: picks the cheapest Gemini model that preserves output quality.
+// Only downgrades from Flash → Flash-lite. Never touches Pro, image models,
+// non-Gemini models, or callers that explicitly opt into "premium".
+function routeModelForPurpose(model: string | undefined, purpose?: CallOptions["purpose"]): string {
+  const requested = (model || "").trim();
+  if (!purpose || purpose === "long" || purpose === "premium") return requested || "google/gemini-2.5-flash";
+
+  // Only auto-downgrade Flash-class models. Pro stays Pro, image stays image.
+  const isFlashClass =
+    requested === "" ||
+    /flash(?!-lite)/.test(requested.toLowerCase()) && !/image/.test(requested.toLowerCase());
+  if (!isFlashClass) return requested;
+
+  // Map to flash-lite, keeping the same provider-prefix style the caller used.
+  if (requested.startsWith("google/")) return "google/gemini-2.5-flash-lite";
+  return "gemini-2.5-flash-lite";
 }
 
 const LOVABLE_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
@@ -91,7 +123,12 @@ interface LogParams {
 }
 
 export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Promise<Response> {
-  const { signal, feature = "unknown", userId = null, maxRetries = 2, skipLog = false, provider = "gemini" } = opts;
+  const { signal, feature = "unknown", userId = null, maxRetries = 2, skipLog = false, provider = "gemini", purpose } = opts;
+  // Cost router: rewrite body.model based on purpose before any downstream logic uses it.
+  const routedModel = routeModelForPurpose(body.model, purpose);
+  if (routedModel !== body.model) {
+    body = { ...body, model: routedModel };
+  }
   const isStream = body.stream === true;
   const startedAt = Date.now();
 
