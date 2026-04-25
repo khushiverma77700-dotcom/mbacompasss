@@ -1,6 +1,5 @@
 import { encode } from "https://deno.land/std@0.168.0/encoding/hex.ts";
-// @ts-ignore deno npm specifier resolved at deploy time
-import Stripe from "npm:stripe@18.5.0";
+import Stripe from "https://esm.sh/stripe@18.5.0?target=denonext";
 
 const getEnv = (key: string): string => {
   const value = Deno.env.get(key);
