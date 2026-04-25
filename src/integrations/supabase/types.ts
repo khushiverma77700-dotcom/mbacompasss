@@ -975,10 +975,14 @@ export type Database = {
           created_at: string
           data: Json | null
           id: string
+          is_active: boolean
+          parent_section_id: string | null
           section_type: string
           sort_order: number | null
+          source: string
           title: string | null
           updated_at: string
+          version: string
         }
         Insert: {
           college_id: string
@@ -986,10 +990,14 @@ export type Database = {
           created_at?: string
           data?: Json | null
           id?: string
+          is_active?: boolean
+          parent_section_id?: string | null
           section_type: string
           sort_order?: number | null
+          source?: string
           title?: string | null
           updated_at?: string
+          version?: string
         }
         Update: {
           college_id?: string
@@ -997,10 +1005,14 @@ export type Database = {
           created_at?: string
           data?: Json | null
           id?: string
+          is_active?: boolean
+          parent_section_id?: string | null
           section_type?: string
           sort_order?: number | null
+          source?: string
           title?: string | null
           updated_at?: string
+          version?: string
         }
         Relationships: [
           {
@@ -1008,6 +1020,13 @@ export type Database = {
             columns: ["college_id"]
             isOneToOne: false
             referencedRelation: "colleges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "college_sections_parent_section_id_fkey"
+            columns: ["parent_section_id"]
+            isOneToOne: false
+            referencedRelation: "college_sections"
             referencedColumns: ["id"]
           },
         ]
