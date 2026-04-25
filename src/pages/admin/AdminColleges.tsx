@@ -369,7 +369,14 @@ const AdminColleges = () => {
     <div>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h1 className="font-heading text-2xl font-bold text-foreground">Manage Colleges</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            onClick={() => navigate("/admin/colleges/bulk-create")}
+            className="border-emerald-500/40 text-emerald-700 hover:bg-emerald-50"
+          >
+            <Upload className="w-4 h-4 mr-2" /> Bulk Create (CSV + AI)
+          </Button>
           <Button
             variant="outline"
             onClick={() => navigate("/admin/colleges/generate-ai")}
