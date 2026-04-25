@@ -7,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft, Upload, Sparkles, FileSpreadsheet, Download, AlertCircle,
-  CheckCircle2, XCircle, Loader2, Copy, ExternalLink, Pause,
+  CheckCircle2, XCircle, Loader2, Copy, ExternalLink, Pause, Ban, RotateCw,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
