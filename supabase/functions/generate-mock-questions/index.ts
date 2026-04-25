@@ -455,8 +455,35 @@ Deno.serve(async (req) => {
         finished_at: new Date().toISOString(),
       }).eq("id", genId);
     }
+     } catch (bgErr) {
+       const bgMsg = bgErr instanceof Error ? bgErr.message : String(bgErr);
+       console.error("[generate-mock-questions] background error:", bgMsg);
+       if (genId) {
+         await admin.from("ai_mock_generations").update({
+           status: "failed",
+           error_message: bgMsg,
+           finished_at: new Date().toISOString(),
+         }).eq("id", genId);
+       }
+     }
+    };
 
-    return jsonResp(200, { ok: true, tests: createdTests, stats, generation_id: genId });
+    // Kick off the background task. EdgeRuntime.waitUntil keeps the worker
+    // alive after the response is sent.
+    // @ts-ignore - EdgeRuntime is available in Supabase Edge Functions
+    if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
+      // @ts-ignore
+      EdgeRuntime.waitUntil(runGeneration());
+    } else {
+      runGeneration();
+    }
+
+    return jsonResp(202, {
+      ok: true,
+      status: "running",
+      generation_id: genId,
+      message: "Generation started. Poll ai_mock_generations for status.",
+    });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("[generate-mock-questions] error:", msg);
