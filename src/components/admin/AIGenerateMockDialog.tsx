@@ -244,7 +244,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                   Auto-balance
                 </Button>
               )}
-            </p>
+            </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
