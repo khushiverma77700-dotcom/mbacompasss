@@ -1,4 +1,5 @@
 import { encode } from "https://deno.land/std@0.168.0/encoding/hex.ts";
+// @ts-ignore deno npm specifier resolved at deploy time
 import Stripe from "npm:stripe@18.5.0";
 
 const getEnv = (key: string): string => {
