@@ -321,7 +321,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
           { role: "user", content: user },
         ],
         max_tokens: maxTokens,
-      });
+      }, { feature: "ai-college-writer", provider });
 
       if (!res.ok) {
         const txt = await res.text();
