@@ -26,7 +26,9 @@ import MobileActionBar from "@/components/mobile/MobileActionBar";
 import FloatingTOC from "@/components/mobile/FloatingTOC";
 import ProgrammePortfolioTable from "@/components/college/ProgrammePortfolioTable";
 import { useProgrammeCourses } from "@/hooks/useProgrammeCourses";
-import { Share2, Phone } from "lucide-react";
+import { Share2, Phone, Sparkles } from "lucide-react";
+import AIExtensionBlock from "@/components/college/AIExtensionBlock";
+import CollegeSectionNav, { type NavItem } from "@/components/college/CollegeSectionNav";
 
 // ── Fallback data used when no DB sections exist ──
 const fallbackRatingAspects = [
@@ -55,26 +57,44 @@ const CollegeDetailPage = () => {
   const galleryRef = useRef<ReturnType<typeof setInterval>>();
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // Fetch college sections from DB
+  // Fetch verified MBA programme portfolio for this college
+  const { data: programmes = [] } = useProgrammeCourses(college?.id);
+
+  // Fetch college sections from DB (only active rows render publicly)
   const { data: dbSections } = useQuery({
     queryKey: ["college-sections", college?.id],
     queryFn: async () => {
-      const { data } = await supabase.from("college_sections").select("*").eq("college_id", college!.id).order("sort_order");
+      const { data } = await supabase
+        .from("college_sections")
+        .select("*")
+        .eq("college_id", college!.id)
+        .eq("is_active", true)
+        .order("sort_order");
       return data || [];
     },
     enabled: !!college?.id,
   });
 
-  // Fetch verified MBA programme portfolio for this college
-  const { data: programmes = [] } = useProgrammeCourses(college?.id);
-
-  // Helper to get section data
-  const getSection = (type: string) => dbSections?.find((s: any) => s.section_type === type);
+  // Helpers — original content is preferred (preserves SEO authority).
+  // AI versions are exposed separately so we can render them as ADDITIONAL extension blocks.
+  const getOriginalSection = (type: string) =>
+    dbSections?.find((s: any) => s.section_type === type && (s.version === "original" || !s.version));
+  const getAISection = (type: string) =>
+    dbSections?.find((s: any) => s.section_type === type && s.version && s.version !== "original");
+  // For data fields (structured data like recruiters, courses) we prefer original; if missing fall back to AI.
+  const getSection = (type: string) => getOriginalSection(type) || getAISection(type);
   const getSectionData = (type: string) => {
     const sec = getSection(type);
-    return sec?.data as any || {};
+    return (sec?.data as any) || {};
   };
   const getSectionContent = (type: string) => getSection(type)?.content || "";
+  const getAIExtension = (type: string) => {
+    const ai = getAISection(type);
+    if (!ai) return null;
+    // Only show as "extension" when an original also exists. Otherwise it's already the primary content.
+    const hasOriginal = !!getOriginalSection(type);
+    return hasOriginal ? ai : null;
+  };
 
   const scrollToSection = useCallback((sectionId: string) => {
     if (!user) { setShowLoginDialog(true); return; }
@@ -643,6 +663,7 @@ const CollegeDetailPage = () => {
                       ))}
                     </ul>
                   </div>
+                  <AIExtensionBlock section={getAIExtension("admission")} extensionLabel="Detailed Admission Guide" />
                 </CardContent>
               </Card>
             </div>
@@ -697,6 +718,7 @@ const CollegeDetailPage = () => {
                   {getSectionContent("placements") && (
                     <div className="mt-4 ai-content max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: getSectionContent("placements") }} />
                   )}
+                  <AIExtensionBlock section={getAIExtension("placements")} extensionLabel="Placement Insights & Trends" />
                 </CardContent>
               </Card>
             </div>
@@ -755,6 +777,7 @@ const CollegeDetailPage = () => {
                   {getSectionContent("cutoff") && (
                     <div className="mt-4 ai-content max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: getSectionContent("cutoff") }} />
                   )}
+                  <AIExtensionBlock section={getAIExtension("cutoff")} extensionLabel="Cut-off Trends & Analysis" />
                 </CardContent>
               </Card>
             </div>
@@ -800,6 +823,7 @@ const CollegeDetailPage = () => {
                       </div>
                     </div>
                   )}
+                  <AIExtensionBlock section={getAIExtension("rankings")} extensionLabel="Rankings Context & Recognition" />
                 </CardContent>
               </Card>
             </div>
@@ -848,6 +872,7 @@ const CollegeDetailPage = () => {
                       </div>
                     </div>
                   ))}
+                  <AIExtensionBlock section={getAIExtension("reviews")} extensionLabel="Aggregated Student Sentiment" />
                 </CardContent>
               </Card>
             </div>
@@ -897,6 +922,7 @@ const CollegeDetailPage = () => {
                       </div>
                     ))}
                   </div>
+                  <AIExtensionBlock section={getAIExtension("scholarships")} extensionLabel="Scholarship Eligibility Guide" />
                 </CardContent>
               </Card>
             </div>
@@ -924,6 +950,7 @@ const CollegeDetailPage = () => {
                       </div>
                     ))}
                   </div>
+                  <AIExtensionBlock section={getAIExtension("faculty")} extensionLabel="Faculty & Research Strengths" />
                 </CardContent>
               </Card>
             </div>
@@ -955,6 +982,7 @@ const CollegeDetailPage = () => {
                   {getSectionContent("hostel") && (
                     <div className="mt-4 ai-content max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: getSectionContent("hostel") }} />
                   )}
+                  <AIExtensionBlock section={getAIExtension("hostel")} extensionLabel="Campus Life Deep-Dive" />
                 </CardContent>
               </Card>
             </div>
@@ -1012,7 +1040,25 @@ const CollegeDetailPage = () => {
           </div>
 
           {/* ===== Premium Sidebar ===== */}
-          <div className="space-y-4 lg:sticky lg:top-32 lg:self-start">
+          <div className="space-y-4 lg:self-start">
+            {/* Sticky on-page navigation — helps users (and Google) discover all 14+ sections */}
+            <CollegeSectionNav
+              items={[
+                { id: "overview", label: "Overview", icon: <BookOpen className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("why_join") },
+                { id: "courses", label: "Courses & Fees", icon: <GraduationCap className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("courses_fees") },
+                { id: "admission", label: "Admissions", icon: <CheckCircle className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("admission") },
+                { id: "placements", label: "Placements", icon: <TrendingUp className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("placements") },
+                { id: "cutoff", label: "Cut-offs", icon: <Award className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("cutoff") },
+                { id: "rankings", label: "Rankings", icon: <Medal className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("rankings") },
+                { id: "reviews", label: "Reviews", icon: <MessageSquare className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("reviews") },
+                { id: "gallery", label: "Gallery", icon: <Image className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("gallery") },
+                { id: "scholarships", label: "Scholarships", icon: <Banknote className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("scholarships") },
+                { id: "faculty", label: "Faculty", icon: <Users className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("faculty") },
+                { id: "hostel", label: "Hostel & Campus", icon: <Home className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("hostel") },
+                { id: "qa", label: "FAQs", icon: <HelpCircle className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("qa") },
+                { id: "news", label: "News", icon: <Star className="w-3.5 h-3.5" />, hasAI: false },
+              ]}
+            />
             {/* Quick Info Card */}
             <Card className="overflow-hidden border-border/60 shadow-lg shadow-primary/5">
               <div className="h-1.5 bg-gradient-to-r from-primary via-primary/80 to-primary/40" />
