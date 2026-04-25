@@ -530,6 +530,7 @@ async function processOneSectionStep(
   cancelFlag: { v: boolean },
   tracker: TelemetryTracker,
   workerId: string,
+  aiProvider: "gemini" | "lovable" = "gemini",
 ): Promise<boolean> {
   const row = rowsRef.value
     .filter(r => r.status !== "not_found" && r.status !== "succeeded")
