@@ -532,13 +532,10 @@ async function runJob(job_id: string, authHeader: string) {
           tracker.setActive(activeRef.n);
         }
 
-        const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
-        const failed = rowsRef.value.filter(r => r.status === "failed").length;
-        const duplicates = rowsRef.value.filter(r => r.status === "duplicate").length;
-        const completed = succeeded + failed + duplicates;
-        tracker.recordProgress(completed, row.name);
+        const liveMetrics = computeCollegeMetrics(rowsRef.value);
+        tracker.recordProgress(liveMetrics.completed, row.name);
         await updateBulkJob(admin, "bulk_college_jobs", job_id, workerId, tracker, {
-          succeeded, failed, duplicates_skipped: duplicates, completed,
+          ...liveMetrics,
         });
       }
     });
@@ -547,10 +544,6 @@ async function runJob(job_id: string, authHeader: string) {
     pollerStop = true;
     await poller.catch(() => {});
 
-    const succeeded = rowsRef.value.filter(r => r.status === "succeeded").length;
-    const failed = rowsRef.value.filter(r => r.status === "failed").length;
-    const duplicates = rowsRef.value.filter(r => r.status === "duplicate").length;
-    const completed = succeeded + failed + duplicates;
     const finalMetrics = computeCollegeMetrics(rowsRef.value);
 
     if (cancelFlag.v) {
@@ -562,7 +555,6 @@ async function runJob(job_id: string, authHeader: string) {
           r.attemptStartedAt = undefined;
         }
       }
-      const failedAfterCancel = rowsRef.value.filter(r => r.status === "failed").length;
       await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
         rows: rowsRef.value,
         status: "cancelled",
