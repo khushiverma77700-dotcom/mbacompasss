@@ -129,6 +129,9 @@ const BulkLiveControlPanel = ({
   const telemetryAgeSec = telemetry?.updatedAt ? Math.max(0, (Date.now() - new Date(telemetry.updatedAt).getTime()) / 1000) : null;
   const isTelemetryFresh = telemetryAgeSec !== null && telemetryAgeSec <= 90 && !paused && !isTerminal;
   const serverCpu = isTelemetryFresh ? Number(telemetry?.cpu?.loadPct || 0) : 0;
+  const liveActiveWorkers = isTelemetryFresh
+    ? Math.max(0, Math.min(10, Number(telemetry?.activeWorkers ?? active) || 0))
+    : active;
   const memory = telemetry?.memory || null;
   const memoryUsedMb = Number(memory?.heapUsed || memory?.rss || 0);
   const memoryTotalMb = Number(memory?.heapTotal || memory?.rss || 0);
@@ -181,14 +184,14 @@ const BulkLiveControlPanel = ({
 
   // Server pressure now comes from real worker telemetry when available.
   const serverLoad = useMemo(() => {
-    const utilisation = concurrency > 0 ? Math.min(1, active / concurrency) : 0;
+    const utilisation = concurrency > 0 ? Math.min(1, liveActiveWorkers / concurrency) : 0;
     const completed = succeeded + failed;
     const failureRate = completed > 0 ? failed / completed : 0;
     const idleMin = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 60000 : 0;
     const idlePenalty = !paused && !isTerminal ? Math.min(1, Math.max(0, idleMin - 1) / 5) : 0;
     const workerPressure = utilisation * 70 + failureRate * 20 + idlePenalty * 10;
     return Math.min(100, Math.round(Math.max(serverCpu, workerPressure)));
-  }, [serverCpu, active, concurrency, succeeded, failed, updatedAt, paused, isTerminal]);
+  }, [serverCpu, liveActiveWorkers, concurrency, succeeded, failed, updatedAt, paused, isTerminal]);
 
   const cpuHistory = useRolling(browserCpu);
   const loadHistory = useRolling(serverLoad);
@@ -278,13 +281,21 @@ const BulkLiveControlPanel = ({
 
   const saveConcurrency = async () => {
     setSaving(true);
+    const previousConcurrency = concurrency;
     const { error } = await (supabase as any).from(table).update({
       concurrency: draftConcurrency,
       updated_at: new Date().toISOString(),
     }).eq("id", jobId);
     setSaving(false);
     if (error) toast({ title: "Couldn't update concurrency", description: error.message, variant: "destructive" });
-    else toast({ title: "Concurrency updated", description: `Worker will use ${draftConcurrency} parallel slot${draftConcurrency > 1 ? "s" : ""} on the next batch tick (~5s).` });
+    else {
+      if (!paused && !isTerminal && draftConcurrency > previousConcurrency) {
+        const fn = table === "bulk_college_jobs" ? "bulk-college-create" : "bulk-section-create";
+        supabase.functions.invoke(fn, { body: { action: "resume", job_id: jobId } }).catch(() => {});
+      }
+      onRefresh?.();
+      toast({ title: "Concurrency updated", description: `Live pool set to ${draftConcurrency}. Idle slots are being woken now.` });
+    }
   };
 
   const togglePaused = async (next: boolean) => {
@@ -405,12 +416,12 @@ const BulkLiveControlPanel = ({
               <div className="flex items-center gap-1.5 text-[11px] font-semibold">
                 <Layers className="w-3.5 h-3.5" /> WORKERS
               </div>
-              <Badge variant="outline" className="text-[10px] h-5 font-mono">{active}/{concurrency}</Badge>
+              <Badge variant="outline" className="text-[10px] h-5 font-mono">{liveActiveWorkers}/{concurrency}</Badge>
             </div>
             <div className="grid grid-cols-5 gap-1 mt-1">
               {Array.from({ length: 10 }).map((_, i) => {
                 const isAvailable = i < concurrency;
-                const isBusy = i < active;
+                const isBusy = i < liveActiveWorkers;
                 return (
                   <div
                     key={i}
@@ -429,7 +440,7 @@ const BulkLiveControlPanel = ({
               })}
             </div>
             <div className="text-[10px] text-muted-foreground mt-1.5 font-mono">
-              {paused ? "all slots paused" : `${active} active · ${Math.max(0, concurrency - active)} idle · ${10 - concurrency} disabled`}
+              {paused ? "all slots paused" : `${liveActiveWorkers} active · ${Math.max(0, concurrency - liveActiveWorkers)} idle · ${10 - concurrency} disabled`}
             </div>
           </div>
         </div>

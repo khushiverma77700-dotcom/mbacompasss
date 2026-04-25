@@ -494,6 +494,129 @@ async function processCollege(
   await persist();
 }
 
+async function processOneSectionStep(
+  admin: any,
+  authHeader: string,
+  job_id: string,
+  rowsRef: { value: RowState[] },
+  cancelFlag: { v: boolean },
+  tracker: TelemetryTracker,
+  workerId: string,
+): Promise<boolean> {
+  const row = rowsRef.value
+    .filter(r => r.status !== "not_found" && r.status !== "succeeded")
+    .sort((a, b) => a.index - b.index)
+    .find(r => (r.steps || []).some(s => s.status === "pending"));
+  if (!row || cancelFlag.v) return false;
+
+  const step = row.steps.find(s => s.status === "pending");
+  if (!step) return false;
+
+  const persist = async () => {
+    const metrics = computeSectionMetrics(rowsRef.value);
+    tracker.recordProgress(metrics.steps_done, `${row.inputName} — ${step.label}`);
+    await updateBulkJob(admin, "bulk_section_jobs", job_id, workerId, tracker, {
+      rows: rowsRef.value,
+      ...sectionMetricPatch(metrics),
+      current_activity: `Row ${row.index + 1}: ${row.inputName} — ${step.label}`,
+    });
+  };
+
+  row.status = "processing";
+  row.startedAt = row.startedAt || new Date().toISOString();
+  step.status = "processing";
+  step.startedAt = new Date().toISOString();
+  rowsRef.value = [...rowsRef.value];
+  await persist();
+
+  try {
+    const { data: college, error: cErr } = await admin
+      .from("colleges")
+      .select("id, name, city, state, type, tier, established, ranking, fees, fees_lakhs, placement_avg, placement_highest, placement_median, exams_accepted, accreditations")
+      .eq("id", row.collegeId!)
+      .maybeSingle();
+    if (cErr || !college) throw new Error("College row not found");
+
+    const cy = new Date().getFullYear();
+    const anchorFacts = {
+      established: college.established,
+      ranking: college.ranking,
+      fees: college.fees,
+      fees_lakhs: college.fees_lakhs,
+      placement_avg: college.placement_avg,
+      placement_highest: college.placement_highest,
+      placement_median: college.placement_median,
+      exams_accepted: college.exams_accepted,
+      accreditations: college.accreditations,
+      admission_cycle: `${cy}-${cy + 1}`,
+    };
+
+    const { data: originalRow } = await admin
+      .from("college_sections")
+      .select("id, section_type, title, content, data, sort_order")
+      .eq("college_id", college.id)
+      .eq("section_type", step.type)
+      .eq("version", "original")
+      .maybeSingle();
+    const { data: aiRow } = await admin
+      .from("college_sections")
+      .select("id, title, content, data, sort_order")
+      .eq("college_id", college.id)
+      .eq("section_type", step.type)
+      .eq("version", "ai_v1")
+      .maybeSingle();
+
+    if (cancelFlag.v) throw new Error("Cancelled by admin");
+    const sec = await generateOneSection(authHeader, college, step.type, anchorFacts, cancelFlag, tracker);
+    if (cancelFlag.v) throw new Error("Cancelled by admin");
+
+    const orderIndex = SECTION_TYPES.findIndex((s) => s.value === step.type);
+    const sortBase = (originalRow?.sort_order ?? Math.max(orderIndex, 0) * 10);
+
+    if (aiRow?.id) {
+      tracker.incDbWrite();
+      await admin.from("college_sections").update({
+        title: sec.title || aiRow.title,
+        content: sec.content || aiRow.content,
+        data: sec.data || {},
+        is_active: true,
+        source: "ai",
+      }).eq("id", aiRow.id);
+    } else {
+      tracker.incDbWrite();
+      await admin.from("college_sections").insert({
+        college_id: college.id,
+        section_type: step.type,
+        title: sec.title || step.label,
+        content: sec.content || null,
+        data: sec.data || {},
+        sort_order: sortBase + 1,
+        version: "ai_v1",
+        is_active: true,
+        source: "ai",
+        parent_section_id: originalRow?.id || null,
+      });
+    }
+    step.status = "succeeded";
+    step.startedAt = undefined;
+  } catch (e: any) {
+    step.status = "failed";
+    step.error = e?.message || "Unknown error";
+    step.startedAt = undefined;
+  }
+
+  const hasPending = row.steps.some(s => s.status === "pending");
+  const hasProcessing = row.steps.some(s => s.status === "processing");
+  const anyFailed = row.steps.some(s => s.status === "failed");
+  row.status = hasPending ? (hasProcessing ? "processing" : "pending") : hasProcessing ? "processing" : anyFailed ? "failed" : "succeeded";
+  if (!hasPending && !hasProcessing) row.finishedAt = new Date().toISOString();
+  if (anyFailed && !hasPending && !hasProcessing) row.error = `${row.steps.filter(s => s.status === "failed").length} section(s) failed`;
+  rowsRef.value = [...rowsRef.value];
+  await persist();
+  await sleep(SECTION_PAUSE_MS);
+  return true;
+}
+
 async function runJob(job_id: string, authHeader: string) {
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
   const { data: job, error } = await admin
@@ -542,11 +665,6 @@ async function runJob(job_id: string, authHeader: string) {
       current_activity: "Worker claimed queue…",
     });
 
-    const eligible = rows
-      .filter(r => r.status === "pending" && (r.steps || []).some((s) => s.status === "pending"))
-      .sort((a, b) => a.index - b.index)
-      .slice(0, ROWS_PER_INVOCATION);
-
     const cancelFlag = { v: false };
     const pauseFlag = { v: false };
     const concurrencyRef = { v: Math.max(1, Math.min(10, Number((job as any).concurrency) || 1)) };
@@ -564,21 +682,27 @@ async function runJob(job_id: string, authHeader: string) {
     })();
 
     let cursor = 0;
+    const hasPendingStep = () => rowsRef.value.some(r => (r.steps || []).some(s => s.status === "pending"));
     const activeRef = { n: 0 };
     const slots = 10;
     const workers = Array.from({ length: slots }, async (_, slotIdx) => {
       while (true) {
         if (cancelFlag.v || pauseFlag.v) return;
-        if (slotIdx >= concurrencyRef.v) return;
+        if (slotIdx >= concurrencyRef.v) {
+          if (cursor >= slots || !hasPendingStep()) return;
+          await sleep(500);
+          continue;
+        }
         const myIdx = cursor++;
-        if (myIdx >= eligible.length) return;
+        if (myIdx >= slots || !hasPendingStep()) return;
         activeRef.n += 1;
         tracker.setActive(activeRef.n);
         const busyStarted = Date.now();
         try {
-          await processCollege(admin, authHeader, job_id, rowsRef, eligible[myIdx], cancelFlag, tracker, workerId);
+          const didWork = await processOneSectionStep(admin, authHeader, job_id, rowsRef, cancelFlag, tracker, workerId);
+          if (!didWork) return;
           const metricsNow = computeSectionMetrics(rowsRef.value);
-          tracker.recordProgress(metricsNow.steps_done, eligible[myIdx].matchedName || eligible[myIdx].inputName);
+          tracker.recordProgress(metricsNow.steps_done, `Section step ${myIdx + 1}`);
         } finally {
           tracker.addBusy(Date.now() - busyStarted);
           activeRef.n = Math.max(0, activeRef.n - 1);
