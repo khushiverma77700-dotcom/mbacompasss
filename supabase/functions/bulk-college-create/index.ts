@@ -82,6 +82,11 @@ async function processOne(
   };
 
   try {
+    if (cancelFlag.v) {
+      await updateRow({ status: "failed", step: "cancelled", error: "Cancelled by admin" });
+      return;
+    }
+
     await updateRow({ status: "processing", step: "researching" });
 
     const y = new Date().getFullYear();
@@ -116,6 +121,12 @@ async function processOne(
     const data = await aiRes.json();
     if (data?.error) throw new Error(data.error);
     if (!data?.college) throw new Error("AI returned empty college");
+
+    // Cancelled during the (long) AI call? Discard the result — never save partial work.
+    if (cancelFlag.v) {
+      await updateRow({ status: "failed", step: "cancelled", error: "Cancelled by admin" });
+      return;
+    }
 
     await updateRow({ step: "saving" });
 
@@ -159,13 +170,28 @@ async function processOne(
       last_seo_refresh: new Date().toISOString(),
     };
 
+    // Last-chance cancel check before persisting to DB
+    if (cancelFlag.v) {
+      await updateRow({ status: "failed", step: "cancelled", error: "Cancelled by admin" });
+      return;
+    }
+
     const { data: inserted, error: insertErr } = await admin
       .from("colleges").insert(insertPayload).select("id").single();
     if (insertErr) throw insertErr;
 
-    // Seed FAQs (same as manual)
+    // Cancelled right after insert — roll back so nothing partial remains
+    if (cancelFlag.v) {
+      if (inserted?.id) {
+        await admin.from("colleges").delete().eq("id", inserted.id);
+      }
+      await updateRow({ status: "failed", step: "cancelled", error: "Cancelled by admin" });
+      return;
+    }
+
+    // Seed FAQs (same as manual) — skip if cancelled
     const faqs = Array.isArray(data?.faqs) ? data.faqs : [];
-    if (faqs.length > 0 && inserted?.id) {
+    if (faqs.length > 0 && inserted?.id && !cancelFlag.v) {
       try {
         await fetch(`${SUPABASE_URL}/functions/v1/auto-seo-engine`, {
           method: "POST",
