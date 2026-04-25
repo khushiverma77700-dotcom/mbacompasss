@@ -490,7 +490,7 @@ async function runJob(job_id: string, authHeader: string) {
 
     let cursor = 0;
     const activeRef = { n: 0 };
-    const slots = Math.max(1, Math.min(10, concurrencyRef.v));
+    const slots = 10;
     const workers = Array.from({ length: slots }, async (_, slotIdx) => {
       while (true) {
         if (cancelFlag.v || pauseFlag.v) return;
@@ -560,7 +560,7 @@ async function runJob(job_id: string, authHeader: string) {
       .select("paused,status").eq("id", job_id).maybeSingle();
     if ((latest as any)?.paused) {
       await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
-        status: "pending",
+        status: "running",
         rows: rowsRef.value,
         succeeded, failed, duplicates_skipped: duplicates, completed,
         current_activity: "Paused — worker parked safely",
@@ -572,7 +572,7 @@ async function runJob(job_id: string, authHeader: string) {
 
     if (remaining > 0) {
       await releaseWorkerLock(admin, "bulk_college_jobs", job_id, workerId, tracker, {
-        status: "pending",
+        status: "running",
         rows: rowsRef.value,
         succeeded,
         failed,
