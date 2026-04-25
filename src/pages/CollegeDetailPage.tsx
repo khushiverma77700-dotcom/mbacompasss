@@ -663,6 +663,7 @@ const CollegeDetailPage = () => {
                       ))}
                     </ul>
                   </div>
+                  <AIExtensionBlock section={getAIExtension("admission")} extensionLabel="Detailed Admission Guide" />
                 </CardContent>
               </Card>
             </div>
