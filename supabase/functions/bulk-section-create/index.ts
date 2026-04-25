@@ -664,6 +664,7 @@ async function runJob(job_id: string, authHeader: string) {
     return;
   }
   const tracker = new TelemetryTracker((job as any).telemetry, workerId);
+  tracker.addHealth("locked", "Worker lock acquired", { job_id });
 
   try {
     const rows = (job.rows as RowState[]).map((r) => {
@@ -779,6 +780,7 @@ async function runJob(job_id: string, authHeader: string) {
     const { data: latest } = await admin.from("bulk_section_jobs")
       .select("paused,status").eq("id", job_id).maybeSingle();
     if ((latest as any)?.paused) {
+      tracker.addHealth("paused", "Worker parked after admin pause", { job_id });
       await releaseWorkerLock(admin, "bulk_section_jobs", job_id, workerId, tracker, {
         status: "running",
         rows: rowsRef.value,
@@ -791,6 +793,7 @@ async function runJob(job_id: string, authHeader: string) {
     const remaining = rowsRef.value.filter(r => r.status === "pending" && (r.steps || []).some(s => s.status === "pending")).length;
 
     if (remaining > 0) {
+      tracker.addHealth("resumed", `Worker run complete; scheduling next chunk with ${remaining} college(s) pending`, { job_id, remaining });
       await releaseWorkerLock(admin, "bulk_section_jobs", job_id, workerId, tracker, {
         status: "running",
         rows: rowsRef.value,
@@ -811,6 +814,7 @@ async function runJob(job_id: string, authHeader: string) {
       return;
     }
 
+    tracker.addHealth("completed", "All section steps completed", { job_id });
     await releaseWorkerLock(admin, "bulk_section_jobs", job_id, workerId, tracker, {
       status: "completed",
       finished_at: new Date().toISOString(),
