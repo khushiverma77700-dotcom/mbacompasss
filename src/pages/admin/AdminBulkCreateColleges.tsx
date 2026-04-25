@@ -600,25 +600,29 @@ const AdminBulkCreateColleges = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-1.5">
-              {recentJobs.map(j => (
-                <button
-                  key={j.id}
-                  onClick={() => setJob(j)}
-                  className="w-full text-left flex items-center justify-between gap-3 p-2 rounded hover:bg-muted/50 text-xs"
-                >
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className={statusBadge(j.status as any)}>{j.status}</Badge>
-                    <span className="text-muted-foreground">
-                      {new Date((j as any).created_at).toLocaleString()}
-                    </span>
+              {recentJobs.map(j => {
+                const canRetry = j.failed > 0 && j.status !== "running" && j.status !== "pending";
+                return (
+                  <div key={j.id} className="w-full flex items-center justify-between gap-3 p-2 rounded hover:bg-muted/50 text-xs">
+                    <button onClick={() => setJob(j)} className="flex-1 text-left flex items-center gap-2">
+                      <Badge variant="outline" className={statusBadge(j.status as any)}>{j.status}</Badge>
+                      <span className="text-muted-foreground">
+                        {new Date((j as any).created_at).toLocaleString()}
+                      </span>
+                    </button>
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <span>{j.succeeded}/{j.total_rows}</span>
+                      {j.failed > 0 && <span className="text-destructive">✕{j.failed}</span>}
+                      {j.duplicates_skipped > 0 && <span className="text-amber-600">⊘{j.duplicates_skipped}</span>}
+                      {canRetry && (
+                        <Button size="sm" variant="default" onClick={(e) => { e.stopPropagation(); retryFailed(j.id); }}>
+                          <RotateCw className="h-3 w-3 mr-1" /> Retry Failed ({j.failed})
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 text-muted-foreground">
-                    <span>{j.succeeded}/{j.total_rows}</span>
-                    {j.failed > 0 && <span className="text-destructive">✕{j.failed}</span>}
-                    {j.duplicates_skipped > 0 && <span className="text-amber-600">⊘{j.duplicates_skipped}</span>}
-                  </div>
-                </button>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
