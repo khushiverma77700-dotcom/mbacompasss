@@ -23,6 +23,37 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import SEOHead, { generateBreadcrumbSchema, generateFAQSchema, generateOrganizationSchema } from "@/components/SEOHead";
+import { useAuth } from "@/contexts/AuthContext";
+
+// Map common short codes / abbreviations to full institute names
+const FULL_NAME_MAP: Record<string, string> = {
+  "IIM A": "IIM Ahmedabad", "IIMA": "IIM Ahmedabad",
+  "IIM B": "IIM Bangalore", "IIMB": "IIM Bangalore",
+  "IIM C": "IIM Calcutta", "IIMC": "IIM Calcutta",
+  "IIM L": "IIM Lucknow", "IIML": "IIM Lucknow",
+  "IIM K": "IIM Kozhikode", "IIMK": "IIM Kozhikode",
+  "IIM I": "IIM Indore", "IIMI": "IIM Indore",
+  "IIM S": "IIM Shillong", "IIMS": "IIM Shillong",
+  "IIM R": "IIM Rohtak",
+  "IIM Ra": "IIM Ranchi", "IIM RA": "IIM Ranchi",
+  "IIM T": "IIM Tiruchirappalli", "IIMT": "IIM Tiruchirappalli",
+  "IIM U": "IIM Udaipur", "IIMU": "IIM Udaipur",
+  "IIM Ka": "IIM Kashipur", "IIM N": "IIM Nagpur",
+  "IIM V": "IIM Visakhapatnam", "IIM Am": "IIM Amritsar",
+  "IIM BG": "IIM Bodh Gaya", "IIM J": "IIM Jammu",
+  "IIM Sa": "IIM Sambalpur", "IIM Si": "IIM Sirmaur",
+  "IIM M": "IIM Mumbai",
+  "FMS": "FMS Delhi", "MDI": "MDI Gurgaon",
+  "SPJIMR": "SPJIMR Mumbai", "JBIMS": "JBIMS Mumbai",
+  "XLRI": "XLRI Jamshedpur", "IIFT": "IIFT Delhi",
+};
+
+function fullName(short: string | null | undefined, full: string): string {
+  if (!short) return full;
+  // If `full` already looks complete (longer than 8 chars and contains the short or city), prefer it
+  if (full && full.length > 8 && full.toLowerCase() !== short.toLowerCase()) return full;
+  return FULL_NAME_MAP[short] || FULL_NAME_MAP[short.toUpperCase()] || full || short;
+}
 
 type ResultRow = {
   id: string; college_name: string; college_short: string | null;
