@@ -180,6 +180,15 @@ const BulkLiveControlPanel = ({
   const [browserCpu, setBrowserCpu] = useState(0); // 0..100
   const [tickRate, setTickRate] = useState(0); // throughput units/min approx
   const [clockTick, setClockTick] = useState(Date.now());
+  // Live cost tracking — sums ai_usage_logs in the job's runtime window.
+  type CostBreakdown = { model: string; usd: number; calls: number; tokens: number };
+  const [costUsd, setCostUsd] = useState(0);
+  const [costCalls, setCostCalls] = useState(0);
+  const [costTokens, setCostTokens] = useState(0);
+  const [costBreakdown, setCostBreakdown] = useState<CostBreakdown[]>([]);
+  const [costSeries, setCostSeries] = useState<number[]>(Array.from({ length: 60 }, () => 0));
+  const [usdInr, setUsdInr] = useState<number>(83.5);
+  const jobStartedAtRef = useRef<string>(new Date().toISOString());
   const autoWakeInFlightRef = useRef(false);
   const lastAutoWakeAtRef = useRef(0);
   const processedUnits = Math.max(0, Number(processed ?? (succeeded + failed)));
