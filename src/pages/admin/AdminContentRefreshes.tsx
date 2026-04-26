@@ -263,7 +263,7 @@ export default function AdminContentRefreshes() {
               <div className="text-xs text-muted-foreground pb-2">
                 Tick the fields you want to publish. Unchanged fields are hidden by default.
               </div>
-              <ScrollArea className="flex-1 pr-3">
+              <ScrollArea className="flex-1 min-h-0 pr-3 max-h-[70vh]">
                 <div className="space-y-4">
                   {Object.entries(open.diff)
                     .sort(([, a], [, b]) => Number(b.changed) - Number(a.changed))
