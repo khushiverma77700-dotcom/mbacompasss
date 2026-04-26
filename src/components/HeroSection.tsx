@@ -116,20 +116,13 @@ const HeroSection = () => {
       {/* Dot pattern overlay */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIxIiBmaWxsPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiLz48L3N2Zz4=')] opacity-40 pointer-events-none" />
 
-      {/* Floating decorative elements */}
-      <div className="absolute w-12 h-12 md:w-20 md:h-20 top-[8%] left-[5%] opacity-10 animate-bounce pointer-events-none" style={{ animationDuration: '7s' }}>
+      {/* Lightweight static decorative elements (no animation, no blur — keeps LCP fast) */}
+      <div className="absolute w-12 h-12 md:w-20 md:h-20 top-[8%] left-[5%] opacity-10 pointer-events-none">
         <GraduationCap className="w-full h-full text-primary-foreground" />
       </div>
-      <div className="absolute w-8 h-8 md:w-12 md:h-12 top-[12%] right-[8%] opacity-10 animate-bounce pointer-events-none" style={{ animationDuration: '5.5s', animationDelay: '1s' }}>
-        <GraduationCap className="w-full h-full text-primary-foreground" />
-      </div>
-      <div className="absolute w-10 h-10 md:w-14 md:h-14 bottom-[25%] right-[15%] opacity-10 animate-bounce pointer-events-none" style={{ animationDuration: '6s', animationDelay: '2s' }}>
+      <div className="absolute w-10 h-10 md:w-14 md:h-14 bottom-[25%] right-[15%] opacity-10 pointer-events-none">
         <BookOpen className="w-full h-full text-primary-foreground" />
       </div>
-
-      {/* Glowing orbs */}
-      <div className="absolute w-48 h-48 -top-16 -left-16 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '4s' }} />
-      <div className="absolute w-72 h-72 -bottom-24 -right-24 bg-white/5 rounded-full blur-3xl animate-pulse pointer-events-none" style={{ animationDuration: '6s', animationDelay: '2s' }} />
 
       {/* Main content */}
       <div className="relative container mx-auto px-4 pt-6 pb-16 md:pt-8 md:pb-20 z-10">

@@ -1,8 +1,9 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { INDIAN_STATES, getCitiesForState } from "@/data/indianLocations";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { MapPin, Search, Users, IndianRupee, TrendingUp, GraduationCap, Award, ChevronRight, ArrowRight, Building2, Filter, Star, Briefcase, CheckCircle2, X, ArrowLeft, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -40,6 +41,26 @@ const CollegesPage = () => {
   const selectedFee = searchParams.get("fee") || "all";
   const selectedSpec = searchParams.get("specialization") || "all";
   const sortBy = searchParams.get("sort") || "ranking";
+
+  // Local search input — debounced into URL so each keystroke doesn't re-render 600+ cards
+  const [searchInput, setSearchInput] = useState(search);
+  useEffect(() => { setSearchInput(search); }, [search]);
+  useEffect(() => {
+    if (searchInput === search) return;
+    const t = setTimeout(() => {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        if (searchInput) next.set("q", searchInput); else next.delete("q");
+        return next;
+      }, { replace: true });
+    }, 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
+
+  // Pagination — render only a chunk of cards at a time. Massive perf win on 600+ items.
+  const PAGE_SIZE = 20;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
   // No redirect needed — city/state filtering stays on this page via query params
 
@@ -90,6 +111,9 @@ const CollegesPage = () => {
     if (sortBy === "fees") result = [...result].sort((a: any, b: any) => (getEffectiveFeesLakhs(a) ?? Infinity) - (getEffectiveFeesLakhs(b) ?? Infinity));
     return result;
   }, [colleges, activeTab, search, selectedCity, selectedState, selectedExam, selectedFee, selectedSpec, sortBy]);
+
+  // Reset pagination whenever the filter set changes
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [activeTab, search, selectedCity, selectedState, selectedExam, selectedFee, selectedSpec, sortBy]);
 
   const regions = (cityPages || []).slice(0, 12);
   const totalColleges = colleges.length;
@@ -218,8 +242,8 @@ const CollegesPage = () => {
                 <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   placeholder="Search colleges by name, city..."
-                  value={search}
-                  onChange={(e) => setFilter("q", e.target.value)}
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
                   className="pl-13 pr-4 py-3 h-14 rounded-2xl bg-white/95 backdrop-blur-sm border-0 text-foreground shadow-2xl text-base focus:ring-2 focus:ring-white/30"
                 />
               </div>
@@ -259,7 +283,7 @@ const CollegesPage = () => {
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Search by college name or city..." value={search} onChange={(e) => setFilter("q", e.target.value)} className="pl-9 rounded-xl" />
+              <Input placeholder="Search by college name or city..." value={searchInput} onChange={(e) => setSearchInput(e.target.value)} className="pl-9 rounded-xl" />
             </div>
             <Select value={selectedState} onValueChange={(v) => setFilter("state", v)}>
               <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="State" /></SelectTrigger>
@@ -343,12 +367,26 @@ const CollegesPage = () => {
           )}
         </div>
 
-        {/* College Cards */}
+        {/* College Cards (paginated for performance — 600+ items would otherwise jank the UI) */}
         <div className="space-y-5">
-          {filtered.map((college: any, i: number) => (
+          {filtered.slice(0, visibleCount).map((college: any, i: number) => (
             <CollegeListingCard key={college.id} college={college} index={i} rank={i + 1} />
           ))}
         </div>
+
+        {visibleCount < filtered.length && (
+          <div className="flex justify-center mt-8">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              className="rounded-xl"
+            >
+              Show {Math.min(PAGE_SIZE, filtered.length - visibleCount)} more
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        )}
 
         {filtered.length === 0 && (
           <div className="text-center py-24 bg-card rounded-2xl border border-border">

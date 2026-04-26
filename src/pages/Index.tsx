@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from "react";
 import HeroSection from "@/components/HeroSection";
 import SEOHead, { generateWebsiteSchema, generateOrganizationSchema, generateFAQSchema, generateBreadcrumbSchema } from "@/components/SEOHead";
+import { LazyMount } from "@/hooks/useInView";
 
 // Lazy load — these pull framer-motion which would bloat the initial bundle
 const StatsCounterSection = lazy(() => import("@/components/StatsCounterSection"));
@@ -88,37 +89,38 @@ const Index = () => {
       {/* Above-the-fold: only Hero loads eagerly for fastest LCP */}
       <HeroSection />
 
-      {/* Everything else: mount after first paint */}
+      {/* Just below the fold — mount as soon as browser is idle (no scroll needed) */}
       {showDeferredSections && (
         <Suspense fallback={null}>
           <StatsCounterSection />
           <CategoryCards />
-          <AIToolsSection />
-          <CoachingOfWeekSection />
-          <OfferBanners />
-          <FeaturedInstitutes />
-          <TopRankedCollegesSection />
-          <BrowseByCitySection />
-          <ExamDeadlinesTicker />
-          <PopularExamsSection />
-          <HowItWorksSection />
-          <LearningResourcesSection />
-          <ProfileAnalyzerCTA />
-          <LatestArticlesSection />
-          <SuccessStoriesSection />
-          <WhyChooseUs />
-          <FAQSection />
-          <CTASection />
         </Suspense>
       )}
 
-      {showDeferredSections && (
-        <div className="container mx-auto px-4 pb-8">
-          <Suspense fallback={null}>
-            <PageKeywords contentType="static" recordId="homepage" fallbackKeywords={["best MBA coaching", "MBA coaching institutes India", "CAT coaching", "MBA entrance exam", "IIM preparation"]} />
-          </Suspense>
-        </div>
-      )}
+      {/* Everything else: mount only when scrolled near. Each section gets its own
+          IntersectionObserver so initial JS execution stays tiny. */}
+      <LazyMount minHeight={300}><AIToolsSection /></LazyMount>
+      <LazyMount minHeight={400}><CoachingOfWeekSection /></LazyMount>
+      <LazyMount minHeight={300}><OfferBanners /></LazyMount>
+      <LazyMount minHeight={400}><FeaturedInstitutes /></LazyMount>
+      <LazyMount minHeight={500}><TopRankedCollegesSection /></LazyMount>
+      <LazyMount minHeight={400}><BrowseByCitySection /></LazyMount>
+      <LazyMount minHeight={120}><ExamDeadlinesTicker /></LazyMount>
+      <LazyMount minHeight={400}><PopularExamsSection /></LazyMount>
+      <LazyMount minHeight={400}><HowItWorksSection /></LazyMount>
+      <LazyMount minHeight={400}><LearningResourcesSection /></LazyMount>
+      <LazyMount minHeight={300}><ProfileAnalyzerCTA /></LazyMount>
+      <LazyMount minHeight={400}><LatestArticlesSection /></LazyMount>
+      <LazyMount minHeight={400}><SuccessStoriesSection /></LazyMount>
+      <LazyMount minHeight={400}><WhyChooseUs /></LazyMount>
+      <LazyMount minHeight={400}><FAQSection /></LazyMount>
+      <LazyMount minHeight={300}><CTASection /></LazyMount>
+
+      <div className="container mx-auto px-4 pb-8">
+        <LazyMount minHeight={80}>
+          <PageKeywords contentType="static" recordId="homepage" fallbackKeywords={["best MBA coaching", "MBA coaching institutes India", "CAT coaching", "MBA entrance exam", "IIM preparation"]} />
+        </LazyMount>
+      </div>
     </>
   );
 };
