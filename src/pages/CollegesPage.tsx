@@ -42,6 +42,26 @@ const CollegesPage = () => {
   const selectedSpec = searchParams.get("specialization") || "all";
   const sortBy = searchParams.get("sort") || "ranking";
 
+  // Local search input — debounced into URL so each keystroke doesn't re-render 600+ cards
+  const [searchInput, setSearchInput] = useState(search);
+  useEffect(() => { setSearchInput(search); }, [search]);
+  useEffect(() => {
+    if (searchInput === search) return;
+    const t = setTimeout(() => {
+      setSearchParams(prev => {
+        const next = new URLSearchParams(prev);
+        if (searchInput) next.set("q", searchInput); else next.delete("q");
+        return next;
+      }, { replace: true });
+    }, 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchInput]);
+
+  // Pagination — render only a chunk of cards at a time. Massive perf win on 600+ items.
+  const PAGE_SIZE = 20;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
   // No redirect needed — city/state filtering stays on this page via query params
 
   // Helper to update URL params without full reload
