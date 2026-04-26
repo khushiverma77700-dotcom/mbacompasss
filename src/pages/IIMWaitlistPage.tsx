@@ -391,7 +391,7 @@ export default function IIMWaitlistPage() {
           transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
         />
 
-        <div className="relative container mx-auto px-4 py-14 md:py-20 text-primary-foreground">
+        <div className="relative container mx-auto px-4 md:px-8 py-14 md:py-20 text-primary-foreground">
           <motion.div initial="hidden" animate="show" variants={fadeUp} transition={{ duration: 0.6 }}>
             <Badge className="bg-white/15 text-white border-white/20 backdrop-blur mb-4">
               <Sparkles className="h-3 w-3 mr-1" /> Live 2026 Admission Season • AI-Powered
@@ -482,7 +482,7 @@ export default function IIMWaitlistPage() {
 
       {/* TRUST BAR */}
       <section className="border-b bg-gradient-to-r from-blue-50 via-white to-emerald-50">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 md:px-8 py-4">
           <div className="flex flex-wrap items-center justify-around gap-4 text-xs md:text-sm">
             {[
               { icon: ShieldCheck, t: "RTI-Verified", c: "text-emerald-600" },
@@ -503,7 +503,7 @@ export default function IIMWaitlistPage() {
       </section>
 
       {/* AI INSIGHTS */}
-      <section className="container mx-auto px-4 md:px-8 py-12">
+      <section className="container mx-auto px-4 md:px-8 md:px-8 py-12">
         <div className="flex items-end justify-between mb-6 flex-wrap gap-3">
           <div>
             <Badge className="bg-gradient-to-r from-violet-600 to-blue-600 text-white border-transparent mb-2">
@@ -556,7 +556,7 @@ export default function IIMWaitlistPage() {
       </section>
 
       {/* CURRENT RESULTS STATUS */}
-      <section className="container mx-auto px-4 py-8">
+      <section className="container mx-auto px-4 md:px-8 py-8">
         <div className="text-center mb-8">
           <Badge variant="secondary" className="mb-3">Current Status</Badge>
           <h2 className="text-2xl md:text-3xl font-bold">Current Results Status &amp; Waitlist Data</h2>
@@ -603,7 +603,7 @@ export default function IIMWaitlistPage() {
 
       {/* EXPECTED RELEASES */}
       <section className="bg-gradient-to-br from-amber-50/50 to-blue-50/40 py-12 border-y">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 md:px-8">
           <div className="text-center mb-8">
             <Badge className="bg-amber-500 text-white border-transparent mb-3">
               <Clock className="h-3 w-3 mr-1" /> Coming Soon
@@ -644,7 +644,7 @@ export default function IIMWaitlistPage() {
       </section>
 
       {/* HOW WAITLIST WORKS — animated timeline */}
-      <section className="container mx-auto px-4 py-14">
+      <section className="container mx-auto px-4 md:px-8 py-14">
         <div className="text-center mb-10">
           <Badge variant="secondary" className="mb-3"><BookOpen className="h-3 w-3 mr-1" /> Explainer</Badge>
           <h2 className="text-2xl md:text-3xl font-bold">How IIM Waitlist Movement Actually Works</h2>
@@ -690,7 +690,7 @@ export default function IIMWaitlistPage() {
 
       {/* CATEGORY-WISE MOVEMENT */}
       <section className="bg-slate-50 border-y py-14">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 md:px-8">
           <div className="text-center mb-8">
             <Badge variant="secondary" className="mb-3">RTI Verified</Badge>
             <h2 className="text-2xl md:text-3xl font-bold">Category-wise Waitlist Movement Data</h2>
@@ -785,7 +785,7 @@ export default function IIMWaitlistPage() {
       </section>
 
       {/* WAITLIST PREDICTOR MINI-TOOL */}
-      <section className="container mx-auto px-4 py-14">
+      <section className="container mx-auto px-4 md:px-8 py-14">
         <Card className="overflow-hidden border-violet-200 max-w-5xl mx-auto">
           <div className="grid md:grid-cols-2">
             <div className="p-8 bg-gradient-to-br from-violet-600 via-blue-600 to-blue-700 text-white">
@@ -854,7 +854,7 @@ export default function IIMWaitlistPage() {
 
       {/* RTI DATA */}
       <section className="bg-slate-50 py-14 border-y">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 md:px-8">
           <div className="text-center mb-8">
             <Badge variant="secondary" className="mb-3">
               <ShieldCheck className="h-3 w-3 mr-1" /> Government Verified
@@ -920,7 +920,7 @@ export default function IIMWaitlistPage() {
 
       {/* APPLICATION FUNNEL */}
       {apps.length > 0 && (
-        <section className="container mx-auto px-4 py-14">
+        <section className="container mx-auto px-4 md:px-8 py-14">
           <div className="text-center mb-8">
             <Badge variant="secondary" className="mb-3"><Activity className="h-3 w-3 mr-1" /> Funnel Analytics</Badge>
             <h2 className="text-2xl md:text-3xl font-bold">Application Funnel — 2026</h2>
@@ -965,7 +965,7 @@ export default function IIMWaitlistPage() {
 
       {/* BACKUP PLAN — APPLY NOW */}
       <section className="bg-gradient-to-br from-rose-50/40 via-white to-blue-50/40 py-14 border-y">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 md:px-8">
           <div className="text-center mb-8 max-w-2xl mx-auto">
             <Badge className="bg-rose-500 text-white border-transparent mb-3">Backup Plan</Badge>
             <h2 className="text-2xl md:text-3xl font-bold">Did Not Shortlist for Any Top B-School?</h2>
@@ -1057,7 +1057,7 @@ export default function IIMWaitlistPage() {
       </section>
 
       {/* FAQ */}
-      <section className="container mx-auto px-4 py-14">
+      <section className="container mx-auto px-4 md:px-8 py-14">
         <div className="text-center mb-8">
           <Badge variant="secondary" className="mb-3"><Lightbulb className="h-3 w-3 mr-1" /> FAQ</Badge>
           <h2 className="text-2xl md:text-3xl font-bold">Frequently Asked Questions</h2>
@@ -1078,7 +1078,7 @@ export default function IIMWaitlistPage() {
       </section>
 
       {/* LEAD CAPTURE */}
-      <section className="container mx-auto px-4 pb-16">
+      <section className="container mx-auto px-4 md:px-8 pb-16">
         <Card className="overflow-hidden border-primary/20">
           <div className="grid md:grid-cols-5">
             <div className="md:col-span-2 p-8 text-primary-foreground relative overflow-hidden" style={{ background: "var(--stat-gradient)" }}>
