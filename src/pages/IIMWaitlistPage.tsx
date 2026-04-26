@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { Helmet } from "react-helmet-async";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -164,13 +163,16 @@ export default function IIMWaitlistPage() {
     setLead({ name: "", email: "", phone: "", current_status: "", message: "" });
   };
 
+  useEffect(() => {
+    document.title = "IIM Waitlist Movement 2026 | Live Tracker, RTI Insights & Results";
+    const meta = document.querySelector('meta[name="description"]') || (() => {
+      const m = document.createElement("meta"); m.setAttribute("name", "description"); document.head.appendChild(m); return m;
+    })();
+    meta.setAttribute("content", "Track 2026 IIM & top B-school results, waitlist movement trends (2021–2026), RTI insights, and category-wise conversion data — live and curated.");
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
-      <Helmet>
-        <title>IIM Waitlist Movement 2026 | Live Tracker, RTI Insights & Results</title>
-        <meta name="description" content="Track 2026 IIM & top B-school results, waitlist movement trends (2021–2026), RTI insights, and category-wise conversion data — live and curated." />
-        <link rel="canonical" href="https://mbacompass.in/iim-waitlist-movement" />
-      </Helmet>
 
       {/* HERO */}
       <section className="relative overflow-hidden">
