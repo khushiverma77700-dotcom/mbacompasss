@@ -759,7 +759,12 @@ const AdminSEODashboard = () => {
 
   const filteredRows = useMemo(() => {
     return rows.filter((row) => {
-      if (selectedType !== "all" && row.contentType !== selectedType) return false;
+      if (selectedType === "static") {
+        if (!row.isStatic) return false;
+      } else if (selectedType !== "all") {
+        if (row.isStatic) return false;
+        if (row.contentType !== selectedType) return false;
+      }
       if (filterStatus !== "all" && row.audit.status !== filterStatus) return false;
       if (schemaFilter === "yes" && !row.audit.hasSchema) return false;
       if (schemaFilter === "no" && row.audit.hasSchema) return false;
@@ -768,8 +773,11 @@ const AdminSEODashboard = () => {
       if (cityFilter !== "all" && (row.city || "") !== cityFilter) return false;
       if (stateFilter !== "all" && (row.state || "") !== stateFilter) return false;
       if (search) {
-        const q = search.toLowerCase();
-        return [row.name, row.slug, row.city, row.state, contentTypeConfig[row.contentType].label].filter(Boolean).some((v) => String(v).toLowerCase().includes(q));
+        const q = search.toLowerCase().trim();
+        const typeLabel = row.isStatic ? "static page" : contentTypeConfig[row.contentType].label;
+        return [row.name, row.slug, row.path, row.city, row.state, typeLabel]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(q));
       }
       return true;
     });
