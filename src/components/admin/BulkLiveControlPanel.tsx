@@ -23,7 +23,7 @@ interface Props {
   status: string;
   paused: boolean;
   concurrency: number;
-  aiProvider?: "gemini" | "lovable";
+  aiProvider?: "gemini" | "gemini-lite" | "lovable" | "openai-mini" | "openai-nano";
   /** Live stats from parent */
   active: number;
   succeeded: number;
@@ -151,7 +151,15 @@ const BulkLiveControlPanel = ({
   active, succeeded, failed, pending, total, processed, updatedAt, telemetry, onRefresh, refreshing,
 }: Props) => {
   const [savingProvider, setSavingProvider] = useState(false);
-  const switchProvider = async (next: "gemini" | "lovable") => {
+  type AIProviderId = "gemini" | "gemini-lite" | "lovable" | "openai-mini" | "openai-nano";
+  const PROVIDER_LABEL: Record<AIProviderId, string> = {
+    "lovable": "Lovable AI",
+    "gemini": "My Gemini API",
+    "gemini-lite": "Gemini Flash-Lite",
+    "openai-mini": "OpenAI GPT-5 Mini",
+    "openai-nano": "OpenAI GPT-5 Nano",
+  };
+  const switchProvider = async (next: AIProviderId) => {
     if (next === aiProvider || savingProvider) return;
     setSavingProvider(true);
     const { error } = await supabase.from(table).update({ ai_provider: next, updated_at: new Date().toISOString() } as any).eq("id", jobId);
@@ -160,7 +168,7 @@ const BulkLiveControlPanel = ({
       toast({ title: "Couldn't switch AI provider", description: error.message, variant: "destructive" });
       return;
     }
-    toast({ title: "AI provider switched", description: next === "lovable" ? "Now using Lovable AI Gateway" : "Now using your Gemini API key" });
+    toast({ title: "AI provider switched", description: `Now using ${PROVIDER_LABEL[next]}` });
   };
   const [draftConcurrency, setDraftConcurrency] = useState(concurrency);
   const [saving, setSaving] = useState(false);
