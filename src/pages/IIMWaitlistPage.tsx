@@ -561,7 +561,7 @@ export default function IIMWaitlistPage() {
       <section className="container mx-auto px-4 md:px-8 py-8">
         <div className="text-center mb-8">
           <Badge variant="secondary" className="mb-3">Current Status</Badge>
-          <h2 className="text-2xl md:text-3xl font-bold">Current Results Status &amp; Waitlist Data</h2>
+          <h2 className="text-2xl md:text-3xl font-bold">🟢 Current Results Status & Waitlist Data</h2>
           <p className="text-muted-foreground mt-2">Latest declared results from official IIM, IIT and Non-IIM portals</p>
         </div>
         {loading ? (
@@ -610,7 +610,7 @@ export default function IIMWaitlistPage() {
             <Badge className="bg-amber-500 text-white border-transparent mb-3">
               <Clock className="h-3 w-3 mr-1" /> Coming Soon
             </Badge>
-            <h2 className="text-2xl md:text-3xl font-bold">Expected Releases</h2>
+            <h2 className="text-2xl md:text-3xl font-bold">📅 Expected Releases</h2>
             <p className="text-muted-foreground mt-2">Upcoming result announcements — bookmark this page for live updates</p>
           </div>
           {loading ? (
@@ -649,7 +649,7 @@ export default function IIMWaitlistPage() {
       <section className="container mx-auto px-4 md:px-8 py-14">
         <div className="text-center mb-10">
           <Badge variant="secondary" className="mb-3"><BookOpen className="h-3 w-3 mr-1" /> Explainer</Badge>
-          <h2 className="text-2xl md:text-3xl font-bold">How IIM Waitlist Movement Actually Works</h2>
+          <h2 className="text-2xl md:text-3xl font-bold">⚙️ How IIM Waitlist Movement Actually Works</h2>
           <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">A 5-step transparent breakdown — from first list to final admit</p>
         </div>
         <div className="max-w-4xl mx-auto relative">
@@ -695,7 +695,7 @@ export default function IIMWaitlistPage() {
         <div className="container mx-auto px-4 md:px-8">
           <div className="text-center mb-8">
             <Badge variant="secondary" className="mb-3">RTI Verified</Badge>
-            <h2 className="text-2xl md:text-3xl font-bold">Category-wise Waitlist Movement Data</h2>
+            <h2 className="text-2xl md:text-3xl font-bold">📊 Category-wise Waitlist Movement Data</h2>
             <p className="text-muted-foreground mt-2">5-year trend (2021–2025) + 2026 estimate — switch category to compare</p>
           </div>
           <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6 max-w-5xl mx-auto">
@@ -1017,7 +1017,7 @@ export default function IIMWaitlistPage() {
             <Badge variant="secondary" className="mb-3">
               <ShieldCheck className="h-3 w-3 mr-1" /> Government Verified
             </Badge>
-            <h2 className="text-2xl md:text-3xl font-bold">RTI Data — Past Years</h2>
+            <h2 className="text-2xl md:text-3xl font-bold">🛡️ RTI Data — Past Years</h2>
             <p className="text-muted-foreground mt-2">Direct from official RTI replies — verified, transparent, chronologically organised</p>
           </div>
           {loading ? (
@@ -1081,7 +1081,7 @@ export default function IIMWaitlistPage() {
         <section className="container mx-auto px-4 md:px-8 py-14">
           <div className="text-center mb-8">
             <Badge variant="secondary" className="mb-3"><Activity className="h-3 w-3 mr-1" /> Funnel Analytics</Badge>
-            <h2 className="text-2xl md:text-3xl font-bold">Application Funnel — 2026</h2>
+            <h2 className="text-2xl md:text-3xl font-bold">🎯 Application Funnel — 2026</h2>
             <p className="text-muted-foreground mt-2">Applications → Shortlist → PI → Offers → Admits, per institute</p>
           </div>
           <Card>
@@ -1126,7 +1126,7 @@ export default function IIMWaitlistPage() {
         <div className="container mx-auto px-4 md:px-8">
           <div className="text-center mb-8 max-w-2xl mx-auto">
             <Badge className="bg-rose-500 text-white border-transparent mb-3">Backup Plan</Badge>
-            <h2 className="text-2xl md:text-3xl font-bold">Did Not Shortlist for Any Top B-School?</h2>
+            <h2 className="text-2xl md:text-3xl font-bold">🚀 Did Not Shortlist for Any Top B-School?</h2>
             <p className="text-muted-foreground mt-2">
               Don't worry — these reputed B-schools have applications <strong className="text-foreground">open right now</strong>. Compare placements, fees, then apply directly.
             </p>
@@ -1218,7 +1218,7 @@ export default function IIMWaitlistPage() {
       <section className="container mx-auto px-4 md:px-8 py-14">
         <div className="text-center mb-8">
           <Badge variant="secondary" className="mb-3"><Lightbulb className="h-3 w-3 mr-1" /> FAQ</Badge>
-          <h2 className="text-2xl md:text-3xl font-bold">Frequently Asked Questions</h2>
+          <h2 className="text-2xl md:text-3xl font-bold">❓ Frequently Asked Questions</h2>
           <p className="text-muted-foreground mt-2">Everything aspirants ask about IIM waitlist movement 2026</p>
         </div>
         <div className="max-w-3xl mx-auto">
