@@ -328,7 +328,7 @@ const SECTION_TOOLS: Record<string, any> = {
     },
     required: ["title", "faculty"],
     instructions:
-      "8-12 plausible faculty profiles. Leave photo_url as empty string ''. Use realistic Indian academic credentials (PhD IIM/IIT/foreign B-school) and concrete years of experience.",
+      "Return ONLY real, publicly-verifiable senior faculty / professors who actually teach at this exact college's MBA / PGDM / PGP programme — names you have high confidence about from the school's official faculty page, NIRF disclosures or widely-cited public profiles. Minimum 4, maximum 10. NEVER invent names, NEVER use placeholder names like 'Dr. Sharma' or 'Prof. Singh', NEVER mix in faculty from a different institution. If you cannot verify at least 4 real names with their actual designation, return only the 4 most prominent verifiable ones — quality over quantity. Each entry: real full name + actual department (Finance / Marketing / OB-HR / Operations / Strategy / Economics / IT-Systems / Decision Sciences) + actual qualification (e.g. 'PhD, IIM Ahmedabad' or 'Fellow, IIM Bangalore') + realistic years of experience as a number range (e.g. '15+ years'). Leave photo_url as empty string ''. If you have ANY doubt whether a name is real, OMIT it.",
   },
   hostel: {
     name: "hostel_payload",
