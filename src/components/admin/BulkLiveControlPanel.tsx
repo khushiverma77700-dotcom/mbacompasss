@@ -7,11 +7,12 @@ import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { computeAICost, modelLabel } from "@/lib/aiPricing";
 import {
   Activity, Cpu, Gauge, PauseCircle, PlayCircle, Save, Server, Zap,
   AlertTriangle, ShieldCheck, Layers, Flame, HardDrive, Network,
   Database, Timer, TrendingUp, Radio, Waves, CircuitBoard, Thermometer,
-  CheckCircle2, XCircle, Clock, Wifi, BarChart3, RefreshCw,
+  CheckCircle2, XCircle, Clock, Wifi, BarChart3, RefreshCw, DollarSign, IndianRupee, Coins,
 } from "lucide-react";
 
 type Workflow = "Bulk Colleges" | "Bulk College Sections";
