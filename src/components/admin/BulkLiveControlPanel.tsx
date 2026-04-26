@@ -340,6 +340,80 @@ const BulkLiveControlPanel = ({
     return () => clearInterval(t);
   }, []);
 
+  // Anchor cost-window start to telemetry.startedAt if available
+  useEffect(() => {
+    const start = telemetry?.startedAt;
+    if (start && typeof start === "string") jobStartedAtRef.current = start;
+  }, [telemetry?.startedAt]);
+
+  // Poll ai_usage_logs to compute live cost. Filters by features used by these
+  // bulk workflows and the job runtime window.
+  useEffect(() => {
+    let cancelled = false;
+    const FEATURES = workflow === "Bulk Colleges"
+      ? ["ai-college-writer", "auto-seo-engine", "ai-college-section"]
+      : ["ai-college-section", "ai-college-writer"];
+    const fetchCost = async () => {
+      try {
+        const since = jobStartedAtRef.current;
+        const { data, error } = await supabase
+          .from("ai_usage_logs")
+          .select("model,prompt_tokens,completion_tokens,total_tokens,created_at,feature")
+          .in("feature", FEATURES)
+          .gte("created_at", since)
+          .order("created_at", { ascending: false })
+          .limit(500);
+        if (error || cancelled) return;
+        const rows = data || [];
+        let usdSum = 0;
+        let tokensSum = 0;
+        const byModel = new Map<string, CostBreakdown>();
+        for (const r of rows) {
+          const usd = computeAICost({
+            model: r.model,
+            promptTokens: Number(r.prompt_tokens || 0),
+            completionTokens: Number(r.completion_tokens || 0),
+            totalTokens: Number(r.total_tokens || 0),
+          });
+          usdSum += usd;
+          tokensSum += Number(r.total_tokens || 0);
+          const key = modelLabel(r.model);
+          const cur = byModel.get(key) || { model: key, usd: 0, calls: 0, tokens: 0 };
+          cur.usd += usd;
+          cur.calls += 1;
+          cur.tokens += Number(r.total_tokens || 0);
+          byModel.set(key, cur);
+        }
+        // Build per-second cost series for last 60s
+        const now = Date.now();
+        const bins = Array.from({ length: 60 }, () => 0);
+        for (const r of rows) {
+          const ts = new Date(r.created_at).getTime();
+          const age = Math.floor((now - ts) / 1000);
+          if (age >= 0 && age < 60) {
+            bins[59 - age] += computeAICost({
+              model: r.model,
+              promptTokens: Number(r.prompt_tokens || 0),
+              completionTokens: Number(r.completion_tokens || 0),
+              totalTokens: Number(r.total_tokens || 0),
+            });
+          }
+        }
+        if (cancelled) return;
+        setCostUsd(usdSum);
+        setCostCalls(rows.length);
+        setCostTokens(tokensSum);
+        setCostBreakdown([...byModel.values()].sort((a, b) => b.usd - a.usd));
+        setCostSeries(bins);
+      } catch (_) { /* swallow */ }
+    };
+    fetchCost();
+    const interval = setInterval(fetchCost, isTerminal || paused ? 15_000 : 4_000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [workflow, isTerminal, paused, jobId]);
+
+  const costInr = costUsd * usdInr;
+
   const workerSlots = useMemo<WorkerSlotView[]>(() => {
     const fromTelemetry = Array.isArray(telemetry?.workerSlots) ? telemetry.workerSlots : [];
     // Only render up to the configured concurrency — never invent extra slots.
