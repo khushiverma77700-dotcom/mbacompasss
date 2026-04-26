@@ -62,6 +62,13 @@ interface ChatBody {
   [k: string]: any;
 }
 
+export type AIProvider =
+  | "gemini"        // Direct Google Gemini (user's GEMINI_API_KEY) — default Flash model
+  | "gemini-lite"   // Direct Google Gemini (user's GEMINI_API_KEY) — Flash-Lite (~87% cheaper)
+  | "lovable"       // Lovable AI Gateway (Gemini Flash via gateway) — baseline cost
+  | "openai-mini"   // Direct OpenAI (user's OPENAI_API_KEY) — gpt-5-mini (~44% cheaper)
+  | "openai-nano";  // Direct OpenAI (user's OPENAI_API_KEY) — gpt-5-nano (cheapest)
+
 interface CallOptions {
   signal?: AbortSignal;
   feature?: string;
@@ -69,12 +76,11 @@ interface CallOptions {
   maxRetries?: number;
   skipLog?: boolean;
   /**
-   * Which upstream to use:
-   *   "gemini"  → call Google's OpenAI-compatible Gemini endpoint with GEMINI_API_KEY (default).
-   *   "lovable" → call the Lovable AI gateway with LOVABLE_API_KEY (legacy fallback).
-   * Pick is dashboard-driven for bulk jobs.
+   * Which upstream to use. The dashboard's bulk job toggle picks this.
+   * All providers accept the same OpenAI-compatible payload (messages, tools,
+   * tool_choice, response_format, stream, …) so callers don't need to change.
    */
-  provider?: "gemini" | "lovable";
+  provider?: AIProvider;
   /**
    * Cost-routing hint. The gateway automatically picks the cheapest model that
    * preserves output quality for that purpose. Caller's `body.model` is only
