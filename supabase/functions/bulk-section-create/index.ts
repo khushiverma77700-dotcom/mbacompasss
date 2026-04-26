@@ -759,7 +759,7 @@ async function runJob(job_id: string, authHeader: string) {
           return;
         }
         activeRef.n += 1;
-        tracker.setActive(activeRef.n);
+        tracker.setActive(activeRef.n, concurrencyRef.v);
         tracker.updateSlot(slotIdx, { job_id, state: "processing", current_item: "section work unit", current_step: `slot ${slotIdx + 1}` });
         tracker.addHealth("processing", `Slot ${slotIdx + 1} processing a section step`, { job_id, slot: slotIdx + 1 });
         const busyStarted = Date.now();
@@ -771,7 +771,7 @@ async function runJob(job_id: string, authHeader: string) {
         } finally {
           tracker.addBusy(Date.now() - busyStarted);
           activeRef.n = Math.max(0, activeRef.n - 1);
-          tracker.setActive(activeRef.n);
+          tracker.setActive(activeRef.n, concurrencyRef.v);
           tracker.updateSlot(slotIdx, { job_id, state: "idle", current_item: "section work unit", current_step: "completed or no work", last_processed_at: new Date().toISOString() });
         }
       }
