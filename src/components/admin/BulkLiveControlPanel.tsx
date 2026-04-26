@@ -190,10 +190,14 @@ const BulkLiveControlPanel = ({
   const networkStats = telemetry?.network || {};
   const telemetryAgeSec = telemetry?.updatedAt ? Math.max(0, (Date.now() - new Date(telemetry.updatedAt).getTime()) / 1000) : null;
   const isTelemetryFresh = telemetryAgeSec !== null && telemetryAgeSec <= 90 && !paused && !isTerminal;
-  const serverCpu = isTelemetryFresh ? Number(telemetry?.cpu?.loadPct || 0) : 0;
+  // CPU is real only when telemetry is fresh AND there is in-flight work; otherwise it's 0.
+  const rawServerCpu = Number(telemetry?.cpu?.loadPct || 0);
+  const serverCpu = isTelemetryFresh && active > 0 ? rawServerCpu : 0;
+  // Cap reported active workers to the configured concurrency so we never
+  // claim "13 processes" when only 2 workers are configured.
   const liveActiveWorkers = isTelemetryFresh
-    ? Math.max(0, Math.min(10, Number(telemetry?.activeWorkers ?? active) || 0))
-    : active;
+    ? Math.max(0, Math.min(concurrency, Number(telemetry?.activeWorkers ?? active) || 0))
+    : Math.min(concurrency, active);
   const memory = telemetry?.memory || null;
   const memoryUsedMb = Number(memory?.heapUsed || memory?.rss || 0);
   const memoryTotalMb = Number(memory?.heapTotal || memory?.rss || 0);
