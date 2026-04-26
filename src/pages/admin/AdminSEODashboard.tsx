@@ -1118,7 +1118,7 @@ const AdminSEODashboard = () => {
                   </div>
                   <Select value={selectedType} onValueChange={(v) => setSelectedType(v as TypeFilter)}>
                     <SelectTrigger><Filter className="h-4 w-4 mr-2" /><SelectValue placeholder="Type" /></SelectTrigger>
-                    <SelectContent><SelectItem value="all">All types</SelectItem>{contentTypes.map(ct => <SelectItem key={ct} value={ct}>{contentTypeConfig[ct].label}</SelectItem>)}</SelectContent>
+                    <SelectContent><SelectItem value="all">All types</SelectItem><SelectItem value="static">Static Pages</SelectItem>{contentTypes.map(ct => <SelectItem key={ct} value={ct}>{contentTypeConfig[ct].label}</SelectItem>)}</SelectContent>
                   </Select>
                   <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as FilterStatus)}>
                     <SelectTrigger><SelectValue placeholder="Score" /></SelectTrigger>
