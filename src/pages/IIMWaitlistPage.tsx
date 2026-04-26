@@ -503,7 +503,7 @@ export default function IIMWaitlistPage() {
       </section>
 
       {/* AI INSIGHTS */}
-      <section className="container mx-auto px-4 md:px-8 md:px-8 py-12">
+      <section className="container mx-auto px-4 md:px-8 py-12">
         <div className="flex items-end justify-between mb-6 flex-wrap gap-3">
           <div>
             <Badge className="bg-gradient-to-r from-violet-600 to-blue-600 text-white border-transparent mb-2">
