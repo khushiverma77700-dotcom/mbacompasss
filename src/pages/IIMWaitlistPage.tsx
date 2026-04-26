@@ -503,37 +503,34 @@ export default function IIMWaitlistPage() {
       </section>
 
       {/* AI INSIGHTS */}
-      <section className="container mx-auto px-4 py-12">
+      <section className="container mx-auto px-4 md:px-8 py-12">
         <div className="flex items-end justify-between mb-6 flex-wrap gap-3">
           <div>
             <Badge className="bg-gradient-to-r from-violet-600 to-blue-600 text-white border-transparent mb-2">
-              <Brain className="h-3 w-3 mr-1" /> Lovable AI · Live Analysis
+              <Brain className="h-3 w-3 mr-1" /> ✨ Lovable AI · Live Analysis
             </Badge>
-            <h2 className="text-2xl md:text-3xl font-bold">AI-Powered Insights for 2026</h2>
+            <h2 className="text-2xl md:text-3xl font-bold">🧠 AI-Powered Insights for 2026</h2>
             <p className="text-muted-foreground text-sm mt-1">
-              {aiUpdatedAt ? <>Last analysed {new Date(aiUpdatedAt).toLocaleString()}</> : "Generating fresh analysis…"}
+              {aiUpdatedAt ? <>🕒 Last analysed {new Date(aiUpdatedAt).toLocaleString()}</> : "🔄 Generating fresh analysis…"}
             </p>
           </div>
-          <Button onClick={fetchAIInsights} disabled={aiLoading} variant="outline" size="sm" className="rounded-full">
-            <RefreshCcw className={`h-4 w-4 mr-1 ${aiLoading ? "animate-spin" : ""}`} />
-            {aiLoading ? "Analysing…" : "Re-run AI"}
-          </Button>
+          {isAdmin && (
+            <Button onClick={fetchAIInsights} disabled={aiLoading} variant="outline" size="sm" className="rounded-full">
+              <RefreshCcw className={`h-4 w-4 mr-1 ${aiLoading ? "animate-spin" : ""}`} />
+              {aiLoading ? "Analysing…" : "Re-run AI (Admin)"}
+            </Button>
+          )}
         </div>
 
-        {aiLoading && aiInsights.length === 0 ? (
+        {aiInsights.length === 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[0,1,2,3,4,5].map(i => (
-              <div key={i} className="h-32 rounded-xl bg-gradient-to-br from-slate-100 to-slate-50 animate-pulse" />
+              <div key={i} className="h-32 rounded-xl bg-gradient-to-br from-violet-50 via-blue-50 to-emerald-50 animate-pulse" />
             ))}
           </div>
-        ) : aiInsights.length === 0 ? (
-          <Card className="p-6 text-center text-muted-foreground border-dashed">
-            <Brain className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            Click "Re-run AI" to generate insights from the latest data.
-          </Card>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {aiInsights.map((ins, i) => (
+
               <motion.div key={i}
                 initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                 transition={{ delay: i * 0.06 }}
