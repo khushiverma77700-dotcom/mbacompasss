@@ -94,20 +94,25 @@ ACCURACY IS MANDATORY. For well-known Indian B-schools (all IIMs, XLRI, FMS, MDI
 - accreditations (AACSB / AMBA / EQUIS / NBA / NAAC if held)
 Reference points you must respect: XLRI Jamshedpur was founded in 1949. IIM Ahmedabad in 1961. IIM Bangalore in 1973. IIM Calcutta in 1961. FMS Delhi in 1954. JBIMS Mumbai in 1965. SPJIMR in 1981. MDI Gurgaon in 1973. IIFT in 1963. NMIMS in 1981. ISB Hyderabad in 2001.
 
-FRESHNESS & CITATION RULES (MACHINE-READABLE):
+FRESHNESS:
 - Today is ${todayIso}. Active admission cycle: ${admissionCycle}. Freshness window: ${freshness}.
-- For EVERY key stat (NIRF rank, fees, average/highest/median package, intake) you MUST append a machine-readable inline citation marker in this EXACT shape: [src:<Source> <Year>]. Examples: [src:NIRF ${currentYear}], [src:Placement Report ${currentYear - 1}-${String(currentYear).slice(-2)}], [src:Admission Brochure ${currentYear}]. Our frontend converts these markers into clickable "view source" pills, so the syntax must be exact (square brackets, "src:" prefix, no quotes, no URLs).
-- Use at least one [src:NIRF ${currentYear}], one [src:Placement Report …], and one [src:Admission Brochure …] across the description.
-- The long-form description MUST end with a small italic line: <p><em>Last updated: ${todayIso}</em></p>
+- Weave the data year naturally into the prose (e.g. "ranked #4 in NIRF ${currentYear}", "average package of ₹28 LPA in the ${currentYear - 1}-${String(currentYear).slice(-2)} placement season").
 
-Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. Never include <html>, <head>, <body>, <h1>, or markdown fences. ABSOLUTELY NO inline style="" attributes, NO <font> tags, NO class="" / id="" attributes — plain semantic HTML only.
+# ABSOLUTE OUTPUT BANS — DO NOT VIOLATE
+- DO NOT include ANY citation, source, footnote or attribution markers anywhere in the output. Forbidden patterns include: "[src:NIRF 2025]", "(source: NIRF 2025)", "(Source/NIRF 2026 Ranking)", "(as per NIRF)", "[1]", "[NIRF]", "Ref:", "*Source:*", "Sources —", parenthetical attributions like "(Source: ...)", "(Ref: ...)". State facts plainly with the year woven into the sentence.
+- DO NOT add pull-quotes, <blockquote>, decorative em-dashes as separators (— — —), random italicised one-liners, "Disclaimer:", "Note:" boxes, or any meta-commentary.
+- DO NOT include "Last updated:" stamps inside generated HTML. The platform handles freshness display itself.
+- DO NOT use markdown ('**', '##', '\`\`\`'), emojis, or smart-quote curly characters.
+- ACCREDITATIONS / RANKINGS: Only state an accreditation (AACSB / AMBA / EQUIS / NBA / NAAC) or a precise NIRF rank if you are highly confident the school actually holds it. When in doubt, omit rather than fabricate.
+
+Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. Never include <html>, <head>, <body>, <h1>, <blockquote>, or markdown fences. ABSOLUTELY NO inline style="" attributes, NO <font> tags, NO class="" / id="" attributes — plain semantic HTML only.
 
 # CRITICAL OUTPUT HYGIENE
 - NEVER emit the literal characters "\\n", "\n", "/n", or any visible escape sequence inside any string field. Use real <p>, <br>, <li> tags or actual newlines — the frontend renders "\\n" as raw text and breaks the page.
 - Do NOT wrap output in markdown code fences. Return plain JSON via the tool call.
 
 # DEEP-RESEARCH MODE
-- Before writing each section, mentally verify the facts against the most authoritative public sources (NIRF, official placement reports, school brochures, AICTE/NAAC listings). No shallow filler — every paragraph must carry concrete data, named recruiters, real numbers or specific dates.`;
+- Before writing each section, mentally verify the facts against the most authoritative public sources (NIRF, official placement reports, school brochures, AICTE/NAAC listings). No shallow filler — every paragraph must carry concrete data, named recruiters, real numbers or specific dates. If you are not confident about a number, give a tight realistic range over the most recent 2-3 years rather than a single fabricated figure.`;
 
     const userPrompt = `Generate a complete, ready-to-publish profile for the following Indian MBA college / B-school. Verify every factual claim against your training knowledge of well-known Indian B-schools before writing.
 
@@ -128,16 +133,16 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
 3. **LATEST DATA (${currentYear})**: All fees, placement figures (avg/median/highest), seat counts and recruiter lists MUST reflect the most recent published cycle (${currentYear - 1}-${currentYear} placements / ${admissionCycle} admissions). State the data year context naturally inside the prose (e.g. "as per the ${currentYear} placement report").
 4. **HUMANIZED LANGUAGE**: Roughly 8th-grade reading level. Contractions, second person ("you"), concrete numbers, real examples. NO phrases like "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving", "in today's fast-paced world".
 5. **NEVER START WITH A QUESTION**. Headings and opening sentences must be DECLARATIVE statements that give a clear fact.
-6. **DESCRIPTION (long-form HTML, 1500-2200 words — DEEP & COMPREHENSIVE)**: Cover history & legacy, rankings (national + global), accreditations, courses offered, admission process summary, eligibility, entrance exams accepted, cut-off trends, fees structure breakdown, placements (avg/median/highest/recruiters/trends), ROI analysis, campus infrastructure, faculty strength, student life, internships & industry exposure, scholarships, alumni network, comparisons with peer colleges. MUST start with a <p><strong>Quick Summary:</strong> ...</p> block (70-90 words) giving the core overview upfront — including the correct founding year and type. Then 9-13 <h2> sections such as: "About ${brief.name}", "${brief.name} History & Legacy", "${brief.name} Rankings & Accreditations", "Courses Offered at ${brief.name}", "${brief.name} Admission Process ${admissionCycle}", "${brief.name} Fees Structure & ROI", "${brief.name} Placements ${currentYear - 1}-${currentYear}", "Campus Infrastructure at ${brief.name}", "Faculty & Academic Strengths", "Student Life & Clubs", "Scholarships at ${brief.name}", "${brief.name} vs Peer B-Schools", "Why Choose ${brief.name}", "${brief.name} FAQs". Each H2 section MUST be 120-200 words minimum — never one-liners. Use semantic <ul>/<ol> for any 3+ enumeration. Include AT LEAST THREE <table>s (Fees breakdown; Placements summary; NIRF/peer comparison). Use <strong> on 15-25 high-value phrases. End with <p><em>Last updated: ${todayIso}</em></p>.
+6. **DESCRIPTION (long-form HTML, 1500-2200 words — DEEP & COMPREHENSIVE)**: Cover history & legacy, rankings (national + global), accreditations, courses offered, admission process summary, eligibility, entrance exams accepted, cut-off trends, fees structure breakdown, placements (avg/median/highest/recruiters/trends), ROI analysis, campus infrastructure, faculty strength (named real professors only — never invented), student life, internships & industry exposure, scholarships, alumni network, comparisons with peer colleges. MUST start with a <p><strong>Quick Summary:</strong> ...</p> block (70-90 words) giving the core overview upfront — including the correct founding year and type. Then 9-13 <h2> sections such as: "About ${brief.name}", "${brief.name} History & Legacy", "${brief.name} Rankings & Accreditations", "Courses Offered at ${brief.name}", "${brief.name} Admission Process ${admissionCycle}", "${brief.name} Fees Structure & ROI", "${brief.name} Placements ${currentYear - 1}-${currentYear}", "Campus Infrastructure at ${brief.name}", "Faculty & Academic Strengths", "Student Life & Clubs", "Scholarships at ${brief.name}", "${brief.name} vs Peer B-Schools", "Why Choose ${brief.name}", "${brief.name} FAQs". Each H2 section MUST be 120-200 words minimum — never one-liners. Use semantic <ul>/<ol> for any 3+ enumeration. Include AT LEAST THREE <table>s (Fees breakdown; Placements summary; NIRF/peer comparison). Use <strong> on 12-20 high-value phrases (real names, key facts, numbers — NEVER on filler words or whole sentences). Do NOT add a "Last updated" stamp at the end — the platform handles that.
 7. **ADMISSION PROCESS (HTML, 500-800 words)**: Cover eligibility (academic + work-ex + reservation), exams accepted (REAL exams with cut-off bands), selection stages (written test / WAT / GD / PI), shortlisting weightage, latest ${admissionCycle} cycle dates, application fees, documents required, and tips to crack the process at ${brief.name}. Use <h3> subsections, bullet lists, and at least TWO <table>s (selection-criteria weightage; ${admissionCycle} timeline). Mention "${brief.name}" at least 6 times naturally. NO question headings.
 8. **ON-PAGE SEO MUST-HAVES** (build naturally into description):
    - Primary keyword AND college name "${brief.name}" both in the first 100 words AND in at least 4 <h2> headings
    - Secondary keywords sprinkled naturally — every secondary keyword should appear at least once
    - Long-tail variants ("${brief.name} fees", "${brief.name} placements ${currentYear}", "${brief.name} cut-off", "${brief.name} admission ${admissionCycle}", "${brief.name} ranking", "${brief.name} courses", "${brief.name} ROI") woven naturally
-   - 6-10 internal-link-style anchors with relative URLs, e.g. <a href="/colleges">top MBA colleges in India</a>, <a href="/exams/cat">CAT exam</a>, <a href="/exams/xat">XAT exam</a>, <a href="/coaching">CAT coaching</a>, <a href="/profile-analyzer">AI Profile Analyzer</a>, <a href="/mba-roi-calculator">MBA ROI Calculator</a>, <a href="/college-shortlister">College Shortlister</a>
-   - Use <strong> on 15-25 high-value phrases (real names, key facts, numbers)
+   - 6-10 internal-link anchors with relative URLs and DESCRIPTIVE multi-word anchor text (4-9 words each). GOOD examples: <a href="/colleges">top MBA colleges in India for 2025-26</a>, <a href="/exams/cat">CAT 2025 exam pattern and cut-off trends</a>, <a href="/exams/xat">XAT exam syllabus and shortlist criteria</a>, <a href="/coaching">best CAT coaching institutes in India</a>, <a href="/profile-analyzer">free AI profile analyzer for B-school admissions</a>, <a href="/mba-roi-calculator">MBA ROI calculator for ${brief.name}</a>, <a href="/college-shortlister">AI college shortlister tool for MBA aspirants</a>. BAD anchors (do NOT use): "click here", "read more", single-word anchors, bare keywords.
+   - Use <strong> on 12-20 high-value phrases (real names, key facts, numbers) — NEVER on filler text
    - Include a final <h2>${brief.name} Frequently Asked Questions</h2> section with 8-10 Q&A pairs (each Q in <h3> mentioning "${brief.name}", A in <p> 50-90 words mentioning "${brief.name}")
-   - Include short citation hints "(source: NIRF ${currentYear})" / "(source: placement report ${currentYear - 1}-${String(currentYear).slice(-2)})" near key stats
+   - DO NOT add parenthetical citations like "(source: NIRF 2025)" or "[src:...]" — state facts plainly with the year woven into the sentence
 8. **STRUCTURED FIELDS**: Fill every required field in the tool schema with REAL, accurate values for known schools. For arrays (courses, accreditations, exams_accepted, top_recruiters, specializations, keywords) return real, realistic values — never placeholder lists.
 9. **SEO META**: meta_title <=60 chars (declarative, includes primary keyword, no "?"). meta_description 140-160 chars (declarative, includes primary keyword + the year ${currentYear}). h1_tag declarative, no "?".
 10. **SLUG**: lowercase-hyphenated, <=80 chars, derived from the college name.
@@ -472,8 +477,8 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
           maxTokens: bulkMode ? 2400 : 4200,
           system: descriptionSystem,
           user: bulkMode
-            ? `Using the structured profile below, write a concise ready-to-publish HTML description for ${brief.name}.\n\nSTRUCTURED PROFILE:\n${JSON.stringify(contentSeed, null, 2)}\n\nRequirements:\n- 450-650 words\n- start with <p><strong>Quick Summary:</strong> ...</p>\n- 4-5 <h2> sections\n- include 1 compact <table>\n- final FAQ section with 3 Q&A pairs\n- include citation markers like [src:NIRF ${currentYear}]\n- end with <p><em>Last updated: ${todayIso}</em></p>`
-            : `Using the structured profile below, write the complete long-form HTML description for ${brief.name}.\n\nSTRUCTURED PROFILE:\n${JSON.stringify(contentSeed, null, 2)}\n\nRequirements:\n- 900-1300 words\n- start with <p><strong>Quick Summary:</strong> ...</p>\n- 6-8 <h2> sections\n- at least 2 <table>s\n- final FAQ section with 5-6 Q&A pairs\n- include citation markers like [src:NIRF ${currentYear}]\n- end with <p><em>Last updated: ${todayIso}</em></p>`,
+            ? `Using the structured profile below, write a concise ready-to-publish HTML description for ${brief.name}.\n\nSTRUCTURED PROFILE:\n${JSON.stringify(contentSeed, null, 2)}\n\nRequirements:\n- 450-650 words\n- start with <p><strong>Quick Summary:</strong> ...</p>\n- 4-5 <h2> sections\n- include 1 compact <table>\n- final FAQ section with 3 Q&A pairs\n- 3-5 internal-link anchors with descriptive multi-word anchor text\n- DO NOT include any "(source: ...)", "[src:...]", or "Last updated:" markers — state facts plainly with the year woven into the sentence`
+            : `Using the structured profile below, write the complete long-form HTML description for ${brief.name}.\n\nSTRUCTURED PROFILE:\n${JSON.stringify(contentSeed, null, 2)}\n\nRequirements:\n- 900-1300 words\n- start with <p><strong>Quick Summary:</strong> ...</p>\n- 6-8 <h2> sections\n- at least 2 <table>s\n- final FAQ section with 5-6 Q&A pairs\n- 5-8 internal-link anchors with descriptive multi-word anchor text\n- DO NOT include any "(source: ...)", "[src:...]", or "Last updated:" markers — state facts plainly with the year woven into the sentence`,
         }),
         callTextModel({
           label: "college admission process",
@@ -488,8 +493,24 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       return handleModelError(error);
     }
 
-    profile.description = descriptionHtml.trim();
-    profile.admission_process = admissionHtml.trim();
+    // Defence-in-depth: even though prompts forbid these, scrub any leaked
+    // citation / source markers, "Last updated" stamps and pull-quotes from
+    // the long-form HTML before saving.
+    const scrubHtml = (raw: string): string => {
+      let out = raw;
+      out = out.replace(/\[src:[^\]]*\]/gi, "");
+      out = out.replace(/\(\s*sources?\s*[:\/\u2013\u2014-]\s*[^)]{0,80}\)/gi, "");
+      out = out.replace(/\(\s*as\s+per\s+[^)]{0,80}\)/gi, "");
+      out = out.replace(/\(\s*ref\.?\s*[:\u2013\u2014-]\s*[^)]{0,80}\)/gi, "");
+      out = out.replace(/<p>\s*<em>\s*Last updated:[^<]*<\/em>\s*<\/p>/gi, "");
+      out = out.replace(/<em>\s*Last updated:[^<]*<\/em>/gi, "");
+      out = out.replace(/<\/?blockquote[^>]*>/gi, "");
+      out = out.replace(/<p>\s*<\/p>/gi, "");
+      out = out.replace(/[ \t]{2,}/g, " ");
+      return out.trim();
+    };
+    profile.description = scrubHtml(descriptionHtml);
+    profile.admission_process = scrubHtml(admissionHtml);
 
     if (!profile.description || !profile.admission_process) {
       return new Response(

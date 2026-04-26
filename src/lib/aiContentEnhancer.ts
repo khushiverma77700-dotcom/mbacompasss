@@ -73,25 +73,34 @@ const buildUrl = (source: string, year?: string, ctx?: CitationContext): string 
   if (GLOBAL_SOURCE_URLS[key]) return GLOBAL_SOURCE_URLS[key];
 
   const domain = extractDomain(ctx?.entityWebsite);
-  const hint = COLLEGE_SITE_HINTS[key] || source;
 
-  // 2. If we know the official college domain, ALWAYS deep-link into it via
-  //    a site:domain Google query. Guarantees the user lands on the official
-  //    college page — never a third-party / partner / aggregator site.
-  if (domain) {
-    return `https://www.google.com/search?q=${encodeURIComponent(`site:${domain} ${hint} ${year || ""}`.trim())}`;
+  // 2. If we know the official college website, link DIRECTLY to it (root URL).
+  //    Sending users to a Google search page is poor UX and the previous behaviour
+  //    occasionally produced wrong / unrelated redirects. The college's homepage
+  //    has a clear nav to placement reports, brochures, fees, faculty, etc.
+  if (ctx?.entityWebsite) {
+    try {
+      const u = ctx.entityWebsite.startsWith("http")
+        ? ctx.entityWebsite
+        : `https://${ctx.entityWebsite}`;
+      // Validate it parses
+      new URL(u);
+      return u;
+    } catch {
+      /* fall through */
+    }
   }
 
-  // 3. No website on file — fall back to the college's OWN site via a
-  //    Google "I'm Feeling Lucky" style query restricted to the official name.
-  //    We append "official site" so Google prioritises the institution's
-  //    own domain over partner/listing sites.
+  // 3. No website on file — last resort: Google query restricted to the official name.
   if (ctx?.entityName) {
+    const hint = COLLEGE_SITE_HINTS[key] || source;
     return `https://www.google.com/search?q=${encodeURIComponent(`${ctx.entityName} official site ${hint} ${year || ""}`.trim())}`;
   }
 
   // 4. Last resort — generic official-source query (no entity context).
   return `https://www.google.com/search?q=${encodeURIComponent(`${source} ${year || ""} official source India MBA`.trim())}`;
+  // (domain unused in current logic but kept for future per-section deep-linking)
+  void domain;
 };
 
 const buildPill = (source: string, year?: string, ctx?: CitationContext) => {
@@ -125,6 +134,16 @@ export function enhanceAIContent(html: string, ctx?: CitationContext): string {
       buildPill(src.trim().replace(/[,;:]+$/, ""), year, ctx),
   );
 
+  // 1c. Strip any leaked source/citation parentheticals that DON'T match the pill formats above.
+  //     Examples seen in production: "(Source/NIRF 2026 Ranking)", "(Source: NIRF)", "(as per NIRF)",
+  //     "(Ref: Placement Report 2024-25)". These leak when the model ignores the no-citation rule.
+  out = out.replace(/\(\s*sources?\s*[:\/\u2013\u2014-]\s*[^)]{0,80}\)/gi, "");
+  out = out.replace(/\(\s*as\s+per\s+[^)]{0,80}\)/gi, "");
+  out = out.replace(/\(\s*ref\.?\s*[:\u2013\u2014-]\s*[^)]{0,80}\)/gi, "");
+  // Strip leftover "Last updated:" stamps the model may have inserted.
+  out = out.replace(/<p>\s*<em>\s*Last updated:[^<]*<\/em>\s*<\/p>/gi, "");
+  out = out.replace(/<em>\s*Last updated:[^<]*<\/em>/gi, "");
+
   // 2. Wrap raw <table> in a scrollable container so wide tables don't bust mobile.
   //    Only wrap tables that aren't already wrapped (idempotent).
   out = out.replace(
@@ -138,6 +157,9 @@ export function enhanceAIContent(html: string, ctx?: CitationContext): string {
     /\b(Not\s*Avail(?:able|aible)|N\/?A|TBD|Contact\s+for\s+details|Coming\s+soon)\b/gi,
     "—",
   );
+
+  // 4. Collapse double spaces that the strips above may have created.
+  out = out.replace(/[ \t]{2,}/g, " ");
 
   return out;
 }
