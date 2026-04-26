@@ -1168,7 +1168,7 @@ const AdminSEODashboard = () => {
                             <p className="font-medium leading-none">{row.name}</p>
                             <p className="text-xs text-muted-foreground">/{row.slug || "—"}</p>
                           </TableCell>
-                          <TableCell><Badge variant="outline" className="text-xs">{contentTypeConfig[row.contentType].label}</Badge></TableCell>
+                          <TableCell><Badge variant={row.isStatic ? "secondary" : "outline"} className="text-xs">{row.isStatic ? "Static Page" : contentTypeConfig[row.contentType].label}</Badge></TableCell>
                           <TableCell><span className={`text-xs font-mono ${row.audit.wordCount < 250 ? "text-red-500" : row.audit.wordCount < 1000 ? "text-amber-500" : "text-green-500"}`}>{row.audit.wordCount}</span></TableCell>
                           <TableCell>
                             <div className="flex flex-wrap gap-1">
