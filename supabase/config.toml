@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.iim-waitlist-ai-insights]
 verify_jwt = false
+
+[functions.iim-waitlist-predict]
+verify_jwt = false
