@@ -347,12 +347,29 @@ const BulkLiveControlPanel = ({
   }, [telemetry?.startedAt]);
 
   // Poll ai_usage_logs to compute live cost. Filters by features used by these
-  // bulk workflows and the job runtime window.
+  // bulk workflows AND by the model family matching the currently-selected
+  // provider, so switching from Gemini → GPT-5 Nano mid-job doesn't keep
+  // showing the prior provider's spend in the breakdown.
   useEffect(() => {
     let cancelled = false;
     const FEATURES = workflow === "Bulk Colleges"
       ? ["ai-college-writer", "auto-seo-engine", "ai-college-section"]
       : ["ai-college-section", "ai-college-writer"];
+    // Map the selected provider to the model substrings we should count.
+    // ai_usage_logs.model is stored without the "google/" or "openai/" prefix
+    // in some rows and with it in others, so we match loosely on the suffix.
+    const PROVIDER_MODEL_MATCH: Record<AIProviderId, string[]> = {
+      "gemini":      ["gemini-3-flash-preview", "gemini-2.5-flash"],
+      "gemini-lite": ["gemini-2.5-flash-lite"],
+      "lovable":     ["gemini-2.5-flash", "gemini-3-flash-preview"],
+      "openai-mini": ["gpt-5-mini"],
+      "openai-nano": ["gpt-5-nano"],
+    };
+    const allowedModels = PROVIDER_MODEL_MATCH[(aiProvider as AIProviderId) ?? "gemini"] || [];
+    const matchesProvider = (model: string | null | undefined) => {
+      const m = (model || "").toLowerCase();
+      return allowedModels.some((needle) => m.includes(needle));
+    };
     const fetchCost = async () => {
       try {
         const since = jobStartedAtRef.current;
@@ -364,7 +381,9 @@ const BulkLiveControlPanel = ({
           .order("created_at", { ascending: false })
           .limit(500);
         if (error || cancelled) return;
-        const rows = data || [];
+        // Only count rows whose model matches the currently-selected provider.
+        // This prevents showing Gemini spend after switching to GPT-5 Nano.
+        const rows = (data || []).filter((r) => matchesProvider(r.model));
         let usdSum = 0;
         let tokensSum = 0;
         const byModel = new Map<string, CostBreakdown>();
@@ -410,7 +429,7 @@ const BulkLiveControlPanel = ({
     fetchCost();
     const interval = setInterval(fetchCost, isTerminal || paused ? 15_000 : 4_000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [workflow, isTerminal, paused, jobId]);
+  }, [workflow, isTerminal, paused, jobId, aiProvider]);
 
   const costInr = costUsd * usdInr;
 
