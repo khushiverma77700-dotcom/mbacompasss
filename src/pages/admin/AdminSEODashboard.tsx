@@ -393,6 +393,8 @@ const AdminSEODashboard = () => {
         contentType: "article" as SEOContentType,
         name: sp.name,
         slug: sp.slug,
+        path: sp.path,
+        isStatic: true,
         city: null,
         state: null,
         item: { id: sp.id, title: sp.name, slug: sp.slug, meta_title: sp.name, meta_description: null, keywords: [] },
