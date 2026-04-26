@@ -116,6 +116,7 @@ function routeModelForPurpose(model: string | undefined, purpose?: CallOptions["
 }
 
 const LOVABLE_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 
 interface LogParams {
   feature: string;
