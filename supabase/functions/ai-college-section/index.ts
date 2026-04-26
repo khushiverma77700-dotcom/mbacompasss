@@ -695,7 +695,7 @@ ${spec.instructions}
 - canonical_slug: lowercase-hyphenated section anchor (e.g. "${brief.sectionType}-${currentYear}").
 - Use the college name and primary keyword naturally (no stuffing).
 - Latest ${admissionCycle} admission cycle context.
-- Include 1-2 internal-link-style anchors where natural (e.g. <a href="/exams/cat">CAT exam</a>, <a href="/college-shortlister">College Shortlister</a>) — only inside HTML content fields.
+- Include 2-4 internal-link anchors in the long-form HTML content. Use DESCRIPTIVE multi-word anchor text — never bare keywords. Examples of GOOD anchors: <a href="/exams/cat">CAT 2025 exam pattern and cut-off trends</a>, <a href="/college-shortlister">free MBA college shortlister tool</a>, <a href="/mba-roi-calculator">MBA ROI calculator for ${brief.collegeName}</a>, <a href="/profile-analyzer">AI profile analyzer for B-school admissions</a>, <a href="/coaching">top CAT coaching institutes</a>. BAD anchors (do NOT use): "click here", "read more", "this", single-word anchors. Each anchor must be 4-9 words and clearly tell the reader what page they're going to.
 - All headings declarative, no questions in headings.
 
 Return JSON via the tool call below — fill EVERY required field with real, accurate values that respect the anchor facts and freshness window.`;
