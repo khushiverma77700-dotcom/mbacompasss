@@ -61,6 +61,49 @@
     --font-heading: 'Plus Jakarta Sans', sans-serif;
     --font-body: 'DM Sans', sans-serif;
   }
+
+  /* Admin-scoped dark theme (does not affect public site) */
+  .admin-dark {
+    --background: 222 28% 8%;
+    --foreground: 210 30% 96%;
+
+    --card: 222 25% 11%;
+    --card-foreground: 210 30% 96%;
+
+    --popover: 222 25% 11%;
+    --popover-foreground: 210 30% 96%;
+
+    --primary: 207 90% 60%;
+    --primary-foreground: 222 28% 8%;
+
+    --secondary: 217 25% 18%;
+    --secondary-foreground: 210 30% 96%;
+
+    --muted: 217 22% 16%;
+    --muted-foreground: 215 18% 65%;
+
+    --accent: 217 30% 20%;
+    --accent-foreground: 210 30% 96%;
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 217 22% 20%;
+    --input: 217 22% 20%;
+    --ring: 207 90% 60%;
+
+    --card-shadow: 0 1px 3px 0 hsl(0 0% 0% / 0.4), 0 1px 2px -1px hsl(0 0% 0% / 0.3);
+    --card-shadow-hover: 0 10px 25px -5px hsl(207 90% 54% / 0.3), 0 8px 10px -6px hsl(207 90% 54% / 0.2);
+
+    --sidebar-background: 222 28% 9%;
+    --sidebar-foreground: 210 25% 85%;
+    --sidebar-primary: 207 90% 60%;
+    --sidebar-primary-foreground: 222 28% 8%;
+    --sidebar-accent: 217 25% 16%;
+    --sidebar-accent-foreground: 210 30% 96%;
+    --sidebar-border: 217 22% 18%;
+    --sidebar-ring: 207 90% 60%;
+  }
 }
 
 @layer base {
