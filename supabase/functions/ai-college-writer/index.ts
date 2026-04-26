@@ -28,10 +28,15 @@ Deno.serve(async (req) => {
 
   // Caller (e.g. bulk dashboard) can pick which AI backend to use via header.
   const providerHeader = (req.headers.get("X-AI-Provider") || "").toLowerCase();
-  const provider: "gemini" | "lovable" = providerHeader === "lovable" ? "lovable" : "gemini";
+  const ALLOWED_PROVIDERS = new Set(["gemini", "gemini-lite", "lovable", "openai-mini", "openai-nano"]);
+  const provider = (ALLOWED_PROVIDERS.has(providerHeader) ? providerHeader : "gemini") as
+    "gemini" | "gemini-lite" | "lovable" | "openai-mini" | "openai-nano";
 
   try {
-    const requiredKey = provider === "lovable" ? "LOVABLE_API_KEY" : "GEMINI_API_KEY";
+    const requiredKey =
+      provider === "lovable" ? "LOVABLE_API_KEY"
+      : (provider === "openai-mini" || provider === "openai-nano") ? "OPENAI_API_KEY"
+      : "GEMINI_API_KEY";
     if (!Deno.env.get(requiredKey)) throw new Error(`${requiredKey} is not configured`);
 
     const brief = (await req.json()) as CollegeBrief;
