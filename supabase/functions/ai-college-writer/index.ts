@@ -493,8 +493,24 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       return handleModelError(error);
     }
 
-    profile.description = descriptionHtml.trim();
-    profile.admission_process = admissionHtml.trim();
+    // Defence-in-depth: even though prompts forbid these, scrub any leaked
+    // citation / source markers, "Last updated" stamps and pull-quotes from
+    // the long-form HTML before saving.
+    const scrubHtml = (raw: string): string => {
+      let out = raw;
+      out = out.replace(/\[src:[^\]]*\]/gi, "");
+      out = out.replace(/\(\s*sources?\s*[:\/\u2013\u2014-]\s*[^)]{0,80}\)/gi, "");
+      out = out.replace(/\(\s*as\s+per\s+[^)]{0,80}\)/gi, "");
+      out = out.replace(/\(\s*ref\.?\s*[:\u2013\u2014-]\s*[^)]{0,80}\)/gi, "");
+      out = out.replace(/<p>\s*<em>\s*Last updated:[^<]*<\/em>\s*<\/p>/gi, "");
+      out = out.replace(/<em>\s*Last updated:[^<]*<\/em>/gi, "");
+      out = out.replace(/<\/?blockquote[^>]*>/gi, "");
+      out = out.replace(/<p>\s*<\/p>/gi, "");
+      out = out.replace(/[ \t]{2,}/g, " ");
+      return out.trim();
+    };
+    profile.description = scrubHtml(descriptionHtml);
+    profile.admission_process = scrubHtml(admissionHtml);
 
     if (!profile.description || !profile.admission_process) {
       return new Response(
