@@ -146,10 +146,17 @@ class TelemetryTracker {
   }
 
   addBusy(ms: number) {
-    this.state.cpu.busyMs += Math.max(0, ms);
-    this.state.cpu.wallMs += Math.max(1, Date.now() - this.wallStart);
-    this.wallStart = Date.now();
-    this.state.cpu.loadPct = Math.min(100, Math.round((this.state.cpu.busyMs / Math.max(1, this.state.cpu.wallMs)) * 100));
+    const now = Date.now();
+    const windowMs = Number(this.state.cpu.windowMs || 30_000);
+    const window = Array.isArray(this.state.cpu.window) ? this.state.cpu.window : [];
+    window.push({ ts: now, busyMs: Math.max(0, ms) });
+    // prune to window
+    const cutoff = now - windowMs;
+    while (window.length && window[0].ts < cutoff) window.shift();
+    const busyTotal = window.reduce((sum: number, e: any) => sum + (Number(e.busyMs) || 0), 0);
+    this.state.cpu.window = window.slice(-300);
+    this.state.cpu.loadPct = Math.min(100, Math.round((busyTotal / windowMs) * 100));
+    this.wallStart = now;
   }
 
   recordHttp(label: string, status: number, requestBytes: number, responseBytes: number, latencyMs: number) {
