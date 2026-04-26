@@ -639,32 +639,69 @@ const BulkLiveControlPanel = ({
             <div className="flex items-center gap-1.5 text-xs font-semibold">
               <CircuitBoard className="w-3.5 h-3.5 text-primary" /> AI Provider (live)
             </div>
-            <Badge variant={aiProvider === "gemini" ? "default" : "secondary"} className="text-[10px]">
-              {aiProvider === "gemini" ? "My Gemini API Key" : "Lovable AI Gateway"}
+            <Badge variant="default" className="text-[10px]">
+              {PROVIDER_LABEL[(aiProvider as AIProviderId) ?? "gemini"]}
             </Badge>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              size="sm"
-              variant={aiProvider === "gemini" ? "default" : "outline"}
-              disabled={savingProvider || aiProvider === "gemini"}
-              onClick={() => switchProvider("gemini")}
-              className="h-8 text-xs"
-            >
-              My Gemini API
-            </Button>
-            <Button
-              size="sm"
-              variant={aiProvider === "lovable" ? "default" : "outline"}
-              disabled={savingProvider || aiProvider === "lovable"}
-              onClick={() => switchProvider("lovable")}
-              className="h-8 text-xs"
-            >
-              Lovable AI
-            </Button>
-          </div>
+
+          {(() => {
+            const PROVIDERS: Array<{
+              id: AIProviderId;
+              name: string;
+              sub: string;
+              savings: string | null;
+              tone: "baseline" | "save-mid" | "save-high" | "save-max";
+            }> = [
+              { id: "lovable",     name: "Lovable AI",        sub: "Gemini Flash via gateway",  savings: null,        tone: "baseline" },
+              { id: "gemini",      name: "My Gemini API",     sub: "Direct Google · Flash",     savings: "88% cheaper", tone: "save-high" },
+              { id: "gemini-lite", name: "Gemini Flash-Lite", sub: "Direct Google · Lite",      savings: "87% cheaper", tone: "save-high" },
+              { id: "openai-mini", name: "OpenAI GPT-5 Mini", sub: "Your OpenAI key",           savings: "44% cheaper", tone: "save-mid" },
+              { id: "openai-nano", name: "OpenAI GPT-5 Nano", sub: "Your OpenAI key",           savings: "92% cheaper", tone: "save-max" },
+            ];
+            const toneClass = (tone: string, active: boolean) => {
+              if (active) return "";
+              if (tone === "save-max")  return "border-emerald-500/60 bg-emerald-500/5 hover:bg-emerald-500/10";
+              if (tone === "save-high") return "border-emerald-400/50 bg-emerald-400/5 hover:bg-emerald-400/10";
+              if (tone === "save-mid")  return "border-amber-400/50 bg-amber-400/5 hover:bg-amber-400/10";
+              return "";
+            };
+            const badgeClass = (tone: string) => {
+              if (tone === "save-max")  return "bg-emerald-600 text-white border-emerald-600";
+              if (tone === "save-high") return "bg-emerald-500 text-white border-emerald-500";
+              if (tone === "save-mid")  return "bg-amber-500 text-white border-amber-500";
+              return "";
+            };
+            return (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+                {PROVIDERS.map((p) => {
+                  const active = aiProvider === p.id;
+                  return (
+                    <Button
+                      key={p.id}
+                      size="sm"
+                      variant={active ? "default" : "outline"}
+                      disabled={savingProvider || active}
+                      onClick={() => switchProvider(p.id)}
+                      className={`h-auto min-h-[58px] py-2 px-2 flex flex-col items-start justify-between gap-1 text-left whitespace-normal ${toneClass(p.tone, active)}`}
+                    >
+                      <div className="flex items-center justify-between w-full gap-1">
+                        <span className="text-[11px] font-semibold leading-tight">{p.name}</span>
+                        {p.savings && (
+                          <Badge className={`text-[9px] px-1.5 py-0 h-4 font-bold border ${badgeClass(p.tone)}`}>
+                            {p.savings}
+                          </Badge>
+                        )}
+                      </div>
+                      <span className="text-[9px] opacity-70 leading-tight">{p.sub}</span>
+                    </Button>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
           <p className="text-[10px] text-muted-foreground mt-2">
-            Switch instantly — applies to the next AI call. Use this if one provider is rate-limited or denied.
+            Switch instantly — applies to the next AI call. Output stays identical across providers; only cost & speed change. Use cheaper options to reduce credit burn.
           </p>
         </div>
 
