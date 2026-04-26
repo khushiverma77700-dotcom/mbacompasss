@@ -1659,6 +1659,270 @@ export type Database = {
           },
         ]
       }
+      iim_waitlist_applications: {
+        Row: {
+          admitted: number | null
+          applications_received: number | null
+          batch_size: number | null
+          called_for_pi: number | null
+          college_name: string
+          college_short: string | null
+          college_type: string
+          created_at: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          offers_made: number | null
+          shortlisted: number | null
+          sort_order: number
+          updated_at: string
+          waitlisted: number | null
+          year: number
+        }
+        Insert: {
+          admitted?: number | null
+          applications_received?: number | null
+          batch_size?: number | null
+          called_for_pi?: number | null
+          college_name: string
+          college_short?: string | null
+          college_type?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          offers_made?: number | null
+          shortlisted?: number | null
+          sort_order?: number
+          updated_at?: string
+          waitlisted?: number | null
+          year?: number
+        }
+        Update: {
+          admitted?: number | null
+          applications_received?: number | null
+          batch_size?: number | null
+          called_for_pi?: number | null
+          college_name?: string
+          college_short?: string | null
+          college_type?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          offers_made?: number | null
+          shortlisted?: number | null
+          sort_order?: number
+          updated_at?: string
+          waitlisted?: number | null
+          year?: number
+        }
+        Relationships: []
+      }
+      iim_waitlist_leads: {
+        Row: {
+          admin_notes: string | null
+          cat_percentile: number | null
+          category: string | null
+          created_at: string
+          current_status: string | null
+          email: string
+          id: string
+          message: string | null
+          name: string
+          phone: string
+          source: string | null
+          status: string
+          target_iims: string[] | null
+          updated_at: string
+          year: number | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          cat_percentile?: number | null
+          category?: string | null
+          created_at?: string
+          current_status?: string | null
+          email: string
+          id?: string
+          message?: string | null
+          name: string
+          phone: string
+          source?: string | null
+          status?: string
+          target_iims?: string[] | null
+          updated_at?: string
+          year?: number | null
+        }
+        Update: {
+          admin_notes?: string | null
+          cat_percentile?: number | null
+          category?: string | null
+          created_at?: string
+          current_status?: string | null
+          email?: string
+          id?: string
+          message?: string | null
+          name?: string
+          phone?: string
+          source?: string | null
+          status?: string
+          target_iims?: string[] | null
+          updated_at?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
+      iim_waitlist_movement: {
+        Row: {
+          category: string
+          college_name: string
+          college_short: string | null
+          college_type: string
+          created_at: string
+          five_yr_avg: number | null
+          id: string
+          is_active: boolean
+          sort_order: number
+          trend: string | null
+          updated_at: string
+          wl_2021: number | null
+          wl_2022: number | null
+          wl_2023: number | null
+          wl_2024: number | null
+          wl_2025: number | null
+          wl_2026_est: number | null
+        }
+        Insert: {
+          category?: string
+          college_name: string
+          college_short?: string | null
+          college_type?: string
+          created_at?: string
+          five_yr_avg?: number | null
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          trend?: string | null
+          updated_at?: string
+          wl_2021?: number | null
+          wl_2022?: number | null
+          wl_2023?: number | null
+          wl_2024?: number | null
+          wl_2025?: number | null
+          wl_2026_est?: number | null
+        }
+        Update: {
+          category?: string
+          college_name?: string
+          college_short?: string | null
+          college_type?: string
+          created_at?: string
+          five_yr_avg?: number | null
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          trend?: string | null
+          updated_at?: string
+          wl_2021?: number | null
+          wl_2022?: number | null
+          wl_2023?: number | null
+          wl_2024?: number | null
+          wl_2025?: number | null
+          wl_2026_est?: number | null
+        }
+        Relationships: []
+      }
+      iim_waitlist_results: {
+        Row: {
+          college_name: string
+          college_short: string | null
+          college_type: string
+          created_at: string
+          id: string
+          is_active: boolean
+          notes: string | null
+          result_date: string | null
+          result_date_label: string | null
+          result_url: string | null
+          sort_order: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          college_name: string
+          college_short?: string | null
+          college_type?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          result_date?: string | null
+          result_date_label?: string | null
+          result_url?: string | null
+          sort_order?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          college_name?: string
+          college_short?: string | null
+          college_type?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          result_date?: string | null
+          result_date_label?: string | null
+          result_url?: string | null
+          sort_order?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      iim_waitlist_rti: {
+        Row: {
+          college_name: string
+          college_short: string | null
+          college_type: string
+          created_at: string
+          id: string
+          insights: Json
+          is_active: boolean
+          rti_year: number
+          sort_order: number
+          source_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          college_name: string
+          college_short?: string | null
+          college_type?: string
+          created_at?: string
+          id?: string
+          insights?: Json
+          is_active?: boolean
+          rti_year?: number
+          sort_order?: number
+          source_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          college_name?: string
+          college_short?: string | null
+          college_type?: string
+          created_at?: string
+          id?: string
+          insights?: Json
+          is_active?: boolean
+          rti_year?: number
+          sort_order?: number
+          source_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       indexing_logs: {
         Row: {
           action: string
