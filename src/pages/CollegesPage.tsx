@@ -112,6 +112,9 @@ const CollegesPage = () => {
     return result;
   }, [colleges, activeTab, search, selectedCity, selectedState, selectedExam, selectedFee, selectedSpec, sortBy]);
 
+  // Reset pagination whenever the filter set changes
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [activeTab, search, selectedCity, selectedState, selectedExam, selectedFee, selectedSpec, sortBy]);
+
   const regions = (cityPages || []).slice(0, 12);
   const totalColleges = colleges.length;
   const iimCount = colleges.filter((c: any) => c.type === "IIM").length;
