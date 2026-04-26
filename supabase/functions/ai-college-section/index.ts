@@ -484,6 +484,20 @@ function sanitizeHtml(html: string): string {
   out = out.replace(/\s+(width|height|align|bgcolor|color|face|size)\s*=\s*'[^']*'/gi, "");
   // Drop any <h1> that the model produced (page already has one)
   out = out.replace(/<h1[^>]*>/gi, "<h2>").replace(/<\/h1>/gi, "</h2>");
+  // Strip leaked citation / source markers from long-form HTML (defence-in-depth — prompts forbid these but models occasionally leak them)
+  out = out.replace(/\[src:[^\]]*\]/gi, "");
+  out = out.replace(/\(\s*sources?\s*[:\/\u2013\u2014-]\s*[^)]{0,80}\)/gi, "");
+  out = out.replace(/\(\s*as\s+per\s+[^)]{0,80}\)/gi, "");
+  out = out.replace(/\(\s*ref\.?\s*[:\u2013\u2014-]\s*[^)]{0,80}\)/gi, "");
+  // Strip stray "Last updated:" stamps inserted by the model
+  out = out.replace(/<p>\s*<em>\s*Last updated:[^<]*<\/em>\s*<\/p>/gi, "");
+  out = out.replace(/<em>\s*Last updated:[^<]*<\/em>/gi, "");
+  // Strip pull-quote / blockquote tags
+  out = out.replace(/<\/?blockquote[^>]*>/gi, "");
+  // Collapse double-spaces created by the strips above
+  out = out.replace(/[ \t]{2,}/g, " ");
+  // Re-collapse paragraphs that are now empty
+  out = out.replace(/<p>\s*<\/p>/gi, "");
   return out.trim();
 }
 
