@@ -26,6 +26,8 @@ const PRICING: Record<string, { input: number; output: number }> = {
   "gemini-2.5-pro": { input: 1.25, output: 10.0 },
   "gemini-2.5-flash": { input: 0.3, output: 2.5 },
   "gemini-2.5-flash-lite": { input: 0.1, output: 0.4 },
+  "gpt-5-mini": { input: 0.25, output: 2.0 },
+  "gpt-5-nano": { input: 0.05, output: 0.4 },
 };
 
 // Map any legacy "google/…" or "openai/…" model IDs the rest of the codebase
@@ -62,6 +64,13 @@ interface ChatBody {
   [k: string]: any;
 }
 
+export type AIProvider =
+  | "gemini"        // Direct Google Gemini (user's GEMINI_API_KEY) — default Flash model
+  | "gemini-lite"   // Direct Google Gemini (user's GEMINI_API_KEY) — Flash-Lite (~87% cheaper)
+  | "lovable"       // Lovable AI Gateway (Gemini Flash via gateway) — baseline cost
+  | "openai-mini"   // Direct OpenAI (user's OPENAI_API_KEY) — gpt-5-mini (~44% cheaper)
+  | "openai-nano";  // Direct OpenAI (user's OPENAI_API_KEY) — gpt-5-nano (cheapest)
+
 interface CallOptions {
   signal?: AbortSignal;
   feature?: string;
@@ -69,12 +78,11 @@ interface CallOptions {
   maxRetries?: number;
   skipLog?: boolean;
   /**
-   * Which upstream to use:
-   *   "gemini"  → call Google's OpenAI-compatible Gemini endpoint with GEMINI_API_KEY (default).
-   *   "lovable" → call the Lovable AI gateway with LOVABLE_API_KEY (legacy fallback).
-   * Pick is dashboard-driven for bulk jobs.
+   * Which upstream to use. The dashboard's bulk job toggle picks this.
+   * All providers accept the same OpenAI-compatible payload (messages, tools,
+   * tool_choice, response_format, stream, …) so callers don't need to change.
    */
-  provider?: "gemini" | "lovable";
+  provider?: AIProvider;
   /**
    * Cost-routing hint. The gateway automatically picks the cheapest model that
    * preserves output quality for that purpose. Caller's `body.model` is only
@@ -110,6 +118,7 @@ function routeModelForPurpose(model: string | undefined, purpose?: CallOptions["
 }
 
 const LOVABLE_GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
+const OPENAI_CHAT_URL = "https://api.openai.com/v1/chat/completions";
 
 interface LogParams {
   feature: string;
@@ -186,7 +195,40 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
     }
   }
 
-  // ── Provider: Direct Gemini (default) ────────────────────────────────────────
+  // ── Provider: Direct OpenAI (user's OPENAI_API_KEY) ──────────────────────────
+  if (provider === "openai-mini" || provider === "openai-nano") {
+    const openaiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!openaiKey) {
+      const err = "OPENAI_API_KEY is not configured.";
+      console.error(`[aiGateway][${feature}] ${err}`);
+      if (!skipLog) {
+        await logUsage({ feature, model: body.model, userId, provider: "none", status: "error", errorMessage: err, latencyMs: 0 });
+      }
+      return new Response(JSON.stringify({ error: err }), { status: 500, headers: { "Content-Type": "application/json" } });
+    }
+    const openaiModel = provider === "openai-mini" ? "gpt-5-mini" : "gpt-5-nano";
+    const payload = buildOpenAICompatPayload(body, openaiModel);
+    try {
+      const resp = await withRetry(
+        () => callUpstream(OPENAI_CHAT_URL, openaiKey, payload, signal),
+        { maxRetries, label: `${provider}[${feature}]` },
+      );
+      if (!skipLog) {
+        if (resp.ok) logSuccess(resp, isStream, feature, openaiModel, userId, provider, startedAt);
+        else await logErrorFromResp(resp, feature, openaiModel, userId, provider, startedAt);
+      }
+      return resp;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error(`[aiGateway][${feature}] OpenAI call threw:`, msg);
+      if (!skipLog) {
+        await logUsage({ feature, model: openaiModel, userId, provider, status: "error", errorMessage: msg, latencyMs: Date.now() - startedAt });
+      }
+      return new Response(JSON.stringify({ error: msg }), { status: 502, headers: { "Content-Type": "application/json" } });
+    }
+  }
+
+  // ── Provider: Direct Gemini (default `gemini` and `gemini-lite`) ─────────────
   const geminiKey = Deno.env.get("GEMINI_API_KEY");
   if (!geminiKey) {
     const err = "GEMINI_API_KEY is not configured.";
@@ -197,20 +239,24 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
     return new Response(JSON.stringify({ error: err }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 
-  const geminiModel = resolveGeminiModel(body.model);
+  // gemini-lite forces flash-lite regardless of caller's model. `gemini`
+  // honors the caller's model (already cost-routed by purpose above).
+  const geminiModel = provider === "gemini-lite"
+    ? "gemini-2.5-flash-lite"
+    : resolveGeminiModel(body.model);
   const payload = buildOpenAICompatPayload(body, geminiModel);
 
   try {
     const resp = await withRetry(
       () => callUpstream(GEMINI_OPENAI_COMPAT_URL, geminiKey, payload, signal),
-      { maxRetries, label: `gemini[${feature}]` },
+      { maxRetries, label: `${provider}[${feature}]` },
     );
 
     if (!skipLog) {
       if (resp.ok) {
-        logSuccess(resp, isStream, feature, geminiModel, userId, "gemini", startedAt);
+        logSuccess(resp, isStream, feature, geminiModel, userId, provider, startedAt);
       } else {
-        await logErrorFromResp(resp, feature, geminiModel, userId, "gemini", startedAt);
+        await logErrorFromResp(resp, feature, geminiModel, userId, provider, startedAt);
       }
     }
     return resp;
@@ -220,7 +266,7 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
     if (!skipLog) {
       await logUsage({
         feature, model: geminiModel, userId,
-        provider: "gemini", status: "error",
+        provider, status: "error",
         errorMessage: msg, latencyMs: Date.now() - startedAt,
       });
     }

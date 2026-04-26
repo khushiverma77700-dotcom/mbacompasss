@@ -515,7 +515,7 @@ export default function AdminBulkGenerateSections() {
           status={job.status}
           paused={!!job.paused}
           concurrency={Number(job.concurrency) || 1}
-          aiProvider={(job as any).ai_provider === "lovable" ? "lovable" : "gemini"}
+          aiProvider={(() => { const v = String((job as any).ai_provider || "gemini"); return (["gemini","gemini-lite","lovable","openai-mini","openai-nano"].includes(v) ? v : "gemini") as any; })()}
           active={liveMetrics.activeRows}
           succeeded={liveMetrics.succeeded}
           failed={liveMetrics.failed}
