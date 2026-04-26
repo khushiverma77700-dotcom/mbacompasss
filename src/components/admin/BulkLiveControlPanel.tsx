@@ -332,8 +332,10 @@ const BulkLiveControlPanel = ({
 
   const workerSlots = useMemo<WorkerSlotView[]>(() => {
     const fromTelemetry = Array.isArray(telemetry?.workerSlots) ? telemetry.workerSlots : [];
-    return Array.from({ length: 10 }).map((_, i) => {
-      const slot = fromTelemetry.find((s: any) => Number(s?.slot) === i + 1) || fromTelemetry[i] || {};
+    // Only render up to the configured concurrency — never invent extra slots.
+    const slotCount = Math.max(1, Math.min(10, concurrency));
+    return Array.from({ length: slotCount }).map((_, i) => {
+      const slot = fromTelemetry.find((s: any) => Number(s?.slot) === i + 1) || {};
       const enabled = i < concurrency;
       const rawState = String(slot?.state || (paused ? "paused" : enabled ? (i < liveActiveWorkers ? "active" : "idle") : "disabled"));
       return {
