@@ -411,7 +411,7 @@ const AdminSEODashboard = () => {
         };
         const passed = Object.values(checks).filter(Boolean).length;
         const score = Math.round((passed / Object.keys(checks).length) * 100);
-        const status: ScoreStatus = score >= 80 ? "good" : score >= 50 ? "warning" : "error";
+        const status: ScoreStatus = score >= 80 ? "good" : score >= 50 ? "warning" : "poor";
         const issues: string[] = [];
         if (!checks.hasMetaTitle) issues.push("Meta title length");
         if (!checks.hasMetaDesc) issues.push("Meta description missing/short");
