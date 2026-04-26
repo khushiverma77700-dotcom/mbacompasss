@@ -183,6 +183,7 @@ function MiniBars({ values, labels, est }: { values: (number | null)[]; labels: 
 const SITE_URL = typeof window !== "undefined" ? window.location.origin : "https://mbacompass.in";
 
 export default function IIMWaitlistPage() {
+  const { isAdmin } = useAuth();
   const [results, setResults] = useState<ResultRow[]>([]);
   const [movement, setMovement] = useState<MovementRow[]>([]);
   const [rti, setRti] = useState<RTIRow[]>([]);
