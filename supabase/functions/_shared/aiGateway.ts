@@ -26,6 +26,8 @@ const PRICING: Record<string, { input: number; output: number }> = {
   "gemini-2.5-pro": { input: 1.25, output: 10.0 },
   "gemini-2.5-flash": { input: 0.3, output: 2.5 },
   "gemini-2.5-flash-lite": { input: 0.1, output: 0.4 },
+  "gpt-5-mini": { input: 0.25, output: 2.0 },
+  "gpt-5-nano": { input: 0.05, output: 0.4 },
 };
 
 // Map any legacy "google/…" or "openai/…" model IDs the rest of the codebase
