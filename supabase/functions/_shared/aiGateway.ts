@@ -321,8 +321,17 @@ function buildOpenAICompatPayload(body: ChatBody, model: string) {
 
   if (typeof body.stream === "boolean") payload.stream = body.stream;
   if (typeof maxTokens === "number") {
-    if (isOpenAINewGen) payload.max_completion_tokens = maxTokens;
-    else payload.max_tokens = maxTokens;
+    if (isOpenAINewGen) {
+      // GPT-5 reasoning models spend tokens on internal reasoning before
+      // producing visible output. If the caller's budget is too small the
+      // model returns an empty message. Give it generous headroom (at least
+      // 4× the visible-output budget, capped at 16k) so tool-calling/JSON
+      // generation actually completes.
+      const padded = Math.min(Math.max(maxTokens * 4, 4000), 16000);
+      payload.max_completion_tokens = padded;
+    } else {
+      payload.max_tokens = maxTokens;
+    }
   }
   if (typeof temperature === "number" && !isOpenAINewGen) payload.temperature = temperature;
   if (typeof body.top_p === "number" && !isOpenAINewGen) payload.top_p = body.top_p;
@@ -331,7 +340,15 @@ function buildOpenAICompatPayload(body: ChatBody, model: string) {
   if (body.response_format) payload.response_format = body.response_format;
   if (Array.isArray(body.tools) && body.tools.length > 0) payload.tools = body.tools;
   if (body.tool_choice) payload.tool_choice = body.tool_choice;
-  if (reasoningEffort) payload.reasoning_effort = reasoningEffort;
+  // GPT-5 reasoning models default to "medium" effort which burns the entire
+  // token budget on hidden reasoning before producing tool-call output. For
+  // structured-extraction workloads we force "minimal" unless the caller
+  // explicitly asked for more.
+  if (isOpenAINewGen) {
+    payload.reasoning_effort = reasoningEffort || "minimal";
+  } else if (reasoningEffort) {
+    payload.reasoning_effort = reasoningEffort;
+  }
 
   return payload;
 }
