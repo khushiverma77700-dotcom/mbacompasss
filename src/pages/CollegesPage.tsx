@@ -364,12 +364,26 @@ const CollegesPage = () => {
           )}
         </div>
 
-        {/* College Cards */}
+        {/* College Cards (paginated for performance — 600+ items would otherwise jank the UI) */}
         <div className="space-y-5">
-          {filtered.map((college: any, i: number) => (
+          {filtered.slice(0, visibleCount).map((college: any, i: number) => (
             <CollegeListingCard key={college.id} college={college} index={i} rank={i + 1} />
           ))}
         </div>
+
+        {visibleCount < filtered.length && (
+          <div className="flex justify-center mt-8">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+              className="rounded-xl"
+            >
+              Show {Math.min(PAGE_SIZE, filtered.length - visibleCount)} more
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        )}
 
         {filtered.length === 0 && (
           <div className="text-center py-24 bg-card rounded-2xl border border-border">
