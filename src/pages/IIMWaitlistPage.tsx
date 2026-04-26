@@ -201,10 +201,16 @@ export default function IIMWaitlistPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiUpdatedAt, setAiUpdatedAt] = useState<string | null>(null);
 
-  // Predictor mini-tool
+  // Advanced Predictor mini-tool
   const [predCat, setPredCat] = useState("General");
   const [predIIM, setPredIIM] = useState<string>("");
   const [predWL, setPredWL] = useState<string>("");
+  const [predCAT, setPredCAT] = useState<string>(""); // CAT %ile
+  const [predGender, setPredGender] = useState<string>("Male");
+  const [predAcad, setPredAcad] = useState<string>("Engineering");
+  const [predWorkEx, setPredWorkEx] = useState<string>("0");
+  const [predLoading, setPredLoading] = useState(false);
+  const [aiPrediction, setAiPrediction] = useState<{prob:number; verdict:string; analysis:string; tips:string[]} | null>(null);
 
   const [lead, setLead] = useState({ name: "", email: "", phone: "", current_status: "", message: "" });
   const [submitting, setSubmitting] = useState(false);
