@@ -234,7 +234,7 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
           </div>
         </div>
       </Link>
-    </motion.div>
+    </div>
   );
 };
 
