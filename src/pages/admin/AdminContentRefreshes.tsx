@@ -263,7 +263,7 @@ export default function AdminContentRefreshes() {
               <div className="text-xs text-muted-foreground pb-2">
                 Tick the fields you want to publish. Unchanged fields are hidden by default.
               </div>
-              <ScrollArea className="flex-1 pr-3">
+              <ScrollArea className="flex-1 min-h-0 pr-3 max-h-[70vh]">
                 <div className="space-y-4">
                   {Object.entries(open.diff)
                     .sort(([, a], [, b]) => Number(b.changed) - Number(a.changed))
@@ -296,17 +296,17 @@ export default function AdminContentRefreshes() {
                             <div className="rounded border border-rose-500/30 bg-rose-500/5 p-3">
                               <div className="text-[10px] uppercase font-bold text-rose-700 dark:text-rose-400 mb-1">Current</div>
                               {html ? (
-                                <div className="prose prose-sm max-w-none dark:prose-invert text-xs max-h-64 overflow-auto" dangerouslySetInnerHTML={{ __html: before }} />
+                                <div className="prose prose-sm max-w-none dark:prose-invert text-xs" dangerouslySetInnerHTML={{ __html: before }} />
                               ) : (
-                                <pre className="text-xs whitespace-pre-wrap break-words max-h-64 overflow-auto">{before}</pre>
+                                <pre className="text-xs whitespace-pre-wrap break-words">{before}</pre>
                               )}
                             </div>
                             <div className="rounded border border-emerald-500/30 bg-emerald-500/5 p-3">
                               <div className="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400 mb-1">Refreshed</div>
                               {html ? (
-                                <div className="prose prose-sm max-w-none dark:prose-invert text-xs max-h-64 overflow-auto" dangerouslySetInnerHTML={{ __html: after }} />
+                                <div className="prose prose-sm max-w-none dark:prose-invert text-xs" dangerouslySetInnerHTML={{ __html: after }} />
                               ) : (
-                                <pre className="text-xs whitespace-pre-wrap break-words max-h-64 overflow-auto">{after}</pre>
+                                <pre className="text-xs whitespace-pre-wrap break-words">{after}</pre>
                               )}
                             </div>
                           </CardContent>

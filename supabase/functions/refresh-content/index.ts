@@ -140,14 +140,25 @@ Deno.serve(async (req) => {
 REFRESH MODE: ${mode.toUpperCase()}
 ${modeNote}
 
-NON-NEGOTIABLE RULES:
+NON-NEGOTIABLE DATA RULES:
 - Use only verified ${year} / ${year - 1}-${String(year).slice(-2)} data (NIRF ${year}, latest placement reports, ${year}-${year + 1} admission brochures).
 - For every key stat append a machine-readable citation: [src:NIRF ${year}], [src:Placement Report ${year - 1}-${String(year).slice(-2)}], [src:Admission Brochure ${year}].
 - NEVER use "N/A", "Not available", "Contact for details", "TBD". Give realistic ranges if exact figure unknown.
-- Long-form content fields must be well-formatted HTML: short paragraphs, <ul>/<ol>, at least one <table> for key facts, semantic <h2>/<h3>.
-- End any long description with: <p><em>Last updated: ${todayIso}</em></p>
 - Scope: MBA / PGP / PGDM / MMS / MiM / Executive MBA / Masters in Management ONLY.
-- Return ALL ${fields.length} fields in the tool call, even if unchanged in smart mode.`;
+- Return ALL ${fields.length} fields in the tool call, even if unchanged in smart mode.
+
+HYPERLINK RULES (STRICT):
+- REMOVE all links to google search, bing, or generic/irrelevant pages.
+- DO NOT add links back to mbacompass.in or third-party/partner sites.
+- Allowed link targets ONLY: (1) Official college/institute website, (2) Official exam website (iimcat.ac.in, xatonline.in, etc.), (3) Government / regulatory sites (nirfindia.org, aicte-india.org, ugc.gov.in).
+- Every <a href="..."> must be a real verified official URL with target="_blank" rel="noopener". If unsure, keep as plain text — never guess.
+
+FORMATTING RULES (long-form HTML fields):
+- Concise bullet lists with 3–5 crisp <li> items per section — no long paragraphs.
+- Important dates, deadlines, fees, cut-offs and key numbers MUST be bold AND underlined: <strong><u>15 Jan ${year}</u></strong>.
+- Use <table> with <thead>/<tbody> for placements, cut-offs, important dates, fee structures, and comparisons.
+- Semantic <h2>/<h3> subheadings. No repetition, no fluff. Human-friendly tone.
+- End any long description with: <p><em>Last updated: ${todayIso}</em></p>`;
 
     const userPrompt = `Refresh the following ${body.entity_type} page:
 

@@ -57,11 +57,11 @@ export function AIInstructionEditor({ entityType, entityId, entityName, size = "
       const total = (data as any)?.total_fields ?? 0;
       toast({
         title: "AI edit ready for review",
-        description: `${entityName || "Entity"}: ${changed}/${total} fields proposed. Open the review queue to approve.`,
+        description: `${entityName || "Entity"}: ${changed}/${total} fields proposed. Open the Content Refresh Queue when you're ready to approve.`,
       });
       setOpen(false);
       setInstruction("");
-      navigate("/admin/content-refreshes");
+      // NOTE: do NOT auto-navigate away — keep the admin in their current workflow.
     } catch (e) {
       const msg = e instanceof Error ? e.message : "AI edit failed";
       toast({ title: "AI edit failed", description: msg, variant: "destructive" });
