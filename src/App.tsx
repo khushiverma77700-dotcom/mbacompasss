@@ -131,6 +131,7 @@ const MockResultPage = lazyWithPreload(() => import("./pages/mocks/MockResultPag
 const MyMocksPage = lazyWithPreload(() => import("./pages/mocks/MyMocksPage"));
 const AdminHyperlinkUpdate = lazyWithPreload(() => import("./pages/admin/AdminHyperlinkUpdate"));
 const AdminBulkAIEdit = lazyWithPreload(() => import("./pages/admin/AdminBulkAIEdit"));
+const AdminIIMWaitlist = lazyWithPreload(() => import("./pages/admin/AdminIIMWaitlist"));
 const MockReviewPage = lazyWithPreload(() => import("./pages/mocks/MockReviewPage"));
 const MockLeaderboardPage = lazyWithPreload(() => import("./pages/mocks/MockLeaderboardPage"));
 const MockCheckoutReturnPage = lazyWithPreload(() => import("./pages/mocks/MockCheckoutReturnPage"));
@@ -499,6 +500,7 @@ const App = () => (
               <Route path="mock-tests/:testId/builder" element={<LazyPage><AdminMockBuilder /></LazyPage>} />
               <Route path="hyperlink-update" element={<LazyPage><AdminHyperlinkUpdate /></LazyPage>} />
               <Route path="bulk-ai-edit" element={<LazyPage><AdminBulkAIEdit /></LazyPage>} />
+              <Route path="iim-waitlist" element={<LazyPage><AdminIIMWaitlist /></LazyPage>} />
             </Route>
 
             {/* Home eager; rest lazy with invisible fallback */}
