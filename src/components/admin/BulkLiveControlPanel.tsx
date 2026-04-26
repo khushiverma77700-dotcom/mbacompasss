@@ -801,6 +801,110 @@ const BulkLiveControlPanel = ({
           </p>
         </div>
 
+        {/* === LIVE COST TRACKER === */}
+        <div className="rounded-lg border bg-gradient-to-br from-emerald-500/5 via-card to-amber-500/5 p-3">
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+            <div className="flex items-center gap-1.5 text-xs font-semibold">
+              <Coins className="w-4 h-4 text-amber-600" />
+              Live Cost Tracker
+              <span className="text-[10px] text-muted-foreground font-normal ml-1">
+                — since job start · updates every {isTerminal || paused ? "15s" : "4s"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-[10px] h-5 font-mono gap-1">
+                <Activity className="w-3 h-3" /> {costCalls} call{costCalls === 1 ? "" : "s"}
+              </Badge>
+              <Badge variant="outline" className="text-[10px] h-5 font-mono">
+                {costTokens.toLocaleString()} tokens
+              </Badge>
+              <input
+                type="number"
+                value={usdInr}
+                onChange={(e) => setUsdInr(Math.max(1, Number(e.target.value) || 83.5))}
+                className="w-16 h-6 text-[10px] font-mono px-1.5 rounded border bg-background"
+                title="USD → INR rate (editable)"
+                step={0.1}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="rounded-lg border bg-card p-3">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700">
+                  <DollarSign className="w-3.5 h-3.5" /> USD SPENT
+                </div>
+                <Badge variant="outline" className="text-[10px] h-5 border-emerald-500/40 text-emerald-700">live</Badge>
+              </div>
+              <div className="text-2xl font-bold font-mono leading-tight text-emerald-700">
+                ${costUsd.toFixed(costUsd < 0.01 ? 6 : 4)}
+              </div>
+              <Sparkline data={costSeries.map((v) => v * 1_000_000)} color="rgb(5 150 105)" />
+              <div className="text-[10px] text-muted-foreground mt-0.5">
+                avg ${costCalls > 0 ? (costUsd / costCalls).toFixed(5) : "0.00000"} / call
+              </div>
+            </div>
+
+            <div className="rounded-lg border bg-card p-3">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-amber-700">
+                  <IndianRupee className="w-3.5 h-3.5" /> INR ESTIMATE
+                </div>
+                <Badge variant="outline" className="text-[10px] h-5 border-amber-500/40 text-amber-700">
+                  ₹{usdInr.toFixed(2)}/USD
+                </Badge>
+              </div>
+              <div className="text-2xl font-bold font-mono leading-tight text-amber-700">
+                ₹{costInr.toFixed(costInr < 1 ? 4 : 2)}
+              </div>
+              <Sparkline data={costSeries.map((v) => v * usdInr * 1_000_000)} color="rgb(217 119 6)" />
+              <div className="text-[10px] text-muted-foreground mt-0.5">
+                projected: ₹{totalUnits > 0 && processedUnits > 0 ? ((costInr / processedUnits) * totalUnits).toFixed(2) : "—"} for full job
+              </div>
+            </div>
+
+            <div className="rounded-lg border bg-card p-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold">
+                  <CircuitBoard className="w-3.5 h-3.5 text-primary" /> BY MODEL
+                </div>
+                <Badge variant="outline" className="text-[10px] h-5">
+                  {costBreakdown.length} model{costBreakdown.length === 1 ? "" : "s"}
+                </Badge>
+              </div>
+              {costBreakdown.length === 0 ? (
+                <div className="text-[11px] text-muted-foreground py-3 font-mono text-center">// no AI calls recorded yet</div>
+              ) : (
+                <div className="space-y-1.5 max-h-24 overflow-y-auto pr-1">
+                  {costBreakdown.slice(0, 5).map((b) => {
+                    const pct = costUsd > 0 ? (b.usd / costUsd) * 100 : 0;
+                    return (
+                      <div key={b.model}>
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className="font-mono truncate" title={b.model}>{b.model}</span>
+                          <span className="font-mono">${b.usd.toFixed(5)}</span>
+                        </div>
+                        <div className="h-1 bg-muted rounded-full overflow-hidden">
+                          <div className="h-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                        </div>
+                        <div className="text-[9px] text-muted-foreground font-mono">
+                          {b.calls} calls · {b.tokens.toLocaleString()} tokens
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-2 text-[10px] text-muted-foreground flex items-center gap-2 flex-wrap">
+            <ShieldCheck className="w-3 h-3 text-primary" />
+            <span>Cost is computed from <code className="font-mono bg-muted px-1 rounded">ai_usage_logs</code> using per-model pricing. INR rate is editable above.</span>
+          </div>
+        </div>
+
         {/* Controls */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Concurrency slider */}
