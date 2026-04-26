@@ -415,14 +415,42 @@ async function getAccessToken(
 
   const signingInput = `${enc(header)}.${enc(payload)}`;
 
-  const pemContent = sa.private_key
-    .replace(/-----BEGIN PRIVATE KEY-----/, "")
-    .replace(/-----END PRIVATE KEY-----/, "")
-    .replace(/\n/g, "");
+  // Aggressively normalise the PEM so we tolerate every common paste shape:
+  //   • literal "\n" sequences (from JSON-encoded values pasted as plain text)
+  //   • CRLF line endings
+  //   • surrounding quotes
+  //   • missing/extra BEGIN/END markers
+  //   • any whitespace, tabs, or stray characters between base64 chunks
+  let pemContent = sa.private_key
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\r/g, "\n")
+    .replace(/^["']|["']$/g, "")
+    .replace(/-----BEGIN [A-Z ]+-----/g, "")
+    .replace(/-----END [A-Z ]+-----/g, "")
+    .replace(/\s+/g, "");
 
-  const binaryKey = Uint8Array.from(atob(pemContent), (character) =>
-    character.charCodeAt(0)
-  );
+  // Keep only valid base64 chars so atob() never sees garbage.
+  pemContent = pemContent.replace(/[^A-Za-z0-9+/=]/g, "");
+
+  // Pad to a multiple of 4 (defensive).
+  while (pemContent.length % 4 !== 0) pemContent += "=";
+
+  let binaryKey: Uint8Array;
+  try {
+    binaryKey = Uint8Array.from(atob(pemContent), (character) =>
+      character.charCodeAt(0)
+    );
+  } catch (decodeErr: any) {
+    throw createStageError(
+      "auth_issue",
+      "GOOGLE_INDEXING_PRIVATE_KEY is malformed and cannot be base64-decoded. Re-save it exactly as Google issued it — either the full service-account JSON in GOOGLE_INDEXING_SERVICE_ACCOUNT, or the complete PEM block (including the BEGIN/END lines and newlines) in GOOGLE_INDEXING_PRIVATE_KEY.",
+      {
+        response_preview: `pem_length=${pemContent.length}, sample=${pemContent.slice(0, 24)}…`,
+        decode_error: decodeErr?.message || String(decodeErr),
+      }
+    );
+  }
 
   const cryptoKey = await crypto.subtle.importKey(
     "pkcs8",
