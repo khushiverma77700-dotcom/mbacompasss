@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+
 import {
   MapPin, Star, Award, Users, GraduationCap, TrendingUp, ChevronRight,
   BadgeCheck, Trophy, BookOpen, Calendar, IndianRupee, Briefcase, ShieldCheck,
@@ -21,11 +21,7 @@ const CollegeListingCard = ({ college, index = 0, rank }: Props) => {
   const displayRank = college.ranking || rank;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: Math.min(index * 0.03, 0.3), duration: 0.4 }}
-    >
+    <div className="animate-fade-in">
       <Link
         to={`/college/${college.slug}`}
         className="group relative block bg-card rounded-2xl border border-border hover:border-primary/40 hover:shadow-[0_20px_50px_-15px_hsl(var(--primary)/0.3)] hover:-translate-y-1 transition-all duration-500 overflow-hidden"
