@@ -94,20 +94,25 @@ ACCURACY IS MANDATORY. For well-known Indian B-schools (all IIMs, XLRI, FMS, MDI
 - accreditations (AACSB / AMBA / EQUIS / NBA / NAAC if held)
 Reference points you must respect: XLRI Jamshedpur was founded in 1949. IIM Ahmedabad in 1961. IIM Bangalore in 1973. IIM Calcutta in 1961. FMS Delhi in 1954. JBIMS Mumbai in 1965. SPJIMR in 1981. MDI Gurgaon in 1973. IIFT in 1963. NMIMS in 1981. ISB Hyderabad in 2001.
 
-FRESHNESS & CITATION RULES (MACHINE-READABLE):
+FRESHNESS:
 - Today is ${todayIso}. Active admission cycle: ${admissionCycle}. Freshness window: ${freshness}.
-- For EVERY key stat (NIRF rank, fees, average/highest/median package, intake) you MUST append a machine-readable inline citation marker in this EXACT shape: [src:<Source> <Year>]. Examples: [src:NIRF ${currentYear}], [src:Placement Report ${currentYear - 1}-${String(currentYear).slice(-2)}], [src:Admission Brochure ${currentYear}]. Our frontend converts these markers into clickable "view source" pills, so the syntax must be exact (square brackets, "src:" prefix, no quotes, no URLs).
-- Use at least one [src:NIRF ${currentYear}], one [src:Placement Report …], and one [src:Admission Brochure …] across the description.
-- The long-form description MUST end with a small italic line: <p><em>Last updated: ${todayIso}</em></p>
+- Weave the data year naturally into the prose (e.g. "ranked #4 in NIRF ${currentYear}", "average package of ₹28 LPA in the ${currentYear - 1}-${String(currentYear).slice(-2)} placement season").
 
-Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. Never include <html>, <head>, <body>, <h1>, or markdown fences. ABSOLUTELY NO inline style="" attributes, NO <font> tags, NO class="" / id="" attributes — plain semantic HTML only.
+# ABSOLUTE OUTPUT BANS — DO NOT VIOLATE
+- DO NOT include ANY citation, source, footnote or attribution markers anywhere in the output. Forbidden patterns include: "[src:NIRF 2025]", "(source: NIRF 2025)", "(Source/NIRF 2026 Ranking)", "(as per NIRF)", "[1]", "[NIRF]", "Ref:", "*Source:*", "Sources —", parenthetical attributions like "(Source: ...)", "(Ref: ...)". State facts plainly with the year woven into the sentence.
+- DO NOT add pull-quotes, <blockquote>, decorative em-dashes as separators (— — —), random italicised one-liners, "Disclaimer:", "Note:" boxes, or any meta-commentary.
+- DO NOT include "Last updated:" stamps inside generated HTML. The platform handles freshness display itself.
+- DO NOT use markdown ('**', '##', '\`\`\`'), emojis, or smart-quote curly characters.
+- ACCREDITATIONS / RANKINGS: Only state an accreditation (AACSB / AMBA / EQUIS / NBA / NAAC) or a precise NIRF rank if you are highly confident the school actually holds it. When in doubt, omit rather than fabricate.
+
+Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. Never include <html>, <head>, <body>, <h1>, <blockquote>, or markdown fences. ABSOLUTELY NO inline style="" attributes, NO <font> tags, NO class="" / id="" attributes — plain semantic HTML only.
 
 # CRITICAL OUTPUT HYGIENE
 - NEVER emit the literal characters "\\n", "\n", "/n", or any visible escape sequence inside any string field. Use real <p>, <br>, <li> tags or actual newlines — the frontend renders "\\n" as raw text and breaks the page.
 - Do NOT wrap output in markdown code fences. Return plain JSON via the tool call.
 
 # DEEP-RESEARCH MODE
-- Before writing each section, mentally verify the facts against the most authoritative public sources (NIRF, official placement reports, school brochures, AICTE/NAAC listings). No shallow filler — every paragraph must carry concrete data, named recruiters, real numbers or specific dates.`;
+- Before writing each section, mentally verify the facts against the most authoritative public sources (NIRF, official placement reports, school brochures, AICTE/NAAC listings). No shallow filler — every paragraph must carry concrete data, named recruiters, real numbers or specific dates. If you are not confident about a number, give a tight realistic range over the most recent 2-3 years rather than a single fabricated figure.`;
 
     const userPrompt = `Generate a complete, ready-to-publish profile for the following Indian MBA college / B-school. Verify every factual claim against your training knowledge of well-known Indian B-schools before writing.
 
