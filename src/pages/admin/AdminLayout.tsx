@@ -192,6 +192,12 @@ const AdminLayout = () => {
     };
   }, [user, isAdmin]);
 
+  // Apply admin theme on mount, restore light on unmount
+  useEffect(() => {
+    applyAdminTheme(getInitialAdminTheme());
+    return () => applyAdminTheme("light");
+  }, []);
+
   // Mark as seen when visiting a lead page
   useEffect(() => {
     const leadPaths = ["/admin/callbacks", "/admin/inquiries", "/admin/leads", "/admin/all-leads-unified", "/admin/subscribers", "/admin/business-inquiries"];
@@ -224,9 +230,12 @@ const AdminLayout = () => {
 
   const SidebarContent = () => (
     <>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 gap-2">
         <h2 className="font-heading font-bold text-lg text-foreground">Admin Panel</h2>
-        <button className="lg:hidden" onClick={() => setSidebarOpen(false)}><X className="w-5 h-5" /></button>
+        <div className="flex items-center gap-2">
+          <AdminThemeToggle />
+          <button className="lg:hidden" onClick={() => setSidebarOpen(false)} aria-label="Close sidebar"><X className="w-5 h-5" /></button>
+        </div>
       </div>
       <nav className="space-y-3">
         {adminNavGroups.map((group) => {
