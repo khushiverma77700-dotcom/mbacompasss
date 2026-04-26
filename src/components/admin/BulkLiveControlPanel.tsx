@@ -429,7 +429,7 @@ const BulkLiveControlPanel = ({
     fetchCost();
     const interval = setInterval(fetchCost, isTerminal || paused ? 15_000 : 4_000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [workflow, isTerminal, paused, jobId]);
+  }, [workflow, isTerminal, paused, jobId, aiProvider]);
 
   const costInr = costUsd * usdInr;
 
