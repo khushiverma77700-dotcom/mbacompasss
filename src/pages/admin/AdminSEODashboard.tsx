@@ -1130,7 +1130,7 @@ const AdminSEODashboard = () => {
                 <div className="grid gap-3 xl:grid-cols-6 md:grid-cols-3">
                   <div className="relative xl:col-span-2">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." className="pl-9" />
+                    <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, slug, or full link…" className="pl-9" />
                   </div>
                   <Select value={selectedType} onValueChange={(v) => setSelectedType(v as TypeFilter)}>
                     <SelectTrigger><Filter className="h-4 w-4 mr-2" /><SelectValue placeholder="Type" /></SelectTrigger>
