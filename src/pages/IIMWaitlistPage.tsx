@@ -279,11 +279,13 @@ export default function IIMWaitlistPage() {
 
   const filteredMovementCards = useMemo(() => {
     const map = new Map<string, MovementRow[]>();
+    const q = search.trim().toLowerCase();
     movement.forEach(r => {
       if (typeFilter !== "all" && r.college_type !== typeFilter) return;
-      if (search) {
-        const q = search.toLowerCase();
-        if (!r.college_name.toLowerCase().includes(q) && !(r.college_short || "").toLowerCase().includes(q)) return;
+      if (q) {
+        const fullN = fullName(r.college_short, r.college_name).toLowerCase();
+        const haystack = [r.college_name, r.college_short || "", r.college_type || "", fullN].join(" ").toLowerCase();
+        if (!haystack.includes(q)) return;
       }
       const key = r.college_name;
       if (!map.has(key)) map.set(key, []);
