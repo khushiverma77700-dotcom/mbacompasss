@@ -51,6 +51,7 @@ interface DashboardRow {
   key: string; id: string; contentType: SEOContentType; name: string;
   slug?: string; city?: string | null; state?: string | null;
   item: Record<string, any>; snapshot: StoredSEOSnapshot | null; audit: SEOAudit;
+  isStatic?: boolean; path?: string;
 }
 
 interface KeywordResult {
