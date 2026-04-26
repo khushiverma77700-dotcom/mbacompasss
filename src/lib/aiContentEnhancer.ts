@@ -134,6 +134,16 @@ export function enhanceAIContent(html: string, ctx?: CitationContext): string {
       buildPill(src.trim().replace(/[,;:]+$/, ""), year, ctx),
   );
 
+  // 1c. Strip any leaked source/citation parentheticals that DON'T match the pill formats above.
+  //     Examples seen in production: "(Source/NIRF 2026 Ranking)", "(Source: NIRF)", "(as per NIRF)",
+  //     "(Ref: Placement Report 2024-25)". These leak when the model ignores the no-citation rule.
+  out = out.replace(/\(\s*sources?\s*[:\/\u2013\u2014-]\s*[^)]{0,80}\)/gi, "");
+  out = out.replace(/\(\s*as\s+per\s+[^)]{0,80}\)/gi, "");
+  out = out.replace(/\(\s*ref\.?\s*[:\u2013\u2014-]\s*[^)]{0,80}\)/gi, "");
+  // Strip leftover "Last updated:" stamps the model may have inserted.
+  out = out.replace(/<p>\s*<em>\s*Last updated:[^<]*<\/em>\s*<\/p>/gi, "");
+  out = out.replace(/<em>\s*Last updated:[^<]*<\/em>/gi, "");
+
   // 2. Wrap raw <table> in a scrollable container so wide tables don't bust mobile.
   //    Only wrap tables that aren't already wrapped (idempotent).
   out = out.replace(
@@ -147,6 +157,9 @@ export function enhanceAIContent(html: string, ctx?: CitationContext): string {
     /\b(Not\s*Avail(?:able|aible)|N\/?A|TBD|Contact\s+for\s+details|Coming\s+soon)\b/gi,
     "—",
   );
+
+  // 4. Collapse double spaces that the strips above may have created.
+  out = out.replace(/[ \t]{2,}/g, " ");
 
   return out;
 }
