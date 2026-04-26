@@ -248,16 +248,16 @@ const BulkLiveControlPanel = ({
     }
   }, [processedUnits]);
 
-  // Server pressure now comes from real worker telemetry when available.
+  // Server pressure: derived ONLY from real telemetry. Falls to 0 when no work.
   const serverLoad = useMemo(() => {
+    if (paused || isTerminal) return 0;
     const utilisation = concurrency > 0 ? Math.min(1, liveActiveWorkers / concurrency) : 0;
+    if (liveActiveWorkers === 0 && serverCpu === 0) return 0;
     const completed = succeeded + failed;
     const failureRate = completed > 0 ? failed / completed : 0;
-    const idleMin = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 60000 : 0;
-    const idlePenalty = !paused && !isTerminal ? Math.min(1, Math.max(0, idleMin - 1) / 5) : 0;
-    const workerPressure = utilisation * 70 + failureRate * 20 + idlePenalty * 10;
+    const workerPressure = utilisation * 70 + failureRate * 20;
     return Math.min(100, Math.round(Math.max(serverCpu, workerPressure)));
-  }, [serverCpu, liveActiveWorkers, concurrency, succeeded, failed, updatedAt, paused, isTerminal]);
+  }, [serverCpu, liveActiveWorkers, concurrency, succeeded, failed, paused, isTerminal]);
 
   const cpuHistory = useRolling(browserCpu);
   const loadHistory = useRolling(serverLoad);
