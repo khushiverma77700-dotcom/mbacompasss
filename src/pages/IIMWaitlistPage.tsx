@@ -311,13 +311,13 @@ export default function IIMWaitlistPage() {
   }, [rti]);
 
   const iimOptions = useMemo(() => {
-    return Array.from(new Set(movement.map(m => m.college_short || m.college_name))).sort();
+    return Array.from(new Set(movement.map(m => fullName(m.college_short, m.college_name)))).sort();
   }, [movement]);
 
   const predictionResult = useMemo(() => {
     if (!predIIM || !predWL) return null;
     const wlNum = parseInt(predWL); if (isNaN(wlNum)) return null;
-    const row = movement.find(m => (m.college_short || m.college_name) === predIIM && m.category === predCat);
+    const row = movement.find(m => (fullName(m.college_short, m.college_name)) === predIIM && m.category === predCat);
     if (!row) return null;
     const avg = row.five_yr_avg || row.wl_2025 || 0;
     if (avg === 0) return null;
@@ -420,13 +420,13 @@ export default function IIMWaitlistPage() {
                     className="flex items-center gap-3 flex-wrap"
                   >
                     <Badge className={statusPill(currentLive.status)}>{statusLabel(currentLive.status)}</Badge>
-                    <span className="font-semibold text-sm md:text-base">{currentLive.notes || `${currentLive.college_short || currentLive.college_name} ${currentLive.status}`}</span>
+                    <span className="font-semibold text-sm md:text-base">{currentLive.notes || `${fullName(currentLive.college_short, currentLive.college_name)} ${currentLive.status}`}</span>
                     <span className="text-xs text-white/70 inline-flex items-center gap-1">
                       <CalendarDays className="h-3 w-3" />
                       {currentLive.result_date_label || (currentLive.result_date ? new Date(currentLive.result_date).toLocaleDateString() : "TBA")}
                     </span>
                     <span className="text-xs text-white/70 inline-flex items-center gap-1">
-                      <Building2 className="h-3 w-3" /> {currentLive.college_short || currentLive.college_name}
+                      <Building2 className="h-3 w-3" /> {fullName(currentLive.college_short, currentLive.college_name)}
                     </span>
                   </motion.div>
                 </AnimatePresence>
@@ -468,7 +468,7 @@ export default function IIMWaitlistPage() {
                   {[...liveUpdates, ...liveUpdates].map((u, i) => (
                     <span key={i} className="inline-flex items-center gap-2">
                       <Sparkles className="h-3 w-3 text-amber-300" />
-                      <strong>{u.college_short || u.college_name}</strong>
+                      <strong>{fullName(u.college_short, u.college_name)}</strong>
                       <span className="text-white/60">— {statusLabel(u.status)}</span>
                       <span className="text-white/50">{u.result_date_label || ""}</span>
                     </span>
@@ -581,11 +581,11 @@ export default function IIMWaitlistPage() {
                       <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                     </div>
                     <h3 className="font-bold text-lg leading-tight mb-2">
-                      {r.notes || `${r.college_short || r.college_name} 2026 Result`}
+                      {r.notes || `${fullName(r.college_short, r.college_name)} 2026 Result`}
                     </h3>
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" /> {r.result_date_label || "Recently"}</span>
-                      <span className="inline-flex items-center gap-1"><Building2 className="h-3 w-3" /> {r.college_short || r.college_name}</span>
+                      <span className="inline-flex items-center gap-1"><Building2 className="h-3 w-3" /> {fullName(r.college_short, r.college_name)}</span>
                     </div>
                     {r.result_url && (
                       <a href={r.result_url} target="_blank" rel="noopener noreferrer"
@@ -625,7 +625,7 @@ export default function IIMWaitlistPage() {
                   <Card className="h-full hover:shadow-lg transition-all bg-white">
                     <CardContent className="p-5">
                       <Badge className={statusPill(r.status) + " mb-3"}>{statusLabel(r.status)}</Badge>
-                      <div className="font-bold text-base mb-1">{r.college_short || r.college_name}</div>
+                      <div className="font-bold text-base mb-1">{fullName(r.college_short, r.college_name)}</div>
                       <div className="text-xs text-muted-foreground mb-3">{r.college_name}</div>
                       <div className="flex items-center justify-between pt-3 border-t">
                         <span className="text-xs text-muted-foreground">Expected</span>
@@ -738,7 +738,7 @@ export default function IIMWaitlistPage() {
                     <Card className="overflow-hidden border-slate-200 hover:shadow-2xl transition-all duration-300 h-full">
                       <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white px-5 py-4 flex items-center justify-between">
                         <div>
-                          <div className="font-bold text-base leading-tight">{row.college_short || name}</div>
+                          <div className="font-bold text-base leading-tight">{fullName(row.college_short, name)}</div>
                           <div className="text-[11px] text-white/60">{name}</div>
                         </div>
                         <Badge className="bg-white/15 text-white border-white/20 text-[10px]">{row.college_type}</Badge>
@@ -884,7 +884,7 @@ export default function IIMWaitlistPage() {
                         <Card className="hover:shadow-lg transition-all bg-white h-full">
                           <CardHeader className="pb-3">
                             <CardTitle className="flex items-center justify-between">
-                              <span className="text-base">{r.college_short || r.college_name}</span>
+                              <span className="text-base">{fullName(r.college_short, r.college_name)}</span>
                               <Badge variant="outline" className="bg-secondary"><ShieldCheck className="h-3 w-3 mr-1" /> {r.rti_year}</Badge>
                             </CardTitle>
                           </CardHeader>
@@ -945,7 +945,7 @@ export default function IIMWaitlistPage() {
                   <TableBody>
                     {apps.map((a, i) => (
                       <TableRow key={a.id} className={`${i % 2 ? "bg-muted/30" : ""}`}>
-                        <TableCell className="font-medium">{a.college_short || a.college_name}</TableCell>
+                        <TableCell className="font-medium">{fullName(a.college_short, a.college_name)}</TableCell>
                         <TableCell className="tabular-nums">{a.batch_size ?? "—"}</TableCell>
                         <TableCell className="tabular-nums">{a.applications_received ?? "—"}</TableCell>
                         <TableCell className="tabular-nums">{a.shortlisted ?? "—"}</TableCell>
