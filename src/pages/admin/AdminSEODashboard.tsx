@@ -773,11 +773,27 @@ const AdminSEODashboard = () => {
       if (cityFilter !== "all" && (row.city || "") !== cityFilter) return false;
       if (stateFilter !== "all" && (row.state || "") !== stateFilter) return false;
       if (search) {
-        const q = search.toLowerCase().trim();
+        const raw = search.toLowerCase().trim();
+        // Normalize: strip protocol/host, leading/trailing slashes, query/hash
+        const q = raw
+          .replace(/^https?:\/\/[^/]+/, "")
+          .replace(/[?#].*$/, "")
+          .replace(/^\/+|\/+$/g, "");
         const typeLabel = row.isStatic ? "static page" : contentTypeConfig[row.contentType].label;
-        return [row.name, row.slug, row.path, row.city, row.state, typeLabel]
+        const fullLink = row.path || (row.slug ? `/${String(row.slug).replace(/^\/+/, "")}` : "");
+        const haystacks = [
+          row.name,
+          row.slug,
+          row.path,
+          fullLink,
+          (row.slug || "").replace(/^\/+/, ""),
+          row.city,
+          row.state,
+          typeLabel,
+        ];
+        return haystacks
           .filter(Boolean)
-          .some((v) => String(v).toLowerCase().includes(q));
+          .some((v) => String(v).toLowerCase().includes(q || raw));
       }
       return true;
     });
