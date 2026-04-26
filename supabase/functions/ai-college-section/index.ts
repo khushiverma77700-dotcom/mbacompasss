@@ -649,21 +649,26 @@ ${anchor.accreditations?.length ? `- Accreditations: ${anchor.accreditations.joi
 
 # WELL-FORMATTED OUTPUT
 - HTML must be tidy: short paragraphs (2-4 sentences), bullet/numbered lists for any 3+ enumerations, at least one <table> when comparing fees / placements / cutoffs / dates.
-- Headings hierarchy: <h2> for main sub-sections, <h3> for nested. Never start a heading or sentence with a question.
-- Use <strong> on key facts (numbers, names, dates) — sparingly, 4-8 per long block.
+- Headings hierarchy: <h2> for main sub-sections, <h3> for nested. Never start a heading or sentence with a question. Never put a heading inside a paragraph.
+- Use <strong> on key facts (numbers, names, dates) — sparingly, 4-8 per long block. Do NOT bold filler words, generic adjectives, or whole sentences.
 
 ACCURACY RULES:
 - Established years for famous schools must be correct (XLRI=1949, IIM-A=1961, IIM-B=1973, IIM-C=1961, FMS=1954, JBIMS=1965, SPJIMR=1981, MDI=1973, IIFT=1963, NMIMS=1981, ISB=2001).
 - All fees, placements, cutoffs, recruiter lists must reflect the latest ${freshness} data window. The active admission cycle is ${admissionCycle}. Today is ${todayIso}. Never use 2020-2023 numbers.
-- For EVERY key stat append a machine-readable inline citation marker in EXACT shape [src:<Source> <Year>], e.g. [src:NIRF ${todayIso.slice(0,4)}], [src:Placement Report ${Number(todayIso.slice(0,4))-1}-${todayIso.slice(2,4)}], [src:Admission Brochure ${todayIso.slice(0,4)}]. The frontend converts these into clickable "view source" pills, so the syntax must be exact (square brackets, "src:" prefix, no quotes, no URLs).
-- CRITICAL — citations, HTML tags, and "Last updated" stamps belong ONLY inside long-form HTML fields named "content". For ALL other short fields (name, body, rank, year, amount, criteria, description, percentage, sector, recruiter name, faculty name, qualification, experience, label, score, value, item.value, scholarship name, etc.) return PLAIN TEXT ONLY — no HTML tags whatsoever, no <strong>, no <a href>, no [src:...] markers, no "Last updated" lines.
+- Accreditations and rankings (NIRF rank, AACSB, AMBA, EQUIS, NAAC grade, NBA) must be 100% accurate — if the school does NOT actually hold an accreditation, do NOT claim it. When in doubt, omit rather than fabricate.
+
+# ABSOLUTE OUTPUT BANS — DO NOT VIOLATE
+- DO NOT include ANY citation, source, footnote or attribution markers in the output. Forbidden patterns include: "[src:NIRF 2025]", "(source: NIRF 2025)", "(Source/NIRF 2026 Ranking)", "(as per NIRF)", "[1]", "[NIRF]", "Ref:", "*Source:*", "Sources —", parentheticals like "(Source: ...)", "(Ref: ...)", or any bracketed/parenthesised attribution. State facts plainly with the year woven into the sentence (e.g. "ranked #4 in NIRF 2025") — never with a parenthetical source tag.
+- DO NOT add pull-quotes, blockquotes, decorative em-dashes as separators (— — —), or random italicised one-liners.
+- DO NOT include "Last updated:" stamps, "Disclaimer:", "Note:" boxes, or any meta-commentary.
+- DO NOT use markdown ('**', '##', '\`\`\`'), emojis, or smart-quote curly characters.
+- For ALL short fields (name, body, rank, year, amount, criteria, description, percentage, sector, recruiter name, faculty name, qualification, experience, label, score, value, scholarship name, etc.) return PLAIN TEXT ONLY — no HTML tags, no parentheses with sources, no brackets.
 - "percentage" fields must be a bare number string ("25" or "25.5") — never "25%" or "<strong>25%</strong>" or "25-30%". Pick the midpoint if you only have a range.
-- "amount" / "rank" / "score" / "rating" fields must be short plain text without HTML or citations (e.g. "Up to 50% waiver", "#1", "4.3").
-- End every long-form HTML content field with a small italic line: <p><em>Last updated: ${todayIso}</em></p>
-- HTML output uses ONLY: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. No <html>/<head>/<body>/<h1>/markdown fences.
+- "amount" / "rank" / "score" / "rating" fields must be short plain text without HTML (e.g. "Up to 50% waiver", "#1", "4.3").
+- HTML output uses ONLY: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. No <html>/<head>/<body>/<h1>/<blockquote>/markdown fences.
 - ABSOLUTELY NO inline style="" attributes, NO <font> tags, NO class="" / id="" attributes, NO width/height/color attributes. Plain semantic HTML only — the platform applies uniform typography.
-- CRITICAL OUTPUT HYGIENE: NEVER write the literal characters "\\n", "\n", "/n", "\\t" or any visible escape sequences inside the HTML or any field — use real <p>, <br>, list tags or actual line breaks. The frontend will display "\\n" as raw text and break the page.
-- DEEP-RESEARCH FIRST: Before writing, mentally verify rankings, fees, placements, recruiters and dates against the most authoritative public sources (NIRF, official school placement reports, brochures). Never guess shallow filler — every paragraph must add factual value.
+- CRITICAL OUTPUT HYGIENE: NEVER write the literal characters "\\n", "\n", "/n", "\\t" or any visible escape sequences inside the HTML or any field — use real <p>, <br>, list tags or actual line breaks.
+- DEEP-RESEARCH FIRST: Before writing, mentally verify rankings, fees, placements, recruiters, accreditations and dates against the most authoritative public sources. Never guess shallow filler. If you are not confident about a specific number, give a tight realistic range based on the most recent 2-3 years rather than a single fabricated figure.
 - Headings & opening sentences must be DECLARATIVE — never start with a question.
 - Avoid AI clichés: "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving".
 - Reading level ~grade 8. Use real numbers, real names, contractions.${factSafetyRules}`;
