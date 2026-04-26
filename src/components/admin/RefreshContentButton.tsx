@@ -54,36 +54,45 @@ export function RefreshContentButton({ entityType, entityId, entityName, size = 
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button size={size} variant={variant} disabled={loading} className="gap-2">
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-          Refresh Content
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-72">
-        <DropdownMenuLabel>AI re-research & update</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => trigger("smart")} className="flex-col items-start gap-1 cursor-pointer">
-          <div className="flex items-center gap-2 font-medium">
-            <Target className="h-4 w-4 text-primary" />
-            Smart refresh (recommended)
-          </div>
-          <span className="text-xs text-muted-foreground pl-6">
-            Updates only fees, placements, rankings, dates & citations. Keeps tone.
-          </span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => trigger("full")} className="flex-col items-start gap-1 cursor-pointer">
-          <div className="flex items-center gap-2 font-medium">
-            <Sparkles className="h-4 w-4 text-primary" />
-            Full content rewrite
-          </div>
-          <span className="text-xs text-muted-foreground pl-6">
-            Re-writes everything from scratch with the latest verified data.
-          </span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="flex items-center gap-2 flex-wrap">
+      <AIInstructionEditor
+        entityType={entityType}
+        entityId={entityId}
+        entityName={entityName}
+        size={size}
+        variant={variant}
+      />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button size={size} variant={variant} disabled={loading} className="gap-2">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            Refresh Content
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-72">
+          <DropdownMenuLabel>AI re-research & update</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => trigger("smart")} className="flex-col items-start gap-1 cursor-pointer">
+            <div className="flex items-center gap-2 font-medium">
+              <Target className="h-4 w-4 text-primary" />
+              Smart refresh (recommended)
+            </div>
+            <span className="text-xs text-muted-foreground pl-6">
+              Updates only fees, placements, rankings, dates & citations. Keeps tone.
+            </span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => trigger("full")} className="flex-col items-start gap-1 cursor-pointer">
+            <div className="flex items-center gap-2 font-medium">
+              <Sparkles className="h-4 w-4 text-primary" />
+              Full content rewrite
+            </div>
+            <span className="text-xs text-muted-foreground pl-6">
+              Re-writes everything from scratch with the latest verified data.
+            </span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 }
 
