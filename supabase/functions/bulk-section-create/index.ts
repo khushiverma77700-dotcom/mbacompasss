@@ -157,6 +157,14 @@ class TelemetryTracker {
   snapshot() {
     this.state.updatedAt = new Date().toISOString();
     this.state.memory = memorySnapshot() || this.state.memory;
+    const now = Date.now();
+    const windowMs = Number(this.state.cpu.windowMs || 30_000);
+    const window = Array.isArray(this.state.cpu.window) ? this.state.cpu.window : [];
+    const cutoff = now - windowMs;
+    while (window.length && window[0].ts < cutoff) window.shift();
+    const busyTotal = window.reduce((sum: number, e: any) => sum + (Number(e.busyMs) || 0), 0);
+    this.state.cpu.window = window;
+    this.state.cpu.loadPct = Math.min(100, Math.round((busyTotal / windowMs) * 100));
     return this.state;
   }
 }
