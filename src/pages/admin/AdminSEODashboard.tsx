@@ -36,7 +36,7 @@ import { AutoFixPanel } from "@/components/admin/AutoFixPanel";
 type ScoreStatus = "good" | "warning" | "poor";
 type FilterStatus = "all" | ScoreStatus;
 type BooleanFilter = "all" | "yes" | "no";
-type TypeFilter = "all" | SEOContentType;
+type TypeFilter = "all" | "static" | SEOContentType;
 
 interface SEOAudit {
   score: number; status: ScoreStatus;
@@ -51,6 +51,7 @@ interface DashboardRow {
   key: string; id: string; contentType: SEOContentType; name: string;
   slug?: string; city?: string | null; state?: string | null;
   item: Record<string, any>; snapshot: StoredSEOSnapshot | null; audit: SEOAudit;
+  isStatic?: boolean; path?: string;
 }
 
 interface KeywordResult {
@@ -392,6 +393,8 @@ const AdminSEODashboard = () => {
         contentType: "article" as SEOContentType,
         name: sp.name,
         slug: sp.slug,
+        path: sp.path,
+        isStatic: true,
         city: null,
         state: null,
         item: { id: sp.id, title: sp.name, slug: sp.slug, meta_title: sp.name, meta_description: null, keywords: [] },
@@ -756,7 +759,12 @@ const AdminSEODashboard = () => {
 
   const filteredRows = useMemo(() => {
     return rows.filter((row) => {
-      if (selectedType !== "all" && row.contentType !== selectedType) return false;
+      if (selectedType === "static") {
+        if (!row.isStatic) return false;
+      } else if (selectedType !== "all") {
+        if (row.isStatic) return false;
+        if (row.contentType !== selectedType) return false;
+      }
       if (filterStatus !== "all" && row.audit.status !== filterStatus) return false;
       if (schemaFilter === "yes" && !row.audit.hasSchema) return false;
       if (schemaFilter === "no" && row.audit.hasSchema) return false;
@@ -765,8 +773,11 @@ const AdminSEODashboard = () => {
       if (cityFilter !== "all" && (row.city || "") !== cityFilter) return false;
       if (stateFilter !== "all" && (row.state || "") !== stateFilter) return false;
       if (search) {
-        const q = search.toLowerCase();
-        return [row.name, row.slug, row.city, row.state, contentTypeConfig[row.contentType].label].filter(Boolean).some((v) => String(v).toLowerCase().includes(q));
+        const q = search.toLowerCase().trim();
+        const typeLabel = row.isStatic ? "static page" : contentTypeConfig[row.contentType].label;
+        return [row.name, row.slug, row.path, row.city, row.state, typeLabel]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(q));
       }
       return true;
     });
@@ -1107,7 +1118,7 @@ const AdminSEODashboard = () => {
                   </div>
                   <Select value={selectedType} onValueChange={(v) => setSelectedType(v as TypeFilter)}>
                     <SelectTrigger><Filter className="h-4 w-4 mr-2" /><SelectValue placeholder="Type" /></SelectTrigger>
-                    <SelectContent><SelectItem value="all">All types</SelectItem>{contentTypes.map(ct => <SelectItem key={ct} value={ct}>{contentTypeConfig[ct].label}</SelectItem>)}</SelectContent>
+                    <SelectContent><SelectItem value="all">All types</SelectItem><SelectItem value="static">Static Pages</SelectItem>{contentTypes.map(ct => <SelectItem key={ct} value={ct}>{contentTypeConfig[ct].label}</SelectItem>)}</SelectContent>
                   </Select>
                   <Select value={filterStatus} onValueChange={(v) => setFilterStatus(v as FilterStatus)}>
                     <SelectTrigger><SelectValue placeholder="Score" /></SelectTrigger>
@@ -1157,7 +1168,7 @@ const AdminSEODashboard = () => {
                             <p className="font-medium leading-none">{row.name}</p>
                             <p className="text-xs text-muted-foreground">/{row.slug || "—"}</p>
                           </TableCell>
-                          <TableCell><Badge variant="outline" className="text-xs">{contentTypeConfig[row.contentType].label}</Badge></TableCell>
+                          <TableCell><Badge variant={row.isStatic ? "secondary" : "outline"} className="text-xs">{row.isStatic ? "Static Page" : contentTypeConfig[row.contentType].label}</Badge></TableCell>
                           <TableCell><span className={`text-xs font-mono ${row.audit.wordCount < 250 ? "text-red-500" : row.audit.wordCount < 1000 ? "text-amber-500" : "text-green-500"}`}>{row.audit.wordCount}</span></TableCell>
                           <TableCell>
                             <div className="flex flex-wrap gap-1">
