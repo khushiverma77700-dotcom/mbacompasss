@@ -1820,11 +1820,14 @@ Deno.serve(async (req) => {
           pathFn: (row: any) => `/colleges/${row.slug}`,
           filter: { active: true },
         },
+        { table: "categories", type: "category", pathFn: (row: any) => `/category/${row.slug}` },
       ];
 
       let newCount = 0;
       const now = new Date().toISOString();
+      const batchInsert: Array<Record<string, unknown>> = [];
 
+      // ── Source 1: walk DB tables (fast path) ─────────────────────
       for (const table of tables) {
         let query = supabase.from(table.table).select("id, slug");
 
@@ -1839,30 +1842,107 @@ Deno.serve(async (req) => {
 
         for (const row of rows) {
           if (!row.slug) continue;
+          batchInsert.push({
+            url: `${SITE_URL}${table.pathFn(row)}`,
+            page_type: table.type,
+            record_id: row.id,
+            status: "pending",
+            updated_at: now,
+          });
+        }
+      }
 
-          const url = `${SITE_URL}${table.pathFn(row)}`;
-          const { data: existing } = await supabase
-            .from("indexing_urls")
-            .select("id")
-            .eq("url", url)
-            .maybeSingle();
-
-          if (!existing) {
-            await supabase.from("indexing_urls").insert({
+      // ── Source 2: parse the live sitemap.xml ─────────────────────
+      // Catches static routes, programmatic pages, and anything the DB
+      // walker might miss. Fully automatic — no manual upload required.
+      let sitemapUrls = 0;
+      try {
+        const sitemapRes = await fetch(`${SITE_URL}/sitemap.xml?cb=${Date.now()}`);
+        if (sitemapRes.ok) {
+          const xml = await sitemapRes.text();
+          const matches = xml.match(/<loc>([^<]+)<\/loc>/gi) || [];
+          for (const m of matches) {
+            const url = m.replace(/<\/?loc>/gi, "").trim();
+            if (!url || !url.startsWith(SITE_URL)) continue;
+            // Skip the sitemap index entry itself
+            if (url.endsWith("/sitemap.xml")) continue;
+            // Infer page_type from path prefix
+            const path = url.replace(SITE_URL, "");
+            let pageType = "other";
+            if (path.startsWith("/article/")) pageType = "article";
+            else if (path.startsWith("/college/")) pageType = "college";
+            else if (path.startsWith("/institute/")) pageType = "institute";
+            else if (path.startsWith("/exam/")) pageType = "exam";
+            else if (path.startsWith("/colleges/")) pageType = "city_page";
+            else if (path.startsWith("/category/")) pageType = "category";
+            else if (path === "" || path === "/") pageType = "home";
+            else pageType = "static";
+            batchInsert.push({
               url,
-              page_type: table.type,
-              record_id: row.id,
+              page_type: pageType,
               status: "pending",
               updated_at: now,
             });
-            newCount += 1;
+            sitemapUrls += 1;
+          }
+        }
+      } catch (e: any) {
+        // Sitemap fetch is best-effort; log but don't fail discovery.
+        await supabase.from("indexing_logs").insert({
+          action: "discover_sitemap",
+          status: "failed",
+          error_message: e?.message || "sitemap fetch failed",
+        });
+      }
+
+      // ── Bulk upsert with onConflict on url ───────────────────────
+      // Far faster than the previous one-by-one select/insert loop.
+      // Existing rows are left alone (ignoreDuplicates) so we don't
+      // reset their status/retry counters.
+      if (batchInsert.length) {
+        // De-dupe locally first (sitemap + DB walker can overlap).
+        const seen = new Set<string>();
+        const deduped = batchInsert.filter((row) => {
+          const u = row.url as string;
+          if (seen.has(u)) return false;
+          seen.add(u);
+          return true;
+        });
+
+        // Find which URLs are truly new vs already in queue.
+        const urls = deduped.map((r) => r.url as string);
+        const { data: existing } = await supabase
+          .from("indexing_urls")
+          .select("url")
+          .in("url", urls);
+        const existingSet = new Set((existing || []).map((r: any) => r.url));
+        const fresh = deduped.filter((r) => !existingSet.has(r.url as string));
+
+        if (fresh.length) {
+          // Insert in chunks of 500 to stay well under request limits.
+          for (let i = 0; i < fresh.length; i += 500) {
+            const chunk = fresh.slice(i, i + 500);
+            const { error: insErr } = await supabase
+              .from("indexing_urls")
+              .insert(chunk);
+            if (!insErr) newCount += chunk.length;
           }
         }
       }
 
+      await supabase.from("indexing_logs").insert({
+        action: "discover",
+        status: "success",
+        response: {
+          discovered: newCount,
+          sitemap_urls_seen: sitemapUrls,
+          db_urls_seen: batchInsert.length - sitemapUrls,
+        },
+      });
+
       return respond({
         ok: true,
-        data: { discovered: newCount },
+        data: { discovered: newCount, sitemap_urls_seen: sitemapUrls },
         diagnostics: {
           action,
           processing_time_ms: Date.now() - startedAt,
