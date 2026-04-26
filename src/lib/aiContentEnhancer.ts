@@ -73,25 +73,34 @@ const buildUrl = (source: string, year?: string, ctx?: CitationContext): string 
   if (GLOBAL_SOURCE_URLS[key]) return GLOBAL_SOURCE_URLS[key];
 
   const domain = extractDomain(ctx?.entityWebsite);
-  const hint = COLLEGE_SITE_HINTS[key] || source;
 
-  // 2. If we know the official college domain, ALWAYS deep-link into it via
-  //    a site:domain Google query. Guarantees the user lands on the official
-  //    college page — never a third-party / partner / aggregator site.
-  if (domain) {
-    return `https://www.google.com/search?q=${encodeURIComponent(`site:${domain} ${hint} ${year || ""}`.trim())}`;
+  // 2. If we know the official college website, link DIRECTLY to it (root URL).
+  //    Sending users to a Google search page is poor UX and the previous behaviour
+  //    occasionally produced wrong / unrelated redirects. The college's homepage
+  //    has a clear nav to placement reports, brochures, fees, faculty, etc.
+  if (ctx?.entityWebsite) {
+    try {
+      const u = ctx.entityWebsite.startsWith("http")
+        ? ctx.entityWebsite
+        : `https://${ctx.entityWebsite}`;
+      // Validate it parses
+      new URL(u);
+      return u;
+    } catch {
+      /* fall through */
+    }
   }
 
-  // 3. No website on file — fall back to the college's OWN site via a
-  //    Google "I'm Feeling Lucky" style query restricted to the official name.
-  //    We append "official site" so Google prioritises the institution's
-  //    own domain over partner/listing sites.
+  // 3. No website on file — last resort: Google query restricted to the official name.
   if (ctx?.entityName) {
+    const hint = COLLEGE_SITE_HINTS[key] || source;
     return `https://www.google.com/search?q=${encodeURIComponent(`${ctx.entityName} official site ${hint} ${year || ""}`.trim())}`;
   }
 
   // 4. Last resort — generic official-source query (no entity context).
   return `https://www.google.com/search?q=${encodeURIComponent(`${source} ${year || ""} official source India MBA`.trim())}`;
+  // (domain unused in current logic but kept for future per-section deep-linking)
+  void domain;
 };
 
 const buildPill = (source: string, year?: string, ctx?: CitationContext) => {
