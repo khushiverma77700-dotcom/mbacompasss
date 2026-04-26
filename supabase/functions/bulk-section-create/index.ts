@@ -91,9 +91,14 @@ class TelemetryTracker {
   }
 
   incDbWrite(n = 1) { this.state.db.writes += n; }
-  setActive(n: number) {
-    this.state.activeWorkers = n;
-    this.state.peakActiveWorkers = Math.max(this.state.peakActiveWorkers || 0, n);
+  setActive(n: number, concurrency?: number) {
+    const cap = Math.max(0, Math.min(10, Number(concurrency || n) || 0));
+    this.state.activeWorkers = Math.max(0, Math.min(cap, n));
+    if (typeof concurrency === "number") this.state.concurrency = cap;
+    this.state.peakActiveWorkers = Math.max(this.state.peakActiveWorkers || 0, this.state.activeWorkers);
+    if (Array.isArray(this.state.workerSlots) && typeof concurrency === "number") {
+      this.state.workerSlots = this.state.workerSlots.filter((s: any) => Number(s?.slot || 0) <= cap);
+    }
   }
 
   updateSlot(slotIndex: number, patch: Record<string, unknown>) {
