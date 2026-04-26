@@ -192,7 +192,40 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
     }
   }
 
-  // ── Provider: Direct Gemini (default) ────────────────────────────────────────
+  // ── Provider: Direct OpenAI (user's OPENAI_API_KEY) ──────────────────────────
+  if (provider === "openai-mini" || provider === "openai-nano") {
+    const openaiKey = Deno.env.get("OPENAI_API_KEY");
+    if (!openaiKey) {
+      const err = "OPENAI_API_KEY is not configured.";
+      console.error(`[aiGateway][${feature}] ${err}`);
+      if (!skipLog) {
+        await logUsage({ feature, model: body.model, userId, provider: "none", status: "error", errorMessage: err, latencyMs: 0 });
+      }
+      return new Response(JSON.stringify({ error: err }), { status: 500, headers: { "Content-Type": "application/json" } });
+    }
+    const openaiModel = provider === "openai-mini" ? "gpt-5-mini" : "gpt-5-nano";
+    const payload = buildOpenAICompatPayload(body, openaiModel);
+    try {
+      const resp = await withRetry(
+        () => callUpstream(OPENAI_CHAT_URL, openaiKey, payload, signal),
+        { maxRetries, label: `${provider}[${feature}]` },
+      );
+      if (!skipLog) {
+        if (resp.ok) logSuccess(resp, isStream, feature, openaiModel, userId, provider, startedAt);
+        else await logErrorFromResp(resp, feature, openaiModel, userId, provider, startedAt);
+      }
+      return resp;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error(`[aiGateway][${feature}] OpenAI call threw:`, msg);
+      if (!skipLog) {
+        await logUsage({ feature, model: openaiModel, userId, provider, status: "error", errorMessage: msg, latencyMs: Date.now() - startedAt });
+      }
+      return new Response(JSON.stringify({ error: msg }), { status: 502, headers: { "Content-Type": "application/json" } });
+    }
+  }
+
+  // ── Provider: Direct Gemini (default `gemini` and `gemini-lite`) ─────────────
   const geminiKey = Deno.env.get("GEMINI_API_KEY");
   if (!geminiKey) {
     const err = "GEMINI_API_KEY is not configured.";
@@ -203,20 +236,24 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
     return new Response(JSON.stringify({ error: err }), { status: 500, headers: { "Content-Type": "application/json" } });
   }
 
-  const geminiModel = resolveGeminiModel(body.model);
+  // gemini-lite forces flash-lite regardless of caller's model. `gemini`
+  // honors the caller's model (already cost-routed by purpose above).
+  const geminiModel = provider === "gemini-lite"
+    ? "gemini-2.5-flash-lite"
+    : resolveGeminiModel(body.model);
   const payload = buildOpenAICompatPayload(body, geminiModel);
 
   try {
     const resp = await withRetry(
       () => callUpstream(GEMINI_OPENAI_COMPAT_URL, geminiKey, payload, signal),
-      { maxRetries, label: `gemini[${feature}]` },
+      { maxRetries, label: `${provider}[${feature}]` },
     );
 
     if (!skipLog) {
       if (resp.ok) {
-        logSuccess(resp, isStream, feature, geminiModel, userId, "gemini", startedAt);
+        logSuccess(resp, isStream, feature, geminiModel, userId, provider, startedAt);
       } else {
-        await logErrorFromResp(resp, feature, geminiModel, userId, "gemini", startedAt);
+        await logErrorFromResp(resp, feature, geminiModel, userId, provider, startedAt);
       }
     }
     return resp;
@@ -226,7 +263,7 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
     if (!skipLog) {
       await logUsage({
         feature, model: geminiModel, userId,
-        provider: "gemini", status: "error",
+        provider, status: "error",
         errorMessage: msg, latencyMs: Date.now() - startedAt,
       });
     }
