@@ -309,17 +309,25 @@ function buildOpenAICompatPayload(body: ChatBody, model: string) {
   const temperature = body.temperature ?? body.generationConfig?.temperature;
   const reasoningEffort = typeof body.reasoning?.effort === "string" ? body.reasoning.effort : undefined;
 
+  // GPT-5 family (and other newer OpenAI reasoning models) require
+  // `max_completion_tokens` instead of `max_tokens`, and only support the
+  // default temperature (1). Detect by model name.
+  const isOpenAINewGen = /^(gpt-5|o\d)/i.test(model);
+
   const payload: Record<string, unknown> = {
     model,
     messages: body.messages,
   };
 
   if (typeof body.stream === "boolean") payload.stream = body.stream;
-  if (typeof maxTokens === "number") payload.max_tokens = maxTokens;
-  if (typeof temperature === "number") payload.temperature = temperature;
-  if (typeof body.top_p === "number") payload.top_p = body.top_p;
-  if (typeof body.frequency_penalty === "number") payload.frequency_penalty = body.frequency_penalty;
-  if (typeof body.presence_penalty === "number") payload.presence_penalty = body.presence_penalty;
+  if (typeof maxTokens === "number") {
+    if (isOpenAINewGen) payload.max_completion_tokens = maxTokens;
+    else payload.max_tokens = maxTokens;
+  }
+  if (typeof temperature === "number" && !isOpenAINewGen) payload.temperature = temperature;
+  if (typeof body.top_p === "number" && !isOpenAINewGen) payload.top_p = body.top_p;
+  if (typeof body.frequency_penalty === "number" && !isOpenAINewGen) payload.frequency_penalty = body.frequency_penalty;
+  if (typeof body.presence_penalty === "number" && !isOpenAINewGen) payload.presence_penalty = body.presence_penalty;
   if (body.response_format) payload.response_format = body.response_format;
   if (Array.isArray(body.tools) && body.tools.length > 0) payload.tools = body.tools;
   if (body.tool_choice) payload.tool_choice = body.tool_choice;
