@@ -42,9 +42,9 @@ export function RefreshContentButton({ entityType, entityId, entityName, size = 
       const total = (data as any)?.total_fields ?? 0;
       toast({
         title: "Refresh ready for review",
-        description: `${entityName || "Entity"}: ${changed}/${total} fields proposed for update. Open the review queue.`,
+        description: `${entityName || "Entity"}: ${changed}/${total} fields proposed. Open the Content Refresh Queue when you're ready to approve.`,
       });
-      navigate("/admin/content-refreshes");
+      // NOTE: do NOT auto-navigate — keep the admin in their current workflow.
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to start refresh";
       toast({ title: "Refresh failed", description: msg, variant: "destructive" });
