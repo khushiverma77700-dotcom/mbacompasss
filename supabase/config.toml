@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.bulk-jobs-watchdog]
 verify_jwt = false
+
+[functions.iim-waitlist-ai-insights]
+verify_jwt = false
