@@ -7,11 +7,12 @@ import { Switch } from "@/components/ui/switch";
 import { Progress } from "@/components/ui/progress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { computeAICost, modelLabel } from "@/lib/aiPricing";
 import {
   Activity, Cpu, Gauge, PauseCircle, PlayCircle, Save, Server, Zap,
   AlertTriangle, ShieldCheck, Layers, Flame, HardDrive, Network,
   Database, Timer, TrendingUp, Radio, Waves, CircuitBoard, Thermometer,
-  CheckCircle2, XCircle, Clock, Wifi, BarChart3, RefreshCw,
+  CheckCircle2, XCircle, Clock, Wifi, BarChart3, RefreshCw, DollarSign, IndianRupee, Coins,
 } from "lucide-react";
 
 type Workflow = "Bulk Colleges" | "Bulk College Sections";
@@ -179,6 +180,15 @@ const BulkLiveControlPanel = ({
   const [browserCpu, setBrowserCpu] = useState(0); // 0..100
   const [tickRate, setTickRate] = useState(0); // throughput units/min approx
   const [clockTick, setClockTick] = useState(Date.now());
+  // Live cost tracking — sums ai_usage_logs in the job's runtime window.
+  type CostBreakdown = { model: string; usd: number; calls: number; tokens: number };
+  const [costUsd, setCostUsd] = useState(0);
+  const [costCalls, setCostCalls] = useState(0);
+  const [costTokens, setCostTokens] = useState(0);
+  const [costBreakdown, setCostBreakdown] = useState<CostBreakdown[]>([]);
+  const [costSeries, setCostSeries] = useState<number[]>(Array.from({ length: 60 }, () => 0));
+  const [usdInr, setUsdInr] = useState<number>(83.5);
+  const jobStartedAtRef = useRef<string>(new Date().toISOString());
   const autoWakeInFlightRef = useRef(false);
   const lastAutoWakeAtRef = useRef(0);
   const processedUnits = Math.max(0, Number(processed ?? (succeeded + failed)));
@@ -190,10 +200,14 @@ const BulkLiveControlPanel = ({
   const networkStats = telemetry?.network || {};
   const telemetryAgeSec = telemetry?.updatedAt ? Math.max(0, (Date.now() - new Date(telemetry.updatedAt).getTime()) / 1000) : null;
   const isTelemetryFresh = telemetryAgeSec !== null && telemetryAgeSec <= 90 && !paused && !isTerminal;
-  const serverCpu = isTelemetryFresh ? Number(telemetry?.cpu?.loadPct || 0) : 0;
+  // CPU is real only when telemetry is fresh AND there is in-flight work; otherwise it's 0.
+  const rawServerCpu = Number(telemetry?.cpu?.loadPct || 0);
+  const serverCpu = isTelemetryFresh && active > 0 ? rawServerCpu : 0;
+  // Cap reported active workers to the configured concurrency so we never
+  // claim "13 processes" when only 2 workers are configured.
   const liveActiveWorkers = isTelemetryFresh
-    ? Math.max(0, Math.min(10, Number(telemetry?.activeWorkers ?? active) || 0))
-    : active;
+    ? Math.max(0, Math.min(concurrency, Number(telemetry?.activeWorkers ?? active) || 0))
+    : Math.min(concurrency, active);
   const memory = telemetry?.memory || null;
   const memoryUsedMb = Number(memory?.heapUsed || memory?.rss || 0);
   const memoryTotalMb = Number(memory?.heapTotal || memory?.rss || 0);
@@ -244,21 +258,21 @@ const BulkLiveControlPanel = ({
     }
   }, [processedUnits]);
 
-  // Server pressure now comes from real worker telemetry when available.
+  // Server pressure: derived ONLY from real telemetry. Falls to 0 when no work.
   const serverLoad = useMemo(() => {
+    if (paused || isTerminal) return 0;
     const utilisation = concurrency > 0 ? Math.min(1, liveActiveWorkers / concurrency) : 0;
+    if (liveActiveWorkers === 0 && serverCpu === 0) return 0;
     const completed = succeeded + failed;
     const failureRate = completed > 0 ? failed / completed : 0;
-    const idleMin = updatedAt ? (Date.now() - new Date(updatedAt).getTime()) / 60000 : 0;
-    const idlePenalty = !paused && !isTerminal ? Math.min(1, Math.max(0, idleMin - 1) / 5) : 0;
-    const workerPressure = utilisation * 70 + failureRate * 20 + idlePenalty * 10;
+    const workerPressure = utilisation * 70 + failureRate * 20;
     return Math.min(100, Math.round(Math.max(serverCpu, workerPressure)));
-  }, [serverCpu, liveActiveWorkers, concurrency, succeeded, failed, updatedAt, paused, isTerminal]);
+  }, [serverCpu, liveActiveWorkers, concurrency, succeeded, failed, paused, isTerminal]);
 
   const cpuHistory = useRolling(browserCpu);
   const loadHistory = useRolling(serverLoad);
 
-  // Per-second ops history for heatmap — driven by real worker telemetry events.
+  // Per-second ops history for heatmap — driven entirely by real worker telemetry.
   const [opsHistory, setOpsHistory] = useState<number[]>(Array.from({ length: 60 }, () => 0));
   const lastTotalRef = useRef(processedUnits);
   useEffect(() => {
@@ -266,16 +280,22 @@ const BulkLiveControlPanel = ({
       const now = Date.now();
       const bins = Array.from({ length: 60 }, () => 0);
       const timeline = Array.isArray(telemetry?.timeline) ? telemetry.timeline : [];
+      let timelineHasRecent = false;
       for (const point of timeline) {
         const ts = Number(point?.ts || 0);
         if (!ts) continue;
         const age = Math.floor((now - ts) / 1000);
-        if (age >= 0 && age < 60) bins[59 - age] += Math.max(1, Number(point?.ops || 1));
+        if (age >= 0 && age < 60) {
+          bins[59 - age] += Math.max(1, Number(point?.ops || 1));
+          if (age <= 5) timelineHasRecent = true;
+        }
       }
+      // Only synthesise from processed delta if the telemetry timeline is empty
+      // or stale — prevents double counting the same completion.
       const cur = processedUnits;
       const delta = Math.max(0, cur - lastTotalRef.current);
       lastTotalRef.current = cur;
-      if (delta > 0) bins[59] += delta;
+      if (delta > 0 && !timelineHasRecent) bins[59] += delta;
       setOpsHistory(bins);
     };
     buildBins();
@@ -320,10 +340,86 @@ const BulkLiveControlPanel = ({
     return () => clearInterval(t);
   }, []);
 
+  // Anchor cost-window start to telemetry.startedAt if available
+  useEffect(() => {
+    const start = telemetry?.startedAt;
+    if (start && typeof start === "string") jobStartedAtRef.current = start;
+  }, [telemetry?.startedAt]);
+
+  // Poll ai_usage_logs to compute live cost. Filters by features used by these
+  // bulk workflows and the job runtime window.
+  useEffect(() => {
+    let cancelled = false;
+    const FEATURES = workflow === "Bulk Colleges"
+      ? ["ai-college-writer", "auto-seo-engine", "ai-college-section"]
+      : ["ai-college-section", "ai-college-writer"];
+    const fetchCost = async () => {
+      try {
+        const since = jobStartedAtRef.current;
+        const { data, error } = await supabase
+          .from("ai_usage_logs")
+          .select("model,prompt_tokens,completion_tokens,total_tokens,created_at,feature")
+          .in("feature", FEATURES)
+          .gte("created_at", since)
+          .order("created_at", { ascending: false })
+          .limit(500);
+        if (error || cancelled) return;
+        const rows = data || [];
+        let usdSum = 0;
+        let tokensSum = 0;
+        const byModel = new Map<string, CostBreakdown>();
+        for (const r of rows) {
+          const usd = computeAICost({
+            model: r.model,
+            promptTokens: Number(r.prompt_tokens || 0),
+            completionTokens: Number(r.completion_tokens || 0),
+            totalTokens: Number(r.total_tokens || 0),
+          });
+          usdSum += usd;
+          tokensSum += Number(r.total_tokens || 0);
+          const key = modelLabel(r.model);
+          const cur = byModel.get(key) || { model: key, usd: 0, calls: 0, tokens: 0 };
+          cur.usd += usd;
+          cur.calls += 1;
+          cur.tokens += Number(r.total_tokens || 0);
+          byModel.set(key, cur);
+        }
+        // Build per-second cost series for last 60s
+        const now = Date.now();
+        const bins = Array.from({ length: 60 }, () => 0);
+        for (const r of rows) {
+          const ts = new Date(r.created_at).getTime();
+          const age = Math.floor((now - ts) / 1000);
+          if (age >= 0 && age < 60) {
+            bins[59 - age] += computeAICost({
+              model: r.model,
+              promptTokens: Number(r.prompt_tokens || 0),
+              completionTokens: Number(r.completion_tokens || 0),
+              totalTokens: Number(r.total_tokens || 0),
+            });
+          }
+        }
+        if (cancelled) return;
+        setCostUsd(usdSum);
+        setCostCalls(rows.length);
+        setCostTokens(tokensSum);
+        setCostBreakdown([...byModel.values()].sort((a, b) => b.usd - a.usd));
+        setCostSeries(bins);
+      } catch (_) { /* swallow */ }
+    };
+    fetchCost();
+    const interval = setInterval(fetchCost, isTerminal || paused ? 15_000 : 4_000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [workflow, isTerminal, paused, jobId]);
+
+  const costInr = costUsd * usdInr;
+
   const workerSlots = useMemo<WorkerSlotView[]>(() => {
     const fromTelemetry = Array.isArray(telemetry?.workerSlots) ? telemetry.workerSlots : [];
-    return Array.from({ length: 10 }).map((_, i) => {
-      const slot = fromTelemetry.find((s: any) => Number(s?.slot) === i + 1) || fromTelemetry[i] || {};
+    // Only render up to the configured concurrency — never invent extra slots.
+    const slotCount = Math.max(1, Math.min(10, concurrency));
+    return Array.from({ length: slotCount }).map((_, i) => {
+      const slot = fromTelemetry.find((s: any) => Number(s?.slot) === i + 1) || {};
       const enabled = i < concurrency;
       const rawState = String(slot?.state || (paused ? "paused" : enabled ? (i < liveActiveWorkers ? "active" : "idle") : "disabled"));
       return {
@@ -703,6 +799,110 @@ const BulkLiveControlPanel = ({
           <p className="text-[10px] text-muted-foreground mt-2">
             Switch instantly — applies to the next AI call. Output stays identical across providers; only cost & speed change. Use cheaper options to reduce credit burn.
           </p>
+        </div>
+
+        {/* === LIVE COST TRACKER === */}
+        <div className="rounded-lg border bg-gradient-to-br from-emerald-500/5 via-card to-amber-500/5 p-3">
+          <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+            <div className="flex items-center gap-1.5 text-xs font-semibold">
+              <Coins className="w-4 h-4 text-amber-600" />
+              Live Cost Tracker
+              <span className="text-[10px] text-muted-foreground font-normal ml-1">
+                — since job start · updates every {isTerminal || paused ? "15s" : "4s"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-[10px] h-5 font-mono gap-1">
+                <Activity className="w-3 h-3" /> {costCalls} call{costCalls === 1 ? "" : "s"}
+              </Badge>
+              <Badge variant="outline" className="text-[10px] h-5 font-mono">
+                {costTokens.toLocaleString()} tokens
+              </Badge>
+              <input
+                type="number"
+                value={usdInr}
+                onChange={(e) => setUsdInr(Math.max(1, Number(e.target.value) || 83.5))}
+                className="w-16 h-6 text-[10px] font-mono px-1.5 rounded border bg-background"
+                title="USD → INR rate (editable)"
+                step={0.1}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="rounded-lg border bg-card p-3">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700">
+                  <DollarSign className="w-3.5 h-3.5" /> USD SPENT
+                </div>
+                <Badge variant="outline" className="text-[10px] h-5 border-emerald-500/40 text-emerald-700">live</Badge>
+              </div>
+              <div className="text-2xl font-bold font-mono leading-tight text-emerald-700">
+                ${costUsd.toFixed(costUsd < 0.01 ? 6 : 4)}
+              </div>
+              <Sparkline data={costSeries.map((v) => v * 1_000_000)} color="rgb(5 150 105)" />
+              <div className="text-[10px] text-muted-foreground mt-0.5">
+                avg ${costCalls > 0 ? (costUsd / costCalls).toFixed(5) : "0.00000"} / call
+              </div>
+            </div>
+
+            <div className="rounded-lg border bg-card p-3">
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-amber-700">
+                  <IndianRupee className="w-3.5 h-3.5" /> INR ESTIMATE
+                </div>
+                <Badge variant="outline" className="text-[10px] h-5 border-amber-500/40 text-amber-700">
+                  ₹{usdInr.toFixed(2)}/USD
+                </Badge>
+              </div>
+              <div className="text-2xl font-bold font-mono leading-tight text-amber-700">
+                ₹{costInr.toFixed(costInr < 1 ? 4 : 2)}
+              </div>
+              <Sparkline data={costSeries.map((v) => v * usdInr * 1_000_000)} color="rgb(217 119 6)" />
+              <div className="text-[10px] text-muted-foreground mt-0.5">
+                projected: ₹{totalUnits > 0 && processedUnits > 0 ? ((costInr / processedUnits) * totalUnits).toFixed(2) : "—"} for full job
+              </div>
+            </div>
+
+            <div className="rounded-lg border bg-card p-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold">
+                  <CircuitBoard className="w-3.5 h-3.5 text-primary" /> BY MODEL
+                </div>
+                <Badge variant="outline" className="text-[10px] h-5">
+                  {costBreakdown.length} model{costBreakdown.length === 1 ? "" : "s"}
+                </Badge>
+              </div>
+              {costBreakdown.length === 0 ? (
+                <div className="text-[11px] text-muted-foreground py-3 font-mono text-center">// no AI calls recorded yet</div>
+              ) : (
+                <div className="space-y-1.5 max-h-24 overflow-y-auto pr-1">
+                  {costBreakdown.slice(0, 5).map((b) => {
+                    const pct = costUsd > 0 ? (b.usd / costUsd) * 100 : 0;
+                    return (
+                      <div key={b.model}>
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className="font-mono truncate" title={b.model}>{b.model}</span>
+                          <span className="font-mono">${b.usd.toFixed(5)}</span>
+                        </div>
+                        <div className="h-1 bg-muted rounded-full overflow-hidden">
+                          <div className="h-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                        </div>
+                        <div className="text-[9px] text-muted-foreground font-mono">
+                          {b.calls} calls · {b.tokens.toLocaleString()} tokens
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-2 text-[10px] text-muted-foreground flex items-center gap-2 flex-wrap">
+            <ShieldCheck className="w-3 h-3 text-primary" />
+            <span>Cost is computed from <code className="font-mono bg-muted px-1 rounded">ai_usage_logs</code> using per-model pricing. INR rate is editable above.</span>
+          </div>
         </div>
 
         {/* Controls */}

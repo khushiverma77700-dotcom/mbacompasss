@@ -84,9 +84,12 @@ class TelemetryTracker {
       activeWorkers: 0,
       peakActiveWorkers: Math.max(initial?.peakActiveWorkers || 0, 0),
       cpu: {
-        busyMs: Number(cpu.busyMs || 0),
-        wallMs: Number(cpu.wallMs || 0),
-        loadPct: Number(cpu.loadPct || 0),
+        // Rolling window: array of {ts, busyMs} kept for last 30s only.
+        // loadPct is recomputed from this window so it falls back to 0 when
+        // no work happens (instead of growing forever like a cumulative ratio).
+        window: Array.isArray(cpu.window) ? cpu.window.slice(-300) : [],
+        loadPct: 0,
+        windowMs: 30_000,
       },
       memory: memorySnapshot() || initial?.memory || null,
       network: {
@@ -113,9 +116,16 @@ class TelemetryTracker {
     this.state.db.writes += n;
   }
 
-  setActive(n: number) {
-    this.state.activeWorkers = n;
-    this.state.peakActiveWorkers = Math.max(this.state.peakActiveWorkers || 0, n);
+  setActive(n: number, concurrency?: number) {
+    const cap = Math.max(0, Math.min(10, Number(concurrency || n) || 0));
+    this.state.activeWorkers = Math.max(0, Math.min(cap, n));
+    if (typeof concurrency === "number") this.state.concurrency = cap;
+    this.state.peakActiveWorkers = Math.max(this.state.peakActiveWorkers || 0, this.state.activeWorkers);
+    // Drop any slot rows above current concurrency so the UI never shows
+    // 13 workers when only 2 are configured.
+    if (Array.isArray(this.state.workerSlots) && typeof concurrency === "number") {
+      this.state.workerSlots = this.state.workerSlots.filter((s: any) => Number(s?.slot || 0) <= cap);
+    }
   }
 
   updateSlot(slotIndex: number, patch: Record<string, unknown>) {
@@ -143,10 +153,17 @@ class TelemetryTracker {
   }
 
   addBusy(ms: number) {
-    this.state.cpu.busyMs += Math.max(0, ms);
-    this.state.cpu.wallMs += Math.max(1, Date.now() - this.wallStart);
-    this.wallStart = Date.now();
-    this.state.cpu.loadPct = Math.min(100, Math.round((this.state.cpu.busyMs / Math.max(1, this.state.cpu.wallMs)) * 100));
+    const now = Date.now();
+    const windowMs = Number(this.state.cpu.windowMs || 30_000);
+    const window = Array.isArray(this.state.cpu.window) ? this.state.cpu.window : [];
+    window.push({ ts: now, busyMs: Math.max(0, ms) });
+    // prune to window
+    const cutoff = now - windowMs;
+    while (window.length && window[0].ts < cutoff) window.shift();
+    const busyTotal = window.reduce((sum: number, e: any) => sum + (Number(e.busyMs) || 0), 0);
+    this.state.cpu.window = window.slice(-300);
+    this.state.cpu.loadPct = Math.min(100, Math.round((busyTotal / windowMs) * 100));
+    this.wallStart = now;
   }
 
   recordHttp(label: string, status: number, requestBytes: number, responseBytes: number, latencyMs: number) {
@@ -173,6 +190,15 @@ class TelemetryTracker {
   snapshot() {
     this.state.updatedAt = new Date().toISOString();
     this.state.memory = memorySnapshot() || this.state.memory;
+    // Re-evaluate CPU window so it decays naturally when no new addBusy fires.
+    const now = Date.now();
+    const windowMs = Number(this.state.cpu.windowMs || 30_000);
+    const window = Array.isArray(this.state.cpu.window) ? this.state.cpu.window : [];
+    const cutoff = now - windowMs;
+    while (window.length && window[0].ts < cutoff) window.shift();
+    const busyTotal = window.reduce((sum: number, e: any) => sum + (Number(e.busyMs) || 0), 0);
+    this.state.cpu.window = window;
+    this.state.cpu.loadPct = Math.min(100, Math.round((busyTotal / windowMs) * 100));
     return this.state;
   }
 }
@@ -576,7 +602,7 @@ async function runJob(job_id: string, authHeader: string) {
           continue;
         }
         activeRef.n += 1;
-        tracker.setActive(activeRef.n);
+        tracker.setActive(activeRef.n, concurrencyRef.v);
         tracker.updateSlot(slotIdx, { job_id, state: "processing", current_item: row.name, current_step: "starting" });
         tracker.addHealth("processing", `Slot ${slotIdx + 1} processing ${row.name}`, { job_id, slot: slotIdx + 1, row: row.index + 1 });
         const busyStarted = Date.now();
@@ -585,7 +611,7 @@ async function runJob(job_id: string, authHeader: string) {
         } finally {
           tracker.addBusy(Date.now() - busyStarted);
           activeRef.n = Math.max(0, activeRef.n - 1);
-          tracker.setActive(activeRef.n);
+          tracker.setActive(activeRef.n, concurrencyRef.v);
           tracker.updateSlot(slotIdx, { job_id, state: "idle", current_item: row.name, current_step: row.step || row.status, last_processed_at: new Date().toISOString() });
         }
 
