@@ -786,72 +786,228 @@ export default function IIMWaitlistPage() {
         </div>
       </section>
 
-      {/* WAITLIST PREDICTOR MINI-TOOL */}
+      {/* WAITLIST PREDICTOR — ADVANCED AI */}
       <section className="container mx-auto px-4 md:px-8 py-14">
-        <Card className="overflow-hidden border-violet-200 max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-2">
-            <div className="p-8 bg-gradient-to-br from-violet-600 via-blue-600 to-blue-700 text-white">
-              <Badge className="bg-white/20 text-white border-white/30 mb-4 backdrop-blur">
-                <Zap className="h-3 w-3 mr-1" /> Instant Predictor
-              </Badge>
-              <h2 className="text-2xl md:text-3xl font-bold mb-3">Will My Waitlist Convert?</h2>
-              <p className="text-white/90 text-sm mb-4">
-                Enter your category, target IIM and waitlist number — we'll compare against 5-year movement averages from RTI data and tell you the conversion probability.
-              </p>
-              <ul className="text-sm space-y-2 text-white/90">
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> Based on RTI-verified historical data</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> Category-wise computation</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> ±8% historical accuracy</li>
-              </ul>
-            </div>
-            <div className="p-8 space-y-4 bg-white">
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">Category</label>
-                <div className="flex flex-wrap gap-2">
-                  {["General","EWS","OBC","SC","ST"].map(c => (
-                    <Button key={c} size="sm" variant={predCat === c ? "default" : "outline"}
-                      onClick={() => setPredCat(c)} className="rounded-full">{c}</Button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">Target IIM / Institute</label>
-                <select value={predIIM} onChange={e => setPredIIM(e.target.value)}
-                  className="w-full h-10 px-3 rounded-md border border-input bg-background">
-                  <option value="">Select institute…</option>
-                  {iimOptions.map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">Your Waitlist Number</label>
-                <Input type="number" placeholder="e.g. 85" value={predWL} onChange={e => setPredWL(e.target.value)} />
-              </div>
+        <div className="text-center mb-8">
+          <Badge className="bg-gradient-to-r from-violet-600 to-blue-600 text-white border-transparent mb-3">
+            <Zap className="h-3 w-3 mr-1" /> 🎯 AI Conversion Predictor
+          </Badge>
+          <h2 className="text-2xl md:text-3xl font-bold">🔮 Will My Waitlist Convert?</h2>
+          <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">Advanced AI prediction trained on 5 years of RTI data + live 2026 admission trends from across the web. Get a calibrated probability + personalised action plan in seconds.</p>
+        </div>
 
-              <AnimatePresence>
-                {predictionResult && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                    className="rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 p-4 border"
-                  >
-                    <div className="text-xs text-muted-foreground mb-1">Conversion Probability</div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-bold text-blue-700">{predictionResult.prob}%</span>
-                      <span className={`font-semibold ${predictionResult.cls}`}>{predictionResult.verdict}</span>
+        <Card className="overflow-hidden border-violet-200 max-w-6xl mx-auto shadow-2xl">
+          <div className="grid lg:grid-cols-5">
+            {/* LEFT: Inputs */}
+            <div className="lg:col-span-2 p-8 bg-gradient-to-br from-violet-600 via-blue-600 to-blue-700 text-white relative overflow-hidden">
+              <motion.div
+                className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-white/10 blur-3xl"
+                animate={{ scale: [1, 1.3, 1], rotate: [0, 90, 0] }}
+                transition={{ duration: 12, repeat: Infinity }}
+              />
+              <Badge className="bg-white/20 text-white border-white/30 mb-4 backdrop-blur relative">
+                <Brain className="h-3 w-3 mr-1" /> Powered by Lovable AI
+              </Badge>
+              <h3 className="text-xl md:text-2xl font-bold mb-3 relative">📋 Your Profile</h3>
+              <p className="text-white/85 text-sm mb-6 relative">Fill in 6 quick details. AI will benchmark you against historical RTI data + 2026 trends.</p>
+
+              <div className="space-y-4 relative">
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">🎓 Category</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {["General","EWS","OBC","SC","ST"].map(c => (
+                      <button key={c} type="button"
+                        onClick={() => setPredCat(c)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${predCat === c ? "bg-white text-blue-700 shadow-lg" : "bg-white/15 text-white hover:bg-white/25"}`}>{c}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">🏛️ Target Institute</label>
+                  <select value={predIIM} onChange={e => setPredIIM(e.target.value)}
+                    className="w-full h-10 px-3 rounded-lg bg-white/95 text-slate-900 text-sm">
+                    <option value="">Select institute…</option>
+                    {iimOptions.map(o => <option key={o} value={o}>{fullName(o, o)}</option>)}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">🔢 WL Number</label>
+                    <Input type="number" placeholder="e.g. 85" value={predWL}
+                      onChange={e => setPredWL(e.target.value)}
+                      className="bg-white/95 text-slate-900 border-0" />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">📊 CAT %ile</label>
+                    <Input type="number" step="0.01" placeholder="e.g. 99.2" value={predCAT}
+                      onChange={e => setPredCAT(e.target.value)}
+                      className="bg-white/95 text-slate-900 border-0" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">👤 Gender</label>
+                    <select value={predGender} onChange={e => setPredGender(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg bg-white/95 text-slate-900 text-sm">
+                      {["Male","Female","Other"].map(g => <option key={g}>{g}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">💼 Work Ex (mo)</label>
+                    <Input type="number" placeholder="0" value={predWorkEx}
+                      onChange={e => setPredWorkEx(e.target.value)}
+                      className="bg-white/95 text-slate-900 border-0" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">📚 Academic Background</label>
+                  <select value={predAcad} onChange={e => setPredAcad(e.target.value)}
+                    className="w-full h-10 px-3 rounded-lg bg-white/95 text-slate-900 text-sm">
+                    {["Engineering","Commerce","Arts/Humanities","Science","Medical","Law","CA/CS/CMA","Other"].map(a => <option key={a}>{a}</option>)}
+                  </select>
+                </div>
+
+                <Button
+                  onClick={async () => {
+                    if (!predIIM || !predWL || !predCat) { toast.error("Pick category, institute and waitlist number"); return; }
+                    setPredLoading(true);
+                    try {
+                      const { data, error } = await supabase.functions.invoke("iim-waitlist-predict", {
+                        body: {
+                          category: predCat,
+                          institute: predIIM,
+                          waitlist_number: predWL,
+                          cat_percentile: predCAT || null,
+                          gender: predGender,
+                          academic_bg: predAcad,
+                          work_ex_months: parseInt(predWorkEx) || 0,
+                        },
+                      });
+                      if (error) throw error;
+                      setAiPrediction({
+                        prob: data.prob ?? 0,
+                        verdict: data.verdict || "—",
+                        analysis: data.analysis || "",
+                        tips: data.tips || [],
+                      });
+                      (window as any).__predExtras = { historical: data.historical, comparable: data.comparable_options };
+                    } catch (e) {
+                      toast.error("Prediction failed — try again in a moment");
+                    } finally {
+                      setPredLoading(false);
+                    }
+                  }}
+                  disabled={predLoading}
+                  className="w-full bg-white text-blue-700 hover:bg-white/90 font-bold shadow-xl mt-2"
+                >
+                  {predLoading ? <><RefreshCcw className="h-4 w-4 mr-2 animate-spin" /> Analysing 2026 Data…</> : <>🚀 Predict My Conversion <ArrowRight className="h-4 w-4 ml-1" /></>}
+                </Button>
+              </div>
+            </div>
+
+            {/* RIGHT: Result */}
+            <div className="lg:col-span-3 p-8 bg-gradient-to-br from-slate-50 to-blue-50/40 min-h-[500px]">
+              <AnimatePresence mode="wait">
+                {predLoading ? (
+                  <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="h-full flex flex-col items-center justify-center text-center py-12">
+                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      className="w-16 h-16 rounded-full border-4 border-blue-200 border-t-blue-600 mb-4" />
+                    <h4 className="font-bold text-lg mb-1">🔍 Analysing your profile</h4>
+                    <p className="text-sm text-muted-foreground max-w-sm">Crunching 5 years of RTI data, comparing 2026 trends, calibrating with diversity factors…</p>
+                  </motion.div>
+                ) : aiPrediction ? (
+                  <motion.div key="result" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }} className="space-y-5">
+                    <div>
+                      <div className="text-xs font-bold uppercase tracking-wider text-violet-600 mb-1">🎯 AI Verdict</div>
+                      <div className="flex items-baseline gap-3 flex-wrap">
+                        <motion.span
+                          initial={{ scale: 0.5 }} animate={{ scale: 1 }}
+                          transition={{ type: "spring", stiffness: 200 }}
+                          className="text-6xl font-black bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
+                          {aiPrediction.prob}%
+                        </motion.span>
+                        <Badge className={`text-base px-3 py-1 ${
+                          aiPrediction.prob >= 70 ? "bg-emerald-500" :
+                          aiPrediction.prob >= 45 ? "bg-blue-500" :
+                          aiPrediction.prob >= 25 ? "bg-amber-500" : "bg-rose-500"
+                        } text-white border-transparent`}>{aiPrediction.verdict}</Badge>
+                      </div>
+                      <div className="mt-3 h-3 bg-slate-200 rounded-full overflow-hidden">
+                        <motion.div initial={{ width: 0 }} animate={{ width: `${aiPrediction.prob}%` }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                          className="h-full bg-gradient-to-r from-blue-500 via-violet-500 to-emerald-500" />
+                      </div>
                     </div>
-                    <div className="mt-2 h-2 bg-slate-200 rounded-full overflow-hidden">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${predictionResult.prob}%` }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="h-full bg-gradient-to-r from-blue-500 to-emerald-500" />
+
+                    <Card className="bg-white border-violet-100">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Brain className="h-4 w-4 text-violet-600" />
+                          <div className="text-xs font-bold uppercase tracking-wider text-violet-600">AI Analysis</div>
+                        </div>
+                        <p className="text-sm text-slate-700 leading-relaxed">{aiPrediction.analysis}</p>
+                      </CardContent>
+                    </Card>
+
+                    {aiPrediction.tips?.length > 0 && (
+                      <Card className="bg-white border-blue-100">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Lightbulb className="h-4 w-4 text-amber-500" />
+                            <div className="text-xs font-bold uppercase tracking-wider text-blue-600">💡 Personalised Action Plan</div>
+                          </div>
+                          <ul className="space-y-2">
+                            {aiPrediction.tips.map((tip, i) => (
+                              <motion.li key={i}
+                                initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: i * 0.1 }}
+                                className="flex gap-2 text-sm text-slate-700">
+                                <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                                <span>{tip}</span>
+                              </motion.li>
+                            ))}
+                          </ul>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </motion.div>
+                ) : (
+                  <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="h-full flex flex-col items-center justify-center text-center py-10">
+                    <motion.div
+                      animate={{ y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity }}
+                      className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-blue-600 flex items-center justify-center mb-4 shadow-2xl">
+                      <Sparkles className="h-10 w-10 text-white" />
+                    </motion.div>
+                    <h4 className="font-bold text-lg mb-1">Get Your AI Prediction</h4>
+                    <p className="text-sm text-muted-foreground max-w-sm">Fill in your profile on the left and tap predict. Our AI will benchmark you against 5 years of RTI data + 2026 trends.</p>
+                    <div className="mt-6 grid grid-cols-3 gap-3 w-full max-w-md">
+                      {[{i:ShieldCheck,t:"RTI verified"},{i:Brain,t:"AI calibrated"},{i:Target,t:"Personalised"}].map((x,i)=>(
+                        <div key={i} className="text-center p-3 rounded-xl bg-white/70 border">
+                          <x.i className="h-4 w-4 mx-auto mb-1 text-violet-600" />
+                          <div className="text-[10px] font-semibold text-slate-600">{x.t}</div>
+                        </div>
+                      ))}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-3">
-                      Based on a 5-year average movement of <strong>{predictionResult.avg}</strong> for {predCat} category at {predIIM}.
-                    </p>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
           </div>
         </Card>
+
+        {/* Quick statistical fallback */}
+        {predictionResult && !aiPrediction && (
+          <p className="text-xs text-center text-muted-foreground mt-3">
+            📊 Statistical baseline: {predictionResult.prob}% based on 5-yr avg movement of {predictionResult.avg}. Click predict for AI deep-analysis.
+          </p>
+        )}
       </section>
 
       {/* RTI DATA */}
