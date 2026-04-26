@@ -386,28 +386,65 @@ const AdminSEODashboard = () => {
         });
       });
 
-      // Add static pages as a special content type
-      const staticRows: DashboardRow[] = staticPages.map(sp => ({
-        key: `static:${sp.id}`,
-        id: sp.id,
-        contentType: "article" as SEOContentType,
-        name: sp.name,
-        slug: sp.slug,
-        path: sp.path,
-        isStatic: true,
-        city: null,
-        state: null,
-        item: { id: sp.id, title: sp.name, slug: sp.slug, meta_title: sp.name, meta_description: null, keywords: [] },
-        snapshot: snapshots[`static:${sp.id}`] || null,
-        audit: {
-          score: 50, status: "warning" as ScoreStatus, issues: ["Static page — manage SEO in code"],
-          hasMetaTitle: true, hasMetaDesc: false, hasKeywords: false, hasH1: true,
-          hasContent: true, hasSchema: false, hasSlug: true, hasCanonical: false,
-          hasSocial: false, hasTechnical: false, aiOptimized: false,
-          metaTitleLen: sp.name.length, metaDescLen: 0, keywordCount: 0,
-          shortTailCount: 0, longTailCount: 0, wordCount: 0,
-        },
-      }));
+      // Add static pages as a special content type, using their declared SEO metadata
+      const staticRows: DashboardRow[] = STATIC_PAGES_CONFIG.map(sp => {
+        const seo = sp.seo || {};
+        const metaTitle = seo.metaTitle || sp.label;
+        const metaDesc = seo.metaDescription || "";
+        const keywords = seo.keywords || [];
+        const wordCount = seo.approxWordCount ?? 0;
+        const longTail = keywords.filter(k => k.split(/\s+/).length >= 3).length;
+        const shortTail = keywords.length - longTail;
+
+        const checks = {
+          hasMetaTitle: metaTitle.length >= 30 && metaTitle.length <= 70,
+          hasMetaDesc: metaDesc.length >= 120 && metaDesc.length <= 170,
+          hasKeywords: keywords.length >= 5,
+          hasH1: !!seo.h1,
+          hasContent: wordCount >= 500,
+          hasSchema: !!seo.hasSchema,
+          hasSlug: true,
+          hasCanonical: !!seo.hasCanonical,
+          hasSocial: !!seo.hasSocial,
+          hasTechnical: !!seo.hasCanonical && !!seo.hasSocial,
+          aiOptimized: !!seo.hasSchema && wordCount >= 1000,
+        };
+        const passed = Object.values(checks).filter(Boolean).length;
+        const score = Math.round((passed / Object.keys(checks).length) * 100);
+        const status: ScoreStatus = score >= 80 ? "good" : score >= 50 ? "warning" : "error";
+        const issues: string[] = [];
+        if (!checks.hasMetaTitle) issues.push("Meta title length");
+        if (!checks.hasMetaDesc) issues.push("Meta description missing/short");
+        if (!checks.hasKeywords) issues.push("Add more target keywords");
+        if (!checks.hasH1) issues.push("H1 missing");
+        if (!checks.hasContent) issues.push("Thin content");
+        if (!checks.hasSchema) issues.push("No JSON-LD schema");
+        if (!checks.hasSocial) issues.push("Missing OG/Twitter tags");
+        if (!checks.hasCanonical) issues.push("Missing canonical");
+
+        return {
+          key: `static:page-${sp.key}`,
+          id: `page-${sp.key}`,
+          contentType: "article" as SEOContentType,
+          name: sp.label,
+          slug: sp.path,
+          path: sp.path,
+          isStatic: true,
+          city: null,
+          state: null,
+          item: {
+            id: `page-${sp.key}`, title: sp.label, slug: sp.path,
+            meta_title: metaTitle, meta_description: metaDesc, keywords,
+          },
+          snapshot: snapshots[`static:page-${sp.key}`] || null,
+          audit: {
+            score, status, issues: issues.length ? issues : ["All key SEO elements present"],
+            ...checks,
+            metaTitleLen: metaTitle.length, metaDescLen: metaDesc.length, keywordCount: keywords.length,
+            shortTailCount: shortTail, longTailCount: longTail, wordCount,
+          },
+        };
+      });
 
       nextRows.push(...staticRows);
       setRows(nextRows);
