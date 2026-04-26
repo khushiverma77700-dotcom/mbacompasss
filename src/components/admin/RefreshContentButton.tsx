@@ -12,6 +12,7 @@ import { RefreshCw, Sparkles, Target, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { AIInstructionEditor } from "./AIInstructionEditor";
 
 interface Props {
   entityType: "article" | "college" | "institute" | "course";
