@@ -36,7 +36,7 @@ import { AutoFixPanel } from "@/components/admin/AutoFixPanel";
 type ScoreStatus = "good" | "warning" | "poor";
 type FilterStatus = "all" | ScoreStatus;
 type BooleanFilter = "all" | "yes" | "no";
-type TypeFilter = "all" | SEOContentType;
+type TypeFilter = "all" | "static" | SEOContentType;
 
 interface SEOAudit {
   score: number; status: ScoreStatus;
