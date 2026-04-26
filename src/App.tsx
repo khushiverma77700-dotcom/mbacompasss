@@ -55,6 +55,7 @@ const BusinessInquiryPage = lazyWithPreload(() => import("./pages/BusinessInquir
 const NotFound = lazyWithPreload(() => import("./pages/NotFound"));
 const ProgrammeDetailPage = lazyWithPreload(() => import("./pages/ProgrammeDetailPage"));
 const MBAProgrammeComparePage = lazyWithPreload(() => import("./pages/MBAProgrammeComparePage"));
+const IIMWaitlistPage = lazyWithPreload(() => import("./pages/IIMWaitlistPage"));
 
 // Lazy-loaded admin pages
 const AdminLayout = lazyWithPreload(() => import("./pages/admin/AdminLayout"));
@@ -543,6 +544,7 @@ const App = () => (
             <Route path="/mocks/leaderboard/:slug" element={<PublicLayout><LazyPage><MockLeaderboardPage /></LazyPage></PublicLayout>} />
             <Route path="/mocks/checkout/return" element={<LazyPage><MockCheckoutReturnPage /></LazyPage>} />
             <Route path="/dashboard/mocks" element={<PublicLayout><LazyPage><MyMocksPage /></LazyPage></PublicLayout>} />
+            <Route path="/iim-waitlist-movement" element={<PublicLayout><LazyPage><IIMWaitlistPage /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />
           </Routes>
         </AuthProvider>
