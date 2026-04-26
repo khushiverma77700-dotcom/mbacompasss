@@ -262,7 +262,7 @@ const BulkLiveControlPanel = ({
   const cpuHistory = useRolling(browserCpu);
   const loadHistory = useRolling(serverLoad);
 
-  // Per-second ops history for heatmap — driven by real worker telemetry events.
+  // Per-second ops history for heatmap — driven entirely by real worker telemetry.
   const [opsHistory, setOpsHistory] = useState<number[]>(Array.from({ length: 60 }, () => 0));
   const lastTotalRef = useRef(processedUnits);
   useEffect(() => {
@@ -270,16 +270,22 @@ const BulkLiveControlPanel = ({
       const now = Date.now();
       const bins = Array.from({ length: 60 }, () => 0);
       const timeline = Array.isArray(telemetry?.timeline) ? telemetry.timeline : [];
+      let timelineHasRecent = false;
       for (const point of timeline) {
         const ts = Number(point?.ts || 0);
         if (!ts) continue;
         const age = Math.floor((now - ts) / 1000);
-        if (age >= 0 && age < 60) bins[59 - age] += Math.max(1, Number(point?.ops || 1));
+        if (age >= 0 && age < 60) {
+          bins[59 - age] += Math.max(1, Number(point?.ops || 1));
+          if (age <= 5) timelineHasRecent = true;
+        }
       }
+      // Only synthesise from processed delta if the telemetry timeline is empty
+      // or stale — prevents double counting the same completion.
       const cur = processedUnits;
       const delta = Math.max(0, cur - lastTotalRef.current);
       lastTotalRef.current = cur;
-      if (delta > 0) bins[59] += delta;
+      if (delta > 0 && !timelineHasRecent) bins[59] += delta;
       setOpsHistory(bins);
     };
     buildBins();
