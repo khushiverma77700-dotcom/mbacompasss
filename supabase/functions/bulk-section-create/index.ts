@@ -64,9 +64,10 @@ class TelemetryTracker {
       activeWorkers: 0,
       peakActiveWorkers: Math.max(initial?.peakActiveWorkers || 0, 0),
       cpu: {
-        busyMs: Number(cpu.busyMs || 0),
-        wallMs: Number(cpu.wallMs || 0),
-        loadPct: Number(cpu.loadPct || 0),
+        // Rolling 30s window — load drops to 0 when no work happens.
+        window: Array.isArray(cpu.window) ? cpu.window.slice(-300) : [],
+        loadPct: 0,
+        windowMs: 30_000,
       },
       memory: memorySnapshot() || initial?.memory || null,
       network: {
