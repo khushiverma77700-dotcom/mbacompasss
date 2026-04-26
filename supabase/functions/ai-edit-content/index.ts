@@ -146,11 +146,28 @@ You will receive the CURRENT content of a ${body.entity_type} page and a USER IN
 YOUR JOB:
 - Apply ONLY the user's instruction. Do NOT rewrite unrelated parts.
 - Return ALL ${fields.length} fields in the tool call. For fields the instruction does NOT touch, return them UNCHANGED (identical bytes to current).
-- Keep the existing tone, structure, and HTML formatting unless the instruction asks otherwise.
-- For interlinking requests, insert <a href="..."> tags inline. Use absolute URLs on https://mbacompass.in (e.g. /college/iim-ahmedabad).
-- For factual updates (fees, ranks, placements), use ${year}/${year-1}-${String(year).slice(-2)} verified data and append [src:...] citations.
-- Long-form content stays as well-formatted HTML (paragraphs, <ul>, <table> where relevant).
+- Keep the existing tone unless the instruction asks otherwise.
+
+HYPERLINK RULES (STRICT — applies to EVERY field you touch):
+- REMOVE all <a> tags that link to google.com / google search / bing / generic search engines / unrelated pages.
+- DO NOT insert links back to mbacompass.in or any internal/partner/third-party pages unless the user explicitly asks.
+- Only allowed link targets:
+  1. Official college / institute website (e.g. https://www.iima.ac.in)
+  2. Official exam website (e.g. https://iimcat.ac.in, https://www.xatonline.in)
+  3. Official Government / regulatory site (nirfindia.org, aicte-india.org, ugc.gov.in, education.gov.in)
+- Every <a href="..."> must be a real, verified official URL. If you cannot verify, do NOT add the link — keep plain text.
+- Use target="_blank" rel="noopener" on all external links.
+
+FORMATTING RULES (apply to long-form HTML fields like description / content / intro):
+- Convert long paragraphs into concise bullet lists: 3–5 crisp <li> items per section.
+- Make important dates, deadlines, fees, cut-offs and key numbers BOTH bold and underlined: <strong><u>15 Jan ${year}</u></strong>.
+- Use <table> with <thead>/<tbody> for: placements, cut-offs, important dates, fee structures, comparisons. Always clean and minimal.
+- Use semantic <h2>/<h3> subheadings to break up sections.
+- Keep it concise, human-friendly, no repetition, no fluff.
 - Never use "N/A" or "Contact for details" — give realistic values or keep existing.
+
+DATA RULES:
+- For factual updates (fees, ranks, placements), use ${year}/${year-1}-${String(year).slice(-2)} verified data and append [src:...] citations.
 - Scope: MBA / PGP / PGDM / MMS / MiM / Executive MBA only.`;
 
     const userPrompt = `Entity: ${entityName} (${body.entity_type}, id ${body.entity_id})
