@@ -23,6 +23,37 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import SEOHead, { generateBreadcrumbSchema, generateFAQSchema, generateOrganizationSchema } from "@/components/SEOHead";
+import { useAuth } from "@/contexts/AuthContext";
+
+// Map common short codes / abbreviations to full institute names
+const FULL_NAME_MAP: Record<string, string> = {
+  "IIM A": "IIM Ahmedabad", "IIMA": "IIM Ahmedabad",
+  "IIM B": "IIM Bangalore", "IIMB": "IIM Bangalore",
+  "IIM C": "IIM Calcutta", "IIMC": "IIM Calcutta",
+  "IIM L": "IIM Lucknow", "IIML": "IIM Lucknow",
+  "IIM K": "IIM Kozhikode", "IIMK": "IIM Kozhikode",
+  "IIM I": "IIM Indore", "IIMI": "IIM Indore",
+  "IIM S": "IIM Shillong", "IIMS": "IIM Shillong",
+  "IIM R": "IIM Rohtak",
+  "IIM Ra": "IIM Ranchi", "IIM RA": "IIM Ranchi",
+  "IIM T": "IIM Tiruchirappalli", "IIMT": "IIM Tiruchirappalli",
+  "IIM U": "IIM Udaipur", "IIMU": "IIM Udaipur",
+  "IIM Ka": "IIM Kashipur", "IIM N": "IIM Nagpur",
+  "IIM V": "IIM Visakhapatnam", "IIM Am": "IIM Amritsar",
+  "IIM BG": "IIM Bodh Gaya", "IIM J": "IIM Jammu",
+  "IIM Sa": "IIM Sambalpur", "IIM Si": "IIM Sirmaur",
+  "IIM M": "IIM Mumbai",
+  "FMS": "FMS Delhi", "MDI": "MDI Gurgaon",
+  "SPJIMR": "SPJIMR Mumbai", "JBIMS": "JBIMS Mumbai",
+  "XLRI": "XLRI Jamshedpur", "IIFT": "IIFT Delhi",
+};
+
+function fullName(short: string | null | undefined, full: string): string {
+  if (!short) return full;
+  // If `full` already looks complete (longer than 8 chars and contains the short or city), prefer it
+  if (full && full.length > 8 && full.toLowerCase() !== short.toLowerCase()) return full;
+  return FULL_NAME_MAP[short] || FULL_NAME_MAP[short.toUpperCase()] || full || short;
+}
 
 type ResultRow = {
   id: string; college_name: string; college_short: string | null;
@@ -152,6 +183,7 @@ function MiniBars({ values, labels, est }: { values: (number | null)[]; labels: 
 const SITE_URL = typeof window !== "undefined" ? window.location.origin : "https://mbacompass.in";
 
 export default function IIMWaitlistPage() {
+  const { isAdmin } = useAuth();
   const [results, setResults] = useState<ResultRow[]>([]);
   const [movement, setMovement] = useState<MovementRow[]>([]);
   const [rti, setRti] = useState<RTIRow[]>([]);
@@ -169,10 +201,16 @@ export default function IIMWaitlistPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiUpdatedAt, setAiUpdatedAt] = useState<string | null>(null);
 
-  // Predictor mini-tool
+  // Advanced Predictor mini-tool
   const [predCat, setPredCat] = useState("General");
   const [predIIM, setPredIIM] = useState<string>("");
   const [predWL, setPredWL] = useState<string>("");
+  const [predCAT, setPredCAT] = useState<string>(""); // CAT %ile
+  const [predGender, setPredGender] = useState<string>("Male");
+  const [predAcad, setPredAcad] = useState<string>("Engineering");
+  const [predWorkEx, setPredWorkEx] = useState<string>("0");
+  const [predLoading, setPredLoading] = useState(false);
+  const [aiPrediction, setAiPrediction] = useState<{prob:number; verdict:string; analysis:string; tips:string[]} | null>(null);
 
   const [lead, setLead] = useState({ name: "", email: "", phone: "", current_status: "", message: "" });
   const [submitting, setSubmitting] = useState(false);
@@ -241,11 +279,13 @@ export default function IIMWaitlistPage() {
 
   const filteredMovementCards = useMemo(() => {
     const map = new Map<string, MovementRow[]>();
+    const q = search.trim().toLowerCase();
     movement.forEach(r => {
       if (typeFilter !== "all" && r.college_type !== typeFilter) return;
-      if (search) {
-        const q = search.toLowerCase();
-        if (!r.college_name.toLowerCase().includes(q) && !(r.college_short || "").toLowerCase().includes(q)) return;
+      if (q) {
+        const fullN = fullName(r.college_short, r.college_name).toLowerCase();
+        const haystack = [r.college_name, r.college_short || "", r.college_type || "", fullN].join(" ").toLowerCase();
+        if (!haystack.includes(q)) return;
       }
       const key = r.college_name;
       if (!map.has(key)) map.set(key, []);
@@ -273,13 +313,13 @@ export default function IIMWaitlistPage() {
   }, [rti]);
 
   const iimOptions = useMemo(() => {
-    return Array.from(new Set(movement.map(m => m.college_short || m.college_name))).sort();
+    return Array.from(new Set(movement.map(m => fullName(m.college_short, m.college_name)))).sort();
   }, [movement]);
 
   const predictionResult = useMemo(() => {
     if (!predIIM || !predWL) return null;
     const wlNum = parseInt(predWL); if (isNaN(wlNum)) return null;
-    const row = movement.find(m => (m.college_short || m.college_name) === predIIM && m.category === predCat);
+    const row = movement.find(m => (fullName(m.college_short, m.college_name)) === predIIM && m.category === predCat);
     if (!row) return null;
     const avg = row.five_yr_avg || row.wl_2025 || 0;
     if (avg === 0) return null;
@@ -353,7 +393,7 @@ export default function IIMWaitlistPage() {
           transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
         />
 
-        <div className="relative container mx-auto px-4 py-14 md:py-20 text-primary-foreground">
+        <div className="relative container mx-auto px-4 md:px-8 py-14 md:py-20 text-primary-foreground">
           <motion.div initial="hidden" animate="show" variants={fadeUp} transition={{ duration: 0.6 }}>
             <Badge className="bg-white/15 text-white border-white/20 backdrop-blur mb-4">
               <Sparkles className="h-3 w-3 mr-1" /> Live 2026 Admission Season • AI-Powered
@@ -382,13 +422,13 @@ export default function IIMWaitlistPage() {
                     className="flex items-center gap-3 flex-wrap"
                   >
                     <Badge className={statusPill(currentLive.status)}>{statusLabel(currentLive.status)}</Badge>
-                    <span className="font-semibold text-sm md:text-base">{currentLive.notes || `${currentLive.college_short || currentLive.college_name} ${currentLive.status}`}</span>
+                    <span className="font-semibold text-sm md:text-base">{currentLive.notes || `${fullName(currentLive.college_short, currentLive.college_name)} ${currentLive.status}`}</span>
                     <span className="text-xs text-white/70 inline-flex items-center gap-1">
                       <CalendarDays className="h-3 w-3" />
                       {currentLive.result_date_label || (currentLive.result_date ? new Date(currentLive.result_date).toLocaleDateString() : "TBA")}
                     </span>
                     <span className="text-xs text-white/70 inline-flex items-center gap-1">
-                      <Building2 className="h-3 w-3" /> {currentLive.college_short || currentLive.college_name}
+                      <Building2 className="h-3 w-3" /> {fullName(currentLive.college_short, currentLive.college_name)}
                     </span>
                   </motion.div>
                 </AnimatePresence>
@@ -430,7 +470,7 @@ export default function IIMWaitlistPage() {
                   {[...liveUpdates, ...liveUpdates].map((u, i) => (
                     <span key={i} className="inline-flex items-center gap-2">
                       <Sparkles className="h-3 w-3 text-amber-300" />
-                      <strong>{u.college_short || u.college_name}</strong>
+                      <strong>{fullName(u.college_short, u.college_name)}</strong>
                       <span className="text-white/60">— {statusLabel(u.status)}</span>
                       <span className="text-white/50">{u.result_date_label || ""}</span>
                     </span>
@@ -444,7 +484,7 @@ export default function IIMWaitlistPage() {
 
       {/* TRUST BAR */}
       <section className="border-b bg-gradient-to-r from-blue-50 via-white to-emerald-50">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 md:px-8 py-4">
           <div className="flex flex-wrap items-center justify-around gap-4 text-xs md:text-sm">
             {[
               { icon: ShieldCheck, t: "RTI-Verified", c: "text-emerald-600" },
@@ -465,34 +505,31 @@ export default function IIMWaitlistPage() {
       </section>
 
       {/* AI INSIGHTS */}
-      <section className="container mx-auto px-4 py-12">
+      <section className="container mx-auto px-4 md:px-8 py-12">
         <div className="flex items-end justify-between mb-6 flex-wrap gap-3">
           <div>
             <Badge className="bg-gradient-to-r from-violet-600 to-blue-600 text-white border-transparent mb-2">
-              <Brain className="h-3 w-3 mr-1" /> Lovable AI · Live Analysis
+              <Brain className="h-3 w-3 mr-1" /> ✨ Lovable AI · Live Analysis
             </Badge>
-            <h2 className="text-2xl md:text-3xl font-bold">AI-Powered Insights for 2026</h2>
+            <h2 className="text-2xl md:text-3xl font-bold">🧠 AI-Powered Insights for 2026</h2>
             <p className="text-muted-foreground text-sm mt-1">
-              {aiUpdatedAt ? <>Last analysed {new Date(aiUpdatedAt).toLocaleString()}</> : "Generating fresh analysis…"}
+              {aiUpdatedAt ? <>🕒 Last analysed {new Date(aiUpdatedAt).toLocaleString()}</> : "🔄 Generating fresh analysis…"}
             </p>
           </div>
-          <Button onClick={fetchAIInsights} disabled={aiLoading} variant="outline" size="sm" className="rounded-full">
-            <RefreshCcw className={`h-4 w-4 mr-1 ${aiLoading ? "animate-spin" : ""}`} />
-            {aiLoading ? "Analysing…" : "Re-run AI"}
-          </Button>
+          {isAdmin && (
+            <Button onClick={fetchAIInsights} disabled={aiLoading} variant="outline" size="sm" className="rounded-full">
+              <RefreshCcw className={`h-4 w-4 mr-1 ${aiLoading ? "animate-spin" : ""}`} />
+              {aiLoading ? "Analysing…" : "Re-run AI (Admin)"}
+            </Button>
+          )}
         </div>
 
-        {aiLoading && aiInsights.length === 0 ? (
+        {aiInsights.length === 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[0,1,2,3,4,5].map(i => (
-              <div key={i} className="h-32 rounded-xl bg-gradient-to-br from-slate-100 to-slate-50 animate-pulse" />
+              <div key={i} className="h-32 rounded-xl bg-gradient-to-br from-violet-50 via-blue-50 to-emerald-50 animate-pulse" />
             ))}
           </div>
-        ) : aiInsights.length === 0 ? (
-          <Card className="p-6 text-center text-muted-foreground border-dashed">
-            <Brain className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            Click "Re-run AI" to generate insights from the latest data.
-          </Card>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {aiInsights.map((ins, i) => (
@@ -521,10 +558,10 @@ export default function IIMWaitlistPage() {
       </section>
 
       {/* CURRENT RESULTS STATUS */}
-      <section className="container mx-auto px-4 py-8">
+      <section className="container mx-auto px-4 md:px-8 py-8">
         <div className="text-center mb-8">
           <Badge variant="secondary" className="mb-3">Current Status</Badge>
-          <h2 className="text-2xl md:text-3xl font-bold">Current Results Status &amp; Waitlist Data</h2>
+          <h2 className="text-2xl md:text-3xl font-bold">🟢 Current Results Status & Waitlist Data</h2>
           <p className="text-muted-foreground mt-2">Latest declared results from official IIM, IIT and Non-IIM portals</p>
         </div>
         {loading ? (
@@ -546,11 +583,11 @@ export default function IIMWaitlistPage() {
                       <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                     </div>
                     <h3 className="font-bold text-lg leading-tight mb-2">
-                      {r.notes || `${r.college_short || r.college_name} 2026 Result`}
+                      {r.notes || `${fullName(r.college_short, r.college_name)} 2026 Result`}
                     </h3>
                     <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" /> {r.result_date_label || "Recently"}</span>
-                      <span className="inline-flex items-center gap-1"><Building2 className="h-3 w-3" /> {r.college_short || r.college_name}</span>
+                      <span className="inline-flex items-center gap-1"><Building2 className="h-3 w-3" /> {fullName(r.college_short, r.college_name)}</span>
                     </div>
                     {r.result_url && (
                       <a href={r.result_url} target="_blank" rel="noopener noreferrer"
@@ -568,12 +605,12 @@ export default function IIMWaitlistPage() {
 
       {/* EXPECTED RELEASES */}
       <section className="bg-gradient-to-br from-amber-50/50 to-blue-50/40 py-12 border-y">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 md:px-8">
           <div className="text-center mb-8">
             <Badge className="bg-amber-500 text-white border-transparent mb-3">
               <Clock className="h-3 w-3 mr-1" /> Coming Soon
             </Badge>
-            <h2 className="text-2xl md:text-3xl font-bold">Expected Releases</h2>
+            <h2 className="text-2xl md:text-3xl font-bold">📅 Expected Releases</h2>
             <p className="text-muted-foreground mt-2">Upcoming result announcements — bookmark this page for live updates</p>
           </div>
           {loading ? (
@@ -590,7 +627,7 @@ export default function IIMWaitlistPage() {
                   <Card className="h-full hover:shadow-lg transition-all bg-white">
                     <CardContent className="p-5">
                       <Badge className={statusPill(r.status) + " mb-3"}>{statusLabel(r.status)}</Badge>
-                      <div className="font-bold text-base mb-1">{r.college_short || r.college_name}</div>
+                      <div className="font-bold text-base mb-1">{fullName(r.college_short, r.college_name)}</div>
                       <div className="text-xs text-muted-foreground mb-3">{r.college_name}</div>
                       <div className="flex items-center justify-between pt-3 border-t">
                         <span className="text-xs text-muted-foreground">Expected</span>
@@ -609,10 +646,10 @@ export default function IIMWaitlistPage() {
       </section>
 
       {/* HOW WAITLIST WORKS — animated timeline */}
-      <section className="container mx-auto px-4 py-14">
+      <section className="container mx-auto px-4 md:px-8 py-14">
         <div className="text-center mb-10">
           <Badge variant="secondary" className="mb-3"><BookOpen className="h-3 w-3 mr-1" /> Explainer</Badge>
-          <h2 className="text-2xl md:text-3xl font-bold">How IIM Waitlist Movement Actually Works</h2>
+          <h2 className="text-2xl md:text-3xl font-bold">⚙️ How IIM Waitlist Movement Actually Works</h2>
           <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">A 5-step transparent breakdown — from first list to final admit</p>
         </div>
         <div className="max-w-4xl mx-auto relative">
@@ -655,10 +692,10 @@ export default function IIMWaitlistPage() {
 
       {/* CATEGORY-WISE MOVEMENT */}
       <section className="bg-slate-50 border-y py-14">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 md:px-8">
           <div className="text-center mb-8">
             <Badge variant="secondary" className="mb-3">RTI Verified</Badge>
-            <h2 className="text-2xl md:text-3xl font-bold">Category-wise Waitlist Movement Data</h2>
+            <h2 className="text-2xl md:text-3xl font-bold">📊 Category-wise Waitlist Movement Data</h2>
             <p className="text-muted-foreground mt-2">5-year trend (2021–2025) + 2026 estimate — switch category to compare</p>
           </div>
           <div className="flex flex-col md:flex-row md:items-center gap-3 mb-6 max-w-5xl mx-auto">
@@ -703,7 +740,7 @@ export default function IIMWaitlistPage() {
                     <Card className="overflow-hidden border-slate-200 hover:shadow-2xl transition-all duration-300 h-full">
                       <div className="bg-gradient-to-br from-slate-900 to-slate-800 text-white px-5 py-4 flex items-center justify-between">
                         <div>
-                          <div className="font-bold text-base leading-tight">{row.college_short || name}</div>
+                          <div className="font-bold text-base leading-tight">{fullName(row.college_short, name)}</div>
                           <div className="text-[11px] text-white/60">{name}</div>
                         </div>
                         <Badge className="bg-white/15 text-white border-white/20 text-[10px]">{row.college_type}</Badge>
@@ -749,82 +786,238 @@ export default function IIMWaitlistPage() {
         </div>
       </section>
 
-      {/* WAITLIST PREDICTOR MINI-TOOL */}
-      <section className="container mx-auto px-4 py-14">
-        <Card className="overflow-hidden border-violet-200 max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-2">
-            <div className="p-8 bg-gradient-to-br from-violet-600 via-blue-600 to-blue-700 text-white">
-              <Badge className="bg-white/20 text-white border-white/30 mb-4 backdrop-blur">
-                <Zap className="h-3 w-3 mr-1" /> Instant Predictor
-              </Badge>
-              <h2 className="text-2xl md:text-3xl font-bold mb-3">Will My Waitlist Convert?</h2>
-              <p className="text-white/90 text-sm mb-4">
-                Enter your category, target IIM and waitlist number — we'll compare against 5-year movement averages from RTI data and tell you the conversion probability.
-              </p>
-              <ul className="text-sm space-y-2 text-white/90">
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> Based on RTI-verified historical data</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> Category-wise computation</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4" /> ±8% historical accuracy</li>
-              </ul>
-            </div>
-            <div className="p-8 space-y-4 bg-white">
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">Category</label>
-                <div className="flex flex-wrap gap-2">
-                  {["General","EWS","OBC","SC","ST"].map(c => (
-                    <Button key={c} size="sm" variant={predCat === c ? "default" : "outline"}
-                      onClick={() => setPredCat(c)} className="rounded-full">{c}</Button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">Target IIM / Institute</label>
-                <select value={predIIM} onChange={e => setPredIIM(e.target.value)}
-                  className="w-full h-10 px-3 rounded-md border border-input bg-background">
-                  <option value="">Select institute…</option>
-                  {iimOptions.map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground mb-1 block">Your Waitlist Number</label>
-                <Input type="number" placeholder="e.g. 85" value={predWL} onChange={e => setPredWL(e.target.value)} />
-              </div>
+      {/* WAITLIST PREDICTOR — ADVANCED AI */}
+      <section className="container mx-auto px-4 md:px-8 py-14">
+        <div className="text-center mb-8">
+          <Badge className="bg-gradient-to-r from-violet-600 to-blue-600 text-white border-transparent mb-3">
+            <Zap className="h-3 w-3 mr-1" /> 🎯 AI Conversion Predictor
+          </Badge>
+          <h2 className="text-2xl md:text-3xl font-bold">🔮 Will My Waitlist Convert?</h2>
+          <p className="text-muted-foreground mt-2 max-w-2xl mx-auto">Advanced AI prediction trained on 5 years of RTI data + live 2026 admission trends from across the web. Get a calibrated probability + personalised action plan in seconds.</p>
+        </div>
 
-              <AnimatePresence>
-                {predictionResult && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                    className="rounded-xl bg-gradient-to-br from-slate-50 to-blue-50 p-4 border"
-                  >
-                    <div className="text-xs text-muted-foreground mb-1">Conversion Probability</div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-bold text-blue-700">{predictionResult.prob}%</span>
-                      <span className={`font-semibold ${predictionResult.cls}`}>{predictionResult.verdict}</span>
+        <Card className="overflow-hidden border-violet-200 max-w-6xl mx-auto shadow-2xl">
+          <div className="grid lg:grid-cols-5">
+            {/* LEFT: Inputs */}
+            <div className="lg:col-span-2 p-8 bg-gradient-to-br from-violet-600 via-blue-600 to-blue-700 text-white relative overflow-hidden">
+              <motion.div
+                className="absolute -top-20 -right-20 w-60 h-60 rounded-full bg-white/10 blur-3xl"
+                animate={{ scale: [1, 1.3, 1], rotate: [0, 90, 0] }}
+                transition={{ duration: 12, repeat: Infinity }}
+              />
+              <Badge className="bg-white/20 text-white border-white/30 mb-4 backdrop-blur relative">
+                <Brain className="h-3 w-3 mr-1" /> Powered by Lovable AI
+              </Badge>
+              <h3 className="text-xl md:text-2xl font-bold mb-3 relative">📋 Your Profile</h3>
+              <p className="text-white/85 text-sm mb-6 relative">Fill in 6 quick details. AI will benchmark you against historical RTI data + 2026 trends.</p>
+
+              <div className="space-y-4 relative">
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">🎓 Category</label>
+                  <div className="flex flex-wrap gap-1.5">
+                    {["General","EWS","OBC","SC","ST"].map(c => (
+                      <button key={c} type="button"
+                        onClick={() => setPredCat(c)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${predCat === c ? "bg-white text-blue-700 shadow-lg" : "bg-white/15 text-white hover:bg-white/25"}`}>{c}</button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">🏛️ Target Institute</label>
+                  <select value={predIIM} onChange={e => setPredIIM(e.target.value)}
+                    className="w-full h-10 px-3 rounded-lg bg-white/95 text-slate-900 text-sm">
+                    <option value="">Select institute…</option>
+                    {iimOptions.map(o => <option key={o} value={o}>{fullName(o, o)}</option>)}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">🔢 WL Number</label>
+                    <Input type="number" placeholder="e.g. 85" value={predWL}
+                      onChange={e => setPredWL(e.target.value)}
+                      className="bg-white/95 text-slate-900 border-0" />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">📊 CAT %ile</label>
+                    <Input type="number" step="0.01" placeholder="e.g. 99.2" value={predCAT}
+                      onChange={e => setPredCAT(e.target.value)}
+                      className="bg-white/95 text-slate-900 border-0" />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">👤 Gender</label>
+                    <select value={predGender} onChange={e => setPredGender(e.target.value)}
+                      className="w-full h-10 px-3 rounded-lg bg-white/95 text-slate-900 text-sm">
+                      {["Male","Female","Other"].map(g => <option key={g}>{g}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">💼 Work Ex (mo)</label>
+                    <Input type="number" placeholder="0" value={predWorkEx}
+                      onChange={e => setPredWorkEx(e.target.value)}
+                      className="bg-white/95 text-slate-900 border-0" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-white/80 mb-1.5 block">📚 Academic Background</label>
+                  <select value={predAcad} onChange={e => setPredAcad(e.target.value)}
+                    className="w-full h-10 px-3 rounded-lg bg-white/95 text-slate-900 text-sm">
+                    {["Engineering","Commerce","Arts/Humanities","Science","Medical","Law","CA/CS/CMA","Other"].map(a => <option key={a}>{a}</option>)}
+                  </select>
+                </div>
+
+                <Button
+                  onClick={async () => {
+                    if (!predIIM || !predWL || !predCat) { toast.error("Pick category, institute and waitlist number"); return; }
+                    setPredLoading(true);
+                    try {
+                      const { data, error } = await supabase.functions.invoke("iim-waitlist-predict", {
+                        body: {
+                          category: predCat,
+                          institute: predIIM,
+                          waitlist_number: predWL,
+                          cat_percentile: predCAT || null,
+                          gender: predGender,
+                          academic_bg: predAcad,
+                          work_ex_months: parseInt(predWorkEx) || 0,
+                        },
+                      });
+                      if (error) throw error;
+                      setAiPrediction({
+                        prob: data.prob ?? 0,
+                        verdict: data.verdict || "—",
+                        analysis: data.analysis || "",
+                        tips: data.tips || [],
+                      });
+                      (window as any).__predExtras = { historical: data.historical, comparable: data.comparable_options };
+                    } catch (e) {
+                      toast.error("Prediction failed — try again in a moment");
+                    } finally {
+                      setPredLoading(false);
+                    }
+                  }}
+                  disabled={predLoading}
+                  className="w-full bg-white text-blue-700 hover:bg-white/90 font-bold shadow-xl mt-2"
+                >
+                  {predLoading ? <><RefreshCcw className="h-4 w-4 mr-2 animate-spin" /> Analysing 2026 Data…</> : <>🚀 Predict My Conversion <ArrowRight className="h-4 w-4 ml-1" /></>}
+                </Button>
+              </div>
+            </div>
+
+            {/* RIGHT: Result */}
+            <div className="lg:col-span-3 p-8 bg-gradient-to-br from-slate-50 to-blue-50/40 min-h-[500px]">
+              <AnimatePresence mode="wait">
+                {predLoading ? (
+                  <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="h-full flex flex-col items-center justify-center text-center py-12">
+                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      className="w-16 h-16 rounded-full border-4 border-blue-200 border-t-blue-600 mb-4" />
+                    <h4 className="font-bold text-lg mb-1">🔍 Analysing your profile</h4>
+                    <p className="text-sm text-muted-foreground max-w-sm">Crunching 5 years of RTI data, comparing 2026 trends, calibrating with diversity factors…</p>
+                  </motion.div>
+                ) : aiPrediction ? (
+                  <motion.div key="result" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }} className="space-y-5">
+                    <div>
+                      <div className="text-xs font-bold uppercase tracking-wider text-violet-600 mb-1">🎯 AI Verdict</div>
+                      <div className="flex items-baseline gap-3 flex-wrap">
+                        <motion.span
+                          initial={{ scale: 0.5 }} animate={{ scale: 1 }}
+                          transition={{ type: "spring", stiffness: 200 }}
+                          className="text-6xl font-black bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
+                          {aiPrediction.prob}%
+                        </motion.span>
+                        <Badge className={`text-base px-3 py-1 ${
+                          aiPrediction.prob >= 70 ? "bg-emerald-500" :
+                          aiPrediction.prob >= 45 ? "bg-blue-500" :
+                          aiPrediction.prob >= 25 ? "bg-amber-500" : "bg-rose-500"
+                        } text-white border-transparent`}>{aiPrediction.verdict}</Badge>
+                      </div>
+                      <div className="mt-3 h-3 bg-slate-200 rounded-full overflow-hidden">
+                        <motion.div initial={{ width: 0 }} animate={{ width: `${aiPrediction.prob}%` }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                          className="h-full bg-gradient-to-r from-blue-500 via-violet-500 to-emerald-500" />
+                      </div>
                     </div>
-                    <div className="mt-2 h-2 bg-slate-200 rounded-full overflow-hidden">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${predictionResult.prob}%` }}
-                        transition={{ duration: 0.8, ease: "easeOut" }}
-                        className="h-full bg-gradient-to-r from-blue-500 to-emerald-500" />
+
+                    <Card className="bg-white border-violet-100">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Brain className="h-4 w-4 text-violet-600" />
+                          <div className="text-xs font-bold uppercase tracking-wider text-violet-600">AI Analysis</div>
+                        </div>
+                        <p className="text-sm text-slate-700 leading-relaxed">{aiPrediction.analysis}</p>
+                      </CardContent>
+                    </Card>
+
+                    {aiPrediction.tips?.length > 0 && (
+                      <Card className="bg-white border-blue-100">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Lightbulb className="h-4 w-4 text-amber-500" />
+                            <div className="text-xs font-bold uppercase tracking-wider text-blue-600">💡 Personalised Action Plan</div>
+                          </div>
+                          <ul className="space-y-2">
+                            {aiPrediction.tips.map((tip, i) => (
+                              <motion.li key={i}
+                                initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: i * 0.1 }}
+                                className="flex gap-2 text-sm text-slate-700">
+                                <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
+                                <span>{tip}</span>
+                              </motion.li>
+                            ))}
+                          </ul>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </motion.div>
+                ) : (
+                  <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="h-full flex flex-col items-center justify-center text-center py-10">
+                    <motion.div
+                      animate={{ y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity }}
+                      className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500 to-blue-600 flex items-center justify-center mb-4 shadow-2xl">
+                      <Sparkles className="h-10 w-10 text-white" />
+                    </motion.div>
+                    <h4 className="font-bold text-lg mb-1">Get Your AI Prediction</h4>
+                    <p className="text-sm text-muted-foreground max-w-sm">Fill in your profile on the left and tap predict. Our AI will benchmark you against 5 years of RTI data + 2026 trends.</p>
+                    <div className="mt-6 grid grid-cols-3 gap-3 w-full max-w-md">
+                      {[{i:ShieldCheck,t:"RTI verified"},{i:Brain,t:"AI calibrated"},{i:Target,t:"Personalised"}].map((x,i)=>(
+                        <div key={i} className="text-center p-3 rounded-xl bg-white/70 border">
+                          <x.i className="h-4 w-4 mx-auto mb-1 text-violet-600" />
+                          <div className="text-[10px] font-semibold text-slate-600">{x.t}</div>
+                        </div>
+                      ))}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-3">
-                      Based on a 5-year average movement of <strong>{predictionResult.avg}</strong> for {predCat} category at {predIIM}.
-                    </p>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
           </div>
         </Card>
+
+        {/* Quick statistical fallback */}
+        {predictionResult && !aiPrediction && (
+          <p className="text-xs text-center text-muted-foreground mt-3">
+            📊 Statistical baseline: {predictionResult.prob}% based on 5-yr avg movement of {predictionResult.avg}. Click predict for AI deep-analysis.
+          </p>
+        )}
       </section>
 
       {/* RTI DATA */}
       <section className="bg-slate-50 py-14 border-y">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 md:px-8">
           <div className="text-center mb-8">
             <Badge variant="secondary" className="mb-3">
               <ShieldCheck className="h-3 w-3 mr-1" /> Government Verified
             </Badge>
-            <h2 className="text-2xl md:text-3xl font-bold">RTI Data — Past Years</h2>
+            <h2 className="text-2xl md:text-3xl font-bold">🛡️ RTI Data — Past Years</h2>
             <p className="text-muted-foreground mt-2">Direct from official RTI replies — verified, transparent, chronologically organised</p>
           </div>
           {loading ? (
@@ -849,7 +1042,7 @@ export default function IIMWaitlistPage() {
                         <Card className="hover:shadow-lg transition-all bg-white h-full">
                           <CardHeader className="pb-3">
                             <CardTitle className="flex items-center justify-between">
-                              <span className="text-base">{r.college_short || r.college_name}</span>
+                              <span className="text-base">{fullName(r.college_short, r.college_name)}</span>
                               <Badge variant="outline" className="bg-secondary"><ShieldCheck className="h-3 w-3 mr-1" /> {r.rti_year}</Badge>
                             </CardTitle>
                           </CardHeader>
@@ -885,10 +1078,10 @@ export default function IIMWaitlistPage() {
 
       {/* APPLICATION FUNNEL */}
       {apps.length > 0 && (
-        <section className="container mx-auto px-4 py-14">
+        <section className="container mx-auto px-4 md:px-8 py-14">
           <div className="text-center mb-8">
             <Badge variant="secondary" className="mb-3"><Activity className="h-3 w-3 mr-1" /> Funnel Analytics</Badge>
-            <h2 className="text-2xl md:text-3xl font-bold">Application Funnel — 2026</h2>
+            <h2 className="text-2xl md:text-3xl font-bold">🎯 Application Funnel — 2026</h2>
             <p className="text-muted-foreground mt-2">Applications → Shortlist → PI → Offers → Admits, per institute</p>
           </div>
           <Card>
@@ -910,7 +1103,7 @@ export default function IIMWaitlistPage() {
                   <TableBody>
                     {apps.map((a, i) => (
                       <TableRow key={a.id} className={`${i % 2 ? "bg-muted/30" : ""}`}>
-                        <TableCell className="font-medium">{a.college_short || a.college_name}</TableCell>
+                        <TableCell className="font-medium">{fullName(a.college_short, a.college_name)}</TableCell>
                         <TableCell className="tabular-nums">{a.batch_size ?? "—"}</TableCell>
                         <TableCell className="tabular-nums">{a.applications_received ?? "—"}</TableCell>
                         <TableCell className="tabular-nums">{a.shortlisted ?? "—"}</TableCell>
@@ -930,10 +1123,10 @@ export default function IIMWaitlistPage() {
 
       {/* BACKUP PLAN — APPLY NOW */}
       <section className="bg-gradient-to-br from-rose-50/40 via-white to-blue-50/40 py-14 border-y">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-4 md:px-8">
           <div className="text-center mb-8 max-w-2xl mx-auto">
             <Badge className="bg-rose-500 text-white border-transparent mb-3">Backup Plan</Badge>
-            <h2 className="text-2xl md:text-3xl font-bold">Did Not Shortlist for Any Top B-School?</h2>
+            <h2 className="text-2xl md:text-3xl font-bold">🚀 Did Not Shortlist for Any Top B-School?</h2>
             <p className="text-muted-foreground mt-2">
               Don't worry — these reputed B-schools have applications <strong className="text-foreground">open right now</strong>. Compare placements, fees, then apply directly.
             </p>
@@ -1022,10 +1215,10 @@ export default function IIMWaitlistPage() {
       </section>
 
       {/* FAQ */}
-      <section className="container mx-auto px-4 py-14">
+      <section className="container mx-auto px-4 md:px-8 py-14">
         <div className="text-center mb-8">
           <Badge variant="secondary" className="mb-3"><Lightbulb className="h-3 w-3 mr-1" /> FAQ</Badge>
-          <h2 className="text-2xl md:text-3xl font-bold">Frequently Asked Questions</h2>
+          <h2 className="text-2xl md:text-3xl font-bold">❓ Frequently Asked Questions</h2>
           <p className="text-muted-foreground mt-2">Everything aspirants ask about IIM waitlist movement 2026</p>
         </div>
         <div className="max-w-3xl mx-auto">
@@ -1043,7 +1236,7 @@ export default function IIMWaitlistPage() {
       </section>
 
       {/* LEAD CAPTURE */}
-      <section className="container mx-auto px-4 pb-16">
+      <section className="container mx-auto px-4 md:px-8 pb-16">
         <Card className="overflow-hidden border-primary/20">
           <div className="grid md:grid-cols-5">
             <div className="md:col-span-2 p-8 text-primary-foreground relative overflow-hidden" style={{ background: "var(--stat-gradient)" }}>
