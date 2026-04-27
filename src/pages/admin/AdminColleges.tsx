@@ -216,6 +216,53 @@ const AdminColleges = () => {
     fetchColleges(); toast({ title: "College deleted" });
   };
 
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === sortedColleges.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(sortedColleges.map((c: any) => c.id)));
+    }
+  };
+
+  const runBulkRefresh = async (mode: "smart" | "full") => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`Queue ${mode === "full" ? "FULL REWRITE" : "smart refresh"} for ${ids.length} college${ids.length > 1 ? "s" : ""}?\n\nEach will land in the Content Refresh Queue for your approval before going live.`)) return;
+    setBulkRefreshing(true);
+    setBulkProgress({ done: 0, total: ids.length, failed: 0 });
+    const { data: { user } } = await supabase.auth.getUser();
+    let done = 0, failed = 0;
+    const CONCURRENCY = 3;
+    for (let i = 0; i < ids.length; i += CONCURRENCY) {
+      const batch = ids.slice(i, i + CONCURRENCY);
+      await Promise.all(batch.map(async (id) => {
+        try {
+          const { error } = await supabase.functions.invoke("refresh-content", {
+            body: { entity_type: "college", entity_id: id, mode, requested_by: user?.id },
+          });
+          if (error) failed++;
+        } catch { failed++; }
+        done++;
+        setBulkProgress({ done, total: ids.length, failed });
+      }));
+    }
+    setBulkRefreshing(false);
+    setSelectedIds(new Set());
+    toast({
+      title: "Bulk refresh queued",
+      description: `${done - failed}/${ids.length} succeeded${failed ? ` • ${failed} failed` : ""}. Open Content Refresh Queue to review & approve.`,
+    });
+  };
+
+
   const TagInput = ({ field, label }: { field: keyof typeof tagInputs; label: string }) => (
     <div>
       <Label className="text-xs font-semibold text-muted-foreground mb-1.5 block">{label}</Label>
