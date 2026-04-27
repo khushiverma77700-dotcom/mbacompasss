@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { enhanceAIContent } from "@/lib/aiContentEnhancer";
 import {
   RefreshCw, Sparkles, Loader2, AlertCircle, CheckCircle2, ArrowLeft,
   ListChecks, Wand2, Eye, Check, X, ExternalLink, Target, FileText,
@@ -92,7 +92,7 @@ const STATUS_COLOR: Record<Status, string> = {
 
 function renderValue(v: any): string {
   if (v === null || v === undefined || v === "") return "—";
-  if (Array.isArray(v)) return v.length ? v.join(", ") : "—";
+  if (Array.isArray(v)) return v.length ? v.map((item) => `• ${item}`).join("\n") : "—";
   if (typeof v === "object") return JSON.stringify(v, null, 2);
   return String(v);
 }
