@@ -16,6 +16,7 @@ import {
   AreaChart, Area, BarChart, Bar, RadialBarChart, RadialBar, PolarAngleAxis,
   ComposedChart, Legend, ReferenceLine,
 } from "recharts";
+import DailyTestCard from "@/components/student/DailyTestCard";
 
 const SECTION_COLORS: Record<string, string> = {
   QA: "#0284c7",
