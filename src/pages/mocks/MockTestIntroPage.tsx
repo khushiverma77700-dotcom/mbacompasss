@@ -56,13 +56,16 @@ export default function MockTestIntroPage() {
     }
     setStarting(true);
     try {
-      // Request fullscreen first (required before navigating)
-      try {
-        await document.documentElement.requestFullscreen();
-      } catch {
-        toast.error("Fullscreen is required to start the test");
-        setStarting(false);
-        return;
+      // Mobile devices: skip fullscreen (unsupported / unreliable on iOS Safari)
+      const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches;
+      if (!isMobile) {
+        try {
+          await document.documentElement.requestFullscreen();
+        } catch {
+          toast.error("Fullscreen is required to start the test");
+          setStarting(false);
+          return;
+        }
       }
 
       const { data, error } = await supabase.functions.invoke("mock-start-attempt", {
@@ -130,8 +133,8 @@ export default function MockTestIntroPage() {
             Strict CAT-mode rules
           </div>
           <ul className="list-disc list-inside text-amber-900 space-y-1">
-            <li>The test runs in <strong>fullscreen</strong>. Exiting fullscreen counts as a violation.</li>
-            <li><strong>Tab switching</strong> is detected. After 3 violations the test auto-submits.</li>
+            <li>On desktop the test runs in <strong>fullscreen</strong>. On mobile, keep the app in foreground.</li>
+            <li><strong>Tab/app switching</strong> is detected. After 3 violations the test auto-submits.</li>
             <li>Sections are <strong>time-locked</strong> — once the section timer ends, you cannot return.</li>
             <li>Right-click and copy/paste are disabled.</li>
             <li>Answers <strong>auto-save</strong>. Server controls the timer — refreshing won't grant extra time.</li>

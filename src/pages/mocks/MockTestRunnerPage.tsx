@@ -4,8 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import MathContent from "@/components/mock/MathContent";
-import { Flag, Bookmark, ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
+import { Flag, Bookmark, ChevronLeft, ChevronRight, AlertTriangle, LayoutGrid, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const isMobileDevice = () =>
+  typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches;
 
 type ResponseStatus =
   | "not_visited"
@@ -81,9 +84,17 @@ export default function MockTestRunnerPage() {
   const [now, setNow] = useState(Date.now());
   const [violations, setViolations] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(isMobileDevice);
 
   const submitRef = useRef(false);
   const violationToastShown = useRef(false);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(isMobileDevice());
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   // ---------- LOAD ----------
   useEffect(() => {
@@ -189,6 +200,7 @@ export default function MockTestRunnerPage() {
       }
     };
     const onFsChange = () => {
+      if (isMobile) return; // skip fullscreen tracking on mobile
       if (!document.fullscreenElement) {
         setViolations((v) => {
           const nv = v + 1;
@@ -228,7 +240,7 @@ export default function MockTestRunnerPage() {
       document.removeEventListener("paste", blockCopy);
       document.removeEventListener("cut", blockCopy);
     };
-  }, [loading, attemptId, handleAutoSubmit]);
+  }, [loading, attemptId, handleAutoSubmit, isMobile]);
 
   // ---------- DERIVED ----------
   const sectionQuestions = useMemo(
@@ -339,7 +351,10 @@ export default function MockTestRunnerPage() {
     supabase.from("mock_attempts").update({ current_section_id: sid }).eq("id", attemptId).then(() => {});
   };
 
-  const goToQuestion = (qid: string) => setCurrentQuestionId(qid);
+  const goToQuestion = (qid: string) => {
+    setCurrentQuestionId(qid);
+    setPaletteOpen(false);
+  };
 
   const goNext = () => {
     const idx = sectionQuestions.findIndex((q) => q.id === currentQuestionId);
@@ -410,20 +425,32 @@ export default function MockTestRunnerPage() {
   return (
     <div className="fixed inset-0 bg-white text-slate-900 flex flex-col select-none">
       {/* Top bar */}
-      <header className="bg-slate-900 text-white px-4 py-2 flex items-center justify-between flex-wrap gap-2">
-        <div className="font-semibold text-sm">CAT Mock Test</div>
-        <div className="flex items-center gap-3 text-sm">
+      <header className="bg-slate-900 text-white px-3 sm:px-4 py-2 flex items-center justify-between gap-2">
+        <div className="font-semibold text-xs sm:text-sm truncate">CAT Mock Test</div>
+        <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
           {violations > 0 && (
-            <span className="flex items-center gap-1 text-amber-300">
-              <AlertTriangle className="h-4 w-4" /> {violations}/{MAX_TAB_SWITCHES} violations
+            <span className="hidden sm:flex items-center gap-1 text-amber-300">
+              <AlertTriangle className="h-4 w-4" /> {violations}/{MAX_TAB_SWITCHES}
             </span>
           )}
-          <span>Total: <strong className="font-mono">{fmt(overallRemaining)}</strong></span>
+          <span className="whitespace-nowrap">
+            <span className="hidden sm:inline">Total: </span>
+            <strong className="font-mono">{fmt(overallRemaining)}</strong>
+          </span>
+          <button
+            type="button"
+            onClick={() => setPaletteOpen(true)}
+            className="lg:hidden inline-flex items-center gap-1 rounded bg-white/10 hover:bg-white/20 px-2 py-1 text-xs font-medium"
+            aria-label="Open question palette"
+          >
+            <LayoutGrid className="h-4 w-4" />
+            <span>Palette</span>
+          </button>
         </div>
       </header>
 
       {/* Section tabs */}
-      <div className="bg-slate-100 border-b px-4 py-2 flex items-center gap-2 flex-wrap">
+      <div className="bg-slate-100 border-b px-2 sm:px-4 py-2 flex items-center gap-2 overflow-x-auto whitespace-nowrap">
         {sections.map((s) => {
           const remaining = attempt?.section_deadlines?.[s.id]
             ? Math.floor((new Date(attempt.section_deadlines[s.id]).getTime() - now) / 1000)
@@ -436,12 +463,14 @@ export default function MockTestRunnerPage() {
               disabled={expired}
               onClick={() => switchSection(s.id)}
               className={cn(
-                "px-3 py-1.5 rounded text-sm font-medium border transition",
+                "shrink-0 px-2.5 sm:px-3 py-1.5 rounded text-xs sm:text-sm font-medium border transition",
                 isCurrent ? "bg-primary text-primary-foreground border-primary" : "bg-white",
                 expired && "opacity-50 cursor-not-allowed line-through",
               )}
             >
-              {s.name} <span className="font-mono ml-2">{fmt(remaining)}</span>
+              <span className="sm:hidden">{s.code}</span>
+              <span className="hidden sm:inline">{s.name}</span>
+              <span className="font-mono ml-1.5 sm:ml-2">{fmt(remaining)}</span>
             </button>
           );
         })}
@@ -450,14 +479,14 @@ export default function MockTestRunnerPage() {
       {/* Main content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Question + passage */}
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto min-w-0">
           {currentPassage ? (
-            <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
-              <div className="p-5 overflow-auto border-r bg-slate-50">
+            <div className="grid grid-cols-1 lg:grid-cols-2 lg:h-full">
+              <div className="p-4 sm:p-5 lg:overflow-auto border-b lg:border-b-0 lg:border-r bg-slate-50">
                 {currentPassage.title && <h3 className="font-semibold mb-2">{currentPassage.title}</h3>}
-                <MathContent html={currentPassage.content_html} className="prose prose-sm max-w-none" />
+                <MathContent html={currentPassage.content_html} className="prose prose-sm max-w-none break-words" />
               </div>
-              <div className="p-5 overflow-auto">
+              <div className="p-4 sm:p-5 lg:overflow-auto">
                 <QuestionPanel
                   question={currentQuestion}
                   options={currentOptions}
@@ -467,7 +496,7 @@ export default function MockTestRunnerPage() {
               </div>
             </div>
           ) : (
-            <div className="p-5 max-w-3xl">
+            <div className="p-4 sm:p-5 max-w-3xl">
               <QuestionPanel
                 question={currentQuestion}
                 options={currentOptions}
@@ -478,67 +507,74 @@ export default function MockTestRunnerPage() {
           )}
         </div>
 
-        {/* Palette */}
-        <aside className="w-64 border-l bg-slate-50 flex flex-col">
-          <div className="p-3 border-b text-xs font-semibold uppercase text-slate-600">
-            {currentSection?.code} — Question Palette
-          </div>
-          <div className="p-3 grid grid-cols-5 gap-2 overflow-auto flex-1">
-            {sectionQuestions.map((q, i) => {
-              const r = responses[q.id];
-              const status = r?.status ?? "not_visited";
-              return (
-                <button
-                  key={q.id}
-                  onClick={() => goToQuestion(q.id)}
-                  className={cn(
-                    "h-9 w-9 rounded text-xs font-semibold border relative",
-                    status === "answered" && "bg-green-600 text-white border-green-700",
-                    status === "not_answered" && "bg-red-500 text-white border-red-600",
-                    status === "marked" && "bg-purple-600 text-white border-purple-700",
-                    status === "answered_marked" && "bg-purple-600 text-white border-purple-700",
-                    status === "not_visited" && "bg-white border-slate-300",
-                    q.id === currentQuestionId && "ring-2 ring-primary ring-offset-1",
-                  )}
-                >
-                  {i + 1}
-                  {status === "answered_marked" && (
-                    <span className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-green-500 rounded-full border border-white" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-          <div className="p-3 border-t text-xs space-y-1.5">
-            <Legend color="bg-green-600" label="Answered" />
-            <Legend color="bg-red-500" label="Not Answered" />
-            <Legend color="bg-purple-600" label="Marked for review" />
-            <Legend color="bg-white border" label="Not Visited" />
-          </div>
-          <div className="p-3 border-t">
-            <Button onClick={handleManualSubmit} disabled={submitting} className="w-full" variant="destructive">
-              {submitting ? "Submitting…" : "Submit Test"}
-            </Button>
-          </div>
+        {/* Palette - desktop sidebar */}
+        <aside className="hidden lg:flex w-64 border-l bg-slate-50 flex-col">
+          <PaletteContent
+            currentSection={currentSection}
+            sectionQuestions={sectionQuestions}
+            responses={responses}
+            currentQuestionId={currentQuestionId}
+            goToQuestion={goToQuestion}
+            handleManualSubmit={handleManualSubmit}
+            submitting={submitting}
+          />
         </aside>
+
+        {/* Palette - mobile drawer */}
+        {paletteOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <div
+              className="absolute inset-0 bg-black/50"
+              onClick={() => setPaletteOpen(false)}
+            />
+            <aside className="absolute right-0 top-0 bottom-0 w-[85%] max-w-xs bg-slate-50 shadow-2xl flex flex-col animate-in slide-in-from-right">
+              <div className="flex items-center justify-between p-3 border-b bg-white">
+                <span className="text-sm font-semibold">Question Palette</span>
+                <button
+                  type="button"
+                  onClick={() => setPaletteOpen(false)}
+                  className="p-1.5 rounded hover:bg-slate-100"
+                  aria-label="Close palette"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <PaletteContent
+                currentSection={currentSection}
+                sectionQuestions={sectionQuestions}
+                responses={responses}
+                currentQuestionId={currentQuestionId}
+                goToQuestion={goToQuestion}
+                handleManualSubmit={handleManualSubmit}
+                submitting={submitting}
+              />
+            </aside>
+          </div>
+        )}
       </div>
 
       {/* Action bar */}
-      <footer className="border-t bg-white px-4 py-3 flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleMarkReview}>
-            <Bookmark className="h-4 w-4 mr-1" /> Mark & Next
+      <footer
+        className="border-t bg-white px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2 flex-wrap"
+        style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
+      >
+        <div className="flex gap-2 order-2 sm:order-1 w-full sm:w-auto">
+          <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={handleMarkReview}>
+            <Bookmark className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Mark & Next</span>
+            <span className="sm:hidden ml-1">Mark</span>
           </Button>
-          <Button variant="outline" size="sm" onClick={handleClear}>
+          <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={handleClear}>
             Clear
           </Button>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={goPrev}>
-            <ChevronLeft className="h-4 w-4" /> Previous
+        <div className="flex gap-2 order-1 sm:order-2 w-full sm:w-auto">
+          <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={goPrev}>
+            <ChevronLeft className="h-4 w-4" />
+            <span className="hidden sm:inline ml-1">Previous</span>
           </Button>
-          <Button size="sm" onClick={handleSaveNext}>
-            Save & Next <ChevronRight className="h-4 w-4 ml-1" />
+          <Button size="sm" className="flex-1 sm:flex-none" onClick={handleSaveNext}>
+            <span>Save & Next</span> <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
         </div>
       </footer>
@@ -612,5 +648,68 @@ function QuestionPanel({
         </div>
       )}
     </div>
+  );
+}
+
+function PaletteContent({
+  currentSection,
+  sectionQuestions,
+  responses,
+  currentQuestionId,
+  goToQuestion,
+  handleManualSubmit,
+  submitting,
+}: {
+  currentSection?: Section;
+  sectionQuestions: Question[];
+  responses: Record<string, ResponseRow>;
+  currentQuestionId: string;
+  goToQuestion: (qid: string) => void;
+  handleManualSubmit: () => void;
+  submitting: boolean;
+}) {
+  return (
+    <>
+      <div className="p-3 border-b text-xs font-semibold uppercase text-slate-600">
+        {currentSection?.code} — Question Palette
+      </div>
+      <div className="p-3 grid grid-cols-5 gap-2 overflow-auto flex-1">
+        {sectionQuestions.map((q, i) => {
+          const r = responses[q.id];
+          const status = r?.status ?? "not_visited";
+          return (
+            <button
+              key={q.id}
+              onClick={() => goToQuestion(q.id)}
+              className={cn(
+                "h-10 w-10 rounded text-xs font-semibold border relative",
+                status === "answered" && "bg-green-600 text-white border-green-700",
+                status === "not_answered" && "bg-red-500 text-white border-red-600",
+                status === "marked" && "bg-purple-600 text-white border-purple-700",
+                status === "answered_marked" && "bg-purple-600 text-white border-purple-700",
+                status === "not_visited" && "bg-white border-slate-300",
+                q.id === currentQuestionId && "ring-2 ring-primary ring-offset-1",
+              )}
+            >
+              {i + 1}
+              {status === "answered_marked" && (
+                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-green-500 rounded-full border border-white" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+      <div className="p-3 border-t text-xs space-y-1.5">
+        <Legend color="bg-green-600" label="Answered" />
+        <Legend color="bg-red-500" label="Not Answered" />
+        <Legend color="bg-purple-600" label="Marked for review" />
+        <Legend color="bg-white border" label="Not Visited" />
+      </div>
+      <div className="p-3 border-t">
+        <Button onClick={handleManualSubmit} disabled={submitting} className="w-full" variant="destructive">
+          {submitting ? "Submitting…" : "Submit Test"}
+        </Button>
+      </div>
+    </>
   );
 }
