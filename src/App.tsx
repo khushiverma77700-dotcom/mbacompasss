@@ -529,6 +529,7 @@ const App = () => (
               <Route path="student-mocks" element={<LazyPage><AdminStudentMocks /></LazyPage>} />
               <Route path="student-announcements" element={<LazyPage><AdminStudentAnnouncements /></LazyPage>} />
               <Route path="student-notifications" element={<LazyPage><AdminStudentNotificationsBroadcast /></LazyPage>} />
+              <Route path="daily-tests" element={<LazyPage><AdminDailyTests /></LazyPage>} />
               <Route path="hyperlink-update" element={<LazyPage><AdminHyperlinkUpdate /></LazyPage>} />
               <Route path="bulk-ai-edit" element={<LazyPage><AdminBulkAIEdit /></LazyPage>} />
               <Route path="iim-waitlist" element={<LazyPage><AdminIIMWaitlist /></LazyPage>} />
