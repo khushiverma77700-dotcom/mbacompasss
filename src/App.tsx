@@ -144,6 +144,9 @@ const StudentLeaderboard = lazyWithPreload(() => import("./pages/student/Student
 const StudentNotifications = lazyWithPreload(() => import("./pages/student/StudentNotifications"));
 const StudentOrders = lazyWithPreload(() => import("./pages/student/StudentOrders"));
 const StudentDeepAnalysis = lazyWithPreload(() => import("./pages/student/StudentDeepAnalysis"));
+const StudentDailyTest = lazyWithPreload(() => import("./pages/student/StudentDailyTest"));
+const StudentAttempts = lazyWithPreload(() => import("./pages/student/StudentAttempts"));
+const AdminDailyTests = lazyWithPreload(() => import("./pages/admin/AdminDailyTests"));
 const AdminStudentNotificationsBroadcast = lazyWithPreload(() => import("./pages/admin/AdminStudentNotificationsBroadcast"));
 const MocksListPage = lazyWithPreload(() => import("./pages/mocks/MocksListPage"));
 const MockTestIntroPage = lazyWithPreload(() => import("./pages/mocks/MockTestIntroPage"));
@@ -526,6 +529,7 @@ const App = () => (
               <Route path="student-mocks" element={<LazyPage><AdminStudentMocks /></LazyPage>} />
               <Route path="student-announcements" element={<LazyPage><AdminStudentAnnouncements /></LazyPage>} />
               <Route path="student-notifications" element={<LazyPage><AdminStudentNotificationsBroadcast /></LazyPage>} />
+              <Route path="daily-tests" element={<LazyPage><AdminDailyTests /></LazyPage>} />
               <Route path="hyperlink-update" element={<LazyPage><AdminHyperlinkUpdate /></LazyPage>} />
               <Route path="bulk-ai-edit" element={<LazyPage><AdminBulkAIEdit /></LazyPage>} />
               <Route path="iim-waitlist" element={<LazyPage><AdminIIMWaitlist /></LazyPage>} />
@@ -586,6 +590,8 @@ const App = () => (
               <Route path="notifications" element={<LazyPage><StudentNotifications /></LazyPage>} />
               <Route path="orders" element={<LazyPage><StudentOrders /></LazyPage>} />
               <Route path="analysis/:attemptId" element={<LazyPage><StudentDeepAnalysis /></LazyPage>} />
+              <Route path="daily-test" element={<LazyPage><StudentDailyTest /></LazyPage>} />
+              <Route path="attempts" element={<LazyPage><StudentAttempts /></LazyPage>} />
             </Route>
             <Route path="/iim-waitlist-movement" element={<PublicLayout><LazyPage><IIMWaitlistPage /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />

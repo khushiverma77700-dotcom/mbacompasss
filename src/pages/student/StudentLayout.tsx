@@ -18,6 +18,8 @@ import {
   Trophy,
   Receipt,
   Award,
+  CalendarDays,
+  History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -25,7 +27,9 @@ import NotificationBell from "@/components/student/NotificationBell";
 
 const navItems = [
   { to: "/student", label: "Overview", icon: LayoutDashboard, end: true },
+  { to: "/student/daily-test", label: "Daily Test", icon: CalendarDays },
   { to: "/student/mocks", label: "My Mocks", icon: BookOpenCheck },
+  { to: "/student/attempts", label: "Previous Attempts", icon: History },
   { to: "/student/buy-mocks", label: "Buy Mocks", icon: ShoppingBag },
   { to: "/student/performance", label: "Performance", icon: BarChart3 },
   { to: "/student/goals", label: "CAT Score Engine", icon: Target },

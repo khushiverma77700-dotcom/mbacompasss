@@ -16,6 +16,7 @@ import {
   AreaChart, Area, BarChart, Bar, RadialBarChart, RadialBar, PolarAngleAxis,
   ComposedChart, Legend, ReferenceLine,
 } from "recharts";
+import DailyTestCard from "@/components/student/DailyTestCard";
 
 const SECTION_COLORS: Record<string, string> = {
   QA: "#0284c7",
@@ -267,6 +268,8 @@ export default function StudentOverview() {
           <Kpi label="Streak" value={`${stats.streak}d`} icon={<Flame className="h-3.5 w-3.5" />} />
         </div>
       </Card>
+
+      <DailyTestCard />
 
       {/* Setup banner */}
       {noProfile && (
