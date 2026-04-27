@@ -36,8 +36,9 @@ import { MockCheckoutDialog } from "@/components/mock/MockCheckoutDialog";
 import SEOHead from "@/components/SEOHead";
 import { initMetaPixel, pixelTrack } from "@/lib/metaPixel";
 import { toast } from "sonner";
-import { AnimatedAIReport } from "@/components/mock/AnimatedAIReport";
+import { SampleAIReport } from "@/components/mock/SampleAIReport";
 import { AutoTestimonialMarquee } from "@/components/mock/AutoTestimonialMarquee";
+import { DualFeedbackMarquees } from "@/components/mock/DualFeedbackMarquees";
 
 const ICONS: Record<string, any> = {
   BrainCircuit, Timer, BookOpen, TrendingUp, Users, MessageCircle, Sparkles, ShieldCheck, Star, Clock,
