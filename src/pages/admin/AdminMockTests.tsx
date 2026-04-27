@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Pencil, Trash2, ArrowLeft, Settings2, ExternalLink, Loader2, Sparkles } from "lucide-react";
 import { slugify } from "@/lib/slugify";
+import FileUpload from "@/components/admin/FileUpload";
 import AIGenerateMockDialog from "@/components/admin/AIGenerateMockDialog";
 
 const SECTION_DEFAULTS = [
