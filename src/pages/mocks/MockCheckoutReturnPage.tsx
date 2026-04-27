@@ -27,7 +27,16 @@ export default function MockCheckoutReturnPage() {
         .eq("stripe_session_id", sessionId)
         .maybeSingle();
       if (cancelled) return;
-      if (data?.status === "paid") setStatus("paid");
+      if (data?.status === "paid") {
+        setStatus("paid");
+        // Lookup slug for redirect
+        if (testId) {
+          const { data: t } = await supabase.from("mock_tests").select("slug").eq("id", testId).maybeSingle();
+          navigate(`/mocks/thank-you?test=${t?.slug ?? ""}`, { replace: true });
+        } else {
+          navigate(`/mocks/thank-you`, { replace: true });
+        }
+      }
       else if (data?.status === "failed") setStatus("failed");
       else if (attempts < 15) setTimeout(poll, 1500);
       else setStatus("pending");
