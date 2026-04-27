@@ -206,7 +206,10 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
       }
       return new Response(JSON.stringify({ error: err }), { status: 500, headers: { "Content-Type": "application/json" } });
     }
-    const openaiModel = provider === "openai-mini" ? "gpt-5-mini" : "gpt-5-nano";
+    // Honor caller's gpt-5 / gpt-5.2 model if explicitly set; otherwise pick mini/nano based on provider tier.
+    const callerModel = (body.model || "").trim().replace(/^openai\//, "");
+    const isExplicitGpt5 = /^gpt-5(\.\d+)?(-mini|-nano)?$/i.test(callerModel) || /^gpt-5\.2$/i.test(callerModel);
+    const openaiModel = isExplicitGpt5 ? callerModel : (provider === "openai-mini" ? "gpt-5-mini" : "gpt-5-nano");
     const payload = buildOpenAICompatPayload(body, openaiModel);
     try {
       const resp = await withRetry(
