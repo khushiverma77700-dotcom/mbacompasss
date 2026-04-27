@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
     };
 
     const aiRes = await callAIGateway({
-        model: "google/gemini-2.5-flash",
+        model: "openai/gpt-5-mini",
         // COST OPT: Cap to 6K tokens — a full blog article (~1500 words) fits in
         // ~4K tokens; without the cap Gemini sometimes returns 8K+ of filler.
         max_tokens: 6000,

@@ -74,16 +74,28 @@ const buildUrl = (source: string, year?: string, ctx?: CitationContext): string 
 
   const domain = extractDomain(ctx?.entityWebsite);
 
-  // 2. If we know the official college website, link DIRECTLY to it (root URL).
-  //    Sending users to a Google search page is poor UX and the previous behaviour
-  //    occasionally produced wrong / unrelated redirects. The college's homepage
-  //    has a clear nav to placement reports, brochures, fees, faculty, etc.
+  // 2. If we know the official college website AND the citation matches a known
+  //    "lives on the college's own site" hint (Placement Report, Brochure, Fees…),
+  //    deep-link via a site:domain Google query so users land on the SPECIFIC
+  //    page instead of the homepage.
+  const collegeHint = COLLEGE_SITE_HINTS[key];
+  if (domain && collegeHint) {
+    const q = `site:${domain} ${collegeHint} ${year || ""}`.trim();
+    return `https://www.google.com/search?q=${encodeURIComponent(q)}&btnI=1`;
+  }
+
+  // 3. Known college site hint but no domain on file — still deep-link via name.
+  if (collegeHint && ctx?.entityName) {
+    const q = `${ctx.entityName} official ${collegeHint} ${year || ""}`.trim();
+    return `https://www.google.com/search?q=${encodeURIComponent(q)}&btnI=1`;
+  }
+
+  // 4. Generic citation with a known college website — fall back to homepage.
   if (ctx?.entityWebsite) {
     try {
       const u = ctx.entityWebsite.startsWith("http")
         ? ctx.entityWebsite
         : `https://${ctx.entityWebsite}`;
-      // Validate it parses
       new URL(u);
       return u;
     } catch {
@@ -91,16 +103,14 @@ const buildUrl = (source: string, year?: string, ctx?: CitationContext): string 
     }
   }
 
-  // 3. No website on file — last resort: Google query restricted to the official name.
+  // 5. No website on file — last resort: Google query restricted to the official name.
   if (ctx?.entityName) {
-    const hint = COLLEGE_SITE_HINTS[key] || source;
+    const hint = collegeHint || source;
     return `https://www.google.com/search?q=${encodeURIComponent(`${ctx.entityName} official site ${hint} ${year || ""}`.trim())}`;
   }
 
-  // 4. Last resort — generic official-source query (no entity context).
+  // 6. Last resort — generic official-source query (no entity context).
   return `https://www.google.com/search?q=${encodeURIComponent(`${source} ${year || ""} official source India MBA`.trim())}`;
-  // (domain unused in current logic but kept for future per-section deep-linking)
-  void domain;
 };
 
 const buildPill = (source: string, year?: string, ctx?: CitationContext) => {
