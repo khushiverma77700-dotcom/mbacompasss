@@ -96,8 +96,10 @@ function renderValue(v: any): string {
   if (typeof v === "object") return JSON.stringify(v, null, 2);
   return String(v);
 }
-function isHtmlField(v: any) {
-  return typeof v === "string" && /<\/?[a-z][\s\S]*>/i.test(v);
+function shouldRenderRich(field: string, v: any) {
+  if (typeof v !== "string") return false;
+  if (["description", "admission_process", "intro", "content"].includes(field)) return true;
+  return /<\/?[a-z][\s\S]*>/i.test(v) || /(^|\n)\s*(#{2,3}\s+|[-•*]\s+)/.test(v) || /\[[^\]]+\]\(https?:\/\//i.test(v);
 }
 
 async function getFunctionErrorMessage(error: any): Promise<string> {
@@ -816,7 +818,7 @@ const AdminContentStudio = () => {
                       if (!d.changed) return null;
                       const before = renderValue(d.before);
                       const after = renderValue(d.after);
-                      const html = isHtmlField(d.before) || isHtmlField(d.after);
+                      const html = shouldRenderRich(field, d.before) || shouldRenderRich(field, d.after);
                       const checked = selectedFields.has(field);
                       const entityName = open.entity_name || undefined;
                       return (

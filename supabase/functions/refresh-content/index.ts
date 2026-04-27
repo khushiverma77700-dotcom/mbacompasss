@@ -44,6 +44,133 @@ const TABLE: Record<EntityType, string> = {
 };
 
 const HTML_FIELDS = new Set(["description", "admission_process", "intro", "content"]);
+const SEO_FIELDS = new Set(["meta_title", "meta_description", "keywords", "h1_tag"]);
+
+type QualityContext = {
+  entityName: string;
+  city?: string;
+  state?: string;
+  website?: string;
+  todayIso: string;
+  year: number;
+};
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function normalizeOfficialUrl(website?: string) {
+  if (!website) return "";
+  try {
+    const url = website.startsWith("http") ? website : `https://${website}`;
+    const parsed = new URL(url);
+    return parsed.origin;
+  } catch {
+    return "";
+  }
+}
+
+function domainLabel(url: string) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "official website";
+  }
+}
+
+function stripHtml(value: string) {
+  return value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function isWeakHtml(value: string) {
+  const text = stripHtml(value);
+  if (!text || /^refreshed\s+\d{4}\s+fields/i.test(text)) return true;
+  if (/^(updated|refreshed)\s+(content|information|details)/i.test(text)) return true;
+  const hasStructure = /<h2[\s>]/i.test(value) || /<h3[\s>]/i.test(value);
+  const hasScanElements = /<(ul|ol|table)[\s>]/i.test(value);
+  return text.length > 140 && (!hasStructure || !hasScanElements);
+}
+
+function enrichHtml(value: string, field: string, ctx: QualityContext) {
+  let out = String(value || "").trim();
+  if (!out) return out;
+
+  const hasHtml = /<\/?[a-z][\s\S]*>/i.test(out);
+  if (!hasHtml || isWeakHtml(out)) {
+    const clean = stripHtml(out).replace(/^[-•*]\s*/gm, "");
+    const sentences = clean
+      .split(/(?<=[.!?])\s+/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .slice(0, 6);
+    const heading = field === "admission_process"
+      ? `${ctx.entityName} Admission ${ctx.year}`
+      : field === "content"
+        ? `${ctx.entityName} ${ctx.year} Update`
+        : `${ctx.entityName} Overview ${ctx.year}`;
+    out = `<h2>${escapeHtml(heading)}</h2><ul>${sentences.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>`;
+  }
+
+  const officialUrl = normalizeOfficialUrl(ctx.website);
+  if (officialUrl && !out.includes(officialUrl) && !/<a\s+[^>]*href=/i.test(out)) {
+    out = `<p><strong>Official resource:</strong> <a href="${officialUrl}" target="_blank" rel="noopener">${escapeHtml(domainLabel(officialUrl))}</a></p>\n${out}`;
+  }
+
+  out = out.replace(/<a\s+([^>]*href=["'][^"']+["'][^>]*)>/gi, (match, attrs) => {
+    const withTarget = /\starget=/i.test(attrs) ? attrs : `${attrs} target="_blank"`;
+    const withRel = /\srel=/i.test(withTarget) ? withTarget : `${withTarget} rel="noopener"`;
+    return `<a ${withRel}>`;
+  });
+
+  if (!/<(strong|b)>[\s\S]*<\/(strong|b)>/i.test(out)) {
+    out = out.replace(/(INR\s*[\d.]+(?:\s*-\s*[\d.]+)?\s*(?:LPA|Lakhs?|Cr)?|\d+(?:\.\d+)?\s*(?:LPA|%|Lakhs?|acres)|CAT|XAT|CMAT|MAT|GMAT|KMAT|SNAP|NMAT)/gi, "<strong><u>$1</u></strong>");
+  }
+
+  if (!/Last updated:/i.test(out)) {
+    out += `\n<p><em>Last updated: ${ctx.todayIso}</em></p>`;
+  }
+  return out;
+}
+
+function postProcessSnapshot(snapshot: Record<string, unknown>, fields: string[], ctx: QualityContext) {
+  const next: Record<string, unknown> = {};
+  for (const field of fields) {
+    const value = snapshot[field];
+    if (HTML_FIELDS.has(field) && typeof value === "string") {
+      next[field] = enrichHtml(value, field, ctx);
+    } else if (SEO_FIELDS.has(field) && typeof value === "string") {
+      next[field] = value.replace(/\[src:[^\]]+\]/gi, "").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim();
+    } else {
+      next[field] = value;
+    }
+  }
+  return next;
+}
+
+function qualityFailures(snapshot: Record<string, unknown>, fields: string[], ctx: QualityContext) {
+  const failures: string[] = [];
+  for (const field of fields) {
+    const value = snapshot[field];
+    if (HTML_FIELDS.has(field) && typeof value === "string" && stripHtml(value).length > 120) {
+      if (isWeakHtml(value)) failures.push(`${field}: needs headings plus bullets/tables, not plain paragraphs`);
+      if (ctx.website && !/<a\s+[^>]*href=/i.test(value)) failures.push(`${field}: must include at least one verified official hyperlink`);
+      if (!/<(strong|b)>[\s\S]*<\/(strong|b)>/i.test(value)) failures.push(`${field}: important facts must use bold formatting`);
+    }
+  }
+  if (fields.includes("meta_title") && typeof snapshot.meta_title === "string" && snapshot.meta_title.length > 62) failures.push("meta_title: keep under 60 characters where possible");
+  if (fields.includes("meta_description") && typeof snapshot.meta_description === "string") {
+    const md = snapshot.meta_description;
+    if (md.length > 165) failures.push("meta_description: keep under 160 characters where possible");
+    if (!md.toLowerCase().includes(ctx.entityName.toLowerCase().split(" ")[0])) failures.push("meta_description: must be entity-specific");
+  }
+  if (fields.includes("keywords") && Array.isArray(snapshot.keywords) && snapshot.keywords.length < 8) failures.push("keywords: include 8-12 specific SEO keywords");
+  return failures.slice(0, 8);
+}
 
 function pickFields(row: Record<string, unknown>, fields: string[]) {
   const out: Record<string, unknown> = {};
@@ -82,6 +209,19 @@ async function callAI(systemPrompt: string, userPrompt: string, schema: any): Pr
   const tc = data.choices?.[0]?.message?.tool_calls?.[0];
   if (!tc) throw new Error("AI did not return tool call");
   return JSON.parse(tc.function.arguments);
+}
+
+async function repairAI(systemPrompt: string, userPrompt: string, schema: any, failures: string[], draft: Record<string, unknown>): Promise<any> {
+  const repairPrompt = `${userPrompt}
+
+The previous draft failed quality review:
+${failures.map((f) => `- ${f}`).join("\n")}
+
+PREVIOUS DRAFT (JSON):
+${JSON.stringify(draft, null, 2)}
+
+Return a corrected version of every tracked field. Do not explain.`;
+  return callAI(systemPrompt, repairPrompt, schema);
 }
 
 function buildSchema(fields: string[]) {
@@ -149,7 +289,7 @@ Deno.serve(async (req) => {
       ? "Rewrite EVERY field from scratch with the latest verified information. Improve clarity, structure, formatting, and humanise the tone."
       : "ONLY update time-sensitive facts: fees, placement figures, rankings, recruiter lists, dates, citations, and meta freshness. Preserve the existing tone, narrative structure and unchanged sections. If a field is already accurate and current for " + year + ", return it unchanged.";
 
-    const systemPrompt = `You are a senior MBA/B-school researcher refreshing an existing page for ${year}. Today is ${todayIso}.
+    const systemPrompt = `You are a senior MBA/B-school researcher, SEO editor and originality checker refreshing an existing page for ${year}. Today is ${todayIso}.
 
 REFRESH MODE: ${mode.toUpperCase()}
 ${modeNote}
@@ -160,6 +300,13 @@ NON-NEGOTIABLE DATA RULES:
 - NEVER use "N/A", "Not available", "Contact for details", "TBD". Give realistic ranges if exact figure unknown.
 - Scope: MBA / PGP / PGDM / MMS / MiM / Executive MBA / Masters in Management ONLY.
 - Return ALL ${fields.length} fields in the tool call, even if unchanged in smart mode.
+
+ORIGINALITY + SEO RULES:
+- Write 100% unique, non-plagiarised copy. Do not copy sentences from the current page, brochures, official websites, competitors, or generic templates.
+- Make every paragraph specific to "${entityName}" and ${city || state || "its location"}; avoid generic lines that could fit any college.
+- Include practical search intent terms naturally: fees, placements, admission, cut off, courses, eligibility, ROI, recruiters, ranking, ${year}.
+- meta_title must be under 60 characters when possible; meta_description must be under 160 characters and include the entity name plus a concrete benefit/fact.
+- keywords must be 8-12 high-intent phrases, not broad one-word terms.
 
 HYPERLINK RULES (STRICT):
 - REMOVE all links to google search, bing, or generic/irrelevant pages.
@@ -172,6 +319,8 @@ FORMATTING RULES (long-form HTML fields):
 - Important dates, deadlines, fees, cut-offs and key numbers MUST be bold AND underlined: <strong><u>15 Jan ${year}</u></strong>.
 - Use <table> with <thead>/<tbody> for placements, cut-offs, important dates, fee structures, and comparisons.
 - Semantic <h2>/<h3> subheadings. No repetition, no fluff. Human-friendly tone.
+- Every long-form HTML field must include at least one official hyperlink when an official website or official exam/regulatory source is available.
+- Never return a one-line summary such as "Refreshed ${year} fields...". That is invalid.
 - End any long description with: <p><em>Last updated: ${todayIso}</em></p>`;
 
     const userPrompt = `Refresh the following ${body.entity_type} page:
@@ -216,7 +365,12 @@ ${mode === "smart" ? "Keep unchanged non-time-sensitive fields identical to curr
     if (insErr) throw new Error(insErr.message);
 
     try {
-      const proposedSnapshot = await callAI(systemPrompt, userPrompt, schema);
+      const ctx: QualityContext = { entityName, city, state, website, todayIso, year };
+      let proposedSnapshot = postProcessSnapshot(await callAI(systemPrompt, userPrompt, schema), fields, ctx);
+      const failures = qualityFailures(proposedSnapshot, fields, ctx);
+      if (failures.length > 0) {
+        proposedSnapshot = postProcessSnapshot(await repairAI(systemPrompt, userPrompt, schema, failures, proposedSnapshot), fields, ctx);
+      }
       const diff = computeDiff(currentSnapshot, proposedSnapshot);
       const changedCount = Object.values(diff).filter((d: any) => d.changed).length;
 

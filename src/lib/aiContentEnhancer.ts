@@ -122,6 +122,46 @@ const buildPill = (source: string, year?: string, ctx?: CitationContext) => {
   return ` <a href="${href}" target="_blank" rel="noopener noreferrer nofollow" class="ai-citation" title="View ${label} source">${label} ↗</a>`;
 };
 
+const applyInlineMarkdown = (value: string) => value
+  .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+  .replace(/__([^_]+)__/g, "<strong>$1</strong>")
+  .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer nofollow">$1</a>');
+
+const plainOrMarkdownToHtml = (value: string) => {
+  const lines = value.split(/\n+/).map((line) => line.trim()).filter(Boolean);
+  if (lines.length === 0) return "";
+  let inList = false;
+  const parts: string[] = [];
+  const closeList = () => {
+    if (inList) {
+      parts.push("</ul>");
+      inList = false;
+    }
+  };
+
+  for (const raw of lines) {
+    const line = applyInlineMarkdown(raw);
+    if (/^###\s+/.test(line)) {
+      closeList();
+      parts.push(`<h3>${line.replace(/^###\s+/, "")}</h3>`);
+    } else if (/^##\s+/.test(line)) {
+      closeList();
+      parts.push(`<h2>${line.replace(/^##\s+/, "")}</h2>`);
+    } else if (/^[-•*]\s+/.test(line)) {
+      if (!inList) {
+        parts.push("<ul>");
+        inList = true;
+      }
+      parts.push(`<li>${line.replace(/^[-•*]\s+/, "")}</li>`);
+    } else {
+      closeList();
+      parts.push(`<p>${line}</p>`);
+    }
+  }
+  closeList();
+  return parts.join("");
+};
+
 /**
  * Transform raw AI-generated HTML into enhanced HTML ready for display.
  * Pass `ctx` with the college's name + website so inline citations
@@ -136,12 +176,8 @@ export function enhanceAIContent(html: string, ctx?: CitationContext): string {
   // 0. If a model returns plain text/bullets without tags, convert it into
   // lightweight HTML so formatting is still visible in review and live pages.
   const hasHtml = /<\/?[a-z][\s\S]*>/i.test(out);
-  if (!hasHtml) {
-    const lines = out.split(/\n+/).map((line) => line.trim()).filter(Boolean);
-    out = lines.length > 1
-      ? `<ul>${lines.map((line) => `<li>${line.replace(/^[-•*]\s*/, "")}</li>`).join("")}</ul>`
-      : `<p>${out}</p>`;
-  }
+  if (!hasHtml) out = plainOrMarkdownToHtml(out);
+  else out = applyInlineMarkdown(out);
 
   // 1a. Machine-readable [src:NIRF 2025] or [src:Placement Report 2024-25]
   out = out.replace(
