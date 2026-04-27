@@ -351,7 +351,10 @@ export default function MockTestRunnerPage() {
     supabase.from("mock_attempts").update({ current_section_id: sid }).eq("id", attemptId).then(() => {});
   };
 
-  const goToQuestion = (qid: string) => setCurrentQuestionId(qid);
+  const goToQuestion = (qid: string) => {
+    setCurrentQuestionId(qid);
+    setPaletteOpen(false);
+  };
 
   const goNext = () => {
     const idx = sectionQuestions.findIndex((q) => q.id === currentQuestionId);
