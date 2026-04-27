@@ -469,29 +469,67 @@ export default function MocksListPage() {
         </section>
       )}
 
-      {/* COMPARISON */}
+      {/* COMPARISON — Advanced */}
       {settings.comparison?.length > 0 && (
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4 max-w-3xl">
-            <h2 className="text-2xl md:text-3xl font-bold text-center">Why we're better than the rest</h2>
-            <p className="text-center text-muted-foreground mt-2">Includes <strong>FREE access</strong> to our AI Profile Analyzer and MBA ROI Calculator.</p>
-            <Card className="mt-8 overflow-hidden border-sky-100 shadow-sm">
-              <div className="grid grid-cols-[1fr_100px_100px] sm:grid-cols-[1fr_140px_140px] bg-gradient-to-r from-sky-100 to-sky-50 px-4 py-3 text-sm font-semibold">
-                <div>Feature</div>
-                <div className="text-center text-sky-800">MBA Compass</div>
-                <div className="text-center text-muted-foreground">Others</div>
+        <section className="py-20 bg-gradient-to-b from-white via-sky-50/40 to-white relative overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none opacity-40 [background-image:radial-gradient(circle_at_20%_50%,hsl(var(--primary)/0.1),transparent_50%)]" />
+          <div className="container mx-auto px-4 max-w-5xl relative">
+            <div className="text-center max-w-3xl mx-auto">
+              <Badge className="mb-3 bg-sky-100 text-sky-800 hover:bg-sky-100 border-sky-200">Comparison</Badge>
+              <h2 className="text-3xl md:text-4xl font-bold">Why we're better than the rest</h2>
+              <p className="text-muted-foreground mt-3">Includes <strong className="text-sky-700">FREE access</strong> to AI Profile Analyzer & MBA ROI Calculator.</p>
+            </div>
+
+            <Card className="mt-10 overflow-hidden border-2 border-sky-200 shadow-2xl rounded-2xl">
+              {/* Header */}
+              <div className="grid grid-cols-[1.4fr_1fr_1fr] sm:grid-cols-[2fr_1fr_1fr]">
+                <div className="bg-slate-50 px-4 py-5 font-semibold text-sm text-muted-foreground uppercase tracking-wider">Feature</div>
+                <div className="bg-gradient-to-br from-sky-600 to-sky-700 text-white px-4 py-5 text-center relative">
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-400 text-amber-950 hover:bg-amber-400 border-0 shadow-md text-[10px]">RECOMMENDED</Badge>
+                  <div className="font-bold text-base">MBA Compass</div>
+                  <div className="text-[11px] text-sky-100 mt-1">Premium · ₹{settings.price_current}</div>
+                </div>
+                <div className="bg-slate-100 px-4 py-5 text-center text-muted-foreground">
+                  <div className="font-semibold text-base text-slate-700">Others</div>
+                  <div className="text-[11px] mt-1">Generic platforms</div>
+                </div>
               </div>
+
               {settings.comparison.map((row: any, i: number) => (
-                <div key={i} className={`grid grid-cols-[1fr_100px_100px] sm:grid-cols-[1fr_140px_140px] px-4 py-3 border-t text-sm items-center ${i % 2 === 0 ? "bg-white" : "bg-sky-50/30"}`}>
-                  <div>{row.feature}</div>
-                  <div className="flex justify-center">
-                    {row.us ? <CheckCircle2 className="h-5 w-5 text-emerald-600" /> : <XCircle className="h-5 w-5 text-muted-foreground" />}
+                <div key={i} className={`grid grid-cols-[1.4fr_1fr_1fr] sm:grid-cols-[2fr_1fr_1fr] border-t text-sm items-stretch ${i % 2 === 0 ? "bg-white" : "bg-sky-50/40"}`}>
+                  <div className="px-4 py-4 font-medium flex items-center">
+                    {row.feature}
+                    {row.highlight && <Badge className="ml-2 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-emerald-200 text-[10px]">FREE</Badge>}
                   </div>
-                  <div className="flex justify-center">
-                    {row.others ? <CheckCircle2 className="h-5 w-5 text-emerald-600" /> : <XCircle className="h-5 w-5 text-muted-foreground" />}
+                  <div className="px-4 py-4 flex flex-col items-center justify-center bg-sky-50/60 border-x border-sky-100">
+                    {row.us_value ? (
+                      <span className="font-semibold text-sky-800 text-center text-sm">{row.us_value}</span>
+                    ) : row.us ? (
+                      <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                    ) : (
+                      <XCircle className="h-6 w-6 text-muted-foreground/60" />
+                    )}
+                  </div>
+                  <div className="px-4 py-4 flex flex-col items-center justify-center">
+                    {row.others_value ? (
+                      <span className="text-muted-foreground text-center text-sm">{row.others_value}</span>
+                    ) : row.others ? (
+                      <CheckCircle2 className="h-5 w-5 text-emerald-600/70" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-muted-foreground/60" />
+                    )}
                   </div>
                 </div>
               ))}
+
+              {/* Footer CTA row */}
+              <div className="grid grid-cols-[1.4fr_1fr_1fr] sm:grid-cols-[2fr_1fr_1fr] border-t bg-gradient-to-r from-sky-50 to-white">
+                <div className="px-4 py-4 font-semibold text-sm">Get started today</div>
+                <div className="px-4 py-3 flex items-center justify-center bg-sky-50/60 border-x border-sky-100">
+                  <Button size="sm" onClick={scrollToPricing} className="shadow-md shadow-sky-500/30">Buy ₹{settings.price_current}</Button>
+                </div>
+                <div className="px-4 py-3 flex items-center justify-center text-xs text-muted-foreground">—</div>
+              </div>
             </Card>
           </div>
         </section>
