@@ -10,7 +10,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { RefreshCw, Sparkles, Loader2, AlertCircle, CheckCircle2, ArrowLeft, ClipboardList } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RefreshCw, Sparkles, Loader2, AlertCircle, CheckCircle2, ArrowLeft, ClipboardList, ListChecks, Wand2 } from "lucide-react";
 
 type EntityType = "college" | "article" | "institute" | "course";
 
