@@ -200,6 +200,7 @@ export default function MockTestRunnerPage() {
       }
     };
     const onFsChange = () => {
+      if (isMobile) return; // skip fullscreen tracking on mobile
       if (!document.fullscreenElement) {
         setViolations((v) => {
           const nv = v + 1;
