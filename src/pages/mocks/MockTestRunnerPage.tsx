@@ -650,3 +650,66 @@ function QuestionPanel({
     </div>
   );
 }
+
+function PaletteContent({
+  currentSection,
+  sectionQuestions,
+  responses,
+  currentQuestionId,
+  goToQuestion,
+  handleManualSubmit,
+  submitting,
+}: {
+  currentSection?: Section;
+  sectionQuestions: Question[];
+  responses: Record<string, ResponseRow>;
+  currentQuestionId: string;
+  goToQuestion: (qid: string) => void;
+  handleManualSubmit: () => void;
+  submitting: boolean;
+}) {
+  return (
+    <>
+      <div className="p-3 border-b text-xs font-semibold uppercase text-slate-600">
+        {currentSection?.code} — Question Palette
+      </div>
+      <div className="p-3 grid grid-cols-5 gap-2 overflow-auto flex-1">
+        {sectionQuestions.map((q, i) => {
+          const r = responses[q.id];
+          const status = r?.status ?? "not_visited";
+          return (
+            <button
+              key={q.id}
+              onClick={() => goToQuestion(q.id)}
+              className={cn(
+                "h-10 w-10 rounded text-xs font-semibold border relative",
+                status === "answered" && "bg-green-600 text-white border-green-700",
+                status === "not_answered" && "bg-red-500 text-white border-red-600",
+                status === "marked" && "bg-purple-600 text-white border-purple-700",
+                status === "answered_marked" && "bg-purple-600 text-white border-purple-700",
+                status === "not_visited" && "bg-white border-slate-300",
+                q.id === currentQuestionId && "ring-2 ring-primary ring-offset-1",
+              )}
+            >
+              {i + 1}
+              {status === "answered_marked" && (
+                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-green-500 rounded-full border border-white" />
+              )}
+            </button>
+          );
+        })}
+      </div>
+      <div className="p-3 border-t text-xs space-y-1.5">
+        <Legend color="bg-green-600" label="Answered" />
+        <Legend color="bg-red-500" label="Not Answered" />
+        <Legend color="bg-purple-600" label="Marked for review" />
+        <Legend color="bg-white border" label="Not Visited" />
+      </div>
+      <div className="p-3 border-t">
+        <Button onClick={handleManualSubmit} disabled={submitting} className="w-full" variant="destructive">
+          {submitting ? "Submitting…" : "Submit Test"}
+        </Button>
+      </div>
+    </>
+  );
+}
