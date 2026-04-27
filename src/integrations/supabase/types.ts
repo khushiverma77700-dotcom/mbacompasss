@@ -3744,6 +3744,179 @@ export type Database = {
         }
         Relationships: []
       }
+      personalized_hub_access: {
+        Row: {
+          created_at: string
+          daily_quota: number
+          expires_at: string | null
+          granted_by: string | null
+          source: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          daily_quota?: number
+          expires_at?: string | null
+          granted_by?: string | null
+          source?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          daily_quota?: number
+          expires_at?: string | null
+          granted_by?: string | null
+          source?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      personalized_mock_attempts: {
+        Row: {
+          accuracy: number | null
+          answers: Json
+          created_at: string
+          difficulty: string
+          duration_minutes: number
+          exam_code: string
+          id: string
+          num_questions: number
+          questions: Json
+          score: number | null
+          sections: string[]
+          started_at: string
+          status: string
+          submitted_at: string | null
+          time_taken_seconds: number | null
+          total_correct: number | null
+          total_unattempted: number | null
+          total_wrong: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          answers?: Json
+          created_at?: string
+          difficulty: string
+          duration_minutes: number
+          exam_code: string
+          id?: string
+          num_questions: number
+          questions: Json
+          score?: number | null
+          sections: string[]
+          started_at?: string
+          status?: string
+          submitted_at?: string | null
+          time_taken_seconds?: number | null
+          total_correct?: number | null
+          total_unattempted?: number | null
+          total_wrong?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          answers?: Json
+          created_at?: string
+          difficulty?: string
+          duration_minutes?: number
+          exam_code?: string
+          id?: string
+          num_questions?: number
+          questions?: Json
+          score?: number | null
+          sections?: string[]
+          started_at?: string
+          status?: string
+          submitted_at?: string | null
+          time_taken_seconds?: number | null
+          total_correct?: number | null
+          total_unattempted?: number | null
+          total_wrong?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      personalized_question_seen: {
+        Row: {
+          question_id: string
+          seen_at: string
+          user_id: string
+        }
+        Insert: {
+          question_id: string
+          seen_at?: string
+          user_id: string
+        }
+        Update: {
+          question_id?: string
+          seen_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personalized_question_seen_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "personalized_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      personalized_questions: {
+        Row: {
+          correct_index: number
+          created_at: string
+          created_by: string | null
+          difficulty: string
+          exam_code: string
+          explanation: string | null
+          id: string
+          options: Json
+          question_text: string
+          section: string
+          source: string | null
+          topic: string | null
+          updated_at: string
+        }
+        Insert: {
+          correct_index: number
+          created_at?: string
+          created_by?: string | null
+          difficulty: string
+          exam_code: string
+          explanation?: string | null
+          id?: string
+          options: Json
+          question_text: string
+          section: string
+          source?: string | null
+          topic?: string | null
+          updated_at?: string
+        }
+        Update: {
+          correct_index?: number
+          created_at?: string
+          created_by?: string | null
+          difficulty?: string
+          exam_code?: string
+          explanation?: string | null
+          id?: string
+          options?: Json
+          question_text?: string
+          section?: string
+          source?: string | null
+          topic?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       phone_otps: {
         Row: {
           attempts: number
@@ -5240,6 +5413,40 @@ export type Database = {
         Returns: boolean
       }
       is_admin_email: { Args: { _email: string }; Returns: boolean }
+      personalized_hub_today_count: {
+        Args: { _user_id: string }
+        Returns: number
+      }
+      pick_personalized_questions: {
+        Args: {
+          _count: number
+          _difficulty: string
+          _exam_code: string
+          _sections: string[]
+          _user_id: string
+        }
+        Returns: {
+          correct_index: number
+          created_at: string
+          created_by: string | null
+          difficulty: string
+          exam_code: string
+          explanation: string | null
+          id: string
+          options: Json
+          question_text: string
+          section: string
+          source: string | null
+          topic: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "personalized_questions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       recover_stale_bulk_jobs: {
         Args: { _threshold_minutes?: number }
         Returns: Json
