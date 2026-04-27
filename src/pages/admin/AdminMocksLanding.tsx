@@ -90,10 +90,18 @@ export default function AdminMocksLanding() {
           <TabsTrigger value="hero">Hero</TabsTrigger>
           <TabsTrigger value="pricing">Pricing & Offer</TabsTrigger>
           <TabsTrigger value="trust">Trust Signals</TabsTrigger>
+          <TabsTrigger value="whyus">Why Us</TabsTrigger>
+          <TabsTrigger value="features">Platform Features</TabsTrigger>
           <TabsTrigger value="benefits">Benefits</TabsTrigger>
           <TabsTrigger value="included">What's Included</TabsTrigger>
           <TabsTrigger value="compare">Comparison</TabsTrigger>
-          <TabsTrigger value="testimonials">Testimonials</TabsTrigger>
+          <TabsTrigger value="auto-test">Auto Marquee</TabsTrigger>
+          <TabsTrigger value="analyses">Student Analysis</TabsTrigger>
+          <TabsTrigger value="fb-text">Feedback (Text)</TabsTrigger>
+          <TabsTrigger value="fb-img">Feedback (Image)</TabsTrigger>
+          <TabsTrigger value="experts">Expert Feedback</TabsTrigger>
+          <TabsTrigger value="ai-report">AI Report</TabsTrigger>
+          <TabsTrigger value="testimonials">Testimonials (Legacy)</TabsTrigger>
           <TabsTrigger value="faqs">FAQs</TabsTrigger>
           <TabsTrigger value="tracking">Tracking & SEO</TabsTrigger>
         </TabsList>
