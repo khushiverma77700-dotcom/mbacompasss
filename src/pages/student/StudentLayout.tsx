@@ -14,6 +14,7 @@ import {
   X,
   LogOut,
   GraduationCap,
+  ShoppingBag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,8 +22,9 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { to: "/student", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/student/mocks", label: "My Mocks", icon: BookOpenCheck },
+  { to: "/student/buy-mocks", label: "Buy Mocks", icon: ShoppingBag },
   { to: "/student/performance", label: "Performance", icon: BarChart3 },
-  { to: "/student/goals", label: "Goals & Planner", icon: Target },
+  { to: "/student/goals", label: "CAT Score Engine", icon: Target },
   { to: "/student/announcements", label: "Announcements", icon: Bell },
   { to: "/student/tools", label: "AI Tools", icon: Sparkles },
   { to: "/student/profile", label: "My Profile", icon: UserIcon },
