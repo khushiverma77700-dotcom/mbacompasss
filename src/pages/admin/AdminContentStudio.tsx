@@ -808,7 +808,7 @@ const AdminContentStudio = () => {
               <div className="text-xs text-muted-foreground pb-2">
                 Tick the fields you want to publish. Unchanged fields are hidden.
               </div>
-              <ScrollArea className="flex-1 min-h-0 pr-3 max-h-[70vh]">
+              <div className="flex-1 min-h-0 overflow-y-auto pr-3 -mr-3">
                 <div className="space-y-4">
                   {Object.entries(open.diff)
                     .sort(([, a], [, b]) => Number(b.changed) - Number(a.changed))
@@ -864,7 +864,7 @@ const AdminContentStudio = () => {
                     </div>
                   )}
                 </div>
-              </ScrollArea>
+              </div>
 
               {open.status === "pending" && (
                 <div className="border-t pt-3 flex flex-col sm:flex-row gap-2 justify-end">
