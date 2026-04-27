@@ -15,9 +15,13 @@ import {
   LogOut,
   GraduationCap,
   ShoppingBag,
+  Trophy,
+  Receipt,
+  Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import NotificationBell from "@/components/student/NotificationBell";
 
 const navItems = [
   { to: "/student", label: "Overview", icon: LayoutDashboard, end: true },
@@ -25,6 +29,9 @@ const navItems = [
   { to: "/student/buy-mocks", label: "Buy Mocks", icon: ShoppingBag },
   { to: "/student/performance", label: "Performance", icon: BarChart3 },
   { to: "/student/goals", label: "CAT Score Engine", icon: Target },
+  { to: "/student/rewards", label: "Rewards", icon: Award },
+  { to: "/student/leaderboard", label: "Leaderboard", icon: Trophy },
+  { to: "/student/orders", label: "My Orders", icon: Receipt },
   { to: "/student/announcements", label: "Announcements", icon: Bell },
   { to: "/student/tools", label: "AI Tools", icon: Sparkles },
   { to: "/student/profile", label: "My Profile", icon: UserIcon },
@@ -79,6 +86,7 @@ export default function StudentLayout() {
             </Link>
           </div>
           <div className="flex items-center gap-2">
+            <NotificationBell />
             <div className="hidden sm:block text-right">
               <div className="text-xs text-muted-foreground">Welcome</div>
               <div className="text-sm font-medium">{displayName}</div>

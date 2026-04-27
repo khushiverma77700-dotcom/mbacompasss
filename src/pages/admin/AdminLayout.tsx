@@ -42,7 +42,8 @@ const adminNavGroups = [
       { label: "Mock Tests", path: "/admin/mock-tests", icon: ClipboardList },
       { label: "Landing Page", path: "/admin/mocks-landing", icon: ClipboardList },
       { label: "Student Assignments", path: "/admin/student-mocks", icon: Users },
-      { label: "Student Announcements", path: "/admin/student-announcements", icon: Bell },
+     { label: "Student Announcements", path: "/admin/student-announcements", icon: Bell },
+     { label: "Push Notifications", path: "/admin/student-notifications", icon: Bell },
     ],
   },
   {

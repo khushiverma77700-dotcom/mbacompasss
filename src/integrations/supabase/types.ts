@@ -2351,6 +2351,54 @@ export type Database = {
         }
         Relationships: []
       }
+      mock_ai_deep_analyses: {
+        Row: {
+          ai_model: string | null
+          attempt_id: string
+          created_at: string
+          id: string
+          mistake_patterns: Json
+          next_steps: Json
+          recommendations: Json
+          summary: string | null
+          test_id: string | null
+          time_insights: Json
+          topic_focus: Json
+          user_id: string
+          why_lost_marks: Json
+        }
+        Insert: {
+          ai_model?: string | null
+          attempt_id: string
+          created_at?: string
+          id?: string
+          mistake_patterns?: Json
+          next_steps?: Json
+          recommendations?: Json
+          summary?: string | null
+          test_id?: string | null
+          time_insights?: Json
+          topic_focus?: Json
+          user_id: string
+          why_lost_marks?: Json
+        }
+        Update: {
+          ai_model?: string | null
+          attempt_id?: string
+          created_at?: string
+          id?: string
+          mistake_patterns?: Json
+          next_steps?: Json
+          recommendations?: Json
+          summary?: string | null
+          test_id?: string | null
+          time_insights?: Json
+          topic_focus?: Json
+          user_id?: string
+          why_lost_marks?: Json
+        }
+        Relationships: []
+      }
       mock_attempts: {
         Row: {
           accuracy: number | null
@@ -2572,6 +2620,89 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      mock_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_name: string
+          order_id: string
+          quantity: number
+          test_id: string | null
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_name: string
+          order_id: string
+          quantity?: number
+          test_id?: string | null
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_name?: string
+          order_id?: string
+          quantity?: number
+          test_id?: string | null
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "mock_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mock_orders: {
+        Row: {
+          coupon_code: string | null
+          created_at: string
+          discount_amount: number
+          final_amount: number
+          id: string
+          notes: string | null
+          payment_method: string | null
+          payment_reference: string | null
+          status: string
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          coupon_code?: string | null
+          created_at?: string
+          discount_amount?: number
+          final_amount?: number
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          coupon_code?: string | null
+          created_at?: string
+          discount_amount?: number
+          final_amount?: number
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       mock_passages: {
         Row: {
@@ -3794,6 +3925,36 @@ export type Database = {
         }
         Relationships: []
       }
+      student_badges: {
+        Row: {
+          badge_description: string | null
+          badge_key: string
+          badge_name: string
+          earned_at: string
+          icon: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_description?: string | null
+          badge_key: string
+          badge_name: string
+          earned_at?: string
+          icon?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_description?: string | null
+          badge_key?: string
+          badge_name?: string
+          earned_at?: string
+          icon?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       student_daily_tasks: {
         Row: {
           completed_at: string | null
@@ -3875,6 +4036,105 @@ export type Database = {
           unit?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      student_leaderboard_settings: {
+        Row: {
+          created_at: string
+          display_handle: string | null
+          is_public: boolean
+          target_percentile: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_handle?: string | null
+          is_public?: boolean
+          target_percentile?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_handle?: string | null
+          is_public?: boolean
+          target_percentile?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      student_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          link_url: string | null
+          message: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link_url?: string | null
+          message?: string | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link_url?: string | null
+          message?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      student_rewards: {
+        Row: {
+          coins: number
+          created_at: string
+          last_activity_date: string | null
+          level: number
+          longest_streak: number
+          streak_days: number
+          total_mocks_completed: number
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        Insert: {
+          coins?: number
+          created_at?: string
+          last_activity_date?: string | null
+          level?: number
+          longest_streak?: number
+          streak_days?: number
+          total_mocks_completed?: number
+          updated_at?: string
+          user_id: string
+          xp?: number
+        }
+        Update: {
+          coins?: number
+          created_at?: string
+          last_activity_date?: string | null
+          level?: number
+          longest_streak?: number
+          streak_days?: number
+          total_mocks_completed?: number
+          updated_at?: string
+          user_id?: string
+          xp?: number
         }
         Relationships: []
       }
@@ -4228,6 +4488,46 @@ export type Database = {
         }[]
       }
       assign_admin_by_email: { Args: { _email: string }; Returns: string }
+      award_student_rewards: {
+        Args: {
+          _activity_today?: boolean
+          _coins: number
+          _user_id: string
+          _xp: number
+        }
+        Returns: {
+          coins: number
+          created_at: string
+          last_activity_date: string | null
+          level: number
+          longest_streak: number
+          streak_days: number
+          total_mocks_completed: number
+          updated_at: string
+          user_id: string
+          xp: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "student_rewards"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      get_global_leaderboard: {
+        Args: { _limit?: number }
+        Returns: {
+          coins: number
+          display_handle: string
+          is_self: boolean
+          level: number
+          rank: number
+          streak_days: number
+          total_mocks_completed: number
+          user_id: string
+          xp: number
+        }[]
+      }
       get_mock_leaderboard: {
         Args: { _limit?: number; _test_id: string }
         Returns: {
