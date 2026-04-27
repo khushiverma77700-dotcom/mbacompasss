@@ -2888,6 +2888,188 @@ export type Database = {
           },
         ]
       }
+      mock_bundle_enrollments: {
+        Row: {
+          bundle_id: string
+          enrolled_at: string
+          expires_at: string | null
+          id: string
+          order_id: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          bundle_id: string
+          enrolled_at?: string
+          expires_at?: string | null
+          id?: string
+          order_id?: string | null
+          source?: string
+          user_id: string
+        }
+        Update: {
+          bundle_id?: string
+          enrolled_at?: string
+          expires_at?: string | null
+          id?: string
+          order_id?: string | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_bundle_enrollments_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "mock_bundles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mock_bundle_enrollments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "mock_bundle_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mock_bundle_items: {
+        Row: {
+          bundle_id: string
+          created_at: string
+          id: string
+          sort_order: number
+          test_id: string
+        }
+        Insert: {
+          bundle_id: string
+          created_at?: string
+          id?: string
+          sort_order?: number
+          test_id: string
+        }
+        Update: {
+          bundle_id?: string
+          created_at?: string
+          id?: string
+          sort_order?: number
+          test_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_bundle_items_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "mock_bundles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mock_bundle_items_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "mock_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mock_bundle_orders: {
+        Row: {
+          amount: number
+          bundle_id: string
+          created_at: string
+          currency: string
+          id: string
+          razorpay_order_id: string | null
+          razorpay_payment_id: string | null
+          razorpay_signature: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          bundle_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          bundle_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_bundle_orders_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "mock_bundles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mock_bundles: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          exam_code: string | null
+          id: string
+          is_published: boolean
+          name: string
+          price_inr: number
+          slug: string
+          sort_order: number
+          updated_at: string
+          validity_days: number
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          exam_code?: string | null
+          id?: string
+          is_published?: boolean
+          name: string
+          price_inr?: number
+          slug: string
+          sort_order?: number
+          updated_at?: string
+          validity_days?: number
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          exam_code?: string | null
+          id?: string
+          is_published?: boolean
+          name?: string
+          price_inr?: number
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+          validity_days?: number
+        }
+        Relationships: []
+      }
       mock_coupons: {
         Row: {
           active: boolean
@@ -5458,6 +5640,10 @@ export type Database = {
       refresh_bulk_section_job_metrics: {
         Args: { _job_id: string }
         Returns: undefined
+      }
+      unlock_bundle_mocks: {
+        Args: { _bundle_id: string; _user_id: string }
+        Returns: number
       }
       user_has_mock_access: {
         Args: { _test_id: string; _user_id: string }
