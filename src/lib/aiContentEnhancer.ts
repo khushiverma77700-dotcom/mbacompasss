@@ -157,7 +157,13 @@ export function enhanceAIContent(html: string, ctx?: CitationContext): string {
       buildPill(src.trim().replace(/[,;:]+$/, ""), year, ctx),
   );
 
-  // 1c. Strip any leaked source/citation parentheticals that DON'T match the pill formats above.
+  // 1c. Convert plain official exam names into hyperlinks when they appear in generated text.
+  out = out.replace(/\b(CAT|XAT|GMAT|GRE|CMAT|NMAT|SNAP|IIFT|MAT|ATMA|KMAT)\b(?![^<]*>)/g, (exam) => {
+    const href = GLOBAL_SOURCE_URLS[exam.toLowerCase()];
+    return href ? `<a href="${href}" target="_blank" rel="noopener noreferrer nofollow">${exam}</a>` : exam;
+  });
+
+  // 1d. Strip any leaked source/citation parentheticals that DON'T match the pill formats above.
   //     Examples seen in production: "(Source/NIRF 2026 Ranking)", "(Source: NIRF)", "(as per NIRF)",
   //     "(Ref: Placement Report 2024-25)". These leak when the model ignores the no-citation rule.
   out = out.replace(/\(\s*sources?\s*[:\/\u2013\u2014-]\s*[^)]{0,80}\)/gi, "");
