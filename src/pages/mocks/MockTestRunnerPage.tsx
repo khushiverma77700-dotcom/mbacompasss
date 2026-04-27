@@ -84,9 +84,17 @@ export default function MockTestRunnerPage() {
   const [now, setNow] = useState(Date.now());
   const [violations, setViolations] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(isMobileDevice);
 
   const submitRef = useRef(false);
   const violationToastShown = useRef(false);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(isMobileDevice());
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   // ---------- LOAD ----------
   useEffect(() => {
