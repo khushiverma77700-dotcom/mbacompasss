@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Trash2, Save } from "lucide-react";
 import { toast } from "sonner";
+import FileUpload from "@/components/admin/FileUpload";
 
 interface Settings {
   id?: string;
@@ -433,3 +434,28 @@ function NumField({ label, v, onChange }: { label: string; v: number; onChange: 
     </div>
   );
 }
+function ImageField({ label, v, onChange, folder }: { label: string; v: string; onChange: (v: string) => void; folder: string }) {
+  return (
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      <FileUpload
+        bucket="uploads"
+        folder={`mocks-landing/${folder}`}
+        value={v}
+        onChange={onChange}
+        accept="image/*"
+        label=""
+        showUrlInput
+      />
+      {v && (
+        <img
+          src={v}
+          alt=""
+          className="h-20 w-auto rounded border border-border object-cover"
+          loading="lazy"
+        />
+      )}
+    </div>
+  );
+}
+
