@@ -269,6 +269,8 @@ export default function StudentOverview() {
         </div>
       </Card>
 
+      <DailyTestCard />
+
       {/* Setup banner */}
       {noProfile && (
         <Card className="p-5 border-sky-200 bg-sky-50/50">
