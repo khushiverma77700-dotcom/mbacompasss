@@ -615,7 +615,7 @@ export default function MocksListPage() {
       {/* FINAL CTA */}
       <section className="py-16 bg-gradient-to-br from-sky-600 to-sky-700 text-white">
         <div className="container mx-auto px-4 text-center max-w-2xl">
-          <h2 className="text-2xl md:text-3xl font-bold">Start your CAT 2025 prep today</h2>
+          <h2 className="text-2xl md:text-3xl font-bold">Start your CAT 2026 prep today</h2>
           <p className="mt-3 text-sky-100">{settings.offer_urgency}</p>
           <Button size="lg" variant="secondary" className="mt-6" onClick={startCheckout}>
             Get Instant Access — ₹{settings.price_current}
