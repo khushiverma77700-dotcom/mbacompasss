@@ -54,6 +54,8 @@ const AdminBulkRefresh = () => {
   const [running, setRunning] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0, succeeded: 0, failed: 0 });
   const [errors, setErrors] = useState<{ name: string; error: string }[]>([]);
+  const [pasteText, setPasteText] = useState("");
+  const [pasteResult, setPasteResult] = useState<{ matched: number; unmatched: string[] } | null>(null);
 
   const config = ENTITY_CONFIG[entityType];
 
