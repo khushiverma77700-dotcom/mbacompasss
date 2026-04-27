@@ -138,6 +138,7 @@ const AdminIIMWaitlist = lazyWithPreload(() => import("./pages/admin/AdminIIMWai
 const MockReviewPage = lazyWithPreload(() => import("./pages/mocks/MockReviewPage"));
 const MockLeaderboardPage = lazyWithPreload(() => import("./pages/mocks/MockLeaderboardPage"));
 const MockCheckoutReturnPage = lazyWithPreload(() => import("./pages/mocks/MockCheckoutReturnPage"));
+const MockThankYouPage = lazyWithPreload(() => import("./pages/mocks/MockThankYouPage"));
 
 // Lazy load heavy popups
 const OnboardingDialog = lazyWithPreload(() => import("@/components/OnboardingDialog"));
@@ -547,6 +548,7 @@ const App = () => (
             <Route path="/mocks/review/:attemptId" element={<PublicLayout><LazyPage><MockReviewPage /></LazyPage></PublicLayout>} />
             <Route path="/mocks/leaderboard/:slug" element={<PublicLayout><LazyPage><MockLeaderboardPage /></LazyPage></PublicLayout>} />
             <Route path="/mocks/checkout/return" element={<LazyPage><MockCheckoutReturnPage /></LazyPage>} />
+            <Route path="/mocks/thank-you" element={<PublicLayout><LazyPage><MockThankYouPage /></LazyPage></PublicLayout>} />
             <Route path="/dashboard/mocks" element={<PublicLayout><LazyPage><MyMocksPage /></LazyPage></PublicLayout>} />
             <Route path="/iim-waitlist-movement" element={<PublicLayout><LazyPage><IIMWaitlistPage /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />

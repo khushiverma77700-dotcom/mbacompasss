@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { initMetaPixel, pixelTrack } from "@/lib/metaPixel";
-import { SEOHead } from "@/components/SEOHead";
+import SEOHead from "@/components/SEOHead";
 
 export default function MockThankYouPage() {
   const [params] = useSearchParams();

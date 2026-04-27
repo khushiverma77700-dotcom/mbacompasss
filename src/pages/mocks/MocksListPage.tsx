@@ -26,7 +26,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { MockCheckoutDialog } from "@/components/mock/MockCheckoutDialog";
-import { SEOHead } from "@/components/SEOHead";
+import SEOHead from "@/components/SEOHead";
 import { initMetaPixel, pixelTrack } from "@/lib/metaPixel";
 import { toast } from "sonner";
 
