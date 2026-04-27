@@ -175,14 +175,15 @@ async function callGeminiBatch(args: {
   });
 
   const resp = await callAIGateway({
-    model: "google/gemini-2.5-pro",
+    model: "gpt-5",
     messages: [
       { role: "system", content: sys },
       { role: "user", content: user },
     ],
     response_format: { type: "json_object" },
     temperature: 0.95,
-  }, { feature: "generate-mock-questions", userId: args.userId, maxRetries: 1 });
+    max_tokens: 8000,
+  }, { feature: "generate-mock-questions", userId: args.userId, maxRetries: 1, provider: "openai-mini" });
 
   if (!resp.ok) {
     const txt = await resp.text();
