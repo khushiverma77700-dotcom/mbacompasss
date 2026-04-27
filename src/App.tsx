@@ -161,6 +161,8 @@ const AdminPersonalizedHub = lazyWithPreload(() => import("./pages/admin/AdminPe
 const AdminDailyTests = lazyWithPreload(() => import("./pages/admin/AdminDailyTests"));
 const AdminStudentNotificationsBroadcast = lazyWithPreload(() => import("./pages/admin/AdminStudentNotificationsBroadcast"));
 const MocksListPage = lazyWithPreload(() => import("./pages/mocks/MocksListPage"));
+const MockBundlesListPage = lazyWithPreload(() => import("./pages/courses/MockBundlesListPage"));
+const MockBundleDetailPage = lazyWithPreload(() => import("./pages/courses/MockBundleDetailPage"));
 const MockTestIntroPage = lazyWithPreload(() => import("./pages/mocks/MockTestIntroPage"));
 const MockTestRunnerPage = lazyWithPreload(() => import("./pages/mocks/MockTestRunnerPage"));
 const MockResultPage = lazyWithPreload(() => import("./pages/mocks/MockResultPage"));
