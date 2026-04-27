@@ -188,19 +188,26 @@ export default function MocksListPage() {
     <div className="bg-background">
       <SEOHead title={settings.meta_title} description={settings.meta_description} />
 
-      {/* HERO */}
+      {/* HERO — HD 3D */}
       <section className="relative overflow-hidden bg-gradient-to-b from-sky-50 via-white to-white">
-        <div className="absolute inset-0 pointer-events-none opacity-40 [background-image:radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.15),transparent_50%)]" />
-        <div className="container mx-auto px-4 py-12 md:py-20 relative">
+        {/* 3D animated background blobs */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute -top-32 -left-24 w-[28rem] h-[28rem] rounded-full bg-gradient-to-br from-sky-300/40 to-blue-400/30 blur-3xl animate-blob" />
+          <div className="absolute top-20 -right-20 w-[24rem] h-[24rem] rounded-full bg-gradient-to-br from-cyan-300/40 to-sky-200/30 blur-3xl animate-blob [animation-delay:3s]" />
+          <div className="absolute bottom-0 left-1/3 w-[22rem] h-[22rem] rounded-full bg-gradient-to-br from-indigo-200/30 to-sky-300/30 blur-3xl animate-blob [animation-delay:6s]" />
+          <div className="absolute inset-0 [background-image:linear-gradient(to_right,hsl(var(--primary)/0.06)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--primary)/0.06)_1px,transparent_1px)] [background-size:48px_48px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
+        </div>
+
+        <div className="container mx-auto px-4 py-14 md:py-24 relative">
           <div className="grid lg:grid-cols-2 gap-10 items-center">
             <div>
-              <Badge className="mb-4 bg-sky-100 text-sky-800 hover:bg-sky-100 border-sky-200">
-                {settings.hero_eyebrow}
+              <Badge className="mb-4 bg-sky-100 text-sky-800 hover:bg-sky-100 border-sky-200 backdrop-blur">
+                <Sparkles className="h-3.5 w-3.5 mr-1" /> {settings.hero_eyebrow}
               </Badge>
-              <h1 className="text-3xl md:text-5xl font-bold leading-tight tracking-tight">
+              <h1 className="text-4xl md:text-6xl font-bold leading-[1.05] tracking-tight bg-gradient-to-br from-slate-900 via-sky-900 to-sky-700 bg-clip-text text-transparent">
                 {settings.hero_headline}
               </h1>
-              <p className="mt-4 text-lg text-muted-foreground">{settings.hero_subheadline}</p>
+              <p className="mt-5 text-lg text-muted-foreground leading-relaxed">{settings.hero_subheadline}</p>
 
               <div className="mt-6 flex flex-wrap items-center gap-4 text-sm">
                 <div className="flex items-center gap-1.5"><Star className="h-4 w-4 fill-amber-400 text-amber-400" /><strong>{settings.trust_rating}</strong> rating</div>
@@ -209,20 +216,20 @@ export default function MocksListPage() {
               </div>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                <Button size="lg" onClick={scrollToPricing} className="text-base px-8">
+                <Button size="lg" onClick={scrollToPricing} className="text-base px-8 shadow-lg shadow-sky-500/30">
                   {settings.hero_cta_label} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <Button size="lg" variant="outline" onClick={startCheckout}>
                   Buy Now ₹{settings.price_current}
                 </Button>
               </div>
-              <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-                <ShieldCheck className="h-4 w-4 text-emerald-600" /> 7-day money-back guarantee
-              </div>
             </div>
 
+            {/* 3D pricing card with floating accents */}
             <div className="relative">
-              <Card className="p-6 shadow-xl border-sky-100">
+              <div className="absolute -top-6 -right-6 h-24 w-24 rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 shadow-2xl rotate-12 animate-float-y opacity-90 hidden md:block" />
+              <div className="absolute -bottom-8 -left-6 h-20 w-20 rounded-full bg-gradient-to-br from-sky-400 to-sky-600 shadow-2xl animate-float-y [animation-delay:2s] opacity-90 hidden md:block" />
+              <Card className="relative p-6 shadow-2xl border-sky-100 bg-white/95 backdrop-blur-xl rounded-2xl">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-sm text-muted-foreground">{settings.bundle_title}</div>
@@ -233,7 +240,7 @@ export default function MocksListPage() {
                   </Badge>
                 </div>
                 <div className="mt-4 flex items-baseline gap-3">
-                  <div className="text-4xl font-bold">₹{settings.price_current}</div>
+                  <div className="text-5xl font-bold bg-gradient-to-br from-sky-700 to-sky-500 bg-clip-text text-transparent">₹{settings.price_current}</div>
                   <div className="text-lg text-muted-foreground line-through">₹{settings.price_original}</div>
                 </div>
                 {countdown && (
@@ -244,14 +251,14 @@ export default function MocksListPage() {
                       ["Min", countdown.m],
                       ["Sec", countdown.s],
                     ].map(([l, v]) => (
-                      <div key={l as string} className="rounded-lg bg-sky-50 py-2">
+                      <div key={l as string} className="rounded-lg bg-gradient-to-b from-sky-50 to-sky-100/60 py-2 border border-sky-100">
                         <div className="text-xl font-bold tabular-nums">{String(v).padStart(2, "0")}</div>
                         <div className="text-[10px] uppercase text-muted-foreground">{l}</div>
                       </div>
                     ))}
                   </div>
                 )}
-                <Button size="lg" className="w-full mt-5" onClick={startCheckout}>
+                <Button size="lg" className="w-full mt-5 shadow-lg shadow-sky-500/30" onClick={startCheckout}>
                   Buy Now — Get Instant Access
                 </Button>
                 <div className="mt-3 text-xs text-center text-muted-foreground">{settings.offer_urgency}</div>
