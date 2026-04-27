@@ -4963,6 +4963,7 @@ export type Database = {
       admin_search_students: {
         Args: { _limit?: number; _query?: string }
         Returns: {
+          banned_until: string
           display_name: string
           email: string
           enrolled_count: number
