@@ -80,6 +80,69 @@ export default function AdminStudentMocks() {
     if (selected) openStudent(selected);
   };
 
+  const isBlocked = (s: StudentRow | null) => {
+    if (!s?.banned_until) return false;
+    return new Date(s.banned_until).getTime() > Date.now();
+  };
+
+  const callAction = async (action: "reset_password" | "block" | "unblock" | "delete") => {
+    if (!selected) return;
+    const { data, error } = await supabase.functions.invoke("admin-user-actions", {
+      body: { action, user_id: selected.user_id },
+    });
+    if (error || (data as any)?.error) {
+      toast({ title: "Action failed", description: error?.message ?? (data as any)?.error, variant: "destructive" });
+      return;
+    }
+    return data as any;
+  };
+
+  const handleResetPassword = async () => {
+    if (!selected) return;
+    if (!confirm(`Reset password for ${selected.email}? A new random password will be generated.`)) return;
+    const res = await callAction("reset_password");
+    if (res?.new_password) {
+      const msg = `Email: ${selected.email}\nNew password: ${res.new_password}\n\nLogin: ${window.location.origin}/auth`;
+      try { await navigator.clipboard.writeText(msg); } catch { /* ignore */ }
+      alert(`Password reset successfully.\n\n${msg}\n\n(Copied to clipboard)`);
+      toast({ title: "Password reset", description: "New credentials copied to clipboard." });
+    }
+  };
+
+  const handleBlock = async () => {
+    if (!selected) return;
+    if (!confirm(`Block ${selected.email}? They will be unable to sign in.`)) return;
+    const res = await callAction("block");
+    if (res?.ok) {
+      toast({ title: "Account blocked" });
+      setSelected({ ...selected, banned_until: new Date(Date.now() + 100 * 365 * 86400000).toISOString() });
+      search();
+    }
+  };
+
+  const handleUnblock = async () => {
+    if (!selected) return;
+    const res = await callAction("unblock");
+    if (res?.ok) {
+      toast({ title: "Account unblocked" });
+      setSelected({ ...selected, banned_until: null });
+      search();
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selected) return;
+    if (!confirm(`PERMANENTLY DELETE ${selected.email}?\n\nThis removes the account and all associated data. This cannot be undone.`)) return;
+    if (!confirm("Are you absolutely sure? Type OK in the next prompt is not required, but this is your last chance.")) return;
+    const res = await callAction("delete");
+    if (res?.ok) {
+      toast({ title: "Account deleted" });
+      setSelected(null);
+      setEnrollments([]);
+      search();
+    }
+  };
+
   return (
     <div className="p-6 space-y-5">
       <div>
