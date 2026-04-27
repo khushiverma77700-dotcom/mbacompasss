@@ -3117,6 +3117,80 @@ export type Database = {
           },
         ]
       }
+      mock_purchase_orders: {
+        Row: {
+          account_created: boolean
+          amount: number
+          bundle: boolean
+          buyer_email: string
+          buyer_name: string
+          buyer_phone: string
+          created_at: string
+          currency: string
+          failure_reason: string | null
+          id: string
+          notes: Json | null
+          product_name: string | null
+          razorpay_order_id: string | null
+          razorpay_payment_id: string | null
+          razorpay_signature: string | null
+          status: string
+          test_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          account_created?: boolean
+          amount: number
+          bundle?: boolean
+          buyer_email: string
+          buyer_name: string
+          buyer_phone: string
+          created_at?: string
+          currency?: string
+          failure_reason?: string | null
+          id?: string
+          notes?: Json | null
+          product_name?: string | null
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
+          status?: string
+          test_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          account_created?: boolean
+          amount?: number
+          bundle?: boolean
+          buyer_email?: string
+          buyer_name?: string
+          buyer_phone?: string
+          created_at?: string
+          currency?: string
+          failure_reason?: string | null
+          id?: string
+          notes?: Json | null
+          product_name?: string | null
+          razorpay_order_id?: string | null
+          razorpay_payment_id?: string | null
+          razorpay_signature?: string | null
+          status?: string
+          test_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_purchase_orders_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "mock_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mock_question_options: {
         Row: {
           id: string
