@@ -525,6 +525,7 @@ const App = () => (
               <Route path="mocks-landing" element={<LazyPage><AdminMocksLanding /></LazyPage>} />
               <Route path="student-mocks" element={<LazyPage><AdminStudentMocks /></LazyPage>} />
               <Route path="student-announcements" element={<LazyPage><AdminStudentAnnouncements /></LazyPage>} />
+              <Route path="student-notifications" element={<LazyPage><AdminStudentNotificationsBroadcast /></LazyPage>} />
               <Route path="hyperlink-update" element={<LazyPage><AdminHyperlinkUpdate /></LazyPage>} />
               <Route path="bulk-ai-edit" element={<LazyPage><AdminBulkAIEdit /></LazyPage>} />
               <Route path="iim-waitlist" element={<LazyPage><AdminIIMWaitlist /></LazyPage>} />
@@ -580,6 +581,11 @@ const App = () => (
               <Route path="announcements" element={<LazyPage><StudentAnnouncements /></LazyPage>} />
               <Route path="tools" element={<LazyPage><StudentTools /></LazyPage>} />
               <Route path="profile" element={<LazyPage><StudentProfile /></LazyPage>} />
+              <Route path="rewards" element={<LazyPage><StudentRewards /></LazyPage>} />
+              <Route path="leaderboard" element={<LazyPage><StudentLeaderboard /></LazyPage>} />
+              <Route path="notifications" element={<LazyPage><StudentNotifications /></LazyPage>} />
+              <Route path="orders" element={<LazyPage><StudentOrders /></LazyPage>} />
+              <Route path="analysis/:attemptId" element={<LazyPage><StudentDeepAnalysis /></LazyPage>} />
             </Route>
             <Route path="/iim-waitlist-movement" element={<PublicLayout><LazyPage><IIMWaitlistPage /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />
