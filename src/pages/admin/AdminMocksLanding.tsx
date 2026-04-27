@@ -23,6 +23,14 @@ interface Settings {
   testimonials: any[]; faqs: any[];
   meta_pixel_id: string | null;
   meta_title: string; meta_description: string;
+  why_us_title?: string; why_us_subtitle?: string; why_us_points?: any[];
+  auto_testimonials?: any[];
+  student_analyses?: any[];
+  student_feedback_text?: any[];
+  student_feedback_images?: any[];
+  expert_feedback?: any[];
+  platform_features?: any[];
+  ai_report_title?: string; ai_report_subtitle?: string;
 }
 
 export default function AdminMocksLanding() {
