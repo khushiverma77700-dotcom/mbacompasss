@@ -12,7 +12,7 @@ const corsHeaders = {
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0?target=denonext";
 
-type EntityType = "article" | "college" | "institute" | "course";
+type EntityType = "article" | "college" | "college_section" | "institute" | "course";
 type Mode = "full" | "smart";
 
 interface Body {
@@ -30,6 +30,7 @@ const MODEL = "openai/gpt-5-mini";
 const TRACKED_FIELDS: Record<EntityType, string[]> = {
   article: ["title", "excerpt", "intro", "content", "meta_title", "meta_description", "keywords", "h1_tag"],
   college: ["description", "fees", "fees_lakhs", "placement_avg", "placement_highest", "placement_median", "ranking", "top_recruiters", "exams_accepted", "accreditations", "highlights", "admission_process", "meta_title", "meta_description", "keywords", "h1_tag"],
+  college_section: ["title", "content", "data"],
   institute: ["description", "fees_lakhs", "rating", "students_count", "success_rate", "features", "specializations", "meta_title", "meta_description", "keywords", "h1_tag"],
   course: ["description", "fees", "duration", "eligibility", "highlights", "curriculum", "batch_info", "discount_text"],
 };
@@ -37,9 +38,12 @@ const TRACKED_FIELDS: Record<EntityType, string[]> = {
 const TABLE: Record<EntityType, string> = {
   article: "articles",
   college: "colleges",
+  college_section: "college_sections",
   institute: "institutes",
   course: "courses",
 };
+
+const HTML_FIELDS = new Set(["description", "admission_process", "intro", "content"]);
 
 function pickFields(row: Record<string, unknown>, fields: string[]) {
   const out: Record<string, unknown> = {};
