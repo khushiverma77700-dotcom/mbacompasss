@@ -497,6 +497,13 @@ const AdminColleges = () => {
           <Table className="min-w-[1100px]">
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={sortedColleges.length > 0 && selectedIds.size === sortedColleges.length}
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Select all"
+                  />
+                </TableHead>
                 <TableHead className="w-12">S.No</TableHead>
                 <SortableTableHead label="Rank" sortKey="ranking" sortConfig={sortConfig} onSort={handleSort} />
                 <SortableTableHead label="Name" sortKey="name" sortConfig={sortConfig} onSort={handleSort} />
