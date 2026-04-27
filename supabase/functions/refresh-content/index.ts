@@ -90,8 +90,15 @@ function buildSchema(fields: string[]) {
     // Arrays vs strings vs numbers — best-guess based on field name
     if (["keywords", "top_recruiters", "exams_accepted", "accreditations", "features", "specializations", "highlights", "curriculum"].includes(f)) {
       props[f] = { type: "array", items: { type: "string" } };
+    } else if (f === "data") {
+      props[f] = { type: "object", additionalProperties: true };
     } else if (["fees_lakhs", "ranking", "rating", "students_count", "success_rate"].includes(f)) {
       props[f] = { type: "number" };
+    } else if (HTML_FIELDS.has(f)) {
+      props[f] = {
+        type: "string",
+        description: "Rich HTML only. Must include headings, bullet lists, bold+underlined key stats, useful official hyperlinks, and tables where relevant.",
+      };
     } else {
       props[f] = { type: "string" };
     }
