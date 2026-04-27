@@ -127,6 +127,57 @@ const AdminBulkRefresh = () => {
     }
   };
 
+  // Extract slug from a URL/path or treat the token as-is
+  const extractSlug = (token: string): string => {
+    let t = token.trim();
+    if (!t) return "";
+    t = t.split("?")[0].split("#")[0];
+    if (t.includes("://") || t.startsWith("/")) {
+      const parts = t.replace(/^https?:\/\/[^/]+/, "").split("/").filter(Boolean);
+      if (parts.length > 0) t = parts[parts.length - 1];
+    }
+    return t.replace(/\/+$/, "").trim();
+  };
+
+  const norm = (s: string) => (s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+  const matchPasted = () => {
+    const tokens = pasteText.split(/[\n,]+/).map(t => t.trim()).filter(Boolean);
+    if (tokens.length === 0) {
+      toast({ title: "Nothing to match", description: "Paste URLs, slugs, or names (one per line or comma-separated).", variant: "destructive" });
+      return;
+    }
+    const next = new Set(selectedIds);
+    const unmatched: string[] = [];
+    let newlyMatched = 0;
+    for (const raw of tokens) {
+      const slugCandidate = extractSlug(raw).toLowerCase();
+      const nameCandidate = norm(raw);
+      let hit = rows.find(r => r.slug && r.slug.toLowerCase() === slugCandidate);
+      if (!hit) hit = rows.find(r => norm(r.name) === nameCandidate);
+      if (!hit) hit = rows.find(r =>
+        (r.slug && slugCandidate.length >= 4 && r.slug.toLowerCase().includes(slugCandidate)) ||
+        (nameCandidate.length >= 4 && norm(r.name).includes(nameCandidate))
+      );
+      if (hit) {
+        if (!next.has(hit.id)) newlyMatched++;
+        next.add(hit.id);
+      } else {
+        unmatched.push(raw);
+      }
+    }
+    setSelectedIds(next);
+    setPasteResult({ matched: tokens.length - unmatched.length, unmatched });
+    toast({
+      title: `Matched ${tokens.length - unmatched.length}/${tokens.length}`,
+      description: `${newlyMatched} newly added to selection${unmatched.length ? ` • ${unmatched.length} not found` : ""}.`,
+      variant: unmatched.length === tokens.length ? "destructive" : "default",
+    });
+  };
+
+  const clearPaste = () => { setPasteText(""); setPasteResult(null); };
+
+
   const start = async () => {
     const ids = Array.from(selectedIds);
     if (ids.length === 0) {
