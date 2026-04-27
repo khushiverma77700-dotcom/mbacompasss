@@ -272,7 +272,7 @@ export default function MocksListPage() {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl md:text-3xl font-bold text-center">Why aspirants choose us</h2>
-          <p className="text-center text-muted-foreground mt-2">Everything you need to crack CAT 2025 — in one place.</p>
+          <p className="text-center text-muted-foreground mt-2">Everything you need to crack CAT 2026 — in one place.</p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-10">
             {settings.benefits.map((b: any, i: number) => {
               const Icon = ICONS[b.icon] ?? Sparkles;
@@ -290,23 +290,39 @@ export default function MocksListPage() {
         </div>
       </section>
 
-      {/* WHAT'S INCLUDED */}
-      <section className="py-16 bg-sky-50/50">
-        <div className="container mx-auto px-4 max-w-5xl">
-          <h2 className="text-2xl md:text-3xl font-bold text-center">What's included</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-8">
-            {settings.whats_included.map((w: any, i: number) => (
-              <Card key={i} className="p-5 text-center bg-white">
-                <div className="text-2xl font-bold text-sky-700">{w.value}</div>
-                <div className="text-sm text-muted-foreground mt-1">{w.label}</div>
-              </Card>
-            ))}
+      {/* WHAT'S INCLUDED — Rich UI */}
+      <section className="py-16 bg-gradient-to-b from-sky-50/60 via-white to-sky-50/40 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none opacity-50 [background-image:radial-gradient(circle_at_80%_30%,hsl(var(--primary)/0.08),transparent_45%)]" />
+        <div className="container mx-auto px-4 max-w-6xl relative">
+          <div className="text-center max-w-3xl mx-auto">
+            <Badge className="mb-3 bg-sky-100 text-sky-800 hover:bg-sky-100 border-sky-200">What's included</Badge>
+            <h2 className="text-2xl md:text-3xl font-bold">A complete CAT 2026 toolkit</h2>
+            <p className="text-muted-foreground mt-2">Premium mocks, AI analysis, mentor support — everything in one bundle.</p>
           </div>
-          <div className="text-center mt-8">
-            <Button size="lg" onClick={scrollToPricing}>Get the Bundle</Button>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-10">
+            {settings.whats_included.map((w: any, i: number) => {
+              const Icon = ICONS[w.icon] ?? Sparkles;
+              return (
+                <Card key={i} className="group p-6 bg-white border-sky-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 h-24 w-24 bg-gradient-to-br from-sky-100/60 to-transparent rounded-bl-full" />
+                  <div className="relative">
+                    <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 text-white flex items-center justify-center shadow-lg shadow-sky-500/30 mb-4 group-hover:scale-110 transition-transform">
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <div className="text-3xl font-bold bg-gradient-to-br from-sky-700 to-sky-500 bg-clip-text text-transparent">{w.value}</div>
+                    <div className="text-sm font-medium mt-1">{w.label}</div>
+                    {w.desc && <div className="text-xs text-muted-foreground mt-2 leading-relaxed">{w.desc}</div>}
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+          <div className="text-center mt-10">
+            <Button size="lg" onClick={scrollToPricing} className="shadow-lg shadow-sky-500/30">Get the Bundle</Button>
           </div>
         </div>
       </section>
+
 
       {/* WHY MBA COMPASS MOCKS */}
       {settings.why_us_points && settings.why_us_points.length > 0 && (
