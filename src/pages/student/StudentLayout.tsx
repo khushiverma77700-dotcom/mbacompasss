@@ -17,9 +17,9 @@ import {
   ShoppingBag,
   Trophy,
   Receipt,
-  Award,
   CalendarDays,
   History,
+  CalendarCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -33,7 +33,7 @@ const navItems = [
   { to: "/student/buy-mocks", label: "Buy Mocks", icon: ShoppingBag },
   { to: "/student/performance", label: "Performance", icon: BarChart3 },
   { to: "/student/goals", label: "CAT Score Engine", icon: Target },
-  { to: "/student/rewards", label: "Rewards", icon: Award },
+  { to: "/student/day-planner", label: "My Day Planner", icon: CalendarCheck },
   { to: "/student/leaderboard", label: "Leaderboard", icon: Trophy },
   { to: "/student/orders", label: "My Orders", icon: Receipt },
   { to: "/student/announcements", label: "Announcements", icon: Bell },

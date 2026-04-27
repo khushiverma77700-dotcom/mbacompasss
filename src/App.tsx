@@ -140,6 +140,9 @@ const StudentAnnouncements = lazyWithPreload(() => import("./pages/student/Stude
 const StudentTools = lazyWithPreload(() => import("./pages/student/StudentTools"));
 const StudentProfile = lazyWithPreload(() => import("./pages/student/StudentProfile"));
 const StudentRewards = lazyWithPreload(() => import("./pages/student/StudentRewards"));
+const StudentDayPlanner = lazyWithPreload(() => import("./pages/student/StudentDayPlanner"));
+const MBACompassCoursesPage = lazyWithPreload(() => import("./pages/MBACompassCoursesPage"));
+const AdminMBACompassCourses = lazyWithPreload(() => import("./pages/admin/AdminMBACompassCourses"));
 const StudentLeaderboard = lazyWithPreload(() => import("./pages/student/StudentLeaderboard"));
 const StudentNotifications = lazyWithPreload(() => import("./pages/student/StudentNotifications"));
 const StudentOrders = lazyWithPreload(() => import("./pages/student/StudentOrders"));
@@ -530,6 +533,7 @@ const App = () => (
               <Route path="student-announcements" element={<LazyPage><AdminStudentAnnouncements /></LazyPage>} />
               <Route path="student-notifications" element={<LazyPage><AdminStudentNotificationsBroadcast /></LazyPage>} />
               <Route path="daily-tests" element={<LazyPage><AdminDailyTests /></LazyPage>} />
+              <Route path="mba-compass-courses" element={<LazyPage><AdminMBACompassCourses /></LazyPage>} />
               <Route path="hyperlink-update" element={<LazyPage><AdminHyperlinkUpdate /></LazyPage>} />
               <Route path="bulk-ai-edit" element={<LazyPage><AdminBulkAIEdit /></LazyPage>} />
               <Route path="iim-waitlist" element={<LazyPage><AdminIIMWaitlist /></LazyPage>} />
@@ -586,6 +590,7 @@ const App = () => (
               <Route path="tools" element={<LazyPage><StudentTools /></LazyPage>} />
               <Route path="profile" element={<LazyPage><StudentProfile /></LazyPage>} />
               <Route path="rewards" element={<LazyPage><StudentRewards /></LazyPage>} />
+              <Route path="day-planner" element={<LazyPage><StudentDayPlanner /></LazyPage>} />
               <Route path="leaderboard" element={<LazyPage><StudentLeaderboard /></LazyPage>} />
               <Route path="notifications" element={<LazyPage><StudentNotifications /></LazyPage>} />
               <Route path="orders" element={<LazyPage><StudentOrders /></LazyPage>} />
@@ -593,6 +598,7 @@ const App = () => (
               <Route path="daily-test" element={<LazyPage><StudentDailyTest /></LazyPage>} />
               <Route path="attempts" element={<LazyPage><StudentAttempts /></LazyPage>} />
             </Route>
+            <Route path="/mba-compass" element={<PublicLayout><LazyPage><MBACompassCoursesPage /></LazyPage></PublicLayout>} />
             <Route path="/iim-waitlist-movement" element={<PublicLayout><LazyPage><IIMWaitlistPage /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />
           </Routes>

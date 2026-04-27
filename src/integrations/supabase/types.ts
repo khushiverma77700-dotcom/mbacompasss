@@ -2347,6 +2347,90 @@ export type Database = {
           },
         ]
       }
+      mba_compass_courses: {
+        Row: {
+          banner_url: string | null
+          brochure_url: string | null
+          created_at: string
+          curriculum: Json | null
+          description: string | null
+          discount_percent: number | null
+          duration_weeks: number | null
+          enroll_url: string | null
+          exam_focus: string[] | null
+          features: Json | null
+          highlights: Json | null
+          id: string
+          is_active: boolean
+          is_featured: boolean
+          mode: string | null
+          original_price: number | null
+          price: number | null
+          seo_description: string | null
+          seo_title: string | null
+          slug: string
+          sort_order: number
+          subtitle: string | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          banner_url?: string | null
+          brochure_url?: string | null
+          created_at?: string
+          curriculum?: Json | null
+          description?: string | null
+          discount_percent?: number | null
+          duration_weeks?: number | null
+          enroll_url?: string | null
+          exam_focus?: string[] | null
+          features?: Json | null
+          highlights?: Json | null
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          mode?: string | null
+          original_price?: number | null
+          price?: number | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug: string
+          sort_order?: number
+          subtitle?: string | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          banner_url?: string | null
+          brochure_url?: string | null
+          created_at?: string
+          curriculum?: Json | null
+          description?: string | null
+          discount_percent?: number | null
+          duration_weeks?: number | null
+          enroll_url?: string | null
+          exam_focus?: string[] | null
+          features?: Json | null
+          highlights?: Json | null
+          id?: string
+          is_active?: boolean
+          is_featured?: boolean
+          mode?: string | null
+          original_price?: number | null
+          price?: number | null
+          seo_description?: string | null
+          seo_title?: string | null
+          slug?: string
+          sort_order?: number
+          subtitle?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       mega_menu_items: {
         Row: {
           active: boolean | null
@@ -4169,6 +4253,60 @@ export type Database = {
           message?: string | null
           title?: string
           type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      student_planner_tasks: {
+        Row: {
+          actual_minutes: number | null
+          category: string
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          estimated_minutes: number
+          id: string
+          notes: string | null
+          priority: string
+          scheduled_date: string
+          scheduled_start_time: string | null
+          status: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          actual_minutes?: number | null
+          category?: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_minutes?: number
+          id?: string
+          notes?: string | null
+          priority?: string
+          scheduled_date?: string
+          scheduled_start_time?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          actual_minutes?: number | null
+          category?: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_minutes?: number
+          id?: string
+          notes?: string | null
+          priority?: string
+          scheduled_date?: string
+          scheduled_start_time?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

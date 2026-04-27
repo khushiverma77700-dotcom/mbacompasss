@@ -26,6 +26,7 @@ const FAQSection = lazy(() => import("@/components/FAQSection"));
 const CTASection = lazy(() => import("@/components/CTASection"));
 const PageKeywords = lazy(() => import("@/components/PageKeywords"));
 const AIToolsSection = lazy(() => import("@/components/AIToolsSection"));
+const AIStudyPlannerSection = lazy(() => import("@/components/AIStudyPlannerSection"));
 
 const homepageFAQs = [
   { q: "What is the best MBA coaching in India?", a: "The best MBA coaching depends on your target exam. For CAT, top choices include IMS, TIME, and Career Launcher. Compare fees, success rates, and student reviews on MBA Compass." },
@@ -100,6 +101,7 @@ const Index = () => {
       {/* Everything else: mount only when scrolled near. Each section gets its own
           IntersectionObserver so initial JS execution stays tiny. */}
       <LazyMount minHeight={300}><AIToolsSection /></LazyMount>
+      <LazyMount minHeight={600}><AIStudyPlannerSection /></LazyMount>
       <LazyMount minHeight={400}><CoachingOfWeekSection /></LazyMount>
       <LazyMount minHeight={300}><OfferBanners /></LazyMount>
       <LazyMount minHeight={400}><FeaturedInstitutes /></LazyMount>
