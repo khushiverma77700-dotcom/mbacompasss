@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, X, ArrowLeft, Sparkles, Upload } from "lucide-react";
+import { Plus, Pencil, Trash2, X, ArrowLeft, Sparkles, Upload, RefreshCw, Loader2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useTableSort } from "@/hooks/useTableSort";
 import { useAdminFilters } from "@/hooks/useAdminFilters";
 import AdminFilterBar from "@/components/admin/AdminFilterBar";
@@ -52,6 +53,9 @@ const AdminColleges = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const [tagInputs, setTagInputs] = useState({ courses: "", accreditations: "", exams_accepted: "", top_recruiters: "", keywords: "" });
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkRefreshing, setBulkRefreshing] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0, failed: 0 });
   const { toast } = useToast();
   const { data: specializationOptions = [] } = useSpecializations("college");
   const navigate = useNavigate();
@@ -211,6 +215,53 @@ const AdminColleges = () => {
     }
     fetchColleges(); toast({ title: "College deleted" });
   };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === sortedColleges.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(sortedColleges.map((c: any) => c.id)));
+    }
+  };
+
+  const runBulkRefresh = async (mode: "smart" | "full") => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`Queue ${mode === "full" ? "FULL REWRITE" : "smart refresh"} for ${ids.length} college${ids.length > 1 ? "s" : ""}?\n\nEach will land in the Content Refresh Queue for your approval before going live.`)) return;
+    setBulkRefreshing(true);
+    setBulkProgress({ done: 0, total: ids.length, failed: 0 });
+    const { data: { user } } = await supabase.auth.getUser();
+    let done = 0, failed = 0;
+    const CONCURRENCY = 3;
+    for (let i = 0; i < ids.length; i += CONCURRENCY) {
+      const batch = ids.slice(i, i + CONCURRENCY);
+      await Promise.all(batch.map(async (id) => {
+        try {
+          const { error } = await supabase.functions.invoke("refresh-content", {
+            body: { entity_type: "college", entity_id: id, mode, requested_by: user?.id },
+          });
+          if (error) failed++;
+        } catch { failed++; }
+        done++;
+        setBulkProgress({ done, total: ids.length, failed });
+      }));
+    }
+    setBulkRefreshing(false);
+    setSelectedIds(new Set());
+    toast({
+      title: "Bulk refresh queued",
+      description: `${done - failed}/${ids.length} succeeded${failed ? ` • ${failed} failed` : ""}. Open Content Refresh Queue to review & approve.`,
+    });
+  };
+
 
   const TagInput = ({ field, label }: { field: keyof typeof tagInputs; label: string }) => (
     <div>
@@ -387,8 +438,41 @@ const AdminColleges = () => {
           <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}>
             <Plus className="w-4 h-4 mr-2" /> Add College
           </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/admin/bulk-refresh")}
+            className="border-violet-500/40 text-violet-700 hover:bg-violet-50"
+            title="Bulk regenerate content across many colleges/articles/institutes"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" /> Bulk Refresh Content
+          </Button>
         </div>
       </div>
+
+      {selectedIds.size > 0 && (
+        <Card className="mb-4 border-violet-300 bg-violet-50/50">
+          <CardContent className="py-3 flex items-center justify-between flex-wrap gap-3">
+            <div className="text-sm font-medium text-violet-900">
+              {bulkRefreshing
+                ? `Regenerating… ${bulkProgress.done}/${bulkProgress.total}${bulkProgress.failed ? ` (${bulkProgress.failed} failed)` : ""}`
+                : `${selectedIds.size} college${selectedIds.size > 1 ? "s" : ""} selected`}
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <Button size="sm" variant="outline" onClick={() => setSelectedIds(new Set())} disabled={bulkRefreshing}>
+                Clear
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => runBulkRefresh("smart")} disabled={bulkRefreshing} className="border-emerald-500/40 text-emerald-700">
+                {bulkRefreshing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+                Smart Refresh Selected
+              </Button>
+              <Button size="sm" onClick={() => runBulkRefresh("full")} disabled={bulkRefreshing} className="bg-violet-600 hover:bg-violet-700">
+                {bulkRefreshing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                Full Rewrite Selected
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <AdminFilterBar
         searchValue={filters.search}
@@ -413,6 +497,13 @@ const AdminColleges = () => {
           <Table className="min-w-[1100px]">
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={sortedColleges.length > 0 && selectedIds.size === sortedColleges.length}
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Select all"
+                  />
+                </TableHead>
                 <TableHead className="w-12">S.No</TableHead>
                 <SortableTableHead label="Rank" sortKey="ranking" sortConfig={sortConfig} onSort={handleSort} />
                 <SortableTableHead label="Name" sortKey="name" sortConfig={sortConfig} onSort={handleSort} />
@@ -426,7 +517,14 @@ const AdminColleges = () => {
             </TableHeader>
             <TableBody>
               {sortedColleges.map((c, idx) => (
-                <TableRow key={c.id}>
+                <TableRow key={c.id} className={selectedIds.has(c.id) ? "bg-violet-50/40" : ""}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.has(c.id)}
+                      onCheckedChange={() => toggleSelect(c.id)}
+                      aria-label={`Select ${c.name}`}
+                    />
+                  </TableCell>
                   <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell>{c.ranking ?? "—"}</TableCell>
                   <TableCell className="font-medium">
@@ -456,7 +554,7 @@ const AdminColleges = () => {
                 </TableRow>
               ))}
               {sortedColleges.length === 0 && (
-                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">{colleges.length === 0 ? "No colleges yet" : "No colleges match your filters"}</TableCell></TableRow>
+                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">{colleges.length === 0 ? "No colleges yet" : "No colleges match your filters"}</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
