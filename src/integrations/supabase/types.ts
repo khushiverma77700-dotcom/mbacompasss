@@ -2358,14 +2358,42 @@ export type Database = {
           duration_weeks: number | null
           enroll_url: string | null
           exam_focus: string[] | null
+          faqs: Json | null
           features: Json | null
+          full_mocks_count: number | null
+          gallery_images: Json | null
+          has_ai_study_planner: boolean | null
+          has_ai_tools: boolean | null
+          has_cat_planner: boolean | null
+          has_certificate: boolean | null
+          has_daily_test: boolean | null
+          has_doubt_resolution: boolean | null
+          has_gd_pi_prep: boolean | null
+          has_leaderboard_access: boolean | null
+          has_lifetime_access: boolean | null
+          has_live_classes: boolean | null
+          has_mentorship_1on1: boolean | null
+          has_mock_analysis: boolean | null
+          has_percentile_predictor: boolean | null
+          has_performance_analytics: boolean | null
+          has_recorded_lectures: boolean | null
+          has_sectional_tests: boolean | null
+          has_study_material: boolean | null
+          has_topic_tests: boolean | null
           highlights: Json | null
           id: string
+          instructors: Json | null
           is_active: boolean
           is_featured: boolean
+          language: string | null
+          level: string | null
+          live_classes_count: number | null
           mode: string | null
           original_price: number | null
           price: number | null
+          rating: number | null
+          reviews_count: number | null
+          sectional_mocks_count: number | null
           seo_description: string | null
           seo_title: string | null
           slug: string
@@ -2373,7 +2401,13 @@ export type Database = {
           subtitle: string | null
           thumbnail_url: string | null
           title: string
+          topic_tests_count: number | null
+          total_practice_questions: number | null
+          total_students_enrolled: number | null
+          total_video_hours: number | null
           updated_at: string
+          validity_months: number | null
+          what_youll_learn: Json | null
         }
         Insert: {
           banner_url?: string | null
@@ -2385,14 +2419,42 @@ export type Database = {
           duration_weeks?: number | null
           enroll_url?: string | null
           exam_focus?: string[] | null
+          faqs?: Json | null
           features?: Json | null
+          full_mocks_count?: number | null
+          gallery_images?: Json | null
+          has_ai_study_planner?: boolean | null
+          has_ai_tools?: boolean | null
+          has_cat_planner?: boolean | null
+          has_certificate?: boolean | null
+          has_daily_test?: boolean | null
+          has_doubt_resolution?: boolean | null
+          has_gd_pi_prep?: boolean | null
+          has_leaderboard_access?: boolean | null
+          has_lifetime_access?: boolean | null
+          has_live_classes?: boolean | null
+          has_mentorship_1on1?: boolean | null
+          has_mock_analysis?: boolean | null
+          has_percentile_predictor?: boolean | null
+          has_performance_analytics?: boolean | null
+          has_recorded_lectures?: boolean | null
+          has_sectional_tests?: boolean | null
+          has_study_material?: boolean | null
+          has_topic_tests?: boolean | null
           highlights?: Json | null
           id?: string
+          instructors?: Json | null
           is_active?: boolean
           is_featured?: boolean
+          language?: string | null
+          level?: string | null
+          live_classes_count?: number | null
           mode?: string | null
           original_price?: number | null
           price?: number | null
+          rating?: number | null
+          reviews_count?: number | null
+          sectional_mocks_count?: number | null
           seo_description?: string | null
           seo_title?: string | null
           slug: string
@@ -2400,7 +2462,13 @@ export type Database = {
           subtitle?: string | null
           thumbnail_url?: string | null
           title: string
+          topic_tests_count?: number | null
+          total_practice_questions?: number | null
+          total_students_enrolled?: number | null
+          total_video_hours?: number | null
           updated_at?: string
+          validity_months?: number | null
+          what_youll_learn?: Json | null
         }
         Update: {
           banner_url?: string | null
@@ -2412,14 +2480,42 @@ export type Database = {
           duration_weeks?: number | null
           enroll_url?: string | null
           exam_focus?: string[] | null
+          faqs?: Json | null
           features?: Json | null
+          full_mocks_count?: number | null
+          gallery_images?: Json | null
+          has_ai_study_planner?: boolean | null
+          has_ai_tools?: boolean | null
+          has_cat_planner?: boolean | null
+          has_certificate?: boolean | null
+          has_daily_test?: boolean | null
+          has_doubt_resolution?: boolean | null
+          has_gd_pi_prep?: boolean | null
+          has_leaderboard_access?: boolean | null
+          has_lifetime_access?: boolean | null
+          has_live_classes?: boolean | null
+          has_mentorship_1on1?: boolean | null
+          has_mock_analysis?: boolean | null
+          has_percentile_predictor?: boolean | null
+          has_performance_analytics?: boolean | null
+          has_recorded_lectures?: boolean | null
+          has_sectional_tests?: boolean | null
+          has_study_material?: boolean | null
+          has_topic_tests?: boolean | null
           highlights?: Json | null
           id?: string
+          instructors?: Json | null
           is_active?: boolean
           is_featured?: boolean
+          language?: string | null
+          level?: string | null
+          live_classes_count?: number | null
           mode?: string | null
           original_price?: number | null
           price?: number | null
+          rating?: number | null
+          reviews_count?: number | null
+          sectional_mocks_count?: number | null
           seo_description?: string | null
           seo_title?: string | null
           slug?: string
@@ -2427,7 +2523,13 @@ export type Database = {
           subtitle?: string | null
           thumbnail_url?: string | null
           title?: string
+          topic_tests_count?: number | null
+          total_practice_questions?: number | null
+          total_students_enrolled?: number | null
+          total_video_hours?: number | null
           updated_at?: string
+          validity_months?: number | null
+          what_youll_learn?: Json | null
         }
         Relationships: []
       }
