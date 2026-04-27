@@ -438,8 +438,41 @@ const AdminColleges = () => {
           <Button onClick={() => { setForm(emptyForm); setEditId(null); setShowForm(true); }}>
             <Plus className="w-4 h-4 mr-2" /> Add College
           </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/admin/bulk-refresh")}
+            className="border-violet-500/40 text-violet-700 hover:bg-violet-50"
+            title="Bulk regenerate content across many colleges/articles/institutes"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" /> Bulk Refresh Content
+          </Button>
         </div>
       </div>
+
+      {selectedIds.size > 0 && (
+        <Card className="mb-4 border-violet-300 bg-violet-50/50">
+          <CardContent className="py-3 flex items-center justify-between flex-wrap gap-3">
+            <div className="text-sm font-medium text-violet-900">
+              {bulkRefreshing
+                ? `Regenerating… ${bulkProgress.done}/${bulkProgress.total}${bulkProgress.failed ? ` (${bulkProgress.failed} failed)` : ""}`
+                : `${selectedIds.size} college${selectedIds.size > 1 ? "s" : ""} selected`}
+            </div>
+            <div className="flex gap-2 flex-wrap">
+              <Button size="sm" variant="outline" onClick={() => setSelectedIds(new Set())} disabled={bulkRefreshing}>
+                Clear
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => runBulkRefresh("smart")} disabled={bulkRefreshing} className="border-emerald-500/40 text-emerald-700">
+                {bulkRefreshing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+                Smart Refresh Selected
+              </Button>
+              <Button size="sm" onClick={() => runBulkRefresh("full")} disabled={bulkRefreshing} className="bg-violet-600 hover:bg-violet-700">
+                {bulkRefreshing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                Full Rewrite Selected
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <AdminFilterBar
         searchValue={filters.search}
