@@ -729,7 +729,7 @@ Return JSON via the tool call below — fill EVERY required field with real, acc
     };
 
     const aiRes = await callAIGateway({
-        model: "google/gemini-3-flash-preview",
+        model: "openai/gpt-5-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },

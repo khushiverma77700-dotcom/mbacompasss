@@ -215,7 +215,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       label: string;
     }) => {
       const res = await callAIGateway({
-        model: "google/gemini-2.5-flash",
+        model: "openai/gpt-5-mini",
         messages: [
           { role: "system", content: system },
           { role: "user", content: user },
@@ -262,7 +262,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
 
       for (let attempt = 0; attempt < 3; attempt++) {
         const res = await callAIGateway({
-          model: "google/gemini-2.5-flash",
+          model: "openai/gpt-5-mini",
           messages: [
             { role: "system", content: `${system}\n\nYou MUST respond by calling the provided function only. Do not write raw JSON in message.content.` },
             {
@@ -325,7 +325,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
       label: string;
     }) => {
       const res = await callAIGateway({
-        model: "google/gemini-2.5-flash",
+        model: "openai/gpt-5-mini",
         messages: [
           { role: "system", content: system },
           { role: "user", content: user },
@@ -648,7 +648,7 @@ RULES:
     let factCheck: any = { confidence: {}, warnings: [], omit_fields: [] };
     if (!bulkMode) try {
       const auditRes = await callAIGateway({
-          model: "google/gemini-2.5-flash",
+          model: "openai/gpt-5-mini",
           messages: [
             { role: "system", content: "You are a meticulous fact-checker for Indian MBA / B-school profiles. You only confirm facts you are confident about; otherwise you flag them." },
             { role: "user", content: auditPrompt },
