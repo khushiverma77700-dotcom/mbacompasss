@@ -1520,6 +1520,47 @@ export type Database = {
           },
         ]
       }
+      daily_test_assignments: {
+        Row: {
+          assigned_date: string
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          test_id: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_date: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          test_id: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_date?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          test_id?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_test_assignments_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "mock_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exams: {
         Row: {
           cluster_id: string | null
@@ -3997,6 +4038,39 @@ export type Database = {
         }
         Relationships: []
       }
+      student_daily_test_progress: {
+        Row: {
+          assigned_date: string
+          attempt_id: string | null
+          completed_at: string | null
+          created_at: string
+          id: string
+          test_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_date: string
+          attempt_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          test_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_date?: string
+          attempt_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          test_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       student_goals: {
         Row: {
           created_at: string
@@ -4543,6 +4617,23 @@ export type Database = {
           total_correct: number
           total_score: number
           user_id: string
+        }[]
+      }
+      get_today_daily_test: {
+        Args: never
+        Returns: {
+          assigned_date: string
+          assignment_id: string
+          completed_at: string
+          duration: number
+          exam_code: string
+          my_attempt_id: string
+          my_progress_id: string
+          note: string
+          test_id: string
+          test_name: string
+          test_slug: string
+          title: string
         }[]
       }
       has_role: {
