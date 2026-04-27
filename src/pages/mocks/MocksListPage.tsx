@@ -589,7 +589,6 @@ export default function MocksListPage() {
               Buy Now — ₹{settings.price_current}
             </Button>
             <div className="mt-3 flex items-center justify-center gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> 7-day refund</span>
               <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> Instant access</span>
             </div>
           </Card>
