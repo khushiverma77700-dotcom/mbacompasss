@@ -9,8 +9,17 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, UserPlus, X, Mail, Phone } from "lucide-react";
+import { Search, UserPlus, X, Mail, Phone, KeyRound, Ban, ShieldCheck, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+type StudentRow = {
+  user_id: string;
+  display_name: string;
+  email: string;
+  phone: string | null;
+  enrolled_count: number;
+  banned_until: string | null;
+};
 
 export default function AdminStudentMocks() {
   const { user } = useAuth();
@@ -71,6 +80,69 @@ export default function AdminStudentMocks() {
     if (selected) openStudent(selected);
   };
 
+  const isBlocked = (s: StudentRow | null) => {
+    if (!s?.banned_until) return false;
+    return new Date(s.banned_until).getTime() > Date.now();
+  };
+
+  const callAction = async (action: "reset_password" | "block" | "unblock" | "delete") => {
+    if (!selected) return;
+    const { data, error } = await supabase.functions.invoke("admin-user-actions", {
+      body: { action, user_id: selected.user_id },
+    });
+    if (error || (data as any)?.error) {
+      toast({ title: "Action failed", description: error?.message ?? (data as any)?.error, variant: "destructive" });
+      return;
+    }
+    return data as any;
+  };
+
+  const handleResetPassword = async () => {
+    if (!selected) return;
+    if (!confirm(`Reset password for ${selected.email}? A new random password will be generated.`)) return;
+    const res = await callAction("reset_password");
+    if (res?.new_password) {
+      const msg = `Email: ${selected.email}\nNew password: ${res.new_password}\n\nLogin: ${window.location.origin}/auth`;
+      try { await navigator.clipboard.writeText(msg); } catch { /* ignore */ }
+      alert(`Password reset successfully.\n\n${msg}\n\n(Copied to clipboard)`);
+      toast({ title: "Password reset", description: "New credentials copied to clipboard." });
+    }
+  };
+
+  const handleBlock = async () => {
+    if (!selected) return;
+    if (!confirm(`Block ${selected.email}? They will be unable to sign in.`)) return;
+    const res = await callAction("block");
+    if (res?.ok) {
+      toast({ title: "Account blocked" });
+      setSelected({ ...selected, banned_until: new Date(Date.now() + 100 * 365 * 86400000).toISOString() });
+      search();
+    }
+  };
+
+  const handleUnblock = async () => {
+    if (!selected) return;
+    const res = await callAction("unblock");
+    if (res?.ok) {
+      toast({ title: "Account unblocked" });
+      setSelected({ ...selected, banned_until: null });
+      search();
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selected) return;
+    if (!confirm(`PERMANENTLY DELETE ${selected.email}?\n\nThis removes the account and all associated data. This cannot be undone.`)) return;
+    if (!confirm("Are you absolutely sure? Type OK in the next prompt is not required, but this is your last chance.")) return;
+    const res = await callAction("delete");
+    if (res?.ok) {
+      toast({ title: "Account deleted" });
+      setSelected(null);
+      setEnrollments([]);
+      search();
+    }
+  };
+
   return (
     <div className="p-6 space-y-5">
       <div>
@@ -129,42 +201,70 @@ export default function AdminStudentMocks() {
             <div className="text-center text-muted-foreground py-12">Select a student to manage their mocks.</div>
           ) : (
             <>
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <div className="font-semibold">{selected.display_name}</div>
+              <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+                <div className="min-w-0">
+                  <div className="font-semibold flex items-center gap-2 flex-wrap">
+                    {selected.display_name}
+                    {isBlocked(selected) && (
+                      <Badge variant="destructive" className="text-[10px]">Blocked</Badge>
+                    )}
+                  </div>
                   <div className="text-xs text-muted-foreground">{selected.email}</div>
                 </div>
-                <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm" className="gap-1"><UserPlus className="h-4 w-4" /> Assign mock</Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader><DialogTitle>Assign a mock to {selected.display_name}</DialogTitle></DialogHeader>
-                    <div className="space-y-3">
-                      <div>
-                        <Label>Mock test</Label>
-                        <Select value={assignForm.test_id} onValueChange={(v) => setAssignForm({ ...assignForm, test_id: v })}>
-                          <SelectTrigger><SelectValue placeholder="Select a mock" /></SelectTrigger>
-                          <SelectContent>
-                            {tests.map((t) => (
-                              <SelectItem key={t.id} value={t.id}>{t.name} {t.exam_code ? `(${t.exam_code})` : ""}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                <div className="flex flex-wrap gap-2">
+                  <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" className="gap-1"><UserPlus className="h-4 w-4" /> Assign mock</Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader><DialogTitle>Assign a mock to {selected.display_name}</DialogTitle></DialogHeader>
+                      <div className="space-y-3">
+                        <div>
+                          <Label>Mock test</Label>
+                          <Select value={assignForm.test_id} onValueChange={(v) => setAssignForm({ ...assignForm, test_id: v })}>
+                            <SelectTrigger><SelectValue placeholder="Select a mock" /></SelectTrigger>
+                            <SelectContent>
+                              {tests.map((t) => (
+                                <SelectItem key={t.id} value={t.id}>{t.name} {t.exam_code ? `(${t.exam_code})` : ""}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label>Expires on (optional)</Label>
+                          <Input type="date" value={assignForm.expires_at} onChange={(e) => setAssignForm({ ...assignForm, expires_at: e.target.value })} />
+                        </div>
+                        <div>
+                          <Label>Notes (optional)</Label>
+                          <Textarea value={assignForm.admin_notes} onChange={(e) => setAssignForm({ ...assignForm, admin_notes: e.target.value })} placeholder="Why is this mock being assigned?" />
+                        </div>
+                        <Button onClick={assign} disabled={!assignForm.test_id} className="w-full">Assign</Button>
                       </div>
-                      <div>
-                        <Label>Expires on (optional)</Label>
-                        <Input type="date" value={assignForm.expires_at} onChange={(e) => setAssignForm({ ...assignForm, expires_at: e.target.value })} />
-                      </div>
-                      <div>
-                        <Label>Notes (optional)</Label>
-                        <Textarea value={assignForm.admin_notes} onChange={(e) => setAssignForm({ ...assignForm, admin_notes: e.target.value })} placeholder="Why is this mock being assigned?" />
-                      </div>
-                      <Button onClick={assign} disabled={!assignForm.test_id} className="w-full">Assign</Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
+
+              <Card className="p-3 mb-4 bg-sky-50/40 border-sky-100">
+                <div className="text-xs font-medium text-muted-foreground mb-2">Account actions</div>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="outline" className="gap-1" onClick={handleResetPassword}>
+                    <KeyRound className="h-4 w-4" /> Reset password
+                  </Button>
+                  {isBlocked(selected) ? (
+                    <Button size="sm" variant="outline" className="gap-1 text-emerald-700" onClick={handleUnblock}>
+                      <ShieldCheck className="h-4 w-4" /> Unblock account
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="outline" className="gap-1 text-amber-700" onClick={handleBlock}>
+                      <Ban className="h-4 w-4" /> Block account
+                    </Button>
+                  )}
+                  <Button size="sm" variant="destructive" className="gap-1" onClick={handleDelete}>
+                    <Trash2 className="h-4 w-4" /> Delete account
+                  </Button>
+                </div>
+              </Card>
 
               <h3 className="text-sm font-medium mb-2">Current enrollments ({enrollments.length})</h3>
               {enrollments.length === 0 ? (
