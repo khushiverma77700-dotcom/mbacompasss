@@ -289,106 +289,131 @@ const AdminBulkRefresh = () => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between flex-wrap gap-2 pt-2 border-t">
-            <div className="text-sm text-muted-foreground">
-              {loading ? "Loading…" : (
-                <>
-                  Showing <strong className="text-foreground">{filtered.length}</strong> of {rows.length} {config.label.toLowerCase()}
-                  {selectedIds.size > 0 && <> • <strong className="text-violet-700">{selectedIds.size} selected</strong></>}
-                </>
+          <Tabs defaultValue="browse" className="pt-2 border-t">
+            <TabsList className="grid grid-cols-2 w-full max-w-md">
+              <TabsTrigger value="browse" className="gap-2"><ListChecks className="w-4 h-4" /> Browse & Tick</TabsTrigger>
+              <TabsTrigger value="paste" className="gap-2"><Wand2 className="w-4 h-4" /> Paste URLs / Slugs / Names</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="browse" className="space-y-3 mt-4">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="text-sm text-muted-foreground">
+                  {loading ? "Loading…" : (
+                    <>
+                      Showing <strong className="text-foreground">{filtered.length}</strong> of {rows.length} {config.label.toLowerCase()}
+                      {selectedIds.size > 0 && <> • <strong className="text-violet-700">{selectedIds.size} selected</strong></>}
+                    </>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={fetchRows} disabled={loading || running}>
+                    <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} /> Reload
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={toggleSelectAllFiltered} disabled={loading || running || filtered.length === 0}>
+                    {allFilteredSelected ? "Deselect" : "Select"} all filtered ({filtered.length})
+                  </Button>
+                  {selectedIds.size > 0 && (
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())} disabled={running} className="text-muted-foreground">
+                      Clear selection
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              <div className="border rounded-md max-h-[420px] overflow-y-auto">
+                {filtered.length === 0 ? (
+                  <div className="p-8 text-center text-sm text-muted-foreground">
+                    {loading ? "Loading…" : "No entities match your filters."}
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {filtered.map(r => {
+                      const ageDays = r.last_seo_refresh
+                        ? Math.floor((Date.now() - new Date(r.last_seo_refresh).getTime()) / (1000 * 60 * 60 * 24))
+                        : null;
+                      return (
+                        <label
+                          key={r.id}
+                          className="flex items-center gap-3 px-3 py-2 hover:bg-muted/40 cursor-pointer text-sm"
+                        >
+                          <Checkbox
+                            checked={selectedIds.has(r.id)}
+                            onCheckedChange={() => toggleSelect(r.id)}
+                            disabled={running}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium truncate">{r.name}</div>
+                            <div className="text-xs text-muted-foreground truncate">
+                              {r.slug && <span className="font-mono">/{r.slug}</span>}
+                              {r.city && <> • {r.city}{r.state ? `, ${r.state}` : ""}</>}
+                            </div>
+                          </div>
+                          {config.hasRefreshTs && (
+                            <Badge variant="outline" className={
+                              ageDays === null ? "border-amber-300 text-amber-700"
+                              : ageDays > 90 ? "border-red-300 text-red-700"
+                              : ageDays > 30 ? "border-yellow-300 text-yellow-700"
+                              : "border-green-300 text-green-700"
+                            }>
+                              {ageDays === null ? "Never" : ageDays === 0 ? "Today" : `${ageDays}d ago`}
+                            </Badge>
+                          )}
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="paste" className="space-y-3 mt-4">
+              <div className="text-sm text-muted-foreground">
+                Paste one entry per line (or comma-separated). We'll auto-match against <strong className="text-foreground">slugs, full URLs, or names</strong> and add matches to your selection.
+              </div>
+              <Textarea
+                placeholder={`Examples (mix freely):\nhttps://mbacompass.in/college/iim-ahmedabad\n/college/iim-bangalore\niim-calcutta\nIIM Lucknow\nXLRI Jamshedpur, FMS Delhi`}
+                value={pasteText}
+                onChange={(e) => setPasteText(e.target.value)}
+                disabled={running || loading}
+                rows={8}
+                className="font-mono text-xs"
+              />
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="text-xs text-muted-foreground">
+                  {selectedIds.size > 0 && <strong className="text-violet-700">{selectedIds.size} currently selected</strong>}
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="ghost" size="sm" onClick={clearPaste} disabled={running || !pasteText}>Clear text</Button>
+                  {selectedIds.size > 0 && (
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())} disabled={running} className="text-muted-foreground">
+                      Clear selection
+                    </Button>
+                  )}
+                  <Button onClick={matchPasted} disabled={running || loading || !pasteText.trim()} className="bg-violet-600 hover:bg-violet-700">
+                    <Wand2 className="w-4 h-4 mr-2" /> Match & Add to Selection
+                  </Button>
+                </div>
+              </div>
+
+              {pasteResult && (
+                <div className={`rounded-md p-3 text-sm border ${pasteResult.unmatched.length === 0 ? "border-emerald-200 bg-emerald-50/60 text-emerald-900" : "border-amber-200 bg-amber-50/60 text-amber-900"}`}>
+                  <div className="font-semibold mb-1 flex items-center gap-2">
+                    {pasteResult.unmatched.length === 0
+                      ? <><CheckCircle2 className="w-4 h-4" /> All {pasteResult.matched} entries matched.</>
+                      : <><AlertCircle className="w-4 h-4" /> Matched {pasteResult.matched} • {pasteResult.unmatched.length} not found.</>}
+                  </div>
+                  {pasteResult.unmatched.length > 0 && (
+                    <>
+                      <div className="text-xs mb-1">Couldn't find these — check spelling or entity type:</div>
+                      <ul className="text-xs font-mono space-y-0.5 max-h-32 overflow-y-auto">
+                        {pasteResult.unmatched.map((u, i) => <li key={i}>• {u}</li>)}
+                      </ul>
+                    </>
+                  )}
+                </div>
               )}
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={fetchRows} disabled={loading || running}>
-                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} /> Reload
-              </Button>
-              <Button variant="outline" size="sm" onClick={toggleSelectAllFiltered} disabled={loading || running || filtered.length === 0}>
-                {allFilteredSelected ? "Deselect" : "Select"} all filtered ({filtered.length})
-              </Button>
-            </div>
-          </div>
-
-          <div className="border rounded-md max-h-[420px] overflow-y-auto">
-            {filtered.length === 0 ? (
-              <div className="p-8 text-center text-sm text-muted-foreground">
-                {loading ? "Loading…" : "No entities match your filters."}
-              </div>
-            ) : (
-              <div className="divide-y">
-                {filtered.map(r => {
-                  const ageDays = r.last_seo_refresh
-                    ? Math.floor((Date.now() - new Date(r.last_seo_refresh).getTime()) / (1000 * 60 * 60 * 24))
-                    : null;
-                  return (
-                    <label
-                      key={r.id}
-                      className="flex items-center gap-3 px-3 py-2 hover:bg-muted/40 cursor-pointer text-sm"
-                    >
-                      <Checkbox
-                        checked={selectedIds.has(r.id)}
-                        onCheckedChange={() => toggleSelect(r.id)}
-                        disabled={running}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">{r.name}</div>
-                        <div className="text-xs text-muted-foreground truncate">
-                          {r.slug && <span className="font-mono">/{r.slug}</span>}
-                          {r.city && <> • {r.city}{r.state ? `, ${r.state}` : ""}</>}
-                        </div>
-                      </div>
-                      {config.hasRefreshTs && (
-                        <Badge variant="outline" className={
-                          ageDays === null ? "border-amber-300 text-amber-700"
-                          : ageDays > 90 ? "border-red-300 text-red-700"
-                          : ageDays > 30 ? "border-yellow-300 text-yellow-700"
-                          : "border-green-300 text-green-700"
-                        }>
-                          {ageDays === null ? "Never" : ageDays === 0 ? "Today" : `${ageDays}d ago`}
-                        </Badge>
-                      )}
-                    </label>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">2. Choose refresh mode & run</CardTitle>
-          <CardDescription>All output requires your approval in the Content Refresh Queue before going live.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => setMode("smart")}
-              disabled={running}
-              className={`text-left border rounded-lg p-4 transition-colors ${mode === "smart" ? "border-emerald-500 bg-emerald-50/60 ring-2 ring-emerald-200" : "border-border hover:border-emerald-300"}`}
-            >
-              <div className="flex items-center gap-2 font-semibold text-foreground mb-1">
-                <RefreshCw className="w-4 h-4 text-emerald-600" /> Smart Refresh
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Updates only fees, placements, rankings, recruiters, dates, citations. Keeps existing tone & structure. ~5–8s per entity.
-              </p>
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode("full")}
-              disabled={running}
-              className={`text-left border rounded-lg p-4 transition-colors ${mode === "full" ? "border-violet-500 bg-violet-50/60 ring-2 ring-violet-200" : "border-border hover:border-violet-300"}`}
-            >
-              <div className="flex items-center gap-2 font-semibold text-foreground mb-1">
-                <Sparkles className="w-4 h-4 text-violet-600" /> Full Rewrite
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Regenerates everything from scratch with new formatting, bullet points, bold dates, deep-link citations, SEO keyword targeting. ~10–15s per entity.
-              </p>
-            </button>
-          </div>
+            </TabsContent>
+          </Tabs>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
             <div>
