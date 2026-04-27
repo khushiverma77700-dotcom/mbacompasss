@@ -265,14 +265,17 @@ export default function AdminMocksLanding() {
         <TabsContent value="features" className="mt-4">
           <Card className="p-5 space-y-3">
             {(s.platform_features ?? []).map((f: any, i: number) => (
-              <div key={i} className="grid grid-cols-12 gap-2 items-end">
-                <div className="col-span-3"><Field label="Icon" v={f.icon} onChange={(v) => updArr("platform_features" as any, i, { icon: v })} /></div>
-                <div className="col-span-3"><Field label="Title" v={f.title} onChange={(v) => updArr("platform_features" as any, i, { title: v })} /></div>
-                <div className="col-span-5"><Field label="Description" v={f.desc} onChange={(v) => updArr("platform_features" as any, i, { desc: v })} /></div>
-                <Button variant="ghost" size="icon" onClick={() => delArr("platform_features" as any, i)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              <div key={i} className="border rounded-md p-3 space-y-2">
+                <div className="grid grid-cols-12 gap-2 items-end">
+                  <div className="col-span-3"><Field label="Icon" v={f.icon} onChange={(v) => updArr("platform_features" as any, i, { icon: v })} /></div>
+                  <div className="col-span-4"><Field label="Title" v={f.title} onChange={(v) => updArr("platform_features" as any, i, { title: v })} /></div>
+                  <div className="col-span-4"><Field label="Badge (optional)" v={f.badge ?? ""} onChange={(v) => updArr("platform_features" as any, i, { badge: v })} /></div>
+                  <Button variant="ghost" size="icon" onClick={() => delArr("platform_features" as any, i)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                </div>
+                <Field label="Description" v={f.desc} onChange={(v) => updArr("platform_features" as any, i, { desc: v })} multiline />
               </div>
             ))}
-            <Button variant="outline" size="sm" onClick={() => addArr("platform_features" as any, { icon: "Target", title: "", desc: "" })}>
+            <Button variant="outline" size="sm" onClick={() => addArr("platform_features" as any, { icon: "Target", title: "", desc: "", badge: "" })}>
               <Plus className="h-4 w-4 mr-1" /> Add feature
             </Button>
             <p className="text-xs text-muted-foreground">Icons: Target, Activity, PlayCircle, GraduationCap, BarChart3, Users, BrainCircuit, Timer, BookOpen, TrendingUp, Sparkles, Award</p>
