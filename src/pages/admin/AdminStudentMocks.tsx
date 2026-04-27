@@ -9,8 +9,17 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, UserPlus, X, Mail, Phone } from "lucide-react";
+import { Search, UserPlus, X, Mail, Phone, KeyRound, Ban, ShieldCheck, Trash2, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+type StudentRow = {
+  user_id: string;
+  display_name: string;
+  email: string;
+  phone: string | null;
+  enrolled_count: number;
+  banned_until: string | null;
+};
 
 export default function AdminStudentMocks() {
   const { user } = useAuth();
