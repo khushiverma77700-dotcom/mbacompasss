@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Trophy, Crown, Medal, Flame, Coins, Zap } from "lucide-react";
@@ -14,12 +13,12 @@ interface Row {
   coins: number; xp: number; level: number; streak_days: number;
   total_mocks_completed: number; is_self: boolean;
 }
-interface Settings { is_public: boolean; display_handle: string | null; target_percentile: number | null; }
+interface Settings { display_handle: string | null; target_percentile: number | null; }
 
 export default function StudentLeaderboard() {
   const { user } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
-  const [settings, setSettings] = useState<Settings>({ is_public: false, display_handle: "", target_percentile: null });
+  const [settings, setSettings] = useState<Settings>({ display_handle: "", target_percentile: null });
   const [tab, setTab] = useState<"global" | "peer">("global");
   const [loading, setLoading] = useState(true);
 
@@ -31,7 +30,7 @@ export default function StudentLeaderboard() {
       supabase.from("student_leaderboard_settings").select("*").eq("user_id", user.id).maybeSingle(),
     ]);
     setRows((lb ?? []) as any);
-    if (s) setSettings({ is_public: s.is_public, display_handle: s.display_handle ?? "", target_percentile: s.target_percentile });
+    if (s) setSettings({ display_handle: s.display_handle ?? "", target_percentile: s.target_percentile });
     setLoading(false);
   };
 
@@ -41,17 +40,17 @@ export default function StudentLeaderboard() {
     if (!user) return;
     const { error } = await supabase.from("student_leaderboard_settings").upsert({
       user_id: user.id,
-      is_public: settings.is_public,
+      is_public: true,
       display_handle: settings.display_handle || null,
       target_percentile: settings.target_percentile,
       updated_at: new Date().toISOString(),
     });
     if (error) return toast.error(error.message);
-    toast.success("Leaderboard settings saved");
+    toast.success("Saved");
     load();
   };
 
-  const peerRows = rows.filter(r => settings.target_percentile && Math.abs((r.level ?? 0) - 5) < 99); // simple peer band placeholder
+  const peerRows = rows.filter(r => settings.target_percentile && Math.abs((r.level ?? 0) - 5) < 99);
   const view = tab === "global" ? rows : peerRows;
 
   return (
@@ -59,27 +58,21 @@ export default function StudentLeaderboard() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Trophy className="h-6 w-6 text-amber-500" /> Leaderboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">See where you stand among other aspirants.</p>
+          <p className="text-sm text-muted-foreground mt-1">Every active student is ranked automatically. Personalise how you appear below.</p>
         </div>
       </div>
 
       <Card className="p-5 border-sky-100 bg-gradient-to-br from-sky-50/60 to-white">
-        <div className="font-semibold mb-3">Your visibility</div>
+        <div className="font-semibold mb-1">Your profile on the board</div>
+        <p className="text-xs text-muted-foreground mb-3">Your XP, coins, level and streak appear automatically. Pick a handle and target percentile so you stand out.</p>
         <div className="grid sm:grid-cols-3 gap-4 items-end">
-          <div>
+          <div className="sm:col-span-2">
             <label className="text-xs text-muted-foreground">Display handle</label>
             <Input value={settings.display_handle ?? ""} onChange={e => setSettings({ ...settings, display_handle: e.target.value })} placeholder="e.g. CAT_Crusher_24" maxLength={32} />
           </div>
           <div>
             <label className="text-xs text-muted-foreground">Target percentile</label>
             <Input type="number" min={50} max={100} value={settings.target_percentile ?? ""} onChange={e => setSettings({ ...settings, target_percentile: e.target.value ? Number(e.target.value) : null })} placeholder="e.g. 99" />
-          </div>
-          <div className="flex items-center justify-between gap-3 sm:col-span-1">
-            <div>
-              <div className="text-sm font-medium">Show on public board</div>
-              <div className="text-xs text-muted-foreground">Off = peer-only mode</div>
-            </div>
-            <Switch checked={settings.is_public} onCheckedChange={v => setSettings({ ...settings, is_public: v })} />
           </div>
         </div>
         <div className="mt-4 flex justify-end">
@@ -89,7 +82,7 @@ export default function StudentLeaderboard() {
 
       <Tabs value={tab} onValueChange={v => setTab(v as any)}>
         <TabsList className="bg-sky-50">
-          <TabsTrigger value="global">Public ({rows.length})</TabsTrigger>
+          <TabsTrigger value="global">Global ({rows.length})</TabsTrigger>
           <TabsTrigger value="peer">My peer band</TabsTrigger>
         </TabsList>
         <TabsContent value={tab} className="mt-4">
@@ -98,8 +91,8 @@ export default function StudentLeaderboard() {
           ) : view.length === 0 ? (
             <Card className="p-8 text-center border-sky-100">
               <Trophy className="h-10 w-10 mx-auto text-sky-300 mb-3" />
-              <div className="font-medium">No public ranks yet</div>
-              <div className="text-sm text-muted-foreground mt-1">Be the first — turn on "Show on public board" above.</div>
+              <div className="font-medium">No ranks yet</div>
+              <div className="text-sm text-muted-foreground mt-1">Submit a mock to claim your spot.</div>
             </Card>
           ) : (
             <Card className="border-sky-100 overflow-hidden">
