@@ -246,8 +246,8 @@ const AdminBulkRefresh = () => {
             Regenerate AI content across many entities at once. All results land in the Content Refresh Queue for your approval.
           </p>
         </div>
-        <Button variant="outline" onClick={() => navigate("/admin/content-refreshes")}>
-          <ClipboardList className="w-4 h-4 mr-2" /> View Refresh Queue
+        <Button variant="outline" onClick={() => navigate("/admin/content-studio")}>
+          <ClipboardList className="w-4 h-4 mr-2" /> Open in Content Studio
         </Button>
       </div>
 
