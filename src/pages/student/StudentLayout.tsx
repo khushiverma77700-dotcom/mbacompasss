@@ -20,6 +20,7 @@ import {
   CalendarDays,
   History,
   CalendarCheck,
+  LifeBuoy,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,7 @@ const navItems = [
   { to: "/student/orders", label: "My Orders", icon: Receipt },
   { to: "/student/announcements", label: "Announcements", icon: Bell },
   { to: "/student/tools", label: "AI Tools", icon: Sparkles },
+  { to: "/student/support", label: "Support Center", icon: LifeBuoy },
   { to: "/student/profile", label: "My Profile", icon: UserIcon },
 ];
 

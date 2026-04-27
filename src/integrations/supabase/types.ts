@@ -2059,6 +2059,45 @@ export type Database = {
         }
         Relationships: []
       }
+      imported_students: {
+        Row: {
+          course: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          imported_by: string | null
+          matched_user_id: string | null
+          mobile: string | null
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          course?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          imported_by?: string | null
+          matched_user_id?: string | null
+          mobile?: string | null
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          course?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          imported_by?: string | null
+          matched_user_id?: string | null
+          mobile?: string | null
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       indexing_logs: {
         Row: {
           action: string
@@ -4711,6 +4750,152 @@ export type Database = {
         }
         Relationships: []
       }
+      support_faqs: {
+        Row: {
+          answer: string
+          category: Database["public"]["Enums"]["ticket_category"] | null
+          created_at: string
+          display_order: number
+          id: string
+          is_published: boolean
+          question: string
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          category?: Database["public"]["Enums"]["ticket_category"] | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_published?: boolean
+          question: string
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          category?: Database["public"]["Enums"]["ticket_category"] | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_published?: boolean
+          question?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      support_ticket_messages: {
+        Row: {
+          attachment_name: string | null
+          attachment_url: string | null
+          body: string
+          created_at: string
+          id: string
+          is_internal: boolean
+          sender_role: Database["public"]["Enums"]["ticket_message_sender"]
+          sender_user_id: string | null
+          ticket_id: string
+        }
+        Insert: {
+          attachment_name?: string | null
+          attachment_url?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          sender_role?: Database["public"]["Enums"]["ticket_message_sender"]
+          sender_user_id?: string | null
+          ticket_id: string
+        }
+        Update: {
+          attachment_name?: string | null
+          attachment_url?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          sender_role?: Database["public"]["Enums"]["ticket_message_sender"]
+          sender_user_id?: string | null
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          attachment_name: string | null
+          attachment_url: string | null
+          category: Database["public"]["Enums"]["ticket_category"]
+          code: string
+          created_at: string
+          description: string
+          id: string
+          internal_notes: string | null
+          last_admin_reply_at: string | null
+          last_student_reply_at: string | null
+          priority: Database["public"]["Enums"]["ticket_priority"]
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["ticket_status"]
+          student_email: string | null
+          student_name: string | null
+          student_phone: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          attachment_name?: string | null
+          attachment_url?: string | null
+          category?: Database["public"]["Enums"]["ticket_category"]
+          code?: string
+          created_at?: string
+          description: string
+          id?: string
+          internal_notes?: string | null
+          last_admin_reply_at?: string | null
+          last_student_reply_at?: string | null
+          priority?: Database["public"]["Enums"]["ticket_priority"]
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          student_email?: string | null
+          student_name?: string | null
+          student_phone?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assigned_to?: string | null
+          attachment_name?: string | null
+          attachment_url?: string | null
+          category?: Database["public"]["Enums"]["ticket_category"]
+          code?: string
+          created_at?: string
+          description?: string
+          id?: string
+          internal_notes?: string | null
+          last_admin_reply_at?: string | null
+          last_student_reply_at?: string | null
+          priority?: Database["public"]["Enums"]["ticket_priority"]
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          student_email?: string | null
+          student_name?: string | null
+          student_phone?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       testimonials: {
         Row: {
           active: boolean | null
@@ -4998,6 +5183,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      generate_ticket_code: { Args: never; Returns: string }
       get_global_leaderboard: {
         Args: { _limit?: number }
         Returns: {
@@ -5094,6 +5280,16 @@ export type Database = {
         | "answered_marked"
       mock_section_code: "VARC" | "DILR" | "QA"
       mock_test_type: "full_length" | "sectional" | "topic"
+      ticket_category:
+        | "mock_issue"
+        | "payment_issue"
+        | "login_issue"
+        | "technical_issue"
+        | "ai_tools"
+        | "other"
+      ticket_message_sender: "student" | "admin" | "system"
+      ticket_priority: "low" | "medium" | "high"
+      ticket_status: "open" | "in_progress" | "resolved" | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5241,6 +5437,17 @@ export const Constants = {
       ],
       mock_section_code: ["VARC", "DILR", "QA"],
       mock_test_type: ["full_length", "sectional", "topic"],
+      ticket_category: [
+        "mock_issue",
+        "payment_issue",
+        "login_issue",
+        "technical_issue",
+        "ai_tools",
+        "other",
+      ],
+      ticket_message_sender: ["student", "admin", "system"],
+      ticket_priority: ["low", "medium", "high"],
+      ticket_status: ["open", "in_progress", "resolved", "closed"],
     },
   },
 } as const

@@ -129,6 +129,7 @@ const AdminMockTests = lazyWithPreload(() => import("./pages/admin/AdminMockTest
 const AdminMockBuilder = lazyWithPreload(() => import("./pages/admin/AdminMockBuilder"));
 const AdminMocksLanding = lazyWithPreload(() => import("./pages/admin/AdminMocksLanding"));
 const AdminStudentMocks = lazyWithPreload(() => import("./pages/admin/AdminStudentMocks"));
+const AdminSupportTickets = lazyWithPreload(() => import("./pages/admin/AdminSupportTickets"));
 const AdminStudentAnnouncements = lazyWithPreload(() => import("./pages/admin/AdminStudentAnnouncements"));
 const StudentLayout = lazyWithPreload(() => import("./pages/student/StudentLayout"));
 const StudentOverview = lazyWithPreload(() => import("./pages/student/StudentOverview"));
@@ -151,6 +152,7 @@ const StudentOrders = lazyWithPreload(() => import("./pages/student/StudentOrder
 const StudentDeepAnalysis = lazyWithPreload(() => import("./pages/student/StudentDeepAnalysis"));
 const StudentDailyTest = lazyWithPreload(() => import("./pages/student/StudentDailyTest"));
 const StudentAttempts = lazyWithPreload(() => import("./pages/student/StudentAttempts"));
+const StudentSupport = lazyWithPreload(() => import("./pages/student/StudentSupport"));
 const AdminDailyTests = lazyWithPreload(() => import("./pages/admin/AdminDailyTests"));
 const AdminStudentNotificationsBroadcast = lazyWithPreload(() => import("./pages/admin/AdminStudentNotificationsBroadcast"));
 const MocksListPage = lazyWithPreload(() => import("./pages/mocks/MocksListPage"));
@@ -599,6 +601,7 @@ const App = () => (
               <Route path="analysis/:attemptId" element={<LazyPage><StudentDeepAnalysis /></LazyPage>} />
               <Route path="daily-test" element={<LazyPage><StudentDailyTest /></LazyPage>} />
               <Route path="attempts" element={<LazyPage><StudentAttempts /></LazyPage>} />
+              <Route path="support" element={<LazyPage><StudentSupport /></LazyPage>} />
             </Route>
             <Route path="/mba-compass" element={<PublicLayout><LazyPage><MBACompassCoursesPage /></LazyPage></PublicLayout>} />
             <Route path="/mba-compass/compare" element={<PublicLayout><LazyPage><MBACompassComparePage /></LazyPage></PublicLayout>} />
