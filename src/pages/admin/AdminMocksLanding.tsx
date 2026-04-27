@@ -175,34 +175,50 @@ export default function AdminMocksLanding() {
 
         <TabsContent value="included" className="mt-4">
           <Card className="p-5 space-y-3">
+            <p className="text-xs text-muted-foreground">Each item appears as a rich icon card. Add an icon name, value, label and optional description.</p>
             {s.whats_included.map((w, i) => (
-              <div key={i} className="grid grid-cols-12 gap-2 items-end">
-                <div className="col-span-4"><Field label="Value" v={w.value} onChange={(v) => updArr("whats_included", i, { value: v })} /></div>
-                <div className="col-span-7"><Field label="Label" v={w.label} onChange={(v) => updArr("whats_included", i, { label: v })} /></div>
-                <Button variant="ghost" size="icon" onClick={() => delArr("whats_included", i)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              <div key={i} className="border rounded-md p-3 space-y-2">
+                <div className="grid grid-cols-12 gap-2 items-end">
+                  <div className="col-span-3"><Field label="Icon" v={w.icon ?? ""} onChange={(v) => updArr("whats_included", i, { icon: v })} /></div>
+                  <div className="col-span-3"><Field label="Value" v={w.value} onChange={(v) => updArr("whats_included", i, { value: v })} /></div>
+                  <div className="col-span-5"><Field label="Label" v={w.label} onChange={(v) => updArr("whats_included", i, { label: v })} /></div>
+                  <Button variant="ghost" size="icon" onClick={() => delArr("whats_included", i)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                </div>
+                <Field label="Description (optional)" v={w.desc ?? ""} onChange={(v) => updArr("whats_included", i, { desc: v })} multiline />
               </div>
             ))}
-            <Button variant="outline" size="sm" onClick={() => addArr("whats_included", { value: "", label: "" })}>
+            <Button variant="outline" size="sm" onClick={() => addArr("whats_included", { icon: "Sparkles", value: "", label: "", desc: "" })}>
               <Plus className="h-4 w-4 mr-1" /> Add item
             </Button>
+            <p className="text-xs text-muted-foreground">Icon names: BrainCircuit, Timer, BookOpen, TrendingUp, Users, Sparkles, ShieldCheck, Star, Clock, Target, Activity, PlayCircle, GraduationCap, BarChart3, Award</p>
           </Card>
         </TabsContent>
 
         <TabsContent value="compare" className="mt-4">
           <Card className="p-5 space-y-3">
+            <p className="text-xs text-muted-foreground">Use checkmarks (Us / Others) OR fill the text values for richer rows. Mark "Highlight" for FREE-tag emphasis.</p>
             {s.comparison.map((row, i) => (
-              <div key={i} className="grid grid-cols-12 gap-2 items-end">
-                <div className="col-span-7"><Field label="Feature" v={row.feature} onChange={(v) => updArr("comparison", i, { feature: v })} /></div>
-                <label className="col-span-2 flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={!!row.us} onChange={(e) => updArr("comparison", i, { us: e.target.checked })} /> Us
-                </label>
-                <label className="col-span-2 flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={!!row.others} onChange={(e) => updArr("comparison", i, { others: e.target.checked })} /> Others
-                </label>
-                <Button variant="ghost" size="icon" onClick={() => delArr("comparison", i)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              <div key={i} className="border rounded-md p-3 space-y-2">
+                <Field label="Feature" v={row.feature} onChange={(v) => updArr("comparison", i, { feature: v })} />
+                <div className="grid grid-cols-2 gap-2">
+                  <Field label="MBA Compass value (text — optional)" v={row.us_value ?? ""} onChange={(v) => updArr("comparison", i, { us_value: v })} />
+                  <Field label="Others value (text — optional)" v={row.others_value ?? ""} onChange={(v) => updArr("comparison", i, { others_value: v })} />
+                </div>
+                <div className="flex items-center gap-4 text-sm">
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={!!row.us} onChange={(e) => updArr("comparison", i, { us: e.target.checked })} /> Us ✓
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={!!row.others} onChange={(e) => updArr("comparison", i, { others: e.target.checked })} /> Others ✓
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input type="checkbox" checked={!!row.highlight} onChange={(e) => updArr("comparison", i, { highlight: e.target.checked })} /> Highlight (FREE badge)
+                  </label>
+                  <Button variant="ghost" size="sm" onClick={() => delArr("comparison", i)} className="ml-auto"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                </div>
               </div>
             ))}
-            <Button variant="outline" size="sm" onClick={() => addArr("comparison", { feature: "", us: true, others: false })}>
+            <Button variant="outline" size="sm" onClick={() => addArr("comparison", { feature: "", us: true, others: false, us_value: "", others_value: "", highlight: false })}>
               <Plus className="h-4 w-4 mr-1" /> Add row
             </Button>
           </Card>
@@ -249,14 +265,17 @@ export default function AdminMocksLanding() {
         <TabsContent value="features" className="mt-4">
           <Card className="p-5 space-y-3">
             {(s.platform_features ?? []).map((f: any, i: number) => (
-              <div key={i} className="grid grid-cols-12 gap-2 items-end">
-                <div className="col-span-3"><Field label="Icon" v={f.icon} onChange={(v) => updArr("platform_features" as any, i, { icon: v })} /></div>
-                <div className="col-span-3"><Field label="Title" v={f.title} onChange={(v) => updArr("platform_features" as any, i, { title: v })} /></div>
-                <div className="col-span-5"><Field label="Description" v={f.desc} onChange={(v) => updArr("platform_features" as any, i, { desc: v })} /></div>
-                <Button variant="ghost" size="icon" onClick={() => delArr("platform_features" as any, i)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              <div key={i} className="border rounded-md p-3 space-y-2">
+                <div className="grid grid-cols-12 gap-2 items-end">
+                  <div className="col-span-3"><Field label="Icon" v={f.icon} onChange={(v) => updArr("platform_features" as any, i, { icon: v })} /></div>
+                  <div className="col-span-4"><Field label="Title" v={f.title} onChange={(v) => updArr("platform_features" as any, i, { title: v })} /></div>
+                  <div className="col-span-4"><Field label="Badge (optional)" v={f.badge ?? ""} onChange={(v) => updArr("platform_features" as any, i, { badge: v })} /></div>
+                  <Button variant="ghost" size="icon" onClick={() => delArr("platform_features" as any, i)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                </div>
+                <Field label="Description" v={f.desc} onChange={(v) => updArr("platform_features" as any, i, { desc: v })} multiline />
               </div>
             ))}
-            <Button variant="outline" size="sm" onClick={() => addArr("platform_features" as any, { icon: "Target", title: "", desc: "" })}>
+            <Button variant="outline" size="sm" onClick={() => addArr("platform_features" as any, { icon: "Target", title: "", desc: "", badge: "" })}>
               <Plus className="h-4 w-4 mr-1" /> Add feature
             </Button>
             <p className="text-xs text-muted-foreground">Icons: Target, Activity, PlayCircle, GraduationCap, BarChart3, Users, BrainCircuit, Timer, BookOpen, TrendingUp, Sparkles, Award</p>

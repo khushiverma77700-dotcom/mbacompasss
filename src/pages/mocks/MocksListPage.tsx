@@ -36,8 +36,9 @@ import { MockCheckoutDialog } from "@/components/mock/MockCheckoutDialog";
 import SEOHead from "@/components/SEOHead";
 import { initMetaPixel, pixelTrack } from "@/lib/metaPixel";
 import { toast } from "sonner";
-import { AnimatedAIReport } from "@/components/mock/AnimatedAIReport";
+import { SampleAIReport } from "@/components/mock/SampleAIReport";
 import { AutoTestimonialMarquee } from "@/components/mock/AutoTestimonialMarquee";
+import { DualFeedbackMarquees } from "@/components/mock/DualFeedbackMarquees";
 
 const ICONS: Record<string, any> = {
   BrainCircuit, Timer, BookOpen, TrendingUp, Users, MessageCircle, Sparkles, ShieldCheck, Star, Clock,
@@ -187,19 +188,26 @@ export default function MocksListPage() {
     <div className="bg-background">
       <SEOHead title={settings.meta_title} description={settings.meta_description} />
 
-      {/* HERO */}
+      {/* HERO — HD 3D */}
       <section className="relative overflow-hidden bg-gradient-to-b from-sky-50 via-white to-white">
-        <div className="absolute inset-0 pointer-events-none opacity-40 [background-image:radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.15),transparent_50%)]" />
-        <div className="container mx-auto px-4 py-12 md:py-20 relative">
+        {/* 3D animated background blobs */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute -top-32 -left-24 w-[28rem] h-[28rem] rounded-full bg-gradient-to-br from-sky-300/40 to-blue-400/30 blur-3xl animate-blob" />
+          <div className="absolute top-20 -right-20 w-[24rem] h-[24rem] rounded-full bg-gradient-to-br from-cyan-300/40 to-sky-200/30 blur-3xl animate-blob [animation-delay:3s]" />
+          <div className="absolute bottom-0 left-1/3 w-[22rem] h-[22rem] rounded-full bg-gradient-to-br from-indigo-200/30 to-sky-300/30 blur-3xl animate-blob [animation-delay:6s]" />
+          <div className="absolute inset-0 [background-image:linear-gradient(to_right,hsl(var(--primary)/0.06)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--primary)/0.06)_1px,transparent_1px)] [background-size:48px_48px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]" />
+        </div>
+
+        <div className="container mx-auto px-4 py-14 md:py-24 relative">
           <div className="grid lg:grid-cols-2 gap-10 items-center">
             <div>
-              <Badge className="mb-4 bg-sky-100 text-sky-800 hover:bg-sky-100 border-sky-200">
-                {settings.hero_eyebrow}
+              <Badge className="mb-4 bg-sky-100 text-sky-800 hover:bg-sky-100 border-sky-200 backdrop-blur">
+                <Sparkles className="h-3.5 w-3.5 mr-1" /> {settings.hero_eyebrow}
               </Badge>
-              <h1 className="text-3xl md:text-5xl font-bold leading-tight tracking-tight">
+              <h1 className="text-4xl md:text-6xl font-bold leading-[1.05] tracking-tight bg-gradient-to-br from-slate-900 via-sky-900 to-sky-700 bg-clip-text text-transparent">
                 {settings.hero_headline}
               </h1>
-              <p className="mt-4 text-lg text-muted-foreground">{settings.hero_subheadline}</p>
+              <p className="mt-5 text-lg text-muted-foreground leading-relaxed">{settings.hero_subheadline}</p>
 
               <div className="mt-6 flex flex-wrap items-center gap-4 text-sm">
                 <div className="flex items-center gap-1.5"><Star className="h-4 w-4 fill-amber-400 text-amber-400" /><strong>{settings.trust_rating}</strong> rating</div>
@@ -208,20 +216,20 @@ export default function MocksListPage() {
               </div>
 
               <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                <Button size="lg" onClick={scrollToPricing} className="text-base px-8">
+                <Button size="lg" onClick={scrollToPricing} className="text-base px-8 shadow-lg shadow-sky-500/30">
                   {settings.hero_cta_label} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <Button size="lg" variant="outline" onClick={startCheckout}>
                   Buy Now ₹{settings.price_current}
                 </Button>
               </div>
-              <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-                <ShieldCheck className="h-4 w-4 text-emerald-600" /> 7-day money-back guarantee
-              </div>
             </div>
 
+            {/* 3D pricing card with floating accents */}
             <div className="relative">
-              <Card className="p-6 shadow-xl border-sky-100">
+              <div className="absolute -top-6 -right-6 h-24 w-24 rounded-2xl bg-gradient-to-br from-amber-300 to-amber-500 shadow-2xl rotate-12 animate-float-y opacity-90 hidden md:block" />
+              <div className="absolute -bottom-8 -left-6 h-20 w-20 rounded-full bg-gradient-to-br from-sky-400 to-sky-600 shadow-2xl animate-float-y [animation-delay:2s] opacity-90 hidden md:block" />
+              <Card className="relative p-6 shadow-2xl border-sky-100 bg-white/95 backdrop-blur-xl rounded-2xl">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-sm text-muted-foreground">{settings.bundle_title}</div>
@@ -232,7 +240,7 @@ export default function MocksListPage() {
                   </Badge>
                 </div>
                 <div className="mt-4 flex items-baseline gap-3">
-                  <div className="text-4xl font-bold">₹{settings.price_current}</div>
+                  <div className="text-5xl font-bold bg-gradient-to-br from-sky-700 to-sky-500 bg-clip-text text-transparent">₹{settings.price_current}</div>
                   <div className="text-lg text-muted-foreground line-through">₹{settings.price_original}</div>
                 </div>
                 {countdown && (
@@ -243,14 +251,14 @@ export default function MocksListPage() {
                       ["Min", countdown.m],
                       ["Sec", countdown.s],
                     ].map(([l, v]) => (
-                      <div key={l as string} className="rounded-lg bg-sky-50 py-2">
+                      <div key={l as string} className="rounded-lg bg-gradient-to-b from-sky-50 to-sky-100/60 py-2 border border-sky-100">
                         <div className="text-xl font-bold tabular-nums">{String(v).padStart(2, "0")}</div>
                         <div className="text-[10px] uppercase text-muted-foreground">{l}</div>
                       </div>
                     ))}
                   </div>
                 )}
-                <Button size="lg" className="w-full mt-5" onClick={startCheckout}>
+                <Button size="lg" className="w-full mt-5 shadow-lg shadow-sky-500/30" onClick={startCheckout}>
                   Buy Now — Get Instant Access
                 </Button>
                 <div className="mt-3 text-xs text-center text-muted-foreground">{settings.offer_urgency}</div>
@@ -264,7 +272,7 @@ export default function MocksListPage() {
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
           <h2 className="text-2xl md:text-3xl font-bold text-center">Why aspirants choose us</h2>
-          <p className="text-center text-muted-foreground mt-2">Everything you need to crack CAT 2025 — in one place.</p>
+          <p className="text-center text-muted-foreground mt-2">Everything you need to crack CAT 2026 — in one place.</p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-10">
             {settings.benefits.map((b: any, i: number) => {
               const Icon = ICONS[b.icon] ?? Sparkles;
@@ -282,23 +290,39 @@ export default function MocksListPage() {
         </div>
       </section>
 
-      {/* WHAT'S INCLUDED */}
-      <section className="py-16 bg-sky-50/50">
-        <div className="container mx-auto px-4 max-w-5xl">
-          <h2 className="text-2xl md:text-3xl font-bold text-center">What's included</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-8">
-            {settings.whats_included.map((w: any, i: number) => (
-              <Card key={i} className="p-5 text-center bg-white">
-                <div className="text-2xl font-bold text-sky-700">{w.value}</div>
-                <div className="text-sm text-muted-foreground mt-1">{w.label}</div>
-              </Card>
-            ))}
+      {/* WHAT'S INCLUDED — Rich UI */}
+      <section className="py-16 bg-gradient-to-b from-sky-50/60 via-white to-sky-50/40 relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none opacity-50 [background-image:radial-gradient(circle_at_80%_30%,hsl(var(--primary)/0.08),transparent_45%)]" />
+        <div className="container mx-auto px-4 max-w-6xl relative">
+          <div className="text-center max-w-3xl mx-auto">
+            <Badge className="mb-3 bg-sky-100 text-sky-800 hover:bg-sky-100 border-sky-200">What's included</Badge>
+            <h2 className="text-2xl md:text-3xl font-bold">A complete CAT 2026 toolkit</h2>
+            <p className="text-muted-foreground mt-2">Premium mocks, AI analysis, mentor support — everything in one bundle.</p>
           </div>
-          <div className="text-center mt-8">
-            <Button size="lg" onClick={scrollToPricing}>Get the Bundle</Button>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-10">
+            {settings.whats_included.map((w: any, i: number) => {
+              const Icon = ICONS[w.icon] ?? Sparkles;
+              return (
+                <Card key={i} className="group p-6 bg-white border-sky-100 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 h-24 w-24 bg-gradient-to-br from-sky-100/60 to-transparent rounded-bl-full" />
+                  <div className="relative">
+                    <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 text-white flex items-center justify-center shadow-lg shadow-sky-500/30 mb-4 group-hover:scale-110 transition-transform">
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <div className="text-3xl font-bold bg-gradient-to-br from-sky-700 to-sky-500 bg-clip-text text-transparent">{w.value}</div>
+                    <div className="text-sm font-medium mt-1">{w.label}</div>
+                    {w.desc && <div className="text-xs text-muted-foreground mt-2 leading-relaxed">{w.desc}</div>}
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+          <div className="text-center mt-10">
+            <Button size="lg" onClick={scrollToPricing} className="shadow-lg shadow-sky-500/30">Get the Bundle</Button>
           </div>
         </div>
       </section>
+
 
       {/* WHY MBA COMPASS MOCKS */}
       {settings.why_us_points && settings.why_us_points.length > 0 && (
@@ -326,27 +350,34 @@ export default function MocksListPage() {
         </section>
       )}
 
-      {/* MOCK PLATFORM FEATURES */}
+      {/* MOCK PLATFORM FEATURES — Rich (dark) */}
       {settings.platform_features && settings.platform_features.length > 0 && (
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4 max-w-6xl">
+        <section className="py-20 bg-gradient-to-br from-slate-900 via-sky-950 to-sky-900 relative overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-10 left-10 w-72 h-72 rounded-full bg-sky-500/20 blur-3xl animate-blob" />
+            <div className="absolute bottom-10 right-10 w-72 h-72 rounded-full bg-cyan-500/20 blur-3xl animate-blob [animation-delay:4s]" />
+            <div className="absolute inset-0 [background-image:linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:48px_48px]" />
+          </div>
+          <div className="container mx-auto px-4 max-w-6xl relative">
             <div className="text-center max-w-3xl mx-auto">
-              <Badge className="mb-3 bg-sky-100 text-sky-800 hover:bg-sky-100 border-sky-200">Mock Platform Features</Badge>
-              <h2 className="text-2xl md:text-3xl font-bold">A mock platform built for serious aspirants</h2>
-              <p className="text-muted-foreground mt-2">Six powerful tools that make every minute of your prep count.</p>
+              <Badge className="mb-3 bg-sky-500/20 text-sky-200 hover:bg-sky-500/20 border-sky-400/30 backdrop-blur">Mock Platform Features</Badge>
+              <h2 className="text-3xl md:text-4xl font-bold text-white">A mock platform built for serious aspirants</h2>
+              <p className="text-sky-100/80 mt-3 text-lg">Tools that turn every mock into measurable progress.</p>
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-10">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-12">
               {settings.platform_features.map((f: any, i: number) => {
                 const Icon = ICONS[f.icon] ?? Sparkles;
                 return (
-                  <Card key={i} className="p-6 border-sky-100 bg-gradient-to-br from-white to-sky-50/40 hover:shadow-md transition">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="h-10 w-10 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center">
-                        <Icon className="h-5 w-5" />
+                  <Card key={i} className="group p-6 border-white/10 bg-white/5 backdrop-blur-md hover:bg-white/10 hover:-translate-y-1 transition-all duration-300 relative overflow-hidden">
+                    <div className="absolute -top-12 -right-12 h-32 w-32 rounded-full bg-gradient-to-br from-sky-400/30 to-transparent blur-2xl opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="relative">
+                      <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-sky-400 to-sky-600 text-white flex items-center justify-center shadow-lg shadow-sky-500/40 mb-4 group-hover:scale-110 transition-transform">
+                        <Icon className="h-6 w-6" />
                       </div>
-                      <h3 className="font-semibold">{f.title}</h3>
+                      <h3 className="font-semibold text-white text-lg">{f.title}</h3>
+                      <p className="text-sm text-sky-100/70 mt-2 leading-relaxed">{f.desc}</p>
+                      {f.badge && <Badge className="mt-3 bg-emerald-400/20 text-emerald-200 border-emerald-300/30 hover:bg-emerald-400/20">{f.badge}</Badge>}
                     </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
                   </Card>
                 );
               })}
@@ -355,16 +386,16 @@ export default function MocksListPage() {
         </section>
       )}
 
-      {/* ANIMATED AI REPORT */}
-      <AnimatedAIReport
+      {/* SAMPLE AI REPORT (tabbed, sample-style) */}
+      <SampleAIReport
         title={settings.ai_report_title || "CAT Mock Analysis — Powered by AI"}
-        subtitle={settings.ai_report_subtitle || "16+ visual reports auto-generated after every mock."}
+        subtitle={settings.ai_report_subtitle || "Switch tabs to explore the same report your account generates after every mock."}
       />
 
       {/* AUTO TESTIMONIALS MARQUEE */}
       <AutoTestimonialMarquee items={settings.auto_testimonials ?? []} />
 
-      {/* STUDENT ANALYSIS */}
+      {/* STUDENT ANALYSIS — 3 column grid */}
       {settings.student_analyses && settings.student_analyses.length > 0 && (
         <section className="py-16 bg-sky-50/40">
           <div className="container mx-auto px-4 max-w-6xl">
@@ -373,24 +404,22 @@ export default function MocksListPage() {
               <h2 className="text-2xl md:text-3xl font-bold">Score breakdowns from real toppers</h2>
               <p className="text-muted-foreground mt-2">See how aspirants used our platform to crack the CAT.</p>
             </div>
-            <div className="grid md:grid-cols-2 gap-5 mt-10">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-10">
               {settings.student_analyses.map((a: any, i: number) => (
-                <Card key={i} className="overflow-hidden border-sky-100 bg-white">
-                  <div className="grid md:grid-cols-5">
-                    <div className="md:col-span-2 bg-sky-50 aspect-video md:aspect-auto flex items-center justify-center">
-                      {a.image_url ? (
-                        <img src={a.image_url} alt={a.name} className="w-full h-full object-cover" loading="lazy" />
-                      ) : (
-                        <Award className="h-14 w-14 text-sky-300" />
-                      )}
+                <Card key={i} className="overflow-hidden border-sky-100 bg-white hover:shadow-lg transition group">
+                  <div className="aspect-video bg-sky-50 overflow-hidden flex items-center justify-center">
+                    {a.image_url ? (
+                      <img src={a.image_url} alt={a.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                    ) : (
+                      <Award className="h-14 w-14 text-sky-300" />
+                    )}
+                  </div>
+                  <div className="p-5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="font-semibold">{a.name}</div>
+                      <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">{a.score}</Badge>
                     </div>
-                    <div className="md:col-span-3 p-5">
-                      <div className="flex items-center gap-2">
-                        <div className="font-semibold">{a.name}</div>
-                        <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">{a.score}</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{a.summary}</p>
-                    </div>
+                    <p className="text-sm text-muted-foreground mt-2 leading-relaxed line-clamp-4">{a.summary}</p>
                   </div>
                 </Card>
               ))}
@@ -399,50 +428,11 @@ export default function MocksListPage() {
         </section>
       )}
 
-      {/* STUDENT FEEDBACK — Text + Image */}
-      {((settings.student_feedback_text?.length ?? 0) > 0 || (settings.student_feedback_images?.length ?? 0) > 0) && (
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4 max-w-6xl">
-            <div className="text-center max-w-3xl mx-auto">
-              <Badge className="mb-3 bg-sky-100 text-sky-800 hover:bg-sky-100 border-sky-200">Student Feedback</Badge>
-              <h2 className="text-2xl md:text-3xl font-bold">What aspirants are saying</h2>
-              <p className="text-muted-foreground mt-2">Unfiltered text & screenshot reviews from our community.</p>
-            </div>
-
-            {(settings.student_feedback_text?.length ?? 0) > 0 && (
-              <div className="grid md:grid-cols-3 gap-5 mt-10">
-                {settings.student_feedback_text!.map((f: any, i: number) => (
-                  <Card key={i} className="p-6 border-sky-100 bg-white relative">
-                    <Quote className="absolute top-4 right-4 h-8 w-8 text-sky-100" />
-                    <p className="text-sm leading-relaxed">{f.quote}</p>
-                    <div className="mt-4 pt-4 border-t">
-                      <div className="font-semibold text-sm">{f.name}</div>
-                      <div className="text-xs text-sky-700 font-medium">{f.tag}</div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-
-            {(settings.student_feedback_images?.length ?? 0) > 0 && (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
-                {settings.student_feedback_images!.map((img: any, i: number) => (
-                  <Card key={i} className="overflow-hidden border-sky-100 bg-white">
-                    <div className="aspect-[4/5] bg-sky-50 flex items-center justify-center">
-                      {img.image_url ? (
-                        <img src={img.image_url} alt={img.caption || "Student feedback"} className="w-full h-full object-cover" loading="lazy" />
-                      ) : (
-                        <MessageCircle className="h-12 w-12 text-sky-300" />
-                      )}
-                    </div>
-                    {img.caption && <div className="p-3 text-xs text-center text-muted-foreground">{img.caption}</div>}
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-      )}
+      {/* DUAL FEEDBACK MARQUEES — Text RTL + Images LTR */}
+      <DualFeedbackMarquees
+        textItems={settings.student_feedback_text ?? []}
+        imageItems={settings.student_feedback_images ?? []}
+      />
 
       {/* EXPERT FEEDBACK */}
       {settings.expert_feedback && settings.expert_feedback.length > 0 && (
@@ -479,29 +469,67 @@ export default function MocksListPage() {
         </section>
       )}
 
-      {/* COMPARISON */}
+      {/* COMPARISON — Advanced */}
       {settings.comparison?.length > 0 && (
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4 max-w-3xl">
-            <h2 className="text-2xl md:text-3xl font-bold text-center">Why we're better than the rest</h2>
-            <p className="text-center text-muted-foreground mt-2">Includes <strong>FREE access</strong> to our AI Profile Analyzer and MBA ROI Calculator.</p>
-            <Card className="mt-8 overflow-hidden border-sky-100 shadow-sm">
-              <div className="grid grid-cols-[1fr_100px_100px] sm:grid-cols-[1fr_140px_140px] bg-gradient-to-r from-sky-100 to-sky-50 px-4 py-3 text-sm font-semibold">
-                <div>Feature</div>
-                <div className="text-center text-sky-800">MBA Compass</div>
-                <div className="text-center text-muted-foreground">Others</div>
+        <section className="py-20 bg-gradient-to-b from-white via-sky-50/40 to-white relative overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none opacity-40 [background-image:radial-gradient(circle_at_20%_50%,hsl(var(--primary)/0.1),transparent_50%)]" />
+          <div className="container mx-auto px-4 max-w-5xl relative">
+            <div className="text-center max-w-3xl mx-auto">
+              <Badge className="mb-3 bg-sky-100 text-sky-800 hover:bg-sky-100 border-sky-200">Comparison</Badge>
+              <h2 className="text-3xl md:text-4xl font-bold">Why we're better than the rest</h2>
+              <p className="text-muted-foreground mt-3">Includes <strong className="text-sky-700">FREE access</strong> to AI Profile Analyzer & MBA ROI Calculator.</p>
+            </div>
+
+            <Card className="mt-10 overflow-hidden border-2 border-sky-200 shadow-2xl rounded-2xl">
+              {/* Header */}
+              <div className="grid grid-cols-[1.4fr_1fr_1fr] sm:grid-cols-[2fr_1fr_1fr]">
+                <div className="bg-slate-50 px-4 py-5 font-semibold text-sm text-muted-foreground uppercase tracking-wider">Feature</div>
+                <div className="bg-gradient-to-br from-sky-600 to-sky-700 text-white px-4 py-5 text-center relative">
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-400 text-amber-950 hover:bg-amber-400 border-0 shadow-md text-[10px]">RECOMMENDED</Badge>
+                  <div className="font-bold text-base">MBA Compass</div>
+                  <div className="text-[11px] text-sky-100 mt-1">Premium · ₹{settings.price_current}</div>
+                </div>
+                <div className="bg-slate-100 px-4 py-5 text-center text-muted-foreground">
+                  <div className="font-semibold text-base text-slate-700">Others</div>
+                  <div className="text-[11px] mt-1">Generic platforms</div>
+                </div>
               </div>
+
               {settings.comparison.map((row: any, i: number) => (
-                <div key={i} className={`grid grid-cols-[1fr_100px_100px] sm:grid-cols-[1fr_140px_140px] px-4 py-3 border-t text-sm items-center ${i % 2 === 0 ? "bg-white" : "bg-sky-50/30"}`}>
-                  <div>{row.feature}</div>
-                  <div className="flex justify-center">
-                    {row.us ? <CheckCircle2 className="h-5 w-5 text-emerald-600" /> : <XCircle className="h-5 w-5 text-muted-foreground" />}
+                <div key={i} className={`grid grid-cols-[1.4fr_1fr_1fr] sm:grid-cols-[2fr_1fr_1fr] border-t text-sm items-stretch ${i % 2 === 0 ? "bg-white" : "bg-sky-50/40"}`}>
+                  <div className="px-4 py-4 font-medium flex items-center">
+                    {row.feature}
+                    {row.highlight && <Badge className="ml-2 bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-emerald-200 text-[10px]">FREE</Badge>}
                   </div>
-                  <div className="flex justify-center">
-                    {row.others ? <CheckCircle2 className="h-5 w-5 text-emerald-600" /> : <XCircle className="h-5 w-5 text-muted-foreground" />}
+                  <div className="px-4 py-4 flex flex-col items-center justify-center bg-sky-50/60 border-x border-sky-100">
+                    {row.us_value ? (
+                      <span className="font-semibold text-sky-800 text-center text-sm">{row.us_value}</span>
+                    ) : row.us ? (
+                      <CheckCircle2 className="h-6 w-6 text-emerald-600" />
+                    ) : (
+                      <XCircle className="h-6 w-6 text-muted-foreground/60" />
+                    )}
+                  </div>
+                  <div className="px-4 py-4 flex flex-col items-center justify-center">
+                    {row.others_value ? (
+                      <span className="text-muted-foreground text-center text-sm">{row.others_value}</span>
+                    ) : row.others ? (
+                      <CheckCircle2 className="h-5 w-5 text-emerald-600/70" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-muted-foreground/60" />
+                    )}
                   </div>
                 </div>
               ))}
+
+              {/* Footer CTA row */}
+              <div className="grid grid-cols-[1.4fr_1fr_1fr] sm:grid-cols-[2fr_1fr_1fr] border-t bg-gradient-to-r from-sky-50 to-white">
+                <div className="px-4 py-4 font-semibold text-sm">Get started today</div>
+                <div className="px-4 py-3 flex items-center justify-center bg-sky-50/60 border-x border-sky-100">
+                  <Button size="sm" onClick={scrollToPricing} className="shadow-md shadow-sky-500/30">Buy ₹{settings.price_current}</Button>
+                </div>
+                <div className="px-4 py-3 flex items-center justify-center text-xs text-muted-foreground">—</div>
+              </div>
             </Card>
           </div>
         </section>
@@ -561,7 +589,6 @@ export default function MocksListPage() {
               Buy Now — ₹{settings.price_current}
             </Button>
             <div className="mt-3 flex items-center justify-center gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1"><ShieldCheck className="h-3.5 w-3.5" /> 7-day refund</span>
               <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> Instant access</span>
             </div>
           </Card>
@@ -588,7 +615,7 @@ export default function MocksListPage() {
       {/* FINAL CTA */}
       <section className="py-16 bg-gradient-to-br from-sky-600 to-sky-700 text-white">
         <div className="container mx-auto px-4 text-center max-w-2xl">
-          <h2 className="text-2xl md:text-3xl font-bold">Start your CAT 2025 prep today</h2>
+          <h2 className="text-2xl md:text-3xl font-bold">Start your CAT 2026 prep today</h2>
           <p className="mt-3 text-sky-100">{settings.offer_urgency}</p>
           <Button size="lg" variant="secondary" className="mt-6" onClick={startCheckout}>
             Get Instant Access — ₹{settings.price_current}

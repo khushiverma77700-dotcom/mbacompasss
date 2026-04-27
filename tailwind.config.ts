@@ -98,6 +98,19 @@ export default {
           from: { transform: "translateX(0)" },
           to: { transform: "translateX(-50%)" },
         },
+        "marquee-reverse": {
+          from: { transform: "translateX(-50%)" },
+          to: { transform: "translateX(0)" },
+        },
+        "blob": {
+          "0%, 100%": { transform: "translate(0,0) scale(1)" },
+          "33%": { transform: "translate(30px,-20px) scale(1.1)" },
+          "66%": { transform: "translate(-20px,20px) scale(0.95)" },
+        },
+        "float-y": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-12px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -106,6 +119,9 @@ export default {
         "fade-in": "fade-in 0.3s ease-out forwards",
         "count-up": "count-up 0.6s ease-out forwards",
         marquee: "marquee 40s linear infinite",
+        "marquee-reverse": "marquee-reverse 45s linear infinite",
+        blob: "blob 14s ease-in-out infinite",
+        "float-y": "float-y 6s ease-in-out infinite",
       },
     },
   },
