@@ -240,7 +240,7 @@ export default function MockTestRunnerPage() {
       document.removeEventListener("paste", blockCopy);
       document.removeEventListener("cut", blockCopy);
     };
-  }, [loading, attemptId, handleAutoSubmit]);
+  }, [loading, attemptId, handleAutoSubmit, isMobile]);
 
   // ---------- DERIVED ----------
   const sectionQuestions = useMemo(
