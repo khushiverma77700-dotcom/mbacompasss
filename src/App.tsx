@@ -128,6 +128,16 @@ const AdminWebsiteOptimizer = lazyWithPreload(() => import("./pages/admin/AdminW
 const AdminMockTests = lazyWithPreload(() => import("./pages/admin/AdminMockTests"));
 const AdminMockBuilder = lazyWithPreload(() => import("./pages/admin/AdminMockBuilder"));
 const AdminMocksLanding = lazyWithPreload(() => import("./pages/admin/AdminMocksLanding"));
+const AdminStudentMocks = lazyWithPreload(() => import("./pages/admin/AdminStudentMocks"));
+const AdminStudentAnnouncements = lazyWithPreload(() => import("./pages/admin/AdminStudentAnnouncements"));
+const StudentLayout = lazyWithPreload(() => import("./pages/student/StudentLayout"));
+const StudentOverview = lazyWithPreload(() => import("./pages/student/StudentOverview"));
+const StudentMocks = lazyWithPreload(() => import("./pages/student/StudentMocks"));
+const StudentPerformance = lazyWithPreload(() => import("./pages/student/StudentPerformance"));
+const StudentGoals = lazyWithPreload(() => import("./pages/student/StudentGoals"));
+const StudentAnnouncements = lazyWithPreload(() => import("./pages/student/StudentAnnouncements"));
+const StudentTools = lazyWithPreload(() => import("./pages/student/StudentTools"));
+const StudentProfile = lazyWithPreload(() => import("./pages/student/StudentProfile"));
 const MocksListPage = lazyWithPreload(() => import("./pages/mocks/MocksListPage"));
 const MockTestIntroPage = lazyWithPreload(() => import("./pages/mocks/MockTestIntroPage"));
 const MockTestRunnerPage = lazyWithPreload(() => import("./pages/mocks/MockTestRunnerPage"));
@@ -506,6 +516,8 @@ const App = () => (
               <Route path="mock-tests" element={<LazyPage><AdminMockTests /></LazyPage>} />
               <Route path="mock-tests/:testId/builder" element={<LazyPage><AdminMockBuilder /></LazyPage>} />
               <Route path="mocks-landing" element={<LazyPage><AdminMocksLanding /></LazyPage>} />
+              <Route path="student-mocks" element={<LazyPage><AdminStudentMocks /></LazyPage>} />
+              <Route path="student-announcements" element={<LazyPage><AdminStudentAnnouncements /></LazyPage>} />
               <Route path="hyperlink-update" element={<LazyPage><AdminHyperlinkUpdate /></LazyPage>} />
               <Route path="bulk-ai-edit" element={<LazyPage><AdminBulkAIEdit /></LazyPage>} />
               <Route path="iim-waitlist" element={<LazyPage><AdminIIMWaitlist /></LazyPage>} />
@@ -552,6 +564,15 @@ const App = () => (
             <Route path="/mocks/checkout/return" element={<LazyPage><MockCheckoutReturnPage /></LazyPage>} />
             <Route path="/mocks/thank-you" element={<PublicLayout><LazyPage><MockThankYouPage /></LazyPage></PublicLayout>} />
             <Route path="/dashboard/mocks" element={<PublicLayout><LazyPage><MyMocksPage /></LazyPage></PublicLayout>} />
+            <Route path="/student" element={<LazyPage><StudentLayout /></LazyPage>}>
+              <Route index element={<LazyPage><StudentOverview /></LazyPage>} />
+              <Route path="mocks" element={<LazyPage><StudentMocks /></LazyPage>} />
+              <Route path="performance" element={<LazyPage><StudentPerformance /></LazyPage>} />
+              <Route path="goals" element={<LazyPage><StudentGoals /></LazyPage>} />
+              <Route path="announcements" element={<LazyPage><StudentAnnouncements /></LazyPage>} />
+              <Route path="tools" element={<LazyPage><StudentTools /></LazyPage>} />
+              <Route path="profile" element={<LazyPage><StudentProfile /></LazyPage>} />
+            </Route>
             <Route path="/iim-waitlist-movement" element={<PublicLayout><LazyPage><IIMWaitlistPage /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />
           </Routes>
