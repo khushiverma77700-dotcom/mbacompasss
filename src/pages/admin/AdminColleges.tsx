@@ -517,7 +517,14 @@ const AdminColleges = () => {
             </TableHeader>
             <TableBody>
               {sortedColleges.map((c, idx) => (
-                <TableRow key={c.id}>
+                <TableRow key={c.id} className={selectedIds.has(c.id) ? "bg-violet-50/40" : ""}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.has(c.id)}
+                      onCheckedChange={() => toggleSelect(c.id)}
+                      aria-label={`Select ${c.name}`}
+                    />
+                  </TableCell>
                   <TableCell className="text-muted-foreground text-xs">{idx + 1}</TableCell>
                   <TableCell>{c.ranking ?? "—"}</TableCell>
                   <TableCell className="font-medium">
