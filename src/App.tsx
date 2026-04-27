@@ -151,6 +151,7 @@ const StudentOrders = lazyWithPreload(() => import("./pages/student/StudentOrder
 const StudentDeepAnalysis = lazyWithPreload(() => import("./pages/student/StudentDeepAnalysis"));
 const StudentDailyTest = lazyWithPreload(() => import("./pages/student/StudentDailyTest"));
 const StudentAttempts = lazyWithPreload(() => import("./pages/student/StudentAttempts"));
+const StudentSupport = lazyWithPreload(() => import("./pages/student/StudentSupport"));
 const AdminDailyTests = lazyWithPreload(() => import("./pages/admin/AdminDailyTests"));
 const AdminStudentNotificationsBroadcast = lazyWithPreload(() => import("./pages/admin/AdminStudentNotificationsBroadcast"));
 const MocksListPage = lazyWithPreload(() => import("./pages/mocks/MocksListPage"));
