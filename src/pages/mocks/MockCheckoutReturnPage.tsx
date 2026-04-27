@@ -11,11 +11,6 @@ export default function MockCheckoutReturnPage() {
   const sessionId = params.get("session_id");
   const testId = params.get("test_id");
   const [status, setStatus] = useState<"checking" | "paid" | "pending" | "failed">("checking");
-  const [params] = useSearchParams();
-  const navigate = useNavigate();
-  const sessionId = params.get("session_id");
-  const testId = params.get("test_id");
-  const [status, setStatus] = useState<"checking" | "paid" | "pending" | "failed">("checking");
 
   useEffect(() => {
     if (!sessionId) {
