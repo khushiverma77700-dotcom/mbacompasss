@@ -1,6 +1,6 @@
 import { Navigate, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp, Sparkles, ShieldCheck, Lock, Briefcase, Target, PhoneCall, Database, Activity, Calculator, ChevronDown, Bell, RefreshCw, PenLine, ClipboardList } from "lucide-react";
+import { LayoutDashboard, Building2, BookOpen, Image, Newspaper, MessageSquare, GraduationCap, Mail, FileText, Tag, Menu, X, Settings, MessageCircle, Trophy, Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare, TrendingUp, Sparkles, ShieldCheck, Lock, Briefcase, Target, PhoneCall, Database, Activity, Calculator, ChevronDown, Bell, RefreshCw, PenLine, ClipboardList, Package } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AdminThemeToggle, { applyAdminTheme, getInitialAdminTheme } from "@/components/admin/AdminThemeToggle";
@@ -40,6 +40,7 @@ const adminNavGroups = [
     label: "CAT Mock Tests",
     items: [
       { label: "Mock Tests", path: "/admin/mock-tests", icon: ClipboardList },
+      { label: "Mock Bundles (Courses)", path: "/admin/mock-bundles", icon: Package },
       { label: "Landing Page", path: "/admin/mocks-landing", icon: ClipboardList },
       { label: "Student Assignments", path: "/admin/student-mocks", icon: Users },
       { label: "Personalized Hub", path: "/admin/personalized-hub", icon: ClipboardList },
