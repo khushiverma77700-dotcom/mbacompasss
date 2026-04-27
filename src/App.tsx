@@ -153,6 +153,10 @@ const StudentDeepAnalysis = lazyWithPreload(() => import("./pages/student/Studen
 const StudentDailyTest = lazyWithPreload(() => import("./pages/student/StudentDailyTest"));
 const StudentAttempts = lazyWithPreload(() => import("./pages/student/StudentAttempts"));
 const StudentSupport = lazyWithPreload(() => import("./pages/student/StudentSupport"));
+const StudentPersonalizedHub = lazyWithPreload(() => import("./pages/student/StudentPersonalizedHub"));
+const PersonalizedMockRunnerPage = lazyWithPreload(() => import("./pages/student/PersonalizedMockRunnerPage"));
+const PersonalizedMockResultPage = lazyWithPreload(() => import("./pages/student/PersonalizedMockResultPage"));
+const AdminPersonalizedHub = lazyWithPreload(() => import("./pages/admin/AdminPersonalizedHub"));
 const AdminDailyTests = lazyWithPreload(() => import("./pages/admin/AdminDailyTests"));
 const AdminStudentNotificationsBroadcast = lazyWithPreload(() => import("./pages/admin/AdminStudentNotificationsBroadcast"));
 const MocksListPage = lazyWithPreload(() => import("./pages/mocks/MocksListPage"));
@@ -534,6 +538,7 @@ const App = () => (
               <Route path="mock-tests/:testId/builder" element={<LazyPage><AdminMockBuilder /></LazyPage>} />
               <Route path="mocks-landing" element={<LazyPage><AdminMocksLanding /></LazyPage>} />
               <Route path="student-mocks" element={<LazyPage><AdminStudentMocks /></LazyPage>} />
+              <Route path="personalized-hub" element={<LazyPage><AdminPersonalizedHub /></LazyPage>} />
               <Route path="student-announcements" element={<LazyPage><AdminStudentAnnouncements /></LazyPage>} />
               <Route path="student-notifications" element={<LazyPage><AdminStudentNotificationsBroadcast /></LazyPage>} />
               <Route path="daily-tests" element={<LazyPage><AdminDailyTests /></LazyPage>} />
@@ -602,6 +607,9 @@ const App = () => (
               <Route path="daily-test" element={<LazyPage><StudentDailyTest /></LazyPage>} />
               <Route path="attempts" element={<LazyPage><StudentAttempts /></LazyPage>} />
               <Route path="support" element={<LazyPage><StudentSupport /></LazyPage>} />
+              <Route path="personalized-hub" element={<LazyPage><StudentPersonalizedHub /></LazyPage>} />
+              <Route path="personalized-hub/attempt/:attemptId" element={<LazyPage><PersonalizedMockRunnerPage /></LazyPage>} />
+              <Route path="personalized-hub/result/:attemptId" element={<LazyPage><PersonalizedMockResultPage /></LazyPage>} />
             </Route>
             <Route path="/mba-compass" element={<PublicLayout><LazyPage><MBACompassCoursesPage /></LazyPage></PublicLayout>} />
             <Route path="/mba-compass/compare" element={<PublicLayout><LazyPage><MBACompassComparePage /></LazyPage></PublicLayout>} />
