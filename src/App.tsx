@@ -142,6 +142,8 @@ const StudentProfile = lazyWithPreload(() => import("./pages/student/StudentProf
 const StudentRewards = lazyWithPreload(() => import("./pages/student/StudentRewards"));
 const StudentDayPlanner = lazyWithPreload(() => import("./pages/student/StudentDayPlanner"));
 const MBACompassCoursesPage = lazyWithPreload(() => import("./pages/MBACompassCoursesPage"));
+const MBACompassCourseDetailPage = lazyWithPreload(() => import("./pages/MBACompassCourseDetailPage"));
+const MBACompassComparePage = lazyWithPreload(() => import("./pages/MBACompassComparePage"));
 const AdminMBACompassCourses = lazyWithPreload(() => import("./pages/admin/AdminMBACompassCourses"));
 const StudentLeaderboard = lazyWithPreload(() => import("./pages/student/StudentLeaderboard"));
 const StudentNotifications = lazyWithPreload(() => import("./pages/student/StudentNotifications"));
@@ -599,6 +601,8 @@ const App = () => (
               <Route path="attempts" element={<LazyPage><StudentAttempts /></LazyPage>} />
             </Route>
             <Route path="/mba-compass" element={<PublicLayout><LazyPage><MBACompassCoursesPage /></LazyPage></PublicLayout>} />
+            <Route path="/mba-compass/compare" element={<PublicLayout><LazyPage><MBACompassComparePage /></LazyPage></PublicLayout>} />
+            <Route path="/mba-compass/:slug" element={<PublicLayout><LazyPage><MBACompassCourseDetailPage /></LazyPage></PublicLayout>} />
             <Route path="/iim-waitlist-movement" element={<PublicLayout><LazyPage><IIMWaitlistPage /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />
           </Routes>
