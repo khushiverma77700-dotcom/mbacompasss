@@ -24,14 +24,24 @@ import {
   MessageCircle,
   Sparkles,
   ArrowRight,
+  Target,
+  Activity,
+  PlayCircle,
+  GraduationCap,
+  BarChart3,
+  Quote,
+  Award,
 } from "lucide-react";
 import { MockCheckoutDialog } from "@/components/mock/MockCheckoutDialog";
 import SEOHead from "@/components/SEOHead";
 import { initMetaPixel, pixelTrack } from "@/lib/metaPixel";
 import { toast } from "sonner";
+import { AnimatedAIReport } from "@/components/mock/AnimatedAIReport";
+import { AutoTestimonialMarquee } from "@/components/mock/AutoTestimonialMarquee";
 
 const ICONS: Record<string, any> = {
   BrainCircuit, Timer, BookOpen, TrendingUp, Users, MessageCircle, Sparkles, ShieldCheck, Star, Clock,
+  Target, Activity, PlayCircle, GraduationCap, BarChart3, Award,
 };
 
 interface Settings {
@@ -59,6 +69,17 @@ interface Settings {
   meta_pixel_id: string | null;
   meta_title: string;
   meta_description: string;
+  why_us_title?: string;
+  why_us_subtitle?: string;
+  why_us_points?: any[];
+  auto_testimonials?: any[];
+  student_analyses?: any[];
+  student_feedback_text?: any[];
+  student_feedback_images?: any[];
+  expert_feedback?: any[];
+  platform_features?: any[];
+  ai_report_title?: string;
+  ai_report_subtitle?: string;
 }
 
 interface MockTest {
