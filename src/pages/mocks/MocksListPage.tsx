@@ -24,14 +24,24 @@ import {
   MessageCircle,
   Sparkles,
   ArrowRight,
+  Target,
+  Activity,
+  PlayCircle,
+  GraduationCap,
+  BarChart3,
+  Quote,
+  Award,
 } from "lucide-react";
 import { MockCheckoutDialog } from "@/components/mock/MockCheckoutDialog";
 import SEOHead from "@/components/SEOHead";
 import { initMetaPixel, pixelTrack } from "@/lib/metaPixel";
 import { toast } from "sonner";
+import { AnimatedAIReport } from "@/components/mock/AnimatedAIReport";
+import { AutoTestimonialMarquee } from "@/components/mock/AutoTestimonialMarquee";
 
 const ICONS: Record<string, any> = {
   BrainCircuit, Timer, BookOpen, TrendingUp, Users, MessageCircle, Sparkles, ShieldCheck, Star, Clock,
+  Target, Activity, PlayCircle, GraduationCap, BarChart3, Award,
 };
 
 interface Settings {
@@ -59,6 +69,17 @@ interface Settings {
   meta_pixel_id: string | null;
   meta_title: string;
   meta_description: string;
+  why_us_title?: string;
+  why_us_subtitle?: string;
+  why_us_points?: any[];
+  auto_testimonials?: any[];
+  student_analyses?: any[];
+  student_feedback_text?: any[];
+  student_feedback_images?: any[];
+  expert_feedback?: any[];
+  platform_features?: any[];
+  ai_report_title?: string;
+  ai_report_subtitle?: string;
 }
 
 interface MockTest {
@@ -279,19 +300,199 @@ export default function MocksListPage() {
         </div>
       </section>
 
+      {/* WHY MBA COMPASS MOCKS */}
+      {settings.why_us_points && settings.why_us_points.length > 0 && (
+        <section className="py-16 bg-gradient-to-b from-sky-50/40 to-white">
+          <div className="container mx-auto px-4 max-w-6xl">
+            <div className="text-center max-w-3xl mx-auto">
+              <h2 className="text-2xl md:text-3xl font-bold">{settings.why_us_title || "Why MBA Compass Mocks?"}</h2>
+              <p className="text-muted-foreground mt-2">{settings.why_us_subtitle}</p>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-10">
+              {settings.why_us_points.map((p: any, i: number) => {
+                const Icon = ICONS[p.icon] ?? Sparkles;
+                return (
+                  <Card key={i} className="p-6 border-sky-100 bg-white hover:shadow-lg hover:-translate-y-1 transition-all">
+                    <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-sky-500 to-sky-600 text-white flex items-center justify-center mb-4 shadow-md">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <h3 className="font-semibold">{p.title}</h3>
+                    <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{p.desc}</p>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* MOCK PLATFORM FEATURES */}
+      {settings.platform_features && settings.platform_features.length > 0 && (
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4 max-w-6xl">
+            <div className="text-center max-w-3xl mx-auto">
+              <Badge className="mb-3 bg-sky-100 text-sky-800 hover:bg-sky-100 border-sky-200">Mock Platform Features</Badge>
+              <h2 className="text-2xl md:text-3xl font-bold">A mock platform built for serious aspirants</h2>
+              <p className="text-muted-foreground mt-2">Six powerful tools that make every minute of your prep count.</p>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-10">
+              {settings.platform_features.map((f: any, i: number) => {
+                const Icon = ICONS[f.icon] ?? Sparkles;
+                return (
+                  <Card key={i} className="p-6 border-sky-100 bg-gradient-to-br from-white to-sky-50/40 hover:shadow-md transition">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="h-10 w-10 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center">
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <h3 className="font-semibold">{f.title}</h3>
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ANIMATED AI REPORT */}
+      <AnimatedAIReport
+        title={settings.ai_report_title || "CAT Mock Analysis — Powered by AI"}
+        subtitle={settings.ai_report_subtitle || "16+ visual reports auto-generated after every mock."}
+      />
+
+      {/* AUTO TESTIMONIALS MARQUEE */}
+      <AutoTestimonialMarquee items={settings.auto_testimonials ?? []} />
+
+      {/* STUDENT ANALYSIS */}
+      {settings.student_analyses && settings.student_analyses.length > 0 && (
+        <section className="py-16 bg-sky-50/40">
+          <div className="container mx-auto px-4 max-w-6xl">
+            <div className="text-center max-w-3xl mx-auto">
+              <Badge className="mb-3 bg-sky-100 text-sky-800 hover:bg-sky-100 border-sky-200">Student Analysis</Badge>
+              <h2 className="text-2xl md:text-3xl font-bold">Score breakdowns from real toppers</h2>
+              <p className="text-muted-foreground mt-2">See how aspirants used our platform to crack the CAT.</p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-5 mt-10">
+              {settings.student_analyses.map((a: any, i: number) => (
+                <Card key={i} className="overflow-hidden border-sky-100 bg-white">
+                  <div className="grid md:grid-cols-5">
+                    <div className="md:col-span-2 bg-sky-50 aspect-video md:aspect-auto flex items-center justify-center">
+                      {a.image_url ? (
+                        <img src={a.image_url} alt={a.name} className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <Award className="h-14 w-14 text-sky-300" />
+                      )}
+                    </div>
+                    <div className="md:col-span-3 p-5">
+                      <div className="flex items-center gap-2">
+                        <div className="font-semibold">{a.name}</div>
+                        <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">{a.score}</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{a.summary}</p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* STUDENT FEEDBACK — Text + Image */}
+      {((settings.student_feedback_text?.length ?? 0) > 0 || (settings.student_feedback_images?.length ?? 0) > 0) && (
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4 max-w-6xl">
+            <div className="text-center max-w-3xl mx-auto">
+              <Badge className="mb-3 bg-sky-100 text-sky-800 hover:bg-sky-100 border-sky-200">Student Feedback</Badge>
+              <h2 className="text-2xl md:text-3xl font-bold">What aspirants are saying</h2>
+              <p className="text-muted-foreground mt-2">Unfiltered text & screenshot reviews from our community.</p>
+            </div>
+
+            {(settings.student_feedback_text?.length ?? 0) > 0 && (
+              <div className="grid md:grid-cols-3 gap-5 mt-10">
+                {settings.student_feedback_text!.map((f: any, i: number) => (
+                  <Card key={i} className="p-6 border-sky-100 bg-white relative">
+                    <Quote className="absolute top-4 right-4 h-8 w-8 text-sky-100" />
+                    <p className="text-sm leading-relaxed">{f.quote}</p>
+                    <div className="mt-4 pt-4 border-t">
+                      <div className="font-semibold text-sm">{f.name}</div>
+                      <div className="text-xs text-sky-700 font-medium">{f.tag}</div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {(settings.student_feedback_images?.length ?? 0) > 0 && (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
+                {settings.student_feedback_images!.map((img: any, i: number) => (
+                  <Card key={i} className="overflow-hidden border-sky-100 bg-white">
+                    <div className="aspect-[4/5] bg-sky-50 flex items-center justify-center">
+                      {img.image_url ? (
+                        <img src={img.image_url} alt={img.caption || "Student feedback"} className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <MessageCircle className="h-12 w-12 text-sky-300" />
+                      )}
+                    </div>
+                    {img.caption && <div className="p-3 text-xs text-center text-muted-foreground">{img.caption}</div>}
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* EXPERT FEEDBACK */}
+      {settings.expert_feedback && settings.expert_feedback.length > 0 && (
+        <section className="py-16 bg-gradient-to-b from-sky-50/40 to-white">
+          <div className="container mx-auto px-4 max-w-6xl">
+            <div className="text-center max-w-3xl mx-auto">
+              <Badge className="mb-3 bg-sky-100 text-sky-800 hover:bg-sky-100 border-sky-200">Expert Feedback</Badge>
+              <h2 className="text-2xl md:text-3xl font-bold">Endorsed by India's top mentors</h2>
+              <p className="text-muted-foreground mt-2">CAT trainers & IIM alumni on what makes our platform different.</p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-5 mt-10">
+              {settings.expert_feedback.map((e: any, i: number) => (
+                <Card key={i} className="p-6 border-sky-100 bg-white">
+                  <div className="flex gap-4">
+                    <div className="shrink-0">
+                      {e.image_url ? (
+                        <img src={e.image_url} alt={e.name} className="h-16 w-16 rounded-full object-cover border-2 border-sky-100" loading="lazy" />
+                      ) : (
+                        <div className="h-16 w-16 rounded-full bg-gradient-to-br from-sky-500 to-sky-700 text-white flex items-center justify-center font-bold text-xl">
+                          {e.name?.charAt(0) || "?"}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="font-semibold">{e.name}</div>
+                      <div className="text-xs text-sky-700 font-medium mt-0.5">{e.title}</div>
+                      <p className="text-sm text-muted-foreground mt-3 leading-relaxed">"{e.quote}"</p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* COMPARISON */}
       {settings.comparison?.length > 0 && (
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4 max-w-3xl">
             <h2 className="text-2xl md:text-3xl font-bold text-center">Why we're better than the rest</h2>
-            <Card className="mt-8 overflow-hidden">
-              <div className="grid grid-cols-3 bg-sky-50 px-4 py-3 text-sm font-semibold">
+            <p className="text-center text-muted-foreground mt-2">Includes <strong>FREE access</strong> to our AI Profile Analyzer and MBA ROI Calculator.</p>
+            <Card className="mt-8 overflow-hidden border-sky-100 shadow-sm">
+              <div className="grid grid-cols-[1fr_100px_100px] sm:grid-cols-[1fr_140px_140px] bg-gradient-to-r from-sky-100 to-sky-50 px-4 py-3 text-sm font-semibold">
                 <div>Feature</div>
-                <div className="text-center">Us</div>
+                <div className="text-center text-sky-800">MBA Compass</div>
                 <div className="text-center text-muted-foreground">Others</div>
               </div>
               {settings.comparison.map((row: any, i: number) => (
-                <div key={i} className="grid grid-cols-3 px-4 py-3 border-t text-sm items-center">
+                <div key={i} className={`grid grid-cols-[1fr_100px_100px] sm:grid-cols-[1fr_140px_140px] px-4 py-3 border-t text-sm items-center ${i % 2 === 0 ? "bg-white" : "bg-sky-50/30"}`}>
                   <div>{row.feature}</div>
                   <div className="flex justify-center">
                     {row.us ? <CheckCircle2 className="h-5 w-5 text-emerald-600" /> : <XCircle className="h-5 w-5 text-muted-foreground" />}
@@ -306,14 +507,14 @@ export default function MocksListPage() {
         </section>
       )}
 
-      {/* TESTIMONIALS */}
+      {/* LEGACY TESTIMONIAL CARDS (kept for backwards compatibility) */}
       {settings.testimonials?.length > 0 && (
-        <section className="py-16 bg-sky-50/50">
+        <section className="py-16 bg-sky-50/40">
           <div className="container mx-auto px-4 max-w-6xl">
             <h2 className="text-2xl md:text-3xl font-bold text-center">Real results from real aspirants</h2>
             <div className="grid md:grid-cols-3 gap-5 mt-10">
               {settings.testimonials.map((t: any, i: number) => (
-                <Card key={i} className="p-6 bg-white">
+                <Card key={i} className="p-6 bg-white border-sky-100">
                   <div className="flex gap-0.5 mb-3">
                     {[...Array(5)].map((_, j) => <Star key={j} className="h-4 w-4 fill-amber-400 text-amber-400" />)}
                   </div>
