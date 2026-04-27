@@ -600,6 +600,7 @@ const App = () => (
               <Route path="analysis/:attemptId" element={<LazyPage><StudentDeepAnalysis /></LazyPage>} />
               <Route path="daily-test" element={<LazyPage><StudentDailyTest /></LazyPage>} />
               <Route path="attempts" element={<LazyPage><StudentAttempts /></LazyPage>} />
+              <Route path="support" element={<LazyPage><StudentSupport /></LazyPage>} />
             </Route>
             <Route path="/mba-compass" element={<PublicLayout><LazyPage><MBACompassCoursesPage /></LazyPage></PublicLayout>} />
             <Route path="/mba-compass/compare" element={<PublicLayout><LazyPage><MBACompassComparePage /></LazyPage></PublicLayout>} />
