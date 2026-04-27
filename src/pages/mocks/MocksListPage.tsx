@@ -395,7 +395,7 @@ export default function MocksListPage() {
       {/* AUTO TESTIMONIALS MARQUEE */}
       <AutoTestimonialMarquee items={settings.auto_testimonials ?? []} />
 
-      {/* STUDENT ANALYSIS */}
+      {/* STUDENT ANALYSIS — 3 column grid */}
       {settings.student_analyses && settings.student_analyses.length > 0 && (
         <section className="py-16 bg-sky-50/40">
           <div className="container mx-auto px-4 max-w-6xl">
@@ -404,24 +404,22 @@ export default function MocksListPage() {
               <h2 className="text-2xl md:text-3xl font-bold">Score breakdowns from real toppers</h2>
               <p className="text-muted-foreground mt-2">See how aspirants used our platform to crack the CAT.</p>
             </div>
-            <div className="grid md:grid-cols-2 gap-5 mt-10">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-10">
               {settings.student_analyses.map((a: any, i: number) => (
-                <Card key={i} className="overflow-hidden border-sky-100 bg-white">
-                  <div className="grid md:grid-cols-5">
-                    <div className="md:col-span-2 bg-sky-50 aspect-video md:aspect-auto flex items-center justify-center">
-                      {a.image_url ? (
-                        <img src={a.image_url} alt={a.name} className="w-full h-full object-cover" loading="lazy" />
-                      ) : (
-                        <Award className="h-14 w-14 text-sky-300" />
-                      )}
+                <Card key={i} className="overflow-hidden border-sky-100 bg-white hover:shadow-lg transition group">
+                  <div className="aspect-video bg-sky-50 overflow-hidden flex items-center justify-center">
+                    {a.image_url ? (
+                      <img src={a.image_url} alt={a.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                    ) : (
+                      <Award className="h-14 w-14 text-sky-300" />
+                    )}
+                  </div>
+                  <div className="p-5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <div className="font-semibold">{a.name}</div>
+                      <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">{a.score}</Badge>
                     </div>
-                    <div className="md:col-span-3 p-5">
-                      <div className="flex items-center gap-2">
-                        <div className="font-semibold">{a.name}</div>
-                        <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">{a.score}</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{a.summary}</p>
-                    </div>
+                    <p className="text-sm text-muted-foreground mt-2 leading-relaxed line-clamp-4">{a.summary}</p>
                   </div>
                 </Card>
               ))}
@@ -430,50 +428,11 @@ export default function MocksListPage() {
         </section>
       )}
 
-      {/* STUDENT FEEDBACK — Text + Image */}
-      {((settings.student_feedback_text?.length ?? 0) > 0 || (settings.student_feedback_images?.length ?? 0) > 0) && (
-        <section className="py-16 bg-white">
-          <div className="container mx-auto px-4 max-w-6xl">
-            <div className="text-center max-w-3xl mx-auto">
-              <Badge className="mb-3 bg-sky-100 text-sky-800 hover:bg-sky-100 border-sky-200">Student Feedback</Badge>
-              <h2 className="text-2xl md:text-3xl font-bold">What aspirants are saying</h2>
-              <p className="text-muted-foreground mt-2">Unfiltered text & screenshot reviews from our community.</p>
-            </div>
-
-            {(settings.student_feedback_text?.length ?? 0) > 0 && (
-              <div className="grid md:grid-cols-3 gap-5 mt-10">
-                {settings.student_feedback_text!.map((f: any, i: number) => (
-                  <Card key={i} className="p-6 border-sky-100 bg-white relative">
-                    <Quote className="absolute top-4 right-4 h-8 w-8 text-sky-100" />
-                    <p className="text-sm leading-relaxed">{f.quote}</p>
-                    <div className="mt-4 pt-4 border-t">
-                      <div className="font-semibold text-sm">{f.name}</div>
-                      <div className="text-xs text-sky-700 font-medium">{f.tag}</div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
-            )}
-
-            {(settings.student_feedback_images?.length ?? 0) > 0 && (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-8">
-                {settings.student_feedback_images!.map((img: any, i: number) => (
-                  <Card key={i} className="overflow-hidden border-sky-100 bg-white">
-                    <div className="aspect-[4/5] bg-sky-50 flex items-center justify-center">
-                      {img.image_url ? (
-                        <img src={img.image_url} alt={img.caption || "Student feedback"} className="w-full h-full object-cover" loading="lazy" />
-                      ) : (
-                        <MessageCircle className="h-12 w-12 text-sky-300" />
-                      )}
-                    </div>
-                    {img.caption && <div className="p-3 text-xs text-center text-muted-foreground">{img.caption}</div>}
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-      )}
+      {/* DUAL FEEDBACK MARQUEES — Text RTL + Images LTR */}
+      <DualFeedbackMarquees
+        textItems={settings.student_feedback_text ?? []}
+        imageItems={settings.student_feedback_images ?? []}
+      />
 
       {/* EXPERT FEEDBACK */}
       {settings.expert_feedback && settings.expert_feedback.length > 0 && (
