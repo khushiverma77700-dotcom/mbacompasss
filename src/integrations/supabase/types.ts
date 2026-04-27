@@ -2531,6 +2531,8 @@ export type Database = {
       }
       mock_enrollments: {
         Row: {
+          admin_notes: string | null
+          assigned_by: string | null
           coupon_code: string | null
           enrolled_at: string
           expires_at: string | null
@@ -2540,6 +2542,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          admin_notes?: string | null
+          assigned_by?: string | null
           coupon_code?: string | null
           enrolled_at?: string
           expires_at?: string | null
@@ -2549,6 +2553,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          admin_notes?: string | null
+          assigned_by?: string | null
           coupon_code?: string | null
           enrolled_at?: string
           expires_at?: string | null
@@ -3746,6 +3752,90 @@ export type Database = {
         }
         Relationships: []
       }
+      student_announcements: {
+        Row: {
+          audience: string
+          body: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          link_label: string | null
+          link_url: string | null
+          pinned: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: string
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          link_label?: string | null
+          link_url?: string | null
+          pinned?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string
+          body?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          link_label?: string | null
+          link_url?: string | null
+          pinned?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      student_goals: {
+        Row: {
+          created_at: string
+          current_value: number | null
+          due_date: string | null
+          goal_type: string
+          id: string
+          is_completed: boolean
+          target_value: number | null
+          title: string
+          unit: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_value?: number | null
+          due_date?: string | null
+          goal_type?: string
+          id?: string
+          is_completed?: boolean
+          target_value?: number | null
+          title: string
+          unit?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_value?: number | null
+          due_date?: string | null
+          goal_type?: string
+          id?: string
+          is_completed?: boolean
+          target_value?: number | null
+          title?: string
+          unit?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       testimonials: {
         Row: {
           active: boolean | null
@@ -3995,6 +4085,16 @@ export type Database = {
       }
     }
     Functions: {
+      admin_search_students: {
+        Args: { _limit?: number; _query?: string }
+        Returns: {
+          display_name: string
+          email: string
+          enrolled_count: number
+          phone: string
+          user_id: string
+        }[]
+      }
       assign_admin_by_email: { Args: { _email: string }; Returns: string }
       get_mock_leaderboard: {
         Args: { _limit?: number; _test_id: string }
