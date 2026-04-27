@@ -533,6 +533,7 @@ const App = () => (
               <Route path="student-announcements" element={<LazyPage><AdminStudentAnnouncements /></LazyPage>} />
               <Route path="student-notifications" element={<LazyPage><AdminStudentNotificationsBroadcast /></LazyPage>} />
               <Route path="daily-tests" element={<LazyPage><AdminDailyTests /></LazyPage>} />
+              <Route path="mba-compass-courses" element={<LazyPage><AdminMBACompassCourses /></LazyPage>} />
               <Route path="hyperlink-update" element={<LazyPage><AdminHyperlinkUpdate /></LazyPage>} />
               <Route path="bulk-ai-edit" element={<LazyPage><AdminBulkAIEdit /></LazyPage>} />
               <Route path="iim-waitlist" element={<LazyPage><AdminIIMWaitlist /></LazyPage>} />
@@ -597,6 +598,7 @@ const App = () => (
               <Route path="daily-test" element={<LazyPage><StudentDailyTest /></LazyPage>} />
               <Route path="attempts" element={<LazyPage><StudentAttempts /></LazyPage>} />
             </Route>
+            <Route path="/mba-compass" element={<PublicLayout><LazyPage><MBACompassCoursesPage /></LazyPage></PublicLayout>} />
             <Route path="/iim-waitlist-movement" element={<PublicLayout><LazyPage><IIMWaitlistPage /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />
           </Routes>

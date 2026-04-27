@@ -43,6 +43,7 @@ const adminNavGroups = [
       { label: "Landing Page", path: "/admin/mocks-landing", icon: ClipboardList },
       { label: "Student Assignments", path: "/admin/student-mocks", icon: Users },
       { label: "Daily Tests", path: "/admin/daily-tests", icon: ClipboardList },
+      { label: "MBA Compass Courses", path: "/admin/mba-compass-courses", icon: GraduationCap },
      { label: "Student Announcements", path: "/admin/student-announcements", icon: Bell },
      { label: "Push Notifications", path: "/admin/student-notifications", icon: Bell },
     ],
