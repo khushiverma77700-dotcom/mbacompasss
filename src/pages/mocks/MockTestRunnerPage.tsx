@@ -4,8 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import MathContent from "@/components/mock/MathContent";
-import { Flag, Bookmark, ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
+import { Flag, Bookmark, ChevronLeft, ChevronRight, AlertTriangle, LayoutGrid, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const isMobileDevice = () =>
+  typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches;
 
 type ResponseStatus =
   | "not_visited"
