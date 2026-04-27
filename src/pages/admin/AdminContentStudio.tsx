@@ -100,6 +100,20 @@ function isHtmlField(v: any) {
   return typeof v === "string" && /<\/?[a-z][\s\S]*>/i.test(v);
 }
 
+async function getFunctionErrorMessage(error: any): Promise<string> {
+  const context = error?.context;
+  if (context && typeof context.text === "function") {
+    try {
+      const text = await context.text();
+      const parsed = JSON.parse(text);
+      return parsed?.error || parsed?.message || text || error.message;
+    } catch {
+      return error.message;
+    }
+  }
+  return error?.message || "Refresh failed";
+}
+
 const AdminContentStudio = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -336,7 +350,7 @@ const AdminContentStudio = () => {
           });
           if (error) {
             failed++;
-            failures.push({ name: idToName.get(id) || id, error: error.message });
+            failures.push({ name: idToName.get(id) || id, error: await getFunctionErrorMessage(error) });
           } else succeeded++;
         } catch (e) {
           failed++;
