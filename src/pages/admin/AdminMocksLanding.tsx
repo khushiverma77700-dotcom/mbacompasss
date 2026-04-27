@@ -113,7 +113,7 @@ export default function AdminMocksLanding() {
             <Field label="Headline" v={s.hero_headline} onChange={(v) => upd({ hero_headline: v })} multiline />
             <Field label="Subheadline" v={s.hero_subheadline} onChange={(v) => upd({ hero_subheadline: v })} multiline />
             <Field label="CTA Label" v={s.hero_cta_label} onChange={(v) => upd({ hero_cta_label: v })} />
-            <Field label="Hero Image URL (optional)" v={s.hero_image_url ?? ""} onChange={(v) => upd({ hero_image_url: v })} />
+            <ImageField label="Hero Image (optional)" v={s.hero_image_url ?? ""} onChange={(v) => upd({ hero_image_url: v })} folder="hero" />
           </Card>
         </TabsContent>
 
@@ -293,7 +293,7 @@ export default function AdminMocksLanding() {
                   <Field label="Score / Result" v={t.score} onChange={(v) => updArr("auto_testimonials" as any, i, { score: v })} />
                 </div>
                 <Field label="Quote" v={t.quote} onChange={(v) => updArr("auto_testimonials" as any, i, { quote: v })} multiline />
-                <Field label="Avatar URL (optional)" v={t.avatar ?? ""} onChange={(v) => updArr("auto_testimonials" as any, i, { avatar: v })} />
+                <ImageField label="Avatar (optional)" v={t.avatar ?? ""} onChange={(v) => updArr("auto_testimonials" as any, i, { avatar: v })} folder="auto-testimonials" />
                 <Button variant="ghost" size="sm" onClick={() => delArr("auto_testimonials" as any, i)}><Trash2 className="h-4 w-4 mr-1" /> Remove</Button>
               </div>
             ))}
@@ -312,7 +312,7 @@ export default function AdminMocksLanding() {
                   <Field label="Name" v={a.name} onChange={(v) => updArr("student_analyses" as any, i, { name: v })} />
                   <Field label="Score" v={a.score} onChange={(v) => updArr("student_analyses" as any, i, { score: v })} />
                 </div>
-                <Field label="Image URL" v={a.image_url ?? ""} onChange={(v) => updArr("student_analyses" as any, i, { image_url: v })} />
+                <ImageField label="Image" v={a.image_url ?? ""} onChange={(v) => updArr("student_analyses" as any, i, { image_url: v })} folder="analyses" />
                 <Field label="Summary" v={a.summary} onChange={(v) => updArr("student_analyses" as any, i, { summary: v })} multiline />
                 <Button variant="ghost" size="sm" onClick={() => delArr("student_analyses" as any, i)}><Trash2 className="h-4 w-4 mr-1" /> Remove</Button>
               </div>
@@ -346,7 +346,7 @@ export default function AdminMocksLanding() {
             <p className="text-xs text-muted-foreground">Screenshots of WhatsApp/email/result feedback.</p>
             {(s.student_feedback_images ?? []).map((img: any, i: number) => (
               <div key={i} className="border rounded-md p-3 space-y-2">
-                <Field label="Image URL" v={img.image_url ?? ""} onChange={(v) => updArr("student_feedback_images" as any, i, { image_url: v })} />
+                <ImageField label="Image" v={img.image_url ?? ""} onChange={(v) => updArr("student_feedback_images" as any, i, { image_url: v })} folder="feedback-images" />
                 <Field label="Caption (optional)" v={img.caption ?? ""} onChange={(v) => updArr("student_feedback_images" as any, i, { caption: v })} />
                 <Button variant="ghost" size="sm" onClick={() => delArr("student_feedback_images" as any, i)}><Trash2 className="h-4 w-4 mr-1" /> Remove</Button>
               </div>
@@ -365,7 +365,7 @@ export default function AdminMocksLanding() {
                   <Field label="Expert Name" v={e.name} onChange={(v) => updArr("expert_feedback" as any, i, { name: v })} />
                   <Field label="Title / Credentials" v={e.title} onChange={(v) => updArr("expert_feedback" as any, i, { title: v })} />
                 </div>
-                <Field label="Image URL" v={e.image_url ?? ""} onChange={(v) => updArr("expert_feedback" as any, i, { image_url: v })} />
+                <ImageField label="Image" v={e.image_url ?? ""} onChange={(v) => updArr("expert_feedback" as any, i, { image_url: v })} folder="expert-feedback" />
                 <Field label="Quote" v={e.quote} onChange={(v) => updArr("expert_feedback" as any, i, { quote: v })} multiline />
                 <Button variant="ghost" size="sm" onClick={() => delArr("expert_feedback" as any, i)}><Trash2 className="h-4 w-4 mr-1" /> Remove</Button>
               </div>
