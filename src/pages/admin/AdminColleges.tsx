@@ -53,6 +53,9 @@ const AdminColleges = () => {
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
   const [tagInputs, setTagInputs] = useState({ courses: "", accreditations: "", exams_accepted: "", top_recruiters: "", keywords: "" });
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkRefreshing, setBulkRefreshing] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0, failed: 0 });
   const { toast } = useToast();
   const { data: specializationOptions = [] } = useSpecializations("college");
   const navigate = useNavigate();
