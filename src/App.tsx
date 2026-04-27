@@ -127,6 +127,7 @@ const AdminWriteCourses = lazyWithPreload(() => import("./pages/admin/AdminWrite
 const AdminWebsiteOptimizer = lazyWithPreload(() => import("./pages/admin/AdminWebsiteOptimizer"));
 const AdminMockTests = lazyWithPreload(() => import("./pages/admin/AdminMockTests"));
 const AdminMockBuilder = lazyWithPreload(() => import("./pages/admin/AdminMockBuilder"));
+const AdminMocksLanding = lazyWithPreload(() => import("./pages/admin/AdminMocksLanding"));
 const MocksListPage = lazyWithPreload(() => import("./pages/mocks/MocksListPage"));
 const MockTestIntroPage = lazyWithPreload(() => import("./pages/mocks/MockTestIntroPage"));
 const MockTestRunnerPage = lazyWithPreload(() => import("./pages/mocks/MockTestRunnerPage"));
@@ -504,6 +505,7 @@ const App = () => (
               <Route path="website-optimizer" element={<LazyPage><AdminWebsiteOptimizer /></LazyPage>} />
               <Route path="mock-tests" element={<LazyPage><AdminMockTests /></LazyPage>} />
               <Route path="mock-tests/:testId/builder" element={<LazyPage><AdminMockBuilder /></LazyPage>} />
+              <Route path="mocks-landing" element={<LazyPage><AdminMocksLanding /></LazyPage>} />
               <Route path="hyperlink-update" element={<LazyPage><AdminHyperlinkUpdate /></LazyPage>} />
               <Route path="bulk-ai-edit" element={<LazyPage><AdminBulkAIEdit /></LazyPage>} />
               <Route path="iim-waitlist" element={<LazyPage><AdminIIMWaitlist /></LazyPage>} />
