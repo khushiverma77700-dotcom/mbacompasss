@@ -295,6 +295,9 @@ export default function MockResultPage() {
                 Leaderboard
               </Button>
             )}
+            <Button onClick={() => navigate(`/student/analysis/${attempt.id}`)} className="bg-gradient-to-r from-sky-500 to-blue-600 text-white hover:opacity-90 gap-1">
+              <Sparkles className="h-4 w-4" /> AI Deep Analysis
+            </Button>
           </div>
         </div>
 
