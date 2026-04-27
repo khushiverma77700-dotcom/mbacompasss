@@ -127,6 +127,7 @@ const AdminWriteCourses = lazyWithPreload(() => import("./pages/admin/AdminWrite
 const AdminWebsiteOptimizer = lazyWithPreload(() => import("./pages/admin/AdminWebsiteOptimizer"));
 const AdminMockTests = lazyWithPreload(() => import("./pages/admin/AdminMockTests"));
 const AdminMockBuilder = lazyWithPreload(() => import("./pages/admin/AdminMockBuilder"));
+const AdminMocksLanding = lazyWithPreload(() => import("./pages/admin/AdminMocksLanding"));
 const MocksListPage = lazyWithPreload(() => import("./pages/mocks/MocksListPage"));
 const MockTestIntroPage = lazyWithPreload(() => import("./pages/mocks/MockTestIntroPage"));
 const MockTestRunnerPage = lazyWithPreload(() => import("./pages/mocks/MockTestRunnerPage"));
@@ -138,6 +139,7 @@ const AdminIIMWaitlist = lazyWithPreload(() => import("./pages/admin/AdminIIMWai
 const MockReviewPage = lazyWithPreload(() => import("./pages/mocks/MockReviewPage"));
 const MockLeaderboardPage = lazyWithPreload(() => import("./pages/mocks/MockLeaderboardPage"));
 const MockCheckoutReturnPage = lazyWithPreload(() => import("./pages/mocks/MockCheckoutReturnPage"));
+const MockThankYouPage = lazyWithPreload(() => import("./pages/mocks/MockThankYouPage"));
 
 // Lazy load heavy popups
 const OnboardingDialog = lazyWithPreload(() => import("@/components/OnboardingDialog"));
@@ -503,6 +505,7 @@ const App = () => (
               <Route path="website-optimizer" element={<LazyPage><AdminWebsiteOptimizer /></LazyPage>} />
               <Route path="mock-tests" element={<LazyPage><AdminMockTests /></LazyPage>} />
               <Route path="mock-tests/:testId/builder" element={<LazyPage><AdminMockBuilder /></LazyPage>} />
+              <Route path="mocks-landing" element={<LazyPage><AdminMocksLanding /></LazyPage>} />
               <Route path="hyperlink-update" element={<LazyPage><AdminHyperlinkUpdate /></LazyPage>} />
               <Route path="bulk-ai-edit" element={<LazyPage><AdminBulkAIEdit /></LazyPage>} />
               <Route path="iim-waitlist" element={<LazyPage><AdminIIMWaitlist /></LazyPage>} />
@@ -547,6 +550,7 @@ const App = () => (
             <Route path="/mocks/review/:attemptId" element={<PublicLayout><LazyPage><MockReviewPage /></LazyPage></PublicLayout>} />
             <Route path="/mocks/leaderboard/:slug" element={<PublicLayout><LazyPage><MockLeaderboardPage /></LazyPage></PublicLayout>} />
             <Route path="/mocks/checkout/return" element={<LazyPage><MockCheckoutReturnPage /></LazyPage>} />
+            <Route path="/mocks/thank-you" element={<PublicLayout><LazyPage><MockThankYouPage /></LazyPage></PublicLayout>} />
             <Route path="/dashboard/mocks" element={<PublicLayout><LazyPage><MyMocksPage /></LazyPage></PublicLayout>} />
             <Route path="/iim-waitlist-movement" element={<PublicLayout><LazyPage><IIMWaitlistPage /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />

@@ -40,6 +40,7 @@ const adminNavGroups = [
     label: "CAT Mock Tests",
     items: [
       { label: "Mock Tests", path: "/admin/mock-tests", icon: ClipboardList },
+      { label: "Landing Page", path: "/admin/mocks-landing", icon: ClipboardList },
     ],
   },
   {

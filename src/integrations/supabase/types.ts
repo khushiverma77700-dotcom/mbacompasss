@@ -2998,6 +2998,99 @@ export type Database = {
         }
         Relationships: []
       }
+      mocks_landing_settings: {
+        Row: {
+          benefits: Json
+          bundle_subtitle: string | null
+          bundle_title: string | null
+          comparison: Json
+          created_at: string
+          cta_target_test_id: string | null
+          faqs: Json
+          hero_cta_label: string | null
+          hero_eyebrow: string | null
+          hero_headline: string | null
+          hero_image_url: string | null
+          hero_subheadline: string | null
+          id: string
+          meta_description: string | null
+          meta_pixel_id: string | null
+          meta_title: string | null
+          offer_ends_at: string | null
+          offer_urgency: string | null
+          price_current: number | null
+          price_discount_label: string | null
+          price_original: number | null
+          singleton: boolean
+          testimonials: Json
+          trust_avg_improvement: string | null
+          trust_rating: string | null
+          trust_students: string | null
+          updated_at: string
+          whats_included: Json
+        }
+        Insert: {
+          benefits?: Json
+          bundle_subtitle?: string | null
+          bundle_title?: string | null
+          comparison?: Json
+          created_at?: string
+          cta_target_test_id?: string | null
+          faqs?: Json
+          hero_cta_label?: string | null
+          hero_eyebrow?: string | null
+          hero_headline?: string | null
+          hero_image_url?: string | null
+          hero_subheadline?: string | null
+          id?: string
+          meta_description?: string | null
+          meta_pixel_id?: string | null
+          meta_title?: string | null
+          offer_ends_at?: string | null
+          offer_urgency?: string | null
+          price_current?: number | null
+          price_discount_label?: string | null
+          price_original?: number | null
+          singleton?: boolean
+          testimonials?: Json
+          trust_avg_improvement?: string | null
+          trust_rating?: string | null
+          trust_students?: string | null
+          updated_at?: string
+          whats_included?: Json
+        }
+        Update: {
+          benefits?: Json
+          bundle_subtitle?: string | null
+          bundle_title?: string | null
+          comparison?: Json
+          created_at?: string
+          cta_target_test_id?: string | null
+          faqs?: Json
+          hero_cta_label?: string | null
+          hero_eyebrow?: string | null
+          hero_headline?: string | null
+          hero_image_url?: string | null
+          hero_subheadline?: string | null
+          id?: string
+          meta_description?: string | null
+          meta_pixel_id?: string | null
+          meta_title?: string | null
+          offer_ends_at?: string | null
+          offer_urgency?: string | null
+          price_current?: number | null
+          price_discount_label?: string | null
+          price_original?: number | null
+          singleton?: boolean
+          testimonials?: Json
+          trust_avg_improvement?: string | null
+          trust_rating?: string | null
+          trust_students?: string | null
+          updated_at?: string
+          whats_included?: Json
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           created_at: string
