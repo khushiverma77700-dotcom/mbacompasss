@@ -35,6 +35,9 @@ const GLOBAL_SOURCE_URLS: Record<string, string> = {
   nmat: "https://www.nmat.org",
   snap: "https://www.snaptest.org",
   iift: "https://iift.nta.nic.in",
+  mat: "https://mat.aima.in",
+  atma: "https://atmaaims.com",
+  kmat: "https://kmatindia.com",
 };
 
 // Source keywords whose pages typically live on the COLLEGE's own website.
