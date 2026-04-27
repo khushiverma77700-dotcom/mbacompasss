@@ -8,14 +8,23 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
   BookOpenCheck, Trophy, TrendingUp, Flame, CheckCircle2, Clock, Target, Bell,
-  ArrowRight, Sparkles, Zap, ShoppingBag, BarChart3, Activity, Brain,
+  ArrowRight, Sparkles, Zap, ShoppingBag, BarChart3, Activity, Brain, Timer,
+  Percent, ListChecks, Gauge, LineChart as LineIcon, Award, AlertTriangle,
 } from "lucide-react";
 import {
   LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid,
   AreaChart, Area, BarChart, Bar, RadialBarChart, RadialBar, PolarAngleAxis,
+  ComposedChart, Legend, ReferenceLine,
 } from "recharts";
 
-const SECTIONS = ["QA", "VARC", "DILR"] as const;
+const SECTION_COLORS: Record<string, string> = {
+  QA: "#0284c7",
+  VARC: "#0ea5e9",
+  DILR: "#38bdf8",
+  LRDI: "#38bdf8",
+  RC: "#7dd3fc",
+  GK: "#0369a1",
+};
 
 export default function StudentOverview() {
   const { user } = useAuth();
@@ -39,7 +48,7 @@ export default function StudentOverview() {
           .select("id, test_id, source, expires_at, enrolled_at, test:mock_tests(name, slug, exam_code)")
           .eq("user_id", user.id).order("enrolled_at", { ascending: false }),
         supabase.from("mock_attempts")
-          .select("id, test_id, status, started_at, submitted_at, total_score, max_score, percentile, total_correct, total_attempted, accuracy, sectional_scores, test:mock_tests(name, slug)")
+          .select("id, test_id, status, started_at, submitted_at, total_score, max_score, percentile, total_correct, total_attempted, accuracy, sectional_scores, time_spent_seconds, test:mock_tests(name, slug, exam_code)")
           .eq("user_id", user.id).order("started_at", { ascending: false }),
         supabase.from("student_goals").select("*").eq("user_id", user.id).eq("is_completed", false)
           .order("due_date", { ascending: true }).limit(3),
@@ -60,16 +69,44 @@ export default function StudentOverview() {
     })();
   }, [user]);
 
+  const submitted = useMemo(
+    () => attempts.filter((x) => x.status === "submitted" || x.status === "auto_submitted"),
+    [attempts]
+  );
+
   const stats = useMemo(() => {
-    const submitted = attempts.filter((x) => x.status === "submitted" || x.status === "auto_submitted");
     const inProgress = attempts.filter((x) => x.status === "in_progress");
     const avgPercentile = submitted.length
-      ? Math.round((submitted.reduce((s, x) => s + Number(x.percentile || 0), 0) / submitted.length) * 10) / 10 : 0;
+      ? +(submitted.reduce((s, x) => s + Number(x.percentile || 0), 0) / submitted.length).toFixed(1) : 0;
     const bestPercentile = submitted.length ? Math.max(...submitted.map((x) => Number(x.percentile || 0))) : 0;
     const accuracy = submitted.length
       ? Math.round(submitted.reduce((s, x) => s + Number(x.accuracy || 0), 0) / submitted.length) : 0;
     const totalAttempted = submitted.reduce((s, x) => s + Number(x.total_attempted || 0), 0);
-    // streak: distinct days in last 30
+    const totalCorrect = submitted.reduce((s, x) => s + Number(x.total_correct || 0), 0);
+    const totalScore = submitted.reduce((s, x) => s + Number(x.total_score || 0), 0);
+    const totalMaxScore = submitted.reduce((s, x) => s + Number(x.max_score || 0), 0);
+    const avgScore = submitted.length ? +(totalScore / submitted.length).toFixed(1) : 0;
+    const avgMaxScore = submitted.length ? +(totalMaxScore / submitted.length).toFixed(1) : 0;
+    const avgPctScore = totalMaxScore > 0 ? Math.round((totalScore / totalMaxScore) * 100) : 0;
+    const totalTimeSec = submitted.reduce((s, x) => s + Number(x.time_spent_seconds || 0), 0);
+    const totalHours = +(totalTimeSec / 3600).toFixed(1);
+    const avgTimeMin = submitted.length ? Math.round(totalTimeSec / 60 / submitted.length) : 0;
+
+    // Consistency = 100 - stddev of percentiles (clamped 0-100)
+    let consistency = 0;
+    if (submitted.length >= 2) {
+      const ps = submitted.map((x) => Number(x.percentile || 0));
+      const mean = ps.reduce((a, b) => a + b, 0) / ps.length;
+      const variance = ps.reduce((s, v) => s + (v - mean) ** 2, 0) / ps.length;
+      consistency = Math.max(0, Math.round(100 - Math.sqrt(variance)));
+    }
+
+    // Improvement: first vs last (chronological)
+    const chrono = submitted.slice().reverse();
+    const improvement = chrono.length >= 2
+      ? +((Number(chrono[chrono.length - 1].percentile || 0)) - Number(chrono[0].percentile || 0)).toFixed(1)
+      : 0;
+
     const days = new Set(
       submitted.filter((x) => x.submitted_at).map((x) => new Date(x.submitted_at).toDateString())
     );
@@ -78,48 +115,89 @@ export default function StudentOverview() {
       submittedCount: submitted.length,
       inProgressCount: inProgress.length,
       avgPercentile, bestPercentile, accuracy,
-      totalAttempted, streak: days.size,
+      totalAttempted, totalCorrect, totalScore, totalMaxScore,
+      avgScore, avgMaxScore, avgPctScore,
+      totalHours, avgTimeMin,
+      consistency, improvement,
+      streak: days.size,
     };
-  }, [enrollments, attempts]);
+  }, [enrollments, attempts, submitted]);
 
-  // Percentile predictor: weighted avg of last 5 attempts, blended toward target
   const predicted = useMemo(() => {
-    const last = attempts
-      .filter((x) => x.status === "submitted" || x.status === "auto_submitted")
-      .slice(0, 5).map((x) => Number(x.percentile || 0));
+    const last = submitted.slice(0, 5).map((x) => Number(x.percentile || 0));
     if (!last.length) return null;
     const weights = last.map((_, i) => 5 - i);
     const wsum = weights.reduce((a, b) => a + b, 0);
     const w = last.reduce((s, v, i) => s + v * weights[i], 0) / wsum;
-    const target = Number(profile?.target_percentile || 0);
-    // Slight upward drift if consistent improvement
     const trend = last.length >= 3 ? (last[0] - last[last.length - 1]) / last.length : 0;
     return Math.max(0, Math.min(99.9, +(w + trend * 0.5).toFixed(1))) || 0;
-  }, [attempts, profile]);
+  }, [submitted]);
 
+  // Trend with cumulative average
   const trendData = useMemo(() => {
-    const submitted = attempts
-      .filter((x) => x.status === "submitted" || x.status === "auto_submitted").slice().reverse();
-    return submitted.slice(-10).map((x, i) => ({
-      name: `M${i + 1}`,
-      percentile: Number(x.percentile || 0),
-      score: Number(x.total_score || 0),
-      accuracy: Number(x.accuracy || 0),
-    }));
-  }, [attempts]);
+    const chrono = submitted.slice().reverse();
+    let cumP = 0, cumA = 0, cumS = 0;
+    return chrono.slice(-12).map((x, i) => {
+      cumP += Number(x.percentile || 0);
+      cumA += Number(x.accuracy || 0);
+      cumS += Number(x.total_score || 0);
+      return {
+        name: `M${i + 1}`,
+        percentile: Number(x.percentile || 0),
+        score: Number(x.total_score || 0),
+        accuracy: Number(x.accuracy || 0),
+        cumPercentile: +(cumP / (i + 1)).toFixed(1),
+        cumAccuracy: +(cumA / (i + 1)).toFixed(1),
+        cumScore: +(cumS / (i + 1)).toFixed(1),
+      };
+    });
+  }, [submitted]);
 
+  // Sectional aggregates: avg score, avg accuracy, avg attempted, avg percentile
   const sectional = useMemo(() => {
-    const sums: Record<string, { total: number; count: number }> = {};
-    for (const a of attempts) {
+    const agg: Record<string, { score: number; max: number; correct: number; attempted: number; percentile: number; count: number }> = {};
+    for (const a of submitted) {
       const ss = a.sectional_scores || {};
       for (const k of Object.keys(ss)) {
-        const v = Number((ss as any)[k]?.percentile ?? (ss as any)[k]?.score ?? 0);
-        if (!sums[k]) sums[k] = { total: 0, count: 0 };
-        sums[k].total += v; sums[k].count += 1;
+        const sec = (ss as any)[k] || {};
+        if (!agg[k]) agg[k] = { score: 0, max: 0, correct: 0, attempted: 0, percentile: 0, count: 0 };
+        agg[k].score += Number(sec.score || 0);
+        agg[k].max += Number(sec.max_score || sec.max || 0);
+        agg[k].correct += Number(sec.correct || 0);
+        agg[k].attempted += Number(sec.attempted || 0);
+        agg[k].percentile += Number(sec.percentile || 0);
+        agg[k].count += 1;
       }
     }
-    return Object.entries(sums).map(([k, v]) => ({ name: k, value: Math.round(v.total / Math.max(1, v.count)) }));
-  }, [attempts]);
+    return Object.entries(agg).map(([name, v]) => ({
+      name,
+      avgScore: +(v.score / v.count).toFixed(1),
+      avgMax: +(v.max / v.count).toFixed(1),
+      avgPercentile: Math.round(v.percentile / v.count),
+      avgAccuracy: v.attempted > 0 ? Math.round((v.correct / v.attempted) * 100) : 0,
+      avgAttempted: Math.round(v.attempted / v.count),
+      pctOfMax: v.max > 0 ? Math.round((v.score / v.max) * 100) : 0,
+      fill: SECTION_COLORS[name] || "#0284c7",
+    }));
+  }, [submitted]);
+
+  // Percentile band distribution
+  const bandData = useMemo(() => {
+    const bands = [
+      { name: "<70", min: 0, max: 70, count: 0 },
+      { name: "70-80", min: 70, max: 80, count: 0 },
+      { name: "80-90", min: 80, max: 90, count: 0 },
+      { name: "90-95", min: 90, max: 95, count: 0 },
+      { name: "95-99", min: 95, max: 99, count: 0 },
+      { name: "99+", min: 99, max: 101, count: 0 },
+    ];
+    for (const a of submitted) {
+      const p = Number(a.percentile || 0);
+      const b = bands.find((x) => p >= x.min && p < x.max);
+      if (b) b.count += 1;
+    }
+    return bands;
+  }, [submitted]);
 
   const taskProgress = tasks.length
     ? Math.round((tasks.filter((t) => t.is_completed).length / tasks.length) * 100) : 0;
@@ -180,17 +258,17 @@ export default function StudentOverview() {
           </div>
         </div>
 
-        {/* Inline KPI strip */}
-        <div className="relative mt-5 grid grid-cols-2 md:grid-cols-5 gap-2 text-white/95">
+        <div className="relative mt-5 grid grid-cols-2 md:grid-cols-6 gap-2 text-white/95">
           <Kpi label="Enrolled" value={stats.enrolledCount} />
           <Kpi label="Completed" value={stats.submittedCount} />
+          <Kpi label="Avg %ile" value={stats.avgPercentile} />
           <Kpi label="Best %ile" value={stats.bestPercentile} />
           <Kpi label="Accuracy" value={`${stats.accuracy}%`} />
           <Kpi label="Streak" value={`${stats.streak}d`} icon={<Flame className="h-3.5 w-3.5" />} />
         </div>
       </Card>
 
-      {/* Setup banner if no profile */}
+      {/* Setup banner */}
       {noProfile && (
         <Card className="p-5 border-sky-200 bg-sky-50/50">
           <div className="flex items-start gap-3">
@@ -210,15 +288,29 @@ export default function StudentOverview() {
         </Card>
       )}
 
-      {/* Stat tiles */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatTile icon={BookOpenCheck} label="Enrolled" value={stats.enrolledCount} accent="from-sky-500 to-blue-600" />
-        <StatTile icon={CheckCircle2} label="Completed" value={stats.submittedCount} accent="from-emerald-500 to-teal-600" />
-        <StatTile icon={Trophy} label="Best %ile" value={stats.bestPercentile} accent="from-amber-500 to-orange-600" />
-        <StatTile icon={Activity} label="Questions" value={stats.totalAttempted} accent="from-rose-500 to-pink-600" />
+      {/* Headline stat tiles */}
+      <div>
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Headline numbers</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatTile icon={BookOpenCheck} label="Mocks Enrolled" value={stats.enrolledCount} sub={`${stats.inProgressCount} in progress`} accent="from-sky-500 to-blue-600" />
+          <StatTile icon={CheckCircle2} label="Mocks Completed" value={stats.submittedCount} sub={stats.improvement >= 0 ? `+${stats.improvement} %ile growth` : `${stats.improvement} %ile drift`} accent="from-emerald-500 to-teal-600" />
+          <StatTile icon={Trophy} label="Best Percentile" value={stats.bestPercentile} sub={`Avg ${stats.avgPercentile}`} accent="from-amber-500 to-orange-600" />
+          <StatTile icon={Activity} label="Questions Solved" value={stats.totalAttempted} sub={`${stats.totalCorrect} correct`} accent="from-rose-500 to-pink-600" />
+        </div>
       </div>
 
-      {/* Predictor + trend */}
+      {/* Score & Time stats */}
+      <div>
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Scores & time invested</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <StatTile icon={Award} label="Avg Total Score" value={`${stats.avgScore}`} sub={`out of ${stats.avgMaxScore}`} accent="from-indigo-500 to-violet-600" />
+          <StatTile icon={Percent} label="Avg % of Max" value={`${stats.avgPctScore}%`} sub="across all mocks" accent="from-cyan-500 to-sky-600" />
+          <StatTile icon={Timer} label="Total Hours" value={`${stats.totalHours}h`} sub={`Avg ${stats.avgTimeMin} min/mock`} accent="from-fuchsia-500 to-pink-600" />
+          <StatTile icon={Gauge} label="Consistency" value={`${stats.consistency}/100`} sub="100 = zero variance" accent="from-emerald-500 to-green-600" />
+        </div>
+      </div>
+
+      {/* Predictor + cumulative trend */}
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="p-5">
           <h2 className="font-semibold flex items-center gap-2 mb-1">
@@ -257,9 +349,9 @@ export default function StudentOverview() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="font-semibold flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-sky-600" /> Mock Score Trend
+                <TrendingUp className="h-4 w-4 text-sky-600" /> Percentile — Mock vs Cumulative Avg
               </h2>
-              <p className="text-xs text-muted-foreground">Last {trendData.length} mocks</p>
+              <p className="text-xs text-muted-foreground">Bars: each mock • Line: running average</p>
             </div>
             <Link to="/student/performance" className="text-xs text-sky-700 hover:underline">
               Detailed analysis →
@@ -270,27 +362,163 @@ export default function StudentOverview() {
               Take a mock to see your trend chart
             </div>
           ) : (
+            <ResponsiveContainer width="100%" height={240}>
+              <ComposedChart data={trendData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
+                <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
+                <YAxis stroke="#64748b" fontSize={11} domain={[0, 100]} />
+                <Tooltip />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Bar dataKey="percentile" name="Mock %ile" fill="#bae6fd" radius={[4, 4, 0, 0]} />
+                <Line type="monotone" dataKey="cumPercentile" name="Cumulative Avg" stroke="#0284c7" strokeWidth={2.5} dot={{ r: 3 }} />
+                {target > 0 && <ReferenceLine y={target} stroke="#16a34a" strokeDasharray="4 4" label={{ value: `Target ${target}`, fill: "#16a34a", fontSize: 10, position: "right" }} />}
+              </ComposedChart>
+            </ResponsiveContainer>
+          )}
+        </Card>
+      </div>
+
+      {/* Cumulative score + Accuracy trend */}
+      <div className="grid lg:grid-cols-2 gap-4">
+        <Card className="p-5">
+          <h2 className="font-semibold flex items-center gap-2 mb-1">
+            <LineIcon className="h-4 w-4 text-sky-600" /> Cumulative Score Growth
+          </h2>
+          <p className="text-xs text-muted-foreground mb-3">Total score per mock and your running average</p>
+          {trendData.length === 0 ? (
+            <div className="h-48 grid place-items-center text-sm text-muted-foreground">No data yet</div>
+          ) : (
             <ResponsiveContainer width="100%" height={220}>
               <AreaChart data={trendData}>
                 <defs>
-                  <linearGradient id="pgrad" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="sgrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#0284c7" stopOpacity={0.4} />
                     <stop offset="100%" stopColor="#0284c7" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
                 <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
+                <YAxis stroke="#64748b" fontSize={11} />
+                <Tooltip />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Area type="monotone" dataKey="score" name="Score" stroke="#0284c7" strokeWidth={2.5} fill="url(#sgrad)" />
+                <Line type="monotone" dataKey="cumScore" name="Cumulative Avg" stroke="#1d4ed8" strokeWidth={2} dot={false} />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </Card>
+
+        <Card className="p-5">
+          <h2 className="font-semibold flex items-center gap-2 mb-1">
+            <Percent className="h-4 w-4 text-sky-600" /> Accuracy Trend
+          </h2>
+          <p className="text-xs text-muted-foreground mb-3">Per-mock accuracy and cumulative average</p>
+          {trendData.length === 0 ? (
+            <div className="h-48 grid place-items-center text-sm text-muted-foreground">No data yet</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <ComposedChart data={trendData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
+                <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
                 <YAxis stroke="#64748b" fontSize={11} domain={[0, 100]} />
                 <Tooltip />
-                <Area type="monotone" dataKey="percentile" stroke="#0284c7" strokeWidth={2.5} fill="url(#pgrad)" />
-              </AreaChart>
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Bar dataKey="accuracy" name="Accuracy %" fill="#7dd3fc" radius={[4, 4, 0, 0]} />
+                <Line type="monotone" dataKey="cumAccuracy" name="Cumulative Avg" stroke="#0369a1" strokeWidth={2.5} dot={{ r: 3 }} />
+              </ComposedChart>
             </ResponsiveContainer>
           )}
         </Card>
       </div>
 
-      {/* Today's plan + Sectional + Weak heatmap */}
+      {/* Sectional deep dive */}
+      <Card className="p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="font-semibold flex items-center gap-2">
+              <BarChart3 className="h-4 w-4 text-sky-600" /> Sectional Average Performance
+            </h2>
+            <p className="text-xs text-muted-foreground">Average score, percentile, accuracy and questions attempted per section</p>
+          </div>
+        </div>
+        {sectional.length === 0 ? (
+          <div className="h-40 grid place-items-center text-sm text-muted-foreground text-center">
+            No sectional data yet — submit a mock to populate this view.
+          </div>
+        ) : (
+          <>
+            <div className="grid md:grid-cols-2 gap-6">
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={sectional}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
+                  <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
+                  <YAxis stroke="#64748b" fontSize={11} />
+                  <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="avgScore" name="Avg Score" fill="#0284c7" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="avgMax" name="Max Score" fill="#bae6fd" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+
+              <ResponsiveContainer width="100%" height={240}>
+                <BarChart data={sectional}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
+                  <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
+                  <YAxis stroke="#64748b" fontSize={11} domain={[0, 100]} />
+                  <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="avgPercentile" name="Avg %ile" fill="#0ea5e9" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="avgAccuracy" name="Accuracy %" fill="#38bdf8" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5">
+              {sectional.map((s) => (
+                <div key={s.name} className="rounded-lg border border-sky-100 bg-sky-50/40 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="font-semibold text-sm">{s.name}</div>
+                    <Badge variant="secondary">{s.avgPercentile} %ile</Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-y-1.5 text-xs">
+                    <div className="text-muted-foreground">Avg score</div>
+                    <div className="font-medium text-right">{s.avgScore} / {s.avgMax}</div>
+                    <div className="text-muted-foreground">% of max</div>
+                    <div className="font-medium text-right">{s.pctOfMax}%</div>
+                    <div className="text-muted-foreground">Accuracy</div>
+                    <div className="font-medium text-right">{s.avgAccuracy}%</div>
+                    <div className="text-muted-foreground">Avg attempted</div>
+                    <div className="font-medium text-right">{s.avgAttempted}</div>
+                  </div>
+                  <Progress value={s.pctOfMax} className="h-1.5 mt-2" />
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </Card>
+
+      {/* Distribution + Today's plan + Heatmap */}
       <div className="grid lg:grid-cols-3 gap-4">
+        <Card className="p-5">
+          <h2 className="font-semibold flex items-center gap-2 mb-3">
+            <BarChart3 className="h-4 w-4 text-sky-600" /> Percentile Distribution
+          </h2>
+          {submitted.length === 0 ? (
+            <div className="h-40 grid place-items-center text-sm text-muted-foreground">No mocks yet</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={bandData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
+                <XAxis dataKey="name" stroke="#64748b" fontSize={10} />
+                <YAxis stroke="#64748b" fontSize={11} allowDecimals={false} />
+                <Tooltip />
+                <Bar dataKey="count" name="Mocks" fill="#0284c7" radius={[6, 6, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </Card>
+
         <Card className="p-5">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold flex items-center gap-2">
@@ -305,6 +533,10 @@ export default function StudentOverview() {
             </div>
           ) : (
             <>
+              <div className="flex items-center justify-between text-xs mb-2">
+                <span className="text-muted-foreground">{tasks.filter((t) => t.is_completed).length} of {tasks.length} done</span>
+                <span className="font-semibold">{taskProgress}%</span>
+              </div>
               <Progress value={taskProgress} className="h-2 mb-3" />
               <div className="space-y-2">
                 {tasks.slice(0, 5).map((t) => (
@@ -321,27 +553,6 @@ export default function StudentOverview() {
 
         <Card className="p-5">
           <h2 className="font-semibold flex items-center gap-2 mb-3">
-            <BarChart3 className="h-4 w-4 text-sky-600" /> Section Strength
-          </h2>
-          {sectional.length === 0 ? (
-            <div className="h-40 grid place-items-center text-sm text-muted-foreground text-center">
-              No sectional data yet.
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={170}>
-              <BarChart data={sectional}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
-                <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                <YAxis stroke="#64748b" fontSize={11} />
-                <Tooltip />
-                <Bar dataKey="value" fill="#0284c7" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </Card>
-
-        <Card className="p-5">
-          <h2 className="font-semibold flex items-center gap-2 mb-3">
             <Target className="h-4 w-4 text-sky-600" /> Weak Topic Heatmap
           </h2>
           {weak.length === 0 ? (
@@ -349,30 +560,37 @@ export default function StudentOverview() {
               Complete a mock and review topics to populate this heatmap.
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-1.5">
-              {weak.map((w) => (
-                <div
-                  key={w.id}
-                  title={`${w.topic} • ${w.section} • ${w.level}`}
-                  className={`text-[10px] px-2 py-2 rounded-md text-center truncate ${
-                    w.level === "red" ? "bg-rose-100 text-rose-800 border border-rose-200"
-                    : w.level === "yellow" ? "bg-amber-100 text-amber-800 border border-amber-200"
-                    : "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                  }`}
-                >
-                  {w.topic}
-                </div>
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-3 gap-1.5">
+                {weak.map((w) => (
+                  <div
+                    key={w.id}
+                    title={`${w.topic} • ${w.section} • ${w.level}`}
+                    className={`text-[10px] px-2 py-2 rounded-md text-center truncate ${
+                      w.level === "red" ? "bg-rose-100 text-rose-800 border border-rose-200"
+                      : w.level === "yellow" ? "bg-amber-100 text-amber-800 border border-amber-200"
+                      : "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                    }`}
+                  >
+                    {w.topic}
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center gap-3 mt-3 text-[10px] text-muted-foreground">
+                <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-rose-400" /> Critical</span>
+                <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-amber-400" /> Improving</span>
+                <span className="flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-emerald-400" /> Strong</span>
+              </div>
+            </>
           )}
         </Card>
       </div>
 
-      {/* Goals + Recent + Announcements */}
+      {/* Recent + Announcements */}
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2 p-5">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold">Recent attempts</h2>
+            <h2 className="font-semibold flex items-center gap-2"><ListChecks className="h-4 w-4 text-sky-600" /> Recent attempts</h2>
             <Link to="/student/mocks" className="text-xs text-sky-700 hover:underline">View all →</Link>
           </div>
           {attempts.length === 0 ? (
@@ -385,13 +603,14 @@ export default function StudentOverview() {
                     <div className="font-medium text-sm truncate">{a.test?.name ?? "Mock"}</div>
                     <div className="text-xs text-muted-foreground">
                       {new Date(a.started_at).toLocaleDateString()} · <StatusLabel status={a.status} />
+                      {a.test?.exam_code && <> · {a.test.exam_code}</>}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     {a.status !== "in_progress" && (
                       <div className="text-right">
                         <div className="text-sm font-semibold">{a.total_score ?? 0}/{a.max_score ?? 0}</div>
-                        <div className="text-[11px] text-muted-foreground">%ile {a.percentile ?? 0}</div>
+                        <div className="text-[11px] text-muted-foreground">%ile {a.percentile ?? 0} · Acc {a.accuracy ?? 0}%</div>
                       </div>
                     )}
                     {a.status === "in_progress" ? (
@@ -459,13 +678,14 @@ function Kpi({ label, value, icon }: any) {
   );
 }
 
-function StatTile({ icon: Icon, label, value, accent }: any) {
+function StatTile({ icon: Icon, label, value, sub, accent }: any) {
   return (
     <Card className="p-4 relative overflow-hidden">
       <div className={`absolute -top-6 -right-6 h-20 w-20 rounded-full bg-gradient-to-br ${accent} opacity-10 pointer-events-none`} />
       <Icon className="h-5 w-5 text-sky-600" />
       <div className="text-2xl font-bold mt-2">{value}</div>
       <div className="text-xs text-muted-foreground">{label}</div>
+      {sub && <div className="text-[10px] text-muted-foreground mt-1 truncate">{sub}</div>}
     </Card>
   );
 }
