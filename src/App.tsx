@@ -133,6 +133,7 @@ const AdminStudentAnnouncements = lazyWithPreload(() => import("./pages/admin/Ad
 const StudentLayout = lazyWithPreload(() => import("./pages/student/StudentLayout"));
 const StudentOverview = lazyWithPreload(() => import("./pages/student/StudentOverview"));
 const StudentMocks = lazyWithPreload(() => import("./pages/student/StudentMocks"));
+const StudentBuyMocks = lazyWithPreload(() => import("./pages/student/StudentBuyMocks"));
 const StudentPerformance = lazyWithPreload(() => import("./pages/student/StudentPerformance"));
 const StudentGoals = lazyWithPreload(() => import("./pages/student/StudentGoals"));
 const StudentAnnouncements = lazyWithPreload(() => import("./pages/student/StudentAnnouncements"));
@@ -567,6 +568,7 @@ const App = () => (
             <Route path="/student" element={<LazyPage><StudentLayout /></LazyPage>}>
               <Route index element={<LazyPage><StudentOverview /></LazyPage>} />
               <Route path="mocks" element={<LazyPage><StudentMocks /></LazyPage>} />
+              <Route path="buy-mocks" element={<LazyPage><StudentBuyMocks /></LazyPage>} />
               <Route path="performance" element={<LazyPage><StudentPerformance /></LazyPage>} />
               <Route path="goals" element={<LazyPage><StudentGoals /></LazyPage>} />
               <Route path="announcements" element={<LazyPage><StudentAnnouncements /></LazyPage>} />
