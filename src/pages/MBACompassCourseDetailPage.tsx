@@ -216,7 +216,15 @@ function DetailInner() {
                   <div className="text-xs text-muted-foreground mt-1">{c.validity_months ?? 12} months access • Taxes included</div>
 
                   <div className="mt-4 space-y-2">
-                    {c.enroll_url ? (
+                    {enrolled ? (
+                      <Button asChild size="lg" className="w-full bg-emerald-600 hover:bg-emerald-700">
+                        <Link to="/student"><CheckCircle2 className="h-4 w-4 mr-1" /> Enrolled — Go to Dashboard</Link>
+                      </Button>
+                    ) : c.price ? (
+                      <Button size="lg" className="w-full bg-sky-600 hover:bg-sky-700" disabled={paying} onClick={handlePay}>
+                        {paying ? "Processing…" : <>Enroll Now <ArrowRight className="h-4 w-4 ml-1" /></>}
+                      </Button>
+                    ) : c.enroll_url ? (
                       <Button asChild size="lg" className="w-full bg-sky-600 hover:bg-sky-700">
                         <a href={c.enroll_url} target="_blank" rel="noopener noreferrer">Enroll Now <ArrowRight className="h-4 w-4 ml-1" /></a>
                       </Button>
