@@ -15,6 +15,7 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const TABLE: Record<string, string> = {
   article: "articles",
   college: "colleges",
+  college_section: "college_sections",
   institute: "institutes",
   course: "courses",
 };
