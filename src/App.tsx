@@ -96,6 +96,7 @@ const AdminDatabaseBackup = lazyWithPreload(() => import("./pages/admin/AdminDat
 const AdminAIUsage = lazyWithPreload(() => import("./pages/admin/AdminAIUsage"));
 const AdminCitationsAudit = lazyWithPreload(() => import("./pages/admin/AdminCitationsAudit"));
 const AdminContentRefreshes = lazyWithPreload(() => import("./pages/admin/AdminContentRefreshes"));
+const AdminBulkRefresh = lazyWithPreload(() => import("./pages/admin/AdminBulkRefresh"));
 const AdminCourseCategories = lazyWithPreload(() => import("./pages/admin/AdminCourseCategories"));
 const AdminCATScores = lazyWithPreload(() => import("./pages/admin/AdminCATScores"));
 const AdminMegaMenu = lazyWithPreload(() => import("./pages/admin/AdminMegaMenu"));
