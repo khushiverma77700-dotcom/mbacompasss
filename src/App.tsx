@@ -590,6 +590,8 @@ const App = () => (
               <Route path="notifications" element={<LazyPage><StudentNotifications /></LazyPage>} />
               <Route path="orders" element={<LazyPage><StudentOrders /></LazyPage>} />
               <Route path="analysis/:attemptId" element={<LazyPage><StudentDeepAnalysis /></LazyPage>} />
+              <Route path="daily-test" element={<LazyPage><StudentDailyTest /></LazyPage>} />
+              <Route path="attempts" element={<LazyPage><StudentAttempts /></LazyPage>} />
             </Route>
             <Route path="/iim-waitlist-movement" element={<PublicLayout><LazyPage><IIMWaitlistPage /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />
