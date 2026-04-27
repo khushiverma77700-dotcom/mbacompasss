@@ -24,10 +24,23 @@ export default function MBACompassCourseDetailPage() {
   );
 }
 
+function loadRzp(): Promise<boolean> {
+  return new Promise((resolve) => {
+    if ((window as any).Razorpay) return resolve(true);
+    const s = document.createElement("script");
+    s.src = "https://checkout.razorpay.com/v1/checkout.js";
+    s.onload = () => resolve(true);
+    s.onerror = () => resolve(false);
+    document.body.appendChild(s);
+  });
+}
+
 function DetailInner() {
   const { slug } = useParams<{ slug: string }>();
   const [c, setC] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [paying, setPaying] = useState(false);
+  const [enrolled, setEnrolled] = useState(false);
   const compare = useCompassCompare();
 
   useEffect(() => {
@@ -35,8 +48,54 @@ function DetailInner() {
     (async () => {
       const { data } = await supabase.from("mba_compass_courses").select("*").eq("slug", slug).maybeSingle();
       setC(data); setLoading(false);
+      if (data) {
+        const { data: u } = await supabase.auth.getUser();
+        if (u.user) {
+          const { data: e } = await supabase.from("course_enrollments")
+            .select("id").eq("user_id", u.user.id).eq("course_id", data.id).maybeSingle();
+          if (e) setEnrolled(true);
+        }
+      }
     })();
   }, [slug]);
+
+  const handlePay = async () => {
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) { toast.error("Please sign in to enroll"); window.location.href = "/auth"; return; }
+    setPaying(true);
+    try {
+      const ok = await loadRzp();
+      if (!ok) throw new Error("Could not load checkout");
+      const { data, error } = await supabase.functions.invoke("razorpay-create-order", { body: { course_id: c.id } });
+      if (error || !data?.order_id) throw new Error(data?.error || error?.message || "Order failed");
+
+      const rzp = new (window as any).Razorpay({
+        key: data.key_id, amount: data.amount, currency: data.currency,
+        name: "MBA Compass", description: data.course_name, order_id: data.order_id,
+        prefill: { email: u.user.email },
+        theme: { color: "#0284c7" },
+        handler: async (resp: any) => {
+          const { data: v, error: ve } = await supabase.functions.invoke("razorpay-verify-payment", {
+            body: {
+              razorpay_order_id: resp.razorpay_order_id,
+              razorpay_payment_id: resp.razorpay_payment_id,
+              razorpay_signature: resp.razorpay_signature,
+            },
+          });
+          if (ve || !v?.success) { toast.error("Payment verification failed"); return; }
+          toast.success("Enrollment successful!");
+          setEnrolled(true);
+        },
+        modal: { ondismiss: () => setPaying(false) },
+      });
+      rzp.open();
+    } catch (e: any) {
+      toast.error(e.message || "Payment failed");
+    } finally {
+      setPaying(false);
+    }
+  };
+
 
   if (loading) return <div className="container mx-auto px-4 py-12 text-muted-foreground">Loading…</div>;
   if (!c) return (
@@ -157,7 +216,15 @@ function DetailInner() {
                   <div className="text-xs text-muted-foreground mt-1">{c.validity_months ?? 12} months access • Taxes included</div>
 
                   <div className="mt-4 space-y-2">
-                    {c.enroll_url ? (
+                    {enrolled ? (
+                      <Button asChild size="lg" className="w-full bg-emerald-600 hover:bg-emerald-700">
+                        <Link to="/student"><CheckCircle2 className="h-4 w-4 mr-1" /> Enrolled — Go to Dashboard</Link>
+                      </Button>
+                    ) : c.price ? (
+                      <Button size="lg" className="w-full bg-sky-600 hover:bg-sky-700" disabled={paying} onClick={handlePay}>
+                        {paying ? "Processing…" : <>Enroll Now <ArrowRight className="h-4 w-4 ml-1" /></>}
+                      </Button>
+                    ) : c.enroll_url ? (
                       <Button asChild size="lg" className="w-full bg-sky-600 hover:bg-sky-700">
                         <a href={c.enroll_url} target="_blank" rel="noopener noreferrer">Enroll Now <ArrowRight className="h-4 w-4 ml-1" /></a>
                       </Button>
