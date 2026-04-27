@@ -211,6 +211,19 @@ async function callAI(systemPrompt: string, userPrompt: string, schema: any): Pr
   return JSON.parse(tc.function.arguments);
 }
 
+async function repairAI(systemPrompt: string, userPrompt: string, schema: any, failures: string[], draft: Record<string, unknown>): Promise<any> {
+  const repairPrompt = `${userPrompt}
+
+The previous draft failed quality review:
+${failures.map((f) => `- ${f}`).join("\n")}
+
+PREVIOUS DRAFT (JSON):
+${JSON.stringify(draft, null, 2)}
+
+Return a corrected version of every tracked field. Do not explain.`;
+  return callAI(systemPrompt, repairPrompt, schema);
+}
+
 function buildSchema(fields: string[]) {
   const props: Record<string, unknown> = {};
   for (const f of fields) {
@@ -276,7 +289,7 @@ Deno.serve(async (req) => {
       ? "Rewrite EVERY field from scratch with the latest verified information. Improve clarity, structure, formatting, and humanise the tone."
       : "ONLY update time-sensitive facts: fees, placement figures, rankings, recruiter lists, dates, citations, and meta freshness. Preserve the existing tone, narrative structure and unchanged sections. If a field is already accurate and current for " + year + ", return it unchanged.";
 
-    const systemPrompt = `You are a senior MBA/B-school researcher refreshing an existing page for ${year}. Today is ${todayIso}.
+    const systemPrompt = `You are a senior MBA/B-school researcher, SEO editor and originality checker refreshing an existing page for ${year}. Today is ${todayIso}.
 
 REFRESH MODE: ${mode.toUpperCase()}
 ${modeNote}
@@ -287,6 +300,13 @@ NON-NEGOTIABLE DATA RULES:
 - NEVER use "N/A", "Not available", "Contact for details", "TBD". Give realistic ranges if exact figure unknown.
 - Scope: MBA / PGP / PGDM / MMS / MiM / Executive MBA / Masters in Management ONLY.
 - Return ALL ${fields.length} fields in the tool call, even if unchanged in smart mode.
+
+ORIGINALITY + SEO RULES:
+- Write 100% unique, non-plagiarised copy. Do not copy sentences from the current page, brochures, official websites, competitors, or generic templates.
+- Make every paragraph specific to "${entityName}" and ${city || state || "its location"}; avoid generic lines that could fit any college.
+- Include practical search intent terms naturally: fees, placements, admission, cut off, courses, eligibility, ROI, recruiters, ranking, ${year}.
+- meta_title must be under 60 characters when possible; meta_description must be under 160 characters and include the entity name plus a concrete benefit/fact.
+- keywords must be 8-12 high-intent phrases, not broad one-word terms.
 
 HYPERLINK RULES (STRICT):
 - REMOVE all links to google search, bing, or generic/irrelevant pages.
@@ -299,6 +319,8 @@ FORMATTING RULES (long-form HTML fields):
 - Important dates, deadlines, fees, cut-offs and key numbers MUST be bold AND underlined: <strong><u>15 Jan ${year}</u></strong>.
 - Use <table> with <thead>/<tbody> for placements, cut-offs, important dates, fee structures, and comparisons.
 - Semantic <h2>/<h3> subheadings. No repetition, no fluff. Human-friendly tone.
+- Every long-form HTML field must include at least one official hyperlink when an official website or official exam/regulatory source is available.
+- Never return a one-line summary such as "Refreshed ${year} fields...". That is invalid.
 - End any long description with: <p><em>Last updated: ${todayIso}</em></p>`;
 
     const userPrompt = `Refresh the following ${body.entity_type} page:
@@ -343,7 +365,12 @@ ${mode === "smart" ? "Keep unchanged non-time-sensitive fields identical to curr
     if (insErr) throw new Error(insErr.message);
 
     try {
-      const proposedSnapshot = await callAI(systemPrompt, userPrompt, schema);
+      const ctx: QualityContext = { entityName, city, state, website, todayIso, year };
+      let proposedSnapshot = postProcessSnapshot(await callAI(systemPrompt, userPrompt, schema), fields, ctx);
+      const failures = qualityFailures(proposedSnapshot, fields, ctx);
+      if (failures.length > 0) {
+        proposedSnapshot = postProcessSnapshot(await repairAI(systemPrompt, userPrompt, schema, failures, proposedSnapshot), fields, ctx);
+      }
       const diff = computeDiff(currentSnapshot, proposedSnapshot);
       const changedCount = Object.values(diff).filter((d: any) => d.changed).length;
 
