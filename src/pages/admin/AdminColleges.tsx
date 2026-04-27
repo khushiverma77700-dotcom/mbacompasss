@@ -554,7 +554,7 @@ const AdminColleges = () => {
                 </TableRow>
               ))}
               {sortedColleges.length === 0 && (
-                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">{colleges.length === 0 ? "No colleges yet" : "No colleges match your filters"}</TableCell></TableRow>
+                <TableRow><TableCell colSpan={10} className="text-center text-muted-foreground py-8">{colleges.length === 0 ? "No colleges yet" : "No colleges match your filters"}</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
