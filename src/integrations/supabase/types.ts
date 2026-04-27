@@ -3000,12 +3000,16 @@ export type Database = {
       }
       mocks_landing_settings: {
         Row: {
+          ai_report_subtitle: string | null
+          ai_report_title: string | null
+          auto_testimonials: Json | null
           benefits: Json
           bundle_subtitle: string | null
           bundle_title: string | null
           comparison: Json
           created_at: string
           cta_target_test_id: string | null
+          expert_feedback: Json | null
           faqs: Json
           hero_cta_label: string | null
           hero_eyebrow: string | null
@@ -3018,24 +3022,35 @@ export type Database = {
           meta_title: string | null
           offer_ends_at: string | null
           offer_urgency: string | null
+          platform_features: Json | null
           price_current: number | null
           price_discount_label: string | null
           price_original: number | null
           singleton: boolean
+          student_analyses: Json | null
+          student_feedback_images: Json | null
+          student_feedback_text: Json | null
           testimonials: Json
           trust_avg_improvement: string | null
           trust_rating: string | null
           trust_students: string | null
           updated_at: string
           whats_included: Json
+          why_us_points: Json | null
+          why_us_subtitle: string | null
+          why_us_title: string | null
         }
         Insert: {
+          ai_report_subtitle?: string | null
+          ai_report_title?: string | null
+          auto_testimonials?: Json | null
           benefits?: Json
           bundle_subtitle?: string | null
           bundle_title?: string | null
           comparison?: Json
           created_at?: string
           cta_target_test_id?: string | null
+          expert_feedback?: Json | null
           faqs?: Json
           hero_cta_label?: string | null
           hero_eyebrow?: string | null
@@ -3048,24 +3063,35 @@ export type Database = {
           meta_title?: string | null
           offer_ends_at?: string | null
           offer_urgency?: string | null
+          platform_features?: Json | null
           price_current?: number | null
           price_discount_label?: string | null
           price_original?: number | null
           singleton?: boolean
+          student_analyses?: Json | null
+          student_feedback_images?: Json | null
+          student_feedback_text?: Json | null
           testimonials?: Json
           trust_avg_improvement?: string | null
           trust_rating?: string | null
           trust_students?: string | null
           updated_at?: string
           whats_included?: Json
+          why_us_points?: Json | null
+          why_us_subtitle?: string | null
+          why_us_title?: string | null
         }
         Update: {
+          ai_report_subtitle?: string | null
+          ai_report_title?: string | null
+          auto_testimonials?: Json | null
           benefits?: Json
           bundle_subtitle?: string | null
           bundle_title?: string | null
           comparison?: Json
           created_at?: string
           cta_target_test_id?: string | null
+          expert_feedback?: Json | null
           faqs?: Json
           hero_cta_label?: string | null
           hero_eyebrow?: string | null
@@ -3078,16 +3104,23 @@ export type Database = {
           meta_title?: string | null
           offer_ends_at?: string | null
           offer_urgency?: string | null
+          platform_features?: Json | null
           price_current?: number | null
           price_discount_label?: string | null
           price_original?: number | null
           singleton?: boolean
+          student_analyses?: Json | null
+          student_feedback_images?: Json | null
+          student_feedback_text?: Json | null
           testimonials?: Json
           trust_avg_improvement?: string | null
           trust_rating?: string | null
           trust_students?: string | null
           updated_at?: string
           whats_included?: Json
+          why_us_points?: Json | null
+          why_us_subtitle?: string | null
+          why_us_title?: string | null
         }
         Relationships: []
       }
