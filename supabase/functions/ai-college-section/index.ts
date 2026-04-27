@@ -661,10 +661,12 @@ ${anchor.accreditations?.length ? `- Accreditations: ${anchor.accreditations.joi
 - Courses, specializations, exams, recruiters, fees and placements must all be management-program-specific (Finance, Marketing, Operations, HR, Strategy, Business Analytics within an MBA, Consulting, etc.).
 - If a college also runs non-MBA programs, IGNORE them entirely — only describe its MBA/PGDM/MiM offerings.
 
-# WELL-FORMATTED OUTPUT
-- HTML must be tidy: short paragraphs (2-4 sentences), bullet/numbered lists for any 3+ enumerations, at least one <table> when comparing fees / placements / cutoffs / dates.
-- Headings hierarchy: <h2> for main sub-sections, <h3> for nested. Never start a heading or sentence with a question. Never put a heading inside a paragraph.
-- Use <strong> on key facts (numbers, names, dates) — sparingly, 4-8 per long block. Do NOT bold filler words, generic adjectives, or whole sentences.
+# WELL-FORMATTED OUTPUT (STRICT — content MUST be visually scannable)
+- NEVER write a wall of text. Break long-form HTML into short paragraphs (2-4 sentences MAX), then immediately follow with a <ul>/<ol> of 3-6 bullet points or a <table>.
+- EVERY long-form section MUST contain: at least 1 <h2>, at least 1 <h3>, at least 1 <ul> (or <ol>), and at least 1 <table> when the topic involves comparable data (fees / placements / cutoffs / dates / recruiters / scholarships).
+- BOLD ALL: dates (e.g. <strong>15 Jan 2026</strong>), deadlines, fees figures (<strong>₹24.5 L</strong>), CAT/XAT cutoffs, salary numbers (<strong>₹34.2 LPA</strong>), NIRF rank, year of establishment, and the primary SEO keyword on its first occurrence. Aim for 6-12 <strong> tags per long block — but never bold filler words or whole sentences.
+- Headings hierarchy: <h2> for main sub-sections, <h3> for nested. Never start a heading or sentence with a question.
+- SEO KEYWORD TARGETING: Identify ONE primary keyword (e.g. "${brief.collegeName} placements 2025") and 3-5 LSI keywords. Use the primary keyword in the first 100 characters of content, in at least one <h2>, and 2-3 more times naturally. Use LSI keywords once each.
 
 ACCURACY RULES:
 - Established years for famous schools must be correct (XLRI=1949, IIM-A=1961, IIM-B=1973, IIM-C=1961, FMS=1954, JBIMS=1965, SPJIMR=1981, MDI=1973, IIFT=1963, NMIMS=1981, ISB=2001).
