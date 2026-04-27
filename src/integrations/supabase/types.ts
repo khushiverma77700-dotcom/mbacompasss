@@ -3794,6 +3794,48 @@ export type Database = {
         }
         Relationships: []
       }
+      student_daily_tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          is_completed: boolean
+          section: string | null
+          target_value: number | null
+          task_date: string
+          task_type: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          is_completed?: boolean
+          section?: string | null
+          target_value?: number | null
+          task_date?: string
+          task_type?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          is_completed?: boolean
+          section?: string | null
+          target_value?: number | null
+          task_date?: string
+          task_type?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       student_goals: {
         Row: {
           created_at: string
@@ -3832,6 +3874,96 @@ export type Database = {
           title?: string
           unit?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      student_study_profile: {
+        Row: {
+          ai_generated_at: string | null
+          ai_insights: Json | null
+          ai_plan: Json | null
+          attempt_year: number | null
+          created_at: string
+          current_level: string | null
+          daily_hours: number | null
+          id: string
+          preferred_session: string | null
+          strong_sections: string[] | null
+          target_colleges: string[] | null
+          target_percentile: number | null
+          updated_at: string
+          user_id: string
+          weak_sections: string[] | null
+        }
+        Insert: {
+          ai_generated_at?: string | null
+          ai_insights?: Json | null
+          ai_plan?: Json | null
+          attempt_year?: number | null
+          created_at?: string
+          current_level?: string | null
+          daily_hours?: number | null
+          id?: string
+          preferred_session?: string | null
+          strong_sections?: string[] | null
+          target_colleges?: string[] | null
+          target_percentile?: number | null
+          updated_at?: string
+          user_id: string
+          weak_sections?: string[] | null
+        }
+        Update: {
+          ai_generated_at?: string | null
+          ai_insights?: Json | null
+          ai_plan?: Json | null
+          attempt_year?: number | null
+          created_at?: string
+          current_level?: string | null
+          daily_hours?: number | null
+          id?: string
+          preferred_session?: string | null
+          strong_sections?: string[] | null
+          target_colleges?: string[] | null
+          target_percentile?: number | null
+          updated_at?: string
+          user_id?: string
+          weak_sections?: string[] | null
+        }
+        Relationships: []
+      }
+      student_weak_topics: {
+        Row: {
+          accuracy: number | null
+          attempts: number | null
+          created_at: string
+          id: string
+          last_seen_at: string | null
+          level: string
+          section: string
+          topic: string
+          user_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          attempts?: number | null
+          created_at?: string
+          id?: string
+          last_seen_at?: string | null
+          level?: string
+          section: string
+          topic: string
+          user_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          attempts?: number | null
+          created_at?: string
+          id?: string
+          last_seen_at?: string | null
+          level?: string
+          section?: string
+          topic?: string
           user_id?: string
         }
         Relationships: []
