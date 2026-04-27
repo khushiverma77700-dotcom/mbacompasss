@@ -246,8 +246,8 @@ const AdminBulkRefresh = () => {
             Regenerate AI content across many entities at once. All results land in the Content Refresh Queue for your approval.
           </p>
         </div>
-        <Button variant="outline" onClick={() => navigate("/admin/content-refreshes")}>
-          <ClipboardList className="w-4 h-4 mr-2" /> View Refresh Queue
+        <Button variant="outline" onClick={() => navigate("/admin/content-studio")}>
+          <ClipboardList className="w-4 h-4 mr-2" /> Open in Content Studio
         </Button>
       </div>
 
@@ -450,7 +450,7 @@ const AdminBulkRefresh = () => {
               <Progress value={progress.total ? (progress.done / progress.total) * 100 : 0} />
               {!running && progress.done === progress.total && (
                 <div className="text-sm text-emerald-700 font-medium pt-1">
-                  ✓ Done. <button className="underline" onClick={() => navigate("/admin/content-refreshes")}>Open Content Refresh Queue</button> to review & approve.
+                  ✓ Done. <button className="underline" onClick={() => navigate("/admin/content-studio")}>Open in Content Studio</button> to review & approve in the same place.
                 </div>
               )}
             </div>
