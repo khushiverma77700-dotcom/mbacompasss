@@ -140,6 +140,9 @@ const StudentAnnouncements = lazyWithPreload(() => import("./pages/student/Stude
 const StudentTools = lazyWithPreload(() => import("./pages/student/StudentTools"));
 const StudentProfile = lazyWithPreload(() => import("./pages/student/StudentProfile"));
 const StudentRewards = lazyWithPreload(() => import("./pages/student/StudentRewards"));
+const StudentDayPlanner = lazyWithPreload(() => import("./pages/student/StudentDayPlanner"));
+const MBACompassCoursesPage = lazyWithPreload(() => import("./pages/MBACompassCoursesPage"));
+const AdminMBACompassCourses = lazyWithPreload(() => import("./pages/admin/AdminMBACompassCourses"));
 const StudentLeaderboard = lazyWithPreload(() => import("./pages/student/StudentLeaderboard"));
 const StudentNotifications = lazyWithPreload(() => import("./pages/student/StudentNotifications"));
 const StudentOrders = lazyWithPreload(() => import("./pages/student/StudentOrders"));
@@ -586,6 +589,7 @@ const App = () => (
               <Route path="tools" element={<LazyPage><StudentTools /></LazyPage>} />
               <Route path="profile" element={<LazyPage><StudentProfile /></LazyPage>} />
               <Route path="rewards" element={<LazyPage><StudentRewards /></LazyPage>} />
+              <Route path="day-planner" element={<LazyPage><StudentDayPlanner /></LazyPage>} />
               <Route path="leaderboard" element={<LazyPage><StudentLeaderboard /></LazyPage>} />
               <Route path="notifications" element={<LazyPage><StudentNotifications /></LazyPage>} />
               <Route path="orders" element={<LazyPage><StudentOrders /></LazyPage>} />
