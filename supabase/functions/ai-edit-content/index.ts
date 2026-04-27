@@ -28,7 +28,7 @@ interface Body {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const MODEL = "gpt-5-nano";
+const MODEL = "openai/gpt-5-mini";
 
 const TRACKED_FIELDS: Record<EntityType, string[]> = {
   article: ["title", "excerpt", "intro", "content", "meta_title", "meta_description", "keywords", "h1_tag"],
