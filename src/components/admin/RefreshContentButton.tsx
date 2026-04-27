@@ -42,7 +42,7 @@ export function RefreshContentButton({ entityType, entityId, entityName, size = 
       const total = (data as any)?.total_fields ?? 0;
       toast({
         title: "Refresh ready for review",
-        description: `${entityName || "Entity"}: ${changed}/${total} fields proposed. Open the Content Refresh Queue when you're ready to approve.`,
+        description: `${entityName || "Entity"}: ${changed}/${total} fields proposed. Review it in Content Studio → Review & Approve.`,
       });
       // NOTE: do NOT auto-navigate — keep the admin in their current workflow.
     } catch (e) {

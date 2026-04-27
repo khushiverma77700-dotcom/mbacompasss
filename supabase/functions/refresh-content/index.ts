@@ -12,7 +12,7 @@ const corsHeaders = {
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0?target=denonext";
 
-type EntityType = "article" | "college" | "institute" | "course";
+type EntityType = "article" | "college" | "college_section" | "institute" | "course";
 type Mode = "full" | "smart";
 
 interface Body {
@@ -30,6 +30,7 @@ const MODEL = "openai/gpt-5-mini";
 const TRACKED_FIELDS: Record<EntityType, string[]> = {
   article: ["title", "excerpt", "intro", "content", "meta_title", "meta_description", "keywords", "h1_tag"],
   college: ["description", "fees", "fees_lakhs", "placement_avg", "placement_highest", "placement_median", "ranking", "top_recruiters", "exams_accepted", "accreditations", "highlights", "admission_process", "meta_title", "meta_description", "keywords", "h1_tag"],
+  college_section: ["title", "content", "data"],
   institute: ["description", "fees_lakhs", "rating", "students_count", "success_rate", "features", "specializations", "meta_title", "meta_description", "keywords", "h1_tag"],
   course: ["description", "fees", "duration", "eligibility", "highlights", "curriculum", "batch_info", "discount_text"],
 };
@@ -37,9 +38,12 @@ const TRACKED_FIELDS: Record<EntityType, string[]> = {
 const TABLE: Record<EntityType, string> = {
   article: "articles",
   college: "colleges",
+  college_section: "college_sections",
   institute: "institutes",
   course: "courses",
 };
+
+const HTML_FIELDS = new Set(["description", "admission_process", "intro", "content"]);
 
 function pickFields(row: Record<string, unknown>, fields: string[]) {
   const out: Record<string, unknown> = {};
@@ -86,8 +90,15 @@ function buildSchema(fields: string[]) {
     // Arrays vs strings vs numbers — best-guess based on field name
     if (["keywords", "top_recruiters", "exams_accepted", "accreditations", "features", "specializations", "highlights", "curriculum"].includes(f)) {
       props[f] = { type: "array", items: { type: "string" } };
+    } else if (f === "data") {
+      props[f] = { type: "object", additionalProperties: true };
     } else if (["fees_lakhs", "ranking", "rating", "students_count", "success_rate"].includes(f)) {
       props[f] = { type: "number" };
+    } else if (HTML_FIELDS.has(f)) {
+      props[f] = {
+        type: "string",
+        description: "Rich HTML only. Must include headings, bullet lists, bold+underlined key stats, useful official hyperlinks, and tables where relevant.",
+      };
     } else {
       props[f] = { type: "string" };
     }
@@ -114,9 +125,10 @@ Deno.serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
     // Fetch current entity
+    const selectColumns = body.entity_type === "college_section" ? "*, colleges(name, slug, city, state, website)" : "*";
     const { data: row, error: fetchErr } = await supabase
       .from(table)
-      .select("*")
+      .select(selectColumns)
       .eq("id", body.entity_id)
       .maybeSingle();
     if (fetchErr || !row) throw new Error(fetchErr?.message || "Entity not found");
@@ -126,9 +138,12 @@ Deno.serve(async (req) => {
     const todayIso = today.toISOString().slice(0, 10);
     const year = today.getFullYear();
 
-    const entityName = (row as any).name || (row as any).title || "Untitled";
-    const city = (row as any).city || "";
-    const state = (row as any).state || "";
+    const entityName = body.entity_type === "college_section"
+      ? `${(row as any).colleges?.name || "College"} — ${(row as any).title || (row as any).section_type || "Section"}`
+      : ((row as any).name || (row as any).title || "Untitled");
+    const city = (row as any).city || (row as any).colleges?.city || "";
+    const state = (row as any).state || (row as any).colleges?.state || "";
+    const website = (row as any).website || (row as any).colleges?.website || "";
 
     const modeNote = mode === "full"
       ? "Rewrite EVERY field from scratch with the latest verified information. Improve clarity, structure, formatting, and humanise the tone."
@@ -163,12 +178,20 @@ FORMATTING RULES (long-form HTML fields):
 
 Name: ${entityName}
 Location: ${city}, ${state}
+Official website: ${website || "not provided"}
 ID: ${body.entity_id}
 
 CURRENT CONTENT (JSON):
 ${JSON.stringify(currentSnapshot, null, 2)}
 
-Produce the refreshed version of every tracked field. ${mode === "smart" ? "Keep unchanged fields identical to current." : "Improve and modernise everything."}`;
+Produce the refreshed version of every tracked field.
+
+For HTML fields (${fields.filter((f) => HTML_FIELDS.has(f)).join(", ") || "none"}):
+- Do NOT return a plain paragraph summary.
+- Use <h2>/<h3>, <ul><li>, <strong><u>key facts</u></strong>, official <a href="https://..." target="_blank" rel="noopener">links</a>, and tables for fees/placements/dates/cutoffs.
+- Keep content concise, scannable, and action-oriented.
+
+${mode === "smart" ? "Keep unchanged non-time-sensitive fields identical to current, but fix weak/plain HTML formatting in long-form fields." : "Improve and modernise everything."}`;
 
     const schema = buildSchema(fields);
 

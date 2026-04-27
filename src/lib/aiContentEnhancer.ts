@@ -35,6 +35,9 @@ const GLOBAL_SOURCE_URLS: Record<string, string> = {
   nmat: "https://www.nmat.org",
   snap: "https://www.snaptest.org",
   iift: "https://iift.nta.nic.in",
+  mat: "https://mat.aima.in",
+  atma: "https://atmaaims.com",
+  kmat: "https://kmatindia.com",
 };
 
 // Source keywords whose pages typically live on the COLLEGE's own website.
@@ -130,6 +133,16 @@ export function enhanceAIContent(html: string, ctx?: CitationContext): string {
 
   let out = html;
 
+  // 0. If a model returns plain text/bullets without tags, convert it into
+  // lightweight HTML so formatting is still visible in review and live pages.
+  const hasHtml = /<\/?[a-z][\s\S]*>/i.test(out);
+  if (!hasHtml) {
+    const lines = out.split(/\n+/).map((line) => line.trim()).filter(Boolean);
+    out = lines.length > 1
+      ? `<ul>${lines.map((line) => `<li>${line.replace(/^[-•*]\s*/, "")}</li>`).join("")}</ul>`
+      : `<p>${out}</p>`;
+  }
+
   // 1a. Machine-readable [src:NIRF 2025] or [src:Placement Report 2024-25]
   out = out.replace(
     /\[src:\s*([^\]\d]+?)\s*(\d{4}(?:[-–]\d{2,4})?)?\s*\]/gi,
@@ -144,7 +157,13 @@ export function enhanceAIContent(html: string, ctx?: CitationContext): string {
       buildPill(src.trim().replace(/[,;:]+$/, ""), year, ctx),
   );
 
-  // 1c. Strip any leaked source/citation parentheticals that DON'T match the pill formats above.
+  // 1c. Convert plain official exam names into hyperlinks when they appear in generated text.
+  out = out.replace(/\b(CAT|XAT|GMAT|GRE|CMAT|NMAT|SNAP|IIFT|MAT|ATMA|KMAT)\b(?![^<]*>)/g, (exam) => {
+    const href = GLOBAL_SOURCE_URLS[exam.toLowerCase()];
+    return href ? `<a href="${href}" target="_blank" rel="noopener noreferrer nofollow">${exam}</a>` : exam;
+  });
+
+  // 1d. Strip any leaked source/citation parentheticals that DON'T match the pill formats above.
   //     Examples seen in production: "(Source/NIRF 2026 Ranking)", "(Source: NIRF)", "(as per NIRF)",
   //     "(Ref: Placement Report 2024-25)". These leak when the model ignores the no-citation rule.
   out = out.replace(/\(\s*sources?\s*[:\/\u2013\u2014-]\s*[^)]{0,80}\)/gi, "");

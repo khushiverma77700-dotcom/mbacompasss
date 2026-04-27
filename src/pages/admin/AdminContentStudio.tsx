@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { enhanceAIContent } from "@/lib/aiContentEnhancer";
 import {
   RefreshCw, Sparkles, Loader2, AlertCircle, CheckCircle2, ArrowLeft,
   ListChecks, Wand2, Eye, Check, X, ExternalLink, Target, FileText,
@@ -92,7 +92,7 @@ const STATUS_COLOR: Record<Status, string> = {
 
 function renderValue(v: any): string {
   if (v === null || v === undefined || v === "") return "—";
-  if (Array.isArray(v)) return v.length ? v.join(", ") : "—";
+  if (Array.isArray(v)) return v.length ? v.map((item) => `• ${item}`).join("\n") : "—";
   if (typeof v === "object") return JSON.stringify(v, null, 2);
   return String(v);
 }
@@ -818,6 +818,7 @@ const AdminContentStudio = () => {
                       const after = renderValue(d.after);
                       const html = isHtmlField(d.before) || isHtmlField(d.after);
                       const checked = selectedFields.has(field);
+                      const entityName = open.entity_name || undefined;
                       return (
                         <Card key={field} className={checked ? "border-primary/50" : ""}>
                           <CardHeader className="pb-2">
@@ -841,7 +842,7 @@ const AdminContentStudio = () => {
                             <div className="rounded border border-rose-500/30 bg-rose-500/5 p-3">
                               <div className="text-[10px] uppercase font-bold text-rose-700 dark:text-rose-400 mb-1">Current</div>
                               {html ? (
-                                <div className="prose prose-sm max-w-none dark:prose-invert text-xs" dangerouslySetInnerHTML={{ __html: before }} />
+                                <div className="ai-content max-w-none" dangerouslySetInnerHTML={{ __html: enhanceAIContent(before, { entityName }) }} />
                               ) : (
                                 <pre className="text-xs whitespace-pre-wrap break-words">{before}</pre>
                               )}
@@ -849,7 +850,7 @@ const AdminContentStudio = () => {
                             <div className="rounded border border-emerald-500/30 bg-emerald-500/5 p-3">
                               <div className="text-[10px] uppercase font-bold text-emerald-700 dark:text-emerald-400 mb-1">Refreshed</div>
                               {html ? (
-                                <div className="prose prose-sm max-w-none dark:prose-invert text-xs" dangerouslySetInnerHTML={{ __html: after }} />
+                                <div className="ai-content max-w-none" dangerouslySetInnerHTML={{ __html: enhanceAIContent(after, { entityName }) }} />
                               ) : (
                                 <pre className="text-xs whitespace-pre-wrap break-words">{after}</pre>
                               )}

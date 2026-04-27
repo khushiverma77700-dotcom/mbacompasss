@@ -642,9 +642,9 @@ const CollegeDetailPage = () => {
                 <CardHeader><CardTitle className="font-heading">Admission Process</CardTitle></CardHeader>
                 <CardContent>
                   {getSectionContent("admission") ? (
-                    <div className="text-muted-foreground leading-relaxed mb-6 ai-content max-w-none" dangerouslySetInnerHTML={{ __html: getSectionContent("admission") }} />
+                    <div className="text-muted-foreground leading-relaxed mb-6 ai-content max-w-none" dangerouslySetInnerHTML={{ __html: enhanceAIContent(getSectionContent("admission"), { entityName: college.name, entityWebsite: (college as any).website }) }} />
                   ) : (
-                    <div className="text-muted-foreground leading-relaxed mb-6 ai-content max-w-none" dangerouslySetInnerHTML={{ __html: college.admission_process || `Admission to ${college.name} is based on entrance exams followed by GD/PI.` }} />
+                    <div className="text-muted-foreground leading-relaxed mb-6 ai-content max-w-none" dangerouslySetInnerHTML={{ __html: enhanceAIContent(college.admission_process || `Admission to ${college.name} is based on entrance exams followed by GD/PI.`, { entityName: college.name, entityWebsite: (college as any).website }) }} />
                   )}
                   <div className="space-y-4">
                     <h3 className="font-heading font-semibold text-foreground">Admission Steps</h3>
@@ -716,7 +716,7 @@ const CollegeDetailPage = () => {
                     </div>
                   )}
                   {getSectionContent("placements") && (
-                    <div className="mt-4 ai-content max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: getSectionContent("placements") }} />
+                    <div className="mt-4 ai-content max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: enhanceAIContent(getSectionContent("placements"), { entityName: college.name, entityWebsite: (college as any).website }) }} />
                   )}
                   <AIExtensionBlock section={getAIExtension("placements")} extensionLabel="Placement Insights & Trends" entityName={college.name} entityWebsite={(college as any).website} />
                 </CardContent>
@@ -775,7 +775,7 @@ const CollegeDetailPage = () => {
                     <p className="text-center text-muted-foreground py-8">Cutoff data coming soon.</p>
                   )}
                   {getSectionContent("cutoff") && (
-                    <div className="mt-4 ai-content max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: getSectionContent("cutoff") }} />
+                    <div className="mt-4 ai-content max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: enhanceAIContent(getSectionContent("cutoff"), { entityName: college.name, entityWebsite: (college as any).website }) }} />
                   )}
                   <AIExtensionBlock section={getAIExtension("cutoff")} extensionLabel="Cut-off Trends & Analysis" entityName={college.name} entityWebsite={(college as any).website} />
                 </CardContent>
@@ -980,7 +980,7 @@ const CollegeDetailPage = () => {
                     ))}
                   </div>
                   {getSectionContent("hostel") && (
-                    <div className="mt-4 ai-content max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: getSectionContent("hostel") }} />
+                    <div className="mt-4 ai-content max-w-none text-muted-foreground" dangerouslySetInnerHTML={{ __html: enhanceAIContent(getSectionContent("hostel"), { entityName: college.name, entityWebsite: (college as any).website }) }} />
                   )}
                   <AIExtensionBlock section={getAIExtension("hostel")} extensionLabel="Campus Life Deep-Dive" entityName={college.name} entityWebsite={(college as any).website} />
                 </CardContent>
