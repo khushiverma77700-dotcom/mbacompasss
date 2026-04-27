@@ -133,6 +133,16 @@ export function enhanceAIContent(html: string, ctx?: CitationContext): string {
 
   let out = html;
 
+  // 0. If a model returns plain text/bullets without tags, convert it into
+  // lightweight HTML so formatting is still visible in review and live pages.
+  const hasHtml = /<\/?[a-z][\s\S]*>/i.test(out);
+  if (!hasHtml) {
+    const lines = out.split(/\n+/).map((line) => line.trim()).filter(Boolean);
+    out = lines.length > 1
+      ? `<ul>${lines.map((line) => `<li>${line.replace(/^[-•*]\s*/, "")}</li>`).join("")}</ul>`
+      : `<p>${out}</p>`;
+  }
+
   // 1a. Machine-readable [src:NIRF 2025] or [src:Placement Report 2024-25]
   out = out.replace(
     /\[src:\s*([^\]\d]+?)\s*(\d{4}(?:[-–]\d{2,4})?)?\s*\]/gi,
