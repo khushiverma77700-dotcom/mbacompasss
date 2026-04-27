@@ -24,7 +24,6 @@ interface Body {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")!;
 const MODEL = "openai/gpt-5-mini";
 
 // Fields that are tracked + diff'd per entity
@@ -70,7 +69,7 @@ async function callAI(systemPrompt: string, userPrompt: string, schema: any): Pr
       tools: [{ type: "function", function: { name: "emit", description: "Emit refreshed fields", parameters: schema } }],
       tool_choice: { type: "function", function: { name: "emit" } },
       max_tokens: 6000,
-    }, { feature: "refresh-content", purpose: "long", provider: "lovable" });
+    }, { feature: "refresh-content", purpose: "long", provider: "openai-mini" });
   if (!resp.ok) {
     const t = await resp.text();
     throw new Error(`AI call failed ${resp.status}: ${t.slice(0, 500)}`);
