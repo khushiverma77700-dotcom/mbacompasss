@@ -450,7 +450,7 @@ const AdminBulkRefresh = () => {
               <Progress value={progress.total ? (progress.done / progress.total) * 100 : 0} />
               {!running && progress.done === progress.total && (
                 <div className="text-sm text-emerald-700 font-medium pt-1">
-                  ✓ Done. <button className="underline" onClick={() => navigate("/admin/content-refreshes")}>Open Content Refresh Queue</button> to review & approve.
+                  ✓ Done. <button className="underline" onClick={() => navigate("/admin/content-studio")}>Open in Content Studio</button> to review & approve in the same place.
                 </div>
               )}
             </div>
