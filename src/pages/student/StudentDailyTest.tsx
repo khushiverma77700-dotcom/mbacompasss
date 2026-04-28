@@ -108,6 +108,26 @@ export default function StudentDailyTest() {
         <p className="text-sm text-muted-foreground mt-1">Build the daily habit. A fresh mock every day, picked for you.</p>
       </div>
 
+      {/* Locked banner */}
+      {!featLoading && !dailyEnabled && (
+        <Card className="p-4 border-amber-200 bg-amber-50/60 flex flex-col md:flex-row md:items-center gap-3 justify-between">
+          <div className="flex items-start gap-3">
+            <div className="h-9 w-9 rounded-lg bg-amber-100 grid place-items-center shrink-0">
+              <Lock className="h-4 w-4 text-amber-700" />
+            </div>
+            <div>
+              <div className="font-semibold text-amber-900">Daily Tests are not included in your course</div>
+              <p className="text-xs text-amber-800/80 mt-0.5">
+                You can preview the schedule below, but attempting daily tests requires a course that includes this feature.
+              </p>
+            </div>
+          </div>
+          <Button size="sm" onClick={() => setUpgradeOpen(true)} className="bg-amber-600 hover:bg-amber-700 text-white shrink-0">
+            <Sparkles className="h-3.5 w-3.5 mr-1" /> Upgrade to unlock
+          </Button>
+        </Card>
+      )}
+
       {/* Today */}
       {!today ? (
         <Card className="p-6 border-sky-100 bg-sky-50/40 text-center">
