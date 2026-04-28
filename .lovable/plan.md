@@ -1,73 +1,85 @@
-# Plan: Mock Generation Progress + Course Builder Overhaul
+## Goal
+Across all mock categories (Full Mock, Sectional, Topic, Daily, Personalized Hub), make sure **Question Number, Set Number, and Option Labels (A/B/C/D)** are always rendered by the UI as fixed/static elements — and the question text editor (and stored `question_html` / `option_html`) contains ONLY the pure question text and pure option text. No "Q1.", "Question 1:", "Set 1:", "(A)", "A.", "1)" etc. embedded anywhere.
 
-## 1. Real-time AI Mock Generation Progress
+## Where the problem lives today
 
-Replace the simple loading state in `AIGenerateMockDialog` with a live progress panel powered by the existing `mock_section_jobs` planner/worker tables.
+1. **AI generator** (`supabase/functions/generate-mock-questions/index.ts`)
+   - The prompt does not forbid embedding "Q1.", "Question 1:", "Set 1:", "(A)", "A." inside `question_html` / option text.
+   - For DILR/VARC sets the prompt actually instructs duplicating the passage at the top of every question, but doesn't prevent the model from prefixing "Question 1 of Set 2" etc.
 
-- Add a polling hook (`useMockGenerationProgress(generationId)`) that selects from `mock_section_jobs` every 2s while open.
-- Show in the dialog (and a new `AIMockGenerationProgress` card on `AdminMockTests`):
-  - Overall progress bar (`questions_done / total_questions` summed across sections).
-  - "Sections: X done / Y total / Z pending / N failed".
-  - "Questions: generated / total / remaining".
-  - Per-section row with status pill (pending / processing / done / failed), current step, retry count.
-  - "Currently generating" line and live spinner; auto-collapses to "Complete" when all sections settle.
-- Reuse existing `AIGenerationProgress.tsx` component (already supports steps + counters) — feed it derived steps from job rows.
-- The dialog `handleGenerate` returns immediately after planner kicks off; user can close dialog and watch progress on the mock test row.
+2. **CSV import & manual editor** (`src/pages/admin/AdminMockBuilder.tsx`)
+   - Admins paste/write content that often starts with "Q1.", "1)", "Question:" and option text starting with "A) …".
 
-## 2. Course Builder — Sectioned Form
+3. **Runner / Review / Daily Test report** already render `question_number`, set badge, `option_label` from columns — so they double up with whatever is inside the HTML.
 
-Refactor `AdminMockBundles.tsx` create/edit dialog into a 3-step wizard:
+The UI side is already correct. The fix is **content hygiene**: enforce clean storage at write-time and clean legacy rows at read-time.
 
-**Step 1 — Basic Details** (existing fields: name, slug, exam_code, price, validity, cover image, description, highlight, published).
+## Plan
 
-**Step 2 — Features & Offerings** (new). Each feature is a toggle:
-- CAT Study Planner
-- Performance Tracker
-- Daily Tests
-- Daily Mocks
-- Previous Year Papers
-- Personalized Mock Hub
-- Deep Analysis
-- Leaderboard
-- Score Predictor
-- AI Insights / Goals
+### 1. AI prompt hardening (Full / Sectional / Topic / Daily / Personalized)
+File: `supabase/functions/generate-mock-questions/index.ts`
 
-Stored as JSONB `features` on `mock_bundles` (default empty → all locked).
+- Add a hard rule block to `buildSystemPrompt`:
+  - `question_html` must NOT begin with or contain any of: `Q1`, `Q.`, `Question 1`, `Question:`, `Q1.`, `1.`, `1)`, `(1)`, `Set 1`, `Set 1:`, `[Set …]`.
+  - For set-bound questions, the passage/caselet stays inside `<div class="passage">` exactly as today, but no "Question 1 of Set 2" prefix anywhere.
+  - `options[].text` must NOT start with `A)`, `A.`, `(A)`, `a)`, `1)`, etc. Just the pure option content.
+- Update the JSON shape example in `buildUserPrompt` to show clean strings ("question_html: <p>Pure question only…</p>", "text: <p>Pure option only…</p>").
 
-**Step 3 — Mock Selection** (replaces the flat "items" list).
-- Admin first picks one or more **categories** (CAT, NMAT, XAT, SNAP, IIFT, CMAT, MAT, Other).
-- For each selected category, a table loads matching `mock_tests` filtered by `exam_code`, columns: checkbox, Name, Type (Full / Sectional via `category` or `level`), Sections, Questions, Duration, Live status.
-- Search box + Full/Sectional sub-tabs per category.
-- Selected mocks persist to existing `mock_bundle_items` table on save.
+### 2. Server-side sanitizer before insert
+Same file, in the section that maps the model's response into rows for `mock_questions` / `mock_question_options` / `personalized_questions` mirror.
 
-## 3. Student Dashboard — Locked Features
+Add a helper `stripQuestionPrefix(html)` and `stripOptionPrefix(html)` that removes:
+- Leading `Q\s*\d+[.\):]?`
+- Leading `Question\s*\d*[.:)]?`
+- Leading `Set\s*\d+[:\-]?` (only if it's a stray prefix outside `<div class="passage">`)
+- Leading numeric markers: `\d+[.\)]\s+`
+- Leading option labels in `option_html`: `^\s*\(?[A-Da-d]\)?[.\):\-]\s+`
 
-- Add helper `useEnrolledBundleFeatures()` that unions `features` JSONB across all active `mock_bundle_enrollments` for the user.
-- Wrap each feature card / sidebar entry in `StudentLayout.tsx` and `StudentOverview.tsx` with a new `<FeatureGate feature="daily_tests">` component:
-  - If included → render normally.
-  - If not → render a blurred/disabled card overlay with a lock icon, message "Not included in your plan", and an **Upgrade** button opening a small dialog with Call (`tel:`) and Email (`mailto:`) CTAs to support.
-- Sidebar items get a small lock badge but stay visible.
+Apply to:
+- `q.question_html` before insert into `mock_questions`
+- `o.text` (becomes `option_html`) before insert into `mock_question_options`
+- The mirrored `personalized_questions` rows (question_text and each option's text).
 
-## 4. Database Changes
+### 3. Same sanitizer in retry path
+File: `supabase/functions/retry-mock-section/index.ts` — apply identical helpers when re-inserting questions/options after a section retry.
 
-```sql
-ALTER TABLE public.mock_bundles
-  ADD COLUMN features jsonb NOT NULL DEFAULT '{}'::jsonb,
-  ADD COLUMN included_categories text[] NOT NULL DEFAULT '{}';
+### 4. CSV import + manual editor sanitizer
+File: `src/pages/admin/AdminMockBuilder.tsx`
+
+- Add a small util `src/lib/cleanQuestionHtml.ts` exporting `stripQuestionPrefix` and `stripOptionPrefix` (same regexes as Edge Function, in TS).
+- CSV import path: run sanitizer on each `question_html` and each option text before insert.
+- Manual editor "Save" handler: run sanitizer on `editorState.question_html` and on every `editorState.options[i].option_html` right before insert/update.
+- Optional: a small inline note under the question editor "Do not add Q1., Set, or option labels — they are added automatically."
+
+### 5. One-time backfill migration (cleans existing rows)
+New migration that runs the same regex cleanup in SQL on:
+- `mock_questions.question_html`
+- `mock_question_options.option_html`
+- `personalized_questions.question_text`
+- `personalized_questions.options` (jsonb — update each element's `text`)
+
+Uses `regexp_replace` with the same patterns as the JS sanitizer, run once.
+
+### 6. UI confirmation (no behavior change, just verify)
+Confirm these already render the metadata as static UI (they do — listed for reference, no edits needed):
+- `src/pages/mocks/MockTestRunnerPage.tsx` — shows `Question {n}`, set badge, `{o.option_label}.` prefix
+- `src/pages/mocks/MockReviewPage.tsx` — same pattern
+- `src/pages/student/StudentDailyTestReportPage.tsx` — same pattern
+- `src/pages/student/PersonalizedHub*` — uses static A/B/C/D labels
+
+If any of these still embed labels in markup duplicated from text, normalize during render.
+
+## Files to change
+
+```text
+supabase/functions/generate-mock-questions/index.ts   (prompt + sanitize on insert + mirror)
+supabase/functions/retry-mock-section/index.ts        (sanitize on retry insert + mirror)
+src/lib/cleanQuestionHtml.ts                          (NEW shared util)
+src/pages/admin/AdminMockBuilder.tsx                  (CSV import + manual save sanitize + helper note)
+supabase/migrations/<new>.sql                         (one-time backfill cleanup)
 ```
 
-No changes needed to `mock_bundle_items` — already supports test_id list.
-
-## 5. Files Touched
-
-- **New**: `src/hooks/useMockGenerationProgress.ts`, `src/hooks/useEnrolledBundleFeatures.ts`, `src/components/student/FeatureGate.tsx`, `src/components/student/UpgradeDialog.tsx`, `src/components/admin/CourseBuilderWizard.tsx`, `src/components/admin/CourseMockPicker.tsx`.
-- **Edited**: `src/components/admin/AIGenerateMockDialog.tsx`, `src/pages/admin/AdminMockTests.tsx` (live progress card), `src/pages/admin/AdminMockBundles.tsx` (use wizard), `src/pages/student/StudentLayout.tsx`, `src/pages/student/StudentOverview.tsx` (FeatureGate wrapping).
-- **Migration**: add `features` + `included_categories` columns.
-
-## 6. Out of Scope
-
-- No changes to the AI generation backend (planner/worker already exists from prior step).
-- Upgrade flow uses contact CTAs only (no in-app purchase changes).
-- Existing bundles without `features` set default to **all features unlocked** to preserve current student access.
-
-Approve to start implementation.
+## Out of scope
+- No change to question_number / set_index columns.
+- No change to runner/review UI logic; they already show metadata statically.
+- No deletion of existing data — only in-place text cleanup.
