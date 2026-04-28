@@ -5,7 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, Clock, CheckCircle2, ArrowRight, Flame, Sparkles } from "lucide-react";
+import { CalendarDays, Clock, CheckCircle2, ArrowRight, Flame, Sparkles, Lock } from "lucide-react";
+import { useEnrolledBundleFeatures } from "@/hooks/useEnrolledBundleFeatures";
+import UpgradeDialog from "@/components/student/UpgradeDialog";
 
 interface Today {
   assignment_id: string; assigned_date: string; test_id: string; title: string; note: string | null;
@@ -19,10 +21,13 @@ interface HistoryRow {
 
 export default function StudentDailyTest() {
   const { user } = useAuth();
+  const { isEnabled, loading: featLoading } = useEnrolledBundleFeatures();
+  const dailyEnabled = isEnabled("daily_tests");
   const [today, setToday] = useState<Today | null>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const load = async () => {
     if (!user) return;
@@ -103,6 +108,26 @@ export default function StudentDailyTest() {
         <p className="text-sm text-muted-foreground mt-1">Build the daily habit. A fresh mock every day, picked for you.</p>
       </div>
 
+      {/* Locked banner */}
+      {!featLoading && !dailyEnabled && (
+        <Card className="p-4 border-amber-200 bg-amber-50/60 flex flex-col md:flex-row md:items-center gap-3 justify-between">
+          <div className="flex items-start gap-3">
+            <div className="h-9 w-9 rounded-lg bg-amber-100 grid place-items-center shrink-0">
+              <Lock className="h-4 w-4 text-amber-700" />
+            </div>
+            <div>
+              <div className="font-semibold text-amber-900">Daily Tests are not included in your course</div>
+              <p className="text-xs text-amber-800/80 mt-0.5">
+                You can preview the schedule below, but attempting daily tests requires a course that includes this feature.
+              </p>
+            </div>
+          </div>
+          <Button size="sm" onClick={() => setUpgradeOpen(true)} className="bg-amber-600 hover:bg-amber-700 text-white shrink-0">
+            <Sparkles className="h-3.5 w-3.5 mr-1" /> Upgrade to unlock
+          </Button>
+        </Card>
+      )}
+
       {/* Today */}
       {!today ? (
         <Card className="p-6 border-sky-100 bg-sky-50/40 text-center">
@@ -134,10 +159,14 @@ export default function StudentDailyTest() {
                     </Link>
                   )}
                 </>
-              ) : (
+              ) : dailyEnabled ? (
                 <Link to={`/mocks/${today.test_slug}`}>
                   <Button size="lg" variant="secondary" className="gap-2">Start daily test <ArrowRight className="h-4 w-4" /></Button>
                 </Link>
+              ) : (
+                <Button size="lg" variant="secondary" className="gap-2" onClick={() => setUpgradeOpen(true)}>
+                  <Lock className="h-4 w-4" /> Locked — Upgrade
+                </Button>
               )}
             </div>
           </div>
@@ -192,9 +221,15 @@ export default function StudentDailyTest() {
                     </>
                   ) : (
                     h.test?.slug && (
-                      <Link to={`/mocks/${h.test.slug}`}>
-                        <Button size="sm" variant="outline">Attempt</Button>
-                      </Link>
+                      dailyEnabled ? (
+                        <Link to={`/mocks/${h.test.slug}`}>
+                          <Button size="sm" variant="outline">Attempt</Button>
+                        </Link>
+                      ) : (
+                        <Button size="sm" variant="outline" onClick={() => setUpgradeOpen(true)} className="gap-1">
+                          <Lock className="h-3 w-3" /> Locked
+                        </Button>
+                      )
                     )
                   )}
                 </div>
@@ -203,6 +238,8 @@ export default function StudentDailyTest() {
           </div>
         )}
       </Card>
+
+      <UpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} featureLabel="Daily Tests" />
     </div>
   );
 }
