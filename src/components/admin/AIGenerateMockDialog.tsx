@@ -144,9 +144,18 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
   const buildDefaultSectionPlan = (examCode: string): SectionRow[] => {
     const p = EXAM_PROFILES[examCode];
     if (!p) return [];
+    const setsMap = DEFAULT_SETS[examCode] || {};
     return p.sections.map((s) => {
       const m = Math.round(s.questions * 0.85);
-      return { code: s.code, name: s.name, duration: s.duration, questions: s.questions, mcq: m, tita: Math.max(0, s.questions - m) };
+      return {
+        code: s.code,
+        name: s.name,
+        duration: s.duration,
+        questions: s.questions,
+        mcq: m,
+        tita: Math.max(0, s.questions - m),
+        sets: setsMap[s.code] ?? 0,
+      };
     });
   };
 
