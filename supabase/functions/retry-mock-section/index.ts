@@ -135,7 +135,7 @@ Deno.serve(async (req) => {
         let attempts = 0;
         const maxAttempts = Math.ceil((target - produced) / BATCH_SIZE) + 4;
 
-        // Mirror to Personalized Hub ONLY if the parent test is sectional/topic (powers Daily Test + Sectional Test).
+        // Mirror to Personalized Hub ONLY if the parent test is Daily/sectional/topic.
         // Look up parent test_type via section → test.
         let allowHubMirror = false;
         try {
@@ -144,7 +144,7 @@ Deno.serve(async (req) => {
             const { data: tRow } = await admin.from("mock_tests").select("test_type, category").eq("id", secRow.test_id).maybeSingle();
             const tt = String((tRow as any)?.test_type || "").toLowerCase();
             const cat = String((tRow as any)?.category || "").toLowerCase();
-            allowHubMirror = tt === "sectional" || tt === "topic" || cat === "sectional" || cat === "topic";
+            allowHubMirror = tt === "daily" || tt === "sectional" || tt === "topic" || cat === "daily" || cat === "sectional" || cat === "topic";
           }
         } catch { /* default false */ }
         const hubSection = allowHubMirror ? (PERSONALIZED_SECTION_MAP[job.exam_code] || {})[job.section_code] : undefined;
