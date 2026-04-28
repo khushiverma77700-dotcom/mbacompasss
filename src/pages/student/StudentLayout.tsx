@@ -25,22 +25,24 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import NotificationBell from "@/components/student/NotificationBell";
+import { FeatureLockBadge } from "@/components/student/FeatureGate";
+import type { FeatureKey } from "@/lib/courseFeatures";
 
-const navItems = [
+const navItems: { to: string; label: string; icon: any; end?: boolean; feature?: FeatureKey }[] = [
   { to: "/student", label: "Overview", icon: LayoutDashboard, end: true },
-  { to: "/student/daily-test", label: "Daily Test", icon: CalendarDays },
-  { to: "/student/mocks", label: "My Mocks", icon: BookOpenCheck },
-  { to: "/student/attempts", label: "Previous Attempts", icon: History },
-  { to: "/student/buy-mocks", label: "Buy Mocks", icon: ShoppingBag },
-  { to: "/student/performance", label: "Performance", icon: BarChart3 },
-  { to: "/student/goals", label: "CAT Score Engine", icon: Target },
-  { to: "/student/day-planner", label: "My Day Planner", icon: CalendarCheck },
-  { to: "/student/leaderboard", label: "Leaderboard", icon: Trophy },
+  { to: "/student/daily-test", label: "Daily Test", icon: CalendarDays, feature: "daily_tests" },
+  { to: "/student/mocks", label: "My Mocks", icon: BookOpenCheck, feature: "daily_mocks" },
+  { to: "/student/attempts", label: "Previous Attempts", icon: History, feature: "performance_tracker" },
+  { to: "/student/buy-mocks", label: "Buy Mocks", icon: ShoppingBag, feature: "buy_mocks" },
+  { to: "/student/performance", label: "Performance", icon: BarChart3, feature: "performance_tracker" },
+  { to: "/student/goals", label: "CAT Score Engine", icon: Target, feature: "study_planner" },
+  { to: "/student/day-planner", label: "My Day Planner", icon: CalendarCheck, feature: "day_planner" },
+  { to: "/student/leaderboard", label: "Leaderboard", icon: Trophy, feature: "leaderboard" },
   { to: "/student/orders", label: "My Orders", icon: Receipt },
   { to: "/student/announcements", label: "Announcements", icon: Bell },
-  { to: "/student/personalized-hub", label: "Personalized Hub", icon: Sparkles },
-  { to: "/student/tools", label: "AI Tools", icon: Sparkles },
-  { to: "/student/support", label: "Support Center", icon: LifeBuoy },
+  { to: "/student/personalized-hub", label: "Personalized Hub", icon: Sparkles, feature: "personalized_hub" },
+  { to: "/student/tools", label: "AI Tools", icon: Sparkles, feature: "ai_tools" },
+  { to: "/student/support", label: "Support Center", icon: LifeBuoy, feature: "support" },
   { to: "/student/profile", label: "My Profile", icon: UserIcon },
 ];
 
