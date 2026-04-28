@@ -327,6 +327,10 @@ export default function MocksListPage() {
         </div>
       </section>
 
+      {/* COURSES CTA — inline strip below hero (1/4) */}
+      <section className="py-8 bg-white">
+        <CoursesCTABand block={settings.courses_cta_block} variant="inline" />
+      </section>
 
       {/* WHY MBA COMPASS MOCKS */}
       {settings.why_us_points && settings.why_us_points.length > 0 && (
