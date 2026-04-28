@@ -392,10 +392,20 @@ Deno.serve(async (req) => {
         }).select("id").single();
         if (secErr || !secRow) throw new Error(secErr?.message || "Failed to create section");
 
-        // Allocate MCQ vs TITA proportionally to this section
-        const sectionShare = sec.questions / safePerSet;
-        let secMcq = Math.round(mcqCount * sectionShare);
-        let secTita = sec.questions - secMcq;
+        // Allocate MCQ vs TITA — use custom plan if provided, else proportional split.
+        const customSec = customSectionPlan && category === "full_length"
+          ? customSectionPlan.find((c) => c.code === sec.code && c.questions === sec.questions) ?? customSectionPlan[sec.sort]
+          : null;
+        let secMcq: number;
+        let secTita: number;
+        if (customSec) {
+          secMcq = customSec.mcq;
+          secTita = customSec.tita;
+        } else {
+          const sectionShare = sec.questions / safePerSet;
+          secMcq = Math.round(mcqCount * sectionShare);
+          secTita = sec.questions - secMcq;
+        }
         if (secTita < 0) { secTita = 0; secMcq = sec.questions; }
 
         // Generate in batches
