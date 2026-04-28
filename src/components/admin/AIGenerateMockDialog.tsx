@@ -656,20 +656,32 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
           </div>
         )}
 
+        {step === 3 && (
+          <div className="space-y-3">
+            <MockGenerationProgressPanel generationId={generationId} />
+            <p className="text-[11px] text-muted-foreground">
+              You can safely close this dialog — generation continues in the background and will appear in the Mock Tests list as it finishes.
+            </p>
+          </div>
+        )}
+
         <DialogFooter>
           {step === 1 && (
             <>
               <Button variant="outline" onClick={close}>Cancel</Button>
               <Button onClick={handleGenerate} disabled={submitting || (category === "full_length" ? !sectionPlanValid : mcq + tita !== perSet)}>
-                {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating… (may take 1–3 min)</> : <><Sparkles className="w-4 h-4 mr-2" /> Generate</>}
+                {submitting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Starting…</> : <><Sparkles className="w-4 h-4 mr-2" /> Generate</>}
               </Button>
             </>
           )}
           {step === 2 && (
             <>
-              <Button variant="outline" onClick={() => { setStep(1); setResult(null); }}>Generate More</Button>
+              <Button variant="outline" onClick={() => { setStep(1); setResult(null); setGenerationId(null); }}>Generate More</Button>
               <Button onClick={close}>Done</Button>
             </>
+          )}
+          {step === 3 && (
+            <Button variant="outline" onClick={close}>Run in background</Button>
           )}
         </DialogFooter>
       </DialogContent>
