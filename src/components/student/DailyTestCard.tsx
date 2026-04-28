@@ -4,21 +4,31 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, ArrowRight, CheckCircle2, Clock } from "lucide-react";
+import { CalendarDays, ArrowRight, CheckCircle2, Clock, ListChecks, Gauge } from "lucide-react";
 
 export default function DailyTestCard() {
   const [today, setToday] = useState<any>(null);
+  const [meta, setMeta] = useState<{ qCount: number; difficulty: string | null }>({ qCount: 0, difficulty: null });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.rpc("get_today_daily_test").then(({ data }) => {
-      setToday((data as any[])?.[0] ?? null);
+    (async () => {
+      const { data } = await supabase.rpc("get_today_daily_test");
+      const t = (data as any[])?.[0] ?? null;
+      setToday(t);
+      if (t?.test_id) {
+        const [{ data: secs }, { data: m }] = await Promise.all([
+          supabase.from("mock_sections").select("total_questions").eq("test_id", t.test_id),
+          supabase.from("mock_tests").select("difficulty").eq("id", t.test_id).maybeSingle(),
+        ]);
+        const q = (secs ?? []).reduce((acc: number, s: any) => acc + (s.total_questions || 0), 0);
+        setMeta({ qCount: q, difficulty: (m as any)?.difficulty ?? null });
+      }
       setLoading(false);
-    });
+    })();
   }, []);
 
   if (loading || !today) return null;
-
   const done = !!today.completed_at;
 
   return (
@@ -31,9 +41,15 @@ export default function DailyTestCard() {
           <div className="min-w-0">
             <div className="text-xs text-sky-700 font-semibold uppercase tracking-wider">Daily test</div>
             <div className="font-semibold truncate">{today.title}</div>
-            <div className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap mt-0.5">
-              <span className="truncate">{today.test_name}</span>
-              {today.exam_code && <Badge variant="outline" className="text-[10px] border-sky-200">{today.exam_code}</Badge>}
+            <div className="text-xs text-muted-foreground flex items-center gap-3 flex-wrap mt-0.5">
+              {meta.qCount > 0 && (
+                <span className="flex items-center gap-1"><ListChecks className="h-3 w-3" />{meta.qCount} questions</span>
+              )}
+              {meta.difficulty && (
+                <Badge variant="outline" className="text-[10px] border-sky-200 capitalize gap-1">
+                  <Gauge className="h-3 w-3" /> {meta.difficulty}
+                </Badge>
+              )}
               {today.duration && <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{today.duration} min</span>}
             </div>
           </div>

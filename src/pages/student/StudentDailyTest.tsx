@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, Clock, CheckCircle2, ArrowRight, Flame, Sparkles, Lock } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { CalendarDays, Clock, CheckCircle2, ArrowRight, Flame, Sparkles, Lock, ListChecks, Gauge, TrendingUp, Trophy, Target } from "lucide-react";
 import { useEnrolledBundleFeatures } from "@/hooks/useEnrolledBundleFeatures";
 import UpgradeDialog from "@/components/student/UpgradeDialog";
 
@@ -14,19 +15,18 @@ interface Today {
   test_name: string; test_slug: string; exam_code: string | null; duration: number | null;
   my_progress_id: string | null; my_attempt_id: string | null; completed_at: string | null;
 }
-interface HistoryRow {
-  assigned_date: string; title: string | null; test:{ name: string; slug: string } | null;
-  progress?: { completed_at: string | null; attempt_id: string | null } | null;
-}
 
 export default function StudentDailyTest() {
   const { user } = useAuth();
   const { isEnabled, loading: featLoading } = useEnrolledBundleFeatures();
   const dailyEnabled = isEnabled("daily_tests");
   const [today, setToday] = useState<Today | null>(null);
+  const [todayMeta, setTodayMeta] = useState<{ qCount: number; difficulty: string | null }>({ qCount: 0, difficulty: null });
   const [history, setHistory] = useState<any[]>([]);
+  const [recentAttempts, setRecentAttempts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
+  const [longestStreak, setLongestStreak] = useState(0);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const load = async () => {
@@ -37,7 +37,7 @@ export default function StudentDailyTest() {
     const [{ data: t }, { data: hist }, { data: prog }] = await Promise.all([
       supabase.rpc("get_today_daily_test"),
       supabase.from("daily_test_assignments")
-        .select("id, assigned_date, title, note, test:mock_tests(name, slug, exam_code, total_duration_minutes)")
+        .select("id, assigned_date, title, note, test:mock_tests(id, name, slug, total_duration_minutes, difficulty)")
         .lte("assigned_date", todayStr)
         .gte("assigned_date", cutoff)
         .order("assigned_date", { ascending: false })
@@ -46,16 +46,22 @@ export default function StudentDailyTest() {
         .select("assigned_date, attempt_id, completed_at")
         .eq("user_id", user.id)
         .order("assigned_date", { ascending: false })
-        .limit(60),
+        .limit(120),
     ]);
 
     const todayRow = (t as any[])?.[0] ?? null;
     setToday(todayRow);
 
+    if (todayRow?.test_id) {
+      const { data: secs } = await supabase.from("mock_sections").select("total_questions").eq("test_id", todayRow.test_id);
+      const { data: m } = await supabase.from("mock_tests").select("difficulty").eq("id", todayRow.test_id).maybeSingle();
+      const q = (secs ?? []).reduce((acc: number, s: any) => acc + (s.total_questions || 0), 0);
+      setTodayMeta({ qCount: q, difficulty: (m as any)?.difficulty ?? null });
+    }
+
     const progByDate: Record<string, any> = {};
     (prog ?? []).forEach((p: any) => { progByDate[p.assigned_date] = p; });
 
-    // Auto-mark today's test complete if user already has a submitted attempt for that test
     if (todayRow && !todayRow.completed_at) {
       const { data: att } = await supabase.from("mock_attempts")
         .select("id, submitted_at, status")
@@ -82,20 +88,57 @@ export default function StudentDailyTest() {
     const merged = (hist ?? []).map((h: any) => ({ ...h, progress: progByDate[h.assigned_date] ?? null }));
     setHistory(merged);
 
-    // streak: consecutive days back from today with completion
+    // Pull last 5 attempts to power improvement dashboard (accuracy trend)
+    const attemptIds = (prog ?? []).map((p: any) => p.attempt_id).filter(Boolean).slice(0, 10);
+    if (attemptIds.length) {
+      const { data: atts } = await supabase.from("mock_attempts")
+        .select("id, total_score, max_score, accuracy, total_correct, total_incorrect, total_attempted, submitted_at")
+        .in("id", attemptIds)
+        .order("submitted_at", { ascending: false });
+      setRecentAttempts(atts ?? []);
+    } else {
+      setRecentAttempts([]);
+    }
+
+    // current streak
     let s = 0;
     const dt = new Date();
     while (true) {
       const key = dt.toISOString().slice(0, 10);
-      const p = progByDate[key];
-      if (p?.completed_at) { s += 1; dt.setDate(dt.getDate() - 1); }
-      else break;
+      if (progByDate[key]?.completed_at) { s += 1; dt.setDate(dt.getDate() - 1); } else break;
     }
     setStreak(s);
+
+    // longest streak (scan)
+    const dates = (prog ?? []).filter((p: any) => p.completed_at).map((p: any) => p.assigned_date).sort();
+    let cur = 0, longest = 0, prev: Date | null = null;
+    for (const d of dates) {
+      const cd = new Date(d);
+      if (prev && (cd.getTime() - prev.getTime()) === 86400000) cur += 1; else cur = 1;
+      longest = Math.max(longest, cur);
+      prev = cd;
+    }
+    setLongestStreak(longest);
+
     setLoading(false);
   };
 
   useEffect(() => { load(); }, [user]);
+
+  const improvement = useMemo(() => {
+    if (recentAttempts.length === 0) return null;
+    const sorted = [...recentAttempts].sort((a, b) => new Date(a.submitted_at).getTime() - new Date(b.submitted_at).getTime());
+    const last = sorted[sorted.length - 1];
+    const prev = sorted.length > 1 ? sorted[sorted.length - 2] : null;
+    const avgAccuracy = sorted.reduce((acc, a) => acc + (Number(a.accuracy) || 0), 0) / sorted.length;
+    const delta = prev && last ? Number(last.accuracy ?? 0) - Number(prev.accuracy ?? 0) : 0;
+    return {
+      latest: last,
+      avgAccuracy: Math.round(avgAccuracy * 10) / 10,
+      delta: Math.round(delta * 10) / 10,
+      attempts: sorted,
+    };
+  }, [recentAttempts]);
 
   if (loading) return <div className="text-muted-foreground">Loading…</div>;
 
@@ -108,7 +151,6 @@ export default function StudentDailyTest() {
         <p className="text-sm text-muted-foreground mt-1">Build the daily habit. A fresh mock every day, picked for you.</p>
       </div>
 
-      {/* Locked banner */}
       {!featLoading && !dailyEnabled && (
         <Card className="p-4 border-amber-200 bg-amber-50/60 flex flex-col md:flex-row md:items-center gap-3 justify-between">
           <div className="flex items-start gap-3">
@@ -143,8 +185,14 @@ export default function StudentDailyTest() {
               <div className="text-sm text-sky-100 mb-1">{new Date(today.assigned_date).toDateString()} • Today's challenge</div>
               <h2 className="text-xl md:text-2xl font-bold">{today.title}</h2>
               <div className="text-sky-100 text-sm mt-1 flex flex-wrap items-center gap-3">
-                <span>{today.test_name}</span>
-                {today.exam_code && <Badge variant="secondary" className="bg-white/20 text-white border-0">{today.exam_code}</Badge>}
+                {todayMeta.qCount > 0 && (
+                  <span className="flex items-center gap-1"><ListChecks className="h-3.5 w-3.5" />{todayMeta.qCount} questions</span>
+                )}
+                {todayMeta.difficulty && (
+                  <Badge variant="secondary" className="bg-white/20 text-white border-0 capitalize gap-1">
+                    <Gauge className="h-3 w-3" /> {todayMeta.difficulty}
+                  </Badge>
+                )}
                 {today.duration && <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {today.duration} min</span>}
               </div>
               {today.note && <p className="text-sky-100 text-xs mt-2 max-w-xl">{today.note}</p>}
@@ -154,8 +202,8 @@ export default function StudentDailyTest() {
                 <>
                   <Badge className="bg-emerald-100 text-emerald-700 border-0 gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> Completed</Badge>
                   {today.my_attempt_id && (
-                    <Link to={`/mocks/result/${today.my_attempt_id}`}>
-                      <Button size="lg" variant="secondary">View result <ArrowRight className="h-4 w-4 ml-1" /></Button>
+                    <Link to={`/student/daily-test/report/${today.my_attempt_id}`}>
+                      <Button size="lg" variant="secondary">View detailed report <ArrowRight className="h-4 w-4 ml-1" /></Button>
                     </Link>
                   )}
                 </>
@@ -183,10 +231,65 @@ export default function StudentDailyTest() {
         </Card>
       )}
 
-      {/* Calendar / history */}
+      {/* Streak / Improvement Dashboard */}
+      <div className="grid md:grid-cols-3 gap-4">
+        <Card className="p-4 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50/40">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs uppercase font-semibold text-orange-700 tracking-wider">Streak System</div>
+            <Flame className="h-4 w-4 text-orange-500" />
+          </div>
+          <div className="text-3xl font-bold text-orange-700">{streak} <span className="text-base font-normal text-muted-foreground">days</span></div>
+          <div className="text-xs text-muted-foreground mt-1">Longest streak: <b>{longestStreak} days</b></div>
+          <Progress value={Math.min(100, (streak / Math.max(longestStreak, 7)) * 100)} className="h-2 mt-3" />
+          <div className="text-[11px] text-muted-foreground mt-2">
+            {streak === 0 ? "Attempt today's test to start a streak." : streak < 3 ? "Great start — keep it going for a 3-day badge." : streak < 7 ? "On fire — 7 days unlocks a Flame badge." : "Legendary consistency."}
+          </div>
+        </Card>
+
+        <Card className="p-4 border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50/40">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs uppercase font-semibold text-emerald-700 tracking-wider">Avg Accuracy</div>
+            <Target className="h-4 w-4 text-emerald-600" />
+          </div>
+          <div className="text-3xl font-bold text-emerald-700">
+            {improvement ? `${improvement.avgAccuracy}%` : "—"}
+          </div>
+          <div className="text-xs text-muted-foreground mt-1">
+            {improvement?.delta != null && improvement.delta !== 0 && (
+              <span className={improvement.delta > 0 ? "text-emerald-600" : "text-rose-600"}>
+                {improvement.delta > 0 ? "▲" : "▼"} {Math.abs(improvement.delta)}% vs previous
+              </span>
+            )}
+            {!improvement && "Submit a test to see your trend"}
+          </div>
+          <div className="text-[11px] text-muted-foreground mt-3">Across last {recentAttempts.length || 0} attempts</div>
+        </Card>
+
+        <Card className="p-4 border-sky-200 bg-gradient-to-br from-sky-50 to-blue-50/40">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs uppercase font-semibold text-sky-700 tracking-wider">Improvement Trend</div>
+            <TrendingUp className="h-4 w-4 text-sky-600" />
+          </div>
+          {improvement && improvement.attempts.length > 0 ? (
+            <div className="flex items-end gap-1 h-16 mt-2">
+              {improvement.attempts.slice(-7).map((a: any, i: number) => {
+                const acc = Number(a.accuracy) || 0;
+                return (
+                  <div key={i} className="flex-1 bg-sky-500/80 rounded-t" style={{ height: `${Math.max(8, acc)}%` }} title={`${acc}% on ${new Date(a.submitted_at).toLocaleDateString()}`} />
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-xs text-muted-foreground mt-3">Your accuracy chart will appear after your first attempt.</div>
+          )}
+          <div className="text-[11px] text-muted-foreground mt-2">Last 7 attempts</div>
+        </Card>
+      </div>
+
+      {/* History */}
       <Card className="p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold">Last 30 days</h2>
+          <h2 className="font-semibold flex items-center gap-2"><Trophy className="h-4 w-4 text-sky-600" /> Last 30 days</h2>
           <span className="text-xs text-muted-foreground">{history.filter(h => h.progress?.completed_at).length} of {history.length} done</span>
         </div>
         {history.length === 0 ? (
@@ -196,16 +299,14 @@ export default function StudentDailyTest() {
             {history.map(h => (
               <div key={h.assigned_date} className="py-3 flex items-center justify-between gap-3">
                 <div className="min-w-0 flex items-center gap-3">
-                  <div className={`h-9 w-9 rounded-lg grid place-items-center text-xs font-bold ${
-                    h.progress?.completed_at ? "bg-emerald-100 text-emerald-700" : "bg-sky-50 text-sky-700"
-                  }`}>
+                  <div className={`h-9 w-9 rounded-lg grid place-items-center text-xs font-bold ${h.progress?.completed_at ? "bg-emerald-100 text-emerald-700" : "bg-sky-50 text-sky-700"}`}>
                     {new Date(h.assigned_date).getDate()}
                   </div>
                   <div className="min-w-0">
                     <div className="text-sm font-medium truncate">{h.title || h.test?.name}</div>
                     <div className="text-xs text-muted-foreground">
                       {new Date(h.assigned_date).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
-                      {h.test?.exam_code && <> · {h.test.exam_code}</>}
+                      {h.test?.total_duration_minutes && <> · {h.test.total_duration_minutes} min</>}
                     </div>
                   </div>
                 </div>
@@ -214,8 +315,8 @@ export default function StudentDailyTest() {
                     <>
                       <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-emerald-100">Completed</Badge>
                       {h.progress.attempt_id && (
-                        <Link to={`/mocks/result/${h.progress.attempt_id}`}>
-                          <Button size="sm" variant="outline">View</Button>
+                        <Link to={`/student/daily-test/report/${h.progress.attempt_id}`}>
+                          <Button size="sm" variant="outline">View report</Button>
                         </Link>
                       )}
                     </>

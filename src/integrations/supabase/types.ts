@@ -5671,6 +5671,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      backfill_personalized_questions_from_mocks: {
+        Args: never
+        Returns: number
+      }
       claim_mock_section_job: {
         Args: { _lock_minutes?: number }
         Returns: {

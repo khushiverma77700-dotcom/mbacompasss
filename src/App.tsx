@@ -152,6 +152,7 @@ const StudentNotifications = lazyWithPreload(() => import("./pages/student/Stude
 const StudentOrders = lazyWithPreload(() => import("./pages/student/StudentOrders"));
 const StudentDeepAnalysis = lazyWithPreload(() => import("./pages/student/StudentDeepAnalysis"));
 const StudentDailyTest = lazyWithPreload(() => import("./pages/student/StudentDailyTest"));
+const StudentDailyTestReportPage = lazyWithPreload(() => import("./pages/student/StudentDailyTestReportPage"));
 const StudentAttempts = lazyWithPreload(() => import("./pages/student/StudentAttempts"));
 const StudentSupport = lazyWithPreload(() => import("./pages/student/StudentSupport"));
 const StudentPersonalizedHub = lazyWithPreload(() => import("./pages/student/StudentPersonalizedHub"));
@@ -611,6 +612,7 @@ const App = () => (
               <Route path="orders" element={<LazyPage><StudentOrders /></LazyPage>} />
               <Route path="analysis/:attemptId" element={<LazyPage><StudentDeepAnalysis /></LazyPage>} />
               <Route path="daily-test" element={<LazyPage><StudentDailyTest /></LazyPage>} />
+              <Route path="daily-test/report/:attemptId" element={<LazyPage><StudentDailyTestReportPage /></LazyPage>} />
               <Route path="attempts" element={<LazyPage><StudentAttempts /></LazyPage>} />
               <Route path="support" element={<LazyPage><StudentSupport /></LazyPage>} />
               <Route path="personalized-hub" element={<LazyPage><StudentPersonalizedHub /></LazyPage>} />
