@@ -284,7 +284,7 @@ const AdminMockBuilder = () => {
           section_id: activeSectionId,
           question_number: row.question_number ? parseInt(row.question_number) : n++,
           question_type: isMcq ? "mcq" : "tita",
-          question_html: row.question_html ?? row.question ?? "",
+          question_html: stripQuestionPrefix(row.question_html ?? row.question ?? ""),
           positive_marks: row.positive_marks ? parseFloat(row.positive_marks) : 3,
           negative_marks: row.negative_marks ? parseFloat(row.negative_marks) : (isMcq ? 1 : 0),
           difficulty: (row.difficulty ?? "medium").toLowerCase(),
