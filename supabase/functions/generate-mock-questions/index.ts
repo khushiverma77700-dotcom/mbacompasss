@@ -193,8 +193,8 @@ For STANDALONE questions:
 - ${standaloneQuestions} fresh independent questions, no shared context.
 - Mix MCQ and TITA per the requested counts.
 - Tag each standalone with "is_set_question": false (no set_index).`;
-  } else if (opts.section_code === "DILR") {
-    setsBlock = `\n\nDILR REQUIREMENT: Every question must be a standalone DI/LR puzzle with concrete data — include an HTML <table> or ASCII chart in <pre> tags. Never write a vague caselet.`;
+  } else if (sectionFamily(opts.section_code) === "logic-data") {
+    setsBlock = `\n\nDATA/REASONING REQUIREMENT: Every question must be exam-realistic with concrete data wherever relevant — include an HTML <table> or ASCII chart in <pre> tags for DI/data-heavy prompts. Never write a vague caselet.`;
   }
 
   return `You are an elite ${opts.exam_full} (${opts.exam}) question setter with 15+ years of experience writing original mock questions for top MBA coaching institutes in India.
@@ -460,7 +460,7 @@ Deno.serve(async (req) => {
       exam_code, category, level,
       request: body, status: "running",
       total_requested: safePerSet * setsCount,
-      ai_model: "google/gemini-2.5-pro",
+      ai_model: "openai/gpt-4o",
       created_by: user.id,
     }).select("id").single();
     const genId = gen?.id;
@@ -580,12 +580,12 @@ Deno.serve(async (req) => {
 
         await updateJob({ status: "processing", current_step: "Calling AI…", attempts: 1 });
 
-        // For CAT, derive sensible questions_per_set defaults if not provided in the plan.
+        // Derive sensible questions_per_set defaults if not provided in the plan.
         const setsForSec = category === "full_length" ? Math.max(0, Number(sec.sets || 0)) : 0;
         let questionsPerSet = 0;
         if (setsForSec > 0) {
-          if (exam_code === "CAT" && sec.code === "VARC") questionsPerSet = 4;
-          else if (exam_code === "CAT" && sec.code === "DILR") questionsPerSet = 5;
+          if (sectionFamily(sec.code) === "verbal") questionsPerSet = Math.min(5, Math.max(3, Math.floor(sec.questions / setsForSec)));
+          else if (sectionFamily(sec.code) === "logic-data") questionsPerSet = Math.min(6, Math.max(4, Math.floor(sec.questions / setsForSec)));
           else questionsPerSet = Math.max(1, Math.floor(sec.questions / setsForSec));
         }
 
@@ -609,7 +609,7 @@ Deno.serve(async (req) => {
 
             let qs: any[] = [];
             try {
-              qs = await callGeminiBatch({
+              qs = await callOpenAIBatch({
                 exam: exam_code, exam_full: profile.full_name,
                 category, level,
                 section_code: sec.code, section_name: sec.name,
