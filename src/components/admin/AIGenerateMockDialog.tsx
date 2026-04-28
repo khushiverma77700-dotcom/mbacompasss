@@ -273,6 +273,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
           questions: Number(r.questions) || 0,
           mcq: Number(r.mcq) || 0,
           tita: Number(r.tita) || 0,
+          sets: Math.max(0, Number(r.sets) || 0),
           sort: idx,
         }));
         payload.total_questions = sectionPlanTotal;
