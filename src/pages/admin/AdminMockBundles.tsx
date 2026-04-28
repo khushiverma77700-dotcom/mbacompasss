@@ -358,6 +358,8 @@ export default function AdminMockBundles() {
               </div>
             </div>
           )}
+
+          {editing && step === 3 && (
             <div className="space-y-4">
               <div>
                 <Label className="text-base">Mock Categories</Label>
