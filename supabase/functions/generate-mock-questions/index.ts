@@ -276,7 +276,11 @@ CRITICAL RULES:
 5. For TITA: provide numeric answer(s) and tolerance if applicable. NO options.
 6. Tag each question with topic and subtopic accurately.
 7. Match the official ${opts.exam} pattern, length, and style precisely.
-8. Output ONLY valid JSON. No prose. No markdown fences. Use raw integers (no thousands separators like "1,234").`;
+8. Output ONLY valid JSON. No prose. No markdown fences. Use raw integers (no thousands separators like "1,234").
+9. STRICT FORMATTING — the UI renders question number, set badge and option letters (A/B/C/D) as STATIC labels:
+   - "question_html" must contain ONLY the pure question text. Do NOT prefix it with "Q1.", "Q.1", "Question 1:", "Question:", "1.", "1)", "(1)", "Set 1:", or any numbering/labeling.
+   - "options[].text" must contain ONLY the pure option text. Do NOT prefix it with "A)", "(A)", "A.", "a)", "1)" or any letter/number label.
+   - For set-bound questions, keep the shared passage/caselet INSIDE <div class="passage">…</div> exactly as instructed; do NOT write "Question 1 of Set 2", "Set 1 — Q3" etc. anywhere.`;
 }
 
 function buildUserPrompt(opts: {
