@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, Pencil, Trash2, Upload, Loader2, BookOpen } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import MathContent from "@/components/mock/MathContent";
+import { stripQuestionPrefix, stripOptionPrefix } from "@/lib/cleanQuestionHtml";
 
 type Section = {
   id: string;
