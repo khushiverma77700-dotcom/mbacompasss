@@ -715,11 +715,14 @@ Deno.serve(async (req) => {
     }
 
     if (genId) {
+      const expectedTotal = safePerSet * setsCount;
+      const completedAll = stats.generated >= expectedTotal;
       await admin.from("ai_mock_generations").update({
-        status: "completed",
+        status: completedAll ? "completed" : "failed",
         total_generated: stats.generated,
         total_rejected_duplicate: stats.rejected_dup_db,
         total_rejected_web_match: stats.rejected_dup_internet,
+        error_message: completedAll ? null : `Incomplete generation: ${stats.generated}/${expectedTotal} questions saved`,
         result_summary: { tests: createdTests, stats },
         finished_at: new Date().toISOString(),
       }).eq("id", genId);
