@@ -719,9 +719,9 @@ Deno.serve(async (req) => {
             });
           }
 
-          // Mirror to Personalized Hub ONLY for sectional/topic generations (which power Daily Tests + Sectional Tests).
+          // Mirror to Personalized Hub ONLY for Daily/sectional/topic generations.
           // Full-length mock questions are intentionally excluded from the Hub.
-          const allowHubMirror = category === "sectional" || category === "topic";
+          const allowHubMirror = category === "daily" || category === "sectional" || category === "topic";
           const hubSection = allowHubMirror ? (PERSONALIZED_SECTION_MAP[exam_code] || {})[sec.code] : undefined;
           const hubRows: any[] = [];
 
@@ -911,15 +911,27 @@ function planSections(
     }];
   }
   if (category === "daily") {
-    // Daily Tests are ALWAYS a balanced 33/33/33 mix across QA, VARC and DILR.
-    const desired = ["QA", "VARC", "DILR"] as const;
-    const pick = (code: string) =>
-      profile.sections.find((s) => s.code === code) || profile.sections[0];
+    // Daily Tests are ALWAYS a balanced 33/33/33 mix across the exam's 3 core sections.
+    // XAT has VALR/DM/QADI, so never fall back to one repeated section code.
+    const dailySectionCodesByExam: Record<string, string[]> = {
+      CAT: ["VARC", "DILR", "QA"],
+      XAT: ["VALR", "DM", "QADI"],
+      SNAP: ["GE", "AR", "QADS"],
+      NMAT: ["LS", "LR", "QS"],
+      CMAT: ["QADI", "LR", "LC"],
+      IIFT: ["VARC", "DILR", "QA"],
+      MAT: ["LC", "ICR", "DA"],
+    };
+    const desired = dailySectionCodesByExam[profile.full_name.includes("Xavier") ? "XAT" : ""]
+      || profile.sections.slice(0, 3).map((s) => s.code);
+    const uniqueDesired = Array.from(new Set(desired)).slice(0, 3);
+    const pick = (code: string, idx: number) =>
+      profile.sections.find((s) => s.code === code) || profile.sections[idx] || profile.sections[0];
     const base = Math.floor(totalQuestions / 3);
     const remainder = totalQuestions - base * 3; // distribute extras to the first sections
     const counts = [base + (remainder > 0 ? 1 : 0), base + (remainder > 1 ? 1 : 0), base];
-    return desired.map((code, idx) => {
-      const sec = pick(code);
+    return uniqueDesired.map((code, idx) => {
+      const sec = pick(code, idx);
       const q = Math.max(1, counts[idx]);
       return {
         code: sec.code,
