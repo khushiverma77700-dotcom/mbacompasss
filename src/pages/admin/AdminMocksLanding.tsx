@@ -32,6 +32,8 @@ interface Settings {
   expert_feedback?: any[];
   platform_features?: any[];
   ai_report_title?: string; ai_report_subtitle?: string;
+  day_planner_block?: any;
+  courses_cta_block?: any;
 }
 
 export default function AdminMocksLanding() {
@@ -102,6 +104,8 @@ export default function AdminMocksLanding() {
           <TabsTrigger value="fb-img">Feedback (Image)</TabsTrigger>
           <TabsTrigger value="experts">Expert Feedback</TabsTrigger>
           <TabsTrigger value="ai-report">AI Report</TabsTrigger>
+          <TabsTrigger value="day-planner">Day Planner</TabsTrigger>
+          <TabsTrigger value="courses-cta">Courses CTA</TabsTrigger>
           <TabsTrigger value="testimonials">Testimonials (Legacy)</TabsTrigger>
           <TabsTrigger value="faqs">FAQs</TabsTrigger>
           <TabsTrigger value="tracking">Tracking & SEO</TabsTrigger>
@@ -381,6 +385,122 @@ export default function AdminMocksLanding() {
             <Field label="Section Title" v={s.ai_report_title ?? ""} onChange={(v) => upd({ ai_report_title: v })} />
             <Field label="Section Subtitle" v={s.ai_report_subtitle ?? ""} onChange={(v) => upd({ ai_report_subtitle: v })} multiline />
             <p className="text-xs text-muted-foreground">The animated charts render automatically using sample data.</p>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="day-planner" className="mt-4">
+          <Card className="p-5 space-y-4">
+            <p className="text-xs text-muted-foreground">"CAT Day Planner — Free Access" section shown on the mocks landing page. CTA links to /student/day-planner by default.</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={s.day_planner_block?.enabled !== false}
+                onChange={(e) => upd({ day_planner_block: { ...(s.day_planner_block ?? {}), enabled: e.target.checked } })}
+              />
+              <Label className="!m-0">Show this section</Label>
+            </div>
+            <Field label="Eyebrow" v={s.day_planner_block?.eyebrow ?? ""} onChange={(v) => upd({ day_planner_block: { ...(s.day_planner_block ?? {}), eyebrow: v } })} />
+            <Field label="Title" v={s.day_planner_block?.title ?? ""} onChange={(v) => upd({ day_planner_block: { ...(s.day_planner_block ?? {}), title: v } })} />
+            <Field label="Subtitle" v={s.day_planner_block?.subtitle ?? ""} onChange={(v) => upd({ day_planner_block: { ...(s.day_planner_block ?? {}), subtitle: v } })} multiline />
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="CTA label" v={s.day_planner_block?.cta_label ?? ""} onChange={(v) => upd({ day_planner_block: { ...(s.day_planner_block ?? {}), cta_label: v } })} />
+              <Field label="CTA URL" v={s.day_planner_block?.cta_url ?? ""} onChange={(v) => upd({ day_planner_block: { ...(s.day_planner_block ?? {}), cta_url: v } })} />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Features</Label>
+              {(s.day_planner_block?.features ?? []).map((f: any, i: number) => (
+                <div key={i} className="border rounded-md p-3 grid grid-cols-12 gap-2 items-end">
+                  <div className="col-span-3"><Field label="Icon" v={f.icon ?? ""} onChange={(v) => {
+                    const arr = [...(s.day_planner_block?.features ?? [])]; arr[i] = { ...arr[i], icon: v };
+                    upd({ day_planner_block: { ...(s.day_planner_block ?? {}), features: arr } });
+                  }} /></div>
+                  <div className="col-span-3"><Field label="Title" v={f.title ?? ""} onChange={(v) => {
+                    const arr = [...(s.day_planner_block?.features ?? [])]; arr[i] = { ...arr[i], title: v };
+                    upd({ day_planner_block: { ...(s.day_planner_block ?? {}), features: arr } });
+                  }} /></div>
+                  <div className="col-span-5"><Field label="Description" v={f.desc ?? ""} onChange={(v) => {
+                    const arr = [...(s.day_planner_block?.features ?? [])]; arr[i] = { ...arr[i], desc: v };
+                    upd({ day_planner_block: { ...(s.day_planner_block ?? {}), features: arr } });
+                  }} /></div>
+                  <Button variant="ghost" size="icon" onClick={() => {
+                    const arr = (s.day_planner_block?.features ?? []).filter((_: any, idx: number) => idx !== i);
+                    upd({ day_planner_block: { ...(s.day_planner_block ?? {}), features: arr } });
+                  }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                </div>
+              ))}
+              <Button variant="outline" size="sm" onClick={() => {
+                const arr = [...(s.day_planner_block?.features ?? []), { icon: "Sparkles", title: "", desc: "" }];
+                upd({ day_planner_block: { ...(s.day_planner_block ?? {}), features: arr } });
+              }}><Plus className="h-4 w-4 mr-1" /> Add feature</Button>
+              <p className="text-xs text-muted-foreground">Icons: CalendarCheck, Activity, Target, Sparkles, Flame, BookOpen, Timer, TrendingUp, Award, BarChart3, BrainCircuit, GraduationCap, Users, PlayCircle</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Stat strips (3 small badges)</Label>
+              {(s.day_planner_block?.stats ?? []).map((st: any, i: number) => (
+                <div key={i} className="grid grid-cols-12 gap-2 items-end">
+                  <div className="col-span-5"><Field label="Value" v={st.value ?? ""} onChange={(v) => {
+                    const arr = [...(s.day_planner_block?.stats ?? [])]; arr[i] = { ...arr[i], value: v };
+                    upd({ day_planner_block: { ...(s.day_planner_block ?? {}), stats: arr } });
+                  }} /></div>
+                  <div className="col-span-6"><Field label="Label" v={st.label ?? ""} onChange={(v) => {
+                    const arr = [...(s.day_planner_block?.stats ?? [])]; arr[i] = { ...arr[i], label: v };
+                    upd({ day_planner_block: { ...(s.day_planner_block ?? {}), stats: arr } });
+                  }} /></div>
+                  <Button variant="ghost" size="icon" onClick={() => {
+                    const arr = (s.day_planner_block?.stats ?? []).filter((_: any, idx: number) => idx !== i);
+                    upd({ day_planner_block: { ...(s.day_planner_block ?? {}), stats: arr } });
+                  }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                </div>
+              ))}
+              <Button variant="outline" size="sm" onClick={() => {
+                const arr = [...(s.day_planner_block?.stats ?? []), { label: "", value: "" }];
+                upd({ day_planner_block: { ...(s.day_planner_block ?? {}), stats: arr } });
+              }}><Plus className="h-4 w-4 mr-1" /> Add stat</Button>
+            </div>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="courses-cta" className="mt-4">
+          <Card className="p-5 space-y-4">
+            <p className="text-xs text-muted-foreground">Courses CTA blocks appear three times across the mocks landing page (inline strip, full band, and compact band before FAQs).</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={s.courses_cta_block?.enabled !== false}
+                onChange={(e) => upd({ courses_cta_block: { ...(s.courses_cta_block ?? {}), enabled: e.target.checked } })}
+              />
+              <Label className="!m-0">Show these CTAs</Label>
+            </div>
+            <Field label="Eyebrow" v={s.courses_cta_block?.eyebrow ?? ""} onChange={(v) => upd({ courses_cta_block: { ...(s.courses_cta_block ?? {}), eyebrow: v } })} />
+            <Field label="Title" v={s.courses_cta_block?.title ?? ""} onChange={(v) => upd({ courses_cta_block: { ...(s.courses_cta_block ?? {}), title: v } })} />
+            <Field label="Subtitle" v={s.courses_cta_block?.subtitle ?? ""} onChange={(v) => upd({ courses_cta_block: { ...(s.courses_cta_block ?? {}), subtitle: v } })} multiline />
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Primary CTA label" v={s.courses_cta_block?.cta_label ?? ""} onChange={(v) => upd({ courses_cta_block: { ...(s.courses_cta_block ?? {}), cta_label: v } })} />
+              <Field label="CTA URL" v={s.courses_cta_block?.cta_url ?? ""} onChange={(v) => upd({ courses_cta_block: { ...(s.courses_cta_block ?? {}), cta_url: v } })} />
+            </div>
+            <Field label="Secondary CTA label (optional)" v={s.courses_cta_block?.secondary_label ?? ""} onChange={(v) => upd({ courses_cta_block: { ...(s.courses_cta_block ?? {}), secondary_label: v } })} />
+
+            <div className="space-y-2">
+              <Label>Highlights (4 short bullet points)</Label>
+              {(s.courses_cta_block?.highlights ?? []).map((h: string, i: number) => (
+                <div key={i} className="flex gap-2 items-end">
+                  <div className="flex-1"><Field label={`Highlight ${i + 1}`} v={h} onChange={(v) => {
+                    const arr = [...(s.courses_cta_block?.highlights ?? [])]; arr[i] = v;
+                    upd({ courses_cta_block: { ...(s.courses_cta_block ?? {}), highlights: arr } });
+                  }} /></div>
+                  <Button variant="ghost" size="icon" onClick={() => {
+                    const arr = (s.courses_cta_block?.highlights ?? []).filter((_: any, idx: number) => idx !== i);
+                    upd({ courses_cta_block: { ...(s.courses_cta_block ?? {}), highlights: arr } });
+                  }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                </div>
+              ))}
+              <Button variant="outline" size="sm" onClick={() => {
+                const arr = [...(s.courses_cta_block?.highlights ?? []), ""];
+                upd({ courses_cta_block: { ...(s.courses_cta_block ?? {}), highlights: arr } });
+              }}><Plus className="h-4 w-4 mr-1" /> Add highlight</Button>
+            </div>
           </Card>
         </TabsContent>
 

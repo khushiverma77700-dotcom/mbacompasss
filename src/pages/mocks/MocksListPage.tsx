@@ -39,6 +39,8 @@ import { toast } from "sonner";
 import { SampleAIReport } from "@/components/mock/SampleAIReport";
 import { AutoTestimonialMarquee } from "@/components/mock/AutoTestimonialMarquee";
 import { DualFeedbackMarquees } from "@/components/mock/DualFeedbackMarquees";
+import DayPlannerShowcase from "@/components/mock/DayPlannerShowcase";
+import CoursesCTABand from "@/components/mock/CoursesCTABand";
 
 const ICONS: Record<string, any> = {
   BrainCircuit, Timer, BookOpen, TrendingUp, Users, MessageCircle, Sparkles, ShieldCheck, Star, Clock,
@@ -81,6 +83,8 @@ interface Settings {
   platform_features?: any[];
   ai_report_title?: string;
   ai_report_subtitle?: string;
+  day_planner_block?: any;
+  courses_cta_block?: any;
 }
 
 interface MockTest {
@@ -323,6 +327,13 @@ export default function MocksListPage() {
         </div>
       </section>
 
+      {/* COURSES CTA — inline strip below hero (1/4) */}
+      <section className="py-8 bg-white">
+        <CoursesCTABand block={settings.courses_cta_block} variant="inline" />
+      </section>
+
+      {/* DAY PLANNER — FREE ACCESS */}
+      <DayPlannerShowcase block={settings.day_planner_block} />
 
       {/* WHY MBA COMPASS MOCKS */}
       {settings.why_us_points && settings.why_us_points.length > 0 && (
@@ -394,6 +405,9 @@ export default function MocksListPage() {
 
       {/* AUTO TESTIMONIALS MARQUEE */}
       <AutoTestimonialMarquee items={settings.auto_testimonials ?? []} />
+
+      {/* COURSES CTA — full band */}
+      <CoursesCTABand block={settings.courses_cta_block} variant="full" />
 
       {/* STUDENT ANALYSIS — 3 column grid */}
       {settings.student_analyses && settings.student_analyses.length > 0 && (
@@ -594,6 +608,9 @@ export default function MocksListPage() {
           </Card>
         </div>
       </section>
+
+      {/* COURSES CTA — compact gradient strip before FAQ */}
+      <CoursesCTABand block={settings.courses_cta_block} variant="compact" />
 
       {/* FAQ */}
       {settings.faqs?.length > 0 && (

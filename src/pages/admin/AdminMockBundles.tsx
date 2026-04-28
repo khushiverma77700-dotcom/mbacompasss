@@ -20,8 +20,10 @@ type Bundle = {
   exam_code: string | null;
   cover_image_url: string | null;
   price_inr: number;
+  original_price_inr: number | null;
   validity_days: number;
   is_published: boolean;
+  highlight_on_mocks: boolean;
   sort_order: number;
 };
 type Mock = { id: string; name: string; slug: string; exam_code: string | null };
@@ -51,7 +53,7 @@ export default function AdminMockBundles() {
   useEffect(() => { load(); }, []);
 
   const openNew = () => {
-    setEditing({ name: "", slug: "", description: "", exam_code: "CAT", price_inr: 0, validity_days: 365, is_published: false, sort_order: 0 });
+    setEditing({ name: "", slug: "", description: "", exam_code: "CAT", price_inr: 0, original_price_inr: null, validity_days: 365, is_published: false, highlight_on_mocks: false, sort_order: 0 });
     setEditingItems([]);
   };
   const openEdit = async (b: Bundle) => {
@@ -72,8 +74,12 @@ export default function AdminMockBundles() {
         exam_code: editing.exam_code ?? null,
         cover_image_url: editing.cover_image_url ?? null,
         price_inr: Number(editing.price_inr) || 0,
+        original_price_inr: editing.original_price_inr === null || editing.original_price_inr === undefined || (editing.original_price_inr as any) === ""
+          ? null
+          : Number(editing.original_price_inr),
         validity_days: Number(editing.validity_days) || 365,
         is_published: !!editing.is_published,
+        highlight_on_mocks: !!editing.highlight_on_mocks,
         sort_order: Number(editing.sort_order) || 0,
       };
       let bundleId = (editing as Bundle).id;
@@ -186,6 +192,10 @@ export default function AdminMockBundles() {
                   <Input type="number" value={editing.price_inr ?? 0} onChange={(e) => setEditing({ ...editing, price_inr: Number(e.target.value) })} />
                 </div>
                 <div>
+                  <Label>Original Price (INR) — optional, shows strikethrough</Label>
+                  <Input type="number" value={editing.original_price_inr ?? ""} onChange={(e) => setEditing({ ...editing, original_price_inr: e.target.value === "" ? null : Number(e.target.value) })} />
+                </div>
+                <div>
                   <Label>Validity (days)</Label>
                   <Input type="number" value={editing.validity_days ?? 365} onChange={(e) => setEditing({ ...editing, validity_days: Number(e.target.value) })} />
                 </div>
@@ -196,6 +206,10 @@ export default function AdminMockBundles() {
                 <div className="flex items-center gap-2 pt-6">
                   <Switch checked={!!editing.is_published} onCheckedChange={(v) => setEditing({ ...editing, is_published: v })} />
                   <Label>Published</Label>
+                </div>
+                <div className="flex items-center gap-2 pt-6">
+                  <Switch checked={!!editing.highlight_on_mocks} onCheckedChange={(v) => setEditing({ ...editing, highlight_on_mocks: v })} />
+                  <Label>Featured on Courses page</Label>
                 </div>
               </div>
               <div>
