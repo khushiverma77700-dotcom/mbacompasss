@@ -238,6 +238,8 @@ export default function StudentDailyTest() {
           </div>
         )}
       </Card>
+
+      <UpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} featureLabel="Daily Tests" />
     </div>
   );
 }
