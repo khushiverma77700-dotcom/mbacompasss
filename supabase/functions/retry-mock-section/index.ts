@@ -10,6 +10,35 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Strip embedded "Q1.", "Set 1:", "(A)" etc. — UI shows these as static labels.
+const Q_PREFIX_PATTERNS: RegExp[] = [
+  /^\s*Q\.?\s*\d+\s*[.\):\-]?\s*/i,
+  /^\s*Question\s*\d*\s*[.\):\-]?\s*/i,
+  /^\s*Set\s*\d+\s*[.\):\-]?\s*/i,
+  /^\s*\(?\d+\)?\s*[.\):\-]\s*/,
+];
+const OPT_PREFIX_PATTERNS: RegExp[] = [
+  /^\s*\(?\s*[A-Da-d1-4]\s*\)?\s*[.\):\-]\s*/,
+];
+function stripPrefixes(html: string | null | undefined, patterns: RegExp[]): string {
+  if (!html) return html ?? "";
+  return html.replace(/^(\s*(?:<[^>]+>\s*)*)([\s\S]*?)(<|$)/, (_m, lead, body, tail) => {
+    let next = body;
+    let changed = true;
+    let safety = 5;
+    while (changed && safety-- > 0) {
+      changed = false;
+      for (const re of patterns) {
+        const r = next.replace(re, "");
+        if (r !== next) { next = r; changed = true; }
+      }
+    }
+    return lead + next + tail;
+  });
+}
+const cleanQuestionHtml = (h: string | null | undefined) => stripPrefixes(h, Q_PREFIX_PATTERNS);
+const cleanOptionHtml = (h: string | null | undefined) => stripPrefixes(h, OPT_PREFIX_PATTERNS);
+
 const OPENAI_TIMEOUT_MS = 90_000;
 const SECTION_WALL_CLOCK_MS = 8 * 60_000;
 const BATCH_SIZE = 8;
