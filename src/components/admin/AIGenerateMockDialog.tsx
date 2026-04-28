@@ -325,8 +325,8 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
       const { data, error } = await supabase.functions.invoke("generate-mock-questions", { body: payload });
       if (error) throw error;
 
-      const generationId = data?.generation_id;
-      if (!generationId) {
+      const newGenId = data?.generation_id;
+      if (!newGenId) {
         // Legacy synchronous response
         setResult(data);
         setStep(2);
@@ -335,58 +335,12 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
         return;
       }
 
+      setGenerationId(newGenId);
+      setStep(3);
       toast({
         title: "Generation started",
-        description: "AI is writing your questions in the background. This may take a few minutes.",
+        description: "AI is writing your questions in the background. Watch progress below.",
       });
-
-      // Poll the ai_mock_generations row until completion (max ~10 minutes)
-      const start = Date.now();
-      const maxMs = 10 * 60 * 1000;
-      let finalRow: any = null;
-      while (Date.now() - start < maxMs) {
-        await new Promise((r) => setTimeout(r, 4000));
-        const { data: row } = await supabase
-          .from("ai_mock_generations")
-          .select("status, total_generated, total_rejected_duplicate, total_rejected_web_match, result_summary, error_message")
-          .eq("id", generationId)
-          .maybeSingle();
-        if (!row) continue;
-        if (row.status === "completed" || row.status === "failed") {
-          finalRow = row;
-          break;
-        }
-      }
-
-      if (!finalRow) {
-        toast({
-          title: "Still generating",
-          description: "Taking longer than expected. Check the Mock Tests list shortly.",
-        });
-        onCreated?.();
-        return;
-      }
-
-      if (finalRow.status === "failed") {
-        throw new Error(finalRow.error_message || "Generation failed");
-      }
-
-      const summary = (finalRow.result_summary || {}) as any;
-      setResult({
-        ok: true,
-        tests: summary.tests || [],
-        stats: summary.stats || {
-          generated: finalRow.total_generated || 0,
-          rejected_dup_db: finalRow.total_rejected_duplicate || 0,
-          rejected_dup_internet: finalRow.total_rejected_web_match || 0,
-        },
-      });
-      setStep(2);
-      toast({
-        title: "Mock generation complete",
-        description: `${finalRow.total_generated || 0} questions generated.`,
-      });
-      onCreated?.();
     } catch (e: any) {
       toast({ title: "Generation failed", description: e?.message || "Try again", variant: "destructive" });
     } finally {
@@ -396,7 +350,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
 
   const close = () => {
     onOpenChange(false);
-    setTimeout(() => { setStep(1); setResult(null); }, 200);
+    setTimeout(() => { setStep(1); setResult(null); setGenerationId(null); }, 200);
   };
 
   return (
