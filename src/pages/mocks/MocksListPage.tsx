@@ -39,6 +39,8 @@ import { toast } from "sonner";
 import { SampleAIReport } from "@/components/mock/SampleAIReport";
 import { AutoTestimonialMarquee } from "@/components/mock/AutoTestimonialMarquee";
 import { DualFeedbackMarquees } from "@/components/mock/DualFeedbackMarquees";
+import DayPlannerShowcase from "@/components/mock/DayPlannerShowcase";
+import CoursesCTABand from "@/components/mock/CoursesCTABand";
 
 const ICONS: Record<string, any> = {
   BrainCircuit, Timer, BookOpen, TrendingUp, Users, MessageCircle, Sparkles, ShieldCheck, Star, Clock,
@@ -81,6 +83,8 @@ interface Settings {
   platform_features?: any[];
   ai_report_title?: string;
   ai_report_subtitle?: string;
+  day_planner_block?: any;
+  courses_cta_block?: any;
 }
 
 interface MockTest {
