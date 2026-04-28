@@ -157,7 +157,8 @@ function SidebarContent() {
           }
         >
           <item.icon className="h-4 w-4" />
-          {item.label}
+          <span className="flex-1">{item.label}</span>
+          {item.feature && <FeatureLockBadge feature={item.feature} />}
         </NavLink>
       ))}
       <div className="pt-4 mt-4 border-t border-sky-100">
