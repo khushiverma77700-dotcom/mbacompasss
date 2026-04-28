@@ -159,10 +159,14 @@ export default function StudentDailyTest() {
                     </Link>
                   )}
                 </>
-              ) : (
+              ) : dailyEnabled ? (
                 <Link to={`/mocks/${today.test_slug}`}>
                   <Button size="lg" variant="secondary" className="gap-2">Start daily test <ArrowRight className="h-4 w-4" /></Button>
                 </Link>
+              ) : (
+                <Button size="lg" variant="secondary" className="gap-2" onClick={() => setUpgradeOpen(true)}>
+                  <Lock className="h-4 w-4" /> Locked — Upgrade
+                </Button>
               )}
             </div>
           </div>
