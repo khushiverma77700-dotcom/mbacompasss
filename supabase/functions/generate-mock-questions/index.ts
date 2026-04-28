@@ -7,7 +7,6 @@
 // Auth: admin only (verifies JWT in code; verify_jwt = false in config.toml).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
-import { callAIGateway } from "../_shared/aiGateway.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,12 +35,12 @@ const EXAM_PROFILES: Record<string, {
   },
   XAT: {
     full_name: "Xavier Aptitude Test (XLRI)",
-    default_total: 100,
+    default_total: 95,
     sections: [
-      { code: "VARC", name: "Verbal & Logical Ability", duration: 50, questions: 26 },
-      { code: "DILR", name: "Decision Making", duration: 50, questions: 22 },
-      { code: "QA", name: "Quantitative Ability & DI", duration: 50, questions: 28 },
-      { code: "GK", name: "General Knowledge", duration: 15, questions: 24 },
+      { code: "VALR", name: "Verbal & Logical Ability", duration: 50, questions: 26 },
+      { code: "DM", name: "Decision Making", duration: 50, questions: 21 },
+      { code: "QADI", name: "Quantitative Ability & Data Interpretation", duration: 50, questions: 28 },
+      { code: "GK", name: "General Knowledge", duration: 15, questions: 20 },
     ],
     default_positive: 1, default_negative: 0.25,
   },
@@ -49,9 +48,9 @@ const EXAM_PROFILES: Record<string, {
     full_name: "Symbiosis National Aptitude Test",
     default_total: 60,
     sections: [
-      { code: "VARC", name: "General English", duration: 20, questions: 15 },
-      { code: "DILR", name: "Analytical & Logical Reasoning", duration: 30, questions: 25 },
-      { code: "QA", name: "Quantitative, Data Interpretation & Sufficiency", duration: 10, questions: 20 },
+      { code: "GE", name: "General English", duration: 15, questions: 15 },
+      { code: "AR", name: "Analytical & Logical Reasoning", duration: 25, questions: 25 },
+      { code: "QADS", name: "Quantitative, Data Interpretation & Data Sufficiency", duration: 20, questions: 20 },
     ],
     default_positive: 1, default_negative: 0.25,
   },
@@ -59,9 +58,9 @@ const EXAM_PROFILES: Record<string, {
     full_name: "NMAT by GMAC",
     default_total: 108,
     sections: [
-      { code: "VARC", name: "Language Skills", duration: 28, questions: 36 },
-      { code: "DILR", name: "Logical Reasoning", duration: 40, questions: 36 },
-      { code: "QA", name: "Quantitative Skills", duration: 52, questions: 36 },
+      { code: "LS", name: "Language Skills", duration: 28, questions: 36 },
+      { code: "LR", name: "Logical Reasoning", duration: 40, questions: 36 },
+      { code: "QS", name: "Quantitative Skills", duration: 52, questions: 36 },
     ],
     default_positive: 1, default_negative: 0,
   },
@@ -69,13 +68,36 @@ const EXAM_PROFILES: Record<string, {
     full_name: "Common Management Admission Test",
     default_total: 100,
     sections: [
-      { code: "QA", name: "Quantitative Techniques & DI", duration: 45, questions: 20 },
-      { code: "DILR", name: "Logical Reasoning", duration: 45, questions: 20 },
-      { code: "VARC", name: "Language Comprehension", duration: 45, questions: 20 },
-      { code: "GK", name: "General Awareness", duration: 30, questions: 20 },
-      { code: "QA-IE", name: "Innovation & Entrepreneurship", duration: 15, questions: 20 },
+      { code: "QADI", name: "Quantitative Techniques & Data Interpretation", duration: 36, questions: 20 },
+      { code: "LR", name: "Logical Reasoning", duration: 36, questions: 20 },
+      { code: "LC", name: "Language Comprehension", duration: 36, questions: 20 },
+      { code: "GA", name: "General Awareness", duration: 36, questions: 20 },
+      { code: "IE", name: "Innovation & Entrepreneurship", duration: 36, questions: 20 },
     ],
     default_positive: 4, default_negative: 1,
+  },
+  IIFT: {
+    full_name: "Indian Institute of Foreign Trade Entrance Test",
+    default_total: 110,
+    sections: [
+      { code: "VARC", name: "Verbal Ability & Reading Comprehension", duration: 40, questions: 35 },
+      { code: "QA", name: "Quantitative Analysis", duration: 35, questions: 25 },
+      { code: "DILR", name: "Data Interpretation & Logical Reasoning", duration: 40, questions: 30 },
+      { code: "GK", name: "General Knowledge & Current Affairs", duration: 25, questions: 20 },
+    ],
+    default_positive: 3, default_negative: 1,
+  },
+  MAT: {
+    full_name: "Management Aptitude Test",
+    default_total: 150,
+    sections: [
+      { code: "LC", name: "Language Comprehension", duration: 30, questions: 30 },
+      { code: "ICR", name: "Intelligence & Critical Reasoning", duration: 30, questions: 30 },
+      { code: "DA", name: "Data Analysis & Sufficiency", duration: 30, questions: 30 },
+      { code: "MS", name: "Mathematical Skills", duration: 30, questions: 30 },
+      { code: "IGE", name: "Indian & Global Environment", duration: 30, questions: 30 },
+    ],
+    default_positive: 1, default_negative: 0.25,
   },
 };
 
