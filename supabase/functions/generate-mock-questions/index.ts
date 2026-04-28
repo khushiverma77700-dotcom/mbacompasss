@@ -216,6 +216,7 @@ async function callGeminiBatch(args: {
   userId: string | null;
   strict_topic?: string | null;
   sets?: number | null;
+  questions_per_set?: number | null;
   total_section_questions?: number | null;
 }) {
   const sys = buildSystemPrompt({
@@ -223,7 +224,10 @@ async function callGeminiBatch(args: {
     section_code: args.section_code, section_name: args.section_name,
     strict_topic: args.strict_topic ?? null,
     sets: args.sets ?? null,
+    questions_per_set: args.questions_per_set ?? null,
     total_section_questions: args.total_section_questions ?? null,
+    mcq_count: args.mcq,
+    tita_count: args.tita,
   });
   const user = buildUserPrompt({
     count: args.count, mcq_count: args.mcq, tita_count: args.tita,
@@ -231,15 +235,15 @@ async function callGeminiBatch(args: {
   });
 
   const resp = await callAIGateway({
-    model: "gpt-5",
+    model: "google/gemini-2.5-flash",
     messages: [
       { role: "system", content: sys },
       { role: "user", content: user },
     ],
     response_format: { type: "json_object" },
-    temperature: 0.95,
-    max_tokens: 8000,
-  }, { feature: "generate-mock-questions", userId: args.userId, maxRetries: 1, provider: "openai-mini" });
+    temperature: 0.9,
+    max_tokens: 16000,
+  }, { feature: "generate-mock-questions", userId: args.userId, maxRetries: 1, provider: "gemini" });
 
   if (!resp.ok) {
     const txt = await resp.text();
@@ -248,9 +252,21 @@ async function callGeminiBatch(args: {
   const data = await resp.json();
   const content = data?.choices?.[0]?.message?.content;
   if (!content) throw new Error("AI returned empty content");
+  // Tolerant JSON parse: strip markdown fences and locate the outer JSON object.
   let parsed: any;
-  try { parsed = typeof content === "string" ? JSON.parse(content) : content; }
-  catch { throw new Error("AI returned non-JSON content"); }
+  try {
+    parsed = typeof content === "string" ? JSON.parse(content) : content;
+  } catch {
+    const cleaned = String(content).replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "");
+    const start = cleaned.indexOf("{");
+    const end = cleaned.lastIndexOf("}");
+    if (start >= 0 && end > start) {
+      try { parsed = JSON.parse(cleaned.slice(start, end + 1)); }
+      catch { throw new Error("AI returned non-JSON content"); }
+    } else {
+      throw new Error("AI returned non-JSON content");
+    }
+  }
   return Array.isArray(parsed?.questions) ? parsed.questions : [];
 }
 
