@@ -598,8 +598,13 @@ Deno.serve(async (req) => {
           while (produced < sec.questions && attemptsLocal < maxAttempts) {
             attemptsLocal++;
             const remain = sec.questions - produced;
-            // For sets, ask for the entire section in one call so the model can build coherent passages.
-            const batch = setsForSec > 0 && attemptsLocal === 1 ? sec.questions : Math.min(BATCH_SIZE, remain);
+            const setBoundTotal = setsForSec > 0 ? Math.min(sec.questions, setsForSec * questionsPerSet) : 0;
+            const generatingSharedSet = setsForSec > 0 && produced < setBoundTotal;
+            // Generate one RC/DILR set per AI call. Asking for a whole full-length section in one call
+            // was too large and caused partial output / stalled jobs.
+            const batch = generatingSharedSet
+              ? Math.min(questionsPerSet, setBoundTotal - produced)
+              : Math.min(BATCH_SIZE, remain);
             const remainMcq = Math.max(0, secMcq - accepted.filter(q => q.question_type === "mcq").length);
             const remainTita = Math.max(0, secTita - accepted.filter(q => q.question_type === "tita").length);
             const batchMcq = Math.min(remainMcq, Math.ceil(batch * (remainMcq / Math.max(1, remainMcq + remainTita))));
@@ -617,9 +622,9 @@ Deno.serve(async (req) => {
                 positive: profile.default_positive, negative: profile.default_negative,
                 userId: user.id,
                 strict_topic: category === "topic" && topic ? topic : null,
-                sets: setsForSec,
-                questions_per_set: questionsPerSet,
-                total_section_questions: sec.questions,
+                sets: generatingSharedSet ? 1 : 0,
+                questions_per_set: generatingSharedSet ? batch : null,
+                total_section_questions: batch,
               });
             } catch (e) {
               console.error(`[generate] ${sec.code} batch ${attemptsLocal} failed:`, e);
@@ -690,9 +695,10 @@ Deno.serve(async (req) => {
           }
 
           await updateJob({
-            status: produced > 0 ? "completed" : "failed",
+            status: produced >= sec.questions ? "completed" : "failed",
             questions_done: produced,
-            current_step: produced > 0 ? `Done — ${produced} questions saved` : "No questions generated",
+            current_step: produced >= sec.questions ? `Done — ${produced} questions saved` : `Incomplete — ${produced}/${sec.questions} saved`,
+            error_message: produced >= sec.questions ? null : `Only ${produced} of ${sec.questions} questions generated`,
           });
         } catch (sectionErr) {
           const msg = (sectionErr as Error)?.message || String(sectionErr);
