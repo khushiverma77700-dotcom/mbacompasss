@@ -103,6 +103,8 @@ function buildSystemPrompt(opts: {
   exam: string; exam_full: string; category: string; level: string;
   section_code: string; section_name: string;
   strict_topic?: string | null;
+  sets?: number | null;
+  total_section_questions?: number | null;
 }) {
   const levelGuidance = opts.level === "mixed"
     ? "Mix Easy (~30%), Moderate (~40%), Hard (~30%)."
@@ -118,13 +120,32 @@ STRICT TOPIC LOCK (Topic-wise Test):
 - Vary the sub-concepts and difficulty within "${opts.strict_topic}" only.`
     : "";
 
+  // Sets guidance — passages (VARC) / caselets (DILR). Group questions under shared contexts.
+  const setsBlock = (opts.sets && opts.sets > 0)
+    ? `
+
+SETS / SHARED-CONTEXT GROUPING (mandatory for this section):
+- This section MUST be organised into exactly ${opts.sets} "sets" (${opts.section_code === "VARC" ? "Reading Comprehension passages" : opts.section_code === "DILR" ? "DI/LR caselets" : "shared-context sets"}).
+- Distribute the ${opts.total_section_questions ?? opts.sets * 4} questions across these ${opts.sets} sets as evenly as possible (e.g. 4 questions per set is standard for CAT).
+- Each question that belongs to a set MUST begin its "question_html" with the FULL shared context (passage / caselet text / data table) wrapped in <div class="passage">…</div>, followed by the actual question.
+- Repeat the SAME context verbatim for every question in the same set (so each row is self-contained when reviewed individually).
+- Each set's context must be a fresh original ${opts.section_code === "VARC" ? "passage of 350–550 words on a unique theme (history / science / philosophy / business / arts)" : "caselet with original numbers, names and a unique scenario"}.
+- Tag each question with a "set_index" field (1..${opts.sets}) so we can group them on display.
+- Standalone (non-set) questions are NOT allowed in this batch — every question must belong to one of the ${opts.sets} sets.`
+    : (opts.section_code === "VARC" || opts.section_code === "DILR")
+      ? `
+
+NO SETS REQUESTED:
+- Generate standalone questions only (no shared passages / caselets) for this batch.`
+      : "";
+
   return `You are an elite ${opts.exam_full} (${opts.exam}) question setter with 15+ years of experience writing original mock questions for top MBA coaching institutes in India.
 
 GENERATE 100% ORIGINAL questions for:
 - Exam: ${opts.exam} (${opts.exam_full})
 - Section: ${opts.section_name} (${opts.section_code})
 - Category: ${opts.category}
-- Difficulty: ${levelGuidance}${topicLock}
+- Difficulty: ${levelGuidance}${topicLock}${setsBlock}
 
 CRITICAL RULES:
 1. EVERY question must be ORIGINAL — never copy from past papers, NCERT, RS Aggarwal, Arun Sharma, Nishit Sinha, Time, IMS, CL, study material, blogs, or anything published.
@@ -176,11 +197,15 @@ async function callGeminiBatch(args: {
   positive: number; negative: number;
   userId: string | null;
   strict_topic?: string | null;
+  sets?: number | null;
+  total_section_questions?: number | null;
 }) {
   const sys = buildSystemPrompt({
     exam: args.exam, exam_full: args.exam_full, category: args.category, level: args.level,
     section_code: args.section_code, section_name: args.section_name,
     strict_topic: args.strict_topic ?? null,
+    sets: args.sets ?? null,
+    total_section_questions: args.total_section_questions ?? null,
   });
   const user = buildUserPrompt({
     count: args.count, mcq_count: args.mcq, tita_count: args.tita,
@@ -289,7 +314,7 @@ Deno.serve(async (req) => {
 
     // Sanitise the user-supplied section plan (only honoured for full_length)
     const customSectionPlan: Array<{
-      code: string; name: string; duration: number; questions: number; mcq: number; tita: number; sort: number;
+      code: string; name: string; duration: number; questions: number; mcq: number; tita: number; sets: number; sort: number;
     }> | null = (category === "full_length" && Array.isArray(rawSectionPlan) && rawSectionPlan.length > 0)
       ? rawSectionPlan.map((r: any, idx: number) => {
           const q = Math.max(0, Number(r?.questions) || 0);
@@ -306,6 +331,7 @@ Deno.serve(async (req) => {
             questions: q,
             mcq: m,
             tita: t,
+            sets: Math.max(0, Number(r?.sets) || 0),
             sort: Number(r?.sort ?? idx),
           };
         }).filter((r) => r.questions > 0)
@@ -370,8 +396,9 @@ Deno.serve(async (req) => {
       const slug = slugify(baseName) + "-" + Date.now().toString(36) + "-" + setIdx;
 
       // Decide sections for this set based on category (custom plan wins for full_length)
-      const sectionPlan = customSectionPlan && category === "full_length"
-        ? customSectionPlan.map((s, idx) => ({ code: s.code, name: s.name, duration: s.duration, questions: s.questions, sort: idx }))
+      const sectionPlan: Array<{ code: string; name: string; duration: number; questions: number; sort: number; sets?: number }> =
+        customSectionPlan && category === "full_length"
+        ? customSectionPlan.map((s, idx) => ({ code: s.code, name: s.name, duration: s.duration, questions: s.questions, sort: idx, sets: s.sets }))
         : planSections(profile, category, safePerSet, section_code, topic);
 
       const { data: testRow, error: testErr } = await admin.from("mock_tests").insert({
@@ -446,6 +473,9 @@ Deno.serve(async (req) => {
               userId: user.id,
               // Topic-wise tests must lock every question to the chosen topic.
               strict_topic: category === "topic" && topic ? topic : null,
+              // Per-section sets (passages/caselets) — only honoured for full_length.
+              sets: category === "full_length" ? (sec.sets ?? 0) : 0,
+              total_section_questions: sec.questions,
             });
           } catch (e) {
             console.error("[generate] batch failed:", e);

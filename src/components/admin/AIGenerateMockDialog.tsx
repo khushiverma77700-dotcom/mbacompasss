@@ -105,6 +105,17 @@ type SectionRow = {
   questions: number;
   mcq: number;
   tita: number;
+  sets: number; // passage/caselet sets (RCs in VARC, caselets in DILR, 0 for standalone-only sections like QA)
+};
+
+// Default number of sets (passages/caselets) per section per exam.
+// 0 means questions are standalone (no shared passage/caselet).
+const DEFAULT_SETS: Record<string, Record<string, number>> = {
+  CAT:  { VARC: 4, DILR: 4, QA: 0 },
+  XAT:  { VARC: 3, DILR: 3, QA: 0, GK: 0 },
+  SNAP: { VARC: 2, DILR: 3, QA: 0 },
+  NMAT: { VARC: 3, DILR: 4, QA: 0 },
+  CMAT: { VARC: 2, DILR: 2, QA: 0, GK: 0, "QA-IE": 0 },
 };
 
 export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: Props) {
@@ -133,9 +144,18 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
   const buildDefaultSectionPlan = (examCode: string): SectionRow[] => {
     const p = EXAM_PROFILES[examCode];
     if (!p) return [];
+    const setsMap = DEFAULT_SETS[examCode] || {};
     return p.sections.map((s) => {
       const m = Math.round(s.questions * 0.85);
-      return { code: s.code, name: s.name, duration: s.duration, questions: s.questions, mcq: m, tita: Math.max(0, s.questions - m) };
+      return {
+        code: s.code,
+        name: s.name,
+        duration: s.duration,
+        questions: s.questions,
+        mcq: m,
+        tita: Math.max(0, s.questions - m),
+        sets: setsMap[s.code] ?? 0,
+      };
     });
   };
 
@@ -253,6 +273,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
           questions: Number(r.questions) || 0,
           mcq: Number(r.mcq) || 0,
           tita: Number(r.tita) || 0,
+          sets: Math.max(0, Number(r.sets) || 0),
           sort: idx,
         }));
         payload.total_questions = sectionPlanTotal;
@@ -432,7 +453,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                   <div>
                     <Label className="text-sm font-semibold">Section-wise plan ({exam})</Label>
                     <p className="text-[11px] text-muted-foreground">
-                      Set questions, MCQ/TITA split and duration for each section. AI will generate accordingly.
+                      Set questions, MCQ/TITA split, sets (passages/caselets) and duration per section. AI generates accordingly. Use <strong>Sets = 0</strong> for sections with only standalone questions (e.g. QA).
                     </p>
                   </div>
                   <Button type="button" size="sm" variant="outline" className="h-7 text-xs"
@@ -449,6 +470,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                         <th className="px-2 py-2 font-medium w-20">Questions</th>
                         <th className="px-2 py-2 font-medium w-20">MCQ</th>
                         <th className="px-2 py-2 font-medium w-20">TITA</th>
+                        <th className="px-2 py-2 font-medium w-20" title="Number of passages (VARC) / caselets (DILR) sharing context. 0 = standalone questions only.">Sets</th>
                         <th className="px-2 py-2 font-medium w-24">Duration (m)</th>
                         <th className="px-2 py-2 font-medium w-20">Status</th>
                       </tr>
@@ -478,6 +500,11 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                                 onChange={(e) => updateSectionRow(idx, { tita: parseInt(e.target.value) || 0 })} />
                             </td>
                             <td className="px-2 py-1.5">
+                              <Input type="number" min={0} className="h-8 text-xs"
+                                value={row.sets}
+                                onChange={(e) => updateSectionRow(idx, { sets: parseInt(e.target.value) || 0 })} />
+                            </td>
+                            <td className="px-2 py-1.5">
                               <Input type="number" min={1} className="h-8 text-xs"
                                 value={row.duration}
                                 onChange={(e) => updateSectionRow(idx, { duration: parseInt(e.target.value) || 1 })} />
@@ -497,6 +524,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                         <td className="px-2 py-1.5">{sectionPlanTotal}</td>
                         <td className="px-2 py-1.5">{sectionPlan.reduce((s, r) => s + r.mcq, 0)}</td>
                         <td className="px-2 py-1.5">{sectionPlan.reduce((s, r) => s + r.tita, 0)}</td>
+                        <td className="px-2 py-1.5">{sectionPlan.reduce((s, r) => s + (r.sets || 0), 0)}</td>
                         <td className="px-2 py-1.5">{sectionPlan.reduce((s, r) => s + r.duration, 0)} min</td>
                         <td className="px-2 py-1.5"></td>
                       </tr>
