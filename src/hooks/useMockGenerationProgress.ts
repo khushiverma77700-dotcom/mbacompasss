@@ -19,6 +19,7 @@ export type MockGenerationProgress = {
   totalSections: number;
   doneSections: number;
   pendingSections: number;
+  processingSections: number;
   failedSections: number;
   totalQuestions: number;
   generatedQuestions: number;
@@ -27,19 +28,27 @@ export type MockGenerationProgress = {
   current?: string;
   isComplete: boolean;
   hasFailures: boolean;
+  startedAt: number | null;
+  elapsedSec: number;
+  qps: number;          // questions per second
+  etaSec: number | null;
 };
 
-export function useMockGenerationProgress(generationId: string | null, intervalMs = 2000): MockGenerationProgress {
+export function useMockGenerationProgress(generationId: string | null, intervalMs = 1500): MockGenerationProgress {
   const [jobs, setJobs] = useState<SectionJob[]>([]);
   const [loading, setLoading] = useState(false);
+  const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [now, setNow] = useState<number>(() => Date.now());
 
   useEffect(() => {
     if (!generationId) {
       setJobs([]);
+      setStartedAt(null);
       return;
     }
     let alive = true;
     setLoading(true);
+    setStartedAt(Date.now());
     const fetchJobs = async () => {
       const { data } = await supabase
         .from("mock_section_jobs")
@@ -52,12 +61,14 @@ export function useMockGenerationProgress(generationId: string | null, intervalM
     };
     fetchJobs();
     const t = setInterval(fetchJobs, intervalMs);
-    return () => { alive = false; clearInterval(t); };
+    const tick = setInterval(() => setNow(Date.now()), 1000);
+    return () => { alive = false; clearInterval(t); clearInterval(tick); };
   }, [generationId, intervalMs]);
 
   const totalSections = jobs.length;
   const doneSections = jobs.filter((j) => j.status === "completed").length;
   const failedSections = jobs.filter((j) => j.status === "failed").length;
+  const processingSections = jobs.filter((j) => j.status === "processing").length;
   const pendingSections = jobs.filter((j) => j.status === "pending" || j.status === "processing").length;
   const totalQuestions = jobs.reduce((s, j) => s + (j.total_questions || 0), 0);
   const generatedQuestions = jobs.reduce((s, j) => s + (j.questions_done || 0), 0);
@@ -67,10 +78,17 @@ export function useMockGenerationProgress(generationId: string | null, intervalM
   const isComplete = totalSections > 0 && pendingSections === 0;
   const hasFailures = failedSections > 0;
 
+  const elapsedSec = startedAt ? Math.max(1, Math.round((now - startedAt) / 1000)) : 0;
+  const qps = elapsedSec > 0 ? generatedQuestions / elapsedSec : 0;
+  const etaSec = !isComplete && qps > 0 && remainingQuestions > 0
+    ? Math.round(remainingQuestions / qps)
+    : (isComplete ? 0 : null);
+
   return {
     loading, jobs,
-    totalSections, doneSections, pendingSections, failedSections,
+    totalSections, doneSections, pendingSections, processingSections, failedSections,
     totalQuestions, generatedQuestions, remainingQuestions,
     pct, current, isComplete, hasFailures,
+    startedAt, elapsedSec, qps, etaSec,
   };
 }
