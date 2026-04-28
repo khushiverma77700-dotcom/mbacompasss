@@ -523,6 +523,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                         <td className="px-2 py-1.5">{sectionPlanTotal}</td>
                         <td className="px-2 py-1.5">{sectionPlan.reduce((s, r) => s + r.mcq, 0)}</td>
                         <td className="px-2 py-1.5">{sectionPlan.reduce((s, r) => s + r.tita, 0)}</td>
+                        <td className="px-2 py-1.5">{sectionPlan.reduce((s, r) => s + (r.sets || 0), 0)}</td>
                         <td className="px-2 py-1.5">{sectionPlan.reduce((s, r) => s + r.duration, 0)} min</td>
                         <td className="px-2 py-1.5"></td>
                       </tr>
