@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import NotificationBell from "@/components/student/NotificationBell";
 import { FeatureLockBadge } from "@/components/student/FeatureGate";
 import type { FeatureKey } from "@/lib/courseFeatures";
+import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
 
 const navItems: { to: string; label: string; icon: any; end?: boolean; feature?: FeatureKey }[] = [
   { to: "/student", label: "Overview", icon: LayoutDashboard, end: true },
@@ -140,27 +141,45 @@ export default function StudentLayout() {
 }
 
 function SidebarContent() {
+  const { counts, markSeen } = useStudentNavBadges();
   return (
     <nav className="w-full p-4 space-y-1">
-      {navItems.map((item) => (
-        <NavLink
-          key={item.to}
-          to={item.to}
-          end={item.end}
-          className={({ isActive }) =>
-            cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
-              isActive
-                ? "bg-gradient-to-r from-sky-100 to-blue-50 text-sky-700 shadow-sm"
-                : "text-gray-700 hover:bg-sky-50 hover:text-sky-700"
-            )
-          }
-        >
-          <item.icon className="h-4 w-4" />
-          <span className="flex-1">{item.label}</span>
-          {item.feature && <FeatureLockBadge feature={item.feature} />}
-        </NavLink>
-      ))}
+      {navItems.map((item) => {
+        const badge = counts[item.to] ?? 0;
+        return (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.end}
+            onClick={() => badge > 0 && markSeen(item.to)}
+            className={({ isActive }) =>
+              cn(
+                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors relative",
+                isActive
+                  ? "bg-gradient-to-r from-sky-100 to-blue-50 text-sky-700 shadow-sm"
+                  : "text-gray-700 hover:bg-sky-50 hover:text-sky-700"
+              )
+            }
+          >
+            <span className="relative">
+              <item.icon className="h-4 w-4" />
+              {badge > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500 ring-2 ring-white" />
+                </span>
+              )}
+            </span>
+            <span className="flex-1">{item.label}</span>
+            {badge > 0 && (
+              <span className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold bg-rose-500 text-white">
+                {badge > 9 ? "9+" : badge}
+              </span>
+            )}
+            {item.feature && <FeatureLockBadge feature={item.feature} />}
+          </NavLink>
+        );
+      })}
       <div className="pt-4 mt-4 border-t border-sky-100">
         <Link
           to="/mocks"
