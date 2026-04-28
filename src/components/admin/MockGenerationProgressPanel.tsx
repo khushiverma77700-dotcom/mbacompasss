@@ -137,10 +137,13 @@ export default function MockGenerationProgressPanel({ generationId, compact = fa
               const isActive = j.status === "processing";
               const isDone = j.status === "completed";
               const isFailed = j.status === "failed";
+              const isStalled = !!j.isStalled;
+              const canRetry = isFailed || isStalled;
               return (
                 <div
                   key={j.id}
                   className={`relative rounded-lg border p-3 transition-all ${
+                    isStalled ? "border-amber-300 bg-amber-50/80 shadow-sm ring-1 ring-amber-200" :
                     isActive ? "border-sky-300 bg-sky-50/80 shadow-sm ring-1 ring-sky-200" :
                     isDone ? "border-emerald-200 bg-emerald-50/60" :
                     isFailed ? "border-rose-200 bg-rose-50/60" :
@@ -149,39 +152,50 @@ export default function MockGenerationProgressPanel({ generationId, compact = fa
                 >
                   <div className="flex items-center gap-2.5">
                     <div className={`h-8 w-8 rounded-lg grid place-items-center shrink-0 ${
+                      isStalled ? "bg-amber-100" :
                       isActive ? "bg-sky-100" : isDone ? "bg-emerald-100" : isFailed ? "bg-rose-100" : "bg-slate-100"
                     }`}>
-                      <StatusIcon status={j.status} />
+                      {isStalled ? <AlertTriangle className="w-4 h-4 text-amber-600" /> : <StatusIcon status={j.status} />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2">
                         <div className="min-w-0">
-                          <div className="text-sm font-semibold truncate text-slate-900" title={j.section_name}>
+                          <div className="text-sm font-semibold truncate text-slate-900 flex items-center gap-2" title={j.section_name}>
                             {j.section_name}
+                            {isStalled && (
+                              <Badge className="h-4 px-1.5 text-[10px] bg-amber-500 hover:bg-amber-500 text-white">Stuck</Badge>
+                            )}
                           </div>
                           <div className="text-[11px] text-slate-500 flex items-center gap-2">
                             <Badge variant="outline" className="h-4 px-1.5 text-[10px]">{j.section_code}</Badge>
-                            {isActive && j.current_step && <span className="truncate">{j.current_step}</span>}
+                            {isStalled && <span className="text-amber-700 truncate">No progress for 90s — AI may be stuck</span>}
+                            {!isStalled && isActive && j.current_step && <span className="truncate">{j.current_step}</span>}
                             {isFailed && j.error_message && <span className="text-rose-600 truncate" title={j.error_message}>{j.error_message}</span>}
                             {j.attempts > 1 && <span className="text-amber-600">retry #{j.attempts - 1}</span>}
                           </div>
                         </div>
-                        <div className="text-right shrink-0">
-                          <div className="text-sm font-bold text-slate-900 tabular-nums">{j.questions_done}/{j.total_questions}</div>
-                          <div className="text-[10px] text-slate-500">{sectionPct}%</div>
+                        <div className="text-right shrink-0 flex items-center gap-2">
+                          <div>
+                            <div className="text-sm font-bold text-slate-900 tabular-nums">{j.questions_done}/{j.total_questions}</div>
+                            <div className="text-[10px] text-slate-500">{sectionPct}%</div>
+                          </div>
+                          {canRetry && (
+                            <RetryButton jobId={j.id} sectionName={j.section_name} />
+                          )}
                         </div>
                       </div>
                       {/* Per-section progress */}
                       <div className="mt-2 h-1.5 w-full rounded-full bg-slate-200/60 overflow-hidden">
                         <div
                           className={`h-full rounded-full transition-all duration-500 ${
+                            isStalled ? "bg-amber-500" :
                             isFailed ? "bg-rose-500" :
                             isDone ? "bg-emerald-500" :
                             "bg-gradient-to-r from-sky-500 to-blue-500"
                           }`}
-                          style={{ width: `${sectionPct}%` }}
+                          style={{ width: `${Math.max(sectionPct, isStalled ? 5 : 0)}%` }}
                         >
-                          {isActive && (
+                          {isActive && !isStalled && (
                             <div className="h-full bg-gradient-to-r from-transparent via-white/50 to-transparent animate-pulse" />
                           )}
                         </div>
