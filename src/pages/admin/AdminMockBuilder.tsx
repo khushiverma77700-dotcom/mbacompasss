@@ -213,7 +213,7 @@ const AdminMockBuilder = () => {
       passage_id: editorState.passage_id || null,
       question_number: editorState.question_number,
       question_type: editorState.question_type,
-      question_html: editorState.question_html,
+      question_html: stripQuestionPrefix(editorState.question_html),
       positive_marks: Number(editorState.positive_marks) || 3,
       negative_marks: Number(editorState.negative_marks) || 0,
       difficulty: editorState.difficulty,
