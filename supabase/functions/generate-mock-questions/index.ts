@@ -247,7 +247,7 @@ Return JSON of shape:
 }`;
 }
 
-async function callGeminiBatch(args: {
+async function callOpenAIBatch(args: {
   exam: string; exam_full: string; category: string; level: string;
   section_code: string; section_name: string;
   count: number; mcq: number; tita: number;
@@ -273,16 +273,23 @@ async function callGeminiBatch(args: {
     positive: args.positive, negative: args.negative,
   });
 
-  const resp = await callAIGateway({
-    model: "gpt-5-mini",
-    messages: [
-      { role: "system", content: sys },
-      { role: "user", content: user },
-    ],
-    response_format: { type: "json_object" },
-    temperature: 0.9,
-    max_tokens: 16000,
-  }, { feature: "generate-mock-questions", userId: args.userId, maxRetries: 1, provider: "openai-mini" });
+  const apiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
+
+  const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: sys },
+        { role: "user", content: user },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.35,
+      max_tokens: 16000,
+    }),
+  });
 
   if (!resp.ok) {
     const txt = await resp.text();
@@ -656,7 +663,7 @@ Deno.serve(async (req) => {
               tita_numeric_tolerance: isTita ? Number(q.tita_tolerance ?? 0) : null,
               positive_marks: profile.default_positive,
               negative_marks: isTita ? 0 : profile.default_negative,
-              difficulty: (q.difficulty || (level === "mixed" ? "medium" : (level === "moderate" ? "medium" : level))),
+                difficulty: normalizeDifficulty(q.difficulty, level),
               topic: q.topic || topic || null,
               subtopic: q.subtopic || null,
               explanation_html: q.explanation_html || "",
