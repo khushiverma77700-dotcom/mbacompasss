@@ -356,8 +356,10 @@ Deno.serve(async (req) => {
         : `${exam_code} ${labelForCategory(category)} ${setIdx} — AI`;
       const slug = slugify(baseName) + "-" + Date.now().toString(36) + "-" + setIdx;
 
-      // Decide sections for this set based on category
-      const sectionPlan = planSections(profile, category, safePerSet, section_code, topic);
+      // Decide sections for this set based on category (custom plan wins for full_length)
+      const sectionPlan = customSectionPlan && category === "full_length"
+        ? customSectionPlan.map((s, idx) => ({ code: s.code, name: s.name, duration: s.duration, questions: s.questions, sort: idx }))
+        : planSections(profile, category, safePerSet, section_code, topic);
 
       const { data: testRow, error: testErr } = await admin.from("mock_tests").insert({
         name: baseName,
