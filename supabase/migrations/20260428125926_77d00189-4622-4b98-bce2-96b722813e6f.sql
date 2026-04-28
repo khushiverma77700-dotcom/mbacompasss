@@ -1,0 +1,1 @@
+ALTER TABLE public.mock_bundles ADD COLUMN IF NOT EXISTS highlights jsonb NOT NULL DEFAULT '{}'::jsonb;
