@@ -471,6 +471,7 @@ export default function MockTestRunnerPage() {
             <span className="hidden sm:inline">Total: </span>
             <strong className="font-mono">{fmt(overallRemaining)}</strong>
           </span>
+          <MockCalculator />
           <button
             type="button"
             onClick={() => setPaletteOpen(true)}
