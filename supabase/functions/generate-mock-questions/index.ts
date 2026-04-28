@@ -719,7 +719,10 @@ Deno.serve(async (req) => {
             });
           }
 
-          // Persist accepted questions + options
+          // Build personalized-hub mirror rows for MCQs (the hub schema requires options + correct_index)
+          const hubSection = (PERSONALIZED_SECTION_MAP[exam_code] || {})[sec.code];
+          const hubRows: any[] = [];
+
           for (let i = 0; i < accepted.length; i++) {
             const q = accepted[i];
             const isTita = q.question_type === "tita";
@@ -750,6 +753,23 @@ Deno.serve(async (req) => {
               }));
               if (opts.length === 4 && opts.some((o) => o.is_correct)) {
                 await admin.from("mock_question_options").insert(opts);
+
+                // Mirror to Personalized Hub bank (MCQ only)
+                if (hubSection) {
+                  const correctIdx = opts.findIndex((o) => o.is_correct);
+                  hubRows.push({
+                    exam_code,
+                    section: hubSection,
+                    difficulty: mapPersonalizedDifficulty(normalizeDifficulty(q.difficulty, level)),
+                    question_text: q.question_html,
+                    options: opts.map((o) => ({ label: o.option_label, text: o.option_html })),
+                    correct_index: correctIdx >= 0 ? correctIdx : 0,
+                    explanation: q.explanation_html || null,
+                    topic: q.topic || topic || null,
+                    source: "mock-mirror",
+                    created_by: user.id,
+                  });
+                }
               } else {
                 await admin.from("mock_questions").delete().eq("id", qRow.id);
                 continue;
@@ -758,11 +778,22 @@ Deno.serve(async (req) => {
             stats.generated++;
           }
 
+          // Bulk-insert personalized hub mirror rows (best-effort, ignore failures)
+          if (hubRows.length > 0) {
+            const { error: hubErr } = await admin.from("personalized_questions").insert(hubRows);
+            if (hubErr) console.error("[generate] personalized hub mirror failed:", hubErr.message);
+            else console.log(`[generate] mirrored ${hubRows.length} questions to Personalized Hub (${exam_code}/${hubSection})`);
+          }
+
+          // Treat ≥80% of target as completed; below that = failed (so retry button shows)
+          const success = produced >= Math.ceil(sec.questions * 0.8);
           await updateJob({
-            status: produced >= sec.questions ? "completed" : "failed",
+            status: success ? "completed" : "failed",
             questions_done: produced,
-            current_step: produced >= sec.questions ? `Done — ${produced} questions saved` : `Incomplete — ${produced}/${sec.questions} saved`,
-            error_message: produced >= sec.questions ? null : `Only ${produced} of ${sec.questions} questions generated`,
+            current_step: success
+              ? `Done — ${produced} questions saved${produced < sec.questions ? ` (target ${sec.questions})` : ""}`
+              : `Incomplete — ${produced}/${sec.questions} saved`,
+            error_message: success ? null : `Only ${produced} of ${sec.questions} questions generated`,
           });
         } catch (sectionErr) {
           const msg = (sectionErr as Error)?.message || String(sectionErr);
