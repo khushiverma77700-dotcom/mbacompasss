@@ -121,6 +121,22 @@ function normalizeForHash(s: string): string {
     .trim();
 }
 
+function sectionFamily(code: string) {
+  const c = String(code || "").toUpperCase();
+  if (["VARC", "VALR", "LS", "GE", "LC"].includes(c)) return "verbal";
+  if (["DILR", "LR", "AR", "DA", "QADS", "QADI"].includes(c)) return "logic-data";
+  if (["QA", "QS", "MS"].includes(c)) return "quant";
+  if (["GK", "GA", "IGE", "IE", "DM", "ICR"].includes(c)) return "judgement-gk";
+  return "general";
+}
+
+function normalizeDifficulty(value: unknown, requestedLevel: string): "easy" | "medium" | "hard" {
+  const raw = String(value || requestedLevel || "medium").toLowerCase();
+  if (["easy", "easier", "low"].includes(raw)) return "easy";
+  if (["hard", "difficult", "advanced", "high"].includes(raw)) return "hard";
+  return "medium";
+}
+
 function buildSystemPrompt(opts: {
   exam: string; exam_full: string; category: string; level: string;
   section_code: string; section_name: string;
@@ -133,7 +149,7 @@ function buildSystemPrompt(opts: {
 }) {
   const levelGuidance = opts.level === "mixed"
     ? "Mix Easy (~30%), Moderate (~40%), Hard (~30%)."
-    : `Strictly target ${opts.level.toUpperCase()} difficulty.`;
+    : `Strictly target ${normalizeDifficulty(null, opts.level).toUpperCase()} difficulty. Every returned question difficulty must be exactly "${normalizeDifficulty(null, opts.level)}".`;
 
   const topicLock = opts.strict_topic
     ? `\n\nSTRICT TOPIC LOCK (Topic-wise Test):\n- EVERY question MUST be exclusively from the topic: "${opts.strict_topic}".\n- The "topic" field on every question MUST be "${opts.strict_topic}".`
@@ -149,8 +165,9 @@ function buildSystemPrompt(opts: {
 
   let setsBlock = "";
   if (setsCount > 0) {
-    const isVARC = opts.section_code === "VARC";
-    const isDILR = opts.section_code === "DILR";
+    const family = sectionFamily(opts.section_code);
+    const isVARC = family === "verbal";
+    const isDILR = family === "logic-data";
     const ctxLabel = isVARC ? "Reading Comprehension passage" : isDILR ? "DI/LR caselet with data" : "shared-context set";
     const ctxDesc = isVARC
       ? "an original Reading Comprehension PASSAGE of 350–550 words (history / science / philosophy / business / arts / social issues)"
