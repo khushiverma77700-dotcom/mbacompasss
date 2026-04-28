@@ -10,6 +10,8 @@ import { Card } from "@/components/ui/card";
 import { Loader2, Sparkles, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import MockGenerationProgressPanel from "@/components/admin/MockGenerationProgressPanel";
+import { useMockGenerationProgress } from "@/hooks/useMockGenerationProgress";
 
 // Mirrors EXAM_PROFILES on the backend so the per-section editor
 // for Full-Length mocks can prefill defaults.
@@ -120,9 +122,42 @@ const DEFAULT_SETS: Record<string, Record<string, number>> = {
 
 export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: Props) {
   const { toast } = useToast();
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [generationId, setGenerationId] = useState<string | null>(null);
+  const progress = useMockGenerationProgress(step === 3 ? generationId : null);
+
+  // When live generation completes, finalize result + advance step
+  useEffect(() => {
+    if (step !== 3 || !generationId || !progress.isComplete) return;
+    (async () => {
+      const { data: row } = await supabase
+        .from("ai_mock_generations")
+        .select("status, total_generated, total_rejected_duplicate, total_rejected_web_match, result_summary, error_message")
+        .eq("id", generationId)
+        .maybeSingle();
+      if (!row) return;
+      const summary = (row.result_summary || {}) as any;
+      setResult({
+        ok: row.status === "completed",
+        tests: summary.tests || [],
+        stats: summary.stats || {
+          generated: row.total_generated || 0,
+          rejected_dup_db: row.total_rejected_duplicate || 0,
+          rejected_dup_internet: row.total_rejected_web_match || 0,
+        },
+      });
+      toast({
+        title: row.status === "completed" ? "Mock generation complete" : "Generation finished with errors",
+        description: `${row.total_generated || 0} questions generated.`,
+        variant: row.status === "completed" ? undefined : "destructive",
+      });
+      onCreated?.();
+      setStep(2);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, generationId, progress.isComplete]);
 
   const [exam, setExam] = useState("CAT");
   const [category, setCategory] = useState("full_length");
