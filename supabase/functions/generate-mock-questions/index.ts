@@ -102,6 +102,38 @@ const EXAM_PROFILES: Record<string, {
 };
 
 const BATCH_SIZE = 8; // questions per AI call
+const OPENAI_TIMEOUT_MS = 90_000;       // single AI call hard timeout
+const FIRECRAWL_TIMEOUT_MS = 6_000;     // single web-check hard timeout
+const SECTION_WALL_CLOCK_MS = 8 * 60_000; // entire section must finish in 8 min
+const MAX_FIRECRAWL_CHECKS_PER_SECTION = 6; // cap web-checks (was unbounded → main stall cause)
+
+// Map mock_section.code (e.g. "DILR") + exam to the personalized_questions catalog
+// Uses src/data/personalizedExams.ts vocabulary so the admin hub counter picks it up.
+const PERSONALIZED_SECTION_MAP: Record<string, Record<string, string>> = {
+  CAT:  { VARC: "VARC", DILR: "DILR", QA: "QA" },
+  NMAT: { LS: "Language Skills", QS: "Quantitative Skills", LR: "Logical Reasoning" },
+  XAT:  { VALR: "Verbal & Logical Ability", DM: "Decision Making", QADI: "Quantitative Ability", GK: "GK" },
+  SNAP: { GE: "General English", QADS: "Quantitative & Data Interpretation", AR: "Analytical & Logical Reasoning" },
+  IIFT: { VARC: "Verbal Ability & RC", QA: "Quantitative Analysis", DILR: "Data Interpretation & LR", GK: "GK" },
+  CMAT: { QADI: "Quantitative Techniques", LR: "Logical Reasoning", LC: "Language Comprehension", GA: "GK", IE: "Innovation & Entrepreneurship" },
+  MAT:  { LC: "Language Comprehension", MS: "Mathematical Skills", DA: "Data Analysis", ICR: "Intelligence & Critical Reasoning", IGE: "Indian & Global Environment" },
+};
+
+function mapPersonalizedDifficulty(d: string): "easy" | "moderate" | "difficult" {
+  if (d === "easy") return "easy";
+  if (d === "hard") return "difficult";
+  return "moderate";
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    promise.then(
+      (v) => { clearTimeout(t); resolve(v); },
+      (e) => { clearTimeout(t); reject(e); },
+    );
+  });
+}
 
 // --------- Helpers ---------
 
