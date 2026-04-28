@@ -21,6 +21,7 @@ export type Database = {
           display_name: string
           email: string
           id: string
+          is_full_access: boolean
           updated_at: string
           user_id: string
         }
@@ -30,6 +31,7 @@ export type Database = {
           display_name: string
           email: string
           id?: string
+          is_full_access?: boolean
           updated_at?: string
           user_id: string
         }
@@ -39,6 +41,7 @@ export type Database = {
           display_name?: string
           email?: string
           id?: string
+          is_full_access?: boolean
           updated_at?: string
           user_id?: string
         }
@@ -3621,6 +3624,115 @@ export type Database = {
           },
         ]
       }
+      mock_section_jobs: {
+        Row: {
+          attempts: number
+          category: string
+          created_at: string
+          created_by: string | null
+          current_step: string | null
+          error_message: string | null
+          exam_code: string
+          generation_id: string | null
+          id: string
+          level: string
+          mcq_count: number
+          negative_marks: number
+          positive_marks: number
+          questions_done: number
+          section_code: string
+          section_id: string
+          section_name: string
+          status: string
+          strict_topic: string | null
+          test_id: string
+          tita_count: number
+          topic: string | null
+          total_questions: number
+          updated_at: string
+          verify_internet: boolean
+          worker_lock_until: string | null
+        }
+        Insert: {
+          attempts?: number
+          category: string
+          created_at?: string
+          created_by?: string | null
+          current_step?: string | null
+          error_message?: string | null
+          exam_code: string
+          generation_id?: string | null
+          id?: string
+          level?: string
+          mcq_count?: number
+          negative_marks?: number
+          positive_marks?: number
+          questions_done?: number
+          section_code: string
+          section_id: string
+          section_name: string
+          status?: string
+          strict_topic?: string | null
+          test_id: string
+          tita_count?: number
+          topic?: string | null
+          total_questions?: number
+          updated_at?: string
+          verify_internet?: boolean
+          worker_lock_until?: string | null
+        }
+        Update: {
+          attempts?: number
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          current_step?: string | null
+          error_message?: string | null
+          exam_code?: string
+          generation_id?: string | null
+          id?: string
+          level?: string
+          mcq_count?: number
+          negative_marks?: number
+          positive_marks?: number
+          questions_done?: number
+          section_code?: string
+          section_id?: string
+          section_name?: string
+          status?: string
+          strict_topic?: string | null
+          test_id?: string
+          tita_count?: number
+          topic?: string | null
+          total_questions?: number
+          updated_at?: string
+          verify_internet?: boolean
+          worker_lock_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_section_jobs_generation_id_fkey"
+            columns: ["generation_id"]
+            isOneToOne: false
+            referencedRelation: "ai_mock_generations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mock_section_jobs_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "mock_sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mock_section_jobs_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "mock_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mock_sections: {
         Row: {
           code: Database["public"]["Enums"]["mock_section_code"]
@@ -5550,6 +5662,43 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      claim_mock_section_job: {
+        Args: { _lock_minutes?: number }
+        Returns: {
+          attempts: number
+          category: string
+          created_at: string
+          created_by: string | null
+          current_step: string | null
+          error_message: string | null
+          exam_code: string
+          generation_id: string | null
+          id: string
+          level: string
+          mcq_count: number
+          negative_marks: number
+          positive_marks: number
+          questions_done: number
+          section_code: string
+          section_id: string
+          section_name: string
+          status: string
+          strict_topic: string | null
+          test_id: string
+          tita_count: number
+          topic: string | null
+          total_questions: number
+          updated_at: string
+          verify_internet: boolean
+          worker_lock_until: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "mock_section_jobs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       generate_ticket_code: { Args: never; Returns: string }
       get_global_leaderboard: {
         Args: { _limit?: number }
@@ -5645,12 +5794,20 @@ export type Database = {
         Args: { _threshold_minutes?: number }
         Returns: Json
       }
+      recover_stale_mock_section_jobs: {
+        Args: { _threshold_minutes?: number }
+        Returns: number
+      }
       refresh_bulk_college_job_metrics: {
         Args: { _job_id: string }
         Returns: undefined
       }
       refresh_bulk_section_job_metrics: {
         Args: { _job_id: string }
+        Returns: undefined
+      }
+      rollup_mock_generation: {
+        Args: { _generation_id: string }
         Returns: undefined
       }
       unlock_bundle_mocks: {
