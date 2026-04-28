@@ -21,10 +21,13 @@ interface HistoryRow {
 
 export default function StudentDailyTest() {
   const { user } = useAuth();
+  const { isEnabled, loading: featLoading } = useEnrolledBundleFeatures();
+  const dailyEnabled = isEnabled("daily_tests");
   const [today, setToday] = useState<Today | null>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const load = async () => {
     if (!user) return;
