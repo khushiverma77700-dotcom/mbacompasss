@@ -29,7 +29,7 @@ const EXAM_PROFILES: Record<string, {
     default_total: 66,
     sections: [
       { code: "VARC", name: "Verbal Ability & Reading Comprehension", duration: 40, questions: 24 },
-      { code: "DILR", name: "Data Interpretation & Logical Reasoning", duration: 40, questions: 22 },
+      { code: "DILR", name: "Data Interpretation & Logical Reasoning", duration: 40, questions: 20 },
       { code: "QA", name: "Quantitative Aptitude", duration: 40, questions: 22 },
     ],
     default_positive: 3, default_negative: 1,
