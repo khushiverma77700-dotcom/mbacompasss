@@ -469,6 +469,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                         <th className="px-2 py-2 font-medium w-20">Questions</th>
                         <th className="px-2 py-2 font-medium w-20">MCQ</th>
                         <th className="px-2 py-2 font-medium w-20">TITA</th>
+                        <th className="px-2 py-2 font-medium w-20" title="Number of passages (VARC) / caselets (DILR) sharing context. 0 = standalone questions only.">Sets</th>
                         <th className="px-2 py-2 font-medium w-24">Duration (m)</th>
                         <th className="px-2 py-2 font-medium w-20">Status</th>
                       </tr>
