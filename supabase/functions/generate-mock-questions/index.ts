@@ -73,7 +73,7 @@ const EXAM_PROFILES: Record<string, {
       { code: "DILR", name: "Logical Reasoning", duration: 45, questions: 20 },
       { code: "VARC", name: "Language Comprehension", duration: 45, questions: 20 },
       { code: "GK", name: "General Awareness", duration: 30, questions: 20 },
-      { code: "QA", name: "Innovation & Entrepreneurship", duration: 15, questions: 20 },
+      { code: "QA-IE", name: "Innovation & Entrepreneurship", duration: 15, questions: 20 },
     ],
     default_positive: 4, default_negative: 1,
   },
