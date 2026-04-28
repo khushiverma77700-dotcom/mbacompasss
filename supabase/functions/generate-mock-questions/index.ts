@@ -763,11 +763,12 @@ Deno.serve(async (req) => {
           for (let i = 0; i < accepted.length; i++) {
             const q = accepted[i];
             const isTita = q.question_type === "tita";
+            const cleanedQHtml = cleanQuestionHtml(q.question_html);
             const { data: qRow, error: qErr } = await admin.from("mock_questions").insert({
               section_id: secRowId,
               question_number: questionNumberOffset + i + 1,
               question_type: isTita ? "tita" : "mcq",
-              question_html: q.question_html,
+              question_html: cleanedQHtml,
               tita_correct_answers: isTita ? (q.tita_answers || []).map(String) : [],
               tita_numeric_tolerance: isTita ? Number(q.tita_tolerance ?? 0) : null,
               positive_marks: profile.default_positive,
@@ -784,7 +785,7 @@ Deno.serve(async (req) => {
               const opts = q.options.slice(0, 4).map((o: any, idx: number) => ({
                 question_id: qRow.id,
                 option_label: o.label || ["A", "B", "C", "D"][idx],
-                option_html: o.text || "",
+                option_html: cleanOptionHtml(o.text || ""),
                 is_correct: !!o.is_correct,
                 sort_order: idx,
               }));
@@ -798,7 +799,7 @@ Deno.serve(async (req) => {
                     exam_code,
                     section: hubSection,
                     difficulty: mapPersonalizedDifficulty(normalizeDifficulty(q.difficulty, level)),
-                    question_text: q.question_html,
+                    question_text: cleanedQHtml,
                     options: opts.map((o) => ({ label: o.option_label, text: o.option_html })),
                     correct_index: correctIdx >= 0 ? correctIdx : 0,
                     explanation: q.explanation_html || null,
