@@ -529,7 +529,7 @@ Deno.serve(async (req) => {
       const sectionPlan: Array<{ code: string; name: string; duration: number; questions: number; sort: number; sets?: number }> =
         customSectionPlan && category === "full_length"
         ? customSectionPlan.map((s, idx) => ({ code: s.code, name: s.name, duration: s.duration, questions: s.questions, sort: idx, sets: s.sets }))
-        : planSections(profile, category, safePerSet, section_code, topic);
+        : planSections(profile, exam_code, category, safePerSet, section_code, topic);
 
       const { data: testRow, error: testErr } = await admin.from("mock_tests").insert({
         name: baseName,
@@ -883,6 +883,7 @@ function slugify(s: string) {
 
 function planSections(
   profile: typeof EXAM_PROFILES.CAT,
+  examCode: string,
   category: string,
   totalQuestions: number,
   sectionCode: string | null,
@@ -922,7 +923,7 @@ function planSections(
       IIFT: ["VARC", "DILR", "QA"],
       MAT: ["LC", "ICR", "DA"],
     };
-    const desired = dailySectionCodesByExam[profile.full_name.includes("Xavier") ? "XAT" : ""]
+    const desired = dailySectionCodesByExam[String(examCode || "").toUpperCase()]
       || profile.sections.slice(0, 3).map((s) => s.code);
     const uniqueDesired = Array.from(new Set(desired)).slice(0, 3);
     const pick = (code: string, idx: number) =>
