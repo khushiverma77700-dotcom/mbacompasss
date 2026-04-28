@@ -4,6 +4,17 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import MathContent from "@/components/mock/MathContent";
+import MockCalculator from "@/components/mock/MockCalculator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Flag, Bookmark, ChevronLeft, ChevronRight, AlertTriangle, LayoutGrid, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -86,6 +97,7 @@ export default function MockTestRunnerPage() {
   const [submitting, setSubmitting] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(isMobileDevice);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const submitRef = useRef(false);
   const violationToastShown = useRef(false);
@@ -400,15 +412,22 @@ export default function MockTestRunnerPage() {
     goNext();
   };
 
-  const handleManualSubmit = async () => {
-    if (!confirm("Submit the entire test now? You cannot change answers after this.")) return;
+  const handleManualSubmit = () => {
+    setConfirmOpen(true);
+  };
+
+  const doSubmit = async () => {
+    setConfirmOpen(false);
+    if (submitRef.current) return;
     submitRef.current = true;
     setSubmitting(true);
     try {
       await supabase.functions.invoke("mock-submit-attempt", {
         body: { attempt_id: attemptId },
       });
-      if (document.fullscreenElement) await document.exitFullscreen().catch(() => {});
+      if (document.fullscreenElement) {
+        try { await document.exitFullscreen(); } catch {}
+      }
       navigate(`/mocks/result/${attemptId}`);
     } catch (e: any) {
       toast.error(e.message ?? "Submit failed");
@@ -416,6 +435,21 @@ export default function MockTestRunnerPage() {
       submitRef.current = false;
     }
   };
+
+  // Overall summary across all sections (for confirm dialog)
+  const submitSummary = useMemo(() => {
+    let answered = 0, marked = 0, notAnswered = 0, notVisited = 0;
+    for (const q of questions) {
+      const r = responses[q.id];
+      const status = r?.status ?? "not_visited";
+      if (status === "answered") answered++;
+      else if (status === "answered_marked") { answered++; marked++; }
+      else if (status === "marked") marked++;
+      else if (status === "not_answered") notAnswered++;
+      else notVisited++;
+    }
+    return { total: questions.length, answered, marked, notAnswered, notVisited };
+  }, [questions, responses]);
 
   // ---------- RENDER ----------
   if (loading) {
@@ -437,6 +471,7 @@ export default function MockTestRunnerPage() {
             <span className="hidden sm:inline">Total: </span>
             <strong className="font-mono">{fmt(overallRemaining)}</strong>
           </span>
+          <MockCalculator />
           <button
             type="button"
             onClick={() => setPaletteOpen(true)}
@@ -553,31 +588,83 @@ export default function MockTestRunnerPage() {
         )}
       </div>
 
-      {/* Action bar */}
+      {/* Save & Next row — placed slightly above on the white area to avoid misclicks */}
+      <div className="bg-white border-t px-3 sm:px-4 py-2 flex items-center justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={goPrev}>
+          <ChevronLeft className="h-4 w-4" />
+          <span className="hidden sm:inline ml-1">Previous</span>
+        </Button>
+        <Button size="sm" className="bg-sky-600 hover:bg-sky-700" onClick={handleSaveNext}>
+          <span>Save &amp; Next</span> <ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+
+      {/* Bottom action bar — Submit pinned at bottom-right corner */}
       <footer
-        className="border-t bg-white px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2 flex-wrap"
+        className="border-t bg-slate-50 px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2 flex-wrap"
         style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
       >
-        <div className="flex gap-2 order-2 sm:order-1 w-full sm:w-auto">
-          <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={handleMarkReview}>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleMarkReview}>
             <Bookmark className="h-4 w-4 sm:mr-1" />
-            <span className="hidden sm:inline">Mark & Next</span>
+            <span className="hidden sm:inline">Mark &amp; Next</span>
             <span className="sm:hidden ml-1">Mark</span>
           </Button>
-          <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={handleClear}>
+          <Button variant="outline" size="sm" onClick={handleClear}>
             Clear
           </Button>
         </div>
-        <div className="flex gap-2 order-1 sm:order-2 w-full sm:w-auto">
-          <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={goPrev}>
-            <ChevronLeft className="h-4 w-4" />
-            <span className="hidden sm:inline ml-1">Previous</span>
-          </Button>
-          <Button size="sm" className="flex-1 sm:flex-none" onClick={handleSaveNext}>
-            <span>Save & Next</span> <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
-        </div>
+        <Button
+          size="sm"
+          variant="destructive"
+          className="ml-auto"
+          onClick={handleManualSubmit}
+          disabled={submitting}
+        >
+          {submitting ? "Submitting…" : "Submit Test"}
+        </Button>
       </footer>
+
+      {/* Submit confirmation dialog */}
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Submit your test?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please review your attempt summary. Once submitted, you cannot change your answers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="grid grid-cols-2 gap-3 my-2">
+            <SummaryStat label="Total questions" value={submitSummary.total} tone="slate" />
+            <SummaryStat label="Answered" value={submitSummary.answered} tone="green" />
+            <SummaryStat label="Not answered" value={submitSummary.notAnswered} tone="red" />
+            <SummaryStat label="Marked for review" value={submitSummary.marked} tone="purple" />
+            <SummaryStat label="Not visited" value={submitSummary.notVisited} tone="gray" />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={submitting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={doSubmit} disabled={submitting} className="bg-rose-600 hover:bg-rose-700">
+              {submitting ? "Submitting…" : "Submit Now"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+function SummaryStat({ label, value, tone }: { label: string; value: number; tone: "slate" | "green" | "red" | "purple" | "gray" }) {
+  const toneCls: Record<string, string> = {
+    slate: "bg-slate-50 border-slate-200 text-slate-900",
+    green: "bg-green-50 border-green-200 text-green-800",
+    red: "bg-red-50 border-red-200 text-red-800",
+    purple: "bg-purple-50 border-purple-200 text-purple-800",
+    gray: "bg-gray-50 border-gray-200 text-gray-700",
+  };
+  return (
+    <div className={cn("rounded-md border px-3 py-2", toneCls[tone])}>
+      <div className="text-[11px] uppercase tracking-wide opacity-80">{label}</div>
+      <div className="text-xl font-bold">{value}</div>
     </div>
   );
 }
@@ -673,7 +760,7 @@ function PaletteContent({
       <div className="p-3 border-b text-xs font-semibold uppercase text-slate-600">
         {currentSection?.code} — Question Palette
       </div>
-      <div className="p-3 grid grid-cols-5 gap-2 overflow-auto flex-1">
+      <div className="px-2 py-2 grid grid-cols-6 gap-1 overflow-auto flex-1 content-start">
         {sectionQuestions.map((q, i) => {
           const r = responses[q.id];
           const status = r?.status ?? "not_visited";
@@ -682,7 +769,7 @@ function PaletteContent({
               key={q.id}
               onClick={() => goToQuestion(q.id)}
               className={cn(
-                "h-10 w-10 rounded text-xs font-semibold border relative",
+                "h-7 w-7 rounded-sm text-[11px] font-semibold border relative leading-none",
                 status === "answered" && "bg-green-600 text-white border-green-700",
                 status === "not_answered" && "bg-red-500 text-white border-red-600",
                 status === "marked" && "bg-purple-600 text-white border-purple-700",
@@ -693,7 +780,7 @@ function PaletteContent({
             >
               {i + 1}
               {status === "answered_marked" && (
-                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-green-500 rounded-full border border-white" />
+                <span className="absolute -top-0.5 -right-0.5 h-2 w-2 bg-green-500 rounded-full border border-white" />
               )}
             </button>
           );
