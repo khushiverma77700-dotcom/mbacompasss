@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Plus, Pencil, Trash2, Search, Package, Loader2, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { toast } from "sonner";
 import { FEATURE_DEFINITIONS, FeatureKey, FeatureMap } from "@/lib/courseFeatures";
+import { HIGHLIGHT_DEFINITIONS, HighlightKey, HighlightMap, isHighlightOn, getHighlightValue } from "@/lib/courseHighlights";
 import CourseMockPicker from "@/components/admin/CourseMockPicker";
 
 type Bundle = {
@@ -27,6 +28,7 @@ type Bundle = {
   highlight_on_mocks: boolean;
   sort_order: number;
   features: FeatureMap;
+  highlights: HighlightMap;
   included_categories: string[];
 };
 
@@ -38,7 +40,7 @@ const ALL_CATEGORIES = ["CAT", "NMAT", "XAT", "SNAP", "IIFT", "CMAT", "MAT", "TI
 const EMPTY: Partial<Bundle> = {
   name: "", slug: "", description: "", exam_code: "CAT", price_inr: 0, original_price_inr: null,
   validity_days: 365, is_published: false, highlight_on_mocks: false, sort_order: 0,
-  features: {}, included_categories: [],
+  features: {}, highlights: {}, included_categories: [],
 };
 
 export default function AdminMockBundles() {
@@ -63,6 +65,7 @@ export default function AdminMockBundles() {
     setEditing({
       ...b,
       features: (b.features ?? {}) as FeatureMap,
+      highlights: (b.highlights ?? {}) as HighlightMap,
       included_categories: b.included_categories ?? [],
     });
     const { data } = await supabase.from("mock_bundle_items").select("test_id").eq("bundle_id", b.id);
@@ -77,6 +80,25 @@ export default function AdminMockBundles() {
     const next = { ...(editing.features ?? {}) };
     if (on) next[key] = true; else delete next[key];
     setEditing({ ...editing, features: next });
+  };
+
+  const toggleHighlight = (key: HighlightKey, on: boolean) => {
+    if (!editing) return;
+    const next: HighlightMap = { ...(editing.highlights ?? {}) };
+    const def = HIGHLIGHT_DEFINITIONS.find((d) => d.key === key);
+    if (on) {
+      next[key] = def?.hasValue ? { value: def.defaultValue ?? "" } : true;
+    } else {
+      delete next[key];
+    }
+    setEditing({ ...editing, highlights: next });
+  };
+
+  const setHighlightValue = (key: HighlightKey, value: string) => {
+    if (!editing) return;
+    const next: HighlightMap = { ...(editing.highlights ?? {}) };
+    next[key] = { value };
+    setEditing({ ...editing, highlights: next });
   };
 
   const toggleCategory = (cat: string, on: boolean) => {
@@ -107,6 +129,7 @@ export default function AdminMockBundles() {
         highlight_on_mocks: !!editing.highlight_on_mocks,
         sort_order: Number(editing.sort_order) || 0,
         features: (editing.features ?? {}) as any,
+        highlights: (editing.highlights ?? {}) as any,
         included_categories: editing.included_categories ?? [],
       };
       let bundleId = (editing as Bundle).id;
