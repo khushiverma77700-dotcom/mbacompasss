@@ -14,6 +14,37 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// --------- Question / Option text sanitizers ---------
+// UI renders question number, set badge and A/B/C/D labels as STATIC chips.
+// Stored HTML must contain only the pure question/option text.
+const Q_PREFIX_PATTERNS: RegExp[] = [
+  /^\s*Q\.?\s*\d+\s*[.\):\-]?\s*/i,
+  /^\s*Question\s*\d*\s*[.\):\-]?\s*/i,
+  /^\s*Set\s*\d+\s*[.\):\-]?\s*/i,
+  /^\s*\(?\d+\)?\s*[.\):\-]\s*/,
+];
+const OPT_PREFIX_PATTERNS: RegExp[] = [
+  /^\s*\(?\s*[A-Da-d1-4]\s*\)?\s*[.\):\-]\s*/,
+];
+function stripPrefixes(html: string | null | undefined, patterns: RegExp[]): string {
+  if (!html) return html ?? "";
+  return html.replace(/^(\s*(?:<[^>]+>\s*)*)([\s\S]*?)(<|$)/, (_m, lead, body, tail) => {
+    let next = body;
+    let changed = true;
+    let safety = 5;
+    while (changed && safety-- > 0) {
+      changed = false;
+      for (const re of patterns) {
+        const r = next.replace(re, "");
+        if (r !== next) { next = r; changed = true; }
+      }
+    }
+    return lead + next + tail;
+  });
+}
+const cleanQuestionHtml = (h: string | null | undefined) => stripPrefixes(h, Q_PREFIX_PATTERNS);
+const cleanOptionHtml = (h: string | null | undefined) => stripPrefixes(h, OPT_PREFIX_PATTERNS);
+
 // --------- Constants ---------
 
 const EXAM_PROFILES: Record<string, {
