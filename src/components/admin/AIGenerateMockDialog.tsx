@@ -453,7 +453,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                   <div>
                     <Label className="text-sm font-semibold">Section-wise plan ({exam})</Label>
                     <p className="text-[11px] text-muted-foreground">
-                      Set questions, MCQ/TITA split and duration for each section. AI will generate accordingly.
+                      Set questions, MCQ/TITA split, sets (passages/caselets) and duration per section. AI generates accordingly. Use <strong>Sets = 0</strong> for sections with only standalone questions (e.g. QA).
                     </p>
                   </div>
                   <Button type="button" size="sm" variant="outline" className="h-7 text-xs"
