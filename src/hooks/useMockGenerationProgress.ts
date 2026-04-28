@@ -11,6 +11,9 @@ export type SectionJob = {
   attempts: number;
   current_step: string | null;
   error_message: string | null;
+  updated_at: string | null;
+  /** True if status=processing but updated_at is older than STALL_MS — shows "Stuck" UI + retry button. */
+  isStalled?: boolean;
 };
 
 export type MockGenerationProgress = {
@@ -21,6 +24,7 @@ export type MockGenerationProgress = {
   pendingSections: number;
   processingSections: number;
   failedSections: number;
+  stalledSections: number;
   totalQuestions: number;
   generatedQuestions: number;
   remainingQuestions: number;
@@ -28,11 +32,15 @@ export type MockGenerationProgress = {
   current?: string;
   isComplete: boolean;
   hasFailures: boolean;
+  hasStalled: boolean;
   startedAt: number | null;
   elapsedSec: number;
   qps: number;          // questions per second
   etaSec: number | null;
 };
+
+// A processing job that hasn't updated in this long is considered stuck
+const STALL_MS = 90_000;
 
 export function useMockGenerationProgress(generationId: string | null, intervalMs = 1500): MockGenerationProgress {
   const [jobs, setJobs] = useState<SectionJob[]>([]);
@@ -52,7 +60,7 @@ export function useMockGenerationProgress(generationId: string | null, intervalM
     const fetchJobs = async () => {
       const { data } = await supabase
         .from("mock_section_jobs")
-        .select("id, section_code, section_name, total_questions, questions_done, status, attempts, current_step, error_message")
+        .select("id, section_code, section_name, total_questions, questions_done, status, attempts, current_step, error_message, updated_at")
         .eq("generation_id", generationId)
         .order("created_at", { ascending: true });
       if (!alive) return;
@@ -65,18 +73,28 @@ export function useMockGenerationProgress(generationId: string | null, intervalM
     return () => { alive = false; clearInterval(t); clearInterval(tick); };
   }, [generationId, intervalMs]);
 
-  const totalSections = jobs.length;
-  const doneSections = jobs.filter((j) => j.status === "completed").length;
-  const failedSections = jobs.filter((j) => j.status === "failed").length;
-  const processingSections = jobs.filter((j) => j.status === "processing").length;
-  const pendingSections = jobs.filter((j) => j.status === "pending" || j.status === "processing").length;
-  const totalQuestions = jobs.reduce((s, j) => s + (j.total_questions || 0), 0);
-  const generatedQuestions = jobs.reduce((s, j) => s + (j.questions_done || 0), 0);
+  // Compute stall flag client-side from updated_at
+  const annotatedJobs: SectionJob[] = jobs.map((j) => {
+    if (j.status !== "processing" || !j.updated_at) return { ...j, isStalled: false };
+    const updatedMs = new Date(j.updated_at).getTime();
+    const isStalled = !Number.isNaN(updatedMs) && (now - updatedMs) > STALL_MS;
+    return { ...j, isStalled };
+  });
+
+  const totalSections = annotatedJobs.length;
+  const doneSections = annotatedJobs.filter((j) => j.status === "completed").length;
+  const failedSections = annotatedJobs.filter((j) => j.status === "failed").length;
+  const processingSections = annotatedJobs.filter((j) => j.status === "processing").length;
+  const stalledSections = annotatedJobs.filter((j) => j.isStalled).length;
+  const pendingSections = annotatedJobs.filter((j) => j.status === "pending" || j.status === "processing").length;
+  const totalQuestions = annotatedJobs.reduce((s, j) => s + (j.total_questions || 0), 0);
+  const generatedQuestions = annotatedJobs.reduce((s, j) => s + (j.questions_done || 0), 0);
   const remainingQuestions = Math.max(0, totalQuestions - generatedQuestions);
   const pct = totalQuestions ? Math.round((generatedQuestions / totalQuestions) * 100) : 0;
-  const current = jobs.find((j) => j.status === "processing")?.section_name;
+  const current = annotatedJobs.find((j) => j.status === "processing")?.section_name;
   const isComplete = totalSections > 0 && pendingSections === 0;
   const hasFailures = failedSections > 0;
+  const hasStalled = stalledSections > 0;
 
   const elapsedSec = startedAt ? Math.max(1, Math.round((now - startedAt) / 1000)) : 0;
   const qps = elapsedSec > 0 ? generatedQuestions / elapsedSec : 0;
@@ -85,10 +103,10 @@ export function useMockGenerationProgress(generationId: string | null, intervalM
     : (isComplete ? 0 : null);
 
   return {
-    loading, jobs,
-    totalSections, doneSections, pendingSections, processingSections, failedSections,
+    loading, jobs: annotatedJobs,
+    totalSections, doneSections, pendingSections, processingSections, failedSections, stalledSections,
     totalQuestions, generatedQuestions, remainingQuestions,
-    pct, current, isComplete, hasFailures,
+    pct, current, isComplete, hasFailures, hasStalled,
     startedAt, elapsedSec, qps, etaSec,
   };
 }

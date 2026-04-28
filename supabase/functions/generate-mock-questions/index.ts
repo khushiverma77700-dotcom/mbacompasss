@@ -102,6 +102,38 @@ const EXAM_PROFILES: Record<string, {
 };
 
 const BATCH_SIZE = 8; // questions per AI call
+const OPENAI_TIMEOUT_MS = 90_000;       // single AI call hard timeout
+const FIRECRAWL_TIMEOUT_MS = 6_000;     // single web-check hard timeout
+const SECTION_WALL_CLOCK_MS = 8 * 60_000; // entire section must finish in 8 min
+const MAX_FIRECRAWL_CHECKS_PER_SECTION = 6; // cap web-checks (was unbounded → main stall cause)
+
+// Map mock_section.code (e.g. "DILR") + exam to the personalized_questions catalog
+// Uses src/data/personalizedExams.ts vocabulary so the admin hub counter picks it up.
+const PERSONALIZED_SECTION_MAP: Record<string, Record<string, string>> = {
+  CAT:  { VARC: "VARC", DILR: "DILR", QA: "QA" },
+  NMAT: { LS: "Language Skills", QS: "Quantitative Skills", LR: "Logical Reasoning" },
+  XAT:  { VALR: "Verbal & Logical Ability", DM: "Decision Making", QADI: "Quantitative Ability", GK: "GK" },
+  SNAP: { GE: "General English", QADS: "Quantitative & Data Interpretation", AR: "Analytical & Logical Reasoning" },
+  IIFT: { VARC: "Verbal Ability & RC", QA: "Quantitative Analysis", DILR: "Data Interpretation & LR", GK: "GK" },
+  CMAT: { QADI: "Quantitative Techniques", LR: "Logical Reasoning", LC: "Language Comprehension", GA: "GK", IE: "Innovation & Entrepreneurship" },
+  MAT:  { LC: "Language Comprehension", MS: "Mathematical Skills", DA: "Data Analysis", ICR: "Intelligence & Critical Reasoning", IGE: "Indian & Global Environment" },
+};
+
+function mapPersonalizedDifficulty(d: string): "easy" | "moderate" | "difficult" {
+  if (d === "easy") return "easy";
+  if (d === "hard") return "difficult";
+  return "moderate";
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+    promise.then(
+      (v) => { clearTimeout(t); resolve(v); },
+      (e) => { clearTimeout(t); reject(e); },
+    );
+  });
+}
 
 // --------- Helpers ---------
 
@@ -276,20 +308,33 @@ async function callOpenAIBatch(args: {
   const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
 
-  const resp = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "gpt-4o",
-      messages: [
-        { role: "system", content: sys },
-        { role: "user", content: user },
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.35,
-      max_tokens: 16000,
-    }),
-  });
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), OPENAI_TIMEOUT_MS);
+  let resp: Response;
+  try {
+    resp = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        messages: [
+          { role: "system", content: sys },
+          { role: "user", content: user },
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.35,
+        max_tokens: 16000,
+      }),
+      signal: ctrl.signal,
+    });
+  } catch (e) {
+    clearTimeout(timer);
+    const msg = (e as Error)?.name === "AbortError"
+      ? `OpenAI request aborted after ${OPENAI_TIMEOUT_MS}ms`
+      : `OpenAI fetch failed: ${(e as Error)?.message || e}`;
+    throw new Error(msg);
+  }
+  clearTimeout(timer);
 
   if (!resp.ok) {
     const txt = await resp.text();
@@ -322,6 +367,8 @@ async function firecrawlIsOnInternet(questionText: string): Promise<boolean> {
   // Trim to a sentence-ish probe
   const probe = normalizeForHash(questionText).slice(0, 220);
   if (probe.length < 60) return false;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), FIRECRAWL_TIMEOUT_MS);
   try {
     const resp = await fetch("https://api.firecrawl.dev/v2/search", {
       method: "POST",
@@ -330,12 +377,15 @@ async function firecrawlIsOnInternet(questionText: string): Promise<boolean> {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ query: `"${probe.slice(0, 140)}"`, limit: 3 }),
+      signal: ctrl.signal,
     });
+    clearTimeout(timer);
     if (!resp.ok) return false;
     const json = await resp.json();
     const hits = json?.data || json?.web?.results || [];
     return Array.isArray(hits) && hits.length > 0;
   } catch {
+    clearTimeout(timer);
     return false;
   }
 }
@@ -593,15 +643,24 @@ Deno.serve(async (req) => {
         let attemptsLocal = 0;
         const maxAttempts = Math.ceil(sec.questions / BATCH_SIZE) + 4;
         const accepted: any[] = [];
+        const sectionStartedAt = Date.now();
+        let firecrawlChecks = 0;
 
         try {
           while (produced < sec.questions && attemptsLocal < maxAttempts) {
+            // Wall-clock guard — never let a section run forever (was the DILR stuck-forever cause).
+            if (Date.now() - sectionStartedAt > SECTION_WALL_CLOCK_MS) {
+              await updateJob({
+                current_step: `Section timeout after ${Math.round(SECTION_WALL_CLOCK_MS / 60000)} min — saving partial`,
+                error_message: `Section exceeded ${Math.round(SECTION_WALL_CLOCK_MS / 60000)}-minute wall clock`,
+              });
+              break;
+            }
+
             attemptsLocal++;
             const remain = sec.questions - produced;
             const setBoundTotal = setsForSec > 0 ? Math.min(sec.questions, setsForSec * questionsPerSet) : 0;
             const generatingSharedSet = setsForSec > 0 && produced < setBoundTotal;
-            // Generate one RC/DILR set per AI call. Asking for a whole full-length section in one call
-            // was too large and caused partial output / stalled jobs.
             const batch = generatingSharedSet
               ? Math.min(questionsPerSet, setBoundTotal - produced)
               : Math.min(BATCH_SIZE, remain);
@@ -610,7 +669,10 @@ Deno.serve(async (req) => {
             const batchMcq = Math.min(remainMcq, Math.ceil(batch * (remainMcq / Math.max(1, remainMcq + remainTita))));
             const batchTita = batch - batchMcq;
 
-            await updateJob({ current_step: `Batch ${attemptsLocal}: requesting ${batch} questions…` });
+            await updateJob({
+              attempts: attemptsLocal,
+              current_step: `Batch ${attemptsLocal}: requesting ${batch} questions…`,
+            });
 
             let qs: any[] = [];
             try {
@@ -638,7 +700,9 @@ Deno.serve(async (req) => {
               const hash = await sha256(normalizeForHash(q.question_html));
               if (seenHashes.has(hash)) { stats.rejected_dup_db++; continue; }
 
-              if (verify_internet) {
+              // Cap web-checks — unbounded firecrawl was the #1 cause of stuck DILR sections.
+              if (verify_internet && firecrawlChecks < MAX_FIRECRAWL_CHECKS_PER_SECTION) {
+                firecrawlChecks++;
                 const onWeb = await firecrawlIsOnInternet(q.question_html);
                 if (onWeb) { stats.rejected_dup_internet++; continue; }
               }
@@ -655,7 +719,10 @@ Deno.serve(async (req) => {
             });
           }
 
-          // Persist accepted questions + options
+          // Build personalized-hub mirror rows for MCQs (the hub schema requires options + correct_index)
+          const hubSection = (PERSONALIZED_SECTION_MAP[exam_code] || {})[sec.code];
+          const hubRows: any[] = [];
+
           for (let i = 0; i < accepted.length; i++) {
             const q = accepted[i];
             const isTita = q.question_type === "tita";
@@ -686,6 +753,23 @@ Deno.serve(async (req) => {
               }));
               if (opts.length === 4 && opts.some((o) => o.is_correct)) {
                 await admin.from("mock_question_options").insert(opts);
+
+                // Mirror to Personalized Hub bank (MCQ only)
+                if (hubSection) {
+                  const correctIdx = opts.findIndex((o) => o.is_correct);
+                  hubRows.push({
+                    exam_code,
+                    section: hubSection,
+                    difficulty: mapPersonalizedDifficulty(normalizeDifficulty(q.difficulty, level)),
+                    question_text: q.question_html,
+                    options: opts.map((o) => ({ label: o.option_label, text: o.option_html })),
+                    correct_index: correctIdx >= 0 ? correctIdx : 0,
+                    explanation: q.explanation_html || null,
+                    topic: q.topic || topic || null,
+                    source: "mock-mirror",
+                    created_by: user.id,
+                  });
+                }
               } else {
                 await admin.from("mock_questions").delete().eq("id", qRow.id);
                 continue;
@@ -694,11 +778,22 @@ Deno.serve(async (req) => {
             stats.generated++;
           }
 
+          // Bulk-insert personalized hub mirror rows (best-effort, ignore failures)
+          if (hubRows.length > 0) {
+            const { error: hubErr } = await admin.from("personalized_questions").insert(hubRows);
+            if (hubErr) console.error("[generate] personalized hub mirror failed:", hubErr.message);
+            else console.log(`[generate] mirrored ${hubRows.length} questions to Personalized Hub (${exam_code}/${hubSection})`);
+          }
+
+          // Treat ≥80% of target as completed; below that = failed (so retry button shows)
+          const success = produced >= Math.ceil(sec.questions * 0.8);
           await updateJob({
-            status: produced >= sec.questions ? "completed" : "failed",
+            status: success ? "completed" : "failed",
             questions_done: produced,
-            current_step: produced >= sec.questions ? `Done — ${produced} questions saved` : `Incomplete — ${produced}/${sec.questions} saved`,
-            error_message: produced >= sec.questions ? null : `Only ${produced} of ${sec.questions} questions generated`,
+            current_step: success
+              ? `Done — ${produced} questions saved${produced < sec.questions ? ` (target ${sec.questions})` : ""}`
+              : `Incomplete — ${produced}/${sec.questions} saved`,
+            error_message: success ? null : `Only ${produced} of ${sec.questions} questions generated`,
           });
         } catch (sectionErr) {
           const msg = (sectionErr as Error)?.message || String(sectionErr);
