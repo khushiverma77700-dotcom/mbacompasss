@@ -3034,6 +3034,7 @@ export type Database = {
           exam_code: string | null
           features: Json
           highlight_on_mocks: boolean
+          highlights: Json
           id: string
           included_categories: string[]
           is_published: boolean
@@ -3053,6 +3054,7 @@ export type Database = {
           exam_code?: string | null
           features?: Json
           highlight_on_mocks?: boolean
+          highlights?: Json
           id?: string
           included_categories?: string[]
           is_published?: boolean
@@ -3072,6 +3074,7 @@ export type Database = {
           exam_code?: string | null
           features?: Json
           highlight_on_mocks?: boolean
+          highlights?: Json
           id?: string
           included_categories?: string[]
           is_published?: boolean

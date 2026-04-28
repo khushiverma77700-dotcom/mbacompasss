@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Plus, Pencil, Trash2, Search, Package, Loader2, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { toast } from "sonner";
 import { FEATURE_DEFINITIONS, FeatureKey, FeatureMap } from "@/lib/courseFeatures";
+import { HIGHLIGHT_DEFINITIONS, HighlightKey, HighlightMap, isHighlightOn, getHighlightValue } from "@/lib/courseHighlights";
 import CourseMockPicker from "@/components/admin/CourseMockPicker";
 
 type Bundle = {
@@ -27,6 +28,7 @@ type Bundle = {
   highlight_on_mocks: boolean;
   sort_order: number;
   features: FeatureMap;
+  highlights: HighlightMap;
   included_categories: string[];
 };
 
@@ -38,7 +40,7 @@ const ALL_CATEGORIES = ["CAT", "NMAT", "XAT", "SNAP", "IIFT", "CMAT", "MAT", "TI
 const EMPTY: Partial<Bundle> = {
   name: "", slug: "", description: "", exam_code: "CAT", price_inr: 0, original_price_inr: null,
   validity_days: 365, is_published: false, highlight_on_mocks: false, sort_order: 0,
-  features: {}, included_categories: [],
+  features: {}, highlights: {}, included_categories: [],
 };
 
 export default function AdminMockBundles() {
@@ -63,6 +65,7 @@ export default function AdminMockBundles() {
     setEditing({
       ...b,
       features: (b.features ?? {}) as FeatureMap,
+      highlights: (b.highlights ?? {}) as HighlightMap,
       included_categories: b.included_categories ?? [],
     });
     const { data } = await supabase.from("mock_bundle_items").select("test_id").eq("bundle_id", b.id);
@@ -77,6 +80,25 @@ export default function AdminMockBundles() {
     const next = { ...(editing.features ?? {}) };
     if (on) next[key] = true; else delete next[key];
     setEditing({ ...editing, features: next });
+  };
+
+  const toggleHighlight = (key: HighlightKey, on: boolean) => {
+    if (!editing) return;
+    const next: HighlightMap = { ...(editing.highlights ?? {}) };
+    const def = HIGHLIGHT_DEFINITIONS.find((d) => d.key === key);
+    if (on) {
+      next[key] = def?.hasValue ? { value: def.defaultValue ?? "" } : true;
+    } else {
+      delete next[key];
+    }
+    setEditing({ ...editing, highlights: next });
+  };
+
+  const setHighlightValue = (key: HighlightKey, value: string) => {
+    if (!editing) return;
+    const next: HighlightMap = { ...(editing.highlights ?? {}) };
+    next[key] = { value };
+    setEditing({ ...editing, highlights: next });
   };
 
   const toggleCategory = (cat: string, on: boolean) => {
@@ -107,6 +129,7 @@ export default function AdminMockBundles() {
         highlight_on_mocks: !!editing.highlight_on_mocks,
         sort_order: Number(editing.sort_order) || 0,
         features: (editing.features ?? {}) as any,
+        highlights: (editing.highlights ?? {}) as any,
         included_categories: editing.included_categories ?? [],
       };
       let bundleId = (editing as Bundle).id;
@@ -294,6 +317,44 @@ export default function AdminMockBundles() {
                     </label>
                   );
                 })}
+              </div>
+
+              <div className="pt-4 border-t">
+                <Label className="text-base">Course Highlights / Deliverables</Label>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Pick the marketing deliverables that show up on the public course page (e.g. Daily Tests, Personalized Tests, 24×7 Support). These build trust before the buy button.
+                </p>
+                {(["Tests & Practice","AI & Analytics","Planning & Mentorship","Support"] as const).map((cat) => (
+                  <div key={cat} className="mb-4">
+                    <div className="text-xs font-semibold text-sky-700 uppercase tracking-wide mb-2">{cat}</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {HIGHLIGHT_DEFINITIONS.filter((d) => d.category === cat).map((d) => {
+                        const on = isHighlightOn(editing.highlights, d.key);
+                        const val = getHighlightValue(editing.highlights, d.key) ?? d.defaultValue ?? "";
+                        return (
+                          <label key={d.key} className={`flex items-start gap-3 px-3 py-2.5 rounded-lg border transition ${on ? "border-emerald-300 bg-emerald-50/60" : "border-border hover:bg-muted/30"}`}>
+                            <Switch checked={on} onCheckedChange={(v) => toggleHighlight(d.key, v)} />
+                            <div className="flex-1">
+                              <div className="text-sm font-medium">{d.label}</div>
+                              <div className="text-[11px] text-muted-foreground">{d.description}</div>
+                              {on && d.hasValue && (
+                                <div className="flex items-center gap-1 mt-2">
+                                  <Input
+                                    value={val}
+                                    onChange={(e) => setHighlightValue(d.key, e.target.value)}
+                                    className="h-7 w-24 text-xs"
+                                    placeholder={d.defaultValue}
+                                  />
+                                  {d.unit && <span className="text-[11px] text-muted-foreground">{d.unit}</span>}
+                                </div>
+                              )}
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
