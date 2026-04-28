@@ -104,40 +104,59 @@ function buildSystemPrompt(opts: {
   section_code: string; section_name: string;
   strict_topic?: string | null;
   sets?: number | null;
+  questions_per_set?: number | null;
   total_section_questions?: number | null;
+  mcq_count?: number | null;
+  tita_count?: number | null;
 }) {
   const levelGuidance = opts.level === "mixed"
     ? "Mix Easy (~30%), Moderate (~40%), Hard (~30%)."
     : `Strictly target ${opts.level.toUpperCase()} difficulty.`;
 
   const topicLock = opts.strict_topic
-    ? `
-
-STRICT TOPIC LOCK (Topic-wise Test):
-- EVERY single question MUST be exclusively from the topic: "${opts.strict_topic}".
-- Do NOT generate questions from any other topic, sub-area, or concept outside "${opts.strict_topic}".
-- The "topic" field on every question MUST be "${opts.strict_topic}".
-- Vary the sub-concepts and difficulty within "${opts.strict_topic}" only.`
+    ? `\n\nSTRICT TOPIC LOCK (Topic-wise Test):\n- EVERY question MUST be exclusively from the topic: "${opts.strict_topic}".\n- The "topic" field on every question MUST be "${opts.strict_topic}".`
     : "";
 
-  // Sets guidance — passages (VARC) / caselets (DILR). Group questions under shared contexts.
-  const setsBlock = (opts.sets && opts.sets > 0)
-    ? `
+  // Hybrid sets + standalone block.
+  // sets > 0 means: first (sets * questions_per_set) questions belong to passages/caselets,
+  // the remaining questions in this batch are standalone.
+  const setsCount = opts.sets ?? 0;
+  const qPerSet = opts.questions_per_set ?? 4;
+  const setQuestions = setsCount > 0 ? setsCount * qPerSet : 0;
+  const standaloneQuestions = Math.max(0, (opts.total_section_questions ?? 0) - setQuestions);
 
-SETS / SHARED-CONTEXT GROUPING (mandatory for this section):
-- This section MUST be organised into exactly ${opts.sets} "sets" (${opts.section_code === "VARC" ? "Reading Comprehension passages" : opts.section_code === "DILR" ? "DI/LR caselets" : "shared-context sets"}).
-- Distribute the ${opts.total_section_questions ?? opts.sets * 4} questions across these ${opts.sets} sets as evenly as possible (e.g. 4 questions per set is standard for CAT).
-- Each question that belongs to a set MUST begin its "question_html" with the FULL shared context (passage / caselet text / data table) wrapped in <div class="passage">…</div>, followed by the actual question.
-- Repeat the SAME context verbatim for every question in the same set (so each row is self-contained when reviewed individually).
-- Each set's context must be a fresh original ${opts.section_code === "VARC" ? "passage of 350–550 words on a unique theme (history / science / philosophy / business / arts)" : "caselet with original numbers, names and a unique scenario"}.
-- Tag each question with a "set_index" field (1..${opts.sets}) so we can group them on display.
-- Standalone (non-set) questions are NOT allowed in this batch — every question must belong to one of the ${opts.sets} sets.`
-    : (opts.section_code === "VARC" || opts.section_code === "DILR")
-      ? `
+  let setsBlock = "";
+  if (setsCount > 0) {
+    const isVARC = opts.section_code === "VARC";
+    const isDILR = opts.section_code === "DILR";
+    const ctxLabel = isVARC ? "Reading Comprehension passage" : isDILR ? "DI/LR caselet with data" : "shared-context set";
+    const ctxDesc = isVARC
+      ? "an original Reading Comprehension PASSAGE of 350–550 words (history / science / philosophy / business / arts / social issues)"
+      : isDILR
+        ? "an original DI/LR caselet with FULLY DETAILED DATA. Include a properly formatted HTML <table> (rows × columns with numeric data) AND/OR an inline ASCII bar/line chart inside <pre> tags. Caselets must contain rich data such as sales figures, rankings, percentage shares, time series, tournament results, seating arrangements, family trees, blood relations, etc. Numbers, names and the scenario must be fresh and original."
+        : "a shared-context block";
 
-NO SETS REQUESTED:
-- Generate standalone questions only (no shared passages / caselets) for this batch.`
-      : "";
+    setsBlock = `\n\nMANDATORY SECTION STRUCTURE (CAT-style hybrid):
+This batch must contain EXACTLY ${opts.total_section_questions} questions total, structured as:
+  • ${setsCount} SETS × ${qPerSet} questions each = ${setQuestions} set-bound questions (FIRST in the output array)
+  • ${standaloneQuestions} STANDALONE questions (AFTER the set questions)
+
+For SET-BOUND questions:
+- Each of the ${setsCount} sets is ${ctxDesc}.
+- Each set has exactly ${qPerSet} questions tied to that ${ctxLabel}.
+- The FIRST question of each set MUST contain the FULL shared context wrapped in <div class="passage">…</div> followed by the question stem.
+- The remaining ${qPerSet - 1} questions of the same set MUST also include the SAME passage/caselet HTML at the top (so each row is self-contained).
+- Tag each set-bound question with "set_index": 1..${setsCount} and "is_set_question": true.
+${isDILR ? "- DILR caselets MUST contain rich tabular data; never write a vague caselet — include actual numbers, names, columns, totals." : ""}
+${isVARC ? "- The first 3 RC passages each have 4 questions tightly tied to that passage (inference, main idea, vocab in context, author tone, etc.)." : ""}
+
+For STANDALONE questions:
+- ${standaloneQuestions} fresh independent questions, no shared context.
+- Mix MCQ and TITA per the requested counts.
+- Tag each standalone with "is_set_question": false (no set_index).`;
+  } else if (opts.section_code === "DILR") {
+    setsBlock = `\n\nDILR REQUIREMENT: Every question must be a standalone DI/LR puzzle with concrete data — include an HTML <table> or ASCII chart in <pre> tags. Never write a vague caselet.`;
+  }
 
   return `You are an elite ${opts.exam_full} (${opts.exam}) question setter with 15+ years of experience writing original mock questions for top MBA coaching institutes in India.
 
@@ -150,13 +169,12 @@ GENERATE 100% ORIGINAL questions for:
 CRITICAL RULES:
 1. EVERY question must be ORIGINAL — never copy from past papers, NCERT, RS Aggarwal, Arun Sharma, Nishit Sinha, Time, IMS, CL, study material, blogs, or anything published.
 2. Use FRESH numbers, fresh names, fresh contexts. Never reuse classic problems verbatim.
-3. Every question must include a DETAILED step-by-step explanation (200-400 words) showing the full solving approach, key concept, common traps, shortcut tricks if any, and final answer derivation. Use clear math notation in plain text or LaTeX-style.
-4. Each question must test a different sub-concept — no repetition of the same trick.
-5. For MCQ: exactly 4 options labelled A, B, C, D, with exactly ONE correct.
-6. For TITA (Type In The Answer / numerical): provide the numeric answer (and tolerance if applicable).
-7. Tag each question with topic and subtopic accurately.
-8. Match the official ${opts.exam} pattern, length, and style precisely.
-9. Output ONLY valid JSON matching the schema. No prose before/after.`;
+3. Every question must include a DETAILED step-by-step explanation (200-400 words) with concept, approach, common traps, shortcut tricks, and final answer derivation.
+4. For MCQ: exactly 4 options labelled A, B, C, D, with exactly ONE correct.
+5. For TITA: provide numeric answer(s) and tolerance if applicable. NO options.
+6. Tag each question with topic and subtopic accurately.
+7. Match the official ${opts.exam} pattern, length, and style precisely.
+8. Output ONLY valid JSON. No prose. No markdown fences. Use raw integers (no thousands separators like "1,234").`;
 }
 
 function buildUserPrompt(opts: {
