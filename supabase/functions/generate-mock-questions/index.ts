@@ -473,6 +473,9 @@ Deno.serve(async (req) => {
               userId: user.id,
               // Topic-wise tests must lock every question to the chosen topic.
               strict_topic: category === "topic" && topic ? topic : null,
+              // Per-section sets (passages/caselets) — only honoured for full_length.
+              sets: category === "full_length" ? (sec.sets ?? 0) : 0,
+              total_section_questions: sec.questions,
             });
           } catch (e) {
             console.error("[generate] batch failed:", e);
