@@ -299,7 +299,7 @@ const AdminMockBuilder = () => {
           if (Array.isArray(row.options)) {
             row.options.forEach((o: any, i: number) => opts.push({
               option_label: o.label ?? String.fromCharCode(65 + i),
-              option_html: o.html ?? o.text ?? "",
+              option_html: stripOptionPrefix(o.html ?? o.text ?? ""),
               is_correct: !!o.is_correct,
               sort_order: i,
             }));
@@ -307,7 +307,7 @@ const AdminMockBuilder = () => {
             const correctLabel = String(row.correct_label ?? row.answer ?? "A").toUpperCase();
             ["a", "b", "c", "d"].forEach((k, i) => {
               const html = row[`option_${k}`] ?? "";
-              if (html) opts.push({ option_label: k.toUpperCase(), option_html: html, is_correct: correctLabel === k.toUpperCase(), sort_order: i });
+              if (html) opts.push({ option_label: k.toUpperCase(), option_html: stripOptionPrefix(html), is_correct: correctLabel === k.toUpperCase(), sort_order: i });
             });
           }
           if (opts.filter(o => o.is_correct).length !== 1) throw new Error(`Question ${qPayload.question_number}: needs exactly 1 correct option`);
