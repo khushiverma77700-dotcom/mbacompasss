@@ -588,31 +588,83 @@ export default function MockTestRunnerPage() {
         )}
       </div>
 
-      {/* Action bar */}
+      {/* Save & Next row — placed slightly above on the white area to avoid misclicks */}
+      <div className="bg-white border-t px-3 sm:px-4 py-2 flex items-center justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={goPrev}>
+          <ChevronLeft className="h-4 w-4" />
+          <span className="hidden sm:inline ml-1">Previous</span>
+        </Button>
+        <Button size="sm" className="bg-sky-600 hover:bg-sky-700" onClick={handleSaveNext}>
+          <span>Save &amp; Next</span> <ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+
+      {/* Bottom action bar — Submit pinned at bottom-right corner */}
       <footer
-        className="border-t bg-white px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2 flex-wrap"
+        className="border-t bg-slate-50 px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2 flex-wrap"
         style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
       >
-        <div className="flex gap-2 order-2 sm:order-1 w-full sm:w-auto">
-          <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={handleMarkReview}>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={handleMarkReview}>
             <Bookmark className="h-4 w-4 sm:mr-1" />
-            <span className="hidden sm:inline">Mark & Next</span>
+            <span className="hidden sm:inline">Mark &amp; Next</span>
             <span className="sm:hidden ml-1">Mark</span>
           </Button>
-          <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={handleClear}>
+          <Button variant="outline" size="sm" onClick={handleClear}>
             Clear
           </Button>
         </div>
-        <div className="flex gap-2 order-1 sm:order-2 w-full sm:w-auto">
-          <Button variant="outline" size="sm" className="flex-1 sm:flex-none" onClick={goPrev}>
-            <ChevronLeft className="h-4 w-4" />
-            <span className="hidden sm:inline ml-1">Previous</span>
-          </Button>
-          <Button size="sm" className="flex-1 sm:flex-none" onClick={handleSaveNext}>
-            <span>Save & Next</span> <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
-        </div>
+        <Button
+          size="sm"
+          variant="destructive"
+          className="ml-auto"
+          onClick={handleManualSubmit}
+          disabled={submitting}
+        >
+          {submitting ? "Submitting…" : "Submit Test"}
+        </Button>
       </footer>
+
+      {/* Submit confirmation dialog */}
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Submit your test?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please review your attempt summary. Once submitted, you cannot change your answers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="grid grid-cols-2 gap-3 my-2">
+            <SummaryStat label="Total questions" value={submitSummary.total} tone="slate" />
+            <SummaryStat label="Answered" value={submitSummary.answered} tone="green" />
+            <SummaryStat label="Not answered" value={submitSummary.notAnswered} tone="red" />
+            <SummaryStat label="Marked for review" value={submitSummary.marked} tone="purple" />
+            <SummaryStat label="Not visited" value={submitSummary.notVisited} tone="gray" />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={submitting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={doSubmit} disabled={submitting} className="bg-rose-600 hover:bg-rose-700">
+              {submitting ? "Submitting…" : "Submit Now"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
+
+function SummaryStat({ label, value, tone }: { label: string; value: number; tone: "slate" | "green" | "red" | "purple" | "gray" }) {
+  const toneCls: Record<string, string> = {
+    slate: "bg-slate-50 border-slate-200 text-slate-900",
+    green: "bg-green-50 border-green-200 text-green-800",
+    red: "bg-red-50 border-red-200 text-red-800",
+    purple: "bg-purple-50 border-purple-200 text-purple-800",
+    gray: "bg-gray-50 border-gray-200 text-gray-700",
+  };
+  return (
+    <div className={cn("rounded-md border px-3 py-2", toneCls[tone])}>
+      <div className="text-[11px] uppercase tracking-wide opacity-80">{label}</div>
+      <div className="text-xl font-bold">{value}</div>
     </div>
   );
 }
