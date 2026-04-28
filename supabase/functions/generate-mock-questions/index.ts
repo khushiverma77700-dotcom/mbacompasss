@@ -719,8 +719,10 @@ Deno.serve(async (req) => {
             });
           }
 
-          // Build personalized-hub mirror rows for MCQs (the hub schema requires options + correct_index)
-          const hubSection = (PERSONALIZED_SECTION_MAP[exam_code] || {})[sec.code];
+          // Mirror to Personalized Hub ONLY for sectional/topic generations (which power Daily Tests + Sectional Tests).
+          // Full-length mock questions are intentionally excluded from the Hub.
+          const allowHubMirror = category === "sectional" || category === "topic";
+          const hubSection = allowHubMirror ? (PERSONALIZED_SECTION_MAP[exam_code] || {})[sec.code] : undefined;
           const hubRows: any[] = [];
 
           for (let i = 0; i < accepted.length; i++) {
