@@ -163,7 +163,7 @@ export default function AIStudyPlannerSection() {
                 <div className="text-xs text-sky-100">Included with every MBA Compass paid course</div>
               </div>
               <Button asChild size="lg" className="bg-white text-sky-700 hover:bg-sky-50">
-                <Link to="/mba-compass">Explore MBA Compass courses →</Link>
+                <Link to="/courses">Explore MBA Compass courses →</Link>
               </Button>
             </div>
           </Card>
