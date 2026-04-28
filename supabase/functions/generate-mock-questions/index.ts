@@ -267,16 +267,57 @@ Deno.serve(async (req) => {
       test_name_prefix = null,
       topic = null,               // for topic category
       section_code = null,        // for sectional category (single section)
+      section_plan: rawSectionPlan = null, // NEW: per-section overrides for full_length
       verify_internet = true,
     } = body || {};
 
     const profile = EXAM_PROFILES[exam_code];
     if (!profile) return jsonResp(400, { error: `Unknown exam_code: ${exam_code}` });
 
+    // Sanitise the user-supplied section plan (only honoured for full_length)
+    const customSectionPlan: Array<{
+      code: string; name: string; duration: number; questions: number; mcq: number; tita: number; sort: number;
+    }> | null = (category === "full_length" && Array.isArray(rawSectionPlan) && rawSectionPlan.length > 0)
+      ? rawSectionPlan.map((r: any, idx: number) => {
+          const q = Math.max(0, Number(r?.questions) || 0);
+          let m = Math.max(0, Math.min(q, Number(r?.mcq) || 0));
+          let t = Math.max(0, Math.min(q, Number(r?.tita) || 0));
+          if (m + t !== q) {
+            // Preserve user intent on MCQ; fix TITA to satisfy total.
+            t = Math.max(0, q - m);
+          }
+          return {
+            code: String(r?.code || `S${idx + 1}`).toUpperCase(),
+            name: String(r?.name || r?.code || `Section ${idx + 1}`),
+            duration: Math.max(1, Number(r?.duration) || 40),
+            questions: q,
+            mcq: m,
+            tita: t,
+            sort: Number(r?.sort ?? idx),
+          };
+        }).filter((r) => r.questions > 0)
+      : null;
+
     const setsCount = Math.max(1, Math.min(10, Number(sets) || 1));
-    const perSet = Number(questions_per_set) || Number(total_questions) || profile.default_total;
-    const mcqCount = Number(total_mcq) ?? Math.round(perSet * 0.85);
-    const titaCount = Number(total_tita) ?? Math.max(0, perSet - mcqCount);
+    const planTotalQuestions = customSectionPlan
+      ? customSectionPlan.reduce((s, r) => s + r.questions, 0)
+      : 0;
+    const planTotalMcq = customSectionPlan
+      ? customSectionPlan.reduce((s, r) => s + r.mcq, 0)
+      : 0;
+    const planTotalTita = customSectionPlan
+      ? customSectionPlan.reduce((s, r) => s + r.tita, 0)
+      : 0;
+
+    const perSet = customSectionPlan
+      ? planTotalQuestions
+      : (Number(questions_per_set) || Number(total_questions) || profile.default_total);
+    const mcqCount = customSectionPlan
+      ? planTotalMcq
+      : (Number(total_mcq) ?? Math.round(perSet * 0.85));
+    const titaCount = customSectionPlan
+      ? planTotalTita
+      : (Number(total_tita) ?? Math.max(0, perSet - mcqCount));
     const safePerSet = mcqCount + titaCount;
 
     const createdTests: Array<{ id: string; name: string; slug: string }> = [];
@@ -315,8 +356,10 @@ Deno.serve(async (req) => {
         : `${exam_code} ${labelForCategory(category)} ${setIdx} — AI`;
       const slug = slugify(baseName) + "-" + Date.now().toString(36) + "-" + setIdx;
 
-      // Decide sections for this set based on category
-      const sectionPlan = planSections(profile, category, safePerSet, section_code, topic);
+      // Decide sections for this set based on category (custom plan wins for full_length)
+      const sectionPlan = customSectionPlan && category === "full_length"
+        ? customSectionPlan.map((s, idx) => ({ code: s.code, name: s.name, duration: s.duration, questions: s.questions, sort: idx }))
+        : planSections(profile, category, safePerSet, section_code, topic);
 
       const { data: testRow, error: testErr } = await admin.from("mock_tests").insert({
         name: baseName,
@@ -349,10 +392,20 @@ Deno.serve(async (req) => {
         }).select("id").single();
         if (secErr || !secRow) throw new Error(secErr?.message || "Failed to create section");
 
-        // Allocate MCQ vs TITA proportionally to this section
-        const sectionShare = sec.questions / safePerSet;
-        let secMcq = Math.round(mcqCount * sectionShare);
-        let secTita = sec.questions - secMcq;
+        // Allocate MCQ vs TITA — use custom plan if provided, else proportional split.
+        const customSec = customSectionPlan && category === "full_length"
+          ? customSectionPlan.find((c) => c.code === sec.code && c.questions === sec.questions) ?? customSectionPlan[sec.sort]
+          : null;
+        let secMcq: number;
+        let secTita: number;
+        if (customSec) {
+          secMcq = customSec.mcq;
+          secTita = customSec.tita;
+        } else {
+          const sectionShare = sec.questions / safePerSet;
+          secMcq = Math.round(mcqCount * sectionShare);
+          secTita = sec.questions - secMcq;
+        }
         if (secTita < 0) { secTita = 0; secMcq = sec.questions; }
 
         // Generate in batches
