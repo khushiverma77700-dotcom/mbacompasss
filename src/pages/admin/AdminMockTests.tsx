@@ -90,7 +90,7 @@ const AdminMockTests = () => {
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast({ title: "Name is required", variant: "destructive" }); return; }
-    const slug = form.slug.trim() || slugify(form.name);
+    const slug = slugify(form.name); // always derived from name
     if (form.pricing_type === "paid" && Number(form.price_inr) <= 0) {
       toast({ title: "Paid mocks need a price > 0", variant: "destructive" }); return;
     }
@@ -98,11 +98,19 @@ const AdminMockTests = () => {
     const payload = { ...form, slug, price_inr: Number(form.price_inr) || 0 };
     if (editId) {
       const { error } = await supabase.from("mock_tests").update(payload).eq("id", editId);
-      if (error) { toast({ title: "Save failed", description: error.message, variant: "destructive" }); setSaving(false); return; }
+      if (error) {
+        const dup = error.code === "23505" || /duplicate key|unique/i.test(error.message);
+        toast({ title: dup ? "Duplicate name" : "Save failed", description: dup ? "A mock with this name already exists. Please pick a unique name." : error.message, variant: "destructive" });
+        setSaving(false); return;
+      }
       toast({ title: "Mock test updated" });
     } else {
       const { data, error } = await supabase.from("mock_tests").insert(payload).select("id").single();
-      if (error || !data) { toast({ title: "Save failed", description: error?.message, variant: "destructive" }); setSaving(false); return; }
+      if (error || !data) {
+        const dup = error?.code === "23505" || /duplicate key|unique/i.test(error?.message || "");
+        toast({ title: dup ? "Duplicate name" : "Save failed", description: dup ? "A mock with this name already exists. Please pick a unique name." : error?.message, variant: "destructive" });
+        setSaving(false); return;
+      }
       // Seed default sections for full-length CAT mock
       if (form.test_type === "full_length") {
         const sections = SECTION_DEFAULTS.map(s => ({ ...s, test_id: data.id }));
