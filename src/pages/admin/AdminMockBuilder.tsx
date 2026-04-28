@@ -237,7 +237,7 @@ const AdminMockBuilder = () => {
 
     if (editorState.question_type === "mcq" && questionId) {
       const opts = (editorState.options as OptionRow[]).map(o => ({
-        question_id: questionId, option_label: o.option_label, option_html: o.option_html, is_correct: o.is_correct, sort_order: o.sort_order,
+        question_id: questionId, option_label: o.option_label, option_html: stripOptionPrefix(o.option_html), is_correct: o.is_correct, sort_order: o.sort_order,
       }));
       const { error: oerr } = await supabase.from("mock_question_options").insert(opts);
       if (oerr) { toast({ title: "Options save failed", description: oerr.message, variant: "destructive" }); setEditorSaving(false); return; }
