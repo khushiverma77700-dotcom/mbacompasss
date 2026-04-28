@@ -444,6 +444,8 @@ Deno.serve(async (req) => {
               count: batch, mcq: batchMcq, tita: batchTita,
               positive: profile.default_positive, negative: profile.default_negative,
               userId: user.id,
+              // Topic-wise tests must lock every question to the chosen topic.
+              strict_topic: category === "topic" && topic ? topic : null,
             });
           } catch (e) {
             console.error("[generate] batch failed:", e);
