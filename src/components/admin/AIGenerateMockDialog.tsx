@@ -221,6 +221,14 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
       toast({ title: "Each section must have MCQ + TITA equal to Questions", variant: "destructive" });
       return;
     }
+    if (category === "sectional" && !sectionCode) {
+      toast({ title: "Please select a section for the Sectional Test", variant: "destructive" });
+      return;
+    }
+    if (category === "topic" && !topic.trim()) {
+      toast({ title: "Topic is required for Topic-wise Tests", description: "Every question will be strictly from this topic.", variant: "destructive" });
+      return;
+    }
     setSubmitting(true);
     setResult(null);
     try {
@@ -233,7 +241,8 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
         launch_date: launchDate || null,
         test_name_prefix: namePrefix || null,
         topic: topic || null,
-        section_code: (category === "sectional" || category === "topic" || category === "daily" || category === "practice") ? sectionCode : null,
+        // Daily tests are always mixed across QA/VARC/DILR — no single section.
+        section_code: (category === "sectional" || category === "topic" || category === "practice") ? sectionCode : null,
         verify_internet: verifyInternet,
       };
       if (isFullLength) {
