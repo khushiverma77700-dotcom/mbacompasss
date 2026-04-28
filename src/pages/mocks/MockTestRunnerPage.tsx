@@ -412,15 +412,22 @@ export default function MockTestRunnerPage() {
     goNext();
   };
 
-  const handleManualSubmit = async () => {
-    if (!confirm("Submit the entire test now? You cannot change answers after this.")) return;
+  const handleManualSubmit = () => {
+    setConfirmOpen(true);
+  };
+
+  const doSubmit = async () => {
+    setConfirmOpen(false);
+    if (submitRef.current) return;
     submitRef.current = true;
     setSubmitting(true);
     try {
       await supabase.functions.invoke("mock-submit-attempt", {
         body: { attempt_id: attemptId },
       });
-      if (document.fullscreenElement) await document.exitFullscreen().catch(() => {});
+      if (document.fullscreenElement) {
+        try { await document.exitFullscreen(); } catch {}
+      }
       navigate(`/mocks/result/${attemptId}`);
     } catch (e: any) {
       toast.error(e.message ?? "Submit failed");
@@ -428,6 +435,21 @@ export default function MockTestRunnerPage() {
       submitRef.current = false;
     }
   };
+
+  // Overall summary across all sections (for confirm dialog)
+  const submitSummary = useMemo(() => {
+    let answered = 0, marked = 0, notAnswered = 0, notVisited = 0;
+    for (const q of questions) {
+      const r = responses[q.id];
+      const status = r?.status ?? "not_visited";
+      if (status === "answered") answered++;
+      else if (status === "answered_marked") { answered++; marked++; }
+      else if (status === "marked") marked++;
+      else if (status === "not_answered") notAnswered++;
+      else notVisited++;
+    }
+    return { total: questions.length, answered, marked, notAnswered, notVisited };
+  }, [questions, responses]);
 
   // ---------- RENDER ----------
   if (loading) {
