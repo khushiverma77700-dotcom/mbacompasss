@@ -609,6 +609,9 @@ export default function MocksListPage() {
         </div>
       </section>
 
+      {/* COURSES CTA — compact gradient strip before FAQ */}
+      <CoursesCTABand block={settings.courses_cta_block} variant="compact" />
+
       {/* FAQ */}
       {settings.faqs?.length > 0 && (
         <section className="py-16 bg-sky-50/50">
