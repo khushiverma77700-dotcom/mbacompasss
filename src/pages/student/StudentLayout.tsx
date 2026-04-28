@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import NotificationBell from "@/components/student/NotificationBell";
 import { FeatureLockBadge } from "@/components/student/FeatureGate";
 import type { FeatureKey } from "@/lib/courseFeatures";
+import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
 
 const navItems: { to: string; label: string; icon: any; end?: boolean; feature?: FeatureKey }[] = [
   { to: "/student", label: "Overview", icon: LayoutDashboard, end: true },
