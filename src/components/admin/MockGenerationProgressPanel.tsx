@@ -1,10 +1,14 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Loader2, CheckCircle2, XCircle, Clock, Sparkles, Activity,
-  Gauge, Timer, ListChecks, AlertTriangle, Zap, Brain,
+  Gauge, Timer, ListChecks, AlertTriangle, Zap, Brain, RotateCcw,
 } from "lucide-react";
 import { useMockGenerationProgress } from "@/hooks/useMockGenerationProgress";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Props {
   generationId: string | null;
