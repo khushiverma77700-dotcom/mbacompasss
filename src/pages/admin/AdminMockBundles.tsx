@@ -318,10 +318,46 @@ export default function AdminMockBundles() {
                   );
                 })}
               </div>
+
+              <div className="pt-4 border-t">
+                <Label className="text-base">Course Highlights / Deliverables</Label>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Pick the marketing deliverables that show up on the public course page (e.g. Daily Tests, Personalized Tests, 24×7 Support). These build trust before the buy button.
+                </p>
+                {(["Tests & Practice","AI & Analytics","Planning & Mentorship","Support"] as const).map((cat) => (
+                  <div key={cat} className="mb-4">
+                    <div className="text-xs font-semibold text-sky-700 uppercase tracking-wide mb-2">{cat}</div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {HIGHLIGHT_DEFINITIONS.filter((d) => d.category === cat).map((d) => {
+                        const on = isHighlightOn(editing.highlights, d.key);
+                        const val = getHighlightValue(editing.highlights, d.key) ?? d.defaultValue ?? "";
+                        return (
+                          <label key={d.key} className={`flex items-start gap-3 px-3 py-2.5 rounded-lg border transition ${on ? "border-emerald-300 bg-emerald-50/60" : "border-border hover:bg-muted/30"}`}>
+                            <Switch checked={on} onCheckedChange={(v) => toggleHighlight(d.key, v)} />
+                            <div className="flex-1">
+                              <div className="text-sm font-medium">{d.label}</div>
+                              <div className="text-[11px] text-muted-foreground">{d.description}</div>
+                              {on && d.hasValue && (
+                                <div className="flex items-center gap-1 mt-2">
+                                  <Input
+                                    value={val}
+                                    onChange={(e) => setHighlightValue(d.key, e.target.value)}
+                                    className="h-7 w-24 text-xs"
+                                    placeholder={d.defaultValue}
+                                  />
+                                  {d.unit && <span className="text-[11px] text-muted-foreground">{d.unit}</span>}
+                                </div>
+                              )}
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
-
-          {editing && step === 3 && (
             <div className="space-y-4">
               <div>
                 <Label className="text-base">Mock Categories</Label>
