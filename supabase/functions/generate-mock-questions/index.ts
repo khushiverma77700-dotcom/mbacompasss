@@ -420,7 +420,7 @@ Deno.serve(async (req) => {
     const genId = gen?.id;
 
     // Long-running generation runs in the background so the HTTP request
-    // returns immediately. The client polls ai_mock_generations for status.
+    // returns immediately. The client polls ai_mock_generations + mock_section_jobs for status.
     const runGeneration = async () => {
      try {
     for (let setIdx = 1; setIdx <= setsCount; setIdx++) {
@@ -454,6 +454,15 @@ Deno.serve(async (req) => {
       }).select("id, name, slug").single();
       if (testErr || !testRow) throw new Error(testErr?.message || "Failed to create test");
 
+      // ---------- Pre-create section rows + progress jobs ----------
+      const sectionRecords: Array<{
+        sec: typeof sectionPlan[number];
+        secRowId: string;
+        jobId: string | null;
+        secMcq: number;
+        secTita: number;
+        questionNumberOffset: number;
+      }> = [];
       let questionNumberOffset = 0;
       for (const sec of sectionPlan) {
         const { data: secRow, error: secErr } = await admin.from("mock_sections").insert({
@@ -466,9 +475,8 @@ Deno.serve(async (req) => {
         }).select("id").single();
         if (secErr || !secRow) throw new Error(secErr?.message || "Failed to create section");
 
-        // Allocate MCQ vs TITA — use custom plan if provided, else proportional split.
         const customSec = customSectionPlan && category === "full_length"
-          ? customSectionPlan.find((c) => c.code === sec.code && c.questions === sec.questions) ?? customSectionPlan[sec.sort]
+          ? customSectionPlan.find((c) => c.code === sec.code) ?? customSectionPlan[sec.sort]
           : null;
         let secMcq: number;
         let secTita: number;
@@ -482,98 +490,174 @@ Deno.serve(async (req) => {
         }
         if (secTita < 0) { secTita = 0; secMcq = sec.questions; }
 
-        // Generate in batches
-        let produced = 0;
-        let attempts = 0;
-        const maxAttempts = Math.ceil(sec.questions / BATCH_SIZE) + 3;
-        const accepted: any[] = [];
-        while (produced < sec.questions && attempts < maxAttempts) {
-          attempts++;
-          const remain = sec.questions - produced;
-          const batch = Math.min(BATCH_SIZE, remain);
-          const remainMcq = Math.max(0, secMcq - accepted.filter(q => q.question_type === "mcq").length);
-          const remainTita = Math.max(0, secTita - accepted.filter(q => q.question_type === "tita").length);
-          const batchMcq = Math.min(remainMcq, Math.ceil(batch * (remainMcq / Math.max(1, remainMcq + remainTita))));
-          const batchTita = batch - batchMcq;
-
-          let qs: any[] = [];
-          try {
-            qs = await callGeminiBatch({
-              exam: exam_code, exam_full: profile.full_name,
-              category, level,
-              section_code: sec.code, section_name: sec.name,
-              count: batch, mcq: batchMcq, tita: batchTita,
-              positive: profile.default_positive, negative: profile.default_negative,
-              userId: user.id,
-              // Topic-wise tests must lock every question to the chosen topic.
-              strict_topic: category === "topic" && topic ? topic : null,
-              // Per-section sets (passages/caselets) — only honoured for full_length.
-              sets: category === "full_length" ? (sec.sets ?? 0) : 0,
-              total_section_questions: sec.questions,
-            });
-          } catch (e) {
-            console.error("[generate] batch failed:", e);
-            continue;
-          }
-
-          for (const q of qs) {
-            if (produced >= sec.questions) break;
-            if (!q?.question_html) continue;
-            const hash = await sha256(normalizeForHash(q.question_html));
-            if (seenHashes.has(hash)) { stats.rejected_dup_db++; continue; }
-
-            if (verify_internet) {
-              const onWeb = await firecrawlIsOnInternet(q.question_html);
-              if (onWeb) { stats.rejected_dup_internet++; continue; }
-            }
-
-            seenHashes.add(hash);
-            accepted.push({ ...q, content_hash: hash });
-            produced++;
-          }
+        // Create a progress job for the UI to poll
+        let jobId: string | null = null;
+        if (genId) {
+          const { data: jobRow } = await admin.from("mock_section_jobs").insert({
+            generation_id: genId,
+            test_id: testRow.id,
+            section_id: secRow.id,
+            exam_code,
+            category,
+            level,
+            section_code: sec.code,
+            section_name: sec.name,
+            total_questions: sec.questions,
+            mcq_count: secMcq,
+            tita_count: secTita,
+            topic: topic || null,
+            strict_topic: category === "topic" ? topic : null,
+            positive_marks: profile.default_positive,
+            negative_marks: profile.default_negative,
+            verify_internet: !!verify_internet,
+            status: "pending",
+            attempts: 0,
+            questions_done: 0,
+            current_step: "queued",
+            created_by: user.id,
+          }).select("id").single();
+          jobId = jobRow?.id ?? null;
         }
 
-        // Persist accepted questions + options
-        for (let i = 0; i < accepted.length; i++) {
-          const q = accepted[i];
-          const isTita = q.question_type === "tita";
-          const { data: qRow, error: qErr } = await admin.from("mock_questions").insert({
-            section_id: secRow.id,
-            question_number: questionNumberOffset + i + 1,
-            question_type: isTita ? "tita" : "mcq",
-            question_html: q.question_html,
-            tita_correct_answers: isTita ? (q.tita_answers || []).map(String) : [],
-            tita_numeric_tolerance: isTita ? Number(q.tita_tolerance ?? 0) : null,
-            positive_marks: profile.default_positive,
-            negative_marks: isTita ? 0 : profile.default_negative,
-            difficulty: (q.difficulty || (level === "mixed" ? "medium" : (level === "moderate" ? "medium" : level))),
-            topic: q.topic || topic || null,
-            subtopic: q.subtopic || null,
-            explanation_html: q.explanation_html || "",
-            content_hash: q.content_hash,
-          }).select("id").single();
-          if (qErr || !qRow) { console.error("insert q failed", qErr); continue; }
+        sectionRecords.push({ sec, secRowId: secRow.id, jobId, secMcq, secTita, questionNumberOffset });
+        questionNumberOffset += sec.questions;
+      }
 
-          if (!isTita && Array.isArray(q.options)) {
-            const opts = q.options.slice(0, 4).map((o: any, idx: number) => ({
-              question_id: qRow.id,
-              option_label: o.label || ["A", "B", "C", "D"][idx],
-              option_html: o.text || "",
-              is_correct: !!o.is_correct,
-              sort_order: idx,
-            }));
-            if (opts.length === 4 && opts.some((o) => o.is_correct)) {
-              await admin.from("mock_question_options").insert(opts);
-            } else {
-              // bad options -> remove the question
-              await admin.from("mock_questions").delete().eq("id", qRow.id);
+      // ---------- Process sections in PARALLEL ----------
+      await Promise.all(sectionRecords.map(async (rec) => {
+        const { sec, secRowId, jobId, secMcq, secTita, questionNumberOffset } = rec;
+
+        const updateJob = async (patch: Record<string, unknown>) => {
+          if (!jobId) return;
+          await admin.from("mock_section_jobs").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", jobId);
+        };
+
+        await updateJob({ status: "processing", current_step: "Calling AI…", attempts: 1 });
+
+        // For CAT, derive sensible questions_per_set defaults if not provided in the plan.
+        const setsForSec = category === "full_length" ? Math.max(0, Number(sec.sets || 0)) : 0;
+        let questionsPerSet = 0;
+        if (setsForSec > 0) {
+          if (exam_code === "CAT" && sec.code === "VARC") questionsPerSet = 4;
+          else if (exam_code === "CAT" && sec.code === "DILR") questionsPerSet = 5;
+          else questionsPerSet = Math.max(1, Math.floor(sec.questions / setsForSec));
+        }
+
+        let produced = 0;
+        let attemptsLocal = 0;
+        const maxAttempts = Math.ceil(sec.questions / BATCH_SIZE) + 4;
+        const accepted: any[] = [];
+
+        try {
+          while (produced < sec.questions && attemptsLocal < maxAttempts) {
+            attemptsLocal++;
+            const remain = sec.questions - produced;
+            // For sets, ask for the entire section in one call so the model can build coherent passages.
+            const batch = setsForSec > 0 && attemptsLocal === 1 ? sec.questions : Math.min(BATCH_SIZE, remain);
+            const remainMcq = Math.max(0, secMcq - accepted.filter(q => q.question_type === "mcq").length);
+            const remainTita = Math.max(0, secTita - accepted.filter(q => q.question_type === "tita").length);
+            const batchMcq = Math.min(remainMcq, Math.ceil(batch * (remainMcq / Math.max(1, remainMcq + remainTita))));
+            const batchTita = batch - batchMcq;
+
+            await updateJob({ current_step: `Batch ${attemptsLocal}: requesting ${batch} questions…` });
+
+            let qs: any[] = [];
+            try {
+              qs = await callGeminiBatch({
+                exam: exam_code, exam_full: profile.full_name,
+                category, level,
+                section_code: sec.code, section_name: sec.name,
+                count: batch, mcq: batchMcq, tita: batchTita,
+                positive: profile.default_positive, negative: profile.default_negative,
+                userId: user.id,
+                strict_topic: category === "topic" && topic ? topic : null,
+                sets: setsForSec,
+                questions_per_set: questionsPerSet,
+                total_section_questions: sec.questions,
+              });
+            } catch (e) {
+              console.error(`[generate] ${sec.code} batch ${attemptsLocal} failed:`, e);
+              await updateJob({ current_step: `Batch ${attemptsLocal} failed, retrying…`, error_message: String((e as Error)?.message || e).slice(0, 500) });
               continue;
             }
+
+            for (const q of qs) {
+              if (produced >= sec.questions) break;
+              if (!q?.question_html) continue;
+              const hash = await sha256(normalizeForHash(q.question_html));
+              if (seenHashes.has(hash)) { stats.rejected_dup_db++; continue; }
+
+              if (verify_internet) {
+                const onWeb = await firecrawlIsOnInternet(q.question_html);
+                if (onWeb) { stats.rejected_dup_internet++; continue; }
+              }
+
+              seenHashes.add(hash);
+              accepted.push({ ...q, content_hash: hash });
+              produced++;
+            }
+
+            // Update progress after each batch — this is what animates the UI.
+            await updateJob({
+              questions_done: produced,
+              current_step: `Generated ${produced}/${sec.questions}`,
+            });
           }
-          stats.generated++;
+
+          // Persist accepted questions + options
+          for (let i = 0; i < accepted.length; i++) {
+            const q = accepted[i];
+            const isTita = q.question_type === "tita";
+            const { data: qRow, error: qErr } = await admin.from("mock_questions").insert({
+              section_id: secRowId,
+              question_number: questionNumberOffset + i + 1,
+              question_type: isTita ? "tita" : "mcq",
+              question_html: q.question_html,
+              tita_correct_answers: isTita ? (q.tita_answers || []).map(String) : [],
+              tita_numeric_tolerance: isTita ? Number(q.tita_tolerance ?? 0) : null,
+              positive_marks: profile.default_positive,
+              negative_marks: isTita ? 0 : profile.default_negative,
+              difficulty: (q.difficulty || (level === "mixed" ? "medium" : (level === "moderate" ? "medium" : level))),
+              topic: q.topic || topic || null,
+              subtopic: q.subtopic || null,
+              explanation_html: q.explanation_html || "",
+              content_hash: q.content_hash,
+            }).select("id").single();
+            if (qErr || !qRow) { console.error("insert q failed", qErr); continue; }
+
+            if (!isTita && Array.isArray(q.options)) {
+              const opts = q.options.slice(0, 4).map((o: any, idx: number) => ({
+                question_id: qRow.id,
+                option_label: o.label || ["A", "B", "C", "D"][idx],
+                option_html: o.text || "",
+                is_correct: !!o.is_correct,
+                sort_order: idx,
+              }));
+              if (opts.length === 4 && opts.some((o) => o.is_correct)) {
+                await admin.from("mock_question_options").insert(opts);
+              } else {
+                await admin.from("mock_questions").delete().eq("id", qRow.id);
+                continue;
+              }
+            }
+            stats.generated++;
+          }
+
+          await updateJob({
+            status: produced > 0 ? "completed" : "failed",
+            questions_done: produced,
+            current_step: produced > 0 ? `Done — ${produced} questions saved` : "No questions generated",
+          });
+        } catch (sectionErr) {
+          const msg = (sectionErr as Error)?.message || String(sectionErr);
+          console.error(`[generate] section ${sec.code} fatal:`, msg);
+          await updateJob({
+            status: "failed",
+            error_message: msg.slice(0, 500),
+            current_step: "Failed",
+          });
         }
-        questionNumberOffset += accepted.length;
-      }
+      }));
 
       createdTests.push(testRow);
     }
