@@ -760,7 +760,7 @@ function PaletteContent({
       <div className="p-3 border-b text-xs font-semibold uppercase text-slate-600">
         {currentSection?.code} — Question Palette
       </div>
-      <div className="p-3 grid grid-cols-5 gap-2 overflow-auto flex-1">
+      <div className="px-2 py-2 grid grid-cols-6 gap-1 overflow-auto flex-1 content-start">
         {sectionQuestions.map((q, i) => {
           const r = responses[q.id];
           const status = r?.status ?? "not_visited";
@@ -769,7 +769,7 @@ function PaletteContent({
               key={q.id}
               onClick={() => goToQuestion(q.id)}
               className={cn(
-                "h-10 w-10 rounded text-xs font-semibold border relative",
+                "h-7 w-7 rounded-sm text-[11px] font-semibold border relative leading-none",
                 status === "answered" && "bg-green-600 text-white border-green-700",
                 status === "not_answered" && "bg-red-500 text-white border-red-600",
                 status === "marked" && "bg-purple-600 text-white border-purple-700",
@@ -780,7 +780,7 @@ function PaletteContent({
             >
               {i + 1}
               {status === "answered_marked" && (
-                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 bg-green-500 rounded-full border border-white" />
+                <span className="absolute -top-0.5 -right-0.5 h-2 w-2 bg-green-500 rounded-full border border-white" />
               )}
             </button>
           );
