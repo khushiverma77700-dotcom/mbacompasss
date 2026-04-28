@@ -221,9 +221,15 @@ export default function StudentDailyTest() {
                     </>
                   ) : (
                     h.test?.slug && (
-                      <Link to={`/mocks/${h.test.slug}`}>
-                        <Button size="sm" variant="outline">Attempt</Button>
-                      </Link>
+                      dailyEnabled ? (
+                        <Link to={`/mocks/${h.test.slug}`}>
+                          <Button size="sm" variant="outline">Attempt</Button>
+                        </Link>
+                      ) : (
+                        <Button size="sm" variant="outline" onClick={() => setUpgradeOpen(true)} className="gap-1">
+                          <Lock className="h-3 w-3" /> Locked
+                        </Button>
+                      )
                     )
                   )}
                 </div>
