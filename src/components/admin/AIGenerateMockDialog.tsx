@@ -499,6 +499,11 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                                 onChange={(e) => updateSectionRow(idx, { tita: parseInt(e.target.value) || 0 })} />
                             </td>
                             <td className="px-2 py-1.5">
+                              <Input type="number" min={0} className="h-8 text-xs"
+                                value={row.sets}
+                                onChange={(e) => updateSectionRow(idx, { sets: parseInt(e.target.value) || 0 })} />
+                            </td>
+                            <td className="px-2 py-1.5">
                               <Input type="number" min={1} className="h-8 text-xs"
                                 value={row.duration}
                                 onChange={(e) => updateSectionRow(idx, { duration: parseInt(e.target.value) || 1 })} />
