@@ -171,7 +171,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
   const [namePrefix, setNamePrefix] = useState("");
   const [topic, setTopic] = useState("");
   const [sectionCode, setSectionCode] = useState("QA");
-  const [verifyInternet, setVerifyInternet] = useState(true);
+  const [verifyInternet, setVerifyInternet] = useState(false);
 
   // NEW: per-section plan for Full-Length mocks
   const [sectionPlan, setSectionPlan] = useState<SectionRow[]>([]);
