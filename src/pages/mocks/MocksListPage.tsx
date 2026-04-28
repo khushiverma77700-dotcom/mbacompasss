@@ -332,6 +332,9 @@ export default function MocksListPage() {
         <CoursesCTABand block={settings.courses_cta_block} variant="inline" />
       </section>
 
+      {/* DAY PLANNER — FREE ACCESS */}
+      <DayPlannerShowcase block={settings.day_planner_block} />
+
       {/* WHY MBA COMPASS MOCKS */}
       {settings.why_us_points && settings.why_us_points.length > 0 && (
         <section className="py-16 bg-gradient-to-b from-sky-50/40 to-white">
