@@ -3029,9 +3029,11 @@ export type Database = {
           created_by: string | null
           description: string | null
           exam_code: string | null
+          highlight_on_mocks: boolean
           id: string
           is_published: boolean
           name: string
+          original_price_inr: number | null
           price_inr: number
           slug: string
           sort_order: number
@@ -3044,9 +3046,11 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           exam_code?: string | null
+          highlight_on_mocks?: boolean
           id?: string
           is_published?: boolean
           name: string
+          original_price_inr?: number | null
           price_inr?: number
           slug: string
           sort_order?: number
@@ -3059,9 +3063,11 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           exam_code?: string | null
+          highlight_on_mocks?: boolean
           id?: string
           is_published?: boolean
           name?: string
+          original_price_inr?: number | null
           price_inr?: number
           slug?: string
           sort_order?: number
@@ -3761,8 +3767,10 @@ export type Database = {
           bundle_subtitle: string | null
           bundle_title: string | null
           comparison: Json
+          courses_cta_block: Json
           created_at: string
           cta_target_test_id: string | null
+          day_planner_block: Json
           expert_feedback: Json | null
           faqs: Json
           hero_cta_label: string | null
@@ -3802,8 +3810,10 @@ export type Database = {
           bundle_subtitle?: string | null
           bundle_title?: string | null
           comparison?: Json
+          courses_cta_block?: Json
           created_at?: string
           cta_target_test_id?: string | null
+          day_planner_block?: Json
           expert_feedback?: Json | null
           faqs?: Json
           hero_cta_label?: string | null
@@ -3843,8 +3853,10 @@ export type Database = {
           bundle_subtitle?: string | null
           bundle_title?: string | null
           comparison?: Json
+          courses_cta_block?: Json
           created_at?: string
           cta_target_test_id?: string | null
+          day_planner_block?: Json
           expert_feedback?: Json | null
           faqs?: Json
           hero_cta_label?: string | null
