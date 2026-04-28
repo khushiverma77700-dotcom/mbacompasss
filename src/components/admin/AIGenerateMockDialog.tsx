@@ -180,15 +180,25 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
     const p = EXAM_PROFILES[examCode];
     if (!p) return [];
     const setsMap = DEFAULT_SETS[examCode] || {};
+    // Exam-specific MCQ/TITA splits (CAT pattern)
+    const splits: Record<string, Record<string, { mcq: number; tita: number }>> = {
+      CAT: {
+        VARC: { mcq: 19, tita: 5 },   // 24 total
+        DILR: { mcq: 14, tita: 6 },   // 20 total
+        QA:   { mcq: 15, tita: 7 },   // 22 total
+      },
+    };
     return p.sections.map((s) => {
-      const m = Math.round(s.questions * 0.85);
+      const override = splits[examCode]?.[s.code];
+      const m = override ? override.mcq : Math.round(s.questions * 0.85);
+      const t = override ? override.tita : Math.max(0, s.questions - m);
       return {
         code: s.code,
         name: s.name,
         duration: s.duration,
         questions: s.questions,
         mcq: m,
-        tita: Math.max(0, s.questions - m),
+        tita: t,
         sets: setsMap[s.code] ?? 0,
       };
     });
