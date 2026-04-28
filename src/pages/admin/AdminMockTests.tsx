@@ -90,7 +90,7 @@ const AdminMockTests = () => {
 
   const handleSave = async () => {
     if (!form.name.trim()) { toast({ title: "Name is required", variant: "destructive" }); return; }
-    const slug = form.slug.trim() || slugify(form.name);
+    const slug = slugify(form.name); // always derived from name
     if (form.pricing_type === "paid" && Number(form.price_inr) <= 0) {
       toast({ title: "Paid mocks need a price > 0", variant: "destructive" }); return;
     }
@@ -98,11 +98,19 @@ const AdminMockTests = () => {
     const payload = { ...form, slug, price_inr: Number(form.price_inr) || 0 };
     if (editId) {
       const { error } = await supabase.from("mock_tests").update(payload).eq("id", editId);
-      if (error) { toast({ title: "Save failed", description: error.message, variant: "destructive" }); setSaving(false); return; }
+      if (error) {
+        const dup = error.code === "23505" || /duplicate key|unique/i.test(error.message);
+        toast({ title: dup ? "Duplicate name" : "Save failed", description: dup ? "A mock with this name already exists. Please pick a unique name." : error.message, variant: "destructive" });
+        setSaving(false); return;
+      }
       toast({ title: "Mock test updated" });
     } else {
       const { data, error } = await supabase.from("mock_tests").insert(payload).select("id").single();
-      if (error || !data) { toast({ title: "Save failed", description: error?.message, variant: "destructive" }); setSaving(false); return; }
+      if (error || !data) {
+        const dup = error?.code === "23505" || /duplicate key|unique/i.test(error?.message || "");
+        toast({ title: dup ? "Duplicate name" : "Save failed", description: dup ? "A mock with this name already exists. Please pick a unique name." : error?.message, variant: "destructive" });
+        setSaving(false); return;
+      }
       // Seed default sections for full-length CAT mock
       if (form.test_type === "full_length") {
         const sections = SECTION_DEFAULTS.map(s => ({ ...s, test_id: data.id }));
@@ -137,12 +145,12 @@ const AdminMockTests = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label className="text-xs">Test Name *</Label>
-                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value, slug: form.slug || slugify(e.target.value) })} placeholder="CAT Mock 01 — Full Length" />
+                <Label className="text-xs">Test Name * <span className="text-muted-foreground">(must be unique)</span></Label>
+                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value, slug: slugify(e.target.value) })} placeholder="CAT Mock 01 — Full Length" />
               </div>
               <div>
-                <Label className="text-xs">Slug</Label>
-                <Input value={form.slug} onChange={(e) => setForm({ ...form, slug: slugify(e.target.value) })} placeholder="cat-mock-01" />
+                <Label className="text-xs">Slug <span className="text-muted-foreground">(auto)</span></Label>
+                <Input value={form.slug || slugify(form.name)} readOnly className="bg-muted/40 cursor-not-allowed" />
               </div>
             </div>
             <div>

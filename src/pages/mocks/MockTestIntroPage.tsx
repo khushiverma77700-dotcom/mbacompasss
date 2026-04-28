@@ -92,11 +92,8 @@ export default function MockTestIntroPage() {
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       
       <Card className="p-6 md:p-8">
-        <div className="flex items-start justify-between flex-wrap gap-3 mb-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold">{test.name}</h1>
-            <p className="text-muted-foreground mt-1">Read the instructions carefully before starting.</p>
-          </div>
+        <div className="flex items-start justify-between flex-wrap gap-3 mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold">{test.name}</h1>
           <Badge variant={test.pricing_type === "free" ? "secondary" : "default"}>
             {test.pricing_type === "free" ? "Free" : `₹${test.price_inr}`}
           </Badge>
@@ -117,7 +114,7 @@ export default function MockTestIntroPage() {
           </div>
         </div>
 
-        <h2 className="font-semibold mb-2">Sections</h2>
+        <p className="font-semibold mb-2 text-sm">Sections</p>
         <div className="border rounded-md divide-y mb-6">
           {sections.map((s, i) => (
             <div key={s.id} className="p-3 flex justify-between text-sm">
