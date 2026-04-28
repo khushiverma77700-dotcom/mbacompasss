@@ -25,7 +25,7 @@ const EXAM_PROFILES: Record<string, {
     default_total: 66,
     sections: [
       { code: "VARC", name: "Verbal Ability & Reading Comprehension", duration: 40, questions: 24 },
-      { code: "DILR", name: "Data Interpretation & Logical Reasoning", duration: 40, questions: 22 },
+      { code: "DILR", name: "Data Interpretation & Logical Reasoning", duration: 40, questions: 20 },
       { code: "QA", name: "Quantitative Aptitude", duration: 40, questions: 22 },
     ],
   },
@@ -113,7 +113,7 @@ type SectionRow = {
 // Default number of sets (passages/caselets) per section per exam.
 // 0 means questions are standalone (no shared passage/caselet).
 const DEFAULT_SETS: Record<string, Record<string, number>> = {
-  CAT:  { VARC: 4, DILR: 4, QA: 0 },
+  CAT:  { VARC: 3, DILR: 3, QA: 0 },
   XAT:  { VARC: 3, DILR: 3, QA: 0, GK: 0 },
   SNAP: { VARC: 2, DILR: 3, QA: 0 },
   NMAT: { VARC: 3, DILR: 4, QA: 0 },
@@ -171,7 +171,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
   const [namePrefix, setNamePrefix] = useState("");
   const [topic, setTopic] = useState("");
   const [sectionCode, setSectionCode] = useState("QA");
-  const [verifyInternet, setVerifyInternet] = useState(true);
+  const [verifyInternet, setVerifyInternet] = useState(false);
 
   // NEW: per-section plan for Full-Length mocks
   const [sectionPlan, setSectionPlan] = useState<SectionRow[]>([]);
@@ -180,15 +180,25 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
     const p = EXAM_PROFILES[examCode];
     if (!p) return [];
     const setsMap = DEFAULT_SETS[examCode] || {};
+    // Exam-specific MCQ/TITA splits (CAT pattern)
+    const splits: Record<string, Record<string, { mcq: number; tita: number }>> = {
+      CAT: {
+        VARC: { mcq: 19, tita: 5 },   // 24 total
+        DILR: { mcq: 14, tita: 6 },   // 20 total
+        QA:   { mcq: 15, tita: 7 },   // 22 total
+      },
+    };
     return p.sections.map((s) => {
-      const m = Math.round(s.questions * 0.85);
+      const override = splits[examCode]?.[s.code];
+      const m = override ? override.mcq : Math.round(s.questions * 0.85);
+      const t = override ? override.tita : Math.max(0, s.questions - m);
       return {
         code: s.code,
         name: s.name,
         duration: s.duration,
         questions: s.questions,
         mcq: m,
-        tita: Math.max(0, s.questions - m),
+        tita: t,
         sets: setsMap[s.code] ?? 0,
       };
     });

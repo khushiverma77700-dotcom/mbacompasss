@@ -29,7 +29,7 @@ const EXAM_PROFILES: Record<string, {
     default_total: 66,
     sections: [
       { code: "VARC", name: "Verbal Ability & Reading Comprehension", duration: 40, questions: 24 },
-      { code: "DILR", name: "Data Interpretation & Logical Reasoning", duration: 40, questions: 22 },
+      { code: "DILR", name: "Data Interpretation & Logical Reasoning", duration: 40, questions: 20 },
       { code: "QA", name: "Quantitative Aptitude", duration: 40, questions: 22 },
     ],
     default_positive: 3, default_negative: 1,
@@ -73,7 +73,7 @@ const EXAM_PROFILES: Record<string, {
       { code: "DILR", name: "Logical Reasoning", duration: 45, questions: 20 },
       { code: "VARC", name: "Language Comprehension", duration: 45, questions: 20 },
       { code: "GK", name: "General Awareness", duration: 30, questions: 20 },
-      { code: "QA", name: "Innovation & Entrepreneurship", duration: 15, questions: 20 },
+      { code: "QA-IE", name: "Innovation & Entrepreneurship", duration: 15, questions: 20 },
     ],
     default_positive: 4, default_negative: 1,
   },
@@ -104,40 +104,59 @@ function buildSystemPrompt(opts: {
   section_code: string; section_name: string;
   strict_topic?: string | null;
   sets?: number | null;
+  questions_per_set?: number | null;
   total_section_questions?: number | null;
+  mcq_count?: number | null;
+  tita_count?: number | null;
 }) {
   const levelGuidance = opts.level === "mixed"
     ? "Mix Easy (~30%), Moderate (~40%), Hard (~30%)."
     : `Strictly target ${opts.level.toUpperCase()} difficulty.`;
 
   const topicLock = opts.strict_topic
-    ? `
-
-STRICT TOPIC LOCK (Topic-wise Test):
-- EVERY single question MUST be exclusively from the topic: "${opts.strict_topic}".
-- Do NOT generate questions from any other topic, sub-area, or concept outside "${opts.strict_topic}".
-- The "topic" field on every question MUST be "${opts.strict_topic}".
-- Vary the sub-concepts and difficulty within "${opts.strict_topic}" only.`
+    ? `\n\nSTRICT TOPIC LOCK (Topic-wise Test):\n- EVERY question MUST be exclusively from the topic: "${opts.strict_topic}".\n- The "topic" field on every question MUST be "${opts.strict_topic}".`
     : "";
 
-  // Sets guidance — passages (VARC) / caselets (DILR). Group questions under shared contexts.
-  const setsBlock = (opts.sets && opts.sets > 0)
-    ? `
+  // Hybrid sets + standalone block.
+  // sets > 0 means: first (sets * questions_per_set) questions belong to passages/caselets,
+  // the remaining questions in this batch are standalone.
+  const setsCount = opts.sets ?? 0;
+  const qPerSet = opts.questions_per_set ?? 4;
+  const setQuestions = setsCount > 0 ? setsCount * qPerSet : 0;
+  const standaloneQuestions = Math.max(0, (opts.total_section_questions ?? 0) - setQuestions);
 
-SETS / SHARED-CONTEXT GROUPING (mandatory for this section):
-- This section MUST be organised into exactly ${opts.sets} "sets" (${opts.section_code === "VARC" ? "Reading Comprehension passages" : opts.section_code === "DILR" ? "DI/LR caselets" : "shared-context sets"}).
-- Distribute the ${opts.total_section_questions ?? opts.sets * 4} questions across these ${opts.sets} sets as evenly as possible (e.g. 4 questions per set is standard for CAT).
-- Each question that belongs to a set MUST begin its "question_html" with the FULL shared context (passage / caselet text / data table) wrapped in <div class="passage">…</div>, followed by the actual question.
-- Repeat the SAME context verbatim for every question in the same set (so each row is self-contained when reviewed individually).
-- Each set's context must be a fresh original ${opts.section_code === "VARC" ? "passage of 350–550 words on a unique theme (history / science / philosophy / business / arts)" : "caselet with original numbers, names and a unique scenario"}.
-- Tag each question with a "set_index" field (1..${opts.sets}) so we can group them on display.
-- Standalone (non-set) questions are NOT allowed in this batch — every question must belong to one of the ${opts.sets} sets.`
-    : (opts.section_code === "VARC" || opts.section_code === "DILR")
-      ? `
+  let setsBlock = "";
+  if (setsCount > 0) {
+    const isVARC = opts.section_code === "VARC";
+    const isDILR = opts.section_code === "DILR";
+    const ctxLabel = isVARC ? "Reading Comprehension passage" : isDILR ? "DI/LR caselet with data" : "shared-context set";
+    const ctxDesc = isVARC
+      ? "an original Reading Comprehension PASSAGE of 350–550 words (history / science / philosophy / business / arts / social issues)"
+      : isDILR
+        ? "an original DI/LR caselet with FULLY DETAILED DATA. Include a properly formatted HTML <table> (rows × columns with numeric data) AND/OR an inline ASCII bar/line chart inside <pre> tags. Caselets must contain rich data such as sales figures, rankings, percentage shares, time series, tournament results, seating arrangements, family trees, blood relations, etc. Numbers, names and the scenario must be fresh and original."
+        : "a shared-context block";
 
-NO SETS REQUESTED:
-- Generate standalone questions only (no shared passages / caselets) for this batch.`
-      : "";
+    setsBlock = `\n\nMANDATORY SECTION STRUCTURE (CAT-style hybrid):
+This batch must contain EXACTLY ${opts.total_section_questions} questions total, structured as:
+  • ${setsCount} SETS × ${qPerSet} questions each = ${setQuestions} set-bound questions (FIRST in the output array)
+  • ${standaloneQuestions} STANDALONE questions (AFTER the set questions)
+
+For SET-BOUND questions:
+- Each of the ${setsCount} sets is ${ctxDesc}.
+- Each set has exactly ${qPerSet} questions tied to that ${ctxLabel}.
+- The FIRST question of each set MUST contain the FULL shared context wrapped in <div class="passage">…</div> followed by the question stem.
+- The remaining ${qPerSet - 1} questions of the same set MUST also include the SAME passage/caselet HTML at the top (so each row is self-contained).
+- Tag each set-bound question with "set_index": 1..${setsCount} and "is_set_question": true.
+${isDILR ? "- DILR caselets MUST contain rich tabular data; never write a vague caselet — include actual numbers, names, columns, totals." : ""}
+${isVARC ? "- The first 3 RC passages each have 4 questions tightly tied to that passage (inference, main idea, vocab in context, author tone, etc.)." : ""}
+
+For STANDALONE questions:
+- ${standaloneQuestions} fresh independent questions, no shared context.
+- Mix MCQ and TITA per the requested counts.
+- Tag each standalone with "is_set_question": false (no set_index).`;
+  } else if (opts.section_code === "DILR") {
+    setsBlock = `\n\nDILR REQUIREMENT: Every question must be a standalone DI/LR puzzle with concrete data — include an HTML <table> or ASCII chart in <pre> tags. Never write a vague caselet.`;
+  }
 
   return `You are an elite ${opts.exam_full} (${opts.exam}) question setter with 15+ years of experience writing original mock questions for top MBA coaching institutes in India.
 
@@ -150,13 +169,12 @@ GENERATE 100% ORIGINAL questions for:
 CRITICAL RULES:
 1. EVERY question must be ORIGINAL — never copy from past papers, NCERT, RS Aggarwal, Arun Sharma, Nishit Sinha, Time, IMS, CL, study material, blogs, or anything published.
 2. Use FRESH numbers, fresh names, fresh contexts. Never reuse classic problems verbatim.
-3. Every question must include a DETAILED step-by-step explanation (200-400 words) showing the full solving approach, key concept, common traps, shortcut tricks if any, and final answer derivation. Use clear math notation in plain text or LaTeX-style.
-4. Each question must test a different sub-concept — no repetition of the same trick.
-5. For MCQ: exactly 4 options labelled A, B, C, D, with exactly ONE correct.
-6. For TITA (Type In The Answer / numerical): provide the numeric answer (and tolerance if applicable).
-7. Tag each question with topic and subtopic accurately.
-8. Match the official ${opts.exam} pattern, length, and style precisely.
-9. Output ONLY valid JSON matching the schema. No prose before/after.`;
+3. Every question must include a DETAILED step-by-step explanation (200-400 words) with concept, approach, common traps, shortcut tricks, and final answer derivation.
+4. For MCQ: exactly 4 options labelled A, B, C, D, with exactly ONE correct.
+5. For TITA: provide numeric answer(s) and tolerance if applicable. NO options.
+6. Tag each question with topic and subtopic accurately.
+7. Match the official ${opts.exam} pattern, length, and style precisely.
+8. Output ONLY valid JSON. No prose. No markdown fences. Use raw integers (no thousands separators like "1,234").`;
 }
 
 function buildUserPrompt(opts: {
@@ -198,6 +216,7 @@ async function callGeminiBatch(args: {
   userId: string | null;
   strict_topic?: string | null;
   sets?: number | null;
+  questions_per_set?: number | null;
   total_section_questions?: number | null;
 }) {
   const sys = buildSystemPrompt({
@@ -205,7 +224,10 @@ async function callGeminiBatch(args: {
     section_code: args.section_code, section_name: args.section_name,
     strict_topic: args.strict_topic ?? null,
     sets: args.sets ?? null,
+    questions_per_set: args.questions_per_set ?? null,
     total_section_questions: args.total_section_questions ?? null,
+    mcq_count: args.mcq,
+    tita_count: args.tita,
   });
   const user = buildUserPrompt({
     count: args.count, mcq_count: args.mcq, tita_count: args.tita,
@@ -213,15 +235,15 @@ async function callGeminiBatch(args: {
   });
 
   const resp = await callAIGateway({
-    model: "gpt-5",
+    model: "google/gemini-2.5-flash",
     messages: [
       { role: "system", content: sys },
       { role: "user", content: user },
     ],
     response_format: { type: "json_object" },
-    temperature: 0.95,
-    max_tokens: 8000,
-  }, { feature: "generate-mock-questions", userId: args.userId, maxRetries: 1, provider: "openai-mini" });
+    temperature: 0.9,
+    max_tokens: 16000,
+  }, { feature: "generate-mock-questions", userId: args.userId, maxRetries: 1, provider: "gemini" });
 
   if (!resp.ok) {
     const txt = await resp.text();
@@ -230,9 +252,21 @@ async function callGeminiBatch(args: {
   const data = await resp.json();
   const content = data?.choices?.[0]?.message?.content;
   if (!content) throw new Error("AI returned empty content");
+  // Tolerant JSON parse: strip markdown fences and locate the outer JSON object.
   let parsed: any;
-  try { parsed = typeof content === "string" ? JSON.parse(content) : content; }
-  catch { throw new Error("AI returned non-JSON content"); }
+  try {
+    parsed = typeof content === "string" ? JSON.parse(content) : content;
+  } catch {
+    const cleaned = String(content).replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "");
+    const start = cleaned.indexOf("{");
+    const end = cleaned.lastIndexOf("}");
+    if (start >= 0 && end > start) {
+      try { parsed = JSON.parse(cleaned.slice(start, end + 1)); }
+      catch { throw new Error("AI returned non-JSON content"); }
+    } else {
+      throw new Error("AI returned non-JSON content");
+    }
+  }
   return Array.isArray(parsed?.questions) ? parsed.questions : [];
 }
 
@@ -386,7 +420,7 @@ Deno.serve(async (req) => {
     const genId = gen?.id;
 
     // Long-running generation runs in the background so the HTTP request
-    // returns immediately. The client polls ai_mock_generations for status.
+    // returns immediately. The client polls ai_mock_generations + mock_section_jobs for status.
     const runGeneration = async () => {
      try {
     for (let setIdx = 1; setIdx <= setsCount; setIdx++) {
@@ -420,6 +454,15 @@ Deno.serve(async (req) => {
       }).select("id, name, slug").single();
       if (testErr || !testRow) throw new Error(testErr?.message || "Failed to create test");
 
+      // ---------- Pre-create section rows + progress jobs ----------
+      const sectionRecords: Array<{
+        sec: typeof sectionPlan[number];
+        secRowId: string;
+        jobId: string | null;
+        secMcq: number;
+        secTita: number;
+        questionNumberOffset: number;
+      }> = [];
       let questionNumberOffset = 0;
       for (const sec of sectionPlan) {
         const { data: secRow, error: secErr } = await admin.from("mock_sections").insert({
@@ -432,9 +475,8 @@ Deno.serve(async (req) => {
         }).select("id").single();
         if (secErr || !secRow) throw new Error(secErr?.message || "Failed to create section");
 
-        // Allocate MCQ vs TITA — use custom plan if provided, else proportional split.
         const customSec = customSectionPlan && category === "full_length"
-          ? customSectionPlan.find((c) => c.code === sec.code && c.questions === sec.questions) ?? customSectionPlan[sec.sort]
+          ? customSectionPlan.find((c) => c.code === sec.code) ?? customSectionPlan[sec.sort]
           : null;
         let secMcq: number;
         let secTita: number;
@@ -448,98 +490,174 @@ Deno.serve(async (req) => {
         }
         if (secTita < 0) { secTita = 0; secMcq = sec.questions; }
 
-        // Generate in batches
-        let produced = 0;
-        let attempts = 0;
-        const maxAttempts = Math.ceil(sec.questions / BATCH_SIZE) + 3;
-        const accepted: any[] = [];
-        while (produced < sec.questions && attempts < maxAttempts) {
-          attempts++;
-          const remain = sec.questions - produced;
-          const batch = Math.min(BATCH_SIZE, remain);
-          const remainMcq = Math.max(0, secMcq - accepted.filter(q => q.question_type === "mcq").length);
-          const remainTita = Math.max(0, secTita - accepted.filter(q => q.question_type === "tita").length);
-          const batchMcq = Math.min(remainMcq, Math.ceil(batch * (remainMcq / Math.max(1, remainMcq + remainTita))));
-          const batchTita = batch - batchMcq;
-
-          let qs: any[] = [];
-          try {
-            qs = await callGeminiBatch({
-              exam: exam_code, exam_full: profile.full_name,
-              category, level,
-              section_code: sec.code, section_name: sec.name,
-              count: batch, mcq: batchMcq, tita: batchTita,
-              positive: profile.default_positive, negative: profile.default_negative,
-              userId: user.id,
-              // Topic-wise tests must lock every question to the chosen topic.
-              strict_topic: category === "topic" && topic ? topic : null,
-              // Per-section sets (passages/caselets) — only honoured for full_length.
-              sets: category === "full_length" ? (sec.sets ?? 0) : 0,
-              total_section_questions: sec.questions,
-            });
-          } catch (e) {
-            console.error("[generate] batch failed:", e);
-            continue;
-          }
-
-          for (const q of qs) {
-            if (produced >= sec.questions) break;
-            if (!q?.question_html) continue;
-            const hash = await sha256(normalizeForHash(q.question_html));
-            if (seenHashes.has(hash)) { stats.rejected_dup_db++; continue; }
-
-            if (verify_internet) {
-              const onWeb = await firecrawlIsOnInternet(q.question_html);
-              if (onWeb) { stats.rejected_dup_internet++; continue; }
-            }
-
-            seenHashes.add(hash);
-            accepted.push({ ...q, content_hash: hash });
-            produced++;
-          }
+        // Create a progress job for the UI to poll
+        let jobId: string | null = null;
+        if (genId) {
+          const { data: jobRow } = await admin.from("mock_section_jobs").insert({
+            generation_id: genId,
+            test_id: testRow.id,
+            section_id: secRow.id,
+            exam_code,
+            category,
+            level,
+            section_code: sec.code,
+            section_name: sec.name,
+            total_questions: sec.questions,
+            mcq_count: secMcq,
+            tita_count: secTita,
+            topic: topic || null,
+            strict_topic: category === "topic" ? topic : null,
+            positive_marks: profile.default_positive,
+            negative_marks: profile.default_negative,
+            verify_internet: !!verify_internet,
+            status: "pending",
+            attempts: 0,
+            questions_done: 0,
+            current_step: "queued",
+            created_by: user.id,
+          }).select("id").single();
+          jobId = jobRow?.id ?? null;
         }
 
-        // Persist accepted questions + options
-        for (let i = 0; i < accepted.length; i++) {
-          const q = accepted[i];
-          const isTita = q.question_type === "tita";
-          const { data: qRow, error: qErr } = await admin.from("mock_questions").insert({
-            section_id: secRow.id,
-            question_number: questionNumberOffset + i + 1,
-            question_type: isTita ? "tita" : "mcq",
-            question_html: q.question_html,
-            tita_correct_answers: isTita ? (q.tita_answers || []).map(String) : [],
-            tita_numeric_tolerance: isTita ? Number(q.tita_tolerance ?? 0) : null,
-            positive_marks: profile.default_positive,
-            negative_marks: isTita ? 0 : profile.default_negative,
-            difficulty: (q.difficulty || (level === "mixed" ? "medium" : (level === "moderate" ? "medium" : level))),
-            topic: q.topic || topic || null,
-            subtopic: q.subtopic || null,
-            explanation_html: q.explanation_html || "",
-            content_hash: q.content_hash,
-          }).select("id").single();
-          if (qErr || !qRow) { console.error("insert q failed", qErr); continue; }
+        sectionRecords.push({ sec, secRowId: secRow.id, jobId, secMcq, secTita, questionNumberOffset });
+        questionNumberOffset += sec.questions;
+      }
 
-          if (!isTita && Array.isArray(q.options)) {
-            const opts = q.options.slice(0, 4).map((o: any, idx: number) => ({
-              question_id: qRow.id,
-              option_label: o.label || ["A", "B", "C", "D"][idx],
-              option_html: o.text || "",
-              is_correct: !!o.is_correct,
-              sort_order: idx,
-            }));
-            if (opts.length === 4 && opts.some((o) => o.is_correct)) {
-              await admin.from("mock_question_options").insert(opts);
-            } else {
-              // bad options -> remove the question
-              await admin.from("mock_questions").delete().eq("id", qRow.id);
+      // ---------- Process sections in PARALLEL ----------
+      await Promise.all(sectionRecords.map(async (rec) => {
+        const { sec, secRowId, jobId, secMcq, secTita, questionNumberOffset } = rec;
+
+        const updateJob = async (patch: Record<string, unknown>) => {
+          if (!jobId) return;
+          await admin.from("mock_section_jobs").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", jobId);
+        };
+
+        await updateJob({ status: "processing", current_step: "Calling AI…", attempts: 1 });
+
+        // For CAT, derive sensible questions_per_set defaults if not provided in the plan.
+        const setsForSec = category === "full_length" ? Math.max(0, Number(sec.sets || 0)) : 0;
+        let questionsPerSet = 0;
+        if (setsForSec > 0) {
+          if (exam_code === "CAT" && sec.code === "VARC") questionsPerSet = 4;
+          else if (exam_code === "CAT" && sec.code === "DILR") questionsPerSet = 5;
+          else questionsPerSet = Math.max(1, Math.floor(sec.questions / setsForSec));
+        }
+
+        let produced = 0;
+        let attemptsLocal = 0;
+        const maxAttempts = Math.ceil(sec.questions / BATCH_SIZE) + 4;
+        const accepted: any[] = [];
+
+        try {
+          while (produced < sec.questions && attemptsLocal < maxAttempts) {
+            attemptsLocal++;
+            const remain = sec.questions - produced;
+            // For sets, ask for the entire section in one call so the model can build coherent passages.
+            const batch = setsForSec > 0 && attemptsLocal === 1 ? sec.questions : Math.min(BATCH_SIZE, remain);
+            const remainMcq = Math.max(0, secMcq - accepted.filter(q => q.question_type === "mcq").length);
+            const remainTita = Math.max(0, secTita - accepted.filter(q => q.question_type === "tita").length);
+            const batchMcq = Math.min(remainMcq, Math.ceil(batch * (remainMcq / Math.max(1, remainMcq + remainTita))));
+            const batchTita = batch - batchMcq;
+
+            await updateJob({ current_step: `Batch ${attemptsLocal}: requesting ${batch} questions…` });
+
+            let qs: any[] = [];
+            try {
+              qs = await callGeminiBatch({
+                exam: exam_code, exam_full: profile.full_name,
+                category, level,
+                section_code: sec.code, section_name: sec.name,
+                count: batch, mcq: batchMcq, tita: batchTita,
+                positive: profile.default_positive, negative: profile.default_negative,
+                userId: user.id,
+                strict_topic: category === "topic" && topic ? topic : null,
+                sets: setsForSec,
+                questions_per_set: questionsPerSet,
+                total_section_questions: sec.questions,
+              });
+            } catch (e) {
+              console.error(`[generate] ${sec.code} batch ${attemptsLocal} failed:`, e);
+              await updateJob({ current_step: `Batch ${attemptsLocal} failed, retrying…`, error_message: String((e as Error)?.message || e).slice(0, 500) });
               continue;
             }
+
+            for (const q of qs) {
+              if (produced >= sec.questions) break;
+              if (!q?.question_html) continue;
+              const hash = await sha256(normalizeForHash(q.question_html));
+              if (seenHashes.has(hash)) { stats.rejected_dup_db++; continue; }
+
+              if (verify_internet) {
+                const onWeb = await firecrawlIsOnInternet(q.question_html);
+                if (onWeb) { stats.rejected_dup_internet++; continue; }
+              }
+
+              seenHashes.add(hash);
+              accepted.push({ ...q, content_hash: hash });
+              produced++;
+            }
+
+            // Update progress after each batch — this is what animates the UI.
+            await updateJob({
+              questions_done: produced,
+              current_step: `Generated ${produced}/${sec.questions}`,
+            });
           }
-          stats.generated++;
+
+          // Persist accepted questions + options
+          for (let i = 0; i < accepted.length; i++) {
+            const q = accepted[i];
+            const isTita = q.question_type === "tita";
+            const { data: qRow, error: qErr } = await admin.from("mock_questions").insert({
+              section_id: secRowId,
+              question_number: questionNumberOffset + i + 1,
+              question_type: isTita ? "tita" : "mcq",
+              question_html: q.question_html,
+              tita_correct_answers: isTita ? (q.tita_answers || []).map(String) : [],
+              tita_numeric_tolerance: isTita ? Number(q.tita_tolerance ?? 0) : null,
+              positive_marks: profile.default_positive,
+              negative_marks: isTita ? 0 : profile.default_negative,
+              difficulty: (q.difficulty || (level === "mixed" ? "medium" : (level === "moderate" ? "medium" : level))),
+              topic: q.topic || topic || null,
+              subtopic: q.subtopic || null,
+              explanation_html: q.explanation_html || "",
+              content_hash: q.content_hash,
+            }).select("id").single();
+            if (qErr || !qRow) { console.error("insert q failed", qErr); continue; }
+
+            if (!isTita && Array.isArray(q.options)) {
+              const opts = q.options.slice(0, 4).map((o: any, idx: number) => ({
+                question_id: qRow.id,
+                option_label: o.label || ["A", "B", "C", "D"][idx],
+                option_html: o.text || "",
+                is_correct: !!o.is_correct,
+                sort_order: idx,
+              }));
+              if (opts.length === 4 && opts.some((o) => o.is_correct)) {
+                await admin.from("mock_question_options").insert(opts);
+              } else {
+                await admin.from("mock_questions").delete().eq("id", qRow.id);
+                continue;
+              }
+            }
+            stats.generated++;
+          }
+
+          await updateJob({
+            status: produced > 0 ? "completed" : "failed",
+            questions_done: produced,
+            current_step: produced > 0 ? `Done — ${produced} questions saved` : "No questions generated",
+          });
+        } catch (sectionErr) {
+          const msg = (sectionErr as Error)?.message || String(sectionErr);
+          console.error(`[generate] section ${sec.code} fatal:`, msg);
+          await updateJob({
+            status: "failed",
+            error_message: msg.slice(0, 500),
+            current_step: "Failed",
+          });
         }
-        questionNumberOffset += accepted.length;
-      }
+      }));
 
       createdTests.push(testRow);
     }
