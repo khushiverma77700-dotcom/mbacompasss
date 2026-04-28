@@ -26,6 +26,7 @@ const FAQSection = lazy(() => import("@/components/FAQSection"));
 const CTASection = lazy(() => import("@/components/CTASection"));
 const PageKeywords = lazy(() => import("@/components/PageKeywords"));
 const AIToolsSection = lazy(() => import("@/components/AIToolsSection"));
+const MocksBannerSection = lazy(() => import("@/components/MocksBannerSection"));
 const AIStudyPlannerSection = lazy(() => import("@/components/AIStudyPlannerSection"));
 
 const homepageFAQs = [
@@ -100,6 +101,7 @@ const Index = () => {
 
       {/* Everything else: mount only when scrolled near. Each section gets its own
           IntersectionObserver so initial JS execution stays tiny. */}
+      <LazyMount minHeight={500}><MocksBannerSection /></LazyMount>
       <LazyMount minHeight={300}><AIToolsSection /></LazyMount>
       <LazyMount minHeight={600}><AIStudyPlannerSection /></LazyMount>
       <LazyMount minHeight={400}><CoachingOfWeekSection /></LazyMount>
