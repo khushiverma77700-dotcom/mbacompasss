@@ -3032,8 +3032,10 @@ export type Database = {
           created_by: string | null
           description: string | null
           exam_code: string | null
+          features: Json
           highlight_on_mocks: boolean
           id: string
+          included_categories: string[]
           is_published: boolean
           name: string
           original_price_inr: number | null
@@ -3049,8 +3051,10 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           exam_code?: string | null
+          features?: Json
           highlight_on_mocks?: boolean
           id?: string
+          included_categories?: string[]
           is_published?: boolean
           name: string
           original_price_inr?: number | null
@@ -3066,8 +3070,10 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           exam_code?: string | null
+          features?: Json
           highlight_on_mocks?: boolean
           id?: string
+          included_categories?: string[]
           is_published?: boolean
           name?: string
           original_price_inr?: number | null
