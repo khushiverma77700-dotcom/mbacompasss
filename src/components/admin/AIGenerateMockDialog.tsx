@@ -105,6 +105,17 @@ type SectionRow = {
   questions: number;
   mcq: number;
   tita: number;
+  sets: number; // passage/caselet sets (RCs in VARC, caselets in DILR, 0 for standalone-only sections like QA)
+};
+
+// Default number of sets (passages/caselets) per section per exam.
+// 0 means questions are standalone (no shared passage/caselet).
+const DEFAULT_SETS: Record<string, Record<string, number>> = {
+  CAT:  { VARC: 4, DILR: 4, QA: 0 },
+  XAT:  { VARC: 3, DILR: 3, QA: 0, GK: 0 },
+  SNAP: { VARC: 2, DILR: 3, QA: 0 },
+  NMAT: { VARC: 3, DILR: 4, QA: 0 },
+  CMAT: { VARC: 2, DILR: 2, QA: 0, GK: 0, "QA-IE": 0 },
 };
 
 export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: Props) {
