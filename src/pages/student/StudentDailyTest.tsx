@@ -27,11 +27,14 @@ export default function StudentDailyTest() {
   const load = async () => {
     if (!user) return;
     setLoading(true);
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const cutoff = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
     const [{ data: t }, { data: hist }, { data: prog }] = await Promise.all([
       supabase.rpc("get_today_daily_test"),
       supabase.from("daily_test_assignments")
         .select("id, assigned_date, title, note, test:mock_tests(name, slug, exam_code, total_duration_minutes)")
-        .lte("assigned_date", new Date().toISOString().slice(0, 10))
+        .lte("assigned_date", todayStr)
+        .gte("assigned_date", cutoff)
         .order("assigned_date", { ascending: false })
         .limit(30),
       supabase.from("student_daily_test_progress")
