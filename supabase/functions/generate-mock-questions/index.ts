@@ -267,16 +267,57 @@ Deno.serve(async (req) => {
       test_name_prefix = null,
       topic = null,               // for topic category
       section_code = null,        // for sectional category (single section)
+      section_plan: rawSectionPlan = null, // NEW: per-section overrides for full_length
       verify_internet = true,
     } = body || {};
 
     const profile = EXAM_PROFILES[exam_code];
     if (!profile) return jsonResp(400, { error: `Unknown exam_code: ${exam_code}` });
 
+    // Sanitise the user-supplied section plan (only honoured for full_length)
+    const customSectionPlan: Array<{
+      code: string; name: string; duration: number; questions: number; mcq: number; tita: number; sort: number;
+    }> | null = (category === "full_length" && Array.isArray(rawSectionPlan) && rawSectionPlan.length > 0)
+      ? rawSectionPlan.map((r: any, idx: number) => {
+          const q = Math.max(0, Number(r?.questions) || 0);
+          let m = Math.max(0, Math.min(q, Number(r?.mcq) || 0));
+          let t = Math.max(0, Math.min(q, Number(r?.tita) || 0));
+          if (m + t !== q) {
+            // Preserve user intent on MCQ; fix TITA to satisfy total.
+            t = Math.max(0, q - m);
+          }
+          return {
+            code: String(r?.code || `S${idx + 1}`).toUpperCase(),
+            name: String(r?.name || r?.code || `Section ${idx + 1}`),
+            duration: Math.max(1, Number(r?.duration) || 40),
+            questions: q,
+            mcq: m,
+            tita: t,
+            sort: Number(r?.sort ?? idx),
+          };
+        }).filter((r) => r.questions > 0)
+      : null;
+
     const setsCount = Math.max(1, Math.min(10, Number(sets) || 1));
-    const perSet = Number(questions_per_set) || Number(total_questions) || profile.default_total;
-    const mcqCount = Number(total_mcq) ?? Math.round(perSet * 0.85);
-    const titaCount = Number(total_tita) ?? Math.max(0, perSet - mcqCount);
+    const planTotalQuestions = customSectionPlan
+      ? customSectionPlan.reduce((s, r) => s + r.questions, 0)
+      : 0;
+    const planTotalMcq = customSectionPlan
+      ? customSectionPlan.reduce((s, r) => s + r.mcq, 0)
+      : 0;
+    const planTotalTita = customSectionPlan
+      ? customSectionPlan.reduce((s, r) => s + r.tita, 0)
+      : 0;
+
+    const perSet = customSectionPlan
+      ? planTotalQuestions
+      : (Number(questions_per_set) || Number(total_questions) || profile.default_total);
+    const mcqCount = customSectionPlan
+      ? planTotalMcq
+      : (Number(total_mcq) ?? Math.round(perSet * 0.85));
+    const titaCount = customSectionPlan
+      ? planTotalTita
+      : (Number(total_tita) ?? Math.max(0, perSet - mcqCount));
     const safePerSet = mcqCount + titaCount;
 
     const createdTests: Array<{ id: string; name: string; slug: string }> = [];
