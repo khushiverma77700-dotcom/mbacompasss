@@ -245,3 +245,26 @@ function Stat({ label, value, tone }: { label: string; value: number | string; t
     </div>
   );
 }
+
+function RetryButton({ jobId, sectionName }: { jobId: string; sectionName: string }) {
+  const [loading, setLoading] = useState(false);
+  const onClick = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("retry-mock-section", { body: { job_id: jobId } });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success(`Retrying ${sectionName}…`);
+    } catch (e: any) {
+      toast.error(e?.message || "Retry failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+  return (
+    <Button size="sm" variant="outline" className="h-7 px-2 gap-1 border-amber-300 text-amber-700 hover:bg-amber-50" onClick={onClick} disabled={loading}>
+      {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
+      Retry
+    </Button>
+  );
+}
