@@ -508,11 +508,14 @@ const AdminMockBuilder = () => {
               <div>
                 <Label className="text-xs mb-1.5 block">Question (use $...$ for inline math, $$...$$ for block)</Label>
                 <RichTextEditor content={editorState.question_html} onChange={(html) => setEditorState({ ...editorState, question_html: html })} />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Enter only the question text. Question number, set badge and option letters (A/B/C/D) are added automatically by the test UI — do not type "Q1.", "Set 1:", "A)" etc.
+                </p>
               </div>
 
               {editorState.question_type === "mcq" ? (
                 <div className="space-y-2">
-                  <Label className="text-xs">Options (mark exactly one as correct)</Label>
+                  <Label className="text-xs">Options (mark exactly one as correct) — type only the option text, the A/B/C/D label is shown automatically</Label>
                   {(editorState.options as OptionRow[]).map((o, i) => (
                     <div key={i} className="flex items-start gap-2 border border-border rounded-md p-2">
                       <div className="flex flex-col items-center gap-1 pt-1">
