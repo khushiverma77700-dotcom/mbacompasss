@@ -197,11 +197,15 @@ async function callGeminiBatch(args: {
   positive: number; negative: number;
   userId: string | null;
   strict_topic?: string | null;
+  sets?: number | null;
+  total_section_questions?: number | null;
 }) {
   const sys = buildSystemPrompt({
     exam: args.exam, exam_full: args.exam_full, category: args.category, level: args.level,
     section_code: args.section_code, section_name: args.section_name,
     strict_topic: args.strict_topic ?? null,
+    sets: args.sets ?? null,
+    total_section_questions: args.total_section_questions ?? null,
   });
   const user = buildUserPrompt({
     count: args.count, mcq_count: args.mcq, tita_count: args.tita,
