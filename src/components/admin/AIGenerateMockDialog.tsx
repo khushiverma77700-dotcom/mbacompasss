@@ -371,24 +371,49 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
               </div>
             </div>
 
-            {(category === "sectional" || category === "topic" || category === "daily" || category === "practice") && (
+            {(category === "sectional" || category === "topic" || category === "practice") && (
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-xs">Section</Label>
+                  <Label className="text-xs">
+                    Section <span className="text-destructive">*</span>
+                  </Label>
                   <Select value={sectionCode} onValueChange={setSectionCode}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       {SECTION_CODES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    {category === "sectional"
+                      ? "All questions will come from this section only."
+                      : category === "topic"
+                      ? "Parent section for the chosen topic."
+                      : "Section to draw practice questions from."}
+                  </p>
                 </div>
-                {(category === "topic" || category === "practice" || category === "daily") && (
+                {(category === "topic" || category === "practice") && (
                   <div>
-                    <Label className="text-xs">Topic (optional)</Label>
+                    <Label className="text-xs">
+                      Topic {category === "topic" && <span className="text-destructive">*</span>}
+                    </Label>
                     <Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. Time Speed Distance, RC, Syllogism" />
+                    {category === "topic" && (
+                      <p className="text-[11px] text-muted-foreground mt-1">
+                        Every question will be strictly from this topic — no mixing.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
+            )}
+
+            {category === "daily" && (
+              <Card className="p-3 bg-primary/5 border-primary/20">
+                <Label className="text-sm font-semibold">Daily Test mix</Label>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Daily Tests are always a balanced mix: <strong>~33% Quant</strong>, <strong>~33% VARC</strong> and <strong>~33% DILR</strong>. Section selection is disabled.
+                </p>
+              </Card>
             )}
 
             {/* Full-Length: per-section editor */}
