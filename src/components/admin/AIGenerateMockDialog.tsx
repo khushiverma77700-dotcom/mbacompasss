@@ -112,7 +112,23 @@ const SECTION_CODES = [
   { value: "VARC", label: "VARC — Verbal & RC" },
   { value: "DILR", label: "DILR — DI & LR" },
   { value: "QA", label: "QA — Quantitative" },
+  { value: "VALR", label: "VALR — Verbal & Logical Ability" },
+  { value: "DM", label: "DM — Decision Making" },
+  { value: "QADI", label: "QADI — Quant & DI" },
+  { value: "LS", label: "LS — Language Skills" },
+  { value: "LR", label: "LR — Logical Reasoning" },
+  { value: "QS", label: "QS — Quantitative Skills" },
+  { value: "GE", label: "GE — General English" },
+  { value: "AR", label: "AR — Analytical Reasoning" },
+  { value: "QADS", label: "QADS — Quant, DI & Sufficiency" },
   { value: "GK", label: "GK — General Awareness" },
+  { value: "GA", label: "GA — General Awareness" },
+  { value: "IE", label: "IE — Innovation & Entrepreneurship" },
+  { value: "LC", label: "LC — Language Comprehension" },
+  { value: "MS", label: "MS — Mathematical Skills" },
+  { value: "DA", label: "DA — Data Analysis" },
+  { value: "ICR", label: "ICR — Intelligence & Critical Reasoning" },
+  { value: "IGE", label: "IGE — Indian & Global Environment" },
 ];
 
 interface Props {
@@ -135,10 +151,12 @@ type SectionRow = {
 // 0 means questions are standalone (no shared passage/caselet).
 const DEFAULT_SETS: Record<string, Record<string, number>> = {
   CAT:  { VARC: 3, DILR: 3, QA: 0 },
-  XAT:  { VARC: 3, DILR: 3, QA: 0, GK: 0 },
-  SNAP: { VARC: 2, DILR: 3, QA: 0 },
-  NMAT: { VARC: 3, DILR: 4, QA: 0 },
-  CMAT: { VARC: 2, DILR: 2, QA: 0, GK: 0, "QA-IE": 0 },
+  XAT:  { VALR: 3, DM: 0, QADI: 0, GK: 0 },
+  SNAP: { GE: 0, AR: 0, QADS: 0 },
+  NMAT: { LS: 0, LR: 0, QS: 0 },
+  CMAT: { QADI: 0, LR: 0, LC: 0, GA: 0, IE: 0 },
+  IIFT: { VARC: 3, QA: 0, DILR: 4, GK: 0 },
+  MAT: { LC: 0, ICR: 0, DA: 0, MS: 0, IGE: 0 },
 };
 
 export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: Props) {
