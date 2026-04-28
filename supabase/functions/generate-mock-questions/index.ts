@@ -102,10 +102,21 @@ function normalizeForHash(s: string): string {
 function buildSystemPrompt(opts: {
   exam: string; exam_full: string; category: string; level: string;
   section_code: string; section_name: string;
+  strict_topic?: string | null;
 }) {
   const levelGuidance = opts.level === "mixed"
     ? "Mix Easy (~30%), Moderate (~40%), Hard (~30%)."
     : `Strictly target ${opts.level.toUpperCase()} difficulty.`;
+
+  const topicLock = opts.strict_topic
+    ? `
+
+STRICT TOPIC LOCK (Topic-wise Test):
+- EVERY single question MUST be exclusively from the topic: "${opts.strict_topic}".
+- Do NOT generate questions from any other topic, sub-area, or concept outside "${opts.strict_topic}".
+- The "topic" field on every question MUST be "${opts.strict_topic}".
+- Vary the sub-concepts and difficulty within "${opts.strict_topic}" only.`
+    : "";
 
   return `You are an elite ${opts.exam_full} (${opts.exam}) question setter with 15+ years of experience writing original mock questions for top MBA coaching institutes in India.
 
@@ -113,7 +124,7 @@ GENERATE 100% ORIGINAL questions for:
 - Exam: ${opts.exam} (${opts.exam_full})
 - Section: ${opts.section_name} (${opts.section_code})
 - Category: ${opts.category}
-- Difficulty: ${levelGuidance}
+- Difficulty: ${levelGuidance}${topicLock}
 
 CRITICAL RULES:
 1. EVERY question must be ORIGINAL — never copy from past papers, NCERT, RS Aggarwal, Arun Sharma, Nishit Sinha, Time, IMS, CL, study material, blogs, or anything published.
@@ -164,10 +175,12 @@ async function callGeminiBatch(args: {
   count: number; mcq: number; tita: number;
   positive: number; negative: number;
   userId: string | null;
+  strict_topic?: string | null;
 }) {
   const sys = buildSystemPrompt({
     exam: args.exam, exam_full: args.exam_full, category: args.category, level: args.level,
     section_code: args.section_code, section_name: args.section_name,
+    strict_topic: args.strict_topic ?? null,
   });
   const user = buildUserPrompt({
     count: args.count, mcq_count: args.mcq, tita_count: args.tita,
@@ -431,6 +444,8 @@ Deno.serve(async (req) => {
               count: batch, mcq: batchMcq, tita: batchTita,
               positive: profile.default_positive, negative: profile.default_negative,
               userId: user.id,
+              // Topic-wise tests must lock every question to the chosen topic.
+              strict_topic: category === "topic" && topic ? topic : null,
             });
           } catch (e) {
             console.error("[generate] batch failed:", e);
@@ -595,7 +610,27 @@ function planSections(
       questions: totalQuestions, sort: 0,
     }];
   }
-  if (category === "daily" || category === "practice") {
+  if (category === "daily") {
+    // Daily Tests are ALWAYS a balanced 33/33/33 mix across QA, VARC and DILR.
+    const desired = ["QA", "VARC", "DILR"] as const;
+    const pick = (code: string) =>
+      profile.sections.find((s) => s.code === code) || profile.sections[0];
+    const base = Math.floor(totalQuestions / 3);
+    const remainder = totalQuestions - base * 3; // distribute extras to the first sections
+    const counts = [base + (remainder > 0 ? 1 : 0), base + (remainder > 1 ? 1 : 0), base];
+    return desired.map((code, idx) => {
+      const sec = pick(code);
+      const q = Math.max(1, counts[idx]);
+      return {
+        code: sec.code,
+        name: sec.name,
+        duration: Math.max(10, Math.round(q * 1.5)),
+        questions: q,
+        sort: idx,
+      };
+    });
+  }
+  if (category === "practice") {
     return [{
       code: sectionCode || "QA",
       name: `${labelForCategory(category)}${topic ? ` — ${topic}` : ""}`,
