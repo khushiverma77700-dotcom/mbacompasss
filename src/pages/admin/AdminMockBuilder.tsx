@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, Pencil, Trash2, Upload, Loader2, BookOpen } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import MathContent from "@/components/mock/MathContent";
+import { stripQuestionPrefix, stripOptionPrefix } from "@/lib/cleanQuestionHtml";
 
 type Section = {
   id: string;
@@ -212,7 +213,7 @@ const AdminMockBuilder = () => {
       passage_id: editorState.passage_id || null,
       question_number: editorState.question_number,
       question_type: editorState.question_type,
-      question_html: editorState.question_html,
+      question_html: stripQuestionPrefix(editorState.question_html),
       positive_marks: Number(editorState.positive_marks) || 3,
       negative_marks: Number(editorState.negative_marks) || 0,
       difficulty: editorState.difficulty,
@@ -236,7 +237,7 @@ const AdminMockBuilder = () => {
 
     if (editorState.question_type === "mcq" && questionId) {
       const opts = (editorState.options as OptionRow[]).map(o => ({
-        question_id: questionId, option_label: o.option_label, option_html: o.option_html, is_correct: o.is_correct, sort_order: o.sort_order,
+        question_id: questionId, option_label: o.option_label, option_html: stripOptionPrefix(o.option_html), is_correct: o.is_correct, sort_order: o.sort_order,
       }));
       const { error: oerr } = await supabase.from("mock_question_options").insert(opts);
       if (oerr) { toast({ title: "Options save failed", description: oerr.message, variant: "destructive" }); setEditorSaving(false); return; }
@@ -283,7 +284,7 @@ const AdminMockBuilder = () => {
           section_id: activeSectionId,
           question_number: row.question_number ? parseInt(row.question_number) : n++,
           question_type: isMcq ? "mcq" : "tita",
-          question_html: row.question_html ?? row.question ?? "",
+          question_html: stripQuestionPrefix(row.question_html ?? row.question ?? ""),
           positive_marks: row.positive_marks ? parseFloat(row.positive_marks) : 3,
           negative_marks: row.negative_marks ? parseFloat(row.negative_marks) : (isMcq ? 1 : 0),
           difficulty: (row.difficulty ?? "medium").toLowerCase(),
@@ -298,7 +299,7 @@ const AdminMockBuilder = () => {
           if (Array.isArray(row.options)) {
             row.options.forEach((o: any, i: number) => opts.push({
               option_label: o.label ?? String.fromCharCode(65 + i),
-              option_html: o.html ?? o.text ?? "",
+              option_html: stripOptionPrefix(o.html ?? o.text ?? ""),
               is_correct: !!o.is_correct,
               sort_order: i,
             }));
@@ -306,7 +307,7 @@ const AdminMockBuilder = () => {
             const correctLabel = String(row.correct_label ?? row.answer ?? "A").toUpperCase();
             ["a", "b", "c", "d"].forEach((k, i) => {
               const html = row[`option_${k}`] ?? "";
-              if (html) opts.push({ option_label: k.toUpperCase(), option_html: html, is_correct: correctLabel === k.toUpperCase(), sort_order: i });
+              if (html) opts.push({ option_label: k.toUpperCase(), option_html: stripOptionPrefix(html), is_correct: correctLabel === k.toUpperCase(), sort_order: i });
             });
           }
           if (opts.filter(o => o.is_correct).length !== 1) throw new Error(`Question ${qPayload.question_number}: needs exactly 1 correct option`);
@@ -507,11 +508,14 @@ const AdminMockBuilder = () => {
               <div>
                 <Label className="text-xs mb-1.5 block">Question (use $...$ for inline math, $$...$$ for block)</Label>
                 <RichTextEditor content={editorState.question_html} onChange={(html) => setEditorState({ ...editorState, question_html: html })} />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Enter only the question text. Question number, set badge and option letters (A/B/C/D) are added automatically by the test UI — do not type "Q1.", "Set 1:", "A)" etc.
+                </p>
               </div>
 
               {editorState.question_type === "mcq" ? (
                 <div className="space-y-2">
-                  <Label className="text-xs">Options (mark exactly one as correct)</Label>
+                  <Label className="text-xs">Options (mark exactly one as correct) — type only the option text, the A/B/C/D label is shown automatically</Label>
                   {(editorState.options as OptionRow[]).map((o, i) => (
                     <div key={i} className="flex items-start gap-2 border border-border rounded-md p-2">
                       <div className="flex flex-col items-center gap-1 pt-1">

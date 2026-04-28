@@ -14,6 +14,37 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// --------- Question / Option text sanitizers ---------
+// UI renders question number, set badge and A/B/C/D labels as STATIC chips.
+// Stored HTML must contain only the pure question/option text.
+const Q_PREFIX_PATTERNS: RegExp[] = [
+  /^\s*Q\.?\s*\d+\s*[.\):\-]?\s*/i,
+  /^\s*Question\s*\d*\s*[.\):\-]?\s*/i,
+  /^\s*Set\s*\d+\s*[.\):\-]?\s*/i,
+  /^\s*\(?\d+\)?\s*[.\):\-]\s*/,
+];
+const OPT_PREFIX_PATTERNS: RegExp[] = [
+  /^\s*\(?\s*[A-Da-d1-4]\s*\)?\s*[.\):\-]\s*/,
+];
+function stripPrefixes(html: string | null | undefined, patterns: RegExp[]): string {
+  if (!html) return html ?? "";
+  return html.replace(/^(\s*(?:<[^>]+>\s*)*)([\s\S]*?)(<|$)/, (_m, lead, body, tail) => {
+    let next = body;
+    let changed = true;
+    let safety = 5;
+    while (changed && safety-- > 0) {
+      changed = false;
+      for (const re of patterns) {
+        const r = next.replace(re, "");
+        if (r !== next) { next = r; changed = true; }
+      }
+    }
+    return lead + next + tail;
+  });
+}
+const cleanQuestionHtml = (h: string | null | undefined) => stripPrefixes(h, Q_PREFIX_PATTERNS);
+const cleanOptionHtml = (h: string | null | undefined) => stripPrefixes(h, OPT_PREFIX_PATTERNS);
+
 // --------- Constants ---------
 
 const EXAM_PROFILES: Record<string, {
@@ -245,7 +276,11 @@ CRITICAL RULES:
 5. For TITA: provide numeric answer(s) and tolerance if applicable. NO options.
 6. Tag each question with topic and subtopic accurately.
 7. Match the official ${opts.exam} pattern, length, and style precisely.
-8. Output ONLY valid JSON. No prose. No markdown fences. Use raw integers (no thousands separators like "1,234").`;
+8. Output ONLY valid JSON. No prose. No markdown fences. Use raw integers (no thousands separators like "1,234").
+9. STRICT FORMATTING — the UI renders question number, set badge and option letters (A/B/C/D) as STATIC labels:
+   - "question_html" must contain ONLY the pure question text. Do NOT prefix it with "Q1.", "Q.1", "Question 1:", "Question:", "1.", "1)", "(1)", "Set 1:", or any numbering/labeling.
+   - "options[].text" must contain ONLY the pure option text. Do NOT prefix it with "A)", "(A)", "A.", "a)", "1)" or any letter/number label.
+   - For set-bound questions, keep the shared passage/caselet INSIDE <div class="passage">…</div> exactly as instructed; do NOT write "Question 1 of Set 2", "Set 1 — Q3" etc. anywhere.`;
 }
 
 function buildUserPrompt(opts: {
@@ -728,11 +763,12 @@ Deno.serve(async (req) => {
           for (let i = 0; i < accepted.length; i++) {
             const q = accepted[i];
             const isTita = q.question_type === "tita";
+            const cleanedQHtml = cleanQuestionHtml(q.question_html);
             const { data: qRow, error: qErr } = await admin.from("mock_questions").insert({
               section_id: secRowId,
               question_number: questionNumberOffset + i + 1,
               question_type: isTita ? "tita" : "mcq",
-              question_html: q.question_html,
+              question_html: cleanedQHtml,
               tita_correct_answers: isTita ? (q.tita_answers || []).map(String) : [],
               tita_numeric_tolerance: isTita ? Number(q.tita_tolerance ?? 0) : null,
               positive_marks: profile.default_positive,
@@ -749,7 +785,7 @@ Deno.serve(async (req) => {
               const opts = q.options.slice(0, 4).map((o: any, idx: number) => ({
                 question_id: qRow.id,
                 option_label: o.label || ["A", "B", "C", "D"][idx],
-                option_html: o.text || "",
+                option_html: cleanOptionHtml(o.text || ""),
                 is_correct: !!o.is_correct,
                 sort_order: idx,
               }));
@@ -763,7 +799,7 @@ Deno.serve(async (req) => {
                     exam_code,
                     section: hubSection,
                     difficulty: mapPersonalizedDifficulty(normalizeDifficulty(q.difficulty, level)),
-                    question_text: q.question_html,
+                    question_text: cleanedQHtml,
                     options: opts.map((o) => ({ label: o.option_label, text: o.option_html })),
                     correct_index: correctIdx >= 0 ? correctIdx : 0,
                     explanation: q.explanation_html || null,

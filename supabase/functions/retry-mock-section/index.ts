@@ -10,6 +10,35 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Strip embedded "Q1.", "Set 1:", "(A)" etc. — UI shows these as static labels.
+const Q_PREFIX_PATTERNS: RegExp[] = [
+  /^\s*Q\.?\s*\d+\s*[.\):\-]?\s*/i,
+  /^\s*Question\s*\d*\s*[.\):\-]?\s*/i,
+  /^\s*Set\s*\d+\s*[.\):\-]?\s*/i,
+  /^\s*\(?\d+\)?\s*[.\):\-]\s*/,
+];
+const OPT_PREFIX_PATTERNS: RegExp[] = [
+  /^\s*\(?\s*[A-Da-d1-4]\s*\)?\s*[.\):\-]\s*/,
+];
+function stripPrefixes(html: string | null | undefined, patterns: RegExp[]): string {
+  if (!html) return html ?? "";
+  return html.replace(/^(\s*(?:<[^>]+>\s*)*)([\s\S]*?)(<|$)/, (_m, lead, body, tail) => {
+    let next = body;
+    let changed = true;
+    let safety = 5;
+    while (changed && safety-- > 0) {
+      changed = false;
+      for (const re of patterns) {
+        const r = next.replace(re, "");
+        if (r !== next) { next = r; changed = true; }
+      }
+    }
+    return lead + next + tail;
+  });
+}
+const cleanQuestionHtml = (h: string | null | undefined) => stripPrefixes(h, Q_PREFIX_PATTERNS);
+const cleanOptionHtml = (h: string | null | undefined) => stripPrefixes(h, OPT_PREFIX_PATTERNS);
+
 const OPENAI_TIMEOUT_MS = 90_000;
 const SECTION_WALL_CLOCK_MS = 8 * 60_000;
 const BATCH_SIZE = 8;
@@ -55,7 +84,7 @@ async function callOpenAIBatch(opts: {
   const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
 
-  const sys = `You are an elite ${opts.exam_code} question setter writing 100% original questions for the ${opts.section_name} (${opts.section_code}) section. Difficulty target: ${opts.level}. ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} Use fresh numbers, fresh names, fresh contexts. Each MCQ has 4 options A-D with one correct; each TITA has numeric answer(s). Include detailed 200-400 word explanations. Output ONLY valid JSON.`;
+  const sys = `You are an elite ${opts.exam_code} question setter writing 100% original questions for the ${opts.section_name} (${opts.section_code}) section. Difficulty target: ${opts.level}. ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} Use fresh numbers, fresh names, fresh contexts. Each MCQ has 4 options A-D with one correct; each TITA has numeric answer(s). Include detailed 200-400 word explanations. Output ONLY valid JSON. STRICT FORMATTING: "question_html" must contain ONLY the pure question text — never prefix with "Q1.", "Question 1:", "Set 1:", "1.", "1)" or any numbering. "options[].text" must contain ONLY pure option text — never prefix with "A)", "(A)", "A.", "1)" or any label. The UI renders these labels statically.`;
   const user = `Generate exactly ${opts.count} questions: ${opts.mcq} MCQ + ${opts.tita} TITA. Marking +${opts.positive}/-${opts.negative}. JSON shape: {"questions":[{"question_type":"mcq"|"tita","question_html":"...","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"tita_answers":["..."],"tita_tolerance":0.01,"explanation_html":"..."}]}`;
 
   const ctrl = new AbortController();
@@ -197,11 +226,12 @@ Deno.serve(async (req) => {
             seen.add(hash);
 
             const isTita = q.question_type === "tita";
+            const cleanedQHtml = cleanQuestionHtml(q.question_html);
             const { data: qRow } = await admin.from("mock_questions").insert({
               section_id: job.section_id,
               question_number: produced + 1,
               question_type: isTita ? "tita" : "mcq",
-              question_html: q.question_html,
+              question_html: cleanedQHtml,
               tita_correct_answers: isTita ? (q.tita_answers || []).map(String) : [],
               tita_numeric_tolerance: isTita ? Number(q.tita_tolerance ?? 0) : null,
               positive_marks: job.positive_marks || 1,
@@ -218,7 +248,7 @@ Deno.serve(async (req) => {
               const opts = q.options.slice(0, 4).map((o: any, idx: number) => ({
                 question_id: qRow.id,
                 option_label: o.label || ["A","B","C","D"][idx],
-                option_html: o.text || "",
+                option_html: cleanOptionHtml(o.text || ""),
                 is_correct: !!o.is_correct,
                 sort_order: idx,
               }));
@@ -229,7 +259,7 @@ Deno.serve(async (req) => {
                   hubRows.push({
                     exam_code: job.exam_code, section: hubSection,
                     difficulty: mapPersonalizedDifficulty(normalizeDifficulty(q.difficulty, job.level)),
-                    question_text: q.question_html,
+                    question_text: cleanedQHtml,
                     options: opts.map((o) => ({ label: o.option_label, text: o.option_html })),
                     correct_index: correctIdx >= 0 ? correctIdx : 0,
                     explanation: q.explanation_html || null,
