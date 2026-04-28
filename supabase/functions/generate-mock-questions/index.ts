@@ -289,7 +289,7 @@ Deno.serve(async (req) => {
 
     // Sanitise the user-supplied section plan (only honoured for full_length)
     const customSectionPlan: Array<{
-      code: string; name: string; duration: number; questions: number; mcq: number; tita: number; sort: number;
+      code: string; name: string; duration: number; questions: number; mcq: number; tita: number; sets: number; sort: number;
     }> | null = (category === "full_length" && Array.isArray(rawSectionPlan) && rawSectionPlan.length > 0)
       ? rawSectionPlan.map((r: any, idx: number) => {
           const q = Math.max(0, Number(r?.questions) || 0);
@@ -306,6 +306,7 @@ Deno.serve(async (req) => {
             questions: q,
             mcq: m,
             tita: t,
+            sets: Math.max(0, Number(r?.sets) || 0),
             sort: Number(r?.sort ?? idx),
           };
         }).filter((r) => r.questions > 0)
