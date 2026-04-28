@@ -32,6 +32,8 @@ interface Settings {
   expert_feedback?: any[];
   platform_features?: any[];
   ai_report_title?: string; ai_report_subtitle?: string;
+  day_planner_block?: any;
+  courses_cta_block?: any;
 }
 
 export default function AdminMocksLanding() {
@@ -102,6 +104,8 @@ export default function AdminMocksLanding() {
           <TabsTrigger value="fb-img">Feedback (Image)</TabsTrigger>
           <TabsTrigger value="experts">Expert Feedback</TabsTrigger>
           <TabsTrigger value="ai-report">AI Report</TabsTrigger>
+          <TabsTrigger value="day-planner">Day Planner</TabsTrigger>
+          <TabsTrigger value="courses-cta">Courses CTA</TabsTrigger>
           <TabsTrigger value="testimonials">Testimonials (Legacy)</TabsTrigger>
           <TabsTrigger value="faqs">FAQs</TabsTrigger>
           <TabsTrigger value="tracking">Tracking & SEO</TabsTrigger>
