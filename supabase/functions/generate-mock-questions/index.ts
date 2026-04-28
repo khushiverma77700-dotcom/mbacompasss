@@ -610,7 +610,27 @@ function planSections(
       questions: totalQuestions, sort: 0,
     }];
   }
-  if (category === "daily" || category === "practice") {
+  if (category === "daily") {
+    // Daily Tests are ALWAYS a balanced 33/33/33 mix across QA, VARC and DILR.
+    const desired = ["QA", "VARC", "DILR"] as const;
+    const pick = (code: string) =>
+      profile.sections.find((s) => s.code === code) || profile.sections[0];
+    const base = Math.floor(totalQuestions / 3);
+    const remainder = totalQuestions - base * 3; // distribute extras to the first sections
+    const counts = [base + (remainder > 0 ? 1 : 0), base + (remainder > 1 ? 1 : 0), base];
+    return desired.map((code, idx) => {
+      const sec = pick(code);
+      const q = Math.max(1, counts[idx]);
+      return {
+        code: sec.code,
+        name: sec.name,
+        duration: Math.max(10, Math.round(q * 1.5)),
+        questions: q,
+        sort: idx,
+      };
+    });
+  }
+  if (category === "practice") {
     return [{
       code: sectionCode || "QA",
       name: `${labelForCategory(category)}${topic ? ` — ${topic}` : ""}`,
