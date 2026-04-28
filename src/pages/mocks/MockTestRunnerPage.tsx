@@ -97,6 +97,7 @@ export default function MockTestRunnerPage() {
   const [submitting, setSubmitting] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(isMobileDevice);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const submitRef = useRef(false);
   const violationToastShown = useRef(false);
