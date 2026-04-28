@@ -192,6 +192,10 @@ export default function AdminMockBundles() {
                   <Input type="number" value={editing.price_inr ?? 0} onChange={(e) => setEditing({ ...editing, price_inr: Number(e.target.value) })} />
                 </div>
                 <div>
+                  <Label>Original Price (INR) — optional, shows strikethrough</Label>
+                  <Input type="number" value={editing.original_price_inr ?? ""} onChange={(e) => setEditing({ ...editing, original_price_inr: e.target.value === "" ? null : Number(e.target.value) })} />
+                </div>
+                <div>
                   <Label>Validity (days)</Label>
                   <Input type="number" value={editing.validity_days ?? 365} onChange={(e) => setEditing({ ...editing, validity_days: Number(e.target.value) })} />
                 </div>
@@ -202,6 +206,10 @@ export default function AdminMockBundles() {
                 <div className="flex items-center gap-2 pt-6">
                   <Switch checked={!!editing.is_published} onCheckedChange={(v) => setEditing({ ...editing, is_published: v })} />
                   <Label>Published</Label>
+                </div>
+                <div className="flex items-center gap-2 pt-6">
+                  <Switch checked={!!editing.highlight_on_mocks} onCheckedChange={(v) => setEditing({ ...editing, highlight_on_mocks: v })} />
+                  <Label>Featured on Courses page</Label>
                 </div>
               </div>
               <div>
