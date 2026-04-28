@@ -102,10 +102,21 @@ function normalizeForHash(s: string): string {
 function buildSystemPrompt(opts: {
   exam: string; exam_full: string; category: string; level: string;
   section_code: string; section_name: string;
+  strict_topic?: string | null;
 }) {
   const levelGuidance = opts.level === "mixed"
     ? "Mix Easy (~30%), Moderate (~40%), Hard (~30%)."
     : `Strictly target ${opts.level.toUpperCase()} difficulty.`;
+
+  const topicLock = opts.strict_topic
+    ? `
+
+STRICT TOPIC LOCK (Topic-wise Test):
+- EVERY single question MUST be exclusively from the topic: "${opts.strict_topic}".
+- Do NOT generate questions from any other topic, sub-area, or concept outside "${opts.strict_topic}".
+- The "topic" field on every question MUST be "${opts.strict_topic}".
+- Vary the sub-concepts and difficulty within "${opts.strict_topic}" only.`
+    : "";
 
   return `You are an elite ${opts.exam_full} (${opts.exam}) question setter with 15+ years of experience writing original mock questions for top MBA coaching institutes in India.
 
@@ -113,7 +124,7 @@ GENERATE 100% ORIGINAL questions for:
 - Exam: ${opts.exam} (${opts.exam_full})
 - Section: ${opts.section_name} (${opts.section_code})
 - Category: ${opts.category}
-- Difficulty: ${levelGuidance}
+- Difficulty: ${levelGuidance}${topicLock}
 
 CRITICAL RULES:
 1. EVERY question must be ORIGINAL — never copy from past papers, NCERT, RS Aggarwal, Arun Sharma, Nishit Sinha, Time, IMS, CL, study material, blogs, or anything published.
