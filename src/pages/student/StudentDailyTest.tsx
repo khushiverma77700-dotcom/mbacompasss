@@ -5,7 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, Clock, CheckCircle2, ArrowRight, Flame, Sparkles } from "lucide-react";
+import { CalendarDays, Clock, CheckCircle2, ArrowRight, Flame, Sparkles, Lock } from "lucide-react";
+import { useEnrolledBundleFeatures } from "@/hooks/useEnrolledBundleFeatures";
+import UpgradeDialog from "@/components/student/UpgradeDialog";
 
 interface Today {
   assignment_id: string; assigned_date: string; test_id: string; title: string; note: string | null;
