@@ -425,7 +425,7 @@ Deno.serve(async (req) => {
      try {
     for (let setIdx = 1; setIdx <= setsCount; setIdx++) {
       const baseName = test_name_prefix
-        ? `${test_name_prefix} #${setIdx}`
+        ? (setsCount > 1 ? `${test_name_prefix} #${setIdx}` : test_name_prefix)
         : `${exam_code} ${labelForCategory(category)} ${setIdx} — AI`;
       const slug = slugify(baseName) + "-" + Date.now().toString(36) + "-" + setIdx;
 
