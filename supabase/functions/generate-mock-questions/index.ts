@@ -235,7 +235,7 @@ async function callGeminiBatch(args: {
   });
 
   const resp = await callAIGateway({
-    model: "gpt-4o",
+    model: "gpt-5-mini",
     messages: [
       { role: "system", content: sys },
       { role: "user", content: user },
