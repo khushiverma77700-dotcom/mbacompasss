@@ -93,6 +93,16 @@ const EXAM_PROFILES: Record<string, {
 
 const EXAMS = Object.entries(EXAM_PROFILES).map(([code, p]) => ({ code, name: p.name, default_total: p.default_total }));
 
+const DAILY_MIX_LABELS: Record<string, string> = {
+  CAT: "VARC, DILR and QA",
+  XAT: "VALR, Decision Making and Quantitative Ability & DI",
+  SNAP: "General English, Analytical Reasoning and Quant/DI",
+  NMAT: "Language Skills, Logical Reasoning and Quantitative Skills",
+  CMAT: "Quant/DI, Logical Reasoning and Language Comprehension",
+  IIFT: "VARC, DILR and Quantitative Analysis",
+  MAT: "Language Comprehension, Intelligence & Critical Reasoning and Data Analysis",
+};
+
 const CATEGORIES = [
   { value: "sectional", label: "Sectional Test" },
   { value: "topic", label: "Topic-wise Test" },
@@ -479,7 +489,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
               <Card className="p-3 bg-primary/5 border-primary/20">
                 <Label className="text-sm font-semibold">Daily Test mix</Label>
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  Daily Tests are always a balanced mix: <strong>~33% Quant</strong>, <strong>~33% VARC</strong> and <strong>~33% DILR</strong>. Section selection is disabled.
+                  Daily Tests are always a balanced 3-section mix for {exam}: <strong>{DAILY_MIX_LABELS[exam] || "the first three exam sections"}</strong>. Section selection is disabled.
                 </p>
               </Card>
             )}
