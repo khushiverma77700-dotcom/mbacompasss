@@ -7,7 +7,6 @@
 // Auth: admin only (verifies JWT in code; verify_jwt = false in config.toml).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
-import { callAIGateway } from "../_shared/aiGateway.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,12 +35,12 @@ const EXAM_PROFILES: Record<string, {
   },
   XAT: {
     full_name: "Xavier Aptitude Test (XLRI)",
-    default_total: 100,
+    default_total: 95,
     sections: [
-      { code: "VARC", name: "Verbal & Logical Ability", duration: 50, questions: 26 },
-      { code: "DILR", name: "Decision Making", duration: 50, questions: 22 },
-      { code: "QA", name: "Quantitative Ability & DI", duration: 50, questions: 28 },
-      { code: "GK", name: "General Knowledge", duration: 15, questions: 24 },
+      { code: "VALR", name: "Verbal & Logical Ability", duration: 50, questions: 26 },
+      { code: "DM", name: "Decision Making", duration: 50, questions: 21 },
+      { code: "QADI", name: "Quantitative Ability & Data Interpretation", duration: 50, questions: 28 },
+      { code: "GK", name: "General Knowledge", duration: 15, questions: 20 },
     ],
     default_positive: 1, default_negative: 0.25,
   },
@@ -49,9 +48,9 @@ const EXAM_PROFILES: Record<string, {
     full_name: "Symbiosis National Aptitude Test",
     default_total: 60,
     sections: [
-      { code: "VARC", name: "General English", duration: 20, questions: 15 },
-      { code: "DILR", name: "Analytical & Logical Reasoning", duration: 30, questions: 25 },
-      { code: "QA", name: "Quantitative, Data Interpretation & Sufficiency", duration: 10, questions: 20 },
+      { code: "GE", name: "General English", duration: 15, questions: 15 },
+      { code: "AR", name: "Analytical & Logical Reasoning", duration: 25, questions: 25 },
+      { code: "QADS", name: "Quantitative, Data Interpretation & Data Sufficiency", duration: 20, questions: 20 },
     ],
     default_positive: 1, default_negative: 0.25,
   },
@@ -59,9 +58,9 @@ const EXAM_PROFILES: Record<string, {
     full_name: "NMAT by GMAC",
     default_total: 108,
     sections: [
-      { code: "VARC", name: "Language Skills", duration: 28, questions: 36 },
-      { code: "DILR", name: "Logical Reasoning", duration: 40, questions: 36 },
-      { code: "QA", name: "Quantitative Skills", duration: 52, questions: 36 },
+      { code: "LS", name: "Language Skills", duration: 28, questions: 36 },
+      { code: "LR", name: "Logical Reasoning", duration: 40, questions: 36 },
+      { code: "QS", name: "Quantitative Skills", duration: 52, questions: 36 },
     ],
     default_positive: 1, default_negative: 0,
   },
@@ -69,13 +68,36 @@ const EXAM_PROFILES: Record<string, {
     full_name: "Common Management Admission Test",
     default_total: 100,
     sections: [
-      { code: "QA", name: "Quantitative Techniques & DI", duration: 45, questions: 20 },
-      { code: "DILR", name: "Logical Reasoning", duration: 45, questions: 20 },
-      { code: "VARC", name: "Language Comprehension", duration: 45, questions: 20 },
-      { code: "GK", name: "General Awareness", duration: 30, questions: 20 },
-      { code: "QA-IE", name: "Innovation & Entrepreneurship", duration: 15, questions: 20 },
+      { code: "QADI", name: "Quantitative Techniques & Data Interpretation", duration: 36, questions: 20 },
+      { code: "LR", name: "Logical Reasoning", duration: 36, questions: 20 },
+      { code: "LC", name: "Language Comprehension", duration: 36, questions: 20 },
+      { code: "GA", name: "General Awareness", duration: 36, questions: 20 },
+      { code: "IE", name: "Innovation & Entrepreneurship", duration: 36, questions: 20 },
     ],
     default_positive: 4, default_negative: 1,
+  },
+  IIFT: {
+    full_name: "Indian Institute of Foreign Trade Entrance Test",
+    default_total: 110,
+    sections: [
+      { code: "VARC", name: "Verbal Ability & Reading Comprehension", duration: 40, questions: 35 },
+      { code: "QA", name: "Quantitative Analysis", duration: 35, questions: 25 },
+      { code: "DILR", name: "Data Interpretation & Logical Reasoning", duration: 40, questions: 30 },
+      { code: "GK", name: "General Knowledge & Current Affairs", duration: 25, questions: 20 },
+    ],
+    default_positive: 3, default_negative: 1,
+  },
+  MAT: {
+    full_name: "Management Aptitude Test",
+    default_total: 150,
+    sections: [
+      { code: "LC", name: "Language Comprehension", duration: 30, questions: 30 },
+      { code: "ICR", name: "Intelligence & Critical Reasoning", duration: 30, questions: 30 },
+      { code: "DA", name: "Data Analysis & Sufficiency", duration: 30, questions: 30 },
+      { code: "MS", name: "Mathematical Skills", duration: 30, questions: 30 },
+      { code: "IGE", name: "Indian & Global Environment", duration: 30, questions: 30 },
+    ],
+    default_positive: 1, default_negative: 0.25,
   },
 };
 
@@ -99,6 +121,22 @@ function normalizeForHash(s: string): string {
     .trim();
 }
 
+function sectionFamily(code: string) {
+  const c = String(code || "").toUpperCase();
+  if (["VARC", "VALR", "LS", "GE", "LC"].includes(c)) return "verbal";
+  if (["DILR", "LR", "AR", "DA", "QADS", "QADI"].includes(c)) return "logic-data";
+  if (["QA", "QS", "MS"].includes(c)) return "quant";
+  if (["GK", "GA", "IGE", "IE", "DM", "ICR"].includes(c)) return "judgement-gk";
+  return "general";
+}
+
+function normalizeDifficulty(value: unknown, requestedLevel: string): "easy" | "medium" | "hard" {
+  const raw = String(value || requestedLevel || "medium").toLowerCase();
+  if (["easy", "easier", "low"].includes(raw)) return "easy";
+  if (["hard", "difficult", "advanced", "high"].includes(raw)) return "hard";
+  return "medium";
+}
+
 function buildSystemPrompt(opts: {
   exam: string; exam_full: string; category: string; level: string;
   section_code: string; section_name: string;
@@ -111,7 +149,7 @@ function buildSystemPrompt(opts: {
 }) {
   const levelGuidance = opts.level === "mixed"
     ? "Mix Easy (~30%), Moderate (~40%), Hard (~30%)."
-    : `Strictly target ${opts.level.toUpperCase()} difficulty.`;
+    : `Strictly target ${normalizeDifficulty(null, opts.level).toUpperCase()} difficulty. Every returned question difficulty must be exactly "${normalizeDifficulty(null, opts.level)}".`;
 
   const topicLock = opts.strict_topic
     ? `\n\nSTRICT TOPIC LOCK (Topic-wise Test):\n- EVERY question MUST be exclusively from the topic: "${opts.strict_topic}".\n- The "topic" field on every question MUST be "${opts.strict_topic}".`
@@ -127,8 +165,9 @@ function buildSystemPrompt(opts: {
 
   let setsBlock = "";
   if (setsCount > 0) {
-    const isVARC = opts.section_code === "VARC";
-    const isDILR = opts.section_code === "DILR";
+    const family = sectionFamily(opts.section_code);
+    const isVARC = family === "verbal";
+    const isDILR = family === "logic-data";
     const ctxLabel = isVARC ? "Reading Comprehension passage" : isDILR ? "DI/LR caselet with data" : "shared-context set";
     const ctxDesc = isVARC
       ? "an original Reading Comprehension PASSAGE of 350–550 words (history / science / philosophy / business / arts / social issues)"
@@ -154,8 +193,8 @@ For STANDALONE questions:
 - ${standaloneQuestions} fresh independent questions, no shared context.
 - Mix MCQ and TITA per the requested counts.
 - Tag each standalone with "is_set_question": false (no set_index).`;
-  } else if (opts.section_code === "DILR") {
-    setsBlock = `\n\nDILR REQUIREMENT: Every question must be a standalone DI/LR puzzle with concrete data — include an HTML <table> or ASCII chart in <pre> tags. Never write a vague caselet.`;
+  } else if (sectionFamily(opts.section_code) === "logic-data") {
+    setsBlock = `\n\nDATA/REASONING REQUIREMENT: Every question must be exam-realistic with concrete data wherever relevant — include an HTML <table> or ASCII chart in <pre> tags for DI/data-heavy prompts. Never write a vague caselet.`;
   }
 
   return `You are an elite ${opts.exam_full} (${opts.exam}) question setter with 15+ years of experience writing original mock questions for top MBA coaching institutes in India.
@@ -208,7 +247,7 @@ Return JSON of shape:
 }`;
 }
 
-async function callGeminiBatch(args: {
+async function callOpenAIBatch(args: {
   exam: string; exam_full: string; category: string; level: string;
   section_code: string; section_name: string;
   count: number; mcq: number; tita: number;
@@ -234,16 +273,23 @@ async function callGeminiBatch(args: {
     positive: args.positive, negative: args.negative,
   });
 
-  const resp = await callAIGateway({
-    model: "gpt-5-mini",
-    messages: [
-      { role: "system", content: sys },
-      { role: "user", content: user },
-    ],
-    response_format: { type: "json_object" },
-    temperature: 0.9,
-    max_tokens: 16000,
-  }, { feature: "generate-mock-questions", userId: args.userId, maxRetries: 1, provider: "openai-mini" });
+  const apiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
+
+  const resp = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "gpt-4o",
+      messages: [
+        { role: "system", content: sys },
+        { role: "user", content: user },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.35,
+      max_tokens: 16000,
+    }),
+  });
 
   if (!resp.ok) {
     const txt = await resp.text();
@@ -414,7 +460,7 @@ Deno.serve(async (req) => {
       exam_code, category, level,
       request: body, status: "running",
       total_requested: safePerSet * setsCount,
-      ai_model: "google/gemini-2.5-pro",
+      ai_model: "openai/gpt-4o",
       created_by: user.id,
     }).select("id").single();
     const genId = gen?.id;
@@ -534,12 +580,12 @@ Deno.serve(async (req) => {
 
         await updateJob({ status: "processing", current_step: "Calling AI…", attempts: 1 });
 
-        // For CAT, derive sensible questions_per_set defaults if not provided in the plan.
+        // Derive sensible questions_per_set defaults if not provided in the plan.
         const setsForSec = category === "full_length" ? Math.max(0, Number(sec.sets || 0)) : 0;
         let questionsPerSet = 0;
         if (setsForSec > 0) {
-          if (exam_code === "CAT" && sec.code === "VARC") questionsPerSet = 4;
-          else if (exam_code === "CAT" && sec.code === "DILR") questionsPerSet = 5;
+          if (sectionFamily(sec.code) === "verbal") questionsPerSet = Math.min(5, Math.max(3, Math.floor(sec.questions / setsForSec)));
+          else if (sectionFamily(sec.code) === "logic-data") questionsPerSet = Math.min(6, Math.max(4, Math.floor(sec.questions / setsForSec)));
           else questionsPerSet = Math.max(1, Math.floor(sec.questions / setsForSec));
         }
 
@@ -552,8 +598,13 @@ Deno.serve(async (req) => {
           while (produced < sec.questions && attemptsLocal < maxAttempts) {
             attemptsLocal++;
             const remain = sec.questions - produced;
-            // For sets, ask for the entire section in one call so the model can build coherent passages.
-            const batch = setsForSec > 0 && attemptsLocal === 1 ? sec.questions : Math.min(BATCH_SIZE, remain);
+            const setBoundTotal = setsForSec > 0 ? Math.min(sec.questions, setsForSec * questionsPerSet) : 0;
+            const generatingSharedSet = setsForSec > 0 && produced < setBoundTotal;
+            // Generate one RC/DILR set per AI call. Asking for a whole full-length section in one call
+            // was too large and caused partial output / stalled jobs.
+            const batch = generatingSharedSet
+              ? Math.min(questionsPerSet, setBoundTotal - produced)
+              : Math.min(BATCH_SIZE, remain);
             const remainMcq = Math.max(0, secMcq - accepted.filter(q => q.question_type === "mcq").length);
             const remainTita = Math.max(0, secTita - accepted.filter(q => q.question_type === "tita").length);
             const batchMcq = Math.min(remainMcq, Math.ceil(batch * (remainMcq / Math.max(1, remainMcq + remainTita))));
@@ -563,7 +614,7 @@ Deno.serve(async (req) => {
 
             let qs: any[] = [];
             try {
-              qs = await callGeminiBatch({
+              qs = await callOpenAIBatch({
                 exam: exam_code, exam_full: profile.full_name,
                 category, level,
                 section_code: sec.code, section_name: sec.name,
@@ -571,9 +622,9 @@ Deno.serve(async (req) => {
                 positive: profile.default_positive, negative: profile.default_negative,
                 userId: user.id,
                 strict_topic: category === "topic" && topic ? topic : null,
-                sets: setsForSec,
-                questions_per_set: questionsPerSet,
-                total_section_questions: sec.questions,
+                sets: generatingSharedSet ? 1 : 0,
+                questions_per_set: generatingSharedSet ? batch : null,
+                total_section_questions: batch,
               });
             } catch (e) {
               console.error(`[generate] ${sec.code} batch ${attemptsLocal} failed:`, e);
@@ -617,7 +668,7 @@ Deno.serve(async (req) => {
               tita_numeric_tolerance: isTita ? Number(q.tita_tolerance ?? 0) : null,
               positive_marks: profile.default_positive,
               negative_marks: isTita ? 0 : profile.default_negative,
-              difficulty: (q.difficulty || (level === "mixed" ? "medium" : (level === "moderate" ? "medium" : level))),
+                difficulty: normalizeDifficulty(q.difficulty, level),
               topic: q.topic || topic || null,
               subtopic: q.subtopic || null,
               explanation_html: q.explanation_html || "",
@@ -644,9 +695,10 @@ Deno.serve(async (req) => {
           }
 
           await updateJob({
-            status: produced > 0 ? "completed" : "failed",
+            status: produced >= sec.questions ? "completed" : "failed",
             questions_done: produced,
-            current_step: produced > 0 ? `Done — ${produced} questions saved` : "No questions generated",
+            current_step: produced >= sec.questions ? `Done — ${produced} questions saved` : `Incomplete — ${produced}/${sec.questions} saved`,
+            error_message: produced >= sec.questions ? null : `Only ${produced} of ${sec.questions} questions generated`,
           });
         } catch (sectionErr) {
           const msg = (sectionErr as Error)?.message || String(sectionErr);
@@ -663,11 +715,14 @@ Deno.serve(async (req) => {
     }
 
     if (genId) {
+      const expectedTotal = safePerSet * setsCount;
+      const completedAll = stats.generated >= expectedTotal;
       await admin.from("ai_mock_generations").update({
-        status: "completed",
+        status: completedAll ? "completed" : "failed",
         total_generated: stats.generated,
         total_rejected_duplicate: stats.rejected_dup_db,
         total_rejected_web_match: stats.rejected_dup_internet,
+        error_message: completedAll ? null : `Incomplete generation: ${stats.generated}/${expectedTotal} questions saved`,
         result_summary: { tests: createdTests, stats },
         finished_at: new Date().toISOString(),
       }).eq("id", genId);

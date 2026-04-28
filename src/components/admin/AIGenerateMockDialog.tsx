@@ -31,41 +31,62 @@ const EXAM_PROFILES: Record<string, {
   },
   XAT: {
     name: "XAT — Xavier Aptitude Test",
-    default_total: 100,
+    default_total: 95,
     sections: [
-      { code: "VARC", name: "Verbal & Logical Ability", duration: 50, questions: 26 },
-      { code: "DILR", name: "Decision Making", duration: 50, questions: 22 },
-      { code: "QA", name: "Quantitative Ability & DI", duration: 50, questions: 28 },
-      { code: "GK", name: "General Knowledge", duration: 15, questions: 24 },
+      { code: "VALR", name: "Verbal & Logical Ability", duration: 50, questions: 26 },
+      { code: "DM", name: "Decision Making", duration: 50, questions: 21 },
+      { code: "QADI", name: "Quantitative Ability & Data Interpretation", duration: 50, questions: 28 },
+      { code: "GK", name: "General Knowledge", duration: 15, questions: 20 },
     ],
   },
   SNAP: {
     name: "SNAP — Symbiosis",
     default_total: 60,
     sections: [
-      { code: "VARC", name: "General English", duration: 20, questions: 15 },
-      { code: "DILR", name: "Analytical & Logical Reasoning", duration: 30, questions: 25 },
-      { code: "QA", name: "Quant, DI & Sufficiency", duration: 10, questions: 20 },
+      { code: "GE", name: "General English", duration: 15, questions: 15 },
+      { code: "AR", name: "Analytical & Logical Reasoning", duration: 25, questions: 25 },
+      { code: "QADS", name: "Quantitative, Data Interpretation & Data Sufficiency", duration: 20, questions: 20 },
     ],
   },
   NMAT: {
     name: "NMAT by GMAC",
     default_total: 108,
     sections: [
-      { code: "VARC", name: "Language Skills", duration: 28, questions: 36 },
-      { code: "DILR", name: "Logical Reasoning", duration: 40, questions: 36 },
-      { code: "QA", name: "Quantitative Skills", duration: 52, questions: 36 },
+      { code: "LS", name: "Language Skills", duration: 28, questions: 36 },
+      { code: "LR", name: "Logical Reasoning", duration: 40, questions: 36 },
+      { code: "QS", name: "Quantitative Skills", duration: 52, questions: 36 },
     ],
   },
   CMAT: {
     name: "CMAT",
     default_total: 100,
     sections: [
-      { code: "QA", name: "Quantitative Techniques & DI", duration: 45, questions: 20 },
-      { code: "DILR", name: "Logical Reasoning", duration: 45, questions: 20 },
-      { code: "VARC", name: "Language Comprehension", duration: 45, questions: 20 },
-      { code: "GK", name: "General Awareness", duration: 30, questions: 20 },
-      { code: "QA-IE", name: "Innovation & Entrepreneurship", duration: 15, questions: 20 },
+      { code: "QADI", name: "Quantitative Techniques & Data Interpretation", duration: 36, questions: 20 },
+      { code: "LR", name: "Logical Reasoning", duration: 36, questions: 20 },
+      { code: "LC", name: "Language Comprehension", duration: 36, questions: 20 },
+      { code: "GA", name: "General Awareness", duration: 36, questions: 20 },
+      { code: "IE", name: "Innovation & Entrepreneurship", duration: 36, questions: 20 },
+    ],
+  },
+  IIFT: {
+    name: "IIFT",
+    default_total: 110,
+    sections: [
+      { code: "VARC", name: "Verbal Ability & Reading Comprehension", duration: 40, questions: 35 },
+      { code: "QA", name: "Quantitative Analysis", duration: 35, questions: 25 },
+      { code: "DILR", name: "Data Interpretation & Logical Reasoning", duration: 40, questions: 30 },
+      { code: "GK", name: "General Knowledge & Current Affairs", duration: 25, questions: 20 },
+    ],
+  },
+  MAT: {
+    name: "MAT",
+    default_total: 150,
+    sections: [
+      { code: "LC", name: "Language Comprehension", duration: 30, questions: 30 },
+      { code: "ICR", name: "Intelligence & Critical Reasoning", duration: 30, questions: 30 },
+      { code: "DA", name: "Data Analysis & Sufficiency", duration: 30, questions: 30 },
+      { code: "MS", name: "Mathematical Skills", duration: 30, questions: 30 },
+      { code: "IGE", name: "Indian & Global Environment", duration: 30, questions: 30 },
     ],
   },
 };
@@ -91,7 +112,23 @@ const SECTION_CODES = [
   { value: "VARC", label: "VARC — Verbal & RC" },
   { value: "DILR", label: "DILR — DI & LR" },
   { value: "QA", label: "QA — Quantitative" },
+  { value: "VALR", label: "VALR — Verbal & Logical Ability" },
+  { value: "DM", label: "DM — Decision Making" },
+  { value: "QADI", label: "QADI — Quant & DI" },
+  { value: "LS", label: "LS — Language Skills" },
+  { value: "LR", label: "LR — Logical Reasoning" },
+  { value: "QS", label: "QS — Quantitative Skills" },
+  { value: "GE", label: "GE — General English" },
+  { value: "AR", label: "AR — Analytical Reasoning" },
+  { value: "QADS", label: "QADS — Quant, DI & Sufficiency" },
   { value: "GK", label: "GK — General Awareness" },
+  { value: "GA", label: "GA — General Awareness" },
+  { value: "IE", label: "IE — Innovation & Entrepreneurship" },
+  { value: "LC", label: "LC — Language Comprehension" },
+  { value: "MS", label: "MS — Mathematical Skills" },
+  { value: "DA", label: "DA — Data Analysis" },
+  { value: "ICR", label: "ICR — Intelligence & Critical Reasoning" },
+  { value: "IGE", label: "IGE — Indian & Global Environment" },
 ];
 
 interface Props {
@@ -114,10 +151,12 @@ type SectionRow = {
 // 0 means questions are standalone (no shared passage/caselet).
 const DEFAULT_SETS: Record<string, Record<string, number>> = {
   CAT:  { VARC: 3, DILR: 3, QA: 0 },
-  XAT:  { VARC: 3, DILR: 3, QA: 0, GK: 0 },
-  SNAP: { VARC: 2, DILR: 3, QA: 0 },
-  NMAT: { VARC: 3, DILR: 4, QA: 0 },
-  CMAT: { VARC: 2, DILR: 2, QA: 0, GK: 0, "QA-IE": 0 },
+  XAT:  { VALR: 3, DM: 0, QADI: 0, GK: 0 },
+  SNAP: { GE: 0, AR: 0, QADS: 0 },
+  NMAT: { LS: 0, LR: 0, QS: 0 },
+  CMAT: { QADI: 0, LR: 0, LC: 0, GA: 0, IE: 0 },
+  IIFT: { VARC: 3, QA: 0, DILR: 4, GK: 0 },
+  MAT: { LC: 0, ICR: 0, DA: 0, MS: 0, IGE: 0 },
 };
 
 export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: Props) {

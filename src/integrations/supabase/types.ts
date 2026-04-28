@@ -5849,7 +5849,29 @@ export type Database = {
         | "answered"
         | "marked"
         | "answered_marked"
-      mock_section_code: "VARC" | "DILR" | "QA"
+      mock_section_code:
+        | "VARC"
+        | "DILR"
+        | "QA"
+        | "VALR"
+        | "DM"
+        | "QADI"
+        | "GK"
+        | "LS"
+        | "LR"
+        | "QS"
+        | "GE"
+        | "AR"
+        | "QADS"
+        | "GA"
+        | "IE"
+        | "LC"
+        | "MS"
+        | "DA"
+        | "ICR"
+        | "IGE"
+        | "VARC_DI"
+        | "DILR_GK"
       mock_test_type: "full_length" | "sectional" | "topic"
       ticket_category:
         | "mock_issue"
@@ -6006,7 +6028,30 @@ export const Constants = {
         "marked",
         "answered_marked",
       ],
-      mock_section_code: ["VARC", "DILR", "QA"],
+      mock_section_code: [
+        "VARC",
+        "DILR",
+        "QA",
+        "VALR",
+        "DM",
+        "QADI",
+        "GK",
+        "LS",
+        "LR",
+        "QS",
+        "GE",
+        "AR",
+        "QADS",
+        "GA",
+        "IE",
+        "LC",
+        "MS",
+        "DA",
+        "ICR",
+        "IGE",
+        "VARC_DI",
+        "DILR_GK",
+      ],
       mock_test_type: ["full_length", "sectional", "topic"],
       ticket_category: [
         "mock_issue",
