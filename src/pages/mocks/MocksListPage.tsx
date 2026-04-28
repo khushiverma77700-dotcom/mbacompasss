@@ -406,6 +406,9 @@ export default function MocksListPage() {
       {/* AUTO TESTIMONIALS MARQUEE */}
       <AutoTestimonialMarquee items={settings.auto_testimonials ?? []} />
 
+      {/* COURSES CTA — full band */}
+      <CoursesCTABand block={settings.courses_cta_block} variant="full" />
+
       {/* STUDENT ANALYSIS — 3 column grid */}
       {settings.student_analyses && settings.student_analyses.length > 0 && (
         <section className="py-16 bg-sky-50/40">
