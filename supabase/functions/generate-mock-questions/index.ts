@@ -643,15 +643,24 @@ Deno.serve(async (req) => {
         let attemptsLocal = 0;
         const maxAttempts = Math.ceil(sec.questions / BATCH_SIZE) + 4;
         const accepted: any[] = [];
+        const sectionStartedAt = Date.now();
+        let firecrawlChecks = 0;
 
         try {
           while (produced < sec.questions && attemptsLocal < maxAttempts) {
+            // Wall-clock guard — never let a section run forever (was the DILR stuck-forever cause).
+            if (Date.now() - sectionStartedAt > SECTION_WALL_CLOCK_MS) {
+              await updateJob({
+                current_step: `Section timeout after ${Math.round(SECTION_WALL_CLOCK_MS / 60000)} min — saving partial`,
+                error_message: `Section exceeded ${Math.round(SECTION_WALL_CLOCK_MS / 60000)}-minute wall clock`,
+              });
+              break;
+            }
+
             attemptsLocal++;
             const remain = sec.questions - produced;
             const setBoundTotal = setsForSec > 0 ? Math.min(sec.questions, setsForSec * questionsPerSet) : 0;
             const generatingSharedSet = setsForSec > 0 && produced < setBoundTotal;
-            // Generate one RC/DILR set per AI call. Asking for a whole full-length section in one call
-            // was too large and caused partial output / stalled jobs.
             const batch = generatingSharedSet
               ? Math.min(questionsPerSet, setBoundTotal - produced)
               : Math.min(BATCH_SIZE, remain);
@@ -660,7 +669,10 @@ Deno.serve(async (req) => {
             const batchMcq = Math.min(remainMcq, Math.ceil(batch * (remainMcq / Math.max(1, remainMcq + remainTita))));
             const batchTita = batch - batchMcq;
 
-            await updateJob({ current_step: `Batch ${attemptsLocal}: requesting ${batch} questions…` });
+            await updateJob({
+              attempts: attemptsLocal,
+              current_step: `Batch ${attemptsLocal}: requesting ${batch} questions…`,
+            });
 
             let qs: any[] = [];
             try {
@@ -688,7 +700,9 @@ Deno.serve(async (req) => {
               const hash = await sha256(normalizeForHash(q.question_html));
               if (seenHashes.has(hash)) { stats.rejected_dup_db++; continue; }
 
-              if (verify_internet) {
+              // Cap web-checks — unbounded firecrawl was the #1 cause of stuck DILR sections.
+              if (verify_internet && firecrawlChecks < MAX_FIRECRAWL_CHECKS_PER_SECTION) {
+                firecrawlChecks++;
                 const onWeb = await firecrawlIsOnInternet(q.question_html);
                 if (onWeb) { stats.rejected_dup_internet++; continue; }
               }
