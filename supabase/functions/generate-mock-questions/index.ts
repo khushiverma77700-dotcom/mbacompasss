@@ -367,6 +367,8 @@ async function firecrawlIsOnInternet(questionText: string): Promise<boolean> {
   // Trim to a sentence-ish probe
   const probe = normalizeForHash(questionText).slice(0, 220);
   if (probe.length < 60) return false;
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), FIRECRAWL_TIMEOUT_MS);
   try {
     const resp = await fetch("https://api.firecrawl.dev/v2/search", {
       method: "POST",
@@ -375,12 +377,15 @@ async function firecrawlIsOnInternet(questionText: string): Promise<boolean> {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ query: `"${probe.slice(0, 140)}"`, limit: 3 }),
+      signal: ctrl.signal,
     });
+    clearTimeout(timer);
     if (!resp.ok) return false;
     const json = await resp.json();
     const hits = json?.data || json?.web?.results || [];
     return Array.isArray(hits) && hits.length > 0;
   } catch {
+    clearTimeout(timer);
     return false;
   }
 }
