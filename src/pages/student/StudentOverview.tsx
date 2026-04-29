@@ -84,9 +84,27 @@ export default function StudentOverview() {
       setTasks(tk ?? []);
       setWeak(wk ?? []);
       setDisplayName(prof?.display_name ?? user.email?.split("@")[0] ?? "Student");
+
+      // Exam countdowns — admin-managed via the existing exams table.
+      const { data: exRows } = await supabase
+        .from("exams")
+        .select("name, slug, exam_date")
+        .not("exam_date", "is", null)
+        .order("exam_date", { ascending: true });
+      const upcoming = (exRows ?? [])
+        .filter((x: any) => x.exam_date && new Date(x.exam_date).getTime() >= Date.now() - 86400000)
+        .slice(0, 8);
+      setExamCountdowns(upcoming);
+
       setSideLoading(false);
     })();
   }, [user]);
+
+  // Re-render every minute so countdowns stay live without manual refresh.
+  useEffect(() => {
+    const id = setInterval(() => setNowTick((t) => t + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const submitted = useMemo(
     () => attempts.filter((x) => x.status === "submitted" || x.status === "auto_submitted"),
