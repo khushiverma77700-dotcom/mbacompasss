@@ -512,9 +512,13 @@ async function callOpenAIBatch(args: {
       { role: "user", content: user },
     ],
     response_format: { type: "json_object" },
-    max_tokens: 16000,
   };
-  if (modelId !== "gpt-5") reqBody.temperature = temp;
+  if (modelId === "gpt-5") {
+    reqBody.max_completion_tokens = 16000;
+  } else {
+    reqBody.max_tokens = 16000;
+    reqBody.temperature = temp;
+  }
 
   // Inline retry with exponential backoff for transient errors (429 / 5xx / network).
   // OpenAI 502s in the field were causing whole batches to be discarded.
