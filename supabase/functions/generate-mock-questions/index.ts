@@ -906,6 +906,9 @@ Deno.serve(async (req) => {
         const accepted: any[] = [];
         let firecrawlChecks = 0;
         let consecutiveDupBatches = 0;
+        const allowHubMirror = category === "daily" || category === "sectional" || category === "topic";
+        const hubSection = allowHubMirror ? (PERSONALIZED_SECTION_MAP[exam_code] || {})[sec.code] : undefined;
+        const hubRows: any[] = [];
 
         try {
           while (produced < sec.questions && attemptsLocal < maxAttempts) {
@@ -962,9 +965,57 @@ Deno.serve(async (req) => {
                 if (onWeb) { stats.rejected_dup_internet++; continue; }
               }
 
+              const isTita = q.question_type === "tita";
+              if (!isTita && (!Array.isArray(q.options) || q.options.length < 4 || q.options.filter((o: any) => !!o.is_correct).length !== 1)) continue;
+              const cleanedQHtml = cleanQuestionHtml(q.question_html);
+              const { data: qRow, error: qErr } = await admin.from("mock_questions").insert({
+                section_id: secRowId,
+                question_number: questionNumberOffset + produced + 1,
+                question_type: isTita ? "tita" : "mcq",
+                question_html: cleanedQHtml,
+                tita_correct_answers: isTita ? (q.tita_answers || []).map(String) : [],
+                tita_numeric_tolerance: isTita ? Number(q.tita_tolerance ?? 0) : null,
+                positive_marks: profile.default_positive,
+                negative_marks: isTita ? 0 : profile.default_negative,
+                difficulty: normalizeDifficulty(q.difficulty, level),
+                topic: q.topic || topic || null,
+                subtopic: q.subtopic || null,
+                explanation_html: q.explanation_html || "",
+                content_hash: hash,
+              }).select("id").single();
+              if (qErr || !qRow) { stats.rejected_dup_db++; continue; }
+
+              if (!isTita) {
+                const opts = q.options.slice(0, 4).map((o: any, idx: number) => ({
+                  question_id: qRow.id,
+                  option_label: o.label || ["A", "B", "C", "D"][idx],
+                  option_html: cleanOptionHtml(o.text || ""),
+                  is_correct: !!o.is_correct,
+                  sort_order: idx,
+                }));
+                const { error: optErr } = await admin.from("mock_question_options").insert(opts);
+                if (optErr) { await admin.from("mock_questions").delete().eq("id", qRow.id); continue; }
+                if (hubSection) {
+                  const correctIdx = opts.findIndex((o) => o.is_correct);
+                  hubRows.push({
+                    exam_code,
+                    section: hubSection,
+                    difficulty: mapPersonalizedDifficulty(normalizeDifficulty(q.difficulty, level)),
+                    question_text: cleanedQHtml,
+                    options: opts.map((o) => ({ label: o.option_label, text: o.option_html })),
+                    correct_index: correctIdx >= 0 ? correctIdx : 0,
+                    explanation: q.explanation_html || null,
+                    topic: q.topic || topic || null,
+                    source: "mock-mirror",
+                    created_by: user.id,
+                  });
+                }
+              }
+
               seenHashes.add(hash);
               accepted.push({ ...q, content_hash: hash });
               produced++;
+              stats.generated++;
               acceptedThisBatch++;
             }
 
