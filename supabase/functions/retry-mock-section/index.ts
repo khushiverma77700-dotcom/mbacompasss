@@ -359,6 +359,18 @@ Deno.serve(async (req) => {
             current_step: `Generated ${produced}/${target}`,
             updated_at: new Date().toISOString(),
           }).eq("id", job_id);
+
+          if (auto && produced < target) {
+            const workerUrl = `${url}/functions/v1/retry-mock-section`;
+            const next = fetch(workerUrl, {
+              method: "POST",
+              headers: { Authorization: authHeader, apikey: anonKey, "Content-Type": "application/json" },
+              body: JSON.stringify({ job_id, auto: true }),
+            }).catch((e) => console.error("[retry-mock-section] next worker failed", e));
+            // @ts-ignore
+            if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
+            return;
+          }
         }
 
         const success = produced === target;
