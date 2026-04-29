@@ -13,6 +13,7 @@ type Mock = {
   slug: string;
   exam_code: string | null;
   category: string | null;
+  test_type: string | null;
   total_duration_minutes?: number | null;
   is_live?: boolean | null;
 };
