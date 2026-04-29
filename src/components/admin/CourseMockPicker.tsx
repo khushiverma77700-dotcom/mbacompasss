@@ -51,7 +51,7 @@ export default function CourseMockPicker({ selectedCategories, selectedTestIds, 
     setLoading(true);
     supabase
       .from("mock_tests")
-      .select("id, name, slug, exam_code, category, total_duration_minutes, is_live")
+      .select("id, name, slug, exam_code, category, test_type, total_duration_minutes, is_live")
       .eq("exam_code", activeCategory)
       .order("name")
       .then(({ data }) => {
