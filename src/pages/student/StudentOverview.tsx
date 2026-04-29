@@ -40,8 +40,21 @@ export default function StudentOverview() {
   const [profile, setProfile] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [weak, setWeak] = useState<any[]>([]);
+  const [displayName, setDisplayName] = useState<string>("");
   const [sideLoading, setSideLoading] = useState(true);
   const loading = perfLoading || sideLoading;
+
+  // Greeting changes by time of day — small touch that makes the dashboard feel alive
+  const greeting = useMemo(() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good morning";
+    if (h < 17) return "Good afternoon";
+    return "Good evening";
+  }, []);
+  const todayLabel = useMemo(
+    () => new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" }),
+    []
+  );
 
   useEffect(() => {
     if (!user) return;
