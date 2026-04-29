@@ -174,6 +174,99 @@ const TOOL_SCHEMA = {
   },
 };
 
+async function runEvaluation(supabase: any, reviewId: string, review: any) {
+  try {
+    const wordCount = (review.sop_text || "").trim().split(/\s+/).filter(Boolean).length;
+
+    const studentContext = {
+      target_colleges: review.target_colleges || "(not provided)",
+      country_preference: review.country_preference || "(not provided)",
+      target_course: review.target_course || "MBA",
+      specialization: review.specialization || "(not provided)",
+      why_course: review.why_course || "(not provided)",
+      experience_years: review.experience_years ?? "(not provided)",
+      current_role: review.current_role_text || "(not provided)",
+      academic_background: review.academic_background || "(not provided)",
+      major_achievements: review.major_achievements || "(not provided)",
+      short_term_goals: review.short_term_goals || "(not provided)",
+      long_term_goals: review.long_term_goals || "(not provided)",
+      why_college: review.why_college || "(not provided)",
+      strengths: review.strengths || "(not provided)",
+      weaknesses: review.weaknesses || "(not provided)",
+      highlight_focus: review.highlight_focus || [],
+      tone_preference: review.tone_preference || "Formal",
+    };
+
+    const userPrompt = `STUDENT PROFILE & INTENT:
+${JSON.stringify(studentContext, null, 2)}
+
+SOP CONTENT (${wordCount} words):
+"""
+${review.sop_text}
+"""
+
+Evaluate this SOP rigorously. Be specific, quantitative, and actionable. Use the submit_sop_evaluation function.`;
+
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      await supabase.from("sop_reviews").update({ status: "failed", error_message: "OpenAI not configured" }).eq("id", reviewId);
+      return;
+    }
+
+    const aiResp = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userPrompt },
+        ],
+        tools: [TOOL_SCHEMA],
+        tool_choice: { type: "function", function: { name: "submit_sop_evaluation" } },
+        temperature: 0.3,
+      }),
+    });
+
+    if (!aiResp.ok) {
+      const errText = await aiResp.text();
+      console.error("OpenAI error:", aiResp.status, errText);
+      await supabase.from("sop_reviews").update({ status: "failed", error_message: `AI error ${aiResp.status}: ${errText.slice(0, 200)}` }).eq("id", reviewId);
+      return;
+    }
+
+    const aiJson = await aiResp.json();
+    const toolCall = aiJson?.choices?.[0]?.message?.tool_calls?.[0];
+    if (!toolCall?.function?.arguments) {
+      console.error("No tool call in response:", JSON.stringify(aiJson).slice(0, 500));
+      await supabase.from("sop_reviews").update({ status: "failed", error_message: "No structured response" }).eq("id", reviewId);
+      return;
+    }
+
+    let evaluation: any;
+    try {
+      evaluation = JSON.parse(toolCall.function.arguments);
+    } catch (parseErr) {
+      console.error("JSON parse error:", parseErr);
+      await supabase.from("sop_reviews").update({ status: "failed", error_message: "Invalid AI JSON" }).eq("id", reviewId);
+      return;
+    }
+
+    await supabase.from("sop_reviews").update({
+      status: "completed",
+      ai_response: evaluation,
+      overall_score: evaluation.overall_score,
+      error_message: null,
+    }).eq("id", reviewId);
+  } catch (e) {
+    console.error("Background evaluation error:", e);
+    await supabase.from("sop_reviews").update({
+      status: "failed",
+      error_message: e instanceof Error ? e.message : "Unknown error",
+    }).eq("id", reviewId);
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -213,88 +306,13 @@ Deno.serve(async (req) => {
 
     await supabase.from("sop_reviews").update({ status: "processing" }).eq("id", reviewId);
 
-    const studentContext = {
-      target_colleges: review.target_colleges || "(not provided)",
-      country_preference: review.country_preference || "(not provided)",
-      target_course: review.target_course || "MBA",
-      specialization: review.specialization || "(not provided)",
-      why_course: review.why_course || "(not provided)",
-      experience_years: review.experience_years ?? "(not provided)",
-      current_role: review.current_role_text || "(not provided)",
-      academic_background: review.academic_background || "(not provided)",
-      major_achievements: review.major_achievements || "(not provided)",
-      short_term_goals: review.short_term_goals || "(not provided)",
-      long_term_goals: review.long_term_goals || "(not provided)",
-      why_college: review.why_college || "(not provided)",
-      strengths: review.strengths || "(not provided)",
-      weaknesses: review.weaknesses || "(not provided)",
-      highlight_focus: review.highlight_focus || [],
-      tone_preference: review.tone_preference || "Formal",
-    };
+    // Kick off the AI evaluation in the background and return immediately.
+    // The client polls sop_reviews.status until "completed" or "failed".
+    // @ts-ignore EdgeRuntime is provided by Supabase Edge runtime
+    EdgeRuntime.waitUntil(runEvaluation(supabase, reviewId, review));
 
-    const userPrompt = `STUDENT PROFILE & INTENT:
-${JSON.stringify(studentContext, null, 2)}
-
-SOP CONTENT (${wordCount} words):
-"""
-${review.sop_text}
-"""
-
-Evaluate this SOP rigorously. Be specific, quantitative, and actionable. Use the submit_sop_evaluation function.`;
-
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) {
-      await supabase.from("sop_reviews").update({ status: "failed", error_message: "OpenAI not configured" }).eq("id", reviewId);
-      return new Response(JSON.stringify({ error: "AI not configured" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    const aiResp = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: userPrompt },
-        ],
-        tools: [TOOL_SCHEMA],
-        tool_choice: { type: "function", function: { name: "submit_sop_evaluation" } },
-        temperature: 0.3,
-      }),
-    });
-
-    if (!aiResp.ok) {
-      const errText = await aiResp.text();
-      console.error("OpenAI error:", aiResp.status, errText);
-      await supabase.from("sop_reviews").update({ status: "failed", error_message: `AI error ${aiResp.status}: ${errText.slice(0,200)}` }).eq("id", reviewId);
-      return new Response(JSON.stringify({ error: `AI service error: ${errText.slice(0,200)}` }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    const aiJson = await aiResp.json();
-    const toolCall = aiJson?.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall?.function?.arguments) {
-      console.error("No tool call in response:", JSON.stringify(aiJson).slice(0, 500));
-      await supabase.from("sop_reviews").update({ status: "failed", error_message: "No structured response" }).eq("id", reviewId);
-      return new Response(JSON.stringify({ error: "No structured response from AI" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    let evaluation: any;
-    try {
-      evaluation = JSON.parse(toolCall.function.arguments);
-    } catch (parseErr) {
-      console.error("JSON parse error:", parseErr, toolCall.function.arguments?.slice(0, 500));
-      await supabase.from("sop_reviews").update({ status: "failed", error_message: "Invalid AI JSON" }).eq("id", reviewId);
-      return new Response(JSON.stringify({ error: "AI returned invalid JSON" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    }
-
-    await supabase.from("sop_reviews").update({
-      status: "completed",
-      ai_response: evaluation,
-      overall_score: evaluation.overall_score,
-      error_message: null,
-    }).eq("id", reviewId);
-
-    return new Response(JSON.stringify({ success: true, evaluation }), {
+    return new Response(JSON.stringify({ success: true, status: "processing", reviewId }), {
+      status: 202,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
