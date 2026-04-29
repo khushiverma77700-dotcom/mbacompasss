@@ -246,7 +246,7 @@ export default function StudentLayout() {
           )}
 
           {/* Main — offset by sidebar width on desktop so layout doesn't overlap */}
-          <main className="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-6 lg:ml-64">
+          <main className="flex-1 min-w-0 px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:ml-64">
             <Outlet />
           </main>
         </div>
