@@ -233,7 +233,7 @@ export default function StudentLayout() {
 
         <div className={cn("flex pt-14", latestUnread && !bannerDismissed && "pt-[5.75rem]")}>
           {/* Sidebar - desktop: FIXED. Scrolls independently of main content. */}
-          <aside className="hidden lg:flex flex-col w-64 shrink-0 border-r border-border bg-card/80 backdrop-blur fixed left-0 top-14 bottom-0 overflow-y-auto z-20">
+          <aside className={cn("hidden lg:flex flex-col w-64 shrink-0 border-r border-border bg-card/80 backdrop-blur fixed left-0 bottom-0 overflow-y-auto z-20", latestUnread && !bannerDismissed ? "top-[5.75rem]" : "top-14")}>
             <SidebarContent />
           </aside>
 
