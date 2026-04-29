@@ -41,6 +41,8 @@ export default function StudentOverview() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [weak, setWeak] = useState<any[]>([]);
   const [displayName, setDisplayName] = useState<string>("");
+  const [examCountdowns, setExamCountdowns] = useState<any[]>([]);
+  const [, setNowTick] = useState(0);
   const [sideLoading, setSideLoading] = useState(true);
   const loading = perfLoading || sideLoading;
 
@@ -82,9 +84,27 @@ export default function StudentOverview() {
       setTasks(tk ?? []);
       setWeak(wk ?? []);
       setDisplayName(prof?.display_name ?? user.email?.split("@")[0] ?? "Student");
+
+      // Exam countdowns — admin-managed via the existing exams table.
+      const { data: exRows } = await supabase
+        .from("exams")
+        .select("name, slug, exam_date")
+        .not("exam_date", "is", null)
+        .order("exam_date", { ascending: true });
+      const upcoming = (exRows ?? [])
+        .filter((x: any) => x.exam_date && new Date(x.exam_date).getTime() >= Date.now() - 86400000)
+        .slice(0, 8);
+      setExamCountdowns(upcoming);
+
       setSideLoading(false);
     })();
   }, [user]);
+
+  // Re-render every minute so countdowns stay live without manual refresh.
+  useEffect(() => {
+    const id = setInterval(() => setNowTick((t) => t + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   const submitted = useMemo(
     () => attempts.filter((x) => x.status === "submitted" || x.status === "auto_submitted"),
@@ -375,6 +395,9 @@ export default function StudentOverview() {
           </div>
         </div>
       </Card>
+
+      {/* ── Exam Countdowns — auto-updates every minute ──────────────────────── */}
+      <ExamCountdownStrip exams={examCountdowns} />
 
       {/* ── Quick navigation rail ────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -876,5 +899,62 @@ function ToolCard({ title, desc, href }: any) {
       <div className="text-xs text-muted-foreground mt-1">{desc}</div>
       <div className="text-xs text-sky-700 mt-2 font-medium">Open tool →</div>
     </Link>
+  );
+}
+
+function ExamCountdownStrip({ exams }: { exams: any[] }) {
+  if (!exams || exams.length === 0) {
+    return (
+      <Card className="p-4 border-sky-100 dark:border-sky-500/20 bg-gradient-to-br from-sky-50/60 to-white dark:from-sky-500/5 dark:to-background">
+        <div className="flex items-center gap-3 text-sm">
+          <div className="h-9 w-9 rounded-lg bg-sky-100 dark:bg-sky-500/20 grid place-items-center text-sky-700 dark:text-sky-300">
+            <CalendarDays className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <div className="font-semibold">Exam Countdowns</div>
+            <div className="text-xs text-muted-foreground">No upcoming exam dates yet — admin can add them in the Exams panel.</div>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+  const now = Date.now();
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2 px-1">
+        <h2 className="text-sm font-semibold flex items-center gap-2 text-foreground">
+          <CalendarDays className="h-4 w-4 text-sky-600 dark:text-sky-300" /> Exam Countdowns
+        </h2>
+        <span className="text-[11px] text-muted-foreground">Updates live</span>
+      </div>
+      <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x">
+        {exams.map((ex: any) => {
+          const target = new Date(ex.exam_date).getTime();
+          const days = Math.ceil((target - now) / 86_400_000);
+          const past = days < 0;
+          const urgent = !past && days <= 30;
+          const tone = past
+            ? "from-muted to-muted/40 text-muted-foreground border-border"
+            : urgent
+              ? "from-rose-50 to-white text-rose-700 border-rose-200 dark:from-rose-500/15 dark:to-background dark:text-rose-200 dark:border-rose-500/30"
+              : "from-sky-50 to-white text-sky-700 border-sky-200 dark:from-sky-500/15 dark:to-background dark:text-sky-200 dark:border-sky-500/30";
+          const dateLabel = new Date(ex.exam_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+          return (
+            <Link
+              key={ex.slug}
+              to={`/exams/${ex.slug}`}
+              className={`snap-start min-w-[170px] rounded-xl border p-3 bg-gradient-to-br ${tone} hover:shadow-md transition-all hover:-translate-y-0.5`}
+            >
+              <div className="text-[10px] uppercase tracking-wider opacity-80 font-bold">{ex.name}</div>
+              <div className="mt-1 flex items-baseline gap-1">
+                <span className="text-2xl font-bold tabular-nums">{past ? "—" : days}</span>
+                <span className="text-[11px] font-medium opacity-90">{past ? "concluded" : days === 1 ? "day left" : "days left"}</span>
+              </div>
+              <div className="text-[11px] mt-1 opacity-80">{dateLabel}</div>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
   );
 }
