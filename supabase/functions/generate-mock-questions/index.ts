@@ -923,7 +923,6 @@ Deno.serve(async (req) => {
             const batchTita = batch - batchMcq;
 
             await updateJob({
-              attempts: attemptsLocal,
               current_step: `Writing question ${produced + 1}/${sec.questions} — uniqueness check active…`,
             });
 
