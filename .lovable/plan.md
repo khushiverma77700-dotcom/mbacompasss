@@ -1,85 +1,90 @@
 ## Goal
-Across all mock categories (Full Mock, Sectional, Topic, Daily, Personalized Hub), make sure **Question Number, Set Number, and Option Labels (A/B/C/D)** are always rendered by the UI as fixed/static elements — and the question text editor (and stored `question_html` / `option_html`) contains ONLY the pure question text and pure option text. No "Q1.", "Question 1:", "Set 1:", "(A)", "A.", "1)" etc. embedded anywhere.
 
-## Where the problem lives today
+Deliver a deeply detailed, **100% system-generated** mock report covering all 10 sections you listed. AI analysis becomes **opt-in** (button click only). **Daily Tests** remain AI-free.
 
-1. **AI generator** (`supabase/functions/generate-mock-questions/index.ts`)
-   - The prompt does not forbid embedding "Q1.", "Question 1:", "Set 1:", "(A)", "A." inside `question_html` / option text.
-   - For DILR/VARC sets the prompt actually instructs duplicating the passage at the top of every question, but doesn't prevent the model from prefixing "Question 1 of Set 2" etc.
+## Scope
 
-2. **CSV import & manual editor** (`src/pages/admin/AdminMockBuilder.tsx`)
-   - Admins paste/write content that often starts with "Q1.", "1)", "Question:" and option text starting with "A) …".
+Rebuild the report UI for:
+1. **Full-length & sectional mocks** → `MockResultPage` (`/mocks/result/:attemptId`)
+2. **Personalized hub mocks** → `PersonalizedMockResultPage` (`/student/personalized/result/:attemptId`)
+3. **Daily Test report** → `StudentDailyTestReportPage` — keep system-only; remove any AI link/CTA.
 
-3. **Runner / Review / Daily Test report** already render `question_number`, set badge, `option_label` from columns — so they double up with whatever is inside the HTML.
+No backend or schema changes. AI uses existing `generate-mock-insights` and `student-mock-deep-analysis` edge functions, but only when the user clicks **"Run AI Analysis"**.
 
-The UI side is already correct. The fix is **content hygiene**: enforce clean storage at write-time and clean legacy rows at read-time.
+## The 10 report sections (built from existing data)
 
-## Plan
+Built using `mock_attempts`, `mock_responses`, `mock_questions`, `mock_question_options`, `mock_sections` — all already loaded.
 
-### 1. AI prompt hardening (Full / Sectional / Topic / Daily / Personalized)
-File: `supabase/functions/generate-mock-questions/index.ts`
+| # | Section | Components / Charts |
+|---|---|---|
+| 1 | **Overall Performance Summary** | KPI cards: Total Score, Percentile, Accuracy, Attempted/Total, Time Utilization. Percentile gauge. |
+| 2 | **Performance Comparison** | Grouped bar (You vs Avg vs Top 10% vs Topper). Accuracy-vs-Attempts scatter. Percentile distribution histogram with "you" highlighted. |
+| 3 | **Section-Wise Analysis** | Expandable card per section: score bar, accuracy donut, time-spent vs ideal-time bar, attempts/correct/incorrect. |
+| 4 | **Question-Level Analysis** | Filterable table (Correct/Incorrect/Skipped × Easy/Med/Hard). Outcome pie. Difficulty-attempt distribution. Tags: silly mistake (correct topic but wrong & <30s), conceptual (wrong & >ideal time), missed easy (skipped easy Qs). |
+| 5 | **Time Management** | Stacked bar — time per section. Per-question time histogram. Speed-vs-accuracy line (rolling). |
+| 6 | **Attempt Strategy** | Classifier → Aggressive / Balanced / Conservative based on (attempts/total) & accuracy. Quadrant chart (attempts vs accuracy). |
+| 7 | **Difficulty Analysis** | Difficulty-wise accuracy bar, attempts distribution. Insight tags ("Weak in Easy", "Strong in Hard"). |
+| 8 | **Peer Benchmarking** | You vs Top 10% vs Avg comparison bars + score-gap bar. |
+| 9 | **Strengths & Weaknesses** | 2-column layout + topic mastery heatmap. |
+| 10 | **Progress Tracking** | If ≥2 attempts on same exam_code: line charts for Score, Accuracy, Percentile across last 5 mocks. |
 
-- Add a hard rule block to `buildSystemPrompt`:
-  - `question_html` must NOT begin with or contain any of: `Q1`, `Q.`, `Question 1`, `Question:`, `Q1.`, `1.`, `1)`, `(1)`, `Set 1`, `Set 1:`, `[Set …]`.
-  - For set-bound questions, the passage/caselet stays inside `<div class="passage">` exactly as today, but no "Question 1 of Set 2" prefix anywhere.
-  - `options[].text` must NOT start with `A)`, `A.`, `(A)`, `a)`, `1)`, etc. Just the pure option content.
-- Update the JSON shape example in `buildUserPrompt` to show clean strings ("question_html: <p>Pure question only…</p>", "text: <p>Pure option only…</p>").
+## AI Analysis (manual only)
 
-### 2. Server-side sanitizer before insert
-Same file, in the section that maps the model's response into rows for `mock_questions` / `mock_question_options` / `personalized_questions` mirror.
+- Remove the auto `useEffect → generateInsights()` in `MockResultPage`.
+- Add a dedicated "🤖 Run AI Analysis" panel at the bottom with a single CTA button.
+- On click → call `generate-mock-insights` (existing). Show loader, then render: AI summary, recommendations, priority weaknesses, 7-day study plan in a clean formatted block.
+- Cache result in component state so re-clicks aren't needed in the same session.
+- Daily Test report: remove any AI mentions/buttons (currently none, just verify).
 
-Add a helper `stripQuestionPrefix(html)` and `stripOptionPrefix(html)` that removes:
-- Leading `Q\s*\d+[.\):]?`
-- Leading `Question\s*\d*[.:)]?`
-- Leading `Set\s*\d+[:\-]?` (only if it's a stray prefix outside `<div class="passage">`)
-- Leading numeric markers: `\d+[.\)]\s+`
-- Leading option labels in `option_html`: `^\s*\(?[A-Da-d]\)?[.\):\-]\s+`
+## Personalized hub report
 
-Apply to:
-- `q.question_html` before insert into `mock_questions`
-- `o.text` (becomes `option_html`) before insert into `mock_question_options`
-- The mirrored `personalized_questions` rows (question_text and each option's text).
+Upgrade `PersonalizedMockResultPage` to show sections 1, 3, 4, 5, 6, 7, 9 (skipping peer & progress where data is unavailable). Same manual AI button using `generate-mock-insights` (works on `mock_attempts` only — for personalized we'll do a lightweight inline rule-based summary instead, no AI dependency since attempts table is different).
 
-### 3. Same sanitizer in retry path
-File: `supabase/functions/retry-mock-section/index.ts` — apply identical helpers when re-inserting questions/options after a section retry.
+## Reusable building blocks
 
-### 4. CSV import + manual editor sanitizer
-File: `src/pages/admin/AdminMockBuilder.tsx`
+Create small reusable components in `src/components/mock/report/`:
+- `KPIGrid.tsx` — section 1 cards
+- `ComparisonPanel.tsx` — section 2
+- `SectionWiseCards.tsx` — section 3 (donut + bars)
+- `QuestionLevelTable.tsx` — section 4 (filters + pie)
+- `TimeManagementCharts.tsx` — section 5
+- `StrategyClassifier.tsx` — section 6
+- `DifficultyAnalysis.tsx` — section 7
+- `PeerBenchmark.tsx` — section 8
+- `StrengthsWeaknesses.tsx` — section 9 (incl. heatmap)
+- `ProgressTrend.tsx` — section 10
+- `AIAnalysisPanel.tsx` — manual-trigger AI block (used by both Mock + Personalized pages)
 
-- Add a small util `src/lib/cleanQuestionHtml.ts` exporting `stripQuestionPrefix` and `stripOptionPrefix` (same regexes as Edge Function, in TS).
-- CSV import path: run sanitizer on each `question_html` and each option text before insert.
-- Manual editor "Save" handler: run sanitizer on `editorState.question_html` and on every `editorState.options[i].option_html` right before insert/update.
-- Optional: a small inline note under the question editor "Do not add Q1., Set, or option labels — they are added automatically."
+`MockResultPage` and `PersonalizedMockResultPage` become orchestrators that load data and render these blocks in order.
 
-### 5. One-time backfill migration (cleans existing rows)
-New migration that runs the same regex cleanup in SQL on:
-- `mock_questions.question_html`
-- `mock_question_options.option_html`
-- `personalized_questions.question_text`
-- `personalized_questions.options` (jsonb — update each element's `text`)
+## Charts
 
-Uses `regexp_replace` with the same patterns as the JS sanitizer, run once.
+Continue using `recharts` (already used). All colors via tailwind tokens / HSL. No emojis (per project rule).
 
-### 6. UI confirmation (no behavior change, just verify)
-Confirm these already render the metadata as static UI (they do — listed for reference, no edits needed):
-- `src/pages/mocks/MockTestRunnerPage.tsx` — shows `Question {n}`, set badge, `{o.option_label}.` prefix
-- `src/pages/mocks/MockReviewPage.tsx` — same pattern
-- `src/pages/student/StudentDailyTestReportPage.tsx` — same pattern
-- `src/pages/student/PersonalizedHub*` — uses static A/B/C/D labels
+## Files
 
-If any of these still embed labels in markup duplicated from text, normalize during render.
+**New**
+- `src/components/mock/report/` (11 files above)
 
-## Files to change
+**Edited**
+- `src/pages/mocks/MockResultPage.tsx` — refactor to use new blocks, remove auto-AI, add manual AI panel
+- `src/pages/student/PersonalizedMockResultPage.tsx` — expand with system-generated sections + manual AI
+- `src/pages/student/StudentDailyTestReportPage.tsx` — verify no AI hooks (likely no change; just confirm)
 
-```text
-supabase/functions/generate-mock-questions/index.ts   (prompt + sanitize on insert + mirror)
-supabase/functions/retry-mock-section/index.ts        (sanitize on retry insert + mirror)
-src/lib/cleanQuestionHtml.ts                          (NEW shared util)
-src/pages/admin/AdminMockBuilder.tsx                  (CSV import + manual save sanitize + helper note)
-supabase/migrations/<new>.sql                         (one-time backfill cleanup)
-```
+**Untouched**
+- Edge functions, DB schema, daily-test logic, mock generation pipeline.
 
 ## Out of scope
-- No change to question_number / set_index columns.
-- No change to runner/review UI logic; they already show metadata statically.
-- No deletion of existing data — only in-place text cleanup.
+
+- No new edge functions
+- No DB migrations
+- No changes to test runner / question generation
+- Daily Test report stays as-is (system-only, no AI)
+
+## QA
+
+After build, navigate to a recent mock result and verify:
+- All 10 sections render
+- AI panel does not auto-fire (network logs)
+- Clicking "Run AI Analysis" calls `generate-mock-insights`
+- Daily test report has no AI button
