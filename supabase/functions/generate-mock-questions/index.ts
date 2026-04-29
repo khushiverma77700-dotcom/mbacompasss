@@ -132,11 +132,11 @@ const EXAM_PROFILES: Record<string, {
   },
 };
 
-const BATCH_SIZE = 12; // questions per AI call (raised so we hit exact counts faster)
-const OPENAI_TIMEOUT_MS = 90_000;       // single AI call hard timeout
+const BATCH_SIZE = 1; // reliability mode: generate + validate + save exactly one question per AI call
+const OPENAI_TIMEOUT_MS = 120_000;      // single-question calls get a little more room, no batch pressure
 const FIRECRAWL_TIMEOUT_MS = 6_000;     // single web-check hard timeout
-const SECTION_WALL_CLOCK_MS = 15 * 60_000; // entire section must finish in 15 min (raised from 8)
 const MAX_FIRECRAWL_CHECKS_PER_SECTION = 4; // cap web-checks tightly to avoid stalls
+const MAX_ATTEMPTS_PER_QUESTION = 60;   // no wall-clock cutoff; retry enough times to hit exact count
 
 // Map mock_section.code (e.g. "DILR") + exam to the personalized_questions catalog
 // Uses src/data/personalizedExams.ts vocabulary so the admin hub counter picks it up.
@@ -174,6 +174,24 @@ async function sha256(text: string): Promise<string> {
   return Array.from(new Uint8Array(buf))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
+}
+
+async function loadExistingQuestionHashes(admin: any): Promise<Set<string>> {
+  const seen = new Set<string>();
+  const pageSize = 1000;
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await admin
+      .from("mock_questions")
+      .select("content_hash, question_html")
+      .range(from, from + pageSize - 1);
+    if (error) throw new Error(`Could not load existing question hashes: ${error.message}`);
+    for (const row of data || []) {
+      if ((row as any).content_hash) seen.add((row as any).content_hash);
+      else if ((row as any).question_html) seen.add(await sha256(normalizeForHash((row as any).question_html)));
+    }
+    if (!data || data.length < pageSize) break;
+  }
+  return seen;
 }
 
 function normalizeForHash(s: string): string {
