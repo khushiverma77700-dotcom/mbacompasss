@@ -24,12 +24,17 @@ export default function StudentLogin() {
   const { toast } = useToast();
   const params = new URLSearchParams(location.search);
   const redirectTo = params.get("redirect") || "/student";
+  const reason = params.get("reason");
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    reason === "no-course"
+      ? "No active course found on this account. Please purchase a course to access the student dashboard."
+      : null,
+  );
 
   // If already logged in AND has access, send to dashboard.
   useEffect(() => {
