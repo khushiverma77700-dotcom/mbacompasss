@@ -208,14 +208,24 @@ Deno.serve(async (req) => {
 
     const authHeader = req.headers.get("Authorization") || "";
     if (!authHeader.startsWith("Bearer ")) return jsonResp(401, { error: "Missing auth" });
-    const userClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });
-    const { data: userRes } = await userClient.auth.getUser();
-    const user = userRes?.user;
-    if (!user) return jsonResp(401, { error: "Invalid auth" });
+    const bearerToken = authHeader.slice("Bearer ".length).trim();
 
     const admin = createClient(url, serviceKey);
-    const { data: roleRow } = await admin.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
-    if (!roleRow) return jsonResp(403, { error: "Admin role required" });
+
+    // Two valid auth modes:
+    //  1) Service-role token (background self-recursion / kickoff from generate-mock-questions)
+    //  2) End-user JWT (admin clicked "Retry section")
+    let userId: string | null = null;
+    const isServiceCall = bearerToken === serviceKey;
+    if (!isServiceCall) {
+      const userClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });
+      const { data: userRes } = await userClient.auth.getUser();
+      const user = userRes?.user;
+      if (!user) return jsonResp(401, { error: "Invalid auth" });
+      const { data: roleRow } = await admin.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
+      if (!roleRow) return jsonResp(403, { error: "Admin role required" });
+      userId = user.id;
+    }
 
     const { job_id, auto = false } = await req.json();
     if (!job_id) return jsonResp(400, { error: "job_id required" });
@@ -223,12 +233,15 @@ Deno.serve(async (req) => {
     const { data: job, error: jobErr } = await admin.from("mock_section_jobs").select("*").eq("id", job_id).single();
     if (jobErr || !job) return jsonResp(404, { error: "Job not found" });
 
-    // Re-arm the job
+    if (!userId) userId = job.created_by;
+
+    // Re-arm the job and grab a worker lock so the watchdog can recover us if we die.
     await admin.from("mock_section_jobs").update({
       status: "processing",
       current_step: "Restart requested — re-calling AI…",
       error_message: null,
       attempts: auto ? (job.attempts || 0) : (job.attempts || 0) + 1,
+      worker_lock_until: new Date(Date.now() + 8 * 60_000).toISOString(),
       updated_at: new Date().toISOString(),
     }).eq("id", job_id);
 
