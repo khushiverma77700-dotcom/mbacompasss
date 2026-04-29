@@ -118,31 +118,58 @@ async function callOpenAIBatch(opts: {
   const sys = `You are an elite ${opts.exam_code} question setter writing 100% original questions for the ${opts.section_name} (${opts.section_code}) section.${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} Use fresh numbers, fresh names, fresh contexts. Each MCQ has 4 options A-D with one correct; each TITA has numeric answer(s). Include detailed 200-400 word explanations. Output ONLY valid JSON. STRICT FORMATTING: "question_html" must contain ONLY the pure question text — never prefix with "Q1.", "Question 1:", "Set 1:", "1.", "1)" or any numbering. "options[].text" must contain ONLY pure option text — never prefix with "A)", "(A)", "A.", "1)" or any label. The UI renders these labels statically.`;
   const user = `Generate exactly ${opts.count} questions: ${opts.mcq} MCQ + ${opts.tita} TITA. Marking +${opts.positive}/-${opts.negative}. JSON shape: {"questions":[{"question_type":"mcq"|"tita","question_html":"...","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"tita_answers":["..."],"tita_tolerance":0.01,"explanation_html":"..."}]}`;
 
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), OPENAI_TIMEOUT_MS);
-  let resp: Response;
-  try {
-    const lvlLower = String(opts.level || "").toLowerCase();
-    const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
-    const modelId = isHardVariant ? "gpt-5" : "gpt-4o";
-    const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.4;
-    const body: Record<string, unknown> = {
-      model: modelId,
-      messages: [{ role: "system", content: sys }, { role: "user", content: user }],
-      response_format: { type: "json_object" },
-      max_tokens: 16000,
-    };
-    if (modelId !== "gpt-5") body.temperature = temp;
-    resp = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal: ctrl.signal,
-    });
-  } finally {
-    clearTimeout(timer);
+  const lvlLower = String(opts.level || "").toLowerCase();
+  const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
+  const modelId = isHardVariant ? "gpt-5" : "gpt-4o";
+  const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.4;
+  const reqBody: Record<string, unknown> = {
+    model: modelId,
+    messages: [{ role: "system", content: sys }, { role: "user", content: user }],
+    response_format: { type: "json_object" },
+    max_tokens: 16000,
+  };
+  if (modelId !== "gpt-5") reqBody.temperature = temp;
+
+  // Inline retry with exponential backoff for transient errors (429 / 5xx).
+  const MAX_INLINE_RETRIES = 4;
+  let resp: Response | null = null;
+  let lastErr: string | null = null;
+  for (let attempt = 1; attempt <= MAX_INLINE_RETRIES; attempt++) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), OPENAI_TIMEOUT_MS);
+    try {
+      resp = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify(reqBody),
+        signal: ctrl.signal,
+      });
+      clearTimeout(timer);
+      if (resp.ok) break;
+      if ([408, 425, 429, 500, 502, 503, 504].includes(resp.status) && attempt < MAX_INLINE_RETRIES) {
+        const txt = await resp.text();
+        lastErr = `AI ${resp.status}: ${txt.slice(0, 200)}`;
+        console.warn(`[retry-mock-section] transient ${resp.status}, retry ${attempt}/${MAX_INLINE_RETRIES - 1}`);
+        const backoff = Math.min(8000, 1000 * Math.pow(2, attempt - 1)) + Math.random() * 500;
+        await new Promise((r) => setTimeout(r, backoff));
+        resp = null;
+        continue;
+      }
+      throw new Error(`AI ${resp.status}: ${(await resp.text()).slice(0, 200)}`);
+    } catch (e) {
+      clearTimeout(timer);
+      const msg = (e as Error)?.name === "AbortError" ? `OpenAI aborted after ${OPENAI_TIMEOUT_MS}ms` : `OpenAI fetch failed: ${(e as Error)?.message || e}`;
+      lastErr = msg;
+      if (attempt < MAX_INLINE_RETRIES) {
+        const backoff = Math.min(8000, 1000 * Math.pow(2, attempt - 1)) + Math.random() * 500;
+        await new Promise((r) => setTimeout(r, backoff));
+        resp = null;
+        continue;
+      }
+      throw new Error(msg);
+    }
   }
-  if (!resp.ok) throw new Error(`AI ${resp.status}: ${(await resp.text()).slice(0, 200)}`);
+  if (!resp || !resp.ok) throw new Error(lastErr || "AI call failed after retries");
   const data = await resp.json();
   const content = data?.choices?.[0]?.message?.content;
   const parsed = typeof content === "string" ? JSON.parse(content) : content;
