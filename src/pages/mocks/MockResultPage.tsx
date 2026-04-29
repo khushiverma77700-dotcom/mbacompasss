@@ -4,26 +4,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Trophy, Target, CheckCircle2, XCircle, Clock, TrendingUp, TrendingDown,
-  Brain, Sparkles, Download, Award, AlertTriangle, Flame, BookOpen,
-  Users, Activity, Lightbulb, ChevronRight,
-} from "lucide-react";
-import {
-  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
-  RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
-  LineChart, Line, Legend, AreaChart, Area, Cell,
-} from "recharts";
+import { Download, ChevronRight, Trophy } from "lucide-react";
 import { toast } from "sonner";
 
-type SectionAgg = {
-  code: string; name: string; score: number; max: number;
-  attempted: number; correct: number; incorrect: number;
-};
-type TopicAgg = { attempted: number; correct: number };
+import KPIGrid from "@/components/mock/report/KPIGrid";
+import ComparisonPanel from "@/components/mock/report/ComparisonPanel";
+import SectionWiseCards, { SectionRow } from "@/components/mock/report/SectionWiseCards";
+import QuestionLevelTable, { QRow } from "@/components/mock/report/QuestionLevelTable";
+import TimeManagementCharts from "@/components/mock/report/TimeManagementCharts";
+import StrategyClassifier from "@/components/mock/report/StrategyClassifier";
+import DifficultyAnalysis, { DiffRow } from "@/components/mock/report/DifficultyAnalysis";
+import PeerBenchmark from "@/components/mock/report/PeerBenchmark";
+import StrengthsWeaknesses, { TopicRow } from "@/components/mock/report/StrengthsWeaknesses";
+import ProgressTrend, { TrendPoint } from "@/components/mock/report/ProgressTrend";
+import AIAnalysisPanel from "@/components/mock/report/AIAnalysisPanel";
 
 export default function MockResultPage() {
   const { attemptId } = useParams();
@@ -34,9 +29,8 @@ export default function MockResultPage() {
   const [sections, setSections] = useState<any[]>([]);
   const [responses, setResponses] = useState<any[]>([]);
   const [questions, setQuestions] = useState<any[]>([]);
-  const [peerScores, setPeerScores] = useState<number[]>([]);
-  const [insights, setInsights] = useState<any>(null);
-  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [peerAttempts, setPeerAttempts] = useState<any[]>([]);
+  const [historyAttempts, setHistoryAttempts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
 
@@ -49,7 +43,8 @@ export default function MockResultPage() {
         supabase.from("mock_tests").select("*").eq("id", a.test_id).maybeSingle(),
         supabase.from("mock_sections").select("*").eq("test_id", a.test_id).order("sort_order"),
         supabase.from("mock_responses").select("*").eq("attempt_id", a.id),
-        supabase.from("mock_attempts").select("total_score, accuracy, percentile")
+        supabase.from("mock_attempts")
+          .select("id, user_id, total_score, max_score, accuracy, percentile, total_attempted, total_correct")
           .eq("test_id", a.test_id).in("status", ["submitted", "auto_submitted"]),
       ]);
       const qIds = (rsp ?? []).map((r: any) => r.question_id);
@@ -57,7 +52,7 @@ export default function MockResultPage() {
       if (qIds.length) {
         const { data: qd } = await supabase
           .from("mock_questions")
-          .select("id, section_id, topic, subtopic, difficulty, question_type, positive_marks")
+          .select("id, section_id, question_number, topic, subtopic, difficulty, question_type, positive_marks")
           .in("id", qIds);
         qs = qd ?? [];
       }
@@ -66,119 +61,78 @@ export default function MockResultPage() {
       setSections(secs ?? []);
       setResponses(rsp ?? []);
       setQuestions(qs);
-      setPeerScores((peers ?? []).map((p: any) => Number(p.total_score ?? 0)));
+      setPeerAttempts(peers ?? []);
+
+      // Progress history (same exam_code, same user, last 5)
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user && t?.exam_code) {
+        const { data: hist } = await supabase.from("mock_attempts")
+          .select("id, total_score, max_score, accuracy, percentile, submitted_at, test_id, mock_tests!inner(exam_code, name)")
+          .eq("user_id", user.id)
+          .in("status", ["submitted", "auto_submitted"])
+          .eq("mock_tests.exam_code", t.exam_code)
+          .order("submitted_at", { ascending: false })
+          .limit(5);
+        setHistoryAttempts((hist ?? []).reverse());
+      }
       setLoading(false);
     })();
   }, [attemptId, navigate]);
 
-  const sectionalScores: Record<string, SectionAgg> = attempt?.sectional_scores ?? {};
-  const topicBreakdown: Record<string, TopicAgg> = attempt?.topic_breakdown ?? {};
-
-  // ============ Derived analytics ============
-  const sectionRows = useMemo(() => {
-    return Object.entries(sectionalScores).map(([id, s]) => ({
-      id, ...s,
-      pct: s.max > 0 ? Math.round((s.score / s.max) * 100) : 0,
-      accuracy: s.attempted > 0 ? Math.round((s.correct / s.attempted) * 100) : 0,
-    }));
-  }, [sectionalScores]);
-
-  const topicRows = useMemo(() => {
-    return Object.entries(topicBreakdown).map(([topic, t]) => ({
-      topic,
-      attempted: t.attempted,
-      correct: t.correct,
-      accuracy: t.attempted > 0 ? Math.round((t.correct / t.attempted) * 100) : 0,
-    })).sort((a, b) => b.attempted - a.attempted);
-  }, [topicBreakdown]);
-
-  const strongTopics = useMemo(
-    () => topicRows.filter((t) => t.attempted >= 2 && t.accuracy >= 70).slice(0, 5),
-    [topicRows],
-  );
-  const weakTopics = useMemo(
-    () => topicRows.filter((t) => t.attempted >= 2 && t.accuracy < 50).slice(0, 5),
-    [topicRows],
-  );
-
-  // Time analysis
+  // ==== Derived data ====
+  const sectionalScores: Record<string, any> = attempt?.sectional_scores ?? {};
+  const topicBreakdown: Record<string, any> = attempt?.topic_breakdown ?? {};
   const qById = useMemo(() => new Map(questions.map((q) => [q.id, q])), [questions]);
-  const timeBySection = useMemo(() => {
-    const m: Record<string, { name: string; time: number; count: number; correct_time: number; wrong_time: number; correct_n: number; wrong_n: number }> = {};
-    for (const sec of sections) m[sec.id] = { name: sec.code || sec.name, time: 0, count: 0, correct_time: 0, wrong_time: 0, correct_n: 0, wrong_n: 0 };
-    for (const r of responses) {
-      const t = Number(r.time_spent_seconds ?? 0);
-      const sid = r.section_id;
-      if (!m[sid]) continue;
-      m[sid].time += t;
-      m[sid].count += 1;
-      if (r.is_correct === true) { m[sid].correct_time += t; m[sid].correct_n += 1; }
-      if (r.is_correct === false) { m[sid].wrong_time += t; m[sid].wrong_n += 1; }
-    }
-    return Object.values(m).map((s) => ({
-      ...s,
-      avg: s.count ? Math.round(s.time / s.count) : 0,
-      avg_correct: s.correct_n ? Math.round(s.correct_time / s.correct_n) : 0,
-      avg_wrong: s.wrong_n ? Math.round(s.wrong_time / s.wrong_n) : 0,
-    }));
-  }, [responses, sections]);
 
-  const perQuestionTime = useMemo(() => {
-    return responses
-      .map((r, i) => ({
-        idx: i + 1,
-        time: Number(r.time_spent_seconds ?? 0),
-        correct: r.is_correct === true ? 1 : 0,
-        wrong: r.is_correct === false ? 1 : 0,
-      }))
-      .filter((r) => r.time > 0);
-  }, [responses]);
-
-  const totalTimeSec = useMemo(
-    () => responses.reduce((a, r) => a + Number(r.time_spent_seconds ?? 0), 0),
-    [responses],
-  );
-
-  // Peer comparison
-  const peerStats = useMemo(() => {
-    if (!peerScores.length) return null;
-    const sorted = [...peerScores].sort((a, b) => b - a);
-    const top10Cut = sorted[Math.max(0, Math.floor(sorted.length * 0.1) - 1)] ?? sorted[0];
-    const top1Cut = sorted[Math.max(0, Math.floor(sorted.length * 0.01) - 1)] ?? sorted[0];
-    const avg = peerScores.reduce((a, b) => a + b, 0) / peerScores.length;
-    const max = sorted[0];
-    return { top10Cut, top1Cut, avg: Math.round(avg * 100) / 100, max, count: peerScores.length };
-  }, [peerScores]);
-
-  const percentileBands = useMemo(() => {
-    if (!peerScores.length) return [];
-    const bands = [
-      { name: "0-25", min: 0, max: 25 }, { name: "25-50", min: 25, max: 50 },
-      { name: "50-75", min: 50, max: 75 }, { name: "75-90", min: 75, max: 90 },
-      { name: "90-95", min: 90, max: 95 }, { name: "95-99", min: 95, max: 99 },
-      { name: "99+", min: 99, max: 101 },
-    ];
-    const myPct = Number(attempt?.percentile ?? 0);
-    const sorted = [...peerScores].sort((a, b) => a - b);
-    return bands.map((b) => {
-      const cnt = sorted.filter((s) => {
-        const p = (sorted.filter((x) => x < s).length / sorted.length) * 100;
-        return p >= b.min && p < b.max;
-      }).length;
-      return { ...b, count: cnt, isMe: myPct >= b.min && myPct < b.max };
+  const sectionRows: SectionRow[] = useMemo(() => {
+    return sections.map((sec) => {
+      const ss = sectionalScores[sec.id] || {};
+      const total = sec.total_questions || 0;
+      const attempted = ss.attempted ?? 0;
+      const correct = ss.correct ?? 0;
+      const incorrect = ss.incorrect ?? 0;
+      // section time
+      const timeSec = responses
+        .filter((r) => r.section_id === sec.id)
+        .reduce((a, r) => a + Number(r.time_spent_seconds ?? 0), 0);
+      const idealSec = (sec.duration_minutes ?? 0) * 60;
+      return {
+        id: sec.id,
+        code: sec.code || sec.name,
+        name: sec.name,
+        score: ss.score ?? 0,
+        max: ss.max ?? (total * (sec.positive_marks ?? 3)),
+        attempted, correct, incorrect,
+        unattempted: Math.max(0, total - attempted),
+        timeSec, idealSec,
+      };
     });
-  }, [peerScores, attempt?.percentile]);
+  }, [sections, sectionalScores, responses]);
 
-  // Difficulty breakdown
-  const difficultyRows = useMemo(() => {
-    const m: Record<string, { attempted: number; correct: number }> = {};
+  const topicRows: TopicRow[] = useMemo(() =>
+    Object.entries(topicBreakdown).map(([topic, t]: any) => ({
+      topic,
+      attempted: t.attempted ?? 0,
+      correct: t.correct ?? 0,
+      accuracy: t.attempted ? Math.round((t.correct / t.attempted) * 100) : 0,
+    })).sort((a, b) => b.attempted - a.attempted), [topicBreakdown]);
+
+  const difficultyRows: DiffRow[] = useMemo(() => {
+    const m: Record<string, { attempted: number; correct: number; total: number }> = {};
+    for (const q of questions) {
+      const d = (q.difficulty || "unknown");
+      if (!m[d]) m[d] = { attempted: 0, correct: 0, total: 0 };
+      m[d].total += 1;
+    }
     for (const r of responses) {
       const q = qById.get(r.question_id);
-      if (!q || (r.status !== "answered" && r.status !== "answered_marked")) continue;
+      if (!q) continue;
       const d = q.difficulty || "unknown";
-      if (!m[d]) m[d] = { attempted: 0, correct: 0 };
-      m[d].attempted += 1;
-      if (r.is_correct) m[d].correct += 1;
+      if (!m[d]) m[d] = { attempted: 0, correct: 0, total: 0 };
+      if (r.status === "answered" || r.status === "answered_marked") {
+        m[d].attempted += 1;
+        if (r.is_correct) m[d].correct += 1;
+      }
     }
     return ["easy", "moderate", "hard", "unknown"]
       .filter((k) => m[k])
@@ -186,35 +140,129 @@ export default function MockResultPage() {
         difficulty: k.charAt(0).toUpperCase() + k.slice(1),
         attempted: m[k].attempted,
         correct: m[k].correct,
+        total: m[k].total,
         accuracy: m[k].attempted ? Math.round((m[k].correct / m[k].attempted) * 100) : 0,
       }));
-  }, [responses, qById]);
+  }, [responses, questions, qById]);
 
-  // ============ AI Insights ============
-  async function generateInsights() {
-    if (!attemptId) return;
-    setInsightsLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("generate-mock-insights", {
-        body: { attempt_id: attemptId },
+  const qRows: QRow[] = useMemo(() => {
+    const sectionMap = new Map(sections.map((s) => [s.id, s.code || s.name]));
+    return responses
+      .map((r, i) => {
+        const q = qById.get(r.question_id);
+        const status: QRow["status"] =
+          r.is_correct === true ? "correct" :
+          r.is_correct === false ? "incorrect" : "skipped";
+        const time = Number(r.time_spent_seconds ?? 0);
+        const tags: string[] = [];
+        const ideal = (q?.difficulty === "easy" ? 60 : q?.difficulty === "hard" ? 150 : 100);
+        if (status === "incorrect" && time < 30) tags.push("silly mistake");
+        if (status === "incorrect" && time > ideal * 1.5) tags.push("conceptual");
+        if (status === "skipped" && q?.difficulty === "easy") tags.push("missed easy");
+        if (status === "correct" && time > ideal * 1.5) tags.push("slow win");
+        return {
+          qNum: q?.question_number ?? i + 1,
+          sectionCode: sectionMap.get(r.section_id) || "—",
+          difficulty: q?.difficulty || "unknown",
+          topic: q?.topic ?? null,
+          status,
+          timeSec: time,
+          idealSec: ideal,
+          tags,
+        };
+      })
+      .sort((a, b) => a.qNum - b.qNum);
+  }, [responses, qById, sections]);
+
+  // Time management
+  const perSectionTime = useMemo(() => sectionRows.map((s) => {
+    const corr = responses.filter((r) => r.section_id === s.id && r.is_correct === true).reduce((a, r) => a + Number(r.time_spent_seconds ?? 0), 0);
+    const wrong = responses.filter((r) => r.section_id === s.id && r.is_correct === false).reduce((a, r) => a + Number(r.time_spent_seconds ?? 0), 0);
+    const skipped = responses.filter((r) => r.section_id === s.id && r.is_correct === null).reduce((a, r) => a + Number(r.time_spent_seconds ?? 0), 0);
+    return {
+      name: s.code,
+      correctTime: Math.round(corr / 60),
+      wrongTime: Math.round(wrong / 60),
+      skippedTime: Math.round(skipped / 60),
+    };
+  }), [sectionRows, responses]);
+
+  const histogram = useMemo(() => {
+    const buckets = [
+      { bucket: "0-30s", min: 0, max: 30, count: 0 },
+      { bucket: "30-60s", min: 30, max: 60, count: 0 },
+      { bucket: "1-2m", min: 60, max: 120, count: 0 },
+      { bucket: "2-3m", min: 120, max: 180, count: 0 },
+      { bucket: "3-5m", min: 180, max: 300, count: 0 },
+      { bucket: "5m+", min: 300, max: 99999, count: 0 },
+    ];
+    responses.forEach((r) => {
+      const t = Number(r.time_spent_seconds ?? 0);
+      if (t === 0) return;
+      const b = buckets.find((x) => t >= x.min && t < x.max);
+      if (b) b.count++;
+    });
+    return buckets.map(({ bucket, count }) => ({ bucket, count }));
+  }, [responses]);
+
+  const speedAcc = useMemo(() => {
+    const win = 5;
+    const seq = qRows.map((r) => ({ t: r.timeSec, c: r.status === "correct" ? 1 : 0, attempted: r.status !== "skipped" ? 1 : 0 }));
+    const out: Array<{ idx: number; speedSec: number; accuracy: number }> = [];
+    for (let i = win - 1; i < seq.length; i++) {
+      const slice = seq.slice(i - win + 1, i + 1);
+      const totT = slice.reduce((a, x) => a + x.t, 0);
+      const totC = slice.reduce((a, x) => a + x.c, 0);
+      const totA = slice.reduce((a, x) => a + x.attempted, 0);
+      out.push({
+        idx: i + 1,
+        speedSec: Math.round(totT / win),
+        accuracy: totA ? Math.round((totC / totA) * 100) : 0,
       });
-      if (error) throw error;
-      setInsights(data?.insights ?? null);
-    } catch (e: any) {
-      toast.error("Could not generate AI insights", { description: e?.message });
-    } finally {
-      setInsightsLoading(false);
     }
-  }
+    return out;
+  }, [qRows]);
 
-  useEffect(() => {
-    if (attempt && !insights && !insightsLoading) {
-      generateInsights();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [attempt]);
+  // Peer stats
+  const peerStats = useMemo(() => {
+    if (peerAttempts.length < 2) return null;
+    const scores = peerAttempts.map((p: any) => Number(p.total_score ?? 0)).sort((a, b) => b - a);
+    const top10 = scores[Math.max(0, Math.floor(scores.length * 0.1) - 1)] ?? scores[0];
+    const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+    const topper = scores[0];
+    const scatter = peerAttempts.map((p: any) => ({
+      attempts: Number(p.total_attempted ?? 0),
+      accuracy: Number(p.accuracy ?? 0),
+      isMe: p.id === attempt?.id,
+    }));
+    return {
+      myScore: Number(attempt?.total_score ?? 0),
+      myAccuracy: Number(attempt?.accuracy ?? 0),
+      myAttempts: Number(attempt?.total_attempted ?? 0),
+      avg, top10, topper, count: scores.length, scatter,
+    };
+  }, [peerAttempts, attempt]);
 
-  // ============ PDF Export ============
+  // Strategy
+  const totalQuestions = useMemo(() => sections.reduce((a, s) => a + (s.total_questions || 0), 0), [sections]);
+  const attemptRate = totalQuestions > 0 ? Math.round((Number(attempt?.total_attempted ?? 0) / totalQuestions) * 100) : 0;
+  const sectionStrategyPoints = sectionRows.map((s) => ({
+    name: s.code,
+    attemptRate: (s.attempted + s.unattempted) > 0 ? Math.round((s.attempted / (s.attempted + s.unattempted)) * 100) : 0,
+    accuracy: s.attempted > 0 ? Math.round((s.correct / s.attempted) * 100) : 0,
+  }));
+
+  // Progress trend
+  const trendPoints: TrendPoint[] = useMemo(() => historyAttempts.map((h: any, i: number) => ({
+    label: `M${i + 1}`,
+    score: Number(h.total_score ?? 0),
+    accuracy: Number(h.accuracy ?? 0),
+    percentile: Number(h.percentile ?? 0),
+  })), [historyAttempts]);
+
+  const totalTimeSec = useMemo(() => responses.reduce((a, r) => a + Number(r.time_spent_seconds ?? 0), 0), [responses]);
+  const allowedTimeSec = (test?.total_duration_minutes ?? 0) * 60;
+
   async function downloadPDF() {
     if (!reportRef.current) return;
     setDownloading(true);
@@ -224,20 +272,14 @@ export default function MockResultPage() {
         import("html2canvas"),
       ]);
       const html2canvas = (html2canvasMod as any).default ?? html2canvasMod;
-      const canvas = await html2canvas(reportRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        windowWidth: reportRef.current.scrollWidth,
-      });
+      const canvas = await html2canvas(reportRef.current, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
       const imgData = canvas.toDataURL("image/jpeg", 0.92);
       const pdf = new jsPDF("p", "mm", "a4");
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
       const imgW = pageW;
       const imgH = (canvas.height * imgW) / canvas.width;
-      let heightLeft = imgH;
-      let position = 0;
+      let heightLeft = imgH; let position = 0;
       pdf.addImage(imgData, "JPEG", 0, position, imgW, imgH);
       heightLeft -= pageH;
       while (heightLeft > 0) {
@@ -259,25 +301,17 @@ export default function MockResultPage() {
     return (
       <div className="container mx-auto px-4 py-8 max-w-6xl space-y-4">
         <Skeleton className="h-12 w-1/2" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24" />)}
-        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-24" />)}</div>
         <Skeleton className="h-64" />
       </div>
     );
   }
   if (!attempt) return <div className="p-8">Not found</div>;
 
-  const pct = Number(attempt.percentile ?? 0);
-  const accuracy = Number(attempt.accuracy ?? 0);
-  const score = Number(attempt.total_score ?? 0);
-  const maxScore = Number(attempt.max_score ?? 0);
-  const scorePct = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
-
   return (
-    <div className="bg-gradient-to-br from-slate-50 via-white to-blue-50/30 min-h-screen">
+    <div className="bg-gradient-to-br from-slate-50 via-white to-sky-50/30 min-h-screen">
       <div className="container mx-auto px-4 py-6 max-w-6xl">
-        {/* Top action bar (excluded from PDF) */}
+        {/* Action bar */}
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
           <Link to="/mocks" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
             <ChevronRight className="h-4 w-4 rotate-180" /> All mocks
@@ -295,430 +329,100 @@ export default function MockResultPage() {
                 Leaderboard
               </Button>
             )}
-            <Button onClick={() => navigate(`/student/analysis/${attempt.id}`)} className="bg-gradient-to-r from-sky-500 to-blue-600 text-white hover:opacity-90 gap-1">
-              <Sparkles className="h-4 w-4" /> AI Deep Analysis
-            </Button>
           </div>
         </div>
 
-        {/* === Report content (captured for PDF) === */}
-        <div ref={reportRef} className="space-y-6 bg-white p-6 rounded-xl">
-          {/* Hero */}
-          <Card className="p-8 bg-gradient-to-br from-primary/5 via-blue-50/50 to-purple-50/30 border-primary/20 overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl" />
-            <div className="relative">
-              <div className="flex items-start justify-between flex-wrap gap-4">
-                <div>
-                  <Badge variant="secondary" className="mb-2">
-                    {test?.category?.replace("_", " ").toUpperCase() || "MOCK TEST"}
-                  </Badge>
-                  <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{test?.name}</h1>
-                  <p className="text-muted-foreground mt-1">
-                    Detailed Performance Report · {new Date(attempt.submitted_at ?? attempt.created_at).toLocaleString()}
-                  </p>
-                  {attempt.auto_submitted_reason && (
-                    <Badge variant="destructive" className="mt-3">
-                      Auto-submitted: {attempt.auto_submitted_reason}
-                    </Badge>
-                  )}
-                </div>
-                <PercentileGauge percentile={pct} />
-              </div>
-            </div>
-          </Card>
-
-          {/* Headline KPIs */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <KPI icon={<Trophy className="h-4 w-4" />} label="Total Score" value={`${score}`} sub={`/ ${maxScore} (${scorePct}%)`} accent="amber" />
-            <KPI icon={<Target className="h-4 w-4" />} label="Percentile" value={`${pct}`} sub={peerStats ? `vs ${peerStats.count} peers` : "—"} accent="blue" />
-            <KPI icon={<Activity className="h-4 w-4" />} label="Accuracy" value={`${accuracy}%`} sub={`${attempt.total_correct}/${attempt.total_attempted} correct`} accent="green" />
-            <KPI icon={<Clock className="h-4 w-4" />} label="Time Used" value={fmtMin(totalTimeSec)} sub={`avg ${perQuestionTime.length ? Math.round(totalTimeSec / perQuestionTime.length) : 0}s/Q`} accent="purple" />
-          </div>
-
-          {/* AI Summary */}
-          <Card className="p-6 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Sparkles className="h-4 w-4 text-primary" />
-              </div>
-              <h2 className="font-semibold text-lg">AI Performance Summary</h2>
-              {insightsLoading && <Badge variant="secondary" className="animate-pulse">Generating…</Badge>}
-            </div>
-            {insights?.summary ? (
-              <p className="text-sm leading-relaxed text-foreground/80">{insights.summary}</p>
-            ) : insightsLoading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-5/6" />
-                <Skeleton className="h-4 w-4/6" />
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">No AI summary yet.</p>
-            )}
-          </Card>
-
-          <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid grid-cols-2 md:grid-cols-5 w-full">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="topics">Topics</TabsTrigger>
-              <TabsTrigger value="time">Time Analysis</TabsTrigger>
-              <TabsTrigger value="peers">Peer Compare</TabsTrigger>
-              <TabsTrigger value="plan">Study Plan</TabsTrigger>
-            </TabsList>
-
-            {/* OVERVIEW */}
-            <TabsContent value="overview" className="space-y-6 mt-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <Card className="p-5">
-                  <h3 className="font-semibold mb-4 flex items-center gap-2">
-                    <Award className="h-4 w-4 text-primary" /> Sectional Performance
-                  </h3>
-                  <div className="space-y-4">
-                    {sectionRows.map((s) => (
-                      <div key={s.id}>
-                        <div className="flex items-center justify-between text-sm mb-1.5">
-                          <span className="font-medium">{s.name} <span className="text-xs text-muted-foreground">({s.code})</span></span>
-                          <span className="font-semibold">{s.score} / {s.max}</span>
-                        </div>
-                        <Progress value={s.pct} className="h-2" />
-                        <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                          <span>Accuracy {s.accuracy}%</span>
-                          <span>{s.correct}✓ · {s.incorrect}✗ · {s.attempted} attempted</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-
-                <Card className="p-5">
-                  <h3 className="font-semibold mb-4 flex items-center gap-2">
-                    <Brain className="h-4 w-4 text-primary" /> Sectional Radar
-                  </h3>
-                  <ResponsiveContainer width="100%" height={260}>
-                    <RadarChart data={sectionRows.map((s) => ({ section: s.code, accuracy: s.accuracy, score: s.pct }))}>
-                      <PolarGrid stroke="hsl(var(--border))" />
-                      <PolarAngleAxis dataKey="section" tick={{ fontSize: 12 }} />
-                      <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 10 }} />
-                      <Radar name="Accuracy %" dataKey="accuracy" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} />
-                      <Radar name="Score %" dataKey="score" stroke="hsl(217 91% 60%)" fill="hsl(217 91% 60%)" fillOpacity={0.2} />
-                      <Legend />
-                    </RadarChart>
-                  </ResponsiveContainer>
-                </Card>
-              </div>
-
-              {difficultyRows.length > 0 && (
-                <Card className="p-5">
-                  <h3 className="font-semibold mb-4 flex items-center gap-2">
-                    <Flame className="h-4 w-4 text-orange-500" /> Performance by Difficulty
-                  </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {difficultyRows.map((d) => (
-                      <div key={d.difficulty} className="border rounded-lg p-4">
-                        <div className="text-xs uppercase text-muted-foreground tracking-wide">{d.difficulty}</div>
-                        <div className="text-2xl font-bold mt-1">{d.accuracy}%</div>
-                        <div className="text-xs text-muted-foreground mt-1">{d.correct}/{d.attempted} correct</div>
-                        <Progress value={d.accuracy} className="h-1.5 mt-2" />
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
-            </TabsContent>
-
-            {/* TOPICS */}
-            <TabsContent value="topics" className="space-y-6 mt-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <Card className="p-5 border-green-200 bg-green-50/30">
-                  <h3 className="font-semibold mb-3 flex items-center gap-2 text-green-700">
-                    <TrendingUp className="h-4 w-4" /> Strong Areas
-                  </h3>
-                  {strongTopics.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">Attempt more questions per topic to surface strengths.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {strongTopics.map((t) => (
-                        <div key={t.topic} className="flex items-center justify-between text-sm bg-white rounded-md p-2.5 border border-green-100">
-                          <span className="font-medium">{t.topic}</span>
-                          <Badge className="bg-green-600 hover:bg-green-600">{t.accuracy}%</Badge>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-                <Card className="p-5 border-red-200 bg-red-50/30">
-                  <h3 className="font-semibold mb-3 flex items-center gap-2 text-red-700">
-                    <TrendingDown className="h-4 w-4" /> Weak Areas
-                  </h3>
-                  {weakTopics.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">No clear weak topics — well rounded!</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {weakTopics.map((t) => (
-                        <div key={t.topic} className="flex items-center justify-between text-sm bg-white rounded-md p-2.5 border border-red-100">
-                          <span className="font-medium">{t.topic}</span>
-                          <Badge variant="destructive">{t.accuracy}%</Badge>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-              </div>
-
-              {/* Heatmap */}
-              <Card className="p-5">
-                <h3 className="font-semibold mb-4 flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-primary" /> Topic Mastery Heatmap
-                </h3>
-                {topicRows.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No topic-tagged questions in this attempt.</p>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                      {topicRows.map((t) => (
-                        <div
-                          key={t.topic}
-                          className="rounded-md p-3 border text-xs"
-                          style={{ backgroundColor: heatColor(t.accuracy), borderColor: heatBorder(t.accuracy) }}
-                        >
-                          <div className="font-semibold text-foreground line-clamp-1" title={t.topic}>{t.topic}</div>
-                          <div className="flex items-center justify-between mt-1">
-                            <span className="text-foreground/70">{t.correct}/{t.attempted}</span>
-                            <span className="font-bold text-foreground">{t.accuracy}%</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex items-center gap-2 mt-4 text-xs text-muted-foreground">
-                      <span>Low</span>
-                      <div className="flex gap-0.5">
-                        {[10, 30, 50, 70, 90].map((v) => (
-                          <div key={v} className="h-3 w-6 rounded-sm" style={{ backgroundColor: heatColor(v) }} />
-                        ))}
-                      </div>
-                      <span>High Mastery</span>
-                    </div>
-                  </>
+        <div ref={reportRef} className="space-y-6 bg-white p-4 md:p-6 rounded-xl border">
+          {/* Header */}
+          <Card className="p-6 bg-gradient-to-br from-sky-50 via-white to-white border-sky-200">
+            <div className="flex items-start justify-between flex-wrap gap-3">
+              <div>
+                <Badge variant="secondary" className="mb-2">
+                  {test?.category?.replace("_", " ").toUpperCase() || "MOCK TEST"} · {test?.exam_code}
+                </Badge>
+                <h1 className="text-2xl md:text-3xl font-bold tracking-tight">{test?.name}</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Detailed performance report · {new Date(attempt.submitted_at ?? attempt.created_at).toLocaleString()}
+                </p>
+                {attempt.auto_submitted_reason && (
+                  <Badge variant="destructive" className="mt-3">Auto-submitted: {attempt.auto_submitted_reason}</Badge>
                 )}
-              </Card>
-
-              {/* AI Recommendations */}
-              {insights?.recommendations?.length > 0 && (
-                <Card className="p-5">
-                  <h3 className="font-semibold mb-4 flex items-center gap-2">
-                    <Lightbulb className="h-4 w-4 text-amber-500" /> AI Recommendations
-                  </h3>
-                  <div className="grid md:grid-cols-2 gap-3">
-                    {insights.recommendations.map((r: any, i: number) => (
-                      <div key={i} className="border rounded-lg p-4 bg-gradient-to-br from-amber-50/40 to-transparent">
-                        <div className="font-semibold text-sm flex items-center gap-2">
-                          <span className="h-5 w-5 rounded-full bg-amber-500 text-white text-xs flex items-center justify-center">{i + 1}</span>
-                          {r.title}
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-2">{r.action}</p>
-                        <div className="flex gap-2 mt-3 text-xs">
-                          {r.time_commitment && <Badge variant="outline">⏱ {r.time_commitment}</Badge>}
-                          {r.expected_impact && <Badge variant="secondary">📈 {r.expected_impact}</Badge>}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
-
-              {insights?.weaknesses?.length > 0 && (
-                <Card className="p-5">
-                  <h3 className="font-semibold mb-4 flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-red-500" /> Priority Improvement Areas
-                  </h3>
-                  <div className="space-y-3">
-                    {insights.weaknesses.map((w: any, i: number) => (
-                      <div key={i} className="border-l-4 pl-4 py-2"
-                        style={{ borderColor: w.priority === "high" ? "#ef4444" : w.priority === "medium" ? "#f59e0b" : "#94a3b8" }}>
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-sm">{w.area}</span>
-                          {w.priority && <Badge variant={w.priority === "high" ? "destructive" : "secondary"}>{w.priority} priority</Badge>}
-                        </div>
-                        {w.evidence && <p className="text-xs text-muted-foreground mt-1">{w.evidence}</p>}
-                        {w.suggestion && <p className="text-sm mt-1.5">💡 {w.suggestion}</p>}
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
-            </TabsContent>
-
-            {/* TIME ANALYSIS */}
-            <TabsContent value="time" className="space-y-6 mt-6">
-              <Card className="p-5">
-                <h3 className="font-semibold mb-4 flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-primary" /> Time Spent per Section
-                </h3>
-                <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={timeBySection}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} label={{ value: "seconds", angle: -90, position: "insideLeft", fontSize: 11 }} />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="avg_correct" name="Avg time (correct)" fill="hsl(142 76% 45%)" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="avg_wrong" name="Avg time (incorrect)" fill="hsl(0 84% 60%)" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="avg" name="Overall avg" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </Card>
-
-              {perQuestionTime.length > 0 && (
-                <Card className="p-5">
-                  <h3 className="font-semibold mb-4 flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-primary" /> Per-Question Time Distribution
-                  </h3>
-                  <ResponsiveContainer width="100%" height={260}>
-                    <AreaChart data={perQuestionTime}>
-                      <defs>
-                        <linearGradient id="timeGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="idx" tick={{ fontSize: 11 }} label={{ value: "Question #", position: "insideBottom", offset: -5, fontSize: 11 }} />
-                      <YAxis tick={{ fontSize: 11 }} label={{ value: "seconds", angle: -90, position: "insideLeft", fontSize: 11 }} />
-                      <Tooltip />
-                      <Area type="monotone" dataKey="time" stroke="hsl(var(--primary))" fill="url(#timeGrad)" />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </Card>
-              )}
-
-              <div className="grid md:grid-cols-3 gap-3">
-                <KPI icon={<Clock className="h-4 w-4" />} label="Avg time per question" value={`${perQuestionTime.length ? Math.round(totalTimeSec / perQuestionTime.length) : 0}s`} sub="" accent="blue" />
-                <KPI icon={<CheckCircle2 className="h-4 w-4" />} label="Avg time on correct" value={fmtAvg(timeBySection, "avg_correct")} sub="" accent="green" />
-                <KPI icon={<XCircle className="h-4 w-4" />} label="Avg time on incorrect" value={fmtAvg(timeBySection, "avg_wrong")} sub="" accent="red" />
               </div>
-            </TabsContent>
+              <div className="flex items-center gap-2 text-sky-700">
+                <Trophy className="h-6 w-6" />
+                <div className="text-3xl font-bold">{attempt.percentile ?? 0}<span className="text-sm font-normal text-muted-foreground"> %ile</span></div>
+              </div>
+            </div>
+          </Card>
 
-            {/* PEERS */}
-            <TabsContent value="peers" className="space-y-6 mt-6">
-              {!peerStats ? (
-                <Card className="p-8 text-center text-muted-foreground">
-                  No peer data yet — be among the first to set the benchmark!
-                </Card>
-              ) : (
-                <>
-                  <div className="grid md:grid-cols-4 gap-3">
-                    <KPI icon={<Users className="h-4 w-4" />} label="Total Test-Takers" value={peerStats.count.toString()} sub="completed attempts" accent="blue" />
-                    <KPI icon={<Trophy className="h-4 w-4" />} label="Topper Score" value={peerStats.max.toString()} sub="highest so far" accent="amber" />
-                    <KPI icon={<Award className="h-4 w-4" />} label="Top 1% Cutoff" value={peerStats.top1Cut.toString()} sub="join the elite" accent="purple" />
-                    <KPI icon={<Target className="h-4 w-4" />} label="Average Score" value={peerStats.avg.toString()} sub="across all attempts" accent="green" />
-                  </div>
+          {/* 1. Overall summary */}
+          <Section title="1. Overall Performance Summary">
+            <KPIGrid data={{
+              totalScore: Number(attempt.total_score ?? 0),
+              maxScore: Number(attempt.max_score ?? 0),
+              percentile: Number(attempt.percentile ?? 0),
+              accuracy: Number(attempt.accuracy ?? 0),
+              attempted: Number(attempt.total_attempted ?? 0),
+              totalQuestions,
+              timeUsedSec: totalTimeSec,
+              totalTimeSec: allowedTimeSec,
+            }} />
+          </Section>
 
-                  <Card className="p-5">
-                    <h3 className="font-semibold mb-4">Where You Stand</h3>
-                    <div className="space-y-3">
-                      <ComparisonBar label="You" value={score} max={Math.max(peerStats.max, score)} color="hsl(var(--primary))" highlight />
-                      <ComparisonBar label="Top 1%" value={peerStats.top1Cut} max={Math.max(peerStats.max, score)} color="hsl(280 70% 55%)" />
-                      <ComparisonBar label="Top 10%" value={peerStats.top10Cut} max={Math.max(peerStats.max, score)} color="hsl(217 91% 60%)" />
-                      <ComparisonBar label="Average" value={peerStats.avg} max={Math.max(peerStats.max, score)} color="hsl(142 70% 45%)" />
-                      <ComparisonBar label="Topper" value={peerStats.max} max={Math.max(peerStats.max, score)} color="hsl(45 95% 55%)" />
-                    </div>
-                  </Card>
+          {/* 2. Performance comparison */}
+          <Section title="2. Performance Comparison">
+            <ComparisonPanel stats={peerStats} />
+          </Section>
 
-                  <Card className="p-5">
-                    <h3 className="font-semibold mb-4">Percentile Distribution</h3>
-                    <ResponsiveContainer width="100%" height={260}>
-                      <BarChart data={percentileBands}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                        <XAxis dataKey="name" tick={{ fontSize: 11 }} label={{ value: "Percentile band", position: "insideBottom", offset: -5, fontSize: 11 }} />
-                        <YAxis tick={{ fontSize: 11 }} label={{ value: "students", angle: -90, position: "insideLeft", fontSize: 11 }} />
-                        <Tooltip />
-                        <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                          {percentileBands.map((b, i) => (
-                            <Cell key={i} fill={b.isMe ? "hsl(var(--primary))" : "hsl(217 91% 80%)"} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                    <p className="text-xs text-muted-foreground mt-2 text-center">
-                      You are in the <strong className="text-primary">{percentileBands.find((b) => b.isMe)?.name ?? "—"}</strong> percentile band.
-                    </p>
-                  </Card>
-                </>
-              )}
-            </TabsContent>
+          {/* 3. Section-wise */}
+          <Section title="3. Section-Wise Analysis">
+            <SectionWiseCards rows={sectionRows} />
+          </Section>
 
-            {/* STUDY PLAN */}
-            <TabsContent value="plan" className="space-y-6 mt-6">
-              {insights?.study_plan?.length ? (
-                <Card className="p-5">
-                  <h3 className="font-semibold mb-4 flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-primary" /> Your 7-Day Personalized Study Plan
-                  </h3>
-                  <div className="space-y-3">
-                    {insights.study_plan.map((d: any, i: number) => (
-                      <div key={i} className="border rounded-lg p-4 hover:shadow-sm transition-shadow">
-                        <div className="flex items-center justify-between flex-wrap gap-2">
-                          <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 rounded-lg bg-primary/10 text-primary font-bold flex items-center justify-center">
-                              D{d.day || i + 1}
-                            </div>
-                            <div>
-                              <div className="font-semibold text-sm">{d.focus}</div>
-                              {d.hours && <div className="text-xs text-muted-foreground">⏱ {d.hours} hours</div>}
-                            </div>
-                          </div>
-                        </div>
-                        {d.tasks?.length > 0 && (
-                          <ul className="mt-3 space-y-1 ml-13 text-sm text-foreground/80">
-                            {d.tasks.map((t: string, j: number) => (
-                              <li key={j} className="flex items-start gap-2">
-                                <ChevronRight className="h-3 w-3 mt-1 text-primary shrink-0" />
-                                <span>{t}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              ) : (
-                <Card className="p-8 text-center">
-                  {insightsLoading ? (
-                    <div className="space-y-2">
-                      <Sparkles className="h-8 w-8 mx-auto text-primary animate-pulse" />
-                      <p className="text-sm text-muted-foreground">Building your personalized study plan…</p>
-                    </div>
-                  ) : (
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-3">No study plan generated yet.</p>
-                      <Button onClick={generateInsights} variant="outline">
-                        <Sparkles className="h-4 w-4 mr-2" /> Generate AI Study Plan
-                      </Button>
-                    </div>
-                  )}
-                </Card>
-              )}
+          {/* 4. Question-level */}
+          <Section title="4. Question-Level Analysis">
+            <QuestionLevelTable rows={qRows} />
+          </Section>
 
-              {insights?.strengths?.length > 0 && (
-                <Card className="p-5">
-                  <h3 className="font-semibold mb-3 flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-green-600" /> Capitalize on Your Strengths
-                  </h3>
-                  <div className="space-y-2">
-                    {insights.strengths.map((s: any, i: number) => (
-                      <div key={i} className="text-sm border-l-4 border-green-500 pl-4 py-2">
-                        <div className="font-semibold">{s.area}</div>
-                        {s.suggestion && <div className="text-muted-foreground mt-0.5">{s.suggestion}</div>}
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              )}
-            </TabsContent>
-          </Tabs>
+          {/* 5. Time management */}
+          <Section title="5. Time Management">
+            <TimeManagementCharts perSection={perSectionTime} histogram={histogram} speedAcc={speedAcc} />
+          </Section>
 
-          {/* Footer */}
+          {/* 6. Strategy */}
+          <Section title="6. Attempt Strategy">
+            <StrategyClassifier
+              attemptRate={attemptRate}
+              accuracy={Number(attempt.accuracy ?? 0)}
+              sectionPoints={sectionStrategyPoints}
+            />
+          </Section>
+
+          {/* 7. Difficulty */}
+          <Section title="7. Difficulty Analysis">
+            <DifficultyAnalysis rows={difficultyRows} />
+          </Section>
+
+          {/* 8. Peer benchmarking */}
+          <Section title="8. Peer Benchmarking">
+            <PeerBenchmark stats={peerStats ? { myScore: peerStats.myScore, avg: peerStats.avg, top10: peerStats.top10, topper: peerStats.topper } : null} />
+          </Section>
+
+          {/* 9. Strengths & Weaknesses */}
+          <Section title="9. Strengths & Weaknesses">
+            <StrengthsWeaknesses topics={topicRows} />
+          </Section>
+
+          {/* 10. Progress */}
+          <Section title="10. Progress Tracking">
+            <ProgressTrend points={trendPoints} />
+          </Section>
+
+          {/* AI Analysis (manual) */}
+          <Section title="AI Deep Analysis (Optional)">
+            <AIAnalysisPanel attemptId={attempt.id} />
+          </Section>
+
           <div className="text-center text-xs text-muted-foreground pt-4 border-t">
             Report generated by MBA Compass · {new Date().toLocaleDateString()}
           </div>
@@ -728,95 +432,11 @@ export default function MockResultPage() {
   );
 }
 
-// ============== Helpers ==============
-function fmtMin(sec: number) {
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${m}m ${s}s`;
-}
-function fmtAvg(rows: any[], key: string) {
-  const vals = rows.map((r) => r[key]).filter((v) => v > 0);
-  if (!vals.length) return "—";
-  return `${Math.round(vals.reduce((a, b) => a + b, 0) / vals.length)}s`;
-}
-function heatColor(pct: number) {
-  if (pct >= 80) return "hsl(142 70% 88%)";
-  if (pct >= 65) return "hsl(95 70% 88%)";
-  if (pct >= 50) return "hsl(50 95% 88%)";
-  if (pct >= 35) return "hsl(30 95% 88%)";
-  return "hsl(0 75% 90%)";
-}
-function heatBorder(pct: number) {
-  if (pct >= 80) return "hsl(142 70% 60%)";
-  if (pct >= 65) return "hsl(95 70% 55%)";
-  if (pct >= 50) return "hsl(50 90% 55%)";
-  if (pct >= 35) return "hsl(30 90% 55%)";
-  return "hsl(0 75% 65%)";
-}
-
-function KPI({ icon, label, value, sub, accent }: { icon: React.ReactNode; label: string; value: string; sub: string; accent: "amber" | "blue" | "green" | "purple" | "red" }) {
-  const colors: Record<string, string> = {
-    amber: "from-amber-50 to-amber-100/30 text-amber-700 border-amber-200",
-    blue: "from-blue-50 to-blue-100/30 text-blue-700 border-blue-200",
-    green: "from-green-50 to-green-100/30 text-green-700 border-green-200",
-    purple: "from-purple-50 to-purple-100/30 text-purple-700 border-purple-200",
-    red: "from-red-50 to-red-100/30 text-red-700 border-red-200",
-  };
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <Card className={`p-4 bg-gradient-to-br ${colors[accent]} border`}>
-      <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide opacity-80">
-        {icon}{label}
-      </div>
-      <div className="text-2xl font-bold mt-1.5 text-foreground">{value}</div>
-      {sub && <div className="text-xs text-muted-foreground mt-0.5">{sub}</div>}
-    </Card>
-  );
-}
-
-function PercentileGauge({ percentile }: { percentile: number }) {
-  const r = 50;
-  const c = 2 * Math.PI * r;
-  const offset = c - (Math.min(100, percentile) / 100) * c;
-  return (
-    <div className="relative w-32 h-32">
-      <svg width="128" height="128" viewBox="0 0 120 120">
-        <circle cx="60" cy="60" r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth="10" />
-        <circle
-          cx="60" cy="60" r={r} fill="none"
-          stroke="url(#gaugeGrad)" strokeWidth="10" strokeLinecap="round"
-          strokeDasharray={c} strokeDashoffset={offset}
-          transform="rotate(-90 60 60)"
-          style={{ transition: "stroke-dashoffset 1s ease-out" }}
-        />
-        <defs>
-          <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="hsl(217 91% 60%)" />
-            <stop offset="100%" stopColor="hsl(280 70% 55%)" />
-          </linearGradient>
-        </defs>
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <div className="text-3xl font-bold leading-none">{percentile}</div>
-        <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">percentile</div>
-      </div>
-    </div>
-  );
-}
-
-function ComparisonBar({ label, value, max, color, highlight }: { label: string; value: number; max: number; color: string; highlight?: boolean }) {
-  const pct = max > 0 ? (value / max) * 100 : 0;
-  return (
-    <div>
-      <div className="flex justify-between text-sm mb-1">
-        <span className={highlight ? "font-bold text-primary" : "font-medium"}>{label}</span>
-        <span className="font-semibold">{value}</span>
-      </div>
-      <div className="h-3 bg-muted rounded-full overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-700"
-          style={{ width: `${pct}%`, backgroundColor: color, boxShadow: highlight ? `0 0 12px ${color}` : undefined }}
-        />
-      </div>
-    </div>
+    <section className="space-y-3">
+      <h2 className="text-lg font-bold text-foreground/90">{title}</h2>
+      {children}
+    </section>
   );
 }
