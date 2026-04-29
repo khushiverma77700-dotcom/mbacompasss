@@ -41,6 +41,8 @@ export default function StudentOverview() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [weak, setWeak] = useState<any[]>([]);
   const [displayName, setDisplayName] = useState<string>("");
+  const [examCountdowns, setExamCountdowns] = useState<any[]>([]);
+  const [, setNowTick] = useState(0);
   const [sideLoading, setSideLoading] = useState(true);
   const loading = perfLoading || sideLoading;
 
