@@ -104,12 +104,22 @@ export default function StudentLayout() {
               >
                 {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
-              <Link to="/" className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white">
+              <Link to="/" className="flex items-center gap-2 min-w-0">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white shrink-0">
                   <GraduationCap className="h-4 w-4" />
                 </div>
-                <div className="leading-tight">
-                  <div className="text-sm font-semibold">Student Dashboard</div>
+                <div className="leading-tight min-w-0">
+                  <div className="text-sm font-semibold flex items-center gap-1.5 min-w-0">
+                    <span>Student Dashboard</span>
+                    {displayName && (
+                      <>
+                        <span className="hidden sm:inline text-muted-foreground/60">·</span>
+                        <span className="hidden sm:inline text-sky-600 dark:text-sky-300 font-semibold truncate max-w-[160px]">
+                          {displayName}
+                        </span>
+                      </>
+                    )}
+                  </div>
                   <div className="text-[10px] text-muted-foreground">MBA Compass LMS</div>
                 </div>
               </Link>
@@ -117,9 +127,14 @@ export default function StudentLayout() {
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <NotificationBell />
-              <div className="hidden sm:block text-right">
-                <div className="text-xs text-muted-foreground">Welcome</div>
-                <div className="text-sm font-medium">{displayName}</div>
+              <div className="hidden md:flex items-center gap-2 pl-2 ml-1 border-l border-border">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white text-xs font-semibold">
+                  {(displayName || "S").charAt(0).toUpperCase()}
+                </div>
+                <div className="leading-tight">
+                  <div className="text-[10px] text-muted-foreground">Welcome</div>
+                  <div className="text-sm font-medium truncate max-w-[140px]">{displayName || "Student"}</div>
+                </div>
               </div>
               <Button
                 variant="ghost"

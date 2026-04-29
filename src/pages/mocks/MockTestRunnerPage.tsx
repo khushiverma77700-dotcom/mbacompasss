@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Flag, Bookmark, ChevronLeft, ChevronRight, AlertTriangle, LayoutGrid, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useForceLightTheme } from "@/hooks/useForceLightTheme";
 
 const isMobileDevice = () =>
   typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches;
@@ -80,6 +81,7 @@ function fmt(seconds: number) {
 }
 
 export default function MockTestRunnerPage() {
+  useForceLightTheme();
   const { attemptId } = useParams();
   const navigate = useNavigate();
 

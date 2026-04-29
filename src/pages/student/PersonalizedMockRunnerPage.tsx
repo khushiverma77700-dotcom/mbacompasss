@@ -6,10 +6,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Flag, Timer, CheckCircle2 } from "lucide-react";
+import { useForceLightTheme } from "@/hooks/useForceLightTheme";
 
 type Q = { id: string; section: string; difficulty: string; question_text: string; options: string[]; topic?: string };
 
 export default function PersonalizedMockRunnerPage() {
+  useForceLightTheme();
   const { attemptId } = useParams();
   const navigate = useNavigate();
   const [attempt, setAttempt] = useState<any>(null);
