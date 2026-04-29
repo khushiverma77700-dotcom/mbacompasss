@@ -749,14 +749,9 @@ Deno.serve(async (req) => {
       rejected_dup_internet: 0,
     };
 
-    // Pre-load all existing question hashes for dedup
-    const { data: existingHashes } = await admin
-      .from("mock_questions")
-      .select("content_hash")
-      .not("content_hash", "is", null);
-    const seenHashes = new Set<string>(
-      (existingHashes || []).map((r: any) => r.content_hash).filter(Boolean),
-    );
+    // Pre-load every existing question hash. The default API limit is 1000 rows,
+    // so page through the full bank to prevent duplicates from older questions.
+    const seenHashes = await loadExistingQuestionHashes(admin);
 
     // Insert generation log row
     const { data: gen } = await admin.from("ai_mock_generations").insert({
@@ -882,8 +877,9 @@ Deno.serve(async (req) => {
         questionNumberOffset += sec.questions;
       }
 
-      // ---------- Process sections in PARALLEL ----------
-      await Promise.all(sectionRecords.map(async (rec) => {
+      // ---------- Process sections one-by-one ----------
+      // Reliability > speed: one AI call writes one validated unique question.
+      for (const rec of sectionRecords) {
         const { sec, secRowId, jobId, secMcq, secTita, questionNumberOffset } = rec;
 
         const updateJob = async (patch: Record<string, unknown>) => {
@@ -908,38 +904,24 @@ Deno.serve(async (req) => {
         // many candidates are rejected as duplicates. (Was: ceil(q/BATCH)+4 → too tight.)
         const maxAttempts = Math.max(20, Math.ceil(sec.questions / BATCH_SIZE) * 6);
         const accepted: any[] = [];
-        const sectionStartedAt = Date.now();
         let firecrawlChecks = 0;
         let consecutiveDupBatches = 0;
 
         try {
           while (produced < sec.questions && attemptsLocal < maxAttempts) {
-            // Wall-clock guard — never let a section run forever.
-            if (Date.now() - sectionStartedAt > SECTION_WALL_CLOCK_MS) {
-              await updateJob({
-                current_step: `Section timeout after ${Math.round(SECTION_WALL_CLOCK_MS / 60000)} min — saving partial`,
-                error_message: `Section exceeded ${Math.round(SECTION_WALL_CLOCK_MS / 60000)}-minute wall clock`,
-              });
-              break;
-            }
-
             attemptsLocal++;
             const remain = sec.questions - produced;
             const setBoundTotal = setsForSec > 0 ? Math.min(sec.questions, setsForSec * questionsPerSet) : 0;
             const generatingSharedSet = setsForSec > 0 && produced < setBoundTotal;
-            // Over-request by ~50% so dedup losses don't starve us. Cap at 16.
-            const askFor = generatingSharedSet
-              ? Math.min(questionsPerSet, setBoundTotal - produced)
-              : Math.min(16, Math.max(remain, Math.ceil(remain * 1.5)));
-            const batch = Math.min(askFor, BATCH_SIZE + 4);
+            const batch = 1;
             const remainMcq = Math.max(0, secMcq - accepted.filter(q => q.question_type === "mcq").length);
             const remainTita = Math.max(0, secTita - accepted.filter(q => q.question_type === "tita").length);
-            const batchMcq = Math.min(remainMcq, Math.ceil(batch * (remainMcq / Math.max(1, remainMcq + remainTita))));
+            const batchMcq = remainMcq > 0 ? 1 : 0;
             const batchTita = batch - batchMcq;
 
             await updateJob({
               attempts: attemptsLocal,
-              current_step: `Batch ${attemptsLocal}: requesting ${batch} questions (have ${produced}/${sec.questions})…`,
+              current_step: `Writing question ${produced + 1}/${sec.questions} — uniqueness check active…`,
             });
 
             let qs: any[] = [];
@@ -953,7 +935,7 @@ Deno.serve(async (req) => {
                 userId: user.id,
                 strict_topic: category === "topic" && topic ? topic : null,
                 sets: generatingSharedSet ? 1 : 0,
-                questions_per_set: generatingSharedSet ? batch : null,
+                questions_per_set: generatingSharedSet ? 1 : null,
                 total_section_questions: batch,
                 // Push diversity by telling the AI which topics/subtopics already used
                 avoid_topics: accepted.slice(-12).map((a) => `${a.topic || ""}/${a.subtopic || ""}`).filter(Boolean),
@@ -961,7 +943,7 @@ Deno.serve(async (req) => {
               });
             } catch (e) {
               console.error(`[generate] ${sec.code} batch ${attemptsLocal} failed:`, e);
-              await updateJob({ current_step: `Batch ${attemptsLocal} failed, retrying…`, error_message: String((e as Error)?.message || e).slice(0, 500) });
+              await updateJob({ current_step: `AI call failed for question ${produced + 1}; retrying…`, error_message: String((e as Error)?.message || e).slice(0, 500) });
               continue;
             }
 
@@ -997,7 +979,7 @@ Deno.serve(async (req) => {
             // Update progress after each batch — this is what animates the UI.
             await updateJob({
               questions_done: produced,
-              current_step: `Generated ${produced}/${sec.questions}`,
+              current_step: `Saved ${produced}/${sec.questions} unique questions`,
             });
           }
 
@@ -1074,13 +1056,12 @@ Deno.serve(async (req) => {
             else console.log(`[generate] mirrored ${hubRows.length} questions to Personalized Hub (${exam_code}/${hubSection})`);
           }
 
-          // Treat ≥80% of target as completed; below that = failed (so retry button shows)
-          const success = produced >= Math.ceil(sec.questions * 0.8);
+          const success = produced === sec.questions;
           await updateJob({
             status: success ? "completed" : "failed",
             questions_done: produced,
             current_step: success
-              ? `Done — ${produced} questions saved${produced < sec.questions ? ` (target ${sec.questions})` : ""}`
+              ? `Done — exactly ${produced} questions saved`
               : `Incomplete — ${produced}/${sec.questions} saved`,
             error_message: success ? null : `Only ${produced} of ${sec.questions} questions generated`,
           });
@@ -1093,7 +1074,7 @@ Deno.serve(async (req) => {
             current_step: "Failed",
           });
         }
-      }));
+      }
 
       createdTests.push(testRow);
     }
