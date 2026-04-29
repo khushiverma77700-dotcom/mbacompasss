@@ -482,6 +482,8 @@ async function callOpenAIBatch(args: {
   sets?: number | null;
   questions_per_set?: number | null;
   total_section_questions?: number | null;
+  avoid_topics?: string[];
+  attempt_seed?: string;
 }) {
   const sys = buildSystemPrompt({
     exam: args.exam, exam_full: args.exam_full, category: args.category, level: args.level,
@@ -493,10 +495,14 @@ async function callOpenAIBatch(args: {
     mcq_count: args.mcq,
     tita_count: args.tita,
   });
+  const avoidLine = (args.avoid_topics && args.avoid_topics.length)
+    ? `\n\nDIVERSITY MANDATE: Do NOT repeat or paraphrase questions on these recently-used topic/subtopic combinations: ${args.avoid_topics.slice(0, 12).join(" | ")}. Pick FRESH topics and subtopics within the section's syllabus.`
+    : "";
+  const seedLine = args.attempt_seed ? `\n\nUNIQUENESS SEED (use to vary scenarios): ${args.attempt_seed}` : "";
   const user = buildUserPrompt({
     count: args.count, mcq_count: args.mcq, tita_count: args.tita,
     positive: args.positive, negative: args.negative,
-  });
+  }) + avoidLine + seedLine;
 
   const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
