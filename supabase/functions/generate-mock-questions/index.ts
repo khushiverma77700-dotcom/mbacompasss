@@ -215,11 +215,37 @@ function buildSystemPrompt(opts: {
   if (lvl === "mixed") {
     levelGuidance = "Mix Easy (~30%), Moderate (~40%), Hard (~30%).";
   } else if (lvl === "very_hard") {
-    levelGuidance = `Strictly target VERY HARD difficulty — every question must be MEASURABLY HARDER than a normal "Hard" question. Use multi-step reasoning, deeper traps, longer chains of logic, and uncommon question patterns. Set every returned question's "difficulty" field to exactly "hard".`;
+    levelGuidance = `DIFFICULTY = VERY HARD (CAT 95+ percentile band). ABSOLUTELY FORBIDDEN: single-step formula plug-ins, direct definition recall, simple percentage/ratio sums, basic syllogisms, vocabulary-only RC questions, two-line LR puzzles. EVERY question MUST require AT LEAST 3-5 non-obvious reasoning steps and take a 99-percentiler 2.5-3.5 minutes.
+
+MANDATORY CHARACTERISTICS for each question:
+- Quant: combine 2+ concepts (e.g. number theory + combinatorics, geometry + coordinate, P&C + probability with conditional cases). Use non-standard variables, parametric conditions, "find all values such that…", quadratic-in-disguise, modular arithmetic, functional equations, max/min over constraints. NO direct TSD/SI/CI plug-ins.
+- VARC: RC inference questions where 3 of 4 options are partially supported and require eliminating subtle scope/tone traps; parajumbles with 6 sentences and overlapping cohesion; critical-reasoning style assumption/flaw questions.
+- DILR: caselets needing case enumeration with 3+ branching constraints; tournament/seating/scheduling with partial info; data sufficiency style sub-questions.
+- All distractors MUST be derived from common student errors (off-by-one, sign flip, missed case, wrong base) — never random.
+
+If the question can be solved in under 90 seconds by a 90-percentile student, it is TOO EASY — discard and rewrite. Set "difficulty" field to exactly "hard".`;
   } else if (lvl === "extremely_hard") {
-    levelGuidance = `Strictly target EXTREMELY HARD difficulty — questions should take a strong aspirant significant time and effort to solve. Use dense data, layered concepts, multi-stage computation, edge cases, and high cognitive load. No trivial shortcuts. Set every returned question's "difficulty" field to exactly "hard".`;
+    levelGuidance = `DIFFICULTY = EXTREMELY HARD (CAT 99.5+ percentile / IIM final-round / Olympiad-adjacent). These must be the HARDEST 2-3 questions of an entire CAT paper.
+
+MANDATORY:
+- Each Quant question fuses 3+ topics OR requires a non-standard insight/trick (telescoping, AM-GM, pigeonhole, generating functions, clever substitution, invariants).
+- Each DILR caselet has dense data (table of 6+ rows × 5+ columns OR multi-layered constraint set) and requires 4-6 deductive steps before any computation.
+- Each VARC question hinges on a single subtle word or logical scope shift; correct answer is defensible only via close textual evidence.
+- Solve time for a 99.5-percentiler: 3.5-5 minutes per question.
+- All 4 options must be plausible; at least 2 must reflect deep traps.
+
+NO formula recall, NO single-concept questions, NO short LR riddles. If a strong CAT topper can eyeball the answer, REWRITE it. Set "difficulty" to exactly "hard".`;
   } else if (lvl === "cat_pyq") {
-    levelGuidance = `CAT LEVEL — based on real CAT Previous Year Questions, but with names, numbers, entities and values CHANGED so the question is not identical to the original. Preserve the structure, concept and difficulty of authentic CAT PYQs. Do NOT reproduce the original numbers or names verbatim. Set every returned question's "difficulty" field to exactly "hard".`;
+    levelGuidance = `DIFFICULTY = CAT PYQ-MIRROR. Internally pick a real CAT/XAT/IIFT Previous Year Question (2015-2024 slot) that matches the section/topic, then REWRITE it by changing ALL names, numbers, entities, units and surface context — but preserve the EXACT logical structure, concept fusion, trap pattern and difficulty band of the original PYQ.
+
+RULES:
+- Do NOT reproduce original numbers, names, or phrasing verbatim.
+- Do NOT mention "CAT 2019" / "PYQ" / "previous year" anywhere in question or explanation.
+- The skeleton (what is given, what is asked, the trap) must be authentically PYQ-grade.
+- Difficulty band: hard CAT slot questions (LOD 3). Solve time 2.5-4 min.
+- Distractors must mirror the original PYQ's distractor logic (common error → wrong option).
+
+If the rewritten question is materially easier than the source PYQ, discard and pick a harder PYQ. Set "difficulty" to exactly "hard".`;
   } else {
     levelGuidance = `Strictly target ${normalizeDifficulty(null, opts.level).toUpperCase()} difficulty. Every returned question difficulty must be exactly "${normalizeDifficulty(null, opts.level)}".`;
   }
