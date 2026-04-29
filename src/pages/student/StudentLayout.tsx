@@ -209,6 +209,23 @@ export default function StudentLayout() {
           </div>
         </header>
 
+        {/* Top alert bar — surfaces newest unread update */}
+        {latestUnread && !bannerDismissed && (
+          <div className="sticky top-14 z-20 bg-gradient-to-r from-sky-500 via-blue-500 to-sky-500 text-white shadow-md animate-in slide-in-from-top duration-300">
+            <div className="flex items-center gap-2 px-4 sm:px-6 h-9 text-xs sm:text-sm">
+              <Bell className="h-3.5 w-3.5 shrink-0 animate-pulse" />
+              <span className="hidden sm:inline font-semibold uppercase tracking-wider opacity-90">New update:</span>
+              <span className="truncate flex-1">{latestUnread.title}</span>
+              <Link to="/student/notifications" className="px-2 py-0.5 rounded-md bg-white/20 hover:bg-white/30 font-medium whitespace-nowrap">
+                View
+              </Link>
+              <button onClick={() => setBannerDismissed(true)} aria-label="Dismiss" className="p-1 rounded hover:bg-white/20">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="flex">
           {/* Sidebar - desktop: FIXED. Scrolls independently of main content. */}
           <aside className="hidden lg:flex flex-col w-64 shrink-0 border-r border-border bg-card/80 backdrop-blur fixed left-0 top-14 bottom-0 overflow-y-auto z-20">
