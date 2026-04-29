@@ -877,41 +877,39 @@ Deno.serve(async (req) => {
         questionNumberOffset += sec.questions;
       }
 
-      // ---------- Process sections one-by-one ----------
-      // Reliability > speed: one AI call writes one validated unique question.
-      for (const rec of sectionRecords) {
-        const { sec, secRowId, jobId, secMcq, secTita, questionNumberOffset } = rec;
+      const firstJobId = sectionRecords.find((r) => r.jobId)?.jobId;
+      if (firstJobId) {
+        await admin.from("mock_section_jobs").update({
+          status: "processing",
+          current_step: "Queued reliable one-question worker…",
+          updated_at: new Date().toISOString(),
+        }).eq("id", firstJobId);
+        // Each worker invocation generates at most one question and then re-invokes itself.
+        // This avoids Cloud function CPU/wall-clock limits that were breaking hard/extreme mocks.
+        const workerUrl = `${url}/functions/v1/retry-mock-section`;
+        const kick = fetch(workerUrl, {
+          method: "POST",
+          headers: { Authorization: authHeader, apikey: anonKey, "Content-Type": "application/json" },
+          body: JSON.stringify({ job_id: firstJobId, auto: true }),
+        }).catch((e) => console.error("[generate] worker kickoff failed", e));
+        // @ts-ignore
+        if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(kick);
+      }
 
-        const updateJob = async (patch: Record<string, unknown>) => {
-          if (!jobId) return;
-          await admin.from("mock_section_jobs").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", jobId);
-        };
+      createdTests.push(testRow);
+    }
 
-        await updateJob({ status: "processing", current_step: "Calling AI…", attempts: 1 });
+    if (genId) {
+      await admin.from("ai_mock_generations").update({
+        status: "running",
+        total_generated: 0,
+        result_summary: { tests: createdTests, stats },
+      }).eq("id", genId);
+    }
 
-        // Derive sensible questions_per_set defaults if not provided in the plan.
-        const setsForSec = category === "full_length" ? Math.max(0, Number(sec.sets || 0)) : 0;
-        let questionsPerSet = 0;
-        if (setsForSec > 0) {
-          if (sectionFamily(sec.code) === "verbal") questionsPerSet = Math.min(5, Math.max(3, Math.floor(sec.questions / setsForSec)));
-          else if (sectionFamily(sec.code) === "logic-data") questionsPerSet = Math.min(6, Math.max(4, Math.floor(sec.questions / setsForSec)));
-          else questionsPerSet = Math.max(1, Math.floor(sec.questions / setsForSec));
-        }
+    return;
 
-        let produced = 0;
-        let attemptsLocal = 0;
-        // Generous retry budget so we ALWAYS hit the requested count even when
-        // many candidates are rejected as duplicates. (Was: ceil(q/BATCH)+4 → too tight.)
-        const maxAttempts = Math.max(20, sec.questions * MAX_ATTEMPTS_PER_QUESTION);
-        const accepted: any[] = [];
-        let firecrawlChecks = 0;
-        let consecutiveDupBatches = 0;
-        const allowHubMirror = category === "daily" || category === "sectional" || category === "topic";
-        const hubSection = allowHubMirror ? (PERSONALIZED_SECTION_MAP[exam_code] || {})[sec.code] : undefined;
-        const hubRows: any[] = [];
-
-        try {
-          while (produced < sec.questions && attemptsLocal < maxAttempts) {
+          while (false) {
             attemptsLocal++;
             const remain = sec.questions - produced;
             const setBoundTotal = setsForSec > 0 ? Math.min(sec.questions, setsForSec * questionsPerSet) : 0;
