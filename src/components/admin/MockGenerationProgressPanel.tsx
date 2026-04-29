@@ -171,7 +171,6 @@ export default function MockGenerationProgressPanel({ generationId, compact = fa
                             {isStalled && <span className="text-amber-700 truncate">No progress for 90s — AI may be stuck</span>}
                             {!isStalled && isActive && j.current_step && <span className="truncate">{j.current_step}</span>}
                             {isFailed && j.error_message && <span className="text-rose-600 truncate" title={j.error_message}>{j.error_message}</span>}
-                            {j.attempts > 1 && <span className="text-amber-600">retry #{j.attempts - 1}</span>}
                           </div>
                         </div>
                         <div className="text-right shrink-0 flex items-center gap-2">
