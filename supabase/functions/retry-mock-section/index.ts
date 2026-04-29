@@ -99,16 +99,21 @@ async function callOpenAIBatch(opts: {
   const timer = setTimeout(() => ctrl.abort(), OPENAI_TIMEOUT_MS);
   let resp: Response;
   try {
+    const lvlLower = String(opts.level || "").toLowerCase();
+    const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
+    const modelId = isHardVariant ? "gpt-5" : "gpt-4o";
+    const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.4;
+    const body: Record<string, unknown> = {
+      model: modelId,
+      messages: [{ role: "system", content: sys }, { role: "user", content: user }],
+      response_format: { type: "json_object" },
+      max_tokens: 16000,
+    };
+    if (modelId !== "gpt-5") body.temperature = temp;
     resp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        messages: [{ role: "system", content: sys }, { role: "user", content: user }],
-        response_format: { type: "json_object" },
-        temperature: 0.4,
-        max_tokens: 16000,
-      }),
+      body: JSON.stringify(body),
       signal: ctrl.signal,
     });
   } finally {
