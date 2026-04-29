@@ -10,6 +10,7 @@ import {
   BookOpenCheck, Trophy, TrendingUp, Flame, CheckCircle2, Clock, Target, Bell,
   ArrowRight, Sparkles, Zap, ShoppingBag, BarChart3, Activity, Brain, Timer,
   Percent, ListChecks, Gauge, LineChart as LineIcon, Award, AlertTriangle,
+  CalendarDays, GraduationCap, Rocket, ChevronRight, Star, Compass, Layers,
 } from "lucide-react";
 import {
   LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid,
