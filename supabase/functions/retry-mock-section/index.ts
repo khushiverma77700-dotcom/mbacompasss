@@ -84,6 +84,29 @@ async function sha256(text: string): Promise<string> {
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+const EXAM_BASELINE: Record<string, string> = {
+  CAT: "HIGH baseline (CAT 85-95 percentile difficulty). Elegant single-insight questions, RC-heavy VARC, dense DILR caselets, arithmetic-heavy QA. No GK.",
+  XAT: "VERY HIGH baseline — HARDER than CAT. Verbose passages, ethical Decision Making dilemmas with no single right answer, harder Modern Math + Geometry. GK section, no negative on GK.",
+  SNAP: "EASY-TO-MODERATE baseline but EXTREMELY TIME-PRESSURED (~1 min/question). Direct calculations, classic LR puzzles, short RCs (250-350 words). Reward speed over depth.",
+  NMAT: "MODERATE baseline with strong SPEED FOCUS. NO negative marking. Direct questions, less trap-laden than CAT. RC ~300-400 words. Arithmetic + basic algebra QA.",
+  IIFT: "HIGH baseline. CAT-level Quant + heavy multi-table DI + real GK section (current affairs, business, sports). Variable marking by section.",
+  CMAT: "MODERATE baseline (closer to NMAT). Broader syllabus including Innovation & Entrepreneurship (Indian startups, business jargon, government schemes) and General Awareness.",
+  MAT: "EASY-TO-MODERATE baseline. Direct, formula-based, low-trap. Includes Indian & Global Environment (current affairs + static GK).",
+};
+
+function buildExamCalibration(examCode: string, level: string): string {
+  const code = String(examCode || "").toUpperCase();
+  const baseline = EXAM_BASELINE[code];
+  if (!baseline) return "";
+  const lvl = String(level || "").toLowerCase();
+  let cal = "";
+  if (lvl === "easy") cal = `Easier than ${code} baseline but still ${code}-style.`;
+  else if (lvl === "medium" || lvl === "moderate") cal = `MATCHES actual ${code} exam baseline.`;
+  else if (lvl === "hard") cal = `Slightly above ${code} baseline.`;
+  else if (["very_hard", "extremely_hard", "cat_pyq"].includes(lvl)) cal = `Significantly above ${code} baseline (top 1-2% hardest), still ${code}-style and in-syllabus.`;
+  return ` EXAM BLUEPRINT — ${code}: ${baseline} EXAM-NORMALIZED DIFFICULTY: ${cal} Difficulty is RELATIVE to ${code}, never absolute. The mock must feel indistinguishable from a real ${code} paper.`;
+}
+
 async function callOpenAIBatch(opts: {
   exam_code: string; section_name: string; section_code: string;
   count: number; mcq: number; tita: number; level: string;
@@ -92,7 +115,7 @@ async function callOpenAIBatch(opts: {
   const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
 
-  const sys = `You are an elite ${opts.exam_code} question setter writing 100% original questions for the ${opts.section_name} (${opts.section_code}) section. ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} Use fresh numbers, fresh names, fresh contexts. Each MCQ has 4 options A-D with one correct; each TITA has numeric answer(s). Include detailed 200-400 word explanations. Output ONLY valid JSON. STRICT FORMATTING: "question_html" must contain ONLY the pure question text — never prefix with "Q1.", "Question 1:", "Set 1:", "1.", "1)" or any numbering. "options[].text" must contain ONLY pure option text — never prefix with "A)", "(A)", "A.", "1)" or any label. The UI renders these labels statically.`;
+  const sys = `You are an elite ${opts.exam_code} question setter writing 100% original questions for the ${opts.section_name} (${opts.section_code}) section.${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} Use fresh numbers, fresh names, fresh contexts. Each MCQ has 4 options A-D with one correct; each TITA has numeric answer(s). Include detailed 200-400 word explanations. Output ONLY valid JSON. STRICT FORMATTING: "question_html" must contain ONLY the pure question text — never prefix with "Q1.", "Question 1:", "Set 1:", "1.", "1)" or any numbering. "options[].text" must contain ONLY pure option text — never prefix with "A)", "(A)", "A.", "1)" or any label. The UI renders these labels statically.`;
   const user = `Generate exactly ${opts.count} questions: ${opts.mcq} MCQ + ${opts.tita} TITA. Marking +${opts.positive}/-${opts.negative}. JSON shape: {"questions":[{"question_type":"mcq"|"tita","question_html":"...","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"tita_answers":["..."],"tita_tolerance":0.01,"explanation_html":"..."}]}`;
 
   const ctrl = new AbortController();
