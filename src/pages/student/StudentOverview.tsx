@@ -905,10 +905,10 @@ function ToolCard({ title, desc, href }: any) {
 function ExamCountdownStrip({ exams }: { exams: any[] }) {
   if (!exams || exams.length === 0) {
     return (
-      <Card className="p-4 border-sky-100 dark:border-sky-500/20 bg-gradient-to-br from-sky-50/60 to-white dark:from-sky-500/5 dark:to-background">
+      <Card className="p-5 border-sky-100 dark:border-sky-500/20 bg-gradient-to-br from-sky-50/60 to-white dark:from-sky-500/5 dark:to-background">
         <div className="flex items-center gap-3 text-sm">
-          <div className="h-9 w-9 rounded-lg bg-sky-100 dark:bg-sky-500/20 grid place-items-center text-sky-700 dark:text-sky-300">
-            <CalendarDays className="h-4 w-4" />
+          <div className="h-10 w-10 rounded-xl bg-sky-100 dark:bg-sky-500/20 grid place-items-center text-sky-700 dark:text-sky-300">
+            <CalendarDays className="h-5 w-5" />
           </div>
           <div className="min-w-0">
             <div className="font-semibold">Exam Countdowns</div>
@@ -921,36 +921,125 @@ function ExamCountdownStrip({ exams }: { exams: any[] }) {
   const now = Date.now();
   return (
     <div>
-      <div className="flex items-center justify-between mb-2 px-1">
-        <h2 className="text-sm font-semibold flex items-center gap-2 text-foreground">
-          <CalendarDays className="h-4 w-4 text-sky-600 dark:text-sky-300" /> Exam Countdowns
-        </h2>
-        <span className="text-[11px] text-muted-foreground">Updates live</span>
+      <div className="flex items-end justify-between mb-3 px-1">
+        <div>
+          <h2 className="text-base font-bold flex items-center gap-2 text-foreground">
+            <span className="h-7 w-7 rounded-lg bg-sky-100 dark:bg-sky-500/20 grid place-items-center text-sky-700 dark:text-sky-300">
+              <CalendarDays className="h-4 w-4" />
+            </span>
+            Exam Countdowns
+          </h2>
+          <p className="text-[11px] text-muted-foreground mt-0.5 ml-9">Track every D-day. Updates live.</p>
+        </div>
+        <Link to="/exams" className="text-xs font-medium text-sky-700 dark:text-sky-300 hover:underline">View all →</Link>
       </div>
-      <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
         {exams.map((ex: any) => {
           const target = new Date(ex.exam_date).getTime();
           const days = Math.ceil((target - now) / 86_400_000);
           const past = days < 0;
-          const urgent = !past && days <= 30;
-          const tone = past
-            ? "from-muted to-muted/40 text-muted-foreground border-border"
-            : urgent
-              ? "from-rose-50 to-white text-rose-700 border-rose-200 dark:from-rose-500/15 dark:to-background dark:text-rose-200 dark:border-rose-500/30"
-              : "from-sky-50 to-white text-sky-700 border-sky-200 dark:from-sky-500/15 dark:to-background dark:text-sky-200 dark:border-sky-500/30";
+          const critical = !past && days <= 7;
+          const urgent = !past && days > 7 && days <= 30;
+          const upcoming = !past && days > 30 && days <= 90;
+          // far = > 90
+
+          const ring = past
+            ? "stroke-muted-foreground/30"
+            : critical
+              ? "stroke-rose-500"
+              : urgent
+                ? "stroke-amber-500"
+                : upcoming
+                  ? "stroke-sky-500"
+                  : "stroke-emerald-500";
+
+          const cardTone = past
+            ? "border-border bg-muted/30"
+            : critical
+              ? "border-rose-200 bg-gradient-to-br from-rose-50 via-white to-rose-50/40 dark:from-rose-500/10 dark:via-background dark:to-background dark:border-rose-500/30"
+              : urgent
+                ? "border-amber-200 bg-gradient-to-br from-amber-50 via-white to-amber-50/40 dark:from-amber-500/10 dark:via-background dark:to-background dark:border-amber-500/30"
+                : upcoming
+                  ? "border-sky-200 bg-gradient-to-br from-sky-50 via-white to-sky-50/40 dark:from-sky-500/10 dark:via-background dark:to-background dark:border-sky-500/30"
+                  : "border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/40 dark:from-emerald-500/10 dark:via-background dark:to-background dark:border-emerald-500/30";
+
+          const numberTone = past
+            ? "text-muted-foreground"
+            : critical
+              ? "text-rose-700 dark:text-rose-200"
+              : urgent
+                ? "text-amber-700 dark:text-amber-200"
+                : upcoming
+                  ? "text-sky-700 dark:text-sky-200"
+                  : "text-emerald-700 dark:text-emerald-200";
+
+          const badgeTone = past
+            ? "bg-muted text-muted-foreground"
+            : critical
+              ? "bg-rose-600 text-white animate-pulse"
+              : urgent
+                ? "bg-amber-500 text-white"
+                : upcoming
+                  ? "bg-sky-600 text-white"
+                  : "bg-emerald-600 text-white";
+
+          const badgeLabel = past
+            ? "Concluded"
+            : critical
+              ? "Final week"
+              : urgent
+                ? "Approaching"
+                : upcoming
+                  ? "Upcoming"
+                  : "Plan ahead";
+
+          // Progress ring: visual fullness based on 365-day horizon
+          const pct = past ? 1 : Math.max(0, Math.min(1, 1 - days / 365));
+          const C = 2 * Math.PI * 26; // r=26
+          const dash = C * pct;
+
           const dateLabel = new Date(ex.exam_date).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+          const weekday = new Date(ex.exam_date).toLocaleDateString("en-IN", { weekday: "short" });
+
           return (
             <Link
               key={ex.slug}
               to={`/exams/${ex.slug}`}
-              className={`snap-start min-w-[170px] rounded-xl border p-3 bg-gradient-to-br ${tone} hover:shadow-md transition-all hover:-translate-y-0.5`}
+              className={`group relative overflow-hidden rounded-2xl border ${cardTone} p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all`}
             >
-              <div className="text-[10px] uppercase tracking-wider opacity-80 font-bold">{ex.name}</div>
-              <div className="mt-1 flex items-baseline gap-1">
-                <span className="text-2xl font-bold tabular-nums">{past ? "—" : days}</span>
-                <span className="text-[11px] font-medium opacity-90">{past ? "concluded" : days === 1 ? "day left" : "days left"}</span>
+              <span className={`absolute top-2 right-2 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${badgeTone}`}>
+                {badgeLabel}
+              </span>
+
+              <div className="flex items-center gap-3">
+                <div className="relative h-16 w-16 shrink-0">
+                  <svg viewBox="0 0 60 60" className="h-16 w-16 -rotate-90">
+                    <circle cx="30" cy="30" r="26" className="fill-none stroke-foreground/10" strokeWidth="5" />
+                    <circle
+                      cx="30" cy="30" r="26"
+                      className={`fill-none ${ring} transition-all duration-700`}
+                      strokeWidth="5"
+                      strokeLinecap="round"
+                      strokeDasharray={`${dash} ${C}`}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 grid place-items-center">
+                    <div className={`text-xl font-extrabold tabular-nums leading-none ${numberTone}`}>
+                      {past ? "—" : days}
+                    </div>
+                  </div>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">{ex.name}</div>
+                  <div className={`text-sm font-bold ${numberTone} mt-0.5`}>
+                    {past ? "Concluded" : days === 0 ? "Today!" : days === 1 ? "1 day left" : `${days} days left`}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
+                    <CalendarDays className="h-3 w-3" />
+                    {weekday}, {dateLabel}
+                  </div>
+                </div>
               </div>
-              <div className="text-[11px] mt-1 opacity-80">{dateLabel}</div>
             </Link>
           );
         })}
