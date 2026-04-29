@@ -62,7 +62,9 @@
     --font-body: 'DM Sans', sans-serif;
   }
 
-  /* Admin-scoped dark theme (does not affect public site) */
+  /* Dark theme — applied via class strategy. Used by Student LMS and Admin.
+     Public marketing pages do not toggle this class so they stay light by default. */
+  .dark,
   .admin-dark {
     --background: 222 28% 8%;
     --foreground: 210 30% 96%;
