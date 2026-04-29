@@ -523,6 +523,36 @@ export default function AdminMBACompassCourses() {
                   </Button>
                 </TabsContent>
 
+                {/* BUNDLES */}
+                <TabsContent value="bundles" className="space-y-3 mt-4">
+                  <div className="text-sm text-muted-foreground flex items-start gap-2">
+                    <Package className="h-4 w-4 mt-0.5 text-sky-600 shrink-0" />
+                    <span>Pick the mock bundles included in this course. Students who buy this course will be auto-enrolled into every selected bundle (and through that, every mock inside).</span>
+                  </div>
+                  {bundles.length === 0 ? (
+                    <Card className="p-6 text-center text-sm text-muted-foreground">
+                      No bundles yet. Create bundles in <span className="font-medium">Mock Bundles</span> first.
+                    </Card>
+                  ) : (
+                    <div className="border rounded-md max-h-96 overflow-y-auto divide-y">
+                      {bundles.map((b) => {
+                        const checked = editBundleIds.includes(b.id);
+                        return (
+                          <label key={b.id} className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-muted/40 ${checked ? "bg-sky-50/40" : ""}`}>
+                            <Checkbox checked={checked} onCheckedChange={() => toggleBundle(b.id)} />
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-sm truncate">{b.name}</div>
+                              <div className="text-xs text-muted-foreground">{b.exam_code ?? "Mixed"}</div>
+                            </div>
+                            {!b.is_published && <Badge variant="outline" className="text-[10px]">Draft</Badge>}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                  <div className="text-xs text-muted-foreground"><strong>{editBundleIds.length}</strong> bundle{editBundleIds.length === 1 ? "" : "s"} selected.</div>
+                </TabsContent>
+
                 {/* SEO */}
                 <TabsContent value="seo" className="space-y-3 mt-4">
                   <div><Label>SEO title (max 60 chars)</Label><Input maxLength={60} value={edit.seo_title ?? ""} onChange={(e) => setEdit({ ...edit, seo_title: e.target.value })} /></div>
