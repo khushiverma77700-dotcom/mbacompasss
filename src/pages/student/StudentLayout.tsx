@@ -25,7 +25,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import NotificationBell from "@/components/student/NotificationBell";
-import { FeatureLockBadge } from "@/components/student/FeatureGate";
+import ThemeToggle from "@/components/student/ThemeToggle";
+import { StudentThemeProvider } from "@/contexts/StudentThemeContext";
+import { useEnrolledBundleFeatures } from "@/hooks/useEnrolledBundleFeatures";
 import type { FeatureKey } from "@/lib/courseFeatures";
 import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
 
@@ -73,78 +75,88 @@ export default function StudentLayout() {
   if (loading || !user) return <div className="p-8 text-muted-foreground">Loading…</div>;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sky-50/40 via-white to-blue-50/30">
-      {/* Top bar */}
-      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur border-b border-sky-100">
-        <div className="flex items-center justify-between px-4 sm:px-6 h-14">
-          <div className="flex items-center gap-3">
-            <button
-              className="lg:hidden p-2 rounded-md hover:bg-sky-50"
-              onClick={() => setMobileOpen((o) => !o)}
-              aria-label="Toggle menu"
-            >
-              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
-            <Link to="/" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white">
-                <GraduationCap className="h-4 w-4" />
-              </div>
-              <div className="leading-tight">
-                <div className="text-sm font-semibold">Student Dashboard</div>
-                <div className="text-[10px] text-muted-foreground">MBA Compass LMS</div>
-              </div>
-            </Link>
-          </div>
-          <div className="flex items-center gap-2">
-            <NotificationBell />
-            <div className="hidden sm:block text-right">
-              <div className="text-xs text-muted-foreground">Welcome</div>
-              <div className="text-sm font-medium">{displayName}</div>
+    <StudentThemeProvider>
+      <div className="min-h-screen bg-gradient-to-br from-sky-50/40 via-white to-blue-50/30 dark:from-background dark:via-background dark:to-background text-foreground">
+        {/* Top bar */}
+        <header className="sticky top-0 z-30 bg-card/90 backdrop-blur border-b border-border">
+          <div className="flex items-center justify-between px-4 sm:px-6 h-14">
+            <div className="flex items-center gap-3">
+              <button
+                className="lg:hidden p-2 rounded-md hover:bg-accent"
+                onClick={() => setMobileOpen((o) => !o)}
+                aria-label="Toggle menu"
+              >
+                {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
+              <Link to="/" className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white">
+                  <GraduationCap className="h-4 w-4" />
+                </div>
+                <div className="leading-tight">
+                  <div className="text-sm font-semibold">Student Dashboard</div>
+                  <div className="text-[10px] text-muted-foreground">MBA Compass LMS</div>
+                </div>
+              </Link>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={async () => {
-                await supabase.auth.signOut();
-                navigate("/");
-              }}
-            >
-              <LogOut className="h-4 w-4 mr-1" /> Logout
-            </Button>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <NotificationBell />
+              <div className="hidden sm:block text-right">
+                <div className="text-xs text-muted-foreground">Welcome</div>
+                <div className="text-sm font-medium">{displayName}</div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  navigate("/");
+                }}
+              >
+                <LogOut className="h-4 w-4 mr-1" /> Logout
+              </Button>
+            </div>
           </div>
+        </header>
+
+        <div className="flex">
+          {/* Sidebar - desktop */}
+          <aside className="hidden lg:flex w-64 shrink-0 border-r border-border bg-card/70 backdrop-blur min-h-[calc(100vh-3.5rem)] sticky top-14">
+            <SidebarContent />
+          </aside>
+
+          {/* Sidebar - mobile drawer */}
+          {mobileOpen && (
+            <div className="fixed inset-0 z-40 lg:hidden">
+              <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
+              <aside className="absolute left-0 top-0 bottom-0 w-72 bg-card shadow-xl border-r border-border pt-14">
+                <SidebarContent />
+              </aside>
+            </div>
+          )}
+
+          {/* Main */}
+          <main className="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-6">
+            <Outlet />
+          </main>
         </div>
-      </header>
-
-      <div className="flex">
-        {/* Sidebar - desktop */}
-        <aside className="hidden lg:flex w-64 shrink-0 border-r border-sky-100 bg-white/70 backdrop-blur min-h-[calc(100vh-3.5rem)] sticky top-14">
-          <SidebarContent />
-        </aside>
-
-        {/* Sidebar - mobile drawer */}
-        {mobileOpen && (
-          <div className="fixed inset-0 z-40 lg:hidden">
-            <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
-            <aside className="absolute left-0 top-0 bottom-0 w-72 bg-white shadow-xl border-r border-sky-100 pt-14">
-              <SidebarContent />
-            </aside>
-          </div>
-        )}
-
-        {/* Main */}
-        <main className="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-6">
-          <Outlet />
-        </main>
       </div>
-    </div>
+    </StudentThemeProvider>
   );
 }
 
 function SidebarContent() {
   const { counts, markSeen } = useStudentNavBadges();
+  const { isEnabled, loading: featuresLoading } = useEnrolledBundleFeatures();
+  // Hide locked items entirely once features have loaded.
+  const visibleItems = navItems.filter((item) => {
+    if (!item.feature) return true;
+    if (featuresLoading) return true;
+    return isEnabled(item.feature);
+  });
   return (
     <nav className="w-full p-4 space-y-1">
-      {navItems.map((item) => {
+      {visibleItems.map((item) => {
         const badge = counts[item.to] ?? 0;
         return (
           <NavLink
@@ -156,8 +168,8 @@ function SidebarContent() {
               cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors relative",
                 isActive
-                  ? "bg-gradient-to-r from-sky-100 to-blue-50 text-sky-700 shadow-sm"
-                  : "text-gray-700 hover:bg-sky-50 hover:text-sky-700"
+                  ? "bg-gradient-to-r from-sky-100 to-blue-50 text-sky-700 shadow-sm dark:from-sky-500/15 dark:to-blue-500/10 dark:text-sky-200"
+                  : "text-foreground/80 hover:bg-accent hover:text-foreground"
               )
             }
           >
@@ -166,7 +178,7 @@ function SidebarContent() {
               {badge > 0 && (
                 <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500 ring-2 ring-white" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500 ring-2 ring-card" />
                 </span>
               )}
             </span>
@@ -176,14 +188,13 @@ function SidebarContent() {
                 {badge > 9 ? "9+" : badge}
               </span>
             )}
-            {item.feature && <FeatureLockBadge feature={item.feature} />}
           </NavLink>
         );
       })}
-      <div className="pt-4 mt-4 border-t border-sky-100">
+      <div className="pt-4 mt-4 border-t border-border">
         <Link
           to="/mocks"
-          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-sky-700 px-3 py-2"
+          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground px-3 py-2"
         >
           Browse all mocks →
         </Link>

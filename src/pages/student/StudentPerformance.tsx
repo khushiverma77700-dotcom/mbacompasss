@@ -1,7 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,25 +21,13 @@ import {
   PolarRadiusAxis,
   Radar,
 } from "recharts";
+import { useStudentPerformance } from "@/hooks/useStudentPerformance";
 
 export default function StudentPerformance() {
-  const { user } = useAuth();
-  const [attempts, setAttempts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("mock_attempts")
-      .select("id, test_id, status, started_at, submitted_at, total_score, max_score, percentile, accuracy, total_correct, total_attempted, total_incorrect, sectional_scores, topic_breakdown, test:mock_tests(name, slug)")
-      .eq("user_id", user.id)
-      .in("status", ["submitted", "auto_submitted"])
-      .order("submitted_at", { ascending: true })
-      .then(({ data }) => {
-        setAttempts(data ?? []);
-        setLoading(false);
-      });
-  }, [user]);
+  // Single source of truth — same engine used by Overview, Mocks, etc.
+  const { submitted, loading } = useStudentPerformance();
+  // Sort chronologically (the hook returns newest first)
+  const attempts = useMemo(() => submitted.slice().reverse(), [submitted]);
 
   const trend = useMemo(
     () =>

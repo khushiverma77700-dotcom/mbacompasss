@@ -17,6 +17,7 @@ import {
   ComposedChart, Legend, ReferenceLine,
 } from "recharts";
 import DailyTestCard from "@/components/student/DailyTestCard";
+import { useStudentPerformance } from "@/hooks/useStudentPerformance";
 
 const SECTION_COLORS: Record<string, string> = {
   QA: "#0284c7",
@@ -29,28 +30,28 @@ const SECTION_COLORS: Record<string, string> = {
 
 export default function StudentOverview() {
   const { user } = useAuth();
+  // Central performance engine — shared with /student/performance, /student/mocks etc.
+  // Realtime: auto-refreshes the moment a mock is submitted.
+  const { attempts, loading: perfLoading } = useStudentPerformance();
   const [enrollments, setEnrollments] = useState<any[]>([]);
-  const [attempts, setAttempts] = useState<any[]>([]);
   const [goals, setGoals] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [weak, setWeak] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [sideLoading, setSideLoading] = useState(true);
+  const loading = perfLoading || sideLoading;
 
   useEffect(() => {
     if (!user) return;
     (async () => {
       const today = new Date().toISOString().slice(0, 10);
       const [
-        { data: e }, { data: a }, { data: g }, { data: ann }, { data: pf }, { data: tk }, { data: wk },
+        { data: e }, { data: g }, { data: ann }, { data: pf }, { data: tk }, { data: wk },
       ] = await Promise.all([
         supabase.from("mock_enrollments")
           .select("id, test_id, source, expires_at, enrolled_at, test:mock_tests(name, slug, exam_code)")
           .eq("user_id", user.id).order("enrolled_at", { ascending: false }),
-        supabase.from("mock_attempts")
-          .select("id, test_id, status, started_at, submitted_at, total_score, max_score, percentile, total_correct, total_attempted, accuracy, sectional_scores, time_spent_seconds, test:mock_tests(name, slug, exam_code)")
-          .eq("user_id", user.id).order("started_at", { ascending: false }),
         supabase.from("student_goals").select("*").eq("user_id", user.id).eq("is_completed", false)
           .order("due_date", { ascending: true }).limit(3),
         supabase.from("student_announcements").select("*").eq("is_active", true)
@@ -60,13 +61,12 @@ export default function StudentOverview() {
         supabase.from("student_weak_topics").select("*").eq("user_id", user.id).order("level", { ascending: true }).limit(12),
       ]);
       setEnrollments(e ?? []);
-      setAttempts(a ?? []);
       setGoals(g ?? []);
       setAnnouncements(ann ?? []);
       setProfile(pf);
       setTasks(tk ?? []);
       setWeak(wk ?? []);
-      setLoading(false);
+      setSideLoading(false);
     })();
   }, [user]);
 
@@ -89,7 +89,13 @@ export default function StudentOverview() {
     const avgScore = submitted.length ? +(totalScore / submitted.length).toFixed(1) : 0;
     const avgMaxScore = submitted.length ? +(totalMaxScore / submitted.length).toFixed(1) : 0;
     const avgPctScore = totalMaxScore > 0 ? Math.round((totalScore / totalMaxScore) * 100) : 0;
-    const totalTimeSec = submitted.reduce((s, x) => s + Number(x.time_spent_seconds || 0), 0);
+    const totalTimeSec = submitted.reduce((s, x) => {
+      if (x.started_at && x.submitted_at) {
+        const diff = (new Date(x.submitted_at).getTime() - new Date(x.started_at).getTime()) / 1000;
+        return s + Math.max(0, diff);
+      }
+      return s;
+    }, 0);
     const totalHours = +(totalTimeSec / 3600).toFixed(1);
     const avgTimeMin = submitted.length ? Math.round(totalTimeSec / 60 / submitted.length) : 0;
 
