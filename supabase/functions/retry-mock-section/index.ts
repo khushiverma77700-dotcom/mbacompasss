@@ -217,7 +217,7 @@ Deno.serve(async (req) => {
     const { data: roleRow } = await admin.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
     if (!roleRow) return jsonResp(403, { error: "Admin role required" });
 
-    const { job_id } = await req.json();
+    const { job_id, auto = false } = await req.json();
     if (!job_id) return jsonResp(400, { error: "job_id required" });
 
     const { data: job, error: jobErr } = await admin.from("mock_section_jobs").select("*").eq("id", job_id).single();
@@ -228,7 +228,7 @@ Deno.serve(async (req) => {
       status: "processing",
       current_step: "Restart requested — re-calling AI…",
       error_message: null,
-      attempts: (job.attempts || 0) + 1,
+      attempts: auto ? (job.attempts || 0) : (job.attempts || 0) + 1,
       updated_at: new Date().toISOString(),
     }).eq("id", job_id);
 
