@@ -360,14 +360,40 @@ Deno.serve(async (req) => {
           const hubRows: any[] = [];
           for (const q of qs) {
             if (produced >= target) break;
-            if (!q?.question_html) continue;
-            const hash = await sha256(normalizeForHash(q.question_html));
-            if (seen.has(hash)) continue;
+            if (!q?.question_html) { rejectedInvalid++; continue; }
+            const norm = normalizeForHash(q.question_html);
+            const hash = await sha256(norm);
+
+            // Reason 1 — exact hash collision against the entire bank
+            if (seen.has(hash)) { dupHash++; continue; }
+
+            // Reason 2 — high token Jaccard against any question in this section
+            const candTokens = tokenize(norm);
+            let maxSim = 0;
+            for (const t of corpus.tokens) {
+              const s = jaccard(candTokens, t);
+              if (s > maxSim) maxSim = s;
+              if (maxSim >= SIM_THRESHOLD) break;
+            }
+            if (maxSim >= SIM_THRESHOLD) { dupSimilarity++; continue; }
+
+            // Reason 3 — near-paraphrase: 5-word shingle overlap
+            const candShingles = buildShingles(norm, 5);
+            let maxShingle = 0;
+            for (const sh of corpus.shingles) {
+              const s = jaccard(candShingles, sh);
+              if (s > maxShingle) maxShingle = s;
+              if (maxShingle >= PARAPHRASE_THRESHOLD) break;
+            }
+            if (maxShingle >= PARAPHRASE_THRESHOLD) { dupParaphrase++; continue; }
+
             seen.add(hash);
+            corpus.tokens.push(candTokens);
+            corpus.shingles.push(candShingles);
 
             const isTita = q.question_type === "tita";
             const cleanedQHtml = cleanQuestionHtml(q.question_html);
-            const { data: qRow } = await admin.from("mock_questions").insert({
+            const { data: qRow, error: insErr } = await admin.from("mock_questions").insert({
               section_id: job.section_id,
               question_number: produced + 1,
               question_type: isTita ? "tita" : "mcq",
@@ -382,7 +408,8 @@ Deno.serve(async (req) => {
               explanation_html: q.explanation_html || "",
               content_hash: hash,
             }).select("id").single();
-            if (!qRow) continue;
+            if (insErr) { dupDb++; continue; }
+            if (!qRow) { rejectedInvalid++; continue; }
 
             if (!isTita && Array.isArray(q.options)) {
               const opts = q.options.slice(0, 4).map((o: any, idx: number) => ({
