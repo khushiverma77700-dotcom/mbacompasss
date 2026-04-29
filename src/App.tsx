@@ -143,6 +143,7 @@ const StudentTools = lazyWithPreload(() => import("./pages/student/StudentTools"
 const StudentProfile = lazyWithPreload(() => import("./pages/student/StudentProfile"));
 const StudentRewards = lazyWithPreload(() => import("./pages/student/StudentRewards"));
 const StudentDayPlanner = lazyWithPreload(() => import("./pages/student/StudentDayPlanner"));
+const StudentPlannerPerformance = lazyWithPreload(() => import("./pages/student/StudentPlannerPerformance"));
 const MBACompassCoursesPage = lazyWithPreload(() => import("./pages/MBACompassCoursesPage"));
 const MBACompassCourseDetailPage = lazyWithPreload(() => import("./pages/MBACompassCourseDetailPage"));
 const MBACompassComparePage = lazyWithPreload(() => import("./pages/MBACompassComparePage"));
@@ -612,6 +613,7 @@ const App = () => (
               <Route path="profile" element={<LazyPage><StudentProfile /></LazyPage>} />
               <Route path="rewards" element={<LazyPage><StudentRewards /></LazyPage>} />
               <Route path="day-planner" element={<LazyPage><StudentDayPlanner /></LazyPage>} />
+              <Route path="day-planner/performance" element={<LazyPage><StudentPlannerPerformance /></LazyPage>} />
               <Route path="leaderboard" element={<LazyPage><StudentLeaderboard /></LazyPage>} />
               <Route path="notifications" element={<LazyPage><StudentNotifications /></LazyPage>} />
               <Route path="orders" element={<LazyPage><StudentOrders /></LazyPage>} />
