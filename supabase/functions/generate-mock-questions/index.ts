@@ -501,43 +501,69 @@ async function callOpenAIBatch(args: {
   const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
 
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), OPENAI_TIMEOUT_MS);
-  let resp: Response;
-  try {
-    const lvlLower = String(args.level || "").toLowerCase();
-    const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
-    const modelId = isHardVariant ? "gpt-5" : "gpt-4o";
-    const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.35;
-    const body: Record<string, unknown> = {
-      model: modelId,
-      messages: [
-        { role: "system", content: sys },
-        { role: "user", content: user },
-      ],
-      response_format: { type: "json_object" },
-      max_tokens: 16000,
-    };
-    // gpt-5 only supports default temperature
-    if (modelId !== "gpt-5") body.temperature = temp;
-    resp = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal: ctrl.signal,
-    });
-  } catch (e) {
-    clearTimeout(timer);
-    const msg = (e as Error)?.name === "AbortError"
-      ? `OpenAI request aborted after ${OPENAI_TIMEOUT_MS}ms`
-      : `OpenAI fetch failed: ${(e as Error)?.message || e}`;
-    throw new Error(msg);
-  }
-  clearTimeout(timer);
+  const lvlLower = String(args.level || "").toLowerCase();
+  const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
+  const modelId = isHardVariant ? "gpt-5" : "gpt-4o";
+  const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.35;
+  const reqBody: Record<string, unknown> = {
+    model: modelId,
+    messages: [
+      { role: "system", content: sys },
+      { role: "user", content: user },
+    ],
+    response_format: { type: "json_object" },
+    max_tokens: 16000,
+  };
+  if (modelId !== "gpt-5") reqBody.temperature = temp;
 
-  if (!resp.ok) {
-    const txt = await resp.text();
-    throw new Error(`AI call failed (${resp.status}): ${txt.slice(0, 300)}`);
+  // Inline retry with exponential backoff for transient errors (429 / 5xx / network).
+  // OpenAI 502s in the field were causing whole batches to be discarded.
+  const MAX_INLINE_RETRIES = 4;
+  let resp: Response | null = null;
+  let lastErr: string | null = null;
+  for (let attempt = 1; attempt <= MAX_INLINE_RETRIES; attempt++) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), OPENAI_TIMEOUT_MS);
+    try {
+      resp = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify(reqBody),
+        signal: ctrl.signal,
+      });
+      clearTimeout(timer);
+      if (resp.ok) break;
+      // Retry on 408/429/5xx
+      if ([408, 425, 429, 500, 502, 503, 504].includes(resp.status) && attempt < MAX_INLINE_RETRIES) {
+        const txt = await resp.text();
+        lastErr = `AI call failed (${resp.status}): ${txt.slice(0, 200)}`;
+        console.warn(`[callOpenAIBatch] transient ${resp.status}, retry ${attempt}/${MAX_INLINE_RETRIES - 1}`);
+        const backoff = Math.min(8000, 1000 * Math.pow(2, attempt - 1)) + Math.random() * 500;
+        await new Promise((r) => setTimeout(r, backoff));
+        resp = null;
+        continue;
+      }
+      // non-retryable
+      const txt = await resp.text();
+      throw new Error(`AI call failed (${resp.status}): ${txt.slice(0, 300)}`);
+    } catch (e) {
+      clearTimeout(timer);
+      const msg = (e as Error)?.name === "AbortError"
+        ? `OpenAI request aborted after ${OPENAI_TIMEOUT_MS}ms`
+        : `OpenAI fetch failed: ${(e as Error)?.message || e}`;
+      lastErr = msg;
+      if (attempt < MAX_INLINE_RETRIES) {
+        console.warn(`[callOpenAIBatch] network error, retry ${attempt}/${MAX_INLINE_RETRIES - 1}: ${msg}`);
+        const backoff = Math.min(8000, 1000 * Math.pow(2, attempt - 1)) + Math.random() * 500;
+        await new Promise((r) => setTimeout(r, backoff));
+        resp = null;
+        continue;
+      }
+      throw new Error(msg);
+    }
+  }
+  if (!resp || !resp.ok) {
+    throw new Error(lastErr || "AI call failed after retries");
   }
   const data = await resp.json();
   const content = data?.choices?.[0]?.message?.content;

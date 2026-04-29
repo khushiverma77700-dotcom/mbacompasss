@@ -213,6 +213,21 @@ export default function MockGenerationProgressPanel({ generationId, compact = fa
             All sections generated successfully — ready to review.
           </div>
         )}
+
+        {p.isComplete && p.hasFailures && (
+          <div className="rounded-lg border border-rose-200 bg-rose-50/70 p-3 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold text-rose-800">
+                Generation finished with {p.failedSections} failed section{p.failedSections === 1 ? "" : "s"}
+              </div>
+              <div className="text-xs text-rose-700 mt-0.5">
+                Only {p.generatedQuestions}/{p.totalQuestions} questions were saved. Use the Retry button on each failed section above to re-run only the missing ones — your saved questions will be preserved.
+              </div>
+              <RetryAllFailedButton jobs={p.jobs.filter((j) => j.status === "failed").map((j) => ({ id: j.id, name: j.section_name }))} />
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -265,6 +280,33 @@ function RetryButton({ jobId, sectionName }: { jobId: string; sectionName: strin
     <Button size="sm" variant="outline" className="h-7 px-2 gap-1 border-amber-300 text-amber-700 hover:bg-amber-50" onClick={onClick} disabled={loading}>
       {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
       Retry
+    </Button>
+  );
+}
+
+function RetryAllFailedButton({ jobs }: { jobs: { id: string; name: string }[] }) {
+  const [loading, setLoading] = useState(false);
+  if (jobs.length === 0) return null;
+  const onClick = async () => {
+    setLoading(true);
+    let ok = 0, fail = 0;
+    for (const j of jobs) {
+      try {
+        const { data, error } = await supabase.functions.invoke("retry-mock-section", { body: { job_id: j.id } });
+        if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+        ok++;
+      } catch {
+        fail++;
+      }
+    }
+    setLoading(false);
+    if (fail === 0) toast.success(`Re-queued ${ok} failed section${ok === 1 ? "" : "s"}`);
+    else toast.warning(`Re-queued ${ok}, failed to retry ${fail}`);
+  };
+  return (
+    <Button size="sm" className="mt-2 h-8 gap-1.5 bg-rose-600 hover:bg-rose-700" onClick={onClick} disabled={loading}>
+      {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+      Retry all {jobs.length} failed section{jobs.length === 1 ? "" : "s"}
     </Button>
   );
 }
