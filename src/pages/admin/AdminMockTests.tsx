@@ -27,7 +27,7 @@ type Form = {
   slug: string;
   description: string;
   banner_url: string;
-  test_type: "full_length" | "sectional" | "topic";
+  test_type: "full_length" | "sectional" | "topic_wise" | "practice_set";
   total_duration_minutes: number;
   pricing_type: "free" | "paid";
   price_inr: number;
