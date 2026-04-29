@@ -115,22 +115,44 @@ const empty: Partial<Course> = {
   total_video_hours: 0, total_practice_questions: 0, live_classes_count: 0,
 };
 
+type BundleOpt = { id: string; name: string; exam_code: string | null; is_published: boolean };
+
 export default function AdminMBACompassCourses() {
   const [list, setList] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [edit, setEdit] = useState<Partial<Course> | null>(null);
+  const [bundles, setBundles] = useState<BundleOpt[]>([]);
+  const [editBundleIds, setEditBundleIds] = useState<string[]>([]);
+  const [bundleCounts, setBundleCounts] = useState<Record<string, number>>({});
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("mba_compass_courses")
-      .select("*")
-      .order("sort_order")
-      .order("created_at", { ascending: false });
-    setList((data ?? []) as Course[]);
+    const [{ data: courses }, { data: b }, { data: cb }] = await Promise.all([
+      supabase.from("mba_compass_courses").select("*").order("sort_order").order("created_at", { ascending: false }),
+      supabase.from("mock_bundles").select("id, name, exam_code, is_published").order("sort_order"),
+      supabase.from("course_bundles").select("course_id, bundle_id"),
+    ]);
+    setList((courses ?? []) as Course[]);
+    setBundles((b ?? []) as BundleOpt[]);
+    const counts: Record<string, number> = {};
+    (cb ?? []).forEach((r: any) => { counts[r.course_id] = (counts[r.course_id] ?? 0) + 1; });
+    setBundleCounts(counts);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
+
+  // When opening an existing course, load its linked bundles
+  useEffect(() => {
+    (async () => {
+      if (!edit?.id) { setEditBundleIds([]); return; }
+      const { data } = await supabase.from("course_bundles").select("bundle_id").eq("course_id", edit.id);
+      setEditBundleIds((data ?? []).map((r: any) => r.bundle_id));
+    })();
+  }, [edit?.id]);
+
+  const toggleBundle = (id: string) => {
+    setEditBundleIds((cur) => cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]);
+  };
 
   const save = async () => {
     if (!edit?.title) return toast.error("Title required");
