@@ -25,7 +25,6 @@ type MockAttempt = {
   accuracy: number | null;
   sectional_scores: any;
   topic_breakdown?: any;
-  time_spent_seconds: number | null;
   test?: { name?: string; slug?: string; exam_code?: string } | null;
 };
 
@@ -34,7 +33,6 @@ export type StudentPerformanceData = {
   submitted: MockAttempt[];
   inProgress: MockAttempt[];
   loading: boolean;
-  // Headline metrics
   totalAttempts: number;
   avgPercentile: number;
   bestPercentile: number;
@@ -42,12 +40,10 @@ export type StudentPerformanceData = {
   avgScore: number;
   totalHours: number;
   streakDays: number;
-  consistency: number;          // 0-100, higher = more consistent
-  improvement: number;          // delta percentile first → last
-  lastDelta: number;            // last attempt vs the one before
-  // Section aggregates
+  consistency: number;
+  improvement: number;
+  lastDelta: number;
   sectional: Array<{ name: string; avgScore: number; avgAccuracy: number; avgPercentile: number; pctOfMax: number }>;
-  // Trend (chronological, last 12)
   trend: Array<{ name: string; percentile: number; score: number; accuracy: number }>;
 };
 
@@ -57,12 +53,12 @@ async function fetchAttempts(userId: string): Promise<MockAttempt[]> {
   const { data, error } = await supabase
     .from("mock_attempts")
     .select(
-      "id, test_id, status, started_at, submitted_at, total_score, max_score, percentile, total_correct, total_attempted, total_incorrect, accuracy, sectional_scores, topic_breakdown, time_spent_seconds, test:mock_tests(name, slug, exam_code)"
+      "id, test_id, status, started_at, submitted_at, total_score, max_score, percentile, total_correct, total_attempted, total_incorrect, accuracy, sectional_scores, topic_breakdown, test:mock_tests(name, slug, exam_code)"
     )
     .eq("user_id", userId)
     .order("started_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as MockAttempt[];
+  return ((data ?? []) as unknown) as MockAttempt[];
 }
 
 export function useStudentPerformance(): StudentPerformanceData {
