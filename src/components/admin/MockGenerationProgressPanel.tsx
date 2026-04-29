@@ -352,7 +352,7 @@ function DiagnosticsPanel({
                   <div className="text-[10px] text-slate-500 mb-1">{r.desc}</div>
                   <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
                     <div
-                      className={`h-full rounded-full bg-${r.color}-500`}
+                      className={`h-full rounded-full ${r.bar}`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
