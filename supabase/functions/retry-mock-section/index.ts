@@ -102,6 +102,50 @@ async function loadExistingQuestionHashes(admin: any): Promise<Set<string>> {
   return seen;
 }
 
+// Section-scoped corpus used for similarity / paraphrase rejection.
+// Keeping it section-local (instead of the entire bank) keeps the math cheap
+// while still catching the most common AI repetition patterns.
+async function loadSectionCorpus(admin: any, sectionId: string): Promise<{ tokens: Set<string>[]; shingles: Set<string>[] }> {
+  const tokens: Set<string>[] = [];
+  const shingles: Set<string>[] = [];
+  const { data } = await admin
+    .from("mock_questions")
+    .select("question_html")
+    .eq("section_id", sectionId)
+    .limit(2000);
+  for (const row of data || []) {
+    const norm = normalizeForHash((row as any).question_html || "");
+    tokens.push(tokenize(norm));
+    shingles.push(buildShingles(norm, 5));
+  }
+  return { tokens, shingles };
+}
+
+function tokenize(text: string): Set<string> {
+  return new Set(text.split(/\s+/).filter((t) => t.length > 2));
+}
+
+function buildShingles(text: string, n: number): Set<string> {
+  const words = text.split(/\s+/).filter(Boolean);
+  const out = new Set<string>();
+  if (words.length < n) {
+    if (words.length) out.add(words.join(" "));
+    return out;
+  }
+  for (let i = 0; i <= words.length - n; i++) out.add(words.slice(i, i + n).join(" "));
+  return out;
+}
+
+function jaccard(a: Set<string>, b: Set<string>): number {
+  if (!a.size || !b.size) return 0;
+  let inter = 0;
+  for (const x of a) if (b.has(x)) inter++;
+  return inter / (a.size + b.size - inter);
+}
+
+const SIM_THRESHOLD = 0.72;        // token Jaccard
+const PARAPHRASE_THRESHOLD = 0.35; // 5-word shingle Jaccard
+
 const EXAM_BASELINE: Record<string, string> = {
   CAT: "HIGH baseline (CAT 85-95 percentile difficulty). Elegant single-insight questions, RC-heavy VARC, dense DILR caselets, arithmetic-heavy QA. No GK.",
   XAT: "VERY HIGH baseline — HARDER than CAT. Verbose passages, ethical Decision Making dilemmas with no single right answer, harder Modern Math + Geometry. GK section, no negative on GK.",
