@@ -238,12 +238,10 @@ Deno.serve(async (req) => {
         let produced = existingCount || 0;
         const target = job.total_questions || 0;
 
-        const { data: existingHashes } = await admin.from("mock_questions").select("content_hash").not("content_hash", "is", null);
-        const seen = new Set<string>((existingHashes || []).map((r: any) => r.content_hash).filter(Boolean));
+        const seen = await loadExistingQuestionHashes(admin);
 
-        const startedAt = Date.now();
         let attempts = 0;
-        const maxAttempts = Math.ceil((target - produced) / BATCH_SIZE) + 4;
+        const maxAttempts = Math.max(20, (target - produced) * MAX_ATTEMPTS_PER_QUESTION);
 
         // Mirror to Personalized Hub ONLY if the parent test is Daily/sectional/topic.
         // Look up parent test_type via section → test.
@@ -260,24 +258,15 @@ Deno.serve(async (req) => {
         const hubSection = allowHubMirror ? (PERSONALIZED_SECTION_MAP[job.exam_code] || {})[job.section_code] : undefined;
 
         while (produced < target && attempts < maxAttempts) {
-          if (Date.now() - startedAt > SECTION_WALL_CLOCK_MS) {
-            await admin.from("mock_section_jobs").update({
-              status: "failed",
-              error_message: "Retry exceeded 8-min wall clock",
-              current_step: "Timed out",
-              updated_at: new Date().toISOString(),
-            }).eq("id", job_id);
-            return;
-          }
           attempts++;
           const remain = target - produced;
-          const batch = Math.min(BATCH_SIZE, remain);
-          const remainTita = Math.max(0, (job.tita_count || 0) - 0);
-          const batchTita = Math.min(remainTita, Math.round(batch * (remainTita / Math.max(1, remain))));
+          const batch = 1;
+          const remainTita = Math.max(0, (job.tita_count || 0) - produced);
+          const batchTita = remainTita > 0 && remain <= remainTita ? 1 : 0;
           const batchMcq = batch - batchTita;
 
           await admin.from("mock_section_jobs").update({
-            current_step: `Retry batch ${attempts}: requesting ${batch} questions…`,
+            current_step: `Retrying question ${produced + 1}/${target} — uniqueness check active…`,
             updated_at: new Date().toISOString(),
           }).eq("id", job_id);
 
@@ -368,11 +357,11 @@ Deno.serve(async (req) => {
           }).eq("id", job_id);
         }
 
-        const success = produced >= Math.ceil(target * 0.8);
+        const success = produced === target;
         await admin.from("mock_section_jobs").update({
           status: success ? "completed" : "failed",
           questions_done: produced,
-          current_step: success ? `Done — ${produced} questions saved` : `Incomplete — ${produced}/${target}`,
+          current_step: success ? `Done — exactly ${produced} questions saved` : `Incomplete — ${produced}/${target}`,
           error_message: success ? null : `Only ${produced} of ${target} after retry`,
           updated_at: new Date().toISOString(),
         }).eq("id", job_id);
