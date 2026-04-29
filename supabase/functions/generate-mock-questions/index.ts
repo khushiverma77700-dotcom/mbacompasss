@@ -132,11 +132,11 @@ const EXAM_PROFILES: Record<string, {
   },
 };
 
-const BATCH_SIZE = 8; // questions per AI call
+const BATCH_SIZE = 12; // questions per AI call (raised so we hit exact counts faster)
 const OPENAI_TIMEOUT_MS = 90_000;       // single AI call hard timeout
 const FIRECRAWL_TIMEOUT_MS = 6_000;     // single web-check hard timeout
-const SECTION_WALL_CLOCK_MS = 8 * 60_000; // entire section must finish in 8 min
-const MAX_FIRECRAWL_CHECKS_PER_SECTION = 6; // cap web-checks (was unbounded → main stall cause)
+const SECTION_WALL_CLOCK_MS = 15 * 60_000; // entire section must finish in 15 min (raised from 8)
+const MAX_FIRECRAWL_CHECKS_PER_SECTION = 4; // cap web-checks tightly to avoid stalls
 
 // Map mock_section.code (e.g. "DILR") + exam to the personalized_questions catalog
 // Uses src/data/personalizedExams.ts vocabulary so the admin hub counter picks it up.
