@@ -5,28 +5,41 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM_PROMPT = `You are an expert admission consultant specializing in SOP (Statement of Purpose) evaluation for top global universities (IIMs, ISB, Harvard, Stanford, Wharton, INSEAD, LBS, etc.).
+const SYSTEM_PROMPT = `You are a top-tier admissions consultant evaluating Statements of Purpose (SOPs) for elite global programs (IIM-A/B/C, ISB, Harvard, Stanford, Wharton, INSEAD, LBS, MIT Sloan).
 
-Your task is to evaluate a student's SOP in a highly structured, unbiased, specific, and detailed manner.
+EVALUATION PHILOSOPHY:
+- Be brutally honest. Do NOT inflate scores.
+- Every comment must be SPECIFIC to the SOP text — quote phrases, point to lines.
+- Avoid generic platitudes ("good job", "well written"). Replace with concrete observations.
+- Pair every weakness with a precise, actionable fix.
+- Never write long flowery paragraphs. Use crisp, dense, bullet-style insight.
+- Quantify wherever possible: word counts, ratios, repetition counts, sentence length, cliche counts.
 
-Rules:
-- Every feedback must be specific, never generic.
-- Every weakness must be paired with an actionable improvement suggestion.
-- Section scores must align with the qualitative feedback (do not give 9/10 then list major problems).
-- Be honest. If the SOP is weak, score it low. If excellent, score it high.
-- All scores: section_scores out of 10 (integers), overall_score out of 100.
-- Never include markdown, never include preamble. Return ONLY the structured tool call.`;
+OUTPUT MUST BE QUANTITATIVE + QUALITATIVE:
+- Section scores out of 10 (integers)
+- Overall score out of 100
+- SWOT analysis (each item ≤ 18 words)
+- Quantitative metrics (numbers, percentages)
+- Line-level issues (real quotes from the SOP)
+- Improvement suggestions (specific, ≤ 20 words each)
+- Rewrite suggestions (1-2 short rewritten sentences max per item)
+
+RULES:
+- Return ONLY the structured tool call. No prose, no markdown, no preamble.
+- Bullets, not paragraphs. Short, punchy, scannable.`;
 
 const TOOL_SCHEMA = {
   type: "function",
   function: {
     name: "submit_sop_evaluation",
-    description: "Return a structured SOP evaluation report.",
+    description: "Return a fully structured, quantitative + qualitative SOP evaluation.",
     parameters: {
       type: "object",
       properties: {
         overall_score: { type: "integer", minimum: 0, maximum: 100 },
         verdict: { type: "string", enum: ["Excellent", "Good", "Needs Improvement", "Poor"] },
+        one_line_summary: { type: "string", description: "≤ 25 words. The single most important takeaway." },
+
         section_scores: {
           type: "object",
           properties: {
@@ -42,33 +55,80 @@ const TOOL_SCHEMA = {
           required: ["clarity", "structure", "storytelling", "career_goals", "college_fit", "originality", "grammar", "impact"],
           additionalProperties: false,
         },
-        strengths: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 8 },
-        weaknesses: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 8 },
-        detailed_feedback: {
+
+        quantitative_metrics: {
           type: "object",
           properties: {
-            introduction: { type: "string" },
-            body: { type: "string" },
-            career_goals: { type: "string" },
-            conclusion: { type: "string" },
+            word_count: { type: "integer" },
+            sentence_count: { type: "integer" },
+            avg_sentence_length: { type: "number" },
+            readability_grade: { type: "number", description: "Approx Flesch-Kincaid grade level" },
+            cliche_count: { type: "integer" },
+            passive_voice_pct: { type: "number" },
+            unique_word_ratio: { type: "number", description: "0-1, lexical diversity" },
+            first_person_pct: { type: "number" },
+            paragraph_count: { type: "integer" },
+            estimated_reading_time_min: { type: "number" },
           },
-          required: ["introduction", "body", "career_goals", "conclusion"],
+          required: ["word_count", "sentence_count", "avg_sentence_length", "readability_grade", "cliche_count", "passive_voice_pct", "unique_word_ratio", "first_person_pct", "paragraph_count", "estimated_reading_time_min"],
           additionalProperties: false,
         },
-        line_level_issues: {
+
+        swot: {
+          type: "object",
+          properties: {
+            strengths: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 6 },
+            weaknesses: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 6 },
+            opportunities: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 6 },
+            threats: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 6 },
+          },
+          required: ["strengths", "weaknesses", "opportunities", "threats"],
+          additionalProperties: false,
+        },
+
+        section_feedback: {
           type: "array",
+          description: "Crisp bullet-style feedback per logical section of the SOP.",
           items: {
             type: "object",
             properties: {
-              quote: { type: "string" },
-              issue: { type: "string" },
-              suggestion: { type: "string" },
+              section: { type: "string", enum: ["Introduction", "Background", "Career Goals", "Why This Course", "Why This College", "Conclusion"] },
+              score_out_of_10: { type: "integer", minimum: 0, maximum: 10 },
+              verdict: { type: "string", description: "≤ 8 words" },
+              bullets: { type: "array", items: { type: "string" }, minItems: 2, maxItems: 5, description: "Each bullet ≤ 22 words, specific." },
             },
-            required: ["quote", "issue", "suggestion"],
+            required: ["section", "score_out_of_10", "verdict", "bullets"],
             additionalProperties: false,
           },
+          minItems: 4,
+          maxItems: 6,
         },
-        improvement_suggestions: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 10 },
+
+        line_level_issues: {
+          type: "array",
+          description: "Specific problematic lines lifted from the SOP with fix.",
+          items: {
+            type: "object",
+            properties: {
+              quote: { type: "string", description: "Real quote from SOP" },
+              issue: { type: "string", description: "≤ 18 words" },
+              suggestion: { type: "string", description: "≤ 22 words, concrete fix" },
+              severity: { type: "string", enum: ["high", "medium", "low"] },
+            },
+            required: ["quote", "issue", "suggestion", "severity"],
+            additionalProperties: false,
+          },
+          minItems: 3,
+          maxItems: 10,
+        },
+
+        improvement_suggestions: {
+          type: "array",
+          items: { type: "string", description: "≤ 20 words, action-oriented" },
+          minItems: 5,
+          maxItems: 10,
+        },
+
         rewrite_suggestions: {
           type: "array",
           items: {
@@ -76,16 +136,38 @@ const TOOL_SCHEMA = {
             properties: {
               section: { type: "string" },
               original_excerpt: { type: "string" },
-              rewritten: { type: "string" },
+              rewritten: { type: "string", description: "≤ 60 words" },
+              why_better: { type: "string", description: "≤ 18 words" },
             },
-            required: ["section", "original_excerpt", "rewritten"],
+            required: ["section", "original_excerpt", "rewritten", "why_better"],
             additionalProperties: false,
           },
+          minItems: 2,
+          maxItems: 5,
+        },
+
+        college_fit_analysis: {
+          type: "object",
+          properties: {
+            alignment_score: { type: "integer", minimum: 0, maximum: 100 },
+            matches: { type: "array", items: { type: "string" }, minItems: 2, maxItems: 5 },
+            gaps: { type: "array", items: { type: "string" }, minItems: 2, maxItems: 5 },
+          },
+          required: ["alignment_score", "matches", "gaps"],
+          additionalProperties: false,
+        },
+
+        red_flags: {
+          type: "array",
+          items: { type: "string", description: "≤ 18 words" },
+          maxItems: 6,
         },
       },
       required: [
-        "overall_score", "verdict", "section_scores", "strengths", "weaknesses",
-        "detailed_feedback", "line_level_issues", "improvement_suggestions", "rewrite_suggestions",
+        "overall_score", "verdict", "one_line_summary",
+        "section_scores", "quantitative_metrics", "swot",
+        "section_feedback", "line_level_issues", "improvement_suggestions",
+        "rewrite_suggestions", "college_fit_analysis", "red_flags",
       ],
       additionalProperties: false,
     },
@@ -132,26 +214,25 @@ Deno.serve(async (req) => {
     await supabase.from("sop_reviews").update({ status: "processing" }).eq("id", reviewId);
 
     const studentContext = {
-      target_colleges: review.target_colleges,
-      country_preference: review.country_preference,
-      deadline: review.deadline,
-      experience_years: review.experience_years,
-      current_role: review.current_role_text,
-      academic_background: review.academic_background,
-      major_achievements: review.major_achievements,
-      target_course: review.target_course,
-      specialization: review.specialization,
-      why_course: review.why_course,
-      short_term_goals: review.short_term_goals,
-      long_term_goals: review.long_term_goals,
-      why_college: review.why_college,
-      strengths: review.strengths,
-      weaknesses: review.weaknesses,
-      highlight_focus: review.highlight_focus,
-      tone_preference: review.tone_preference,
+      target_colleges: review.target_colleges || "(not provided)",
+      country_preference: review.country_preference || "(not provided)",
+      target_course: review.target_course || "MBA",
+      specialization: review.specialization || "(not provided)",
+      why_course: review.why_course || "(not provided)",
+      experience_years: review.experience_years ?? "(not provided)",
+      current_role: review.current_role_text || "(not provided)",
+      academic_background: review.academic_background || "(not provided)",
+      major_achievements: review.major_achievements || "(not provided)",
+      short_term_goals: review.short_term_goals || "(not provided)",
+      long_term_goals: review.long_term_goals || "(not provided)",
+      why_college: review.why_college || "(not provided)",
+      strengths: review.strengths || "(not provided)",
+      weaknesses: review.weaknesses || "(not provided)",
+      highlight_focus: review.highlight_focus || [],
+      tone_preference: review.tone_preference || "Formal",
     };
 
-    const userPrompt = `STUDENT PROFILE & INTENT (JSON):
+    const userPrompt = `STUDENT PROFILE & INTENT:
 ${JSON.stringify(studentContext, null, 2)}
 
 SOP CONTENT (${wordCount} words):
@@ -159,7 +240,7 @@ SOP CONTENT (${wordCount} words):
 ${review.sop_text}
 """
 
-Evaluate this SOP rigorously against the student's stated profile, target course/college, and intended highlights. Use the submit_sop_evaluation function.`;
+Evaluate this SOP rigorously. Be specific, quantitative, and actionable. Use the submit_sop_evaluation function.`;
 
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) {
@@ -178,25 +259,33 @@ Evaluate this SOP rigorously against the student's stated profile, target course
         ],
         tools: [TOOL_SCHEMA],
         tool_choice: { type: "function", function: { name: "submit_sop_evaluation" } },
-        temperature: 0.4,
+        temperature: 0.3,
       }),
     });
 
     if (!aiResp.ok) {
       const errText = await aiResp.text();
       console.error("OpenAI error:", aiResp.status, errText);
-      await supabase.from("sop_reviews").update({ status: "failed", error_message: `AI error ${aiResp.status}` }).eq("id", reviewId);
-      return new Response(JSON.stringify({ error: "AI service error" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      await supabase.from("sop_reviews").update({ status: "failed", error_message: `AI error ${aiResp.status}: ${errText.slice(0,200)}` }).eq("id", reviewId);
+      return new Response(JSON.stringify({ error: `AI service error: ${errText.slice(0,200)}` }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const aiJson = await aiResp.json();
     const toolCall = aiJson?.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall?.function?.arguments) {
+      console.error("No tool call in response:", JSON.stringify(aiJson).slice(0, 500));
       await supabase.from("sop_reviews").update({ status: "failed", error_message: "No structured response" }).eq("id", reviewId);
-      return new Response(JSON.stringify({ error: "No structured response" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "No structured response from AI" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const evaluation = JSON.parse(toolCall.function.arguments);
+    let evaluation: any;
+    try {
+      evaluation = JSON.parse(toolCall.function.arguments);
+    } catch (parseErr) {
+      console.error("JSON parse error:", parseErr, toolCall.function.arguments?.slice(0, 500));
+      await supabase.from("sop_reviews").update({ status: "failed", error_message: "Invalid AI JSON" }).eq("id", reviewId);
+      return new Response(JSON.stringify({ error: "AI returned invalid JSON" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     await supabase.from("sop_reviews").update({
       status: "completed",
