@@ -159,6 +159,7 @@ const StudentSupport = lazyWithPreload(() => import("./pages/student/StudentSupp
 const StudentPersonalizedHub = lazyWithPreload(() => import("./pages/student/StudentPersonalizedHub"));
 const PersonalizedMockRunnerPage = lazyWithPreload(() => import("./pages/student/PersonalizedMockRunnerPage"));
 const PersonalizedMockResultPage = lazyWithPreload(() => import("./pages/student/PersonalizedMockResultPage"));
+const StudentLogin = lazyWithPreload(() => import("./pages/student/StudentLogin"));
 const AdminPersonalizedHub = lazyWithPreload(() => import("./pages/admin/AdminPersonalizedHub"));
 const AdminDailyTests = lazyWithPreload(() => import("./pages/admin/AdminDailyTests"));
 const AdminStudentNotificationsBroadcast = lazyWithPreload(() => import("./pages/admin/AdminStudentNotificationsBroadcast"));
@@ -597,6 +598,7 @@ const App = () => (
             <Route path="/mocks/checkout/return" element={<LazyPage><MockCheckoutReturnPage /></LazyPage>} />
             <Route path="/mocks/thank-you" element={<PublicLayout><LazyPage><MockThankYouPage /></LazyPage></PublicLayout>} />
             <Route path="/dashboard/mocks" element={<PublicLayout><LazyPage><MyMocksPage /></LazyPage></PublicLayout>} />
+            <Route path="/student/login" element={<LazyPage><StudentLogin /></LazyPage>} />
             <Route path="/student" element={<LazyPage><StudentLayout /></LazyPage>}>
               <Route index element={<LazyPage><StudentOverview /></LazyPage>} />
               <Route path="mocks" element={<LazyPage><StudentMocks /></LazyPage>} />

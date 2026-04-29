@@ -71,10 +71,36 @@ export default function StudentLayout() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [displayName, setDisplayName] = useState<string>("");
+  const [accessChecked, setAccessChecked] = useState(false);
+  const [hasAccess, setHasAccess] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) navigate("/auth?redirect=" + encodeURIComponent(location.pathname));
+    if (!loading && !user) {
+      navigate("/student/login?redirect=" + encodeURIComponent(location.pathname), { replace: true });
+    }
   }, [loading, user, navigate, location.pathname]);
+
+  // Verify the student has at least one purchased course/mock/bundle.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const [mocks, bundles, courses] = await Promise.all([
+        supabase.from("mock_enrollments").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("mock_bundle_enrollments").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+        supabase.from("course_enrollments").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+      ]);
+      if (cancelled) return;
+      const ok = (mocks.count ?? 0) > 0 || (bundles.count ?? 0) > 0 || (courses.count ?? 0) > 0;
+      setHasAccess(ok);
+      setAccessChecked(true);
+      if (!ok) {
+        await supabase.auth.signOut();
+        navigate("/student/login?reason=no-course", { replace: true });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user, navigate]);
 
   useEffect(() => {
     if (!user) return;
@@ -88,7 +114,7 @@ export default function StudentLayout() {
 
   useEffect(() => setMobileOpen(false), [location.pathname]);
 
-  if (loading || !user) return <div className="p-8 text-muted-foreground">Loading…</div>;
+  if (loading || !user || !accessChecked || !hasAccess) return <div className="p-8 text-muted-foreground">Loading…</div>;
 
   return (
     <StudentThemeProvider>
@@ -141,7 +167,7 @@ export default function StudentLayout() {
                 size="sm"
                 onClick={async () => {
                   await supabase.auth.signOut();
-                  navigate("/");
+                  navigate("/student/login", { replace: true });
                 }}
               >
                 <LogOut className="h-4 w-4 mr-1" /> Logout
