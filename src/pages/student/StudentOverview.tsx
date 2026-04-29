@@ -260,7 +260,7 @@ export default function StudentOverview() {
   const targetProgress = target > 0 && predicted != null ? Math.min(100, Math.round((predicted / target) * 100)) : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* ── HERO: Personalised greeting + projection ring + smart CTAs ───────── */}
       <Card className="relative overflow-hidden border-0 shadow-xl bg-gradient-to-br from-sky-600 via-blue-600 to-indigo-700 text-white">
         {/* Decorative orbs (non-interactive) */}
@@ -275,27 +275,29 @@ export default function StudentOverview() {
           }}
         />
 
-        <div className="relative p-6 md:p-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div className="relative p-5 sm:p-6 md:p-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 sm:gap-6">
             {/* Left: greeting */}
-            <div className="flex items-start gap-4 min-w-0 flex-1">
-              <div className="h-14 w-14 rounded-2xl bg-white/15 backdrop-blur-sm grid place-items-center text-2xl font-bold border border-white/25 shadow-inner shrink-0">
+            <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
+              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-white/15 backdrop-blur-sm grid place-items-center text-xl sm:text-2xl font-bold border border-white/25 shadow-inner shrink-0">
                 {initial}
               </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 text-xs text-sky-100/90">
-                  <CalendarDays className="h-3.5 w-3.5" />
-                  <span>{todayLabel}</span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] sm:text-xs text-sky-100/90">
+                  <span className="inline-flex items-center gap-1">
+                    <CalendarDays className="h-3.5 w-3.5" />
+                    <span>{todayLabel}</span>
+                  </span>
                   {stats.streak > 0 && (
-                    <span className="inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/30 text-amber-100">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/30 text-amber-100">
                       <Flame className="h-3 w-3" /> {stats.streak}-day streak
                     </span>
                   )}
                 </div>
-                <h1 className="text-2xl md:text-3xl font-bold mt-1 leading-tight">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mt-1 leading-tight break-words">
                   {greeting}, <span className="text-cyan-200">{firstName}</span>
                 </h1>
-                <p className="text-sky-100/90 mt-1.5 text-sm max-w-lg">
+                <p className="text-sky-100/90 mt-1.5 text-[13px] sm:text-sm max-w-lg">
                   {target && gap != null
                     ? gap > 0
                       ? `You're ${gap} %ile away from your ${target}%ile target — let's close the gap.`
@@ -305,33 +307,33 @@ export default function StudentOverview() {
                       : "Take your first mock to unlock AI-powered insights and a personalised plan."}
                 </p>
 
-                <div className="flex flex-wrap gap-2 mt-4">
+                <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 mt-4">
                   {resumeMock ? (
-                    <Link to={`/mocks/attempt/${resumeMock.id}`}>
-                      <Button size="lg" className="gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-lg">
+                    <Link to={`/mocks/attempt/${resumeMock.id}`} className="col-span-2 sm:col-auto">
+                      <Button size="lg" className="w-full sm:w-auto gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-lg">
                         <Clock className="h-4 w-4" /> Resume Mock
                       </Button>
                     </Link>
                   ) : nextMock?.test?.slug ? (
-                    <Link to={`/mocks/${nextMock.test.slug}`}>
-                      <Button size="lg" className="gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-lg">
+                    <Link to={`/mocks/${nextMock.test.slug}`} className="col-span-2 sm:col-auto">
+                      <Button size="lg" className="w-full sm:w-auto gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-lg">
                         <Rocket className="h-4 w-4" /> Start Next Mock
                       </Button>
                     </Link>
                   ) : (
-                    <Link to="/student/buy-mocks">
-                      <Button size="lg" className="gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-lg">
+                    <Link to="/student/buy-mocks" className="col-span-2 sm:col-auto">
+                      <Button size="lg" className="w-full sm:w-auto gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-lg">
                         <ShoppingBag className="h-4 w-4" /> Browse Mocks
                       </Button>
                     </Link>
                   )}
                   <Link to="/student/goals">
-                    <Button size="lg" variant="outline" className="gap-2 bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm">
+                    <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2 bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm">
                       <Target className="h-4 w-4" /> Score Engine
                     </Button>
                   </Link>
                   <Link to="/student/day-planner">
-                    <Button size="lg" variant="ghost" className="gap-2 text-white hover:bg-white/15 hover:text-white">
+                    <Button size="lg" variant="ghost" className="w-full sm:w-auto gap-2 text-white hover:bg-white/15 hover:text-white border border-white/15 sm:border-0">
                       <CalendarDays className="h-4 w-4" /> Today's Plan
                     </Button>
                   </Link>
@@ -341,9 +343,9 @@ export default function StudentOverview() {
 
             {/* Right: projection ring */}
             <div className="shrink-0 w-full lg:w-auto">
-              <div className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-5 flex items-center gap-5 min-w-[280px]">
-                <div className="relative h-24 w-24 shrink-0">
-                  <svg viewBox="0 0 100 100" className="h-24 w-24 -rotate-90">
+              <div className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-4 sm:p-5 flex items-center gap-4 sm:gap-5 lg:min-w-[280px]">
+                <div className="relative h-20 w-20 sm:h-24 sm:w-24 shrink-0">
+                  <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
                     <circle cx="50" cy="50" r="42" stroke="rgba(255,255,255,0.15)" strokeWidth="9" fill="none" />
                     <circle
                       cx="50" cy="50" r="42" stroke="white" strokeWidth="9" fill="none"
@@ -355,19 +357,19 @@ export default function StudentOverview() {
                   </svg>
                   <div className="absolute inset-0 grid place-items-center text-center">
                     <div>
-                      <div className="text-2xl font-bold leading-none">{predicted ?? "—"}</div>
+                      <div className="text-xl sm:text-2xl font-bold leading-none">{predicted ?? "—"}</div>
                       <div className="text-[9px] uppercase tracking-wider text-sky-100/80 mt-0.5">%ile</div>
                     </div>
                   </div>
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="text-[10px] uppercase tracking-wider text-sky-100/80">Projected Percentile</div>
                   <div className="text-sm font-semibold mt-0.5">
                     {target > 0 ? `Target ${target}%ile` : "Set a target to track gap"}
                   </div>
                   {target > 0 && (
                     <div className="mt-2">
-                      <div className="h-1.5 w-40 rounded-full bg-white/15 overflow-hidden">
+                      <div className="h-1.5 w-full max-w-[160px] rounded-full bg-white/15 overflow-hidden">
                         <div
                           className="h-full bg-gradient-to-r from-cyan-300 to-emerald-300 transition-all duration-700"
                           style={{ width: `${targetProgress}%` }}
@@ -385,7 +387,7 @@ export default function StudentOverview() {
           </div>
 
           {/* Inline KPI strip */}
-          <div className="relative mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+          <div className="relative mt-5 sm:mt-6 grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2">
             <Kpi label="Enrolled" value={stats.enrolledCount} />
             <Kpi label="Completed" value={stats.submittedCount} />
             <Kpi label="Avg %ile" value={stats.avgPercentile} />
@@ -787,11 +789,11 @@ export default function StudentOverview() {
 
 function Kpi({ label, value, icon }: any) {
   return (
-    <div className="bg-white/10 hover:bg-white/15 transition-colors backdrop-blur-sm rounded-xl px-3 py-2.5 border border-white/20">
-      <div className="text-[10px] uppercase tracking-wider text-white/75 flex items-center gap-1">
-        {icon} {label}
+    <div className="bg-white/10 hover:bg-white/15 transition-colors backdrop-blur-sm rounded-xl px-2.5 sm:px-3 py-2 sm:py-2.5 border border-white/20 min-w-0">
+      <div className="text-[9.5px] sm:text-[10px] uppercase tracking-wider text-white/75 flex items-center gap-1 truncate">
+        {icon} <span className="truncate">{label}</span>
       </div>
-      <div className="text-xl font-bold mt-0.5">{value}</div>
+      <div className="text-base sm:text-xl font-bold mt-0.5 tabular-nums">{value}</div>
     </div>
   );
 }
@@ -833,16 +835,16 @@ function QuickAction({ to, icon: Icon, label, desc, tone = "sky" }: any) {
   return (
     <Link
       to={to}
-      className={`group relative overflow-hidden rounded-xl border border-border bg-card p-4 ring-1 ${t.ring} hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-3`}
+      className={`group relative overflow-hidden rounded-xl border border-border bg-card p-3 sm:p-4 ring-1 ${t.ring} hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2.5 sm:gap-3`}
     >
-      <div className={`h-11 w-11 rounded-xl grid place-items-center ${t.icon} group-hover:scale-110 transition-transform`}>
+      <div className={`h-10 w-10 sm:h-11 sm:w-11 rounded-xl grid place-items-center ${t.icon} group-hover:scale-110 transition-transform shrink-0`}>
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="font-semibold text-sm truncate">{label}</div>
-        <div className="text-[11px] text-muted-foreground truncate">{desc}</div>
+        <div className="font-semibold text-[13px] sm:text-sm leading-tight">{label}</div>
+        <div className="text-[10.5px] sm:text-[11px] text-muted-foreground leading-tight mt-0.5 line-clamp-2">{desc}</div>
       </div>
-      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
+      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
     </Link>
   );
 }
@@ -979,15 +981,21 @@ function ExamCountdownStrip({ exams }: { exams: any[] }) {
             <Link
               key={ex.slug}
               to={`/exams/${ex.slug}`}
-              className={`group relative overflow-hidden rounded-2xl border ${cardTone} p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all`}
+              className={`group relative overflow-hidden rounded-2xl border ${cardTone} p-3 sm:p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all`}
             >
-              <span className={`absolute top-2 right-2 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${badgeTone}`}>
-                {badgeLabel}
-              </span>
+              {/* Badge: full-width row on top so it never overlaps exam name */}
+              <div className="flex items-center justify-between mb-2 gap-2">
+                <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${badgeTone} truncate`}>
+                  {badgeLabel}
+                </span>
+                <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground truncate text-right">
+                  {ex.name}
+                </span>
+              </div>
 
               <div className="flex items-center gap-3">
-                <div className="relative h-16 w-16 shrink-0">
-                  <svg viewBox="0 0 60 60" className="h-16 w-16 -rotate-90">
+                <div className="relative h-14 w-14 sm:h-16 sm:w-16 shrink-0">
+                  <svg viewBox="0 0 60 60" className="h-full w-full -rotate-90">
                     <circle cx="30" cy="30" r="26" className="fill-none stroke-foreground/10" strokeWidth="5" />
                     <circle
                       cx="30" cy="30" r="26"
@@ -998,19 +1006,18 @@ function ExamCountdownStrip({ exams }: { exams: any[] }) {
                     />
                   </svg>
                   <div className="absolute inset-0 grid place-items-center">
-                    <div className={`text-xl font-extrabold tabular-nums leading-none ${numberTone}`}>
+                    <div className={`text-lg sm:text-xl font-extrabold tabular-nums leading-none ${numberTone}`}>
                       {past ? "—" : days}
                     </div>
                   </div>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">{ex.name}</div>
-                  <div className={`text-sm font-bold ${numberTone} mt-0.5`}>
+                  <div className={`text-[13px] sm:text-sm font-bold ${numberTone} leading-tight`}>
                     {past ? "Concluded" : days === 0 ? "Today!" : days === 1 ? "1 day left" : `${days} days left`}
                   </div>
-                  <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-                    <CalendarDays className="h-3 w-3" />
-                    {weekday}, {dateLabel}
+                  <div className="text-[10.5px] sm:text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
+                    <CalendarDays className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{weekday}, {dateLabel}</span>
                   </div>
                 </div>
               </div>
