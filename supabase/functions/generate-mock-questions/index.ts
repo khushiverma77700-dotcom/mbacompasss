@@ -415,7 +415,10 @@ For STANDALONE questions:
     setsBlock = `\n\nDATA/REASONING REQUIREMENT: Every question must be exam-realistic with concrete data wherever relevant — include an HTML <table> or ASCII chart in <pre> tags for DI/data-heavy prompts. Never write a vague caselet.`;
   }
 
+  const examCalibration = buildExamCalibrationBlock(opts.exam, opts.level, opts.section_code);
+
   return `You are an elite ${opts.exam_full} (${opts.exam}) question setter with 15+ years of experience writing original mock questions for top MBA coaching institutes in India.
+${examCalibration}
 
 GENERATE 100% ORIGINAL questions for:
 - Exam: ${opts.exam} (${opts.exam_full})
