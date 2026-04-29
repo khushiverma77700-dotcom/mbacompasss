@@ -53,13 +53,16 @@ export const adminNavGroups: AdminNavGroup[] = [
     ],
   },
   {
-    label: "CAT Mock Tests",
+    label: "Mock Platform",
     items: [
-      { label: "Mock Tests", path: "/admin/mock-tests", icon: ClipboardList },
-      { label: "Mock Bundle Courses", path: "/admin/mock-bundles", icon: Package },
-      { label: "Landing Page", path: "/admin/mocks-landing", icon: ClipboardList },
-      { label: "Student Assignments", path: "/admin/student-mocks", icon: Users },
-      { label: "Personalized Hub", path: "/admin/personalized-hub", icon: ClipboardList },
+      // Primary 4
+      { label: "Courses", path: "/admin/mba-compass-courses", icon: BookOpen },
+      { label: "Bundles", path: "/admin/mock-bundles", icon: Package },
+      { label: "Mocks", path: "/admin/mock-tests", icon: ClipboardList },
+      { label: "Students", path: "/admin/student-mocks", icon: Users },
+      // Secondary tools
+      { label: "Mocks Landing Page", path: "/admin/mocks-landing", icon: ClipboardList },
+      { label: "Personalized Hub", path: "/admin/personalized-hub", icon: Sparkles },
       { label: "Daily Tests", path: "/admin/daily-tests", icon: ClipboardList },
       { label: "Student Announcements", path: "/admin/student-announcements", icon: Bell },
       { label: "Push Notifications", path: "/admin/student-notifications", icon: Bell },
