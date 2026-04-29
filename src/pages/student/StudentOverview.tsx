@@ -275,27 +275,29 @@ export default function StudentOverview() {
           }}
         />
 
-        <div className="relative p-6 md:p-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div className="relative p-5 sm:p-6 md:p-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 sm:gap-6">
             {/* Left: greeting */}
-            <div className="flex items-start gap-4 min-w-0 flex-1">
-              <div className="h-14 w-14 rounded-2xl bg-white/15 backdrop-blur-sm grid place-items-center text-2xl font-bold border border-white/25 shadow-inner shrink-0">
+            <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
+              <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-white/15 backdrop-blur-sm grid place-items-center text-xl sm:text-2xl font-bold border border-white/25 shadow-inner shrink-0">
                 {initial}
               </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 text-xs text-sky-100/90">
-                  <CalendarDays className="h-3.5 w-3.5" />
-                  <span>{todayLabel}</span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] sm:text-xs text-sky-100/90">
+                  <span className="inline-flex items-center gap-1">
+                    <CalendarDays className="h-3.5 w-3.5" />
+                    <span>{todayLabel}</span>
+                  </span>
                   {stats.streak > 0 && (
-                    <span className="inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/30 text-amber-100">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/30 text-amber-100">
                       <Flame className="h-3 w-3" /> {stats.streak}-day streak
                     </span>
                   )}
                 </div>
-                <h1 className="text-2xl md:text-3xl font-bold mt-1 leading-tight">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mt-1 leading-tight break-words">
                   {greeting}, <span className="text-cyan-200">{firstName}</span>
                 </h1>
-                <p className="text-sky-100/90 mt-1.5 text-sm max-w-lg">
+                <p className="text-sky-100/90 mt-1.5 text-[13px] sm:text-sm max-w-lg">
                   {target && gap != null
                     ? gap > 0
                       ? `You're ${gap} %ile away from your ${target}%ile target — let's close the gap.`
@@ -305,33 +307,33 @@ export default function StudentOverview() {
                       : "Take your first mock to unlock AI-powered insights and a personalised plan."}
                 </p>
 
-                <div className="flex flex-wrap gap-2 mt-4">
+                <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 mt-4">
                   {resumeMock ? (
-                    <Link to={`/mocks/attempt/${resumeMock.id}`}>
-                      <Button size="lg" className="gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-lg">
+                    <Link to={`/mocks/attempt/${resumeMock.id}`} className="col-span-2 sm:col-auto">
+                      <Button size="lg" className="w-full sm:w-auto gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-lg">
                         <Clock className="h-4 w-4" /> Resume Mock
                       </Button>
                     </Link>
                   ) : nextMock?.test?.slug ? (
-                    <Link to={`/mocks/${nextMock.test.slug}`}>
-                      <Button size="lg" className="gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-lg">
+                    <Link to={`/mocks/${nextMock.test.slug}`} className="col-span-2 sm:col-auto">
+                      <Button size="lg" className="w-full sm:w-auto gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-lg">
                         <Rocket className="h-4 w-4" /> Start Next Mock
                       </Button>
                     </Link>
                   ) : (
-                    <Link to="/student/buy-mocks">
-                      <Button size="lg" className="gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-lg">
+                    <Link to="/student/buy-mocks" className="col-span-2 sm:col-auto">
+                      <Button size="lg" className="w-full sm:w-auto gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-lg">
                         <ShoppingBag className="h-4 w-4" /> Browse Mocks
                       </Button>
                     </Link>
                   )}
                   <Link to="/student/goals">
-                    <Button size="lg" variant="outline" className="gap-2 bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm">
+                    <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2 bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm">
                       <Target className="h-4 w-4" /> Score Engine
                     </Button>
                   </Link>
                   <Link to="/student/day-planner">
-                    <Button size="lg" variant="ghost" className="gap-2 text-white hover:bg-white/15 hover:text-white">
+                    <Button size="lg" variant="ghost" className="w-full sm:w-auto gap-2 text-white hover:bg-white/15 hover:text-white border border-white/15 sm:border-0">
                       <CalendarDays className="h-4 w-4" /> Today's Plan
                     </Button>
                   </Link>
@@ -341,9 +343,9 @@ export default function StudentOverview() {
 
             {/* Right: projection ring */}
             <div className="shrink-0 w-full lg:w-auto">
-              <div className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-5 flex items-center gap-5 min-w-[280px]">
-                <div className="relative h-24 w-24 shrink-0">
-                  <svg viewBox="0 0 100 100" className="h-24 w-24 -rotate-90">
+              <div className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-4 sm:p-5 flex items-center gap-4 sm:gap-5 lg:min-w-[280px]">
+                <div className="relative h-20 w-20 sm:h-24 sm:w-24 shrink-0">
+                  <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
                     <circle cx="50" cy="50" r="42" stroke="rgba(255,255,255,0.15)" strokeWidth="9" fill="none" />
                     <circle
                       cx="50" cy="50" r="42" stroke="white" strokeWidth="9" fill="none"
@@ -355,19 +357,19 @@ export default function StudentOverview() {
                   </svg>
                   <div className="absolute inset-0 grid place-items-center text-center">
                     <div>
-                      <div className="text-2xl font-bold leading-none">{predicted ?? "—"}</div>
+                      <div className="text-xl sm:text-2xl font-bold leading-none">{predicted ?? "—"}</div>
                       <div className="text-[9px] uppercase tracking-wider text-sky-100/80 mt-0.5">%ile</div>
                     </div>
                   </div>
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="text-[10px] uppercase tracking-wider text-sky-100/80">Projected Percentile</div>
                   <div className="text-sm font-semibold mt-0.5">
                     {target > 0 ? `Target ${target}%ile` : "Set a target to track gap"}
                   </div>
                   {target > 0 && (
                     <div className="mt-2">
-                      <div className="h-1.5 w-40 rounded-full bg-white/15 overflow-hidden">
+                      <div className="h-1.5 w-full max-w-[160px] rounded-full bg-white/15 overflow-hidden">
                         <div
                           className="h-full bg-gradient-to-r from-cyan-300 to-emerald-300 transition-all duration-700"
                           style={{ width: `${targetProgress}%` }}
@@ -385,7 +387,7 @@ export default function StudentOverview() {
           </div>
 
           {/* Inline KPI strip */}
-          <div className="relative mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+          <div className="relative mt-5 sm:mt-6 grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2">
             <Kpi label="Enrolled" value={stats.enrolledCount} />
             <Kpi label="Completed" value={stats.submittedCount} />
             <Kpi label="Avg %ile" value={stats.avgPercentile} />
