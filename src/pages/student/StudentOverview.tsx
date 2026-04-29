@@ -17,6 +17,7 @@ import {
   ComposedChart, Legend, ReferenceLine,
 } from "recharts";
 import DailyTestCard from "@/components/student/DailyTestCard";
+import { useStudentPerformance } from "@/hooks/useStudentPerformance";
 
 const SECTION_COLORS: Record<string, string> = {
   QA: "#0284c7",
