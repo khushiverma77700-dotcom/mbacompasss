@@ -62,8 +62,16 @@ function mapPersonalizedDifficulty(d: string): "easy" | "moderate" | "difficult"
 function normalizeDifficulty(value: unknown, requestedLevel: string): "easy" | "medium" | "hard" {
   const raw = String(value || requestedLevel || "medium").toLowerCase();
   if (["easy", "easier", "low"].includes(raw)) return "easy";
-  if (["hard", "difficult", "advanced", "high"].includes(raw)) return "hard";
+  if (["hard", "difficult", "advanced", "high", "very_hard", "very hard", "extremely_hard", "extremely hard", "cat_pyq", "cat pyq", "cat-level", "cat_level"].includes(raw)) return "hard";
   return "medium";
+}
+
+function levelGuidanceText(level: string): string {
+  const lvl = String(level || "mixed").toLowerCase();
+  if (lvl === "very_hard") return `Difficulty target: VERY HARD — every question must be measurably harder than a normal Hard question. Use multi-step reasoning, deeper traps, longer logic chains. Set "difficulty" field to "hard".`;
+  if (lvl === "extremely_hard") return `Difficulty target: EXTREMELY HARD — questions should take significant time and effort even for strong aspirants. Dense data, layered concepts, multi-stage computation. Set "difficulty" field to "hard".`;
+  if (lvl === "cat_pyq") return `Difficulty target: CAT LEVEL based on real CAT Previous Year Questions, but with names, numbers, entities and values CHANGED — never reproduce originals verbatim. Set "difficulty" field to "hard".`;
+  return `Difficulty target: ${lvl}.`;
 }
 
 function normalizeForHash(s: string): string {
