@@ -155,7 +155,7 @@ export default function StudentLayout() {
     <StudentThemeProvider>
       <div className="min-h-screen bg-gradient-to-br from-sky-50/40 via-white to-blue-50/30 dark:from-background dark:via-background dark:to-background text-foreground">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 bg-card/90 backdrop-blur border-b border-border">
+        <header className="fixed top-0 left-0 right-0 z-30 bg-card/95 backdrop-blur border-b border-border">
           <div className="flex items-center justify-between gap-2 px-3 sm:px-6 h-14">
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <button
