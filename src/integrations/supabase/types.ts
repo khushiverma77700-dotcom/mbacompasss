@@ -4809,6 +4809,99 @@ export type Database = {
         }
         Relationships: []
       }
+      sop_reviews: {
+        Row: {
+          academic_background: string | null
+          ai_response: Json | null
+          country_preference: string | null
+          created_at: string
+          current_role_text: string | null
+          deadline: string | null
+          error_message: string | null
+          experience_years: number | null
+          file_name: string | null
+          file_url: string | null
+          highlight_focus: string[] | null
+          id: string
+          long_term_goals: string | null
+          major_achievements: string | null
+          overall_score: number | null
+          short_term_goals: string | null
+          sop_text: string
+          specialization: string | null
+          status: string
+          strengths: string | null
+          target_colleges: string | null
+          target_course: string | null
+          tone_preference: string | null
+          updated_at: string
+          user_id: string
+          weaknesses: string | null
+          why_college: string | null
+          why_course: string | null
+        }
+        Insert: {
+          academic_background?: string | null
+          ai_response?: Json | null
+          country_preference?: string | null
+          created_at?: string
+          current_role_text?: string | null
+          deadline?: string | null
+          error_message?: string | null
+          experience_years?: number | null
+          file_name?: string | null
+          file_url?: string | null
+          highlight_focus?: string[] | null
+          id?: string
+          long_term_goals?: string | null
+          major_achievements?: string | null
+          overall_score?: number | null
+          short_term_goals?: string | null
+          sop_text: string
+          specialization?: string | null
+          status?: string
+          strengths?: string | null
+          target_colleges?: string | null
+          target_course?: string | null
+          tone_preference?: string | null
+          updated_at?: string
+          user_id: string
+          weaknesses?: string | null
+          why_college?: string | null
+          why_course?: string | null
+        }
+        Update: {
+          academic_background?: string | null
+          ai_response?: Json | null
+          country_preference?: string | null
+          created_at?: string
+          current_role_text?: string | null
+          deadline?: string | null
+          error_message?: string | null
+          experience_years?: number | null
+          file_name?: string | null
+          file_url?: string | null
+          highlight_focus?: string[] | null
+          id?: string
+          long_term_goals?: string | null
+          major_achievements?: string | null
+          overall_score?: number | null
+          short_term_goals?: string | null
+          sop_text?: string
+          specialization?: string | null
+          status?: string
+          strengths?: string | null
+          target_colleges?: string | null
+          target_course?: string | null
+          tone_preference?: string | null
+          updated_at?: string
+          user_id?: string
+          weaknesses?: string | null
+          why_college?: string | null
+          why_course?: string | null
+        }
+        Relationships: []
+      }
       specializations: {
         Row: {
           active: boolean
