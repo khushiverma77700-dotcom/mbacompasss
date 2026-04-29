@@ -789,11 +789,11 @@ export default function StudentOverview() {
 
 function Kpi({ label, value, icon }: any) {
   return (
-    <div className="bg-white/10 hover:bg-white/15 transition-colors backdrop-blur-sm rounded-xl px-3 py-2.5 border border-white/20">
-      <div className="text-[10px] uppercase tracking-wider text-white/75 flex items-center gap-1">
-        {icon} {label}
+    <div className="bg-white/10 hover:bg-white/15 transition-colors backdrop-blur-sm rounded-xl px-2.5 sm:px-3 py-2 sm:py-2.5 border border-white/20 min-w-0">
+      <div className="text-[9.5px] sm:text-[10px] uppercase tracking-wider text-white/75 flex items-center gap-1 truncate">
+        {icon} <span className="truncate">{label}</span>
       </div>
-      <div className="text-xl font-bold mt-0.5">{value}</div>
+      <div className="text-base sm:text-xl font-bold mt-0.5 tabular-nums">{value}</div>
     </div>
   );
 }
