@@ -314,11 +314,11 @@ export default function StudentSOPReview() {
         <div className="flex flex-col sm:flex-row gap-3">
           <label className="flex-1 border-2 border-dashed border-sky-200 rounded-lg p-4 text-center cursor-pointer hover:bg-sky-50 transition">
             <Upload className="h-5 w-5 text-sky-600 mx-auto mb-1" />
-            <div className="text-sm font-medium">Upload SOP (.txt)</div>
-            <div className="text-xs text-muted-foreground">For PDF/DOC, paste text on the right</div>
+            <div className="text-sm font-medium">Upload SOP</div>
+            <div className="text-xs text-muted-foreground">PDF, DOCX, TXT or MD (max 10 MB)</div>
             <input
               type="file"
-              accept=".txt,.md,text/plain"
+              accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
               className="hidden"
               onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
             />
