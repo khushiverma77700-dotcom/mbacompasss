@@ -122,22 +122,105 @@
   .dark .bg-gray-100,
   .dark .bg-slate-100 { background-color: hsl(var(--accent)) !important; }
 
-  /* Soft tinted backgrounds → translucent accents */
-  .dark [class*="bg-sky-50"],
-  .dark [class*="bg-blue-50"],
-  .dark [class*="bg-indigo-50"] { background-color: hsl(207 90% 60% / 0.10) !important; }
-  .dark [class*="bg-emerald-50"],
-  .dark [class*="bg-teal-50"],
-  .dark [class*="bg-green-50"] { background-color: hsl(152 65% 50% / 0.10) !important; }
-  .dark [class*="bg-amber-50"],
-  .dark [class*="bg-yellow-50"],
-  .dark [class*="bg-orange-50"] { background-color: hsl(38 90% 55% / 0.10) !important; }
-  .dark [class*="bg-rose-50"],
-  .dark [class*="bg-red-50"],
-  .dark [class*="bg-pink-50"] { background-color: hsl(350 80% 60% / 0.10) !important; }
-  .dark [class*="bg-violet-50"],
-  .dark [class*="bg-purple-50"],
-  .dark [class*="bg-fuchsia-50"] { background-color: hsl(270 80% 65% / 0.10) !important; }
+  /* Soft tinted backgrounds → translucent accents.
+     Restrict to actual bg- utilities so gradient stops (from-/to-/via-)
+     are handled separately below. */
+  .dark .bg-sky-50,
+  .dark .bg-blue-50,
+  .dark .bg-indigo-50 { background-color: hsl(207 90% 60% / 0.10) !important; }
+  .dark .bg-emerald-50,
+  .dark .bg-teal-50,
+  .dark .bg-green-50 { background-color: hsl(152 65% 50% / 0.10) !important; }
+  .dark .bg-amber-50,
+  .dark .bg-yellow-50,
+  .dark .bg-orange-50 { background-color: hsl(38 90% 55% / 0.10) !important; }
+  .dark .bg-rose-50,
+  .dark .bg-red-50,
+  .dark .bg-pink-50 { background-color: hsl(350 80% 60% / 0.10) !important; }
+  .dark .bg-violet-50,
+  .dark .bg-purple-50,
+  .dark .bg-fuchsia-50 { background-color: hsl(270 80% 65% / 0.10) !important; }
+
+  /* Tailwind gradient stops (from-/via-/to-) — neutralise pale 50-tints in dark
+     by overriding the CSS custom properties Tailwind emits. Without this, cards
+     like `bg-gradient-to-br from-orange-50 to-amber-50/40` render almost-white
+     in dark mode and bury all foreground text. */
+  .dark .from-sky-50,
+  .dark .from-blue-50,
+  .dark .from-indigo-50,
+  .dark .from-cyan-50    { --tw-gradient-from: hsl(207 90% 60% / 0.14) var(--tw-gradient-from-position) !important; --tw-gradient-to: hsl(207 90% 60% / 0) var(--tw-gradient-to-position) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+  .dark .via-sky-50,
+  .dark .via-blue-50,
+  .dark .via-indigo-50   { --tw-gradient-via: hsl(207 90% 60% / 0.14) var(--tw-gradient-via-position) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-via), var(--tw-gradient-to) !important; }
+  .dark .to-sky-50,
+  .dark .to-blue-50,
+  .dark .to-indigo-50,
+  .dark .to-cyan-50,
+  .dark [class*="to-sky-50/"],
+  .dark [class*="to-blue-50/"],
+  .dark [class*="to-indigo-50/"] { --tw-gradient-to: hsl(207 90% 60% / 0.06) var(--tw-gradient-to-position) !important; }
+
+  .dark .from-emerald-50,
+  .dark .from-green-50,
+  .dark .from-teal-50    { --tw-gradient-from: hsl(152 65% 50% / 0.14) var(--tw-gradient-from-position) !important; --tw-gradient-to: hsl(152 65% 50% / 0) var(--tw-gradient-to-position) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+  .dark .to-emerald-50,
+  .dark .to-green-50,
+  .dark .to-teal-50,
+  .dark [class*="to-emerald-50/"],
+  .dark [class*="to-teal-50/"],
+  .dark [class*="to-green-50/"] { --tw-gradient-to: hsl(152 65% 50% / 0.06) var(--tw-gradient-to-position) !important; }
+
+  .dark .from-amber-50,
+  .dark .from-orange-50,
+  .dark .from-yellow-50  { --tw-gradient-from: hsl(38 95% 55% / 0.14) var(--tw-gradient-from-position) !important; --tw-gradient-to: hsl(38 95% 55% / 0) var(--tw-gradient-to-position) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+  .dark .to-amber-50,
+  .dark .to-orange-50,
+  .dark .to-yellow-50,
+  .dark [class*="to-amber-50/"],
+  .dark [class*="to-orange-50/"],
+  .dark [class*="to-yellow-50/"] { --tw-gradient-to: hsl(38 95% 55% / 0.06) var(--tw-gradient-to-position) !important; }
+
+  .dark .from-rose-50,
+  .dark .from-red-50,
+  .dark .from-pink-50    { --tw-gradient-from: hsl(350 85% 60% / 0.14) var(--tw-gradient-from-position) !important; --tw-gradient-to: hsl(350 85% 60% / 0) var(--tw-gradient-to-position) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+  .dark .to-rose-50,
+  .dark .to-red-50,
+  .dark .to-pink-50,
+  .dark [class*="to-rose-50/"],
+  .dark [class*="to-red-50/"],
+  .dark [class*="to-pink-50/"] { --tw-gradient-to: hsl(350 85% 60% / 0.06) var(--tw-gradient-to-position) !important; }
+
+  .dark .from-violet-50,
+  .dark .from-purple-50,
+  .dark .from-fuchsia-50 { --tw-gradient-from: hsl(270 80% 65% / 0.14) var(--tw-gradient-from-position) !important; --tw-gradient-to: hsl(270 80% 65% / 0) var(--tw-gradient-to-position) !important; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important; }
+  .dark .to-violet-50,
+  .dark .to-purple-50,
+  .dark .to-fuchsia-50,
+  .dark [class*="to-violet-50/"],
+  .dark [class*="to-purple-50/"],
+  .dark [class*="to-fuchsia-50/"] { --tw-gradient-to: hsl(270 80% 65% / 0.06) var(--tw-gradient-to-position) !important; }
+
+  /* Brand-tinted text-600 (mid-weight) — boost for dark backgrounds */
+  .dark .text-sky-600,
+  .dark .text-blue-600,
+  .dark .text-indigo-600,
+  .dark .text-cyan-600 { color: hsl(207 95% 72%) !important; }
+  .dark .text-emerald-600,
+  .dark .text-green-600,
+  .dark .text-teal-600 { color: hsl(152 70% 65%) !important; }
+  .dark .text-amber-600,
+  .dark .text-orange-600,
+  .dark .text-yellow-600 { color: hsl(38 95% 65%) !important; }
+  .dark .text-rose-600,
+  .dark .text-red-600,
+  .dark .text-pink-600 { color: hsl(350 90% 72%) !important; }
+  .dark .text-violet-600,
+  .dark .text-purple-600,
+  .dark .text-fuchsia-600 { color: hsl(270 90% 75%) !important; }
+
+  /* Text-400 (light icons on white) — keep visible on dark */
+  .dark .text-sky-400,
+  .dark .text-blue-400 { color: hsl(207 95% 78%) !important; }
 
   /* Light tint chips (100) → slightly stronger translucent fills */
   .dark .bg-sky-100,
