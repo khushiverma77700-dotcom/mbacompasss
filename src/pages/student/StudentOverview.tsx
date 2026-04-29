@@ -260,7 +260,7 @@ export default function StudentOverview() {
   const targetProgress = target > 0 && predicted != null ? Math.min(100, Math.round((predicted / target) * 100)) : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* ── HERO: Personalised greeting + projection ring + smart CTAs ───────── */}
       <Card className="relative overflow-hidden border-0 shadow-xl bg-gradient-to-br from-sky-600 via-blue-600 to-indigo-700 text-white">
         {/* Decorative orbs (non-interactive) */}
