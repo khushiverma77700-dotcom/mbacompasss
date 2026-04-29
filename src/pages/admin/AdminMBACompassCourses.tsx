@@ -9,8 +9,9 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Star, GraduationCap, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Star, GraduationCap, X, Package } from "lucide-react";
 import FileUpload from "@/components/admin/FileUpload";
 
 interface Course {
