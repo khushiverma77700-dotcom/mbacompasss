@@ -145,7 +145,7 @@ export default function StudentDailyTest() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <CalendarDays className="h-6 w-6 text-sky-600" /> Daily Test
         </h1>
         <p className="text-sm text-muted-foreground mt-1">Build the daily habit. A fresh mock every day, picked for you.</p>
