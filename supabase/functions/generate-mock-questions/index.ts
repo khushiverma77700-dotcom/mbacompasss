@@ -527,7 +527,7 @@ async function callOpenAIBatch(args: {
 
   const lvlLower = String(args.level || "").toLowerCase();
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
-  const modelId = isHardVariant ? "gpt-5" : "gpt-4o";
+  const modelId = "gpt-4o";
   const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.35;
   const reqBody: Record<string, unknown> = {
     model: modelId,
