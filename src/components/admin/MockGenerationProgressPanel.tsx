@@ -2,11 +2,13 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Loader2, CheckCircle2, XCircle, Clock, Sparkles, Activity,
   Gauge, Timer, ListChecks, AlertTriangle, Zap, Brain, RotateCcw,
+  ShieldCheck, Stethoscope, BarChart3, Copy, FileSearch, Layers,
 } from "lucide-react";
-import { useMockGenerationProgress } from "@/hooks/useMockGenerationProgress";
+import { useMockGenerationProgress, type SectionJob } from "@/hooks/useMockGenerationProgress";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
