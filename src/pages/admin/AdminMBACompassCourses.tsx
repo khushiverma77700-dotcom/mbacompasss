@@ -594,6 +594,7 @@ export default function AdminMBACompassCourses() {
                   {(c.exam_focus ?? []).map((e) => <Badge key={e} variant="outline" className="text-[10px]">{e}</Badge>)}
                   {c.is_featured && <Badge className="bg-amber-500 hover:bg-amber-500 text-[10px] border-0"><Star className="h-3 w-3 mr-0.5" /> Featured</Badge>}
                   {!c.is_active && <Badge variant="outline" className="text-[10px] text-rose-600 border-rose-200">Inactive</Badge>}
+                  {(bundleCounts[c.id] ?? 0) > 0 && <Badge variant="outline" className="text-[10px] gap-1"><Package className="h-3 w-3" /> {bundleCounts[c.id]} bundle{bundleCounts[c.id] === 1 ? "" : "s"}</Badge>}
                 </div>
                 <div className="mt-2 text-xs text-muted-foreground">
                   {c.full_mocks_count ?? 0} mocks • {c.total_video_hours ?? 0}h video • {c.live_classes_count ?? 0} live
