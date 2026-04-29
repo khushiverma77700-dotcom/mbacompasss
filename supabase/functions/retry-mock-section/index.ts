@@ -144,9 +144,13 @@ async function callOpenAIBatch(opts: {
     model: modelId,
     messages: [{ role: "system", content: sys }, { role: "user", content: user }],
     response_format: { type: "json_object" },
-    max_tokens: 16000,
   };
-  if (modelId !== "gpt-5") reqBody.temperature = temp;
+  if (modelId === "gpt-5") {
+    reqBody.max_completion_tokens = 16000;
+  } else {
+    reqBody.max_tokens = 16000;
+    reqBody.temperature = temp;
+  }
 
   // Inline retry with exponential backoff for transient errors (429 / 5xx).
   const MAX_INLINE_RETRIES = 4;
