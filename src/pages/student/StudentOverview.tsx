@@ -396,6 +396,9 @@ export default function StudentOverview() {
         </div>
       </Card>
 
+      {/* ── Exam Countdowns — auto-updates every minute ──────────────────────── */}
+      <ExamCountdownStrip exams={examCountdowns} />
+
       {/* ── Quick navigation rail ────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <QuickAction to="/student/personalized-hub" icon={Sparkles} label="Personalized Hub" desc="AI-built mocks" tone="violet" />
