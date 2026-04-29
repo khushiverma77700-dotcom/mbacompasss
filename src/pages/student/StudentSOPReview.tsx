@@ -106,7 +106,7 @@ export default function StudentSOPReview() {
     setPhaseIndex(0);
     const t = setInterval(() => {
       setPhaseIndex((i) => (i < steps.length - 1 ? i + 1 : i));
-    }, step === "scanning" ? 700 : 2200);
+    }, step === "scanning" ? 420 : 2200);
     return () => clearInterval(t);
   }, [step]);
 
