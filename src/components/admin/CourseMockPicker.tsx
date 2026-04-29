@@ -13,6 +13,7 @@ type Mock = {
   slug: string;
   exam_code: string | null;
   category: string | null;
+  test_type: string | null;
   total_duration_minutes?: number | null;
   is_live?: boolean | null;
 };
@@ -27,9 +28,9 @@ const TYPE_TABS = [
   { value: "all", label: "All" },
   { value: "full_length", label: "Full-Length" },
   { value: "sectional", label: "Sectional" },
-  { value: "topic", label: "Topic-wise" },
+  { value: "topic_wise", label: "Topic-wise" },
+  { value: "practice_set", label: "Practice Set" },
   { value: "daily", label: "Daily" },
-  { value: "practice", label: "Practice" },
 ];
 
 export default function CourseMockPicker({ selectedCategories, selectedTestIds, onTestIdsChange }: Props) {
@@ -50,7 +51,7 @@ export default function CourseMockPicker({ selectedCategories, selectedTestIds, 
     setLoading(true);
     supabase
       .from("mock_tests")
-      .select("id, name, slug, exam_code, category, total_duration_minutes, is_live")
+      .select("id, name, slug, exam_code, category, test_type, total_duration_minutes, is_live")
       .eq("exam_code", activeCategory)
       .order("name")
       .then(({ data }) => {
@@ -61,7 +62,8 @@ export default function CourseMockPicker({ selectedCategories, selectedTestIds, 
 
   const filtered = useMemo(() => {
     return mocks.filter((m) => {
-      if (activeType !== "all" && (m.category ?? "full_length") !== activeType) return false;
+      const kind = m.test_type || m.category || "full_length";
+      if (activeType !== "all" && kind !== activeType) return false;
       if (q && !m.name.toLowerCase().includes(q.toLowerCase())) return false;
       return true;
     });
@@ -145,7 +147,7 @@ export default function CourseMockPicker({ selectedCategories, selectedTestIds, 
                               <div className="text-[10px] text-muted-foreground">/{m.slug}</div>
                             </td>
                             <td className="px-3 py-2">
-                              <Badge variant="outline" className="text-[10px]">{m.category ?? "full_length"}</Badge>
+                              <Badge variant="outline" className="text-[10px]">{(m.test_type || m.category || "full_length").replace("_", " ")}</Badge>
                             </td>
                             <td className="px-3 py-2 text-xs">{m.total_duration_minutes ?? "—"} min</td>
                             <td className="px-3 py-2">

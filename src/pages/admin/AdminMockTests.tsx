@@ -27,7 +27,7 @@ type Form = {
   slug: string;
   description: string;
   banner_url: string;
-  test_type: "full_length" | "sectional" | "topic";
+  test_type: "full_length" | "sectional" | "topic_wise" | "practice_set";
   total_duration_minutes: number;
   pricing_type: "free" | "paid";
   price_inr: number;
@@ -165,7 +165,8 @@ const AdminMockTests = () => {
                   <SelectContent>
                     <SelectItem value="full_length">Full Length</SelectItem>
                     <SelectItem value="sectional">Sectional</SelectItem>
-                    <SelectItem value="topic">Topic-wise</SelectItem>
+                    <SelectItem value="topic_wise">Topic-wise</SelectItem>
+                    <SelectItem value="practice_set">Practice Set</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

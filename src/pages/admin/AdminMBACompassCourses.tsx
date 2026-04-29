@@ -9,8 +9,9 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Star, GraduationCap, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Star, GraduationCap, X, Package } from "lucide-react";
 import FileUpload from "@/components/admin/FileUpload";
 
 interface Course {
@@ -114,22 +115,44 @@ const empty: Partial<Course> = {
   total_video_hours: 0, total_practice_questions: 0, live_classes_count: 0,
 };
 
+type BundleOpt = { id: string; name: string; exam_code: string | null; is_published: boolean };
+
 export default function AdminMBACompassCourses() {
   const [list, setList] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [edit, setEdit] = useState<Partial<Course> | null>(null);
+  const [bundles, setBundles] = useState<BundleOpt[]>([]);
+  const [editBundleIds, setEditBundleIds] = useState<string[]>([]);
+  const [bundleCounts, setBundleCounts] = useState<Record<string, number>>({});
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from("mba_compass_courses")
-      .select("*")
-      .order("sort_order")
-      .order("created_at", { ascending: false });
-    setList((data ?? []) as Course[]);
+    const [{ data: courses }, { data: b }, { data: cb }] = await Promise.all([
+      supabase.from("mba_compass_courses").select("*").order("sort_order").order("created_at", { ascending: false }),
+      supabase.from("mock_bundles").select("id, name, exam_code, is_published").order("sort_order"),
+      supabase.from("course_bundles").select("course_id, bundle_id"),
+    ]);
+    setList((courses ?? []) as Course[]);
+    setBundles((b ?? []) as BundleOpt[]);
+    const counts: Record<string, number> = {};
+    (cb ?? []).forEach((r: any) => { counts[r.course_id] = (counts[r.course_id] ?? 0) + 1; });
+    setBundleCounts(counts);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
+
+  // When opening an existing course, load its linked bundles
+  useEffect(() => {
+    (async () => {
+      if (!edit?.id) { setEditBundleIds([]); return; }
+      const { data } = await supabase.from("course_bundles").select("bundle_id").eq("course_id", edit.id);
+      setEditBundleIds((data ?? []).map((r: any) => r.bundle_id));
+    })();
+  }, [edit?.id]);
+
+  const toggleBundle = (id: string) => {
+    setEditBundleIds((cur) => cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]);
+  };
 
   const save = async () => {
     if (!edit?.title) return toast.error("Title required");
@@ -146,10 +169,27 @@ export default function AdminMBACompassCourses() {
       instructors: edit.instructors ?? [],
       gallery_images: edit.gallery_images ?? [],
     };
+    let courseId = edit.id;
     let error;
-    if (edit.id) ({ error } = await supabase.from("mba_compass_courses").update(payload as any).eq("id", edit.id));
-    else ({ error } = await supabase.from("mba_compass_courses").insert(payload as any));
+    if (edit.id) {
+      ({ error } = await supabase.from("mba_compass_courses").update(payload as any).eq("id", edit.id));
+    } else {
+      const ins = await supabase.from("mba_compass_courses").insert(payload as any).select("id").single();
+      error = ins.error;
+      courseId = ins.data?.id;
+    }
     if (error) return toast.error(error.message);
+
+    // Sync course_bundles: replace links for this course
+    if (courseId) {
+      await supabase.from("course_bundles").delete().eq("course_id", courseId);
+      if (editBundleIds.length > 0) {
+        const rows = editBundleIds.map((bundle_id, sort_order) => ({ course_id: courseId, bundle_id, sort_order }));
+        const linkRes = await supabase.from("course_bundles").insert(rows);
+        if (linkRes.error) toast.error("Course saved, but bundle links failed: " + linkRes.error.message);
+      }
+    }
+
     toast.success("Course saved");
     setEdit(null); load();
   };
@@ -193,6 +233,7 @@ export default function AdminMBACompassCourses() {
                   <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
                   <TabsTrigger value="instructors">Instructors</TabsTrigger>
                   <TabsTrigger value="faqs">FAQs</TabsTrigger>
+                  <TabsTrigger value="bundles">Bundles ({editBundleIds.length})</TabsTrigger>
                   <TabsTrigger value="seo">SEO</TabsTrigger>
                 </TabsList>
 
@@ -482,6 +523,36 @@ export default function AdminMBACompassCourses() {
                   </Button>
                 </TabsContent>
 
+                {/* BUNDLES */}
+                <TabsContent value="bundles" className="space-y-3 mt-4">
+                  <div className="text-sm text-muted-foreground flex items-start gap-2">
+                    <Package className="h-4 w-4 mt-0.5 text-sky-600 shrink-0" />
+                    <span>Pick the mock bundles included in this course. Students who buy this course will be auto-enrolled into every selected bundle (and through that, every mock inside).</span>
+                  </div>
+                  {bundles.length === 0 ? (
+                    <Card className="p-6 text-center text-sm text-muted-foreground">
+                      No bundles yet. Create bundles in <span className="font-medium">Mock Bundles</span> first.
+                    </Card>
+                  ) : (
+                    <div className="border rounded-md max-h-96 overflow-y-auto divide-y">
+                      {bundles.map((b) => {
+                        const checked = editBundleIds.includes(b.id);
+                        return (
+                          <label key={b.id} className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-muted/40 ${checked ? "bg-sky-50/40" : ""}`}>
+                            <Checkbox checked={checked} onCheckedChange={() => toggleBundle(b.id)} />
+                            <div className="flex-1 min-w-0">
+                              <div className="font-medium text-sm truncate">{b.name}</div>
+                              <div className="text-xs text-muted-foreground">{b.exam_code ?? "Mixed"}</div>
+                            </div>
+                            {!b.is_published && <Badge variant="outline" className="text-[10px]">Draft</Badge>}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                  <div className="text-xs text-muted-foreground"><strong>{editBundleIds.length}</strong> bundle{editBundleIds.length === 1 ? "" : "s"} selected.</div>
+                </TabsContent>
+
                 {/* SEO */}
                 <TabsContent value="seo" className="space-y-3 mt-4">
                   <div><Label>SEO title (max 60 chars)</Label><Input maxLength={60} value={edit.seo_title ?? ""} onChange={(e) => setEdit({ ...edit, seo_title: e.target.value })} /></div>
@@ -523,6 +594,7 @@ export default function AdminMBACompassCourses() {
                   {(c.exam_focus ?? []).map((e) => <Badge key={e} variant="outline" className="text-[10px]">{e}</Badge>)}
                   {c.is_featured && <Badge className="bg-amber-500 hover:bg-amber-500 text-[10px] border-0"><Star className="h-3 w-3 mr-0.5" /> Featured</Badge>}
                   {!c.is_active && <Badge variant="outline" className="text-[10px] text-rose-600 border-rose-200">Inactive</Badge>}
+                  {(bundleCounts[c.id] ?? 0) > 0 && <Badge variant="outline" className="text-[10px] gap-1"><Package className="h-3 w-3" /> {bundleCounts[c.id]} bundle{bundleCounts[c.id] === 1 ? "" : "s"}</Badge>}
                 </div>
                 <div className="mt-2 text-xs text-muted-foreground">
                   {c.full_mocks_count ?? 0} mocks • {c.total_video_hours ?? 0}h video • {c.live_classes_count ?? 0} live
