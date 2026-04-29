@@ -147,7 +147,7 @@ export default function CourseMockPicker({ selectedCategories, selectedTestIds, 
                               <div className="text-[10px] text-muted-foreground">/{m.slug}</div>
                             </td>
                             <td className="px-3 py-2">
-                              <Badge variant="outline" className="text-[10px]">{m.category ?? "full_length"}</Badge>
+                              <Badge variant="outline" className="text-[10px]">{(m.test_type || m.category || "full_length").replace("_", " ")}</Badge>
                             </td>
                             <td className="px-3 py-2 text-xs">{m.total_duration_minutes ?? "—"} min</td>
                             <td className="px-3 py-2">
