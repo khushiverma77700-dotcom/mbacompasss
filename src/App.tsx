@@ -159,6 +159,7 @@ const StudentSupport = lazyWithPreload(() => import("./pages/student/StudentSupp
 const StudentPersonalizedHub = lazyWithPreload(() => import("./pages/student/StudentPersonalizedHub"));
 const PersonalizedMockRunnerPage = lazyWithPreload(() => import("./pages/student/PersonalizedMockRunnerPage"));
 const PersonalizedMockResultPage = lazyWithPreload(() => import("./pages/student/PersonalizedMockResultPage"));
+const StudentLogin = lazyWithPreload(() => import("./pages/student/StudentLogin"));
 const AdminPersonalizedHub = lazyWithPreload(() => import("./pages/admin/AdminPersonalizedHub"));
 const AdminDailyTests = lazyWithPreload(() => import("./pages/admin/AdminDailyTests"));
 const AdminStudentNotificationsBroadcast = lazyWithPreload(() => import("./pages/admin/AdminStudentNotificationsBroadcast"));
