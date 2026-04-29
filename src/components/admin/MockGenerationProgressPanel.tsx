@@ -306,11 +306,11 @@ function DiagnosticsPanel({
     .sort((a, b) => (b.updated_at || "").localeCompare(a.updated_at || ""))[0];
 
   const reasons = [
-    { key: "hash", label: "Exact hash collision", desc: "Identical to an already-saved question.", count: totals.hash, color: "rose" },
-    { key: "similarity", label: "Similarity rule (Jaccard ≥ 0.72)", desc: "Token overlap with another question in this section.", count: totals.similarity, color: "amber" },
-    { key: "paraphrase", label: "Near-paraphrase (5-word shingles)", desc: "Substantial phrasing reuse across the section.", count: totals.paraphrase, color: "sky" },
-    { key: "dbConflict", label: "Database uniqueness conflict", desc: "Hash collided at insert-time (race).", count: totals.dbConflict, color: "violet" },
-    { key: "invalid", label: "Invalid candidate (missing options / answer)", desc: "AI returned malformed JSON or incomplete options.", count: totals.invalid, color: "slate" },
+    { key: "hash", label: "Exact hash collision", desc: "Identical to an already-saved question.", count: totals.hash, bar: "bg-rose-500" },
+    { key: "similarity", label: "Similarity rule (Jaccard ≥ 0.72)", desc: "Token overlap with another question in this section.", count: totals.similarity, bar: "bg-amber-500" },
+    { key: "paraphrase", label: "Near-paraphrase (5-word shingles)", desc: "Substantial phrasing reuse across the section.", count: totals.paraphrase, bar: "bg-sky-500" },
+    { key: "dbConflict", label: "Database uniqueness conflict", desc: "Hash collided at insert-time (race).", count: totals.dbConflict, bar: "bg-violet-500" },
+    { key: "invalid", label: "Invalid candidate (missing options / answer)", desc: "AI returned malformed JSON or incomplete options.", count: totals.invalid, bar: "bg-slate-500" },
   ];
 
   const grandTotal = reasons.reduce((s, r) => s + r.count, 0);
