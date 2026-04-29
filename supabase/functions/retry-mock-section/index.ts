@@ -84,6 +84,24 @@ async function sha256(text: string): Promise<string> {
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+async function loadExistingQuestionHashes(admin: any): Promise<Set<string>> {
+  const seen = new Set<string>();
+  const pageSize = 1000;
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await admin
+      .from("mock_questions")
+      .select("content_hash, question_html")
+      .range(from, from + pageSize - 1);
+    if (error) throw new Error(`Could not load existing question hashes: ${error.message}`);
+    for (const row of data || []) {
+      if ((row as any).content_hash) seen.add((row as any).content_hash);
+      else if ((row as any).question_html) seen.add(await sha256(normalizeForHash((row as any).question_html)));
+    }
+    if (!data || data.length < pageSize) break;
+  }
+  return seen;
+}
+
 const EXAM_BASELINE: Record<string, string> = {
   CAT: "HIGH baseline (CAT 85-95 percentile difficulty). Elegant single-insight questions, RC-heavy VARC, dense DILR caselets, arithmetic-heavy QA. No GK.",
   XAT: "VERY HIGH baseline — HARDER than CAT. Verbose passages, ethical Decision Making dilemmas with no single right answer, harder Modern Math + Geometry. GK section, no negative on GK.",
