@@ -200,6 +200,125 @@ function normalizeDifficulty(value: unknown, requestedLevel: string): "easy" | "
   return "medium";
 }
 
+// ============================================================================
+// EXAM BLUEPRINTS — official pattern, timing, marking, section traits
+// Difficulty is normalized RELATIVE to each exam's baseline (CAT High,
+// XAT > CAT, SNAP easier but speed-pressured, NMAT moderate + speed, etc.)
+// ============================================================================
+const EXAM_BLUEPRINTS: Record<string, {
+  full: string;
+  baselineDifficulty: string;   // exam's natural baseline (what "Medium" maps to)
+  totalQuestions: number;
+  totalDuration: number;        // minutes
+  sectionalTiming: boolean;
+  marking: string;
+  sections: string;             // section-wise distribution + traits
+  styleNotes: string;           // exam-specific tone & quirks
+}> = {
+  CAT: {
+    full: "Common Admission Test",
+    baselineDifficulty: "HIGH (CAT 85-95 percentile difficulty as the natural baseline)",
+    totalQuestions: 66,
+    totalDuration: 120,
+    sectionalTiming: true,
+    marking: "+3 correct, -1 wrong for MCQ; +3/0 for TITA (no negative)",
+    sections: "VARC 24Q/40min (RC-heavy: 4 RCs × 4Q + 8 standalone — parajumbles, para-summary, odd-one-out); DILR 22Q/40min (4 sets × 5-6Q each, dense data + multi-step deduction); QA 22Q/40min (Arithmetic-heavy ~40%, Algebra ~25%, Geometry ~15%, Number Systems/Modern Math ~20%; ~8 TITA)",
+    styleNotes: "CAT favors elegant single-insight questions over heavy calculation. RC passages 500-700 words on abstract/philosophical/social-science themes. DILR caselets reward case enumeration and constraint logic. Avoid GK and current affairs entirely.",
+  },
+  XAT: {
+    full: "Xavier Aptitude Test",
+    baselineDifficulty: "VERY HIGH (HARDER than CAT — denser language, ethical dilemmas, tougher Decision Making)",
+    totalQuestions: 100,
+    totalDuration: 180,
+    sectionalTiming: false,
+    marking: "+1 correct, -0.25 wrong; -0.10 for un-attempted beyond 8; GK no negative",
+    sections: "VALR 26Q (Verbal+Logical with critical reasoning, dense RC); DM 21Q (Decision Making — UNIQUE to XAT: ethical/business case-lets, no single 'right' answer, must pick BEST option); QA+DI 28Q (Quant + heavy DI, harder than CAT QA); GK 25Q (separate, no negative)",
+    styleNotes: "XAT is famously verbose — long passages, layered conditions, ambiguous phrasing. Decision Making must present a stakeholder dilemma with 4-5 plausible actions and demand judgment, not calculation. QA leans Modern Math + Geometry harder than CAT.",
+  },
+  SNAP: {
+    full: "Symbiosis National Aptitude Test",
+    baselineDifficulty: "EASY-TO-MODERATE absolute, but EXTREMELY TIME-PRESSURED (60 min for 60Q ≈ 1 min/question)",
+    totalQuestions: 60,
+    totalDuration: 60,
+    sectionalTiming: false,
+    marking: "+1 correct, -0.25 wrong",
+    sections: "GE 15Q (General English — vocab, grammar, short RC, idioms); QADS 20Q (Quant + DI + DS — easier than CAT but high volume); AR 25Q (Analytical & Logical Reasoning — puzzles, arrangements, syllogism, coding-decoding)",
+    styleNotes: "SNAP rewards SPEED over depth. Questions are individually solvable but the volume crushes most aspirants. Use shorter stems, direct calculations, classic LR puzzles. NO long RCs (250-350 words max).",
+  },
+  NMAT: {
+    full: "NMAT by GMAC",
+    baselineDifficulty: "MODERATE with strong SPEED FOCUS (108Q in 120min, no negative marking, adaptive feel)",
+    totalQuestions: 108,
+    totalDuration: 120,
+    sectionalTiming: true,
+    marking: "+3 correct, 0 wrong (NO NEGATIVE MARKING)",
+    sections: "LS 36Q/28min (Language Skills — vocab, grammar, RC); QS 36Q/52min (Quantitative Skills — arithmetic-heavy + DI + DS); LR 36Q/40min (Logical Reasoning — puzzles, syllogism, statement-conclusion)",
+    styleNotes: "NMAT is moderate but SPEED-heavy. Questions are fairly direct, less trap-laden than CAT. RC passages ~300-400 words. Quant is arithmetic + basic algebra, not olympiad-style. Distractors are reasonable, not viciously close.",
+  },
+  IIFT: {
+    full: "Indian Institute of Foreign Trade",
+    baselineDifficulty: "HIGH (CAT-level Quant + heavy DI + GK component)",
+    totalQuestions: 110,
+    totalDuration: 120,
+    sectionalTiming: false,
+    marking: "Variable +1.5/+1.0, -0.5/-0.33 (mixed by section)",
+    sections: "VARC 35Q (RC-heavy + vocab, idioms, analogies); QA 25Q (CAT-level arithmetic + algebra + geometry); DILR 30Q (heavy DI with complex tables/charts + LR puzzles); GK 20Q (current affairs, business, sports, awards — UNIQUE)",
+    styleNotes: "IIFT has a real GK section — include factual MBA/business/economy questions when GK is requested. DI is the trickiest section: multi-table caselets requiring cross-referencing.",
+  },
+  CMAT: {
+    full: "Common Management Admission Test",
+    baselineDifficulty: "MODERATE (easier than CAT/XAT; closer to NMAT difficulty with broader syllabus)",
+    totalQuestions: 100,
+    totalDuration: 180,
+    sectionalTiming: false,
+    marking: "+4 correct, -1 wrong",
+    sections: "QADI 20Q (Quantitative + DI); LR 20Q (Logical Reasoning); LC 20Q (Language Comprehension); GA 20Q (General Awareness — current affairs + static GK); IE 20Q (Innovation & Entrepreneurship — UNIQUE: startup ecosystem, business terms, Indian entrepreneurs)",
+    styleNotes: "CMAT covers wider ground but with shallower depth per topic. IE section needs questions on Indian startups, unicorns, business jargon, government schemes (Startup India, MUDRA, etc.). GA is current-affairs heavy.",
+  },
+  MAT: {
+    full: "Management Aptitude Test",
+    baselineDifficulty: "EASY-TO-MODERATE (easiest of the major MBA exams; broad but shallow)",
+    totalQuestions: 200,
+    totalDuration: 150,
+    sectionalTiming: false,
+    marking: "+1 correct, -0.25 wrong",
+    sections: "LC 40Q (Language Comprehension); MS 40Q (Mathematical Skills — basic arithmetic & algebra); DA 40Q (Data Analysis & Sufficiency); ICR 40Q (Intelligence & Critical Reasoning); IGE 40Q (Indian & Global Environment — current affairs + static GK)",
+    styleNotes: "MAT questions are direct, formula-based, low-trap. Avoid CAT-style elegant traps. IGE needs straightforward current-affairs and GK questions on India/world.",
+  },
+};
+
+function getBlueprint(examCode: string) {
+  const code = String(examCode || "").toUpperCase();
+  return EXAM_BLUEPRINTS[code] || null;
+}
+
+function buildExamCalibrationBlock(examCode: string, level: string, sectionCode: string): string {
+  const bp = getBlueprint(examCode);
+  if (!bp) return "";
+  const lvl = String(level || "").toLowerCase();
+  let calibration = "";
+  if (lvl === "easy") {
+    calibration = `Target difficulty = EASIER than ${examCode}'s natural baseline. Still authentic to ${examCode} style — just at the lower end of what appears in real ${examCode} papers (40-60 percentile difficulty). NOT generic-easy.`;
+  } else if (lvl === "medium" || lvl === "moderate") {
+    calibration = `Target difficulty = MATCHES the actual ${examCode} exam baseline → ${bp.baselineDifficulty}. This is what a real ${examCode} paper feels like.`;
+  } else if (lvl === "hard") {
+    calibration = `Target difficulty = SLIGHTLY ABOVE actual ${examCode} baseline. Above ${examCode}'s natural high band but still realistic for that exam.`;
+  } else if (["very_hard", "extremely_hard", "cat_pyq"].includes(lvl)) {
+    calibration = `Target difficulty = SIGNIFICANTLY ABOVE ${examCode} baseline (top 1-2% hardest questions ever seen in this exam) — but still recognizably ${examCode}-style, never out-of-syllabus or unrealistic.`;
+  }
+  return `\n\nEXAM BLUEPRINT — ${examCode} (${bp.full}):
+- Baseline difficulty: ${bp.baselineDifficulty}
+- Real exam pattern: ${bp.totalQuestions}Q in ${bp.totalDuration} min, ${bp.sectionalTiming ? "WITH sectional timing" : "no sectional timing"}
+- Marking: ${bp.marking}
+- Section structure: ${bp.sections}
+- Exam-specific style: ${bp.styleNotes}
+
+EXAM-NORMALIZED DIFFICULTY CALIBRATION:
+${calibration}
+
+CRITICAL: Difficulty is RELATIVE to ${examCode}, not absolute. ${examCode} ${lvl.toUpperCase()} ≠ any other exam's ${lvl.toUpperCase()}. The mock must feel indistinguishable from a real ${examCode} paper in pattern, tone, topic distribution and question style. NO out-of-syllabus questions. NO unrealistic difficulty spikes. NO generic content.`;
+}
+
 function buildSystemPrompt(opts: {
   exam: string; exam_full: string; category: string; level: string;
   section_code: string; section_name: string;
