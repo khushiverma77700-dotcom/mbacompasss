@@ -129,14 +129,16 @@ export default function StudentSOPReview() {
     }
     const name = file.name.toLowerCase();
 
-    // Premium scan animation
+    // Premium scan animation — capped at ~3s total regardless of parse time
     setStep("scanning");
+    set("file_name", file.name);
 
-    try {
-      let text = "";
+    // Parse the file in the background; UI does not block on it
+    const parsePromise: Promise<string> = (async () => {
       if (name.endsWith(".txt") || name.endsWith(".md") || file.type.startsWith("text/")) {
-        text = await file.text();
-      } else if (name.endsWith(".pdf") || file.type === "application/pdf") {
+        return await file.text();
+      }
+      if (name.endsWith(".pdf") || file.type === "application/pdf") {
         const pdfjs: any = await import("pdfjs-dist");
         // @ts-ignore
         const workerSrc = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
@@ -149,44 +151,38 @@ export default function StudentSOPReview() {
           const content = await page.getTextContent();
           parts.push(content.items.map((it: any) => it.str).join(" "));
         }
-        text = parts.join("\n\n").replace(/\s+\n/g, "\n").trim();
-      } else if (name.endsWith(".docx")) {
+        return parts.join("\n\n").replace(/\s+\n/g, "\n").trim();
+      }
+      if (name.endsWith(".docx")) {
         const mammoth: any = await import("mammoth/mammoth.browser");
         const buf = await file.arrayBuffer();
         const result = await mammoth.extractRawText({ arrayBuffer: buf });
-        text = (result.value || "").trim();
-      } else if (name.endsWith(".doc")) {
-        setStep("form");
-        toast({ title: "Legacy .doc not supported", description: "Save as .docx or .pdf, or paste text.", variant: "destructive" });
-        return;
-      } else {
-        setStep("form");
-        toast({ title: "Unsupported format", description: "Use .pdf, .docx, .txt or .md.", variant: "destructive" });
-        return;
+        return (result.value || "").trim();
       }
-
-      if (!text || text.length < 50) {
-        setStep("form");
-        toast({ title: "Could not extract text", description: "File may be scanned/empty. Paste text manually.", variant: "destructive" });
-        set("file_name", file.name);
-        return;
+      if (name.endsWith(".doc")) {
+        throw new Error("Legacy .doc not supported. Save as .docx or .pdf.");
       }
+      throw new Error("Unsupported format. Use .pdf, .docx, .txt or .md.");
+    })();
 
-      // Ensure scan animation runs at least 2.5s for premium feel
-      await new Promise((r) => setTimeout(r, 2200));
+    // Handle parsed text whenever it resolves (may be after UI returns to form)
+    parsePromise
+      .then((text) => {
+        if (!text || text.length < 50) {
+          toast({ title: "Could not extract text", description: "File may be scanned/empty. Paste text manually.", variant: "destructive" });
+          return;
+        }
+        set("sop_text", text);
+        toast({ title: "SOP read successfully", description: `${file.name} • ${text.split(/\s+/).filter(Boolean).length} words extracted.` });
+      })
+      .catch((err: any) => {
+        console.error("File parse error", err);
+        toast({ title: "Failed to parse file", description: err?.message || "Paste SOP text manually.", variant: "destructive" });
+      });
 
-      set("sop_text", text);
-      set("file_name", file.name);
-      setStep("scanned");
-      toast({ title: "SOP read successfully", description: `${file.name} • ${text.split(/\s+/).filter(Boolean).length} words extracted.` });
-
-      // Auto-return to form after a moment
-      setTimeout(() => setStep("form"), 1400);
-    } catch (err: any) {
-      console.error("File parse error", err);
-      setStep("form");
-      toast({ title: "Failed to parse file", description: err?.message || "Paste SOP text manually.", variant: "destructive" });
-    }
+    // Fixed 3s premium animation: ~2.2s scanning → ~0.8s "scanned" → form
+    setTimeout(() => setStep("scanned"), 2200);
+    setTimeout(() => setStep((s) => (s === "scanned" || s === "scanning" ? "form" : s)), 3000);
   };
 
   const submit = async () => {
