@@ -5062,7 +5062,9 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          image_url: string | null
           is_read: boolean
+          link_label: string | null
           link_url: string | null
           message: string | null
           title: string
@@ -5072,7 +5074,9 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          image_url?: string | null
           is_read?: boolean
+          link_label?: string | null
           link_url?: string | null
           message?: string | null
           title: string
@@ -5082,7 +5086,9 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          image_url?: string | null
           is_read?: boolean
+          link_label?: string | null
           link_url?: string | null
           message?: string | null
           title?: string
