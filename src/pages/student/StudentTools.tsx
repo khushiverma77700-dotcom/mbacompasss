@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
-import { Sparkles, Target, Calculator, GraduationCap, FileBarChart2, Users } from "lucide-react";
+import { Sparkles, Target, Calculator, GraduationCap, FileBarChart2, Users, FileText } from "lucide-react";
 
 const tools = [
+  { title: "AI SOP Review", desc: "Upload your SOP and get a structured AI evaluation with section scores, feedback & rewrite suggestions.", href: "/student/sop-review", icon: FileText },
   { title: "AI Profile Analyzer", desc: "Get an MBA admission probability score with tailored recommendations.", href: "/profile-analyzer", icon: Sparkles },
   { title: "College Shortlister", desc: "Personalized college list using your CAT %ile, profile and preferences.", href: "/college-shortlister", icon: Target },
   { title: "MBA ROI Calculator", desc: "Project ROI, payback years and salary upside across top B-schools.", href: "/roi-calculator", icon: Calculator },
