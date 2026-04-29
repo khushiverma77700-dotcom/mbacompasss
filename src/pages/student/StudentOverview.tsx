@@ -835,16 +835,16 @@ function QuickAction({ to, icon: Icon, label, desc, tone = "sky" }: any) {
   return (
     <Link
       to={to}
-      className={`group relative overflow-hidden rounded-xl border border-border bg-card p-4 ring-1 ${t.ring} hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-3`}
+      className={`group relative overflow-hidden rounded-xl border border-border bg-card p-3 sm:p-4 ring-1 ${t.ring} hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-2.5 sm:gap-3`}
     >
-      <div className={`h-11 w-11 rounded-xl grid place-items-center ${t.icon} group-hover:scale-110 transition-transform`}>
+      <div className={`h-10 w-10 sm:h-11 sm:w-11 rounded-xl grid place-items-center ${t.icon} group-hover:scale-110 transition-transform shrink-0`}>
         <Icon className="h-5 w-5" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="font-semibold text-sm truncate">{label}</div>
-        <div className="text-[11px] text-muted-foreground truncate">{desc}</div>
+        <div className="font-semibold text-[13px] sm:text-sm leading-tight">{label}</div>
+        <div className="text-[10.5px] sm:text-[11px] text-muted-foreground leading-tight mt-0.5 line-clamp-2">{desc}</div>
       </div>
-      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
+      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all shrink-0" />
     </Link>
   );
 }
