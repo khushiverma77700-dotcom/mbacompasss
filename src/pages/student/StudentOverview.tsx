@@ -981,15 +981,21 @@ function ExamCountdownStrip({ exams }: { exams: any[] }) {
             <Link
               key={ex.slug}
               to={`/exams/${ex.slug}`}
-              className={`group relative overflow-hidden rounded-2xl border ${cardTone} p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all`}
+              className={`group relative overflow-hidden rounded-2xl border ${cardTone} p-3 sm:p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all`}
             >
-              <span className={`absolute top-2 right-2 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${badgeTone}`}>
-                {badgeLabel}
-              </span>
+              {/* Badge: full-width row on top so it never overlaps exam name */}
+              <div className="flex items-center justify-between mb-2 gap-2">
+                <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${badgeTone} truncate`}>
+                  {badgeLabel}
+                </span>
+                <span className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground truncate text-right">
+                  {ex.name}
+                </span>
+              </div>
 
               <div className="flex items-center gap-3">
-                <div className="relative h-16 w-16 shrink-0">
-                  <svg viewBox="0 0 60 60" className="h-16 w-16 -rotate-90">
+                <div className="relative h-14 w-14 sm:h-16 sm:w-16 shrink-0">
+                  <svg viewBox="0 0 60 60" className="h-full w-full -rotate-90">
                     <circle cx="30" cy="30" r="26" className="fill-none stroke-foreground/10" strokeWidth="5" />
                     <circle
                       cx="30" cy="30" r="26"
@@ -1000,19 +1006,18 @@ function ExamCountdownStrip({ exams }: { exams: any[] }) {
                     />
                   </svg>
                   <div className="absolute inset-0 grid place-items-center">
-                    <div className={`text-xl font-extrabold tabular-nums leading-none ${numberTone}`}>
+                    <div className={`text-lg sm:text-xl font-extrabold tabular-nums leading-none ${numberTone}`}>
                       {past ? "—" : days}
                     </div>
                   </div>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">{ex.name}</div>
-                  <div className={`text-sm font-bold ${numberTone} mt-0.5`}>
+                  <div className={`text-[13px] sm:text-sm font-bold ${numberTone} leading-tight`}>
                     {past ? "Concluded" : days === 0 ? "Today!" : days === 1 ? "1 day left" : `${days} days left`}
                   </div>
-                  <div className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-                    <CalendarDays className="h-3 w-3" />
-                    {weekday}, {dateLabel}
+                  <div className="text-[10.5px] sm:text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
+                    <CalendarDays className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{weekday}, {dateLabel}</span>
                   </div>
                 </div>
               </div>
