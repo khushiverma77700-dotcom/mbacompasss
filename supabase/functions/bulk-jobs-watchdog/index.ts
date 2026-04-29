@@ -130,6 +130,60 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ---- mock_section_jobs (AI mock generator) ----
+    // Two responsibilities here:
+    //  (1) recover any 'processing' job whose worker_lock_until expired
+    //  (2) kick off any 'pending' job that has no active worker
+    // We always use the service role token so the worker is never blocked
+    // by a stale end-user JWT.
+    try {
+      const { data: recoveredCount, error: recErr } = await admin.rpc(
+        "recover_stale_mock_section_jobs",
+        { _threshold_minutes: STUCK_MINUTES },
+      );
+      (report as any).mock_section_jobs_recovered = recoveredCount ?? 0;
+      if (recErr) (report.errors as string[]).push(`mock recovery: ${recErr.message}`);
+    } catch (err) {
+      (report.errors as string[]).push(`mock recovery: ${(err as Error).message}`);
+    }
+
+    const { data: pendingMockJobs, error: e3 } = await admin
+      .from("mock_section_jobs")
+      .select("id,status,updated_at,worker_lock_until")
+      .eq("status", "pending");
+
+    if (e3) (report.errors as string[]).push(`mock fetch: ${e3.message}`);
+
+    const kickedMockJobs: string[] = [];
+    for (const job of (pendingMockJobs || [])) {
+      try {
+        await admin
+          .from("mock_section_jobs")
+          .update({
+            status: "processing",
+            current_step: "Watchdog kicked off worker…",
+            worker_lock_until: new Date(Date.now() + 8 * 60_000).toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", (job as any).id);
+
+        await fetch(`${SUPABASE_URL}/functions/v1/retry-mock-section`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${SERVICE_ROLE}`,
+            apikey: SERVICE_ROLE,
+          },
+          body: JSON.stringify({ job_id: (job as any).id, auto: true, service: true }),
+        }).catch(() => {});
+
+        kickedMockJobs.push((job as any).id);
+      } catch (err) {
+        (report.errors as string[]).push(`mock kickoff ${(job as any).id}: ${(err as Error).message}`);
+      }
+    }
+    (report as any).mock_section_jobs_kicked = kickedMockJobs;
+
     console.log("Watchdog run", JSON.stringify(report));
     return new Response(JSON.stringify({ ok: true, ...report }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
