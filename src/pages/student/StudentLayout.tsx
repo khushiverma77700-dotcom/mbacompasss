@@ -117,6 +117,36 @@ export default function StudentLayout() {
 
   useEffect(() => setMobileOpen(false), [location.pathname]);
 
+  // Track latest unread notification for the top alert bar
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    const loadLatest = async () => {
+      const { data } = await supabase
+        .from("student_notifications")
+        .select("id, title")
+        .eq("user_id", user.id)
+        .eq("is_read", false)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (alive) setLatestUnread(data ?? null);
+    };
+    loadLatest();
+    const ch = supabase
+      .channel(`layout-notif-${user.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "student_notifications", filter: `user_id=eq.${user.id}` },
+        (p: any) => { setLatestUnread({ id: p.new.id, title: p.new.title }); setBannerDismissed(false); })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "student_notifications", filter: `user_id=eq.${user.id}` }, loadLatest)
+      .subscribe();
+    return () => { alive = false; supabase.removeChannel(ch); };
+  }, [user]);
+
+  // Auto-hide banner when user is on the timeline page itself
+  useEffect(() => {
+    if (location.pathname.startsWith("/student/notifications")) setBannerDismissed(true);
+  }, [location.pathname]);
+
   if (loading || !user || !accessChecked || !hasAccess) return <div className="p-8 text-muted-foreground">Loading…</div>;
 
   return (
