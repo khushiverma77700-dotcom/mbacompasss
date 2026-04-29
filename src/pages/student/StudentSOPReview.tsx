@@ -229,13 +229,34 @@ export default function StudentSOPReview() {
       setReviewId(inserted.id);
       setStep("reviewing");
 
-      const { data, error } = await supabase.functions.invoke("sop-review", {
+      const { error } = await supabase.functions.invoke("sop-review", {
         body: { reviewId: inserted.id },
       });
       if (error) throw new Error(error.message || "Edge function failed");
-      if ((data as any)?.error) throw new Error((data as any).error);
 
-      setEvaluation((data as any).evaluation);
+      // Poll sop_reviews.status until completed/failed (max ~3 min)
+      const startedAt = Date.now();
+      const TIMEOUT_MS = 180_000;
+      let evalResult: any = null;
+      while (Date.now() - startedAt < TIMEOUT_MS) {
+        await new Promise((r) => setTimeout(r, 2000));
+        const { data: row } = await supabase
+          .from("sop_reviews")
+          .select("status, ai_response, error_message")
+          .eq("id", inserted.id)
+          .maybeSingle();
+        if (!row) continue;
+        if (row.status === "completed" && row.ai_response) {
+          evalResult = row.ai_response;
+          break;
+        }
+        if (row.status === "failed") {
+          throw new Error(row.error_message || "Review failed");
+        }
+      }
+      if (!evalResult) throw new Error("Review timed out. Please try again.");
+
+      setEvaluation(evalResult);
       setStep("report");
     } catch (e: any) {
       console.error(e);
