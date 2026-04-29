@@ -102,6 +102,50 @@ async function loadExistingQuestionHashes(admin: any): Promise<Set<string>> {
   return seen;
 }
 
+// Section-scoped corpus used for similarity / paraphrase rejection.
+// Keeping it section-local (instead of the entire bank) keeps the math cheap
+// while still catching the most common AI repetition patterns.
+async function loadSectionCorpus(admin: any, sectionId: string): Promise<{ tokens: Set<string>[]; shingles: Set<string>[] }> {
+  const tokens: Set<string>[] = [];
+  const shingles: Set<string>[] = [];
+  const { data } = await admin
+    .from("mock_questions")
+    .select("question_html")
+    .eq("section_id", sectionId)
+    .limit(2000);
+  for (const row of data || []) {
+    const norm = normalizeForHash((row as any).question_html || "");
+    tokens.push(tokenize(norm));
+    shingles.push(buildShingles(norm, 5));
+  }
+  return { tokens, shingles };
+}
+
+function tokenize(text: string): Set<string> {
+  return new Set(text.split(/\s+/).filter((t) => t.length > 2));
+}
+
+function buildShingles(text: string, n: number): Set<string> {
+  const words = text.split(/\s+/).filter(Boolean);
+  const out = new Set<string>();
+  if (words.length < n) {
+    if (words.length) out.add(words.join(" "));
+    return out;
+  }
+  for (let i = 0; i <= words.length - n; i++) out.add(words.slice(i, i + n).join(" "));
+  return out;
+}
+
+function jaccard(a: Set<string>, b: Set<string>): number {
+  if (!a.size || !b.size) return 0;
+  let inter = 0;
+  for (const x of a) if (b.has(x)) inter++;
+  return inter / (a.size + b.size - inter);
+}
+
+const SIM_THRESHOLD = 0.72;        // token Jaccard
+const PARAPHRASE_THRESHOLD = 0.35; // 5-word shingle Jaccard
+
 const EXAM_BASELINE: Record<string, string> = {
   CAT: "HIGH baseline (CAT 85-95 percentile difficulty). Elegant single-insight questions, RC-heavy VARC, dense DILR caselets, arithmetic-heavy QA. No GK.",
   XAT: "VERY HIGH baseline — HARDER than CAT. Verbose passages, ethical Decision Making dilemmas with no single right answer, harder Modern Math + Geometry. GK section, no negative on GK.",
@@ -256,6 +300,14 @@ Deno.serve(async (req) => {
         const target = job.total_questions || 0;
 
         const seen = await loadExistingQuestionHashes(admin);
+        const corpus = await loadSectionCorpus(admin, job.section_id);
+
+        // Persisted dedup counters — preserve any value already on the row.
+        let dupHash = job.dup_hash || 0;
+        let dupSimilarity = job.dup_similarity || 0;
+        let dupParaphrase = job.dup_paraphrase || 0;
+        let dupDb = job.dup_db_conflict || 0;
+        let rejectedInvalid = job.rejected_invalid || 0;
 
         let attempts = 0;
         const maxAttempts = Math.max(20, (target - produced) * MAX_ATTEMPTS_PER_QUESTION);
@@ -308,14 +360,40 @@ Deno.serve(async (req) => {
           const hubRows: any[] = [];
           for (const q of qs) {
             if (produced >= target) break;
-            if (!q?.question_html) continue;
-            const hash = await sha256(normalizeForHash(q.question_html));
-            if (seen.has(hash)) continue;
+            if (!q?.question_html) { rejectedInvalid++; continue; }
+            const norm = normalizeForHash(q.question_html);
+            const hash = await sha256(norm);
+
+            // Reason 1 — exact hash collision against the entire bank
+            if (seen.has(hash)) { dupHash++; continue; }
+
+            // Reason 2 — high token Jaccard against any question in this section
+            const candTokens = tokenize(norm);
+            let maxSim = 0;
+            for (const t of corpus.tokens) {
+              const s = jaccard(candTokens, t);
+              if (s > maxSim) maxSim = s;
+              if (maxSim >= SIM_THRESHOLD) break;
+            }
+            if (maxSim >= SIM_THRESHOLD) { dupSimilarity++; continue; }
+
+            // Reason 3 — near-paraphrase: 5-word shingle overlap
+            const candShingles = buildShingles(norm, 5);
+            let maxShingle = 0;
+            for (const sh of corpus.shingles) {
+              const s = jaccard(candShingles, sh);
+              if (s > maxShingle) maxShingle = s;
+              if (maxShingle >= PARAPHRASE_THRESHOLD) break;
+            }
+            if (maxShingle >= PARAPHRASE_THRESHOLD) { dupParaphrase++; continue; }
+
             seen.add(hash);
+            corpus.tokens.push(candTokens);
+            corpus.shingles.push(candShingles);
 
             const isTita = q.question_type === "tita";
             const cleanedQHtml = cleanQuestionHtml(q.question_html);
-            const { data: qRow } = await admin.from("mock_questions").insert({
+            const { data: qRow, error: insErr } = await admin.from("mock_questions").insert({
               section_id: job.section_id,
               question_number: produced + 1,
               question_type: isTita ? "tita" : "mcq",
@@ -330,7 +408,8 @@ Deno.serve(async (req) => {
               explanation_html: q.explanation_html || "",
               content_hash: hash,
             }).select("id").single();
-            if (!qRow) continue;
+            if (insErr) { dupDb++; continue; }
+            if (!qRow) { rejectedInvalid++; continue; }
 
             if (!isTita && Array.isArray(q.options)) {
               const opts = q.options.slice(0, 4).map((o: any, idx: number) => ({
@@ -358,6 +437,7 @@ Deno.serve(async (req) => {
                 }
               } else {
                 await admin.from("mock_questions").delete().eq("id", qRow.id);
+                rejectedInvalid++;
                 continue;
               }
             }
@@ -368,9 +448,16 @@ Deno.serve(async (req) => {
             await admin.from("personalized_questions").insert(hubRows);
           }
 
+          const totalDup = dupHash + dupSimilarity + dupParaphrase + dupDb;
           await admin.from("mock_section_jobs").update({
             questions_done: produced,
             current_step: `Generated ${produced}/${target}`,
+            duplicates_rejected: totalDup,
+            dup_hash: dupHash,
+            dup_similarity: dupSimilarity,
+            dup_paraphrase: dupParaphrase,
+            dup_db_conflict: dupDb,
+            rejected_invalid: rejectedInvalid,
             worker_lock_until: new Date(Date.now() + 8 * 60_000).toISOString(),
             updated_at: new Date().toISOString(),
           }).eq("id", job_id);
@@ -395,9 +482,20 @@ Deno.serve(async (req) => {
         }
 
         const success = produced === target;
+        const totalDup = dupHash + dupSimilarity + dupParaphrase + dupDb;
+        const finalReason = success
+          ? `Saved exactly ${produced}/${target} questions. Rejected ${totalDup} duplicates (${dupHash} hash, ${dupSimilarity} similarity, ${dupParaphrase} paraphrase, ${dupDb} db) and ${rejectedInvalid} invalid candidates across ${attempts} AI calls.`
+          : `Saved only ${produced}/${target} after ${attempts} AI calls. Rejected ${totalDup} duplicates (${dupHash} hash, ${dupSimilarity} similarity, ${dupParaphrase} paraphrase, ${dupDb} db) and ${rejectedInvalid} invalid candidates.`;
         await admin.from("mock_section_jobs").update({
           status: success ? "completed" : "failed",
           questions_done: produced,
+          duplicates_rejected: totalDup,
+          dup_hash: dupHash,
+          dup_similarity: dupSimilarity,
+          dup_paraphrase: dupParaphrase,
+          dup_db_conflict: dupDb,
+          rejected_invalid: rejectedInvalid,
+          final_reason: finalReason,
           current_step: success ? `Done — exactly ${produced} questions saved` : `Incomplete — ${produced}/${target}`,
           error_message: success ? null : `Only ${produced} of ${target} after retry`,
           worker_lock_until: null,
