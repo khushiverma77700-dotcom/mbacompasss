@@ -730,9 +730,9 @@ export default function StudentOverview() {
         </Card>
       </div>
 
-      {/* Recent + Announcements */}
-      <div className="grid lg:grid-cols-3 gap-4">
-        <Card className="lg:col-span-2 p-5">
+      {/* Recent attempts */}
+      <div className="grid grid-cols-1 gap-4">
+        <Card className="p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold flex items-center gap-2"><ListChecks className="h-4 w-4 text-sky-600" /> Recent attempts</h2>
             <Link to="/student/mocks" className="text-xs text-sky-700 hover:underline">View all →</Link>
@@ -763,32 +763,6 @@ export default function StudentOverview() {
                       <Link to={`/mocks/result/${a.id}`}><Button size="sm" variant="outline">View</Button></Link>
                     )}
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </Card>
-
-        <Card className="p-5">
-          <h2 className="font-semibold flex items-center gap-2 mb-4">
-            <Bell className="h-4 w-4 text-sky-600" /> Announcements
-          </h2>
-          {announcements.length === 0 ? (
-            <div className="text-sm text-muted-foreground">No new announcements.</div>
-          ) : (
-            <div className="space-y-3">
-              {announcements.map((n) => (
-                <div key={n.id} className="border-l-2 border-sky-400 pl-3 py-1">
-                  <div className="flex items-center gap-2">
-                    {n.pinned && <Badge variant="secondary" className="text-[10px] h-4">Pinned</Badge>}
-                    <div className="font-medium text-sm">{n.title}</div>
-                  </div>
-                  {n.body && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{n.body}</p>}
-                  {n.link_url && (
-                    <a href={n.link_url} className="text-xs text-sky-700 hover:underline mt-1 inline-block">
-                      {n.link_label || "Open"} →
-                    </a>
-                  )}
                 </div>
               ))}
             </div>
