@@ -18,9 +18,14 @@ import {
   Trophy,
   Receipt,
   CalendarDays,
-  History,
   CalendarCheck,
   LifeBuoy,
+  ChevronDown,
+  Layers,
+  BookOpen,
+  Repeat,
+  History,
+  FlaskConical,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -31,11 +36,23 @@ import { useEnrolledBundleFeatures } from "@/hooks/useEnrolledBundleFeatures";
 import type { FeatureKey } from "@/lib/courseFeatures";
 import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
 
-const navItems: { to: string; label: string; icon: any; end?: boolean; feature?: FeatureKey }[] = [
+type NavItem = { to: string; label: string; icon: any; end?: boolean; feature?: FeatureKey };
+
+// "My Mocks" — single, self-explanatory group containing every mock-related section.
+// Order matters: most-used first.
+const mocksGroup: NavItem[] = [
+  { to: "/student/daily-test",        label: "Daily Tests",       icon: CalendarDays, feature: "daily_tests" },
+  { to: "/student/mocks/full-length", label: "Full-Length Mocks", icon: Layers,       feature: "daily_mocks" },
+  { to: "/student/mocks/sectional",   label: "Sectional Mocks",   icon: Target,       feature: "daily_mocks" },
+  { to: "/student/mocks/topic-wise",  label: "Topic-wise Tests",  icon: BookOpen,     feature: "daily_mocks" },
+  { to: "/student/mocks/practice",    label: "Practice Sets",     icon: Repeat,       feature: "daily_mocks" },
+  { to: "/student/personalized-hub",  label: "Personalized Hub",  icon: Sparkles,     feature: "personalized_hub" },
+  { to: "/student/mocks/attempted",   label: "Previous Attempts", icon: History,      feature: "performance_tracker" },
+];
+
+const navItems: NavItem[] = [
   { to: "/student", label: "Overview", icon: LayoutDashboard, end: true },
-  { to: "/student/daily-test", label: "Daily Test", icon: CalendarDays, feature: "daily_tests" },
-  { to: "/student/mocks", label: "My Mocks", icon: BookOpenCheck, feature: "daily_mocks" },
-  { to: "/student/attempts", label: "Previous Attempts", icon: History, feature: "performance_tracker" },
+  // "My Mocks" group is rendered separately as an expandable section.
   { to: "/student/buy-mocks", label: "Buy Mocks", icon: ShoppingBag, feature: "buy_mocks" },
   { to: "/student/performance", label: "Performance", icon: BarChart3, feature: "performance_tracker" },
   { to: "/student/goals", label: "CAT Score Engine", icon: Target, feature: "study_planner" },
@@ -43,7 +60,6 @@ const navItems: { to: string; label: string; icon: any; end?: boolean; feature?:
   { to: "/student/leaderboard", label: "Leaderboard", icon: Trophy, feature: "leaderboard" },
   { to: "/student/orders", label: "My Orders", icon: Receipt },
   { to: "/student/announcements", label: "Announcements", icon: Bell },
-  { to: "/student/personalized-hub", label: "Personalized Hub", icon: Sparkles, feature: "personalized_hub" },
   { to: "/student/tools", label: "AI Tools", icon: Sparkles, feature: "ai_tools" },
   { to: "/student/support", label: "Support Center", icon: LifeBuoy, feature: "support" },
   { to: "/student/profile", label: "My Profile", icon: UserIcon },
