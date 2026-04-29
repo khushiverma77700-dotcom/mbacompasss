@@ -155,7 +155,7 @@ export default function StudentLayout() {
     <StudentThemeProvider>
       <div className="min-h-screen bg-gradient-to-br from-sky-50/40 via-white to-blue-50/30 dark:from-background dark:via-background dark:to-background text-foreground">
         {/* Top bar */}
-        <header className="sticky top-0 z-30 bg-card/90 backdrop-blur border-b border-border">
+        <header className="fixed top-0 left-0 right-0 z-30 bg-card/95 backdrop-blur border-b border-border">
           <div className="flex items-center justify-between gap-2 px-3 sm:px-6 h-14">
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <button
@@ -216,7 +216,7 @@ export default function StudentLayout() {
 
         {/* Top alert bar — surfaces newest unread update */}
         {latestUnread && !bannerDismissed && (
-          <div className="sticky top-14 z-20 bg-gradient-to-r from-sky-500 via-blue-500 to-sky-500 text-white shadow-md animate-in slide-in-from-top duration-300">
+          <div className="fixed top-14 left-0 right-0 z-20 bg-gradient-to-r from-sky-500 via-blue-500 to-sky-500 text-white shadow-md animate-in slide-in-from-top duration-300">
             <div className="flex items-center gap-2 px-4 sm:px-6 h-9 text-xs sm:text-sm">
               <Bell className="h-3.5 w-3.5 shrink-0 animate-pulse" />
               <span className="hidden sm:inline font-semibold uppercase tracking-wider opacity-90">New update:</span>
@@ -231,9 +231,9 @@ export default function StudentLayout() {
           </div>
         )}
 
-        <div className="flex">
+        <div className={cn("flex pt-14", latestUnread && !bannerDismissed && "pt-[5.75rem]")}>
           {/* Sidebar - desktop: FIXED. Scrolls independently of main content. */}
-          <aside className="hidden lg:flex flex-col w-64 shrink-0 border-r border-border bg-card/80 backdrop-blur fixed left-0 top-14 bottom-0 overflow-y-auto z-20">
+          <aside className={cn("hidden lg:flex flex-col w-64 shrink-0 border-r border-border bg-card/80 backdrop-blur fixed left-0 bottom-0 overflow-y-auto z-20", latestUnread && !bannerDismissed ? "top-[5.75rem]" : "top-14")}>
             <SidebarContent />
           </aside>
 
