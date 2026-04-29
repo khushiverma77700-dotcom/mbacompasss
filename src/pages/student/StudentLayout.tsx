@@ -25,7 +25,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import NotificationBell from "@/components/student/NotificationBell";
-import { FeatureLockBadge } from "@/components/student/FeatureGate";
+import ThemeToggle from "@/components/student/ThemeToggle";
+import { StudentThemeProvider } from "@/contexts/StudentThemeContext";
+import { useEnrolledBundleFeatures } from "@/hooks/useEnrolledBundleFeatures";
 import type { FeatureKey } from "@/lib/courseFeatures";
 import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
 
