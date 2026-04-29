@@ -5091,19 +5091,52 @@ export type Database = {
         }
         Relationships: []
       }
+      student_planner_skips: {
+        Row: {
+          created_at: string
+          id: string
+          series_id: string
+          skipped_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          series_id: string
+          skipped_date: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          series_id?: string
+          skipped_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       student_planner_tasks: {
         Row: {
           actual_minutes: number | null
+          auto_rollover: boolean
           category: string
           completed_at: string | null
           created_at: string
           description: string | null
           estimated_minutes: number
           id: string
+          linked_action: string | null
+          linked_ref: string | null
           notes: string | null
+          original_date: string | null
           priority: string
+          recurrence: string
+          recurrence_days: number[]
+          recurrence_until: string | null
+          rolled_over_from: string | null
           scheduled_date: string
           scheduled_start_time: string | null
+          series_id: string | null
           status: string
           title: string
           updated_at: string
@@ -5111,16 +5144,25 @@ export type Database = {
         }
         Insert: {
           actual_minutes?: number | null
+          auto_rollover?: boolean
           category?: string
           completed_at?: string | null
           created_at?: string
           description?: string | null
           estimated_minutes?: number
           id?: string
+          linked_action?: string | null
+          linked_ref?: string | null
           notes?: string | null
+          original_date?: string | null
           priority?: string
+          recurrence?: string
+          recurrence_days?: number[]
+          recurrence_until?: string | null
+          rolled_over_from?: string | null
           scheduled_date?: string
           scheduled_start_time?: string | null
+          series_id?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -5128,16 +5170,25 @@ export type Database = {
         }
         Update: {
           actual_minutes?: number | null
+          auto_rollover?: boolean
           category?: string
           completed_at?: string | null
           created_at?: string
           description?: string | null
           estimated_minutes?: number
           id?: string
+          linked_action?: string | null
+          linked_ref?: string | null
           notes?: string | null
+          original_date?: string | null
           priority?: string
+          recurrence?: string
+          recurrence_days?: number[]
+          recurrence_until?: string | null
+          rolled_over_from?: string | null
           scheduled_date?: string
           scheduled_start_time?: string | null
+          series_id?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -5805,6 +5856,10 @@ export type Database = {
         Returns: boolean
       }
       is_admin_email: { Args: { _email: string }; Returns: boolean }
+      materialize_recurring_tasks: {
+        Args: { _through?: string; _user_id: string }
+        Returns: number
+      }
       personalized_hub_today_count: {
         Args: { _user_id: string }
         Returns: number
@@ -5855,6 +5910,7 @@ export type Database = {
         Args: { _job_id: string }
         Returns: undefined
       }
+      rollover_planner_tasks: { Args: { _user_id: string }; Returns: number }
       rollup_mock_generation: {
         Args: { _generation_id: string }
         Returns: undefined

@@ -1,25 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import {
-  CalendarDays, CheckCircle2, Clock, Plus, Flame, Coins, Trophy, Target,
-  Trash2, Play, Pause, BookOpen, Brain, FileText, Repeat, Sparkles, TrendingUp, Activity,
+  CalendarDays, CheckCircle2, Clock, Plus, Flame, Trophy, Target,
+  Trash2, Play, Pause, BookOpen, Brain, FileText, Repeat, Sparkles,
+  TrendingUp, Activity, Edit3, ArrowRight, ArrowRightCircle, SkipForward,
 } from "lucide-react";
-import {
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  PieChart, Pie, Cell, BarChart, Bar, Legend,
-} from "recharts";
+import PlannerTaskDialog, { TaskFormValue } from "@/components/student/PlannerTaskDialog";
+import PlannerSuggestions from "@/components/student/PlannerSuggestions";
+import { Recurrence, addDays, fmtDate, fmtFullDate, todayStr, describeRecurrence } from "@/lib/plannerRecurrence";
 
 interface Task {
   id: string;
@@ -34,11 +34,15 @@ interface Task {
   status: string;
   completed_at: string | null;
   notes: string | null;
-}
-
-interface Rewards {
-  coins: number; xp: number; level: number;
-  streak_days: number; longest_streak: number; total_mocks_completed: number;
+  recurrence: Recurrence;
+  recurrence_days: number[];
+  recurrence_until: string | null;
+  series_id: string | null;
+  linked_action: string | null;
+  linked_ref: string | null;
+  rolled_over_from: string | null;
+  auto_rollover: boolean;
+  original_date: string | null;
 }
 
 const CATEGORIES = [
@@ -52,30 +56,23 @@ const CATEGORIES = [
   { value: "custom", label: "Custom", icon: Sparkles, color: "#6366f1" },
 ];
 
-const PRIORITIES = [
-  { value: "high", label: "High", color: "bg-rose-100 text-rose-700 border-rose-200" },
-  { value: "medium", label: "Medium", color: "bg-amber-100 text-amber-700 border-amber-200" },
-  { value: "low", label: "Low", color: "bg-sky-100 text-sky-700 border-sky-200" },
-];
+const PRIORITY_COLOR: Record<string, string> = {
+  high:   "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-500/15 dark:text-rose-300 dark:border-rose-500/30",
+  medium: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30",
+  low:    "bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-500/15 dark:text-sky-300 dark:border-sky-500/30",
+};
 
-const todayStr = () => new Date().toISOString().slice(0, 10);
-const fmtDate = (d: string) => new Date(d + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+const ROLLOVER_KEY = "planner_rollover_date";
 
 export default function StudentDayPlanner() {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [rewards, setRewards] = useState<Rewards | null>(null);
+  const [rewards, setRewards] = useState<{ streak_days: number; longest_streak: number } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [openCreate, setOpenCreate] = useState(false);
 
-  // form state
-  const [fTitle, setFTitle] = useState("");
-  const [fDesc, setFDesc] = useState("");
-  const [fCategory, setFCategory] = useState("custom");
-  const [fPriority, setFPriority] = useState("medium");
-  const [fDate, setFDate] = useState(todayStr());
-  const [fTime, setFTime] = useState("");
-  const [fMinutes, setFMinutes] = useState(30);
+  const [openCreate, setOpenCreate] = useState(false);
+  const [editing, setEditing] = useState<Task | null>(null);
+  const [skipDialog, setSkipDialog] = useState<Task | null>(null);
 
   const load = async () => {
     if (!user) return;
@@ -87,36 +84,91 @@ export default function StudentDayPlanner() {
         .order("scheduled_date", { ascending: false })
         .order("scheduled_start_time", { ascending: true, nullsFirst: false })
         .limit(500),
-      supabase.from("student_rewards").select("*").eq("user_id", user.id).maybeSingle(),
+      supabase.from("student_rewards").select("streak_days, longest_streak").eq("user_id", user.id).maybeSingle(),
     ]);
     setTasks((t ?? []) as Task[]);
-    setRewards(r as Rewards | null);
+    setRewards(r as any);
     setLoading(false);
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [user]);
+  // First mount per day: rollover stale pending tasks + materialise upcoming recurrences
+  useEffect(() => {
+    if (!user) return;
+    const today = todayStr();
+    const stamp = typeof window !== "undefined" ? localStorage.getItem(ROLLOVER_KEY) : today;
+    (async () => {
+      if (stamp !== today) {
+        try {
+          await supabase.rpc("rollover_planner_tasks", { _user_id: user.id });
+          await supabase.rpc("materialize_recurring_tasks", { _user_id: user.id });
+        } catch (e) {
+          // non-fatal
+        }
+        try { localStorage.setItem(ROLLOVER_KEY, today); } catch {}
+      }
+      load();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
-  const resetForm = () => {
-    setFTitle(""); setFDesc(""); setFCategory("custom"); setFPriority("medium");
-    setFDate(todayStr()); setFTime(""); setFMinutes(30);
-  };
+  const today = todayStr();
+  const yesterday = addDays(today, -1);
+  const tomorrow = addDays(today, 1);
 
-  const createTask = async () => {
-    if (!user || !fTitle.trim()) return toast.error("Please add a title");
-    const { error } = await supabase.from("student_planner_tasks").insert({
+  const todayTasks    = useMemo(() => tasks.filter((t) => t.scheduled_date === today), [tasks, today]);
+  const yesterdayTasks= useMemo(() => tasks.filter((t) => t.scheduled_date === yesterday), [tasks, yesterday]);
+  const tomorrowTasks = useMemo(() => tasks.filter((t) => t.scheduled_date === tomorrow), [tasks, tomorrow]);
+
+  const completedToday = todayTasks.filter((t) => t.status === "completed").length;
+  const todayPct = todayTasks.length ? Math.round((completedToday / todayTasks.length) * 100) : 0;
+  const pendingToday = todayTasks.filter((t) => t.status !== "completed").length;
+  const focusToday = todayTasks
+    .filter((t) => t.status === "completed")
+    .reduce((s, t) => s + (t.actual_minutes ?? t.estimated_minutes), 0);
+
+  // ---------- Mutations ----------
+
+  const upsertTask = async (v: TaskFormValue): Promise<void> => {
+    if (!user) return;
+    const series_id =
+      v.recurrence === "none" ? null
+      : (editing?.series_id ?? crypto.randomUUID());
+
+    const payload: any = {
       user_id: user.id,
-      title: fTitle.trim(),
-      description: fDesc.trim() || null,
-      category: fCategory,
-      priority: fPriority,
-      scheduled_date: fDate,
-      scheduled_start_time: fTime || null,
-      estimated_minutes: fMinutes,
-      status: "pending",
-    });
-    if (error) return toast.error(error.message);
-    toast.success("Task added to your planner");
-    setOpenCreate(false); resetForm(); load();
+      title: v.title,
+      description: v.description,
+      category: v.category,
+      priority: v.priority,
+      scheduled_date: v.scheduled_date,
+      scheduled_start_time: v.scheduled_start_time,
+      estimated_minutes: v.estimated_minutes,
+      recurrence: v.recurrence,
+      recurrence_days: v.recurrence_days,
+      recurrence_until: v.recurrence_until,
+      auto_rollover: v.auto_rollover,
+      linked_action: v.linked_action,
+      linked_ref: v.linked_ref,
+      series_id,
+    };
+
+    if (editing) {
+      const { error } = await supabase.from("student_planner_tasks").update(payload).eq("id", editing.id);
+      if (error) return toast.error(error.message);
+      toast.success("Task updated");
+      setEditing(null);
+    } else {
+      payload.original_date = v.scheduled_date;
+      payload.status = "pending";
+      const { error } = await supabase.from("student_planner_tasks").insert(payload);
+      if (error) return toast.error(error.message);
+      toast.success(v.recurrence === "none" ? "Task added" : "Recurring task scheduled");
+    }
+
+    if (v.recurrence !== "none") {
+      try { await supabase.rpc("materialize_recurring_tasks", { _user_id: user.id }); } catch {}
+    }
+    load();
   };
 
   const setStatus = async (task: Task, status: string) => {
@@ -124,377 +176,450 @@ export default function StudentDayPlanner() {
     if (status === "completed") {
       patch.completed_at = new Date().toISOString();
       patch.actual_minutes = task.actual_minutes ?? task.estimated_minutes;
+    } else if (status === "pending") {
+      patch.completed_at = null;
     }
     const { error } = await supabase.from("student_planner_tasks").update(patch).eq("id", task.id);
     if (error) return toast.error(error.message);
     if (status === "completed") {
-      // Award rewards: 5 coins + 20 XP per task
       try {
         await supabase.rpc("award_student_rewards", {
           _user_id: user!.id, _coins: 5, _xp: 20, _activity_today: true,
         });
       } catch {}
-      toast.success("Nice! +20 XP, +5 coins");
+      toast.success("Nice! +20 XP");
     }
     load();
   };
 
-  const removeTask = async (id: string) => {
-    if (!confirm("Delete this task?")) return;
-    await supabase.from("student_planner_tasks").delete().eq("id", id);
+  const moveToToday = async (task: Task) => {
+    const { error } = await supabase
+      .from("student_planner_tasks")
+      .update({ scheduled_date: todayStr(), rolled_over_from: task.scheduled_date })
+      .eq("id", task.id);
+    if (error) return toast.error(error.message);
+    toast.success("Moved to today");
     load();
   };
 
-  // ---------- Analytics ----------
-  const today = todayStr();
-  const todayTasks = useMemo(() => tasks.filter((t) => t.scheduled_date === today), [tasks, today]);
-  const upcoming = useMemo(() => tasks.filter((t) => t.scheduled_date > today && t.status !== "completed"), [tasks, today]);
-  const completedToday = todayTasks.filter((t) => t.status === "completed").length;
-  const todayCompletion = todayTasks.length ? Math.round((completedToday / todayTasks.length) * 100) : 0;
+  const moveToTomorrow = async (task: Task) => {
+    const { error } = await supabase
+      .from("student_planner_tasks")
+      .update({ scheduled_date: addDays(task.scheduled_date, 1) })
+      .eq("id", task.id);
+    if (error) return toast.error(error.message);
+    toast.success("Pushed to tomorrow");
+    load();
+  };
 
-  // 14-day completion trend
-  const trend14 = useMemo(() => {
-    const days: { date: string; planned: number; done: number; mins: number }[] = [];
-    for (let i = 13; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      const ds = d.toISOString().slice(0, 10);
-      const dayTasks = tasks.filter((t) => t.scheduled_date === ds);
-      const done = dayTasks.filter((t) => t.status === "completed");
-      days.push({
-        date: fmtDate(ds),
-        planned: dayTasks.length,
-        done: done.length,
-        mins: done.reduce((s, x) => s + (x.actual_minutes ?? x.estimated_minutes), 0),
+  const skipPermanently = async (task: Task) => {
+    if (task.series_id) {
+      // Skip this single occurrence in the series
+      await supabase.from("student_planner_skips").insert({
+        user_id: user!.id, series_id: task.series_id, skipped_date: task.scheduled_date,
       });
     }
-    return days;
-  }, [tasks]);
+    await supabase.from("student_planner_tasks").delete().eq("id", task.id);
+    toast.success("Skipped");
+    setSkipDialog(null);
+    load();
+  };
 
-  // Subject distribution (last 30 days, completed)
-  const subjectDist = useMemo(() => {
-    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
-    const cs = cutoff.toISOString().slice(0, 10);
-    const map: Record<string, number> = {};
-    for (const t of tasks) {
-      if (t.status !== "completed" || t.scheduled_date < cs) continue;
-      map[t.category] = (map[t.category] ?? 0) + (t.actual_minutes ?? t.estimated_minutes);
+  const deleteSeries = async (task: Task) => {
+    if (!task.series_id) {
+      await supabase.from("student_planner_tasks").delete().eq("id", task.id);
+    } else {
+      await supabase
+        .from("student_planner_tasks")
+        .delete()
+        .eq("user_id", user!.id)
+        .eq("series_id", task.series_id);
     }
-    return CATEGORIES
-      .map((c) => ({ name: c.label, value: map[c.value] ?? 0, color: c.color }))
-      .filter((x) => x.value > 0);
-  }, [tasks]);
+    toast.success("Series removed");
+    setSkipDialog(null);
+    load();
+  };
 
-  // Productivity score: completion rate * consistency * focus mins
-  const last7 = trend14.slice(-7);
-  const completionRate = last7.length
-    ? Math.round(
-        (last7.reduce((s, d) => s + (d.planned ? d.done / d.planned : 0), 0) / last7.length) * 100
-      )
-    : 0;
-  const totalMins7 = last7.reduce((s, d) => s + d.mins, 0);
-  const activeDays7 = last7.filter((d) => d.done > 0).length;
-  const productivity = Math.min(
-    100,
-    Math.round(completionRate * 0.5 + (activeDays7 / 7) * 30 + Math.min(20, totalMins7 / 30))
-  );
-
-  // Heatmap (12 weeks)
-  const heatmap = useMemo(() => {
-    const cells: { date: string; mins: number }[] = [];
-    for (let i = 83; i >= 0; i--) {
-      const d = new Date(); d.setDate(d.getDate() - i);
-      const ds = d.toISOString().slice(0, 10);
-      const mins = tasks
-        .filter((t) => t.scheduled_date === ds && t.status === "completed")
-        .reduce((s, x) => s + (x.actual_minutes ?? x.estimated_minutes), 0);
-      cells.push({ date: ds, mins });
-    }
-    return cells;
-  }, [tasks]);
-  const heatColor = (m: number) =>
-    m === 0 ? "bg-slate-100" :
-    m < 30 ? "bg-sky-200" :
-    m < 60 ? "bg-sky-400" :
-    m < 120 ? "bg-sky-500" : "bg-sky-700";
+  const removeOne = async (task: Task) => {
+    if (!confirm("Delete this task?")) return;
+    await supabase.from("student_planner_tasks").delete().eq("id", task.id);
+    load();
+  };
 
   if (loading) return <div className="text-muted-foreground">Loading your planner…</div>;
-
-  const xp = rewards?.xp ?? 0;
-  const level = rewards?.level ?? 1;
-  const xpProgress = Math.min(100, ((xp % 500) / 500) * 100);
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <CalendarDays className="h-6 w-6 text-sky-600" />
-            My Day Planner
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <CalendarDays className="h-6 w-6 text-sky-600" /> My Day Planner
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Plan tasks, track focus time, build streaks. Earn XP & coins as you complete them.
+            {fmtFullDate(today)} · plan, track and stay consistent.
           </p>
         </div>
-        <Dialog open={openCreate} onOpenChange={setOpenCreate}>
-          <DialogTrigger asChild>
-            <Button className="bg-sky-600 hover:bg-sky-700">
-              <Plus className="h-4 w-4 mr-2" /> Add Task
+        <div className="flex items-center gap-2">
+          <Link to="/student/day-planner/performance">
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <TrendingUp className="h-4 w-4" /> Performance
             </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader><DialogTitle>Add a task to your planner</DialogTitle></DialogHeader>
-            <div className="space-y-3">
-              <div>
-                <Label>Task title *</Label>
-                <Input value={fTitle} onChange={(e) => setFTitle(e.target.value)} placeholder="e.g. CAT VARC sectional - 1 hour" />
-              </div>
-              <div>
-                <Label>Notes (optional)</Label>
-                <Textarea value={fDesc} onChange={(e) => setFDesc(e.target.value)} rows={2} />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>Category</Label>
-                  <Select value={fCategory} onValueChange={setFCategory}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Priority</Label>
-                  <Select value={fPriority} onValueChange={setFPriority}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {PRIORITIES.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <Label>Date</Label>
-                  <Input type="date" value={fDate} onChange={(e) => setFDate(e.target.value)} />
-                </div>
-                <div>
-                  <Label>Start time</Label>
-                  <Input type="time" value={fTime} onChange={(e) => setFTime(e.target.value)} />
-                </div>
-                <div>
-                  <Label>Minutes</Label>
-                  <Input type="number" min={5} max={600} value={fMinutes} onChange={(e) => setFMinutes(parseInt(e.target.value) || 30)} />
-                </div>
-              </div>
-              <Button className="w-full bg-sky-600 hover:bg-sky-700" onClick={createTask}>Add to planner</Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+          </Link>
+          <Button onClick={() => { setEditing(null); setOpenCreate(true); }} className="bg-sky-600 hover:bg-sky-700">
+            <Plus className="h-4 w-4 mr-1" /> Add Task
+          </Button>
+        </div>
       </div>
 
-      {/* Stat tiles */}
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
-        <StatTile icon={<Flame className="h-5 w-5 text-orange-500" />} label="Streak" value={`${rewards?.streak_days ?? 0}d`} sub={`Best ${rewards?.longest_streak ?? 0}d`} />
-        <StatTile icon={<Coins className="h-5 w-5 text-amber-500" />} label="Coins" value={rewards?.coins ?? 0} sub="Earned" />
-        <StatTile icon={<Trophy className="h-5 w-5 text-violet-500" />} label="Level" value={level} sub={`${xp % 500}/500 XP`} progress={xpProgress} />
-        <StatTile icon={<CheckCircle2 className="h-5 w-5 text-emerald-500" />} label="Today" value={`${completedToday}/${todayTasks.length}`} sub={`${todayCompletion}% done`} progress={todayCompletion} />
-        <StatTile icon={<Clock className="h-5 w-5 text-sky-500" />} label="7d Focus" value={`${Math.round(totalMins7 / 60 * 10) / 10}h`} sub={`${activeDays7}/7 active`} />
-        <StatTile icon={<TrendingUp className="h-5 w-5 text-emerald-600" />} label="Productivity" value={`${productivity}`} sub="Out of 100" progress={productivity} />
+      {/* KPI strip */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+        <Kpi icon={<CheckCircle2 className="h-4 w-4 text-emerald-500" />} label="Today done" value={`${completedToday}/${todayTasks.length}`} hint={`${todayPct}%`} progress={todayPct} />
+        <Kpi icon={<Clock className="h-4 w-4 text-sky-500" />} label="Pending today" value={String(pendingToday)} hint={pendingToday ? "Tap to complete" : "All clear"} />
+        <Kpi icon={<Flame className="h-4 w-4 text-orange-500" />} label="Streak" value={`${rewards?.streak_days ?? 0}d`} hint={`Best ${rewards?.longest_streak ?? 0}d`} />
+        <Kpi icon={<Activity className="h-4 w-4 text-violet-500" />} label="Today focus" value={`${Math.round(focusToday / 60 * 10) / 10}h`} hint={`${focusToday} min`} />
+        <Kpi icon={<Trophy className="h-4 w-4 text-amber-500" />} label="Tomorrow" value={String(tomorrowTasks.length)} hint="Planned ahead" />
       </div>
 
+      {/* Smart suggestions */}
+      <PlannerSuggestions
+        existingTitles={todayTasks.map((t) => t.title)}
+        onAdded={load}
+      />
+
+      {/* Day tabs */}
       <Tabs defaultValue="today">
         <TabsList>
-          <TabsTrigger value="today">Today ({todayTasks.length})</TabsTrigger>
-          <TabsTrigger value="upcoming">Upcoming ({upcoming.length})</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="all">All tasks</TabsTrigger>
+          <TabsTrigger value="yesterday">
+            Yesterday
+            {yesterdayTasks.filter((t) => t.status !== "completed").length > 0 && (
+              <Badge variant="secondary" className="ml-1.5 h-4 text-[10px]">
+                {yesterdayTasks.filter((t) => t.status !== "completed").length} missed
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="today">
+            Today
+            {pendingToday > 0 && (
+              <Badge className="ml-1.5 h-4 text-[10px] bg-sky-500 text-white">{pendingToday}</Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="tomorrow">Tomorrow ({tomorrowTasks.length})</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="today" className="space-y-3">
-          {todayTasks.length === 0 ? (
-            <EmptyState onAdd={() => setOpenCreate(true)} />
-          ) : todayTasks.map((t) => <TaskCard key={t.id} task={t} onStatus={setStatus} onDelete={removeTask} />)}
-        </TabsContent>
-
-        <TabsContent value="upcoming" className="space-y-3">
-          {upcoming.length === 0
-            ? <Card className="p-8 text-center text-muted-foreground">Nothing scheduled ahead. Plan your week!</Card>
-            : upcoming.map((t) => <TaskCard key={t.id} task={t} onStatus={setStatus} onDelete={removeTask} />)}
-        </TabsContent>
-
-        <TabsContent value="analytics" className="space-y-4">
-          <div className="grid lg:grid-cols-2 gap-4">
-            <Card className="p-4">
-              <h3 className="font-semibold text-sm mb-2">14-day plan vs done</h3>
-              <ResponsiveContainer width="100%" height={220}>
-                <AreaChart data={trend14}>
-                  <defs>
-                    <linearGradient id="gPlan" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#94a3b8" stopOpacity={0.4}/>
-                      <stop offset="100%" stopColor="#94a3b8" stopOpacity={0}/>
-                    </linearGradient>
-                    <linearGradient id="gDone" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.6}/>
-                      <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip />
-                  <Area type="monotone" dataKey="planned" stroke="#94a3b8" fill="url(#gPlan)" />
-                  <Area type="monotone" dataKey="done" stroke="#0ea5e9" fill="url(#gDone)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            </Card>
-
-            <Card className="p-4">
-              <h3 className="font-semibold text-sm mb-2">Focus minutes (14 days)</h3>
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={trend14}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                  <YAxis tick={{ fontSize: 11 }} />
-                  <Tooltip />
-                  <Bar dataKey="mins" fill="#0ea5e9" radius={[4,4,0,0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </Card>
-
-            <Card className="p-4">
-              <h3 className="font-semibold text-sm mb-2">Time by subject (last 30 days)</h3>
-              {subjectDist.length === 0 ? (
-                <div className="h-[220px] flex items-center justify-center text-muted-foreground text-sm">
-                  Complete tasks to see your subject mix
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie data={subjectDist} dataKey="value" nameKey="name" innerRadius={50} outerRadius={85}>
-                      {subjectDist.map((s, i) => <Cell key={i} fill={s.color} />)}
-                    </Pie>
-                    <Tooltip formatter={(v: any) => `${v} min`} />
-                    <Legend wrapperStyle={{ fontSize: 11 }} />
-                  </PieChart>
-                </ResponsiveContainer>
+        <TabsContent value="yesterday" className="space-y-2 mt-4">
+          {yesterdayTasks.length === 0 ? (
+            <EmptyDay label="Nothing scheduled yesterday." />
+          ) : (
+            <>
+              {yesterdayTasks.filter((t) => t.status !== "completed").map((t) => (
+                <TaskCard
+                  key={t.id} task={t}
+                  onStatus={setStatus}
+                  onEdit={(task) => { setEditing(task); setOpenCreate(true); }}
+                  onDelete={removeOne}
+                  onSkip={(task) => setSkipDialog(task)}
+                  extraActions={
+                    <Button size="sm" variant="outline" className="h-7 px-2 text-xs gap-1" onClick={() => moveToToday(t)}>
+                      <ArrowRightCircle className="h-3 w-3" /> Move to today
+                    </Button>
+                  }
+                />
+              ))}
+              {yesterdayTasks.filter((t) => t.status === "completed").length > 0 && (
+                <details className="mt-2">
+                  <summary className="text-xs text-muted-foreground cursor-pointer hover:text-foreground">
+                    Show {yesterdayTasks.filter((t) => t.status === "completed").length} completed
+                  </summary>
+                  <div className="space-y-2 mt-2">
+                    {yesterdayTasks.filter((t) => t.status === "completed").map((t) => (
+                      <TaskCard key={t.id} task={t} onStatus={setStatus} onEdit={() => {}} onDelete={removeOne} onSkip={() => {}} compact />
+                    ))}
+                  </div>
+                </details>
               )}
-            </Card>
-
-            <Card className="p-4">
-              <h3 className="font-semibold text-sm mb-3">Consistency heatmap (12 weeks)</h3>
-              <div className="grid grid-flow-col grid-rows-7 gap-1">
-                {heatmap.map((c) => (
-                  <div
-                    key={c.date}
-                    title={`${c.date} • ${c.mins} min`}
-                    className={`h-3.5 w-3.5 rounded-sm ${heatColor(c.mins)}`}
-                  />
-                ))}
-              </div>
-              <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
-                Less
-                <span className="h-3 w-3 rounded-sm bg-slate-100" />
-                <span className="h-3 w-3 rounded-sm bg-sky-200" />
-                <span className="h-3 w-3 rounded-sm bg-sky-400" />
-                <span className="h-3 w-3 rounded-sm bg-sky-500" />
-                <span className="h-3 w-3 rounded-sm bg-sky-700" />
-                More
-              </div>
-            </Card>
-          </div>
+            </>
+          )}
         </TabsContent>
 
-        <TabsContent value="all" className="space-y-3">
-          {tasks.length === 0
-            ? <EmptyState onAdd={() => setOpenCreate(true)} />
-            : tasks.map((t) => <TaskCard key={t.id} task={t} onStatus={setStatus} onDelete={removeTask} />)}
+        <TabsContent value="today" className="space-y-2 mt-4">
+          {todayTasks.length === 0 ? (
+            <EmptyDay label="No tasks for today yet." onAdd={() => { setEditing(null); setOpenCreate(true); }} />
+          ) : (
+            <>
+              {/* Pending first */}
+              {todayTasks.filter((t) => t.status !== "completed").map((t) => (
+                <TaskCard
+                  key={t.id} task={t}
+                  onStatus={setStatus}
+                  onEdit={(task) => { setEditing(task); setOpenCreate(true); }}
+                  onDelete={removeOne}
+                  onSkip={(task) => setSkipDialog(task)}
+                  extraActions={
+                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs gap-1 text-muted-foreground" onClick={() => moveToTomorrow(t)}>
+                      <ArrowRightCircle className="h-3 w-3" /> Tomorrow
+                    </Button>
+                  }
+                />
+              ))}
+              {todayTasks.filter((t) => t.status === "completed").length > 0 && (
+                <div className="pt-3 mt-2 border-t border-dashed border-border space-y-2">
+                  <div className="text-xs text-muted-foreground">Completed today</div>
+                  {todayTasks.filter((t) => t.status === "completed").map((t) => (
+                    <TaskCard key={t.id} task={t} onStatus={setStatus} onEdit={() => {}} onDelete={removeOne} onSkip={() => {}} />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="tomorrow" className="space-y-2 mt-4">
+          {tomorrowTasks.length === 0 ? (
+            <EmptyDay label="Nothing planned for tomorrow." onAdd={() => { setEditing({ ...({} as Task), scheduled_date: tomorrow } as any); setOpenCreate(true); }} addLabel="Plan tomorrow" />
+          ) : (
+            tomorrowTasks.map((t) => (
+              <TaskCard
+                key={t.id} task={t}
+                onStatus={setStatus}
+                onEdit={(task) => { setEditing(task); setOpenCreate(true); }}
+                onDelete={removeOne}
+                onSkip={(task) => setSkipDialog(task)}
+              />
+            ))
+          )}
         </TabsContent>
       </Tabs>
+
+      {/* Create / edit dialog */}
+      <PlannerTaskDialog
+        open={openCreate}
+        onOpenChange={(v) => { setOpenCreate(v); if (!v) setEditing(null); }}
+        initial={editing ? {
+          id: editing.id,
+          title: editing.title ?? "",
+          description: editing.description,
+          category: editing.category,
+          priority: editing.priority,
+          scheduled_date: editing.scheduled_date,
+          scheduled_start_time: editing.scheduled_start_time,
+          estimated_minutes: editing.estimated_minutes,
+          recurrence: (editing.recurrence ?? "none") as Recurrence,
+          recurrence_days: editing.recurrence_days ?? [],
+          recurrence_until: editing.recurrence_until,
+          auto_rollover: editing.auto_rollover ?? true,
+          linked_action: editing.linked_action,
+          linked_ref: editing.linked_ref,
+        } : undefined}
+        onSubmit={upsertTask}
+      />
+
+      {/* Skip / series dialog */}
+      <AlertDialog open={!!skipDialog} onOpenChange={(o) => !o && setSkipDialog(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>What should we do with this task?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {skipDialog?.series_id
+                ? "This is part of a recurring series. Choose how to skip it."
+                : "Choose how to remove this task."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="grid gap-2">
+            <Button
+              variant="outline"
+              className="justify-start gap-2"
+              onClick={() => skipDialog && moveToTomorrow(skipDialog).then(() => setSkipDialog(null))}
+            >
+              <ArrowRightCircle className="h-4 w-4 text-sky-600" />
+              <div className="text-left">
+                <div className="text-sm font-medium">Move to next day</div>
+                <div className="text-[11px] text-muted-foreground">Push this task forward by one day</div>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start gap-2"
+              onClick={() => skipDialog && skipPermanently(skipDialog)}
+            >
+              <SkipForward className="h-4 w-4 text-amber-600" />
+              <div className="text-left">
+                <div className="text-sm font-medium">Skip just this day</div>
+                <div className="text-[11px] text-muted-foreground">
+                  {skipDialog?.series_id ? "Removes this occurrence; future ones still appear" : "Removes this single task"}
+                </div>
+              </div>
+            </Button>
+            {skipDialog?.series_id && (
+              <Button
+                variant="outline"
+                className="justify-start gap-2 text-rose-600 border-rose-200"
+                onClick={() => skipDialog && deleteSeries(skipDialog)}
+              >
+                <Trash2 className="h-4 w-4" />
+                <div className="text-left">
+                  <div className="text-sm font-medium">End the whole series</div>
+                  <div className="text-[11px] text-muted-foreground">Removes this and all future occurrences</div>
+                </div>
+              </Button>
+            )}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
 
-function StatTile({ icon, label, value, sub, progress }: { icon: React.ReactNode; label: string; value: any; sub?: string; progress?: number }) {
+/* ---------- subcomponents ---------- */
+
+function Kpi({ icon, label, value, hint, progress }: { icon: React.ReactNode; label: string; value: string; hint?: string; progress?: number }) {
   return (
     <Card className="p-3">
-      <div className="flex items-center gap-2">{icon}<div className="text-xs text-muted-foreground">{label}</div></div>
+      <div className="flex items-center gap-2">{icon}<div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div></div>
       <div className="text-xl font-bold mt-1">{value}</div>
-      {sub && <div className="text-[11px] text-muted-foreground">{sub}</div>}
+      {hint && <div className="text-[11px] text-muted-foreground">{hint}</div>}
       {typeof progress === "number" && <Progress value={progress} className="h-1 mt-2" />}
     </Card>
   );
 }
 
-function TaskCard({ task, onStatus, onDelete }: { task: Task; onStatus: (t: Task, s: string) => void; onDelete: (id: string) => void }) {
+function EmptyDay({ label, onAdd, addLabel = "Add a task" }: { label: string; onAdd?: () => void; addLabel?: string }) {
+  return (
+    <Card className="p-8 text-center">
+      <CalendarDays className="h-8 w-8 mx-auto text-sky-500 mb-2" />
+      <div className="text-sm text-muted-foreground mb-3">{label}</div>
+      {onAdd && (
+        <Button size="sm" onClick={onAdd} className="bg-sky-600 hover:bg-sky-700">
+          <Plus className="h-3.5 w-3.5 mr-1" /> {addLabel}
+        </Button>
+      )}
+    </Card>
+  );
+}
+
+function actionLink(linked_action: string | null, linked_ref: string | null): string | null {
+  if (!linked_action) return null;
+  if (linked_action === "daily_test")       return "/student/daily-test";
+  if (linked_action === "personalized_hub") return "/student/personalized-hub";
+  if (linked_action === "mocks")            return "/student/mocks/full-length";
+  if (linked_action === "mock" && linked_ref) return `/mocks/${linked_ref}`;
+  return null;
+}
+
+interface CardProps {
+  task: Task;
+  onStatus: (t: Task, s: string) => void;
+  onEdit: (t: Task) => void;
+  onDelete: (t: Task) => void;
+  onSkip: (t: Task) => void;
+  extraActions?: React.ReactNode;
+  compact?: boolean;
+}
+
+function TaskCard({ task, onStatus, onEdit, onDelete, onSkip, extraActions, compact }: CardProps) {
   const cat = CATEGORIES.find((c) => c.value === task.category) ?? CATEGORIES[CATEGORIES.length - 1];
-  const pri = PRIORITIES.find((p) => p.value === task.priority) ?? PRIORITIES[1];
   const Icon = cat.icon;
   const done = task.status === "completed";
+  const inProgress = task.status === "in_progress";
+  const isPending = task.status === "pending";
+  const recLabel = describeRecurrence(task.recurrence, task.recurrence_days);
+  const link = actionLink(task.linked_action, task.linked_ref);
+
   return (
-    <Card className={`p-4 transition ${done ? "bg-emerald-50/50 border-emerald-200" : "hover:shadow-sm"}`}>
+    <Card
+      className={`p-3 sm:p-4 transition-shadow ${
+        done ? "bg-emerald-50/40 border-emerald-200 dark:bg-emerald-500/5 dark:border-emerald-500/20"
+             : isPending ? "hover:shadow-sm border-l-4 border-l-sky-500"
+             : "hover:shadow-sm"
+      }`}
+    >
       <div className="flex items-start gap-3">
         <button
           onClick={() => onStatus(task, done ? "pending" : "completed")}
-          className={`mt-1 h-5 w-5 rounded-full border-2 grid place-items-center transition ${done ? "bg-emerald-500 border-emerald-500" : "border-slate-300 hover:border-sky-500"}`}
+          className={`mt-0.5 h-5 w-5 rounded-full border-2 grid place-items-center transition shrink-0 ${
+            done ? "bg-emerald-500 border-emerald-500" : "border-muted-foreground/40 hover:border-sky-500"
+          }`}
           aria-label="Toggle complete"
         >
           {done && <CheckCircle2 className="h-4 w-4 text-white" />}
         </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <div className={`font-medium text-sm ${done ? "line-through text-muted-foreground" : "text-gray-900"}`}>
+            <div className="min-w-0 flex-1">
+              <div className={`font-medium text-sm ${done ? "line-through text-muted-foreground" : "text-foreground"}`}>
                 {task.title}
               </div>
-              {task.description && <div className="text-xs text-muted-foreground mt-0.5">{task.description}</div>}
+              {task.description && !compact && (
+                <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{task.description}</div>
+              )}
             </div>
-            <button onClick={() => onDelete(task.id)} className="text-muted-foreground hover:text-rose-600 shrink-0">
-              <Trash2 className="h-4 w-4" />
-            </button>
+            {!compact && (
+              <div className="flex items-center gap-1 shrink-0">
+                <button onClick={() => onEdit(task)} className="text-muted-foreground hover:text-sky-600 p-1" title="Edit">
+                  <Edit3 className="h-3.5 w-3.5" />
+                </button>
+                <button onClick={() => onDelete(task)} className="text-muted-foreground hover:text-rose-600 p-1" title="Delete">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
           </div>
-          <div className="flex flex-wrap items-center gap-2 mt-2">
+
+          <div className="flex flex-wrap items-center gap-1.5 mt-2">
             <Badge variant="outline" className="text-[10px] gap-1" style={{ borderColor: cat.color, color: cat.color }}>
               <Icon className="h-3 w-3" /> {cat.label}
             </Badge>
-            <Badge variant="outline" className={`text-[10px] ${pri.color}`}>{pri.label}</Badge>
+            <Badge variant="outline" className={`text-[10px] ${PRIORITY_COLOR[task.priority] ?? ""}`}>{task.priority}</Badge>
             <span className="text-[11px] text-muted-foreground flex items-center gap-1">
               <CalendarDays className="h-3 w-3" /> {fmtDate(task.scheduled_date)}
-              {task.scheduled_start_time && ` • ${task.scheduled_start_time.slice(0,5)}`}
+              {task.scheduled_start_time && ` · ${task.scheduled_start_time.slice(0, 5)}`}
             </span>
             <span className="text-[11px] text-muted-foreground flex items-center gap-1">
               <Clock className="h-3 w-3" /> {task.estimated_minutes}m
             </span>
-            {!done && task.status === "in_progress" && (
-              <Badge className="text-[10px] bg-sky-100 text-sky-700 border-sky-200" variant="outline">In progress</Badge>
+            {recLabel && (
+              <Badge variant="secondary" className="text-[10px] gap-1">
+                <Repeat className="h-3 w-3" /> {recLabel}
+              </Badge>
             )}
-          </div>
-        </div>
-        {!done && (
-          <div className="flex flex-col gap-1 shrink-0">
-            {task.status !== "in_progress" ? (
-              <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => onStatus(task, "in_progress")}>
-                <Play className="h-3 w-3 mr-1" /> Start
-              </Button>
-            ) : (
-              <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => onStatus(task, "pending")}>
-                <Pause className="h-3 w-3 mr-1" /> Pause
-              </Button>
+            {task.rolled_over_from && task.rolled_over_from !== task.scheduled_date && (
+              <Badge variant="secondary" className="text-[10px] bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30">
+                Rolled over
+              </Badge>
             )}
+            {inProgress && <Badge variant="outline" className="text-[10px] bg-sky-100 text-sky-700 border-sky-200">In progress</Badge>}
           </div>
-        )}
-      </div>
-    </Card>
-  );
-}
 
-function EmptyState({ onAdd }: { onAdd: () => void }) {
-  return (
-    <Card className="p-10 text-center">
-      <CalendarDays className="h-10 w-10 mx-auto text-sky-500 mb-3" />
-      <h3 className="font-semibold">No tasks yet</h3>
-      <p className="text-sm text-muted-foreground mt-1 mb-4">Plan your study day — add mocks, sectionals, revision blocks.</p>
-      <Button onClick={onAdd} className="bg-sky-600 hover:bg-sky-700"><Plus className="h-4 w-4 mr-2" /> Add your first task</Button>
+          {!done && !compact && (
+            <div className="flex flex-wrap items-center gap-1.5 mt-3">
+              {link && (
+                <Link to={link}>
+                  <Button size="sm" className="h-7 px-2 text-xs bg-sky-600 hover:bg-sky-700 gap-1">
+                    <Sparkles className="h-3 w-3" /> Open
+                    <ArrowRight className="h-3 w-3 ml-0.5" />
+                  </Button>
+                </Link>
+              )}
+              {!inProgress ? (
+                <Button size="sm" variant="outline" className="h-7 px-2 text-xs gap-1" onClick={() => onStatus(task, "in_progress")}>
+                  <Play className="h-3 w-3" /> Start timer
+                </Button>
+              ) : (
+                <Button size="sm" variant="outline" className="h-7 px-2 text-xs gap-1" onClick={() => onStatus(task, "pending")}>
+                  <Pause className="h-3 w-3" /> Pause
+                </Button>
+              )}
+              {extraActions}
+              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-muted-foreground" onClick={() => onSkip(task)}>
+                Skip…
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
     </Card>
   );
 }
