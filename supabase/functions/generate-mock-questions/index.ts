@@ -902,7 +902,7 @@ Deno.serve(async (req) => {
         let attemptsLocal = 0;
         // Generous retry budget so we ALWAYS hit the requested count even when
         // many candidates are rejected as duplicates. (Was: ceil(q/BATCH)+4 → too tight.)
-        const maxAttempts = Math.max(20, Math.ceil(sec.questions / BATCH_SIZE) * 6);
+        const maxAttempts = Math.max(20, sec.questions * MAX_ATTEMPTS_PER_QUESTION);
         const accepted: any[] = [];
         let firecrawlChecks = 0;
         let consecutiveDupBatches = 0;
