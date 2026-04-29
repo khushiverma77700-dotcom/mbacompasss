@@ -132,11 +132,11 @@ const EXAM_PROFILES: Record<string, {
   },
 };
 
-const BATCH_SIZE = 8; // questions per AI call
+const BATCH_SIZE = 12; // questions per AI call (raised so we hit exact counts faster)
 const OPENAI_TIMEOUT_MS = 90_000;       // single AI call hard timeout
 const FIRECRAWL_TIMEOUT_MS = 6_000;     // single web-check hard timeout
-const SECTION_WALL_CLOCK_MS = 8 * 60_000; // entire section must finish in 8 min
-const MAX_FIRECRAWL_CHECKS_PER_SECTION = 6; // cap web-checks (was unbounded → main stall cause)
+const SECTION_WALL_CLOCK_MS = 15 * 60_000; // entire section must finish in 15 min (raised from 8)
+const MAX_FIRECRAWL_CHECKS_PER_SECTION = 4; // cap web-checks tightly to avoid stalls
 
 // Map mock_section.code (e.g. "DILR") + exam to the personalized_questions catalog
 // Uses src/data/personalizedExams.ts vocabulary so the admin hub counter picks it up.
@@ -482,6 +482,8 @@ async function callOpenAIBatch(args: {
   sets?: number | null;
   questions_per_set?: number | null;
   total_section_questions?: number | null;
+  avoid_topics?: string[];
+  attempt_seed?: string;
 }) {
   const sys = buildSystemPrompt({
     exam: args.exam, exam_full: args.exam_full, category: args.category, level: args.level,
@@ -493,10 +495,14 @@ async function callOpenAIBatch(args: {
     mcq_count: args.mcq,
     tita_count: args.tita,
   });
+  const avoidLine = (args.avoid_topics && args.avoid_topics.length)
+    ? `\n\nDIVERSITY MANDATE: Do NOT repeat or paraphrase questions on these recently-used topic/subtopic combinations: ${args.avoid_topics.slice(0, 12).join(" | ")}. Pick FRESH topics and subtopics within the section's syllabus.`
+    : "";
+  const seedLine = args.attempt_seed ? `\n\nUNIQUENESS SEED (use to vary scenarios): ${args.attempt_seed}` : "";
   const user = buildUserPrompt({
     count: args.count, mcq_count: args.mcq, tita_count: args.tita,
     positive: args.positive, negative: args.negative,
-  });
+  }) + avoidLine + seedLine;
 
   const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
@@ -880,14 +886,17 @@ Deno.serve(async (req) => {
 
         let produced = 0;
         let attemptsLocal = 0;
-        const maxAttempts = Math.ceil(sec.questions / BATCH_SIZE) + 4;
+        // Generous retry budget so we ALWAYS hit the requested count even when
+        // many candidates are rejected as duplicates. (Was: ceil(q/BATCH)+4 → too tight.)
+        const maxAttempts = Math.max(20, Math.ceil(sec.questions / BATCH_SIZE) * 6);
         const accepted: any[] = [];
         const sectionStartedAt = Date.now();
         let firecrawlChecks = 0;
+        let consecutiveDupBatches = 0;
 
         try {
           while (produced < sec.questions && attemptsLocal < maxAttempts) {
-            // Wall-clock guard — never let a section run forever (was the DILR stuck-forever cause).
+            // Wall-clock guard — never let a section run forever.
             if (Date.now() - sectionStartedAt > SECTION_WALL_CLOCK_MS) {
               await updateJob({
                 current_step: `Section timeout after ${Math.round(SECTION_WALL_CLOCK_MS / 60000)} min — saving partial`,
@@ -900,9 +909,11 @@ Deno.serve(async (req) => {
             const remain = sec.questions - produced;
             const setBoundTotal = setsForSec > 0 ? Math.min(sec.questions, setsForSec * questionsPerSet) : 0;
             const generatingSharedSet = setsForSec > 0 && produced < setBoundTotal;
-            const batch = generatingSharedSet
+            // Over-request by ~50% so dedup losses don't starve us. Cap at 16.
+            const askFor = generatingSharedSet
               ? Math.min(questionsPerSet, setBoundTotal - produced)
-              : Math.min(BATCH_SIZE, remain);
+              : Math.min(16, Math.max(remain, Math.ceil(remain * 1.5)));
+            const batch = Math.min(askFor, BATCH_SIZE + 4);
             const remainMcq = Math.max(0, secMcq - accepted.filter(q => q.question_type === "mcq").length);
             const remainTita = Math.max(0, secTita - accepted.filter(q => q.question_type === "tita").length);
             const batchMcq = Math.min(remainMcq, Math.ceil(batch * (remainMcq / Math.max(1, remainMcq + remainTita))));
@@ -910,7 +921,7 @@ Deno.serve(async (req) => {
 
             await updateJob({
               attempts: attemptsLocal,
-              current_step: `Batch ${attemptsLocal}: requesting ${batch} questions…`,
+              current_step: `Batch ${attemptsLocal}: requesting ${batch} questions (have ${produced}/${sec.questions})…`,
             });
 
             let qs: any[] = [];
@@ -926,6 +937,9 @@ Deno.serve(async (req) => {
                 sets: generatingSharedSet ? 1 : 0,
                 questions_per_set: generatingSharedSet ? batch : null,
                 total_section_questions: batch,
+                // Push diversity by telling the AI which topics/subtopics already used
+                avoid_topics: accepted.slice(-12).map((a) => `${a.topic || ""}/${a.subtopic || ""}`).filter(Boolean),
+                attempt_seed: `${attemptsLocal}-${Math.random().toString(36).slice(2, 8)}`,
               });
             } catch (e) {
               console.error(`[generate] ${sec.code} batch ${attemptsLocal} failed:`, e);
@@ -933,13 +947,15 @@ Deno.serve(async (req) => {
               continue;
             }
 
+            let acceptedThisBatch = 0;
             for (const q of qs) {
               if (produced >= sec.questions) break;
               if (!q?.question_html) continue;
               const hash = await sha256(normalizeForHash(q.question_html));
               if (seenHashes.has(hash)) { stats.rejected_dup_db++; continue; }
 
-              // Cap web-checks — unbounded firecrawl was the #1 cause of stuck DILR sections.
+              // Cap web-checks — unbounded firecrawl was the #1 cause of stuck sections.
+              // Default OFF (verify_internet must be explicitly true AND budget remaining).
               if (verify_internet && firecrawlChecks < MAX_FIRECRAWL_CHECKS_PER_SECTION) {
                 firecrawlChecks++;
                 const onWeb = await firecrawlIsOnInternet(q.question_html);
@@ -949,6 +965,15 @@ Deno.serve(async (req) => {
               seenHashes.add(hash);
               accepted.push({ ...q, content_hash: hash });
               produced++;
+              acceptedThisBatch++;
+            }
+
+            // Track dup-storms: 3 batches in a row with 0 accepted ⇒ inject more entropy.
+            if (acceptedThisBatch === 0) consecutiveDupBatches++;
+            else consecutiveDupBatches = 0;
+            if (consecutiveDupBatches >= 3) {
+              console.warn(`[generate] ${sec.code}: 3 consecutive empty batches — heavy dedup pressure`);
+              consecutiveDupBatches = 0;
             }
 
             // Update progress after each batch — this is what animates the UI.
@@ -956,6 +981,10 @@ Deno.serve(async (req) => {
               questions_done: produced,
               current_step: `Generated ${produced}/${sec.questions}`,
             });
+          }
+
+          if (produced < sec.questions) {
+            console.warn(`[generate] ${sec.code} ended at ${produced}/${sec.questions} after ${attemptsLocal} attempts`);
           }
 
           // Mirror to Personalized Hub ONLY for Daily/sectional/topic generations.
