@@ -1,65 +1,68 @@
-## Mock System with Bundle-Based Access — Implementation Plan
+# Premium Mock Platform — Polish & Unification
 
-The core infra (mock_bundles, mock_bundle_items, mock_bundle_enrollments, FeatureGate, CourseMockPicker, AdminMockBundles 3-step wizard) already exists. This plan fills the four real gaps: (1) bundles are not yet linked to `mba_compass_courses`, (2) only `full_length` and `sectional` test types exist, (3) StudentMocks is split by exam series only — not by Full/Sectional/Topic/Practice, (4) there is no consistent locked-mock card or "Attempted" bucket on the frontend.
+The bundle system, course→bundle linking, locked-content UX, four-category filters (Full Length / Sectional / Topic-wise / Practice Sets), exam chips, "Coming Soon" labels and the Attempted tab were all built in the previous turn. This plan covers what's still missing: **premium UI, dark mode, a single performance engine, and admin nav cleanup.**
 
----
+## 1. Central Performance Engine (highest priority)
 
-### 1. Database changes (one migration)
+Today every student page (`StudentOverview`, `StudentPerformance`, `StudentMocks`, day planner) re-queries `mock_attempts` independently with slightly different shapes. We'll consolidate.
 
-- Extend the `test_type` enum: add `topic_wise` and `practice_set`.
-- New table `course_bundles` — many-to-many between `mba_compass_courses` and `mock_bundles`:
-  ```text
-  course_id uuid → mba_compass_courses(id) on delete cascade
-  bundle_id uuid → mock_bundles(id)        on delete cascade
-  sort_order int default 0
-  PRIMARY KEY (course_id, bundle_id)
-  ```
-  RLS: public can SELECT (catalog visibility); admins can write.
-- New trigger function `unlock_course_bundles_on_enrollment()` on `course_enrollments` AFTER INSERT — for every linked bundle, call existing `public.unlock_bundle_mocks(user_id, bundle_id)`. This means buying ONE course auto-grants all its bundles → all their mocks via the existing `mock_enrollments` cascade.
-- Backfill: for any existing `course_enrollments`, insert matching `mock_bundle_enrollments` for already-linked bundles.
+- New hook `src/hooks/useStudentPerformance.ts` — single source of truth.
+  - Fetches `mock_attempts` + `personalized_mock_attempts` + `student_daily_test_progress` once, caches via React Query.
+  - Computes: overall percentile trend, section-wise accuracy, speed (sec/q), strongest/weakest topics, last-7-day activity, streak, total attempts, improvement delta vs previous mock.
+- Realtime: subscribe to `mock_attempts` insert/update for `auth.uid()` so dashboards refresh the moment a mock is submitted (no manual refresh).
+- Refactor `StudentOverview`, `StudentPerformance`, `StudentMocks` (Attempted tab), and the new "My Stats" widget on bundle cards to consume this hook. No isolated queries.
 
-### 2. Admin Panel
+## 2. Dark Mode (LMS + Admin)
 
-**a. Courses ↔ Bundles linker** — `src/pages/admin/AdminMBACompassCourses.tsx`
-Add a "Bundles" step/section to the course edit dialog: multi-select chip list of all published bundles (`mock_bundles`), persisted to `course_bundles`. Show count on course card.
+- Add `next-themes` provider scoped via `class` strategy.
+- Extend `src/index.css` with a `.dark` block mirroring every existing token (background, card, primary stays sky-blue, muted, border, etc.). Keep the white/light-blue brand on light mode untouched.
+- Theme toggle (sun/moon) in `StudentLayout` topbar and `AdminLayout` topbar. Persist in `localStorage` key `mbacompass-theme`.
+- Public marketing pages stay forced-light (wrap `<PublicLayout>` with `data-theme="light"` override) to protect SEO/brand.
+- Audit cards / charts (recharts) for hardcoded `#fff` / `bg-white` and swap to `bg-card text-card-foreground` so dark mode looks polished, not inverted.
 
-**b. Mock Test type selector** — `src/pages/admin/AdminMockTests.tsx`
-Add `topic_wise` and `practice_set` to the test_type dropdown with labels "Topic-wise Test" and "Practice Set".
+## 3. Premium UI Pass on Student LMS
 
-**c. AdminMockBundles** — already 3-step. Update `CourseMockPicker` Type sub-tabs to include the two new types so admins can pick topic/practice mocks into a bundle. Already wired via `included_categories`; just extend the type list.
+Apply a consistent "high-end" visual language across `/student/*`:
 
-### 3. Student Frontend — `/student/mocks` (`StudentMocks.tsx`)
+- **Stat cards**: gradient ring, large number, delta chip (↑12% vs last mock), micro-sparkline. Reusable `<StatCard>` component.
+- **Section headers**: H2 + one-line tooltip explainer (lucide `Info` icon).
+- **Charts**: unify color palette via CSS vars (sky-500, blue-600, cyan-400) so they auto-recolor in dark mode. Add subtle grid, rounded corners, hover tooltips with section icons.
+- **Bundle / mock cards** on `StudentMocks`: glassmorphism on hover, "Locked" overlay uses blurred backdrop + lock icon + CTA "Upgrade to unlock", "Coming Soon" uses gradient ribbon with launch date countdown.
+- **Attempted tab**: each row shows score, percentile band (color-coded), accuracy bar, time used, and three CTAs (View Report / Solutions / Leaderboard).
+- **Skeleton loaders** everywhere instead of "Loading…" text.
+- **Empty states**: friendly illustration + single primary CTA.
 
-Restructure into a **two-level tab system**:
+No new routes — pure presentational refactor of existing pages.
 
-- **Primary tabs (test type):** Full Length · Sectional · Topic-wise · Practice Sets · Attempted
-- **Secondary chip filters (exam):** All · CAT · XAT · NMAT · SNAP · IIFT · CMAT · MAT · TISSNET
+## 4. Feature Toggle Visibility
 
-Behavior:
-- Query both `mock_enrollments` (for owned/accessible mocks) AND a catalog of all published mocks matching the user's enrolled bundle types — so unowned mocks render as locked cards instead of being hidden. Use the existing `<FeatureGate>`/`UpgradeDialog` pattern.
-- **Coming Soon:** any mock with `launch_date > now()` OR `scheduled_start_at > now()` shows a "Coming Soon · DD MMM" badge and disables the Start button.
-- **Attempted tab:** mocks where the user has at least one `submitted`/`auto_submitted` `mock_attempts` row, showing score, percentile, accuracy with Result + Review CTAs.
-- **Empty state per tab:** "No [Topic-wise] mocks in your active courses yet — Upgrade course to unlock this content." with a "Browse Courses" CTA to `/courses`.
+`FeatureGate` and `course_features` already exist. We'll make the OFF behavior cleaner:
 
-### 4. Locked content card
+- When a feature is OFF for the student's enrolled course(s), hide the nav item entirely (today it shows a lock badge). Add a single "Locked features" section at the bottom of `/student` overview listing what's available with an upgrade.
+- Admin `Course Builder → Features` step already has ON/OFF toggles — verify Daily Tests, Personalized Hub, AI Tools toggles map correctly and tighten copy.
 
-Reuse `<FeatureGate>` visual: blurred mock card + lock icon + message "Upgrade course to unlock this content." + "Upgrade" button → `UpgradeDialog`. Apply when a mock appears in the catalog (matches user's exam interest / is published) but the user has no active enrollment for it.
+## 5. Admin Nav Cleanup (mock group only)
 
-### 5. Memory update
+In `src/pages/admin/adminNav.ts`, rename the "CAT Mock Tests" group to **"Mock Platform"** with exactly four primary items:
 
-Update `mem://features/mock-bundles` to note: (a) bundles now link to courses via `course_bundles`, (b) test_type enum includes `topic_wise` and `practice_set`, (c) StudentMocks is structured by type × exam with an Attempted tab.
+```text
+Mock Platform
+├── Courses    → /admin/mba-compass-courses
+├── Bundles    → /admin/mock-bundles
+├── Mocks      → /admin/mock-tests
+└── Students   → /admin/student-mocks
+```
 
----
+Move the secondary mock items (Landing Page, Personalized Hub, Daily Tests, Announcements, Push Notifications) into a collapsible "More tools" sub-group under Mock Platform. All other admin groups (Institutes, Colleges, Content, Leads, etc.) stay exactly as they are.
 
-### Out of scope (already working)
+## Files touched
 
-- Bundle creation wizard, feature toggles, FeatureGate, UpgradeDialog
-- `unlock_bundle_mocks` RPC and `mock_bundle_enrollments → mock_enrollments` sync trigger
-- Razorpay course/bundle checkout
-- Admin Students panel (already at `/admin/student-mocks`)
+- **New**: `src/hooks/useStudentPerformance.ts`, `src/components/student/StatCard.tsx`, `src/components/student/EmptyState.tsx`, `src/components/ThemeToggle.tsx`, `src/contexts/ThemeProvider.tsx`.
+- **Edited**: `src/index.css` (dark tokens), `src/App.tsx` (wrap with ThemeProvider), `src/pages/student/StudentLayout.tsx` (toggle + hide locked nav), `src/pages/student/StudentOverview.tsx`, `src/pages/student/StudentPerformance.tsx`, `src/pages/student/StudentMocks.tsx`, `src/pages/admin/AdminLayout.tsx` (toggle), `src/pages/admin/adminNav.ts` (group rename + restructure).
+- **No DB migrations** — bundles, course_bundles, enums, triggers were all created last turn.
 
-### Risk notes
+## Out of scope
 
-- Adding enum values is non-destructive; existing rows unchanged.
-- The trigger on `course_enrollments` is additive — it won't revoke access if a course's bundle list is later edited (intentional; revocation would need explicit admin tooling).
-- Catalog query for locked cards must respect `is_published = true` to avoid leaking drafts.
+- Marketing pages dark mode (kept light intentionally).
+- New AI features — performance analytics reuses existing `mock_attempts` columns, no new edge functions.
+- Schema changes — already in place.
