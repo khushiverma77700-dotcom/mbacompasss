@@ -3676,8 +3676,14 @@ export type Database = {
           created_at: string
           created_by: string | null
           current_step: string | null
+          dup_db_conflict: number
+          dup_hash: number
+          dup_paraphrase: number
+          dup_similarity: number
+          duplicates_rejected: number
           error_message: string | null
           exam_code: string
+          final_reason: string | null
           generation_id: string | null
           id: string
           level: string
@@ -3685,6 +3691,7 @@ export type Database = {
           negative_marks: number
           positive_marks: number
           questions_done: number
+          rejected_invalid: number
           section_code: string
           section_id: string
           section_name: string
@@ -3704,8 +3711,14 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           current_step?: string | null
+          dup_db_conflict?: number
+          dup_hash?: number
+          dup_paraphrase?: number
+          dup_similarity?: number
+          duplicates_rejected?: number
           error_message?: string | null
           exam_code: string
+          final_reason?: string | null
           generation_id?: string | null
           id?: string
           level?: string
@@ -3713,6 +3726,7 @@ export type Database = {
           negative_marks?: number
           positive_marks?: number
           questions_done?: number
+          rejected_invalid?: number
           section_code: string
           section_id: string
           section_name: string
@@ -3732,8 +3746,14 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           current_step?: string | null
+          dup_db_conflict?: number
+          dup_hash?: number
+          dup_paraphrase?: number
+          dup_similarity?: number
+          duplicates_rejected?: number
           error_message?: string | null
           exam_code?: string
+          final_reason?: string | null
           generation_id?: string | null
           id?: string
           level?: string
@@ -3741,6 +3761,7 @@ export type Database = {
           negative_marks?: number
           positive_marks?: number
           questions_done?: number
+          rejected_invalid?: number
           section_code?: string
           section_id?: string
           section_name?: string
@@ -5869,8 +5890,14 @@ export type Database = {
           created_at: string
           created_by: string | null
           current_step: string | null
+          dup_db_conflict: number
+          dup_hash: number
+          dup_paraphrase: number
+          dup_similarity: number
+          duplicates_rejected: number
           error_message: string | null
           exam_code: string
+          final_reason: string | null
           generation_id: string | null
           id: string
           level: string
@@ -5878,6 +5905,7 @@ export type Database = {
           negative_marks: number
           positive_marks: number
           questions_done: number
+          rejected_invalid: number
           section_code: string
           section_id: string
           section_name: string
