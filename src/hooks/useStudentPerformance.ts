@@ -105,7 +105,13 @@ export function useStudentPerformance(): StudentPerformanceData {
       };
     }
     const totalScore = submitted.reduce((s, x) => s + Number(x.total_score || 0), 0);
-    const totalSec = submitted.reduce((s, x) => s + Number(x.time_spent_seconds || 0), 0);
+    const totalSec = submitted.reduce((s, x) => {
+      if (x.started_at && x.submitted_at) {
+        const diff = (new Date(x.submitted_at).getTime() - new Date(x.started_at).getTime()) / 1000;
+        return s + Math.max(0, diff);
+      }
+      return s;
+    }, 0);
     const ps = submitted.map((x) => Number(x.percentile || 0));
     const accs = submitted.map((x) => Number(x.accuracy || 0));
 
