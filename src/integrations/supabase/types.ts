@@ -1403,6 +1403,42 @@ export type Database = {
           },
         ]
       }
+      course_bundles: {
+        Row: {
+          bundle_id: string
+          course_id: string
+          created_at: string
+          sort_order: number
+        }
+        Insert: {
+          bundle_id: string
+          course_id: string
+          created_at?: string
+          sort_order?: number
+        }
+        Update: {
+          bundle_id?: string
+          course_id?: string
+          created_at?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_bundles_bundle_id_fkey"
+            columns: ["bundle_id"]
+            isOneToOne: false
+            referencedRelation: "mock_bundles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "course_bundles_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "mba_compass_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       course_categories: {
         Row: {
           active: boolean | null
@@ -5876,7 +5912,12 @@ export type Database = {
         | "IGE"
         | "VARC_DI"
         | "DILR_GK"
-      mock_test_type: "full_length" | "sectional" | "topic"
+      mock_test_type:
+        | "full_length"
+        | "sectional"
+        | "topic"
+        | "topic_wise"
+        | "practice_set"
       ticket_category:
         | "mock_issue"
         | "payment_issue"
@@ -6056,7 +6097,13 @@ export const Constants = {
         "VARC_DI",
         "DILR_GK",
       ],
-      mock_test_type: ["full_length", "sectional", "topic"],
+      mock_test_type: [
+        "full_length",
+        "sectional",
+        "topic",
+        "topic_wise",
+        "practice_set",
+      ],
       ticket_category: [
         "mock_issue",
         "payment_issue",
