@@ -25,13 +25,13 @@ export default function StudentTools() {
             to={t.href}
             className="group block"
           >
-            <Card className="p-5 h-full hover:shadow-lg hover:border-sky-300 transition-all bg-gradient-to-br from-white to-sky-50/40">
+            <Card className="p-5 h-full hover:shadow-lg hover:border-sky-300 dark:hover:border-sky-500/40 transition-all bg-gradient-to-br from-white to-sky-50/40 dark:from-slate-900 dark:to-sky-950/30">
               <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white mb-3">
                 <t.icon className="h-5 w-5" />
               </div>
-              <h3 className="font-semibold">{t.title}</h3>
+              <h3 className="font-semibold text-foreground">{t.title}</h3>
               <p className="text-xs text-muted-foreground mt-1">{t.desc}</p>
-              <div className="text-xs text-sky-700 mt-3 font-medium group-hover:underline">Open →</div>
+              <div className="text-xs text-sky-700 dark:text-sky-400 mt-3 font-medium group-hover:underline">Open →</div>
             </Card>
           </Link>
         ))}
