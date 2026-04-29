@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -25,6 +25,23 @@ const TYPE_TABS: { key: TypeKey; label: string; icon: any }[] = [
   { key: "attempted",    label: "Attempted",     icon: History },
 ];
 
+// Map a URL slug → fixed test type. Used by /student/mocks/full-length etc.
+const SLUG_TO_TYPE: Record<string, TypeKey> = {
+  "full-length": "full_length",
+  "sectional": "sectional",
+  "topic-wise": "topic_wise",
+  "practice": "practice_set",
+  "attempted": "attempted",
+};
+
+const TYPE_TITLES: Record<TypeKey, { title: string; subtitle: string }> = {
+  full_length:  { title: "Full Length Mocks",  subtitle: "Exam-day simulations across all sections." },
+  sectional:    { title: "Sectional Mocks",    subtitle: "Single-section drills to fix weak areas." },
+  topic_wise:   { title: "Topic-wise Tests",   subtitle: "Bite-sized practice on specific topics." },
+  practice_set: { title: "Practice Sets",      subtitle: "Mixed question banks for daily practice." },
+  attempted:    { title: "Previous Attempts",  subtitle: "Every mock you've submitted with results." },
+};
+
 type Test = {
   id: string;
   name: string;
@@ -49,12 +66,24 @@ type Attempt = {
   total_correct: number | null; total_attempted: number | null;
 };
 
-export default function StudentMocks() {
+interface StudentMocksProps {
+  fixedType?: TypeKey;
+}
+
+export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksProps = {}) {
   const { user } = useAuth();
+  const params = useParams();
+  const location = useLocation();
+  // Resolve a fixed type either from props or from the URL slug.
+  const fixedType: TypeKey | null = useMemo(() => {
+    if (fixedTypeProp) return fixedTypeProp;
+    const last = location.pathname.split("/").pop() ?? "";
+    return SLUG_TO_TYPE[last] ?? null;
+  }, [fixedTypeProp, location.pathname, params]);
+
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [tests, setTests] = useState<Record<string, Test>>({});
-  const [catalog, setCatalog] = useState<Test[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [examFilter, setExamFilter] = useState<string>("All");
@@ -93,7 +122,6 @@ export default function StudentMocks() {
       setEnrollments(enr);
       setAttempts((a ?? []) as Attempt[]);
       setTests(tMap);
-      setCatalog((c ?? []) as Test[]);
       setLoading(false);
     })();
   }, [user]);
@@ -127,7 +155,6 @@ export default function StudentMocks() {
           const t = tests[a.test_id];
           if (t && matchesExam(t) && matchesQuery(t)) items.push({ test: t, attempt: a });
         });
-      // dedupe by test_id keeping best/latest
       const seen = new Set<string>();
       return items.filter((i) => {
         if (seen.has(i.test.id)) return false;
@@ -135,7 +162,6 @@ export default function StudentMocks() {
       });
     }
 
-    // For each test of this type matching filters, classify owned vs locked
     const list = Object.values(tests)
       .filter((t) => getKind(t) === typeKey)
       .filter(matchesExam)
@@ -153,12 +179,15 @@ export default function StudentMocks() {
   if (!user) return <div className="text-muted-foreground">Please sign in.</div>;
   if (loading) return <div className="text-muted-foreground">Loading mocks…</div>;
 
+  // Header content varies based on whether we're filtered to one type or showing all.
+  const heading = fixedType ? TYPE_TITLES[fixedType] : { title: "My Mocks", subtitle: "Structured by format and exam — locked mocks are part of bundles you haven't unlocked yet." };
+
   return (
     <div className="space-y-5">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold">My Mocks</h1>
-          <p className="text-sm text-muted-foreground">Structured by format and exam — locked mocks are part of bundles you haven't unlocked yet.</p>
+          <h1 className="text-2xl font-bold">{heading.title}</h1>
+          <p className="text-sm text-muted-foreground">{heading.subtitle}</p>
         </div>
         <Link to="/courses">
           <Button className="gap-2">
@@ -184,7 +213,7 @@ export default function StudentMocks() {
             className={`px-3 py-1 rounded-full text-xs border transition-colors ${
               examFilter === f
                 ? "bg-sky-600 text-white border-sky-600"
-                : "bg-white text-foreground border-sky-100 hover:bg-sky-50"
+                : "bg-card text-foreground border-border hover:bg-accent"
             }`}
           >
             {f}
@@ -192,35 +221,48 @@ export default function StudentMocks() {
         ))}
       </div>
 
-      {/* Type tabs */}
-      <Tabs defaultValue="full_length">
-        <TabsList className="flex-wrap h-auto">
-          {TYPE_TABS.map((t) => {
-            const Icon = t.icon;
-            const count = buildBucket(t.key).length;
-            return (
-              <TabsTrigger key={t.key} value={t.key} className="gap-1.5">
-                <Icon className="h-3.5 w-3.5" /> {t.label} ({count})
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
+      {/* If a fixed type is set, render just that bucket. Otherwise show tabs. */}
+      {fixedType ? (
+        fixedType === "attempted" ? (
+          <AttemptedGrid items={buildBucket("attempted") as any} />
+        ) : (
+          <BucketGrid
+            items={buildBucket(fixedType) as any}
+            typeLabel={TYPE_TITLES[fixedType].title}
+            examFilter={examFilter}
+            onUpgrade={() => setUpgradeOpen(true)}
+          />
+        )
+      ) : (
+        <Tabs defaultValue="full_length">
+          <TabsList className="flex-wrap h-auto">
+            {TYPE_TABS.map((t) => {
+              const Icon = t.icon;
+              const count = buildBucket(t.key).length;
+              return (
+                <TabsTrigger key={t.key} value={t.key} className="gap-1.5">
+                  <Icon className="h-3.5 w-3.5" /> {t.label} ({count})
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
 
-        {TYPE_TABS.map((t) => (
-          <TabsContent key={t.key} value={t.key} className="mt-4">
-            {t.key === "attempted" ? (
-              <AttemptedGrid items={buildBucket("attempted") as any} />
-            ) : (
-              <BucketGrid
-                items={buildBucket(t.key) as any}
-                typeLabel={t.label}
-                examFilter={examFilter}
-                onUpgrade={() => setUpgradeOpen(true)}
-              />
-            )}
-          </TabsContent>
-        ))}
-      </Tabs>
+          {TYPE_TABS.map((t) => (
+            <TabsContent key={t.key} value={t.key} className="mt-4">
+              {t.key === "attempted" ? (
+                <AttemptedGrid items={buildBucket("attempted") as any} />
+              ) : (
+                <BucketGrid
+                  items={buildBucket(t.key) as any}
+                  typeLabel={t.label}
+                  examFilter={examFilter}
+                  onUpgrade={() => setUpgradeOpen(true)}
+                />
+              )}
+            </TabsContent>
+          ))}
+        </Tabs>
+      )}
 
       <UpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} featureLabel="this mock" />
     </div>
@@ -249,7 +291,7 @@ function BucketGrid({
         <div className="font-medium">
           No {typeLabel}{examFilter !== "All" ? ` (${examFilter})` : ""} mocks in your active courses yet.
         </div>
-        <p className="text-sm text-muted-foreground mt-1 mb-4">Upgrade course to unlock this content.</p>
+        <p className="text-sm text-muted-foreground mt-1 mb-4">Upgrade your course to access this section.</p>
         <Link to="/courses">
           <Button className="gap-2"><ShoppingBag className="h-4 w-4" /> Browse Courses</Button>
         </Link>
