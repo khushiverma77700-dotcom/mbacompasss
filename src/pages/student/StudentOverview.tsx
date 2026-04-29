@@ -232,106 +232,199 @@ export default function StudentOverview() {
 
   if (loading) return <div className="text-muted-foreground">Loading dashboard…</div>;
 
-  const noProfile = !profile;
-  const target = Number(profile?.target_percentile || 0);
-  const gap = target && predicted != null ? +(target - predicted).toFixed(1) : null;
+  const firstName = (displayName || "Student").split(" ")[0];
+  const initial = (displayName || "S").charAt(0).toUpperCase();
+  const targetProgress = target > 0 && predicted != null ? Math.min(100, Math.round((predicted / target) * 100)) : 0;
 
   return (
     <div className="space-y-6">
-      {/* Hero */}
-      <Card className="p-6 bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-600 text-white border-0 shadow-xl relative overflow-hidden">
-        <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl pointer-events-none" />
-        <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-white/10 blur-2xl pointer-events-none" />
-        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <div className="text-sm text-sky-100 mb-1">CAT 2026 Improvement Engine</div>
-            <h1 className="text-2xl md:text-3xl font-bold">
-              {predicted != null ? `Projected: ${predicted}%ile` : "Welcome to your prep cockpit"}
-            </h1>
-            <p className="text-sky-100 mt-1 text-sm">
-              {target && gap != null
-                ? gap > 0
-                  ? `${gap} %ile away from your ${target}%ile target — keep grinding.`
-                  : `You're already ahead of your ${target}%ile target. Push higher!`
-                : stats.submittedCount > 0
-                  ? `You've completed ${stats.submittedCount} mock${stats.submittedCount > 1 ? "s" : ""} • Best %ile ${stats.bestPercentile}`
-                  : "Take your first mock to unlock AI insights and percentile predictions."}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {resumeMock ? (
-              <Link to={`/mocks/attempt/${resumeMock.id}`}>
-                <Button size="lg" variant="secondary" className="gap-2">
-                  <Clock className="h-4 w-4" /> Resume Mock
-                </Button>
-              </Link>
-            ) : nextMock?.test?.slug ? (
-              <Link to={`/mocks/${nextMock.test.slug}`}>
-                <Button size="lg" variant="secondary" className="gap-2">
-                  Start Next Mock <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            ) : (
-              <Link to="/student/buy-mocks">
-                <Button size="lg" variant="secondary" className="gap-2">
-                  <ShoppingBag className="h-4 w-4" /> Buy Mocks
-                </Button>
-              </Link>
-            )}
-          </div>
-        </div>
+      {/* ── HERO: Personalised greeting + projection ring + smart CTAs ───────── */}
+      <Card className="relative overflow-hidden border-0 shadow-xl bg-gradient-to-br from-sky-600 via-blue-600 to-indigo-700 text-white">
+        {/* Decorative orbs (non-interactive) */}
+        <div className="absolute -top-24 -right-16 h-72 w-72 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-20 -left-12 h-56 w-56 rounded-full bg-cyan-300/15 blur-3xl pointer-events-none" />
+        <div
+          className="absolute inset-0 opacity-[0.07] pointer-events-none"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.6) 1px, transparent 0)",
+            backgroundSize: "22px 22px",
+          }}
+        />
 
-        <div className="relative mt-5 grid grid-cols-2 md:grid-cols-6 gap-2 text-white/95">
-          <Kpi label="Enrolled" value={stats.enrolledCount} />
-          <Kpi label="Completed" value={stats.submittedCount} />
-          <Kpi label="Avg %ile" value={stats.avgPercentile} />
-          <Kpi label="Best %ile" value={stats.bestPercentile} />
-          <Kpi label="Accuracy" value={`${stats.accuracy}%`} />
-          <Kpi label="Streak" value={`${stats.streak}d`} icon={<Flame className="h-3.5 w-3.5" />} />
+        <div className="relative p-6 md:p-8">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            {/* Left: greeting */}
+            <div className="flex items-start gap-4 min-w-0 flex-1">
+              <div className="h-14 w-14 rounded-2xl bg-white/15 backdrop-blur-sm grid place-items-center text-2xl font-bold border border-white/25 shadow-inner shrink-0">
+                {initial}
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 text-xs text-sky-100/90">
+                  <CalendarDays className="h-3.5 w-3.5" />
+                  <span>{todayLabel}</span>
+                  {stats.streak > 0 && (
+                    <span className="inline-flex items-center gap-1 ml-2 px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-300/30 text-amber-100">
+                      <Flame className="h-3 w-3" /> {stats.streak}-day streak
+                    </span>
+                  )}
+                </div>
+                <h1 className="text-2xl md:text-3xl font-bold mt-1 leading-tight">
+                  {greeting}, <span className="text-cyan-200">{firstName}</span>
+                </h1>
+                <p className="text-sky-100/90 mt-1.5 text-sm max-w-lg">
+                  {target && gap != null
+                    ? gap > 0
+                      ? `You're ${gap} %ile away from your ${target}%ile target — let's close the gap.`
+                      : `You've crossed your ${target}%ile target. Aim higher today!`
+                    : stats.submittedCount > 0
+                      ? `${stats.submittedCount} mock${stats.submittedCount > 1 ? "s" : ""} done, best at ${stats.bestPercentile}%ile. Keep momentum.`
+                      : "Take your first mock to unlock AI-powered insights and a personalised plan."}
+                </p>
+
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {resumeMock ? (
+                    <Link to={`/mocks/attempt/${resumeMock.id}`}>
+                      <Button size="lg" className="gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-lg">
+                        <Clock className="h-4 w-4" /> Resume Mock
+                      </Button>
+                    </Link>
+                  ) : nextMock?.test?.slug ? (
+                    <Link to={`/mocks/${nextMock.test.slug}`}>
+                      <Button size="lg" className="gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-lg">
+                        <Rocket className="h-4 w-4" /> Start Next Mock
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Link to="/student/buy-mocks">
+                      <Button size="lg" className="gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-lg">
+                        <ShoppingBag className="h-4 w-4" /> Browse Mocks
+                      </Button>
+                    </Link>
+                  )}
+                  <Link to="/student/goals">
+                    <Button size="lg" variant="outline" className="gap-2 bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm">
+                      <Target className="h-4 w-4" /> Score Engine
+                    </Button>
+                  </Link>
+                  <Link to="/student/day-planner">
+                    <Button size="lg" variant="ghost" className="gap-2 text-white hover:bg-white/15 hover:text-white">
+                      <CalendarDays className="h-4 w-4" /> Today's Plan
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: projection ring */}
+            <div className="shrink-0 w-full lg:w-auto">
+              <div className="rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-5 flex items-center gap-5 min-w-[280px]">
+                <div className="relative h-24 w-24 shrink-0">
+                  <svg viewBox="0 0 100 100" className="h-24 w-24 -rotate-90">
+                    <circle cx="50" cy="50" r="42" stroke="rgba(255,255,255,0.15)" strokeWidth="9" fill="none" />
+                    <circle
+                      cx="50" cy="50" r="42" stroke="white" strokeWidth="9" fill="none"
+                      strokeDasharray={2 * Math.PI * 42}
+                      strokeDashoffset={(1 - (predicted ?? 0) / 100) * 2 * Math.PI * 42}
+                      strokeLinecap="round"
+                      className="transition-all duration-1000"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 grid place-items-center text-center">
+                    <div>
+                      <div className="text-2xl font-bold leading-none">{predicted ?? "—"}</div>
+                      <div className="text-[9px] uppercase tracking-wider text-sky-100/80 mt-0.5">%ile</div>
+                    </div>
+                  </div>
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[10px] uppercase tracking-wider text-sky-100/80">Projected Percentile</div>
+                  <div className="text-sm font-semibold mt-0.5">
+                    {target > 0 ? `Target ${target}%ile` : "Set a target to track gap"}
+                  </div>
+                  {target > 0 && (
+                    <div className="mt-2">
+                      <div className="h-1.5 w-40 rounded-full bg-white/15 overflow-hidden">
+                        <div
+                          className="h-full bg-gradient-to-r from-cyan-300 to-emerald-300 transition-all duration-700"
+                          style={{ width: `${targetProgress}%` }}
+                        />
+                      </div>
+                      <div className="text-[10px] text-sky-100/80 mt-1">{targetProgress}% to target</div>
+                    </div>
+                  )}
+                  <Link to="/student/performance" className="inline-flex items-center text-xs text-cyan-200 hover:text-white mt-2">
+                    View deep analytics <ChevronRight className="h-3 w-3" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Inline KPI strip */}
+          <div className="relative mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+            <Kpi label="Enrolled" value={stats.enrolledCount} />
+            <Kpi label="Completed" value={stats.submittedCount} />
+            <Kpi label="Avg %ile" value={stats.avgPercentile} />
+            <Kpi label="Best %ile" value={stats.bestPercentile} />
+            <Kpi label="Accuracy" value={`${stats.accuracy}%`} />
+            <Kpi label="Streak" value={`${stats.streak}d`} icon={<Flame className="h-3.5 w-3.5" />} />
+          </div>
         </div>
       </Card>
+
+      {/* ── Quick navigation rail ────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <QuickAction to="/student/personalized-hub" icon={Sparkles} label="Personalized Hub" desc="AI-built mocks" tone="violet" />
+        <QuickAction to="/student/mocks/full-length" icon={Layers} label="Full-Length Mocks" desc="Exam-grade tests" tone="sky" />
+        <QuickAction to="/student/performance" icon={BarChart3} label="Deep Analytics" desc="Track every metric" tone="emerald" />
+        <QuickAction to="/student/leaderboard" icon={Trophy} label="Leaderboard" desc="See where you rank" tone="amber" />
+      </div>
 
       <DailyTestCard />
 
       {/* Setup banner */}
       {noProfile && (
-        <Card className="p-5 border-sky-200 bg-sky-50/50">
+        <Card className="p-5 border-sky-200 bg-gradient-to-r from-sky-50 to-blue-50/40 dark:from-sky-500/10 dark:to-blue-500/5 dark:border-sky-500/20">
           <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-lg bg-sky-100 grid place-items-center">
-              <Sparkles className="h-5 w-5 text-sky-700" />
+            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center shadow-md shrink-0">
+              <Sparkles className="h-5 w-5 text-white" />
             </div>
-            <div className="flex-1">
-              <div className="font-semibold">Set up your CAT Score Engine</div>
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold flex items-center gap-2">
+                Set up your CAT Score Engine
+                <Badge variant="secondary" className="text-[10px]">Recommended</Badge>
+              </div>
               <p className="text-sm text-muted-foreground">
                 Tell us your target percentile, weak areas and study hours — we'll generate a personalised AI plan.
               </p>
             </div>
-            <Link to="/student/goals">
+            <Link to="/student/goals" className="shrink-0">
               <Button>Set up now <ArrowRight className="h-4 w-4 ml-1" /></Button>
             </Link>
           </div>
         </Card>
       )}
 
-      {/* Headline stat tiles */}
+      {/* ── Headline stat tiles ──────────────────────────────────────────────── */}
       <div>
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Headline numbers</h2>
+        <SectionHeading icon={Gauge} title="Your numbers at a glance" subtitle="Live snapshot — updates the moment you submit a mock" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatTile icon={BookOpenCheck} label="Mocks Enrolled" value={stats.enrolledCount} sub={`${stats.inProgressCount} in progress`} accent="from-sky-500 to-blue-600" />
-          <StatTile icon={CheckCircle2} label="Mocks Completed" value={stats.submittedCount} sub={stats.improvement >= 0 ? `+${stats.improvement} %ile growth` : `${stats.improvement} %ile drift`} accent="from-emerald-500 to-teal-600" />
-          <StatTile icon={Trophy} label="Best Percentile" value={stats.bestPercentile} sub={`Avg ${stats.avgPercentile}`} accent="from-amber-500 to-orange-600" />
-          <StatTile icon={Activity} label="Questions Solved" value={stats.totalAttempted} sub={`${stats.totalCorrect} correct`} accent="from-rose-500 to-pink-600" />
+          <StatTile icon={BookOpenCheck} label="Mocks Enrolled" value={stats.enrolledCount} sub={`${stats.inProgressCount} in progress`} tone="sky" />
+          <StatTile icon={CheckCircle2} label="Mocks Completed" value={stats.submittedCount} sub={stats.improvement >= 0 ? `▲ ${stats.improvement} %ile growth` : `▼ ${Math.abs(stats.improvement)} %ile`} tone="emerald" trend={stats.improvement} />
+          <StatTile icon={Trophy} label="Best Percentile" value={stats.bestPercentile} sub={`Avg ${stats.avgPercentile}`} tone="amber" />
+          <StatTile icon={Activity} label="Questions Solved" value={stats.totalAttempted} sub={`${stats.totalCorrect} correct`} tone="rose" />
         </div>
       </div>
 
       {/* Score & Time stats */}
       <div>
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Scores & time invested</h2>
+        <SectionHeading icon={Award} title="Scores & time invested" subtitle="How hard you've worked and how it's paying off" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatTile icon={Award} label="Avg Total Score" value={`${stats.avgScore}`} sub={`out of ${stats.avgMaxScore}`} accent="from-indigo-500 to-violet-600" />
-          <StatTile icon={Percent} label="Avg % of Max" value={`${stats.avgPctScore}%`} sub="across all mocks" accent="from-cyan-500 to-sky-600" />
-          <StatTile icon={Timer} label="Total Hours" value={`${stats.totalHours}h`} sub={`Avg ${stats.avgTimeMin} min/mock`} accent="from-fuchsia-500 to-pink-600" />
-          <StatTile icon={Gauge} label="Consistency" value={`${stats.consistency}/100`} sub="100 = zero variance" accent="from-emerald-500 to-green-600" />
+          <StatTile icon={Award} label="Avg Total Score" value={`${stats.avgScore}`} sub={`out of ${stats.avgMaxScore}`} tone="violet" />
+          <StatTile icon={Percent} label="Avg % of Max" value={`${stats.avgPctScore}%`} sub="across all mocks" tone="cyan" />
+          <StatTile icon={Timer} label="Total Hours" value={`${stats.totalHours}h`} sub={`Avg ${stats.avgTimeMin} min/mock`} tone="fuchsia" />
+          <StatTile icon={Gauge} label="Consistency" value={`${stats.consistency}/100`} sub="100 = zero variance" tone="green" />
         </div>
       </div>
 
