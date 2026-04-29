@@ -437,6 +437,7 @@ Deno.serve(async (req) => {
                 }
               } else {
                 await admin.from("mock_questions").delete().eq("id", qRow.id);
+                rejectedInvalid++;
                 continue;
               }
             }
@@ -447,9 +448,16 @@ Deno.serve(async (req) => {
             await admin.from("personalized_questions").insert(hubRows);
           }
 
+          const totalDup = dupHash + dupSimilarity + dupParaphrase + dupDb;
           await admin.from("mock_section_jobs").update({
             questions_done: produced,
             current_step: `Generated ${produced}/${target}`,
+            duplicates_rejected: totalDup,
+            dup_hash: dupHash,
+            dup_similarity: dupSimilarity,
+            dup_paraphrase: dupParaphrase,
+            dup_db_conflict: dupDb,
+            rejected_invalid: rejectedInvalid,
             worker_lock_until: new Date(Date.now() + 8 * 60_000).toISOString(),
             updated_at: new Date().toISOString(),
           }).eq("id", job_id);
