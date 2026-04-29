@@ -147,9 +147,16 @@ export default function StudentLayout() {
 
 function SidebarContent() {
   const { counts, markSeen } = useStudentNavBadges();
+  const { isEnabled, loading: featuresLoading } = useEnrolledBundleFeatures();
+  // Hide locked items entirely once features have loaded.
+  const visibleItems = navItems.filter((item) => {
+    if (!item.feature) return true;
+    if (featuresLoading) return true;
+    return isEnabled(item.feature);
+  });
   return (
     <nav className="w-full p-4 space-y-1">
-      {navItems.map((item) => {
+      {visibleItems.map((item) => {
         const badge = counts[item.to] ?? 0;
         return (
           <NavLink
@@ -161,8 +168,8 @@ function SidebarContent() {
               cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors relative",
                 isActive
-                  ? "bg-gradient-to-r from-sky-100 to-blue-50 text-sky-700 shadow-sm"
-                  : "text-gray-700 hover:bg-sky-50 hover:text-sky-700"
+                  ? "bg-gradient-to-r from-sky-100 to-blue-50 text-sky-700 shadow-sm dark:from-sky-500/15 dark:to-blue-500/10 dark:text-sky-200"
+                  : "text-foreground/80 hover:bg-accent hover:text-foreground"
               )
             }
           >
@@ -171,7 +178,7 @@ function SidebarContent() {
               {badge > 0 && (
                 <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500 ring-2 ring-white" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500 ring-2 ring-card" />
                 </span>
               )}
             </span>
@@ -181,14 +188,13 @@ function SidebarContent() {
                 {badge > 9 ? "9+" : badge}
               </span>
             )}
-            {item.feature && <FeatureLockBadge feature={item.feature} />}
           </NavLink>
         );
       })}
-      <div className="pt-4 mt-4 border-t border-sky-100">
+      <div className="pt-4 mt-4 border-t border-border">
         <Link
           to="/mocks"
-          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-sky-700 px-3 py-2"
+          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground px-3 py-2"
         >
           Browse all mocks →
         </Link>
