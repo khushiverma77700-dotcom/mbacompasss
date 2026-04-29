@@ -217,7 +217,7 @@ Deno.serve(async (req) => {
     const { data: roleRow } = await admin.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
     if (!roleRow) return jsonResp(403, { error: "Admin role required" });
 
-    const { job_id } = await req.json();
+    const { job_id, auto = false } = await req.json();
     if (!job_id) return jsonResp(400, { error: "job_id required" });
 
     const { data: job, error: jobErr } = await admin.from("mock_section_jobs").select("*").eq("id", job_id).single();
@@ -228,7 +228,7 @@ Deno.serve(async (req) => {
       status: "processing",
       current_step: "Restart requested — re-calling AI…",
       error_message: null,
-      attempts: (job.attempts || 0) + 1,
+      attempts: auto ? (job.attempts || 0) : (job.attempts || 0) + 1,
       updated_at: new Date().toISOString(),
     }).eq("id", job_id);
 
@@ -359,6 +359,18 @@ Deno.serve(async (req) => {
             current_step: `Generated ${produced}/${target}`,
             updated_at: new Date().toISOString(),
           }).eq("id", job_id);
+
+          if (auto && produced < target) {
+            const workerUrl = `${url}/functions/v1/retry-mock-section`;
+            const next = fetch(workerUrl, {
+              method: "POST",
+              headers: { Authorization: authHeader, apikey: anonKey, "Content-Type": "application/json" },
+              body: JSON.stringify({ job_id, auto: true }),
+            }).catch((e) => console.error("[retry-mock-section] next worker failed", e));
+            // @ts-ignore
+            if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
+            return;
+          }
         }
 
         const success = produced === target;

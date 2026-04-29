@@ -877,209 +877,38 @@ Deno.serve(async (req) => {
         questionNumberOffset += sec.questions;
       }
 
-      // ---------- Process sections one-by-one ----------
-      // Reliability > speed: one AI call writes one validated unique question.
-      for (const rec of sectionRecords) {
-        const { sec, secRowId, jobId, secMcq, secTita, questionNumberOffset } = rec;
-
-        const updateJob = async (patch: Record<string, unknown>) => {
-          if (!jobId) return;
-          await admin.from("mock_section_jobs").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", jobId);
-        };
-
-        await updateJob({ status: "processing", current_step: "Calling AI…", attempts: 1 });
-
-        // Derive sensible questions_per_set defaults if not provided in the plan.
-        const setsForSec = category === "full_length" ? Math.max(0, Number(sec.sets || 0)) : 0;
-        let questionsPerSet = 0;
-        if (setsForSec > 0) {
-          if (sectionFamily(sec.code) === "verbal") questionsPerSet = Math.min(5, Math.max(3, Math.floor(sec.questions / setsForSec)));
-          else if (sectionFamily(sec.code) === "logic-data") questionsPerSet = Math.min(6, Math.max(4, Math.floor(sec.questions / setsForSec)));
-          else questionsPerSet = Math.max(1, Math.floor(sec.questions / setsForSec));
-        }
-
-        let produced = 0;
-        let attemptsLocal = 0;
-        // Generous retry budget so we ALWAYS hit the requested count even when
-        // many candidates are rejected as duplicates. (Was: ceil(q/BATCH)+4 → too tight.)
-        const maxAttempts = Math.max(20, sec.questions * MAX_ATTEMPTS_PER_QUESTION);
-        const accepted: any[] = [];
-        let firecrawlChecks = 0;
-        let consecutiveDupBatches = 0;
-        const allowHubMirror = category === "daily" || category === "sectional" || category === "topic";
-        const hubSection = allowHubMirror ? (PERSONALIZED_SECTION_MAP[exam_code] || {})[sec.code] : undefined;
-        const hubRows: any[] = [];
-
-        try {
-          while (produced < sec.questions && attemptsLocal < maxAttempts) {
-            attemptsLocal++;
-            const remain = sec.questions - produced;
-            const setBoundTotal = setsForSec > 0 ? Math.min(sec.questions, setsForSec * questionsPerSet) : 0;
-            const generatingSharedSet = setsForSec > 0 && produced < setBoundTotal;
-            const batch = 1;
-            const remainMcq = Math.max(0, secMcq - accepted.filter(q => q.question_type === "mcq").length);
-            const remainTita = Math.max(0, secTita - accepted.filter(q => q.question_type === "tita").length);
-            const batchMcq = remainMcq > 0 ? 1 : 0;
-            const batchTita = batch - batchMcq;
-
-            await updateJob({
-              current_step: `Writing question ${produced + 1}/${sec.questions} — uniqueness check active…`,
-            });
-
-            let qs: any[] = [];
-            try {
-              qs = await callOpenAIBatch({
-                exam: exam_code, exam_full: profile.full_name,
-                category, level,
-                section_code: sec.code, section_name: sec.name,
-                count: batch, mcq: batchMcq, tita: batchTita,
-                positive: profile.default_positive, negative: profile.default_negative,
-                userId: user.id,
-                strict_topic: category === "topic" && topic ? topic : null,
-                sets: generatingSharedSet ? 1 : 0,
-                questions_per_set: generatingSharedSet ? 1 : null,
-                total_section_questions: batch,
-                // Push diversity by telling the AI which topics/subtopics already used
-                avoid_topics: accepted.slice(-12).map((a) => `${a.topic || ""}/${a.subtopic || ""}`).filter(Boolean),
-                attempt_seed: `${attemptsLocal}-${Math.random().toString(36).slice(2, 8)}`,
-              });
-            } catch (e) {
-              console.error(`[generate] ${sec.code} batch ${attemptsLocal} failed:`, e);
-              await updateJob({ current_step: `AI call failed for question ${produced + 1}; retrying…`, error_message: String((e as Error)?.message || e).slice(0, 500) });
-              continue;
-            }
-
-            let acceptedThisBatch = 0;
-            for (const q of qs) {
-              if (produced >= sec.questions) break;
-              if (!q?.question_html) continue;
-              const hash = await sha256(normalizeForHash(q.question_html));
-              if (seenHashes.has(hash)) { stats.rejected_dup_db++; continue; }
-
-              // Cap web-checks — unbounded firecrawl was the #1 cause of stuck sections.
-              // Default OFF (verify_internet must be explicitly true AND budget remaining).
-              if (verify_internet && firecrawlChecks < MAX_FIRECRAWL_CHECKS_PER_SECTION) {
-                firecrawlChecks++;
-                const onWeb = await firecrawlIsOnInternet(q.question_html);
-                if (onWeb) { stats.rejected_dup_internet++; continue; }
-              }
-
-              const isTita = q.question_type === "tita";
-              if (!isTita && (!Array.isArray(q.options) || q.options.length < 4 || q.options.filter((o: any) => !!o.is_correct).length !== 1)) continue;
-              const cleanedQHtml = cleanQuestionHtml(q.question_html);
-              const { data: qRow, error: qErr } = await admin.from("mock_questions").insert({
-                section_id: secRowId,
-                question_number: questionNumberOffset + produced + 1,
-                question_type: isTita ? "tita" : "mcq",
-                question_html: cleanedQHtml,
-                tita_correct_answers: isTita ? (q.tita_answers || []).map(String) : [],
-                tita_numeric_tolerance: isTita ? Number(q.tita_tolerance ?? 0) : null,
-                positive_marks: profile.default_positive,
-                negative_marks: isTita ? 0 : profile.default_negative,
-                difficulty: normalizeDifficulty(q.difficulty, level),
-                topic: q.topic || topic || null,
-                subtopic: q.subtopic || null,
-                explanation_html: q.explanation_html || "",
-                content_hash: hash,
-              }).select("id").single();
-              if (qErr || !qRow) { stats.rejected_dup_db++; continue; }
-
-              if (!isTita) {
-                const opts = q.options.slice(0, 4).map((o: any, idx: number) => ({
-                  question_id: qRow.id,
-                  option_label: o.label || ["A", "B", "C", "D"][idx],
-                  option_html: cleanOptionHtml(o.text || ""),
-                  is_correct: !!o.is_correct,
-                  sort_order: idx,
-                }));
-                const { error: optErr } = await admin.from("mock_question_options").insert(opts);
-                if (optErr) { await admin.from("mock_questions").delete().eq("id", qRow.id); continue; }
-                if (hubSection) {
-                  const correctIdx = opts.findIndex((o) => o.is_correct);
-                  hubRows.push({
-                    exam_code,
-                    section: hubSection,
-                    difficulty: mapPersonalizedDifficulty(normalizeDifficulty(q.difficulty, level)),
-                    question_text: cleanedQHtml,
-                    options: opts.map((o) => ({ label: o.option_label, text: o.option_html })),
-                    correct_index: correctIdx >= 0 ? correctIdx : 0,
-                    explanation: q.explanation_html || null,
-                    topic: q.topic || topic || null,
-                    source: "mock-mirror",
-                    created_by: user.id,
-                  });
-                }
-              }
-
-              seenHashes.add(hash);
-              accepted.push({ ...q, content_hash: hash });
-              produced++;
-              stats.generated++;
-              acceptedThisBatch++;
-            }
-
-            // Track dup-storms: 3 batches in a row with 0 accepted ⇒ inject more entropy.
-            if (acceptedThisBatch === 0) consecutiveDupBatches++;
-            else consecutiveDupBatches = 0;
-            if (consecutiveDupBatches >= 3) {
-              console.warn(`[generate] ${sec.code}: 3 consecutive empty batches — heavy dedup pressure`);
-              consecutiveDupBatches = 0;
-            }
-
-            // Update progress after each batch — this is what animates the UI.
-            await updateJob({
-              questions_done: produced,
-              current_step: `Saved ${produced}/${sec.questions} unique questions`,
-            });
-          }
-
-          if (produced < sec.questions) {
-            console.warn(`[generate] ${sec.code} ended at ${produced}/${sec.questions} after ${attemptsLocal} attempts`);
-          }
-
-          // Bulk-insert personalized hub mirror rows (best-effort, ignore failures)
-          if (hubRows.length > 0) {
-            const { error: hubErr } = await admin.from("personalized_questions").insert(hubRows);
-            if (hubErr) console.error("[generate] personalized hub mirror failed:", hubErr.message);
-            else console.log(`[generate] mirrored ${hubRows.length} questions to Personalized Hub (${exam_code}/${hubSection})`);
-          }
-
-          const success = produced === sec.questions;
-          await updateJob({
-            status: success ? "completed" : "failed",
-            questions_done: produced,
-            current_step: success
-              ? `Done — exactly ${produced} questions saved`
-              : `Incomplete — ${produced}/${sec.questions} saved`,
-            error_message: success ? null : `Only ${produced} of ${sec.questions} questions generated`,
-          });
-        } catch (sectionErr) {
-          const msg = (sectionErr as Error)?.message || String(sectionErr);
-          console.error(`[generate] section ${sec.code} fatal:`, msg);
-          await updateJob({
-            status: "failed",
-            error_message: msg.slice(0, 500),
-            current_step: "Failed",
-          });
-        }
+      const firstJobId = sectionRecords.find((r) => r.jobId)?.jobId;
+      if (firstJobId) {
+        await admin.from("mock_section_jobs").update({
+          status: "processing",
+          current_step: "Queued reliable one-question worker…",
+          updated_at: new Date().toISOString(),
+        }).eq("id", firstJobId);
+        // Each worker invocation generates at most one question and then re-invokes itself.
+        // This avoids Cloud function CPU/wall-clock limits that were breaking hard/extreme mocks.
+        const workerUrl = `${url}/functions/v1/retry-mock-section`;
+        const kick = fetch(workerUrl, {
+          method: "POST",
+          headers: { Authorization: authHeader, apikey: anonKey, "Content-Type": "application/json" },
+          body: JSON.stringify({ job_id: firstJobId, auto: true }),
+        }).catch((e) => console.error("[generate] worker kickoff failed", e));
+        // @ts-ignore
+        if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(kick);
       }
 
       createdTests.push(testRow);
     }
 
     if (genId) {
-      const expectedTotal = safePerSet * setsCount;
-      const completedAll = stats.generated >= expectedTotal;
       await admin.from("ai_mock_generations").update({
-        status: completedAll ? "completed" : "failed",
-        total_generated: stats.generated,
-        total_rejected_duplicate: stats.rejected_dup_db,
-        total_rejected_web_match: stats.rejected_dup_internet,
-        error_message: completedAll ? null : `Incomplete generation: ${stats.generated}/${expectedTotal} questions saved`,
+        status: "running",
+        total_generated: 0,
         result_summary: { tests: createdTests, stats },
-        finished_at: new Date().toISOString(),
       }).eq("id", genId);
     }
+
+    return;
+
      } catch (bgErr) {
        const bgMsg = bgErr instanceof Error ? bgErr.message : String(bgErr);
        console.error("[generate-mock-questions] background error:", bgMsg);
