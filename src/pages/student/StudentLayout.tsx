@@ -202,7 +202,7 @@ function SidebarContent() {
     location.pathname.startsWith("/student/daily-test") ||
     location.pathname.startsWith("/student/personalized-hub");
 
-  const [mocksOpen, setMocksOpen] = useState(isMocksActive);
+  const [mocksOpen, setMocksOpen] = useState(true);
   useEffect(() => {
     if (isMocksActive) setMocksOpen(true);
   }, [isMocksActive]);
