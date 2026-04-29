@@ -213,6 +213,21 @@ export default function MockGenerationProgressPanel({ generationId, compact = fa
             All sections generated successfully — ready to review.
           </div>
         )}
+
+        {p.isComplete && p.hasFailures && (
+          <div className="rounded-lg border border-rose-200 bg-rose-50/70 p-3 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-semibold text-rose-800">
+                Generation finished with {p.failedSections} failed section{p.failedSections === 1 ? "" : "s"}
+              </div>
+              <div className="text-xs text-rose-700 mt-0.5">
+                Only {p.generatedQuestions}/{p.totalQuestions} questions were saved. Use the Retry button on each failed section above to re-run only the missing ones — your saved questions will be preserved.
+              </div>
+              <RetryAllFailedButton jobs={p.jobs.filter((j) => j.status === "failed").map((j) => ({ id: j.id, name: j.section_name }))} />
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
