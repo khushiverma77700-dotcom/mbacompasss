@@ -120,8 +120,8 @@ export default function StudentLayout() {
         </header>
 
         <div className="flex">
-          {/* Sidebar - desktop */}
-          <aside className="hidden lg:flex w-64 shrink-0 border-r border-border bg-card/70 backdrop-blur min-h-[calc(100vh-3.5rem)] sticky top-14">
+          {/* Sidebar - desktop: FIXED. Scrolls independently of main content. */}
+          <aside className="hidden lg:flex flex-col w-64 shrink-0 border-r border-border bg-card/80 backdrop-blur fixed left-0 top-14 bottom-0 overflow-y-auto z-20">
             <SidebarContent />
           </aside>
 
@@ -129,14 +129,14 @@ export default function StudentLayout() {
           {mobileOpen && (
             <div className="fixed inset-0 z-40 lg:hidden">
               <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
-              <aside className="absolute left-0 top-0 bottom-0 w-72 bg-card shadow-xl border-r border-border pt-14">
+              <aside className="absolute left-0 top-0 bottom-0 w-72 bg-card shadow-xl border-r border-border pt-14 overflow-y-auto">
                 <SidebarContent />
               </aside>
             </div>
           )}
 
-          {/* Main */}
-          <main className="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-6">
+          {/* Main — offset by sidebar width on desktop so layout doesn't overlap */}
+          <main className="flex-1 min-w-0 px-4 sm:px-6 lg:px-8 py-6 lg:ml-64">
             <Outlet />
           </main>
         </div>
