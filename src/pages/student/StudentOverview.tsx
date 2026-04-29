@@ -89,7 +89,13 @@ export default function StudentOverview() {
     const avgScore = submitted.length ? +(totalScore / submitted.length).toFixed(1) : 0;
     const avgMaxScore = submitted.length ? +(totalMaxScore / submitted.length).toFixed(1) : 0;
     const avgPctScore = totalMaxScore > 0 ? Math.round((totalScore / totalMaxScore) * 100) : 0;
-    const totalTimeSec = submitted.reduce((s, x) => s + Number(x.time_spent_seconds || 0), 0);
+    const totalTimeSec = submitted.reduce((s, x) => {
+      if (x.started_at && x.submitted_at) {
+        const diff = (new Date(x.submitted_at).getTime() - new Date(x.started_at).getTime()) / 1000;
+        return s + Math.max(0, diff);
+      }
+      return s;
+    }, 0);
     const totalHours = +(totalTimeSec / 3600).toFixed(1);
     const avgTimeMin = submitted.length ? Math.round(totalTimeSec / 60 / submitted.length) : 0;
 
