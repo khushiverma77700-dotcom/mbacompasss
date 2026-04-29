@@ -274,7 +274,34 @@ function RetryButton({ jobId, sectionName }: { jobId: string; sectionName: strin
       toast.error(e?.message || "Retry failed");
     } finally {
       setLoading(false);
+}
+
+function RetryAllFailedButton({ jobs }: { jobs: { id: string; name: string }[] }) {
+  const [loading, setLoading] = useState(false);
+  if (jobs.length === 0) return null;
+  const onClick = async () => {
+    setLoading(true);
+    let ok = 0, fail = 0;
+    for (const j of jobs) {
+      try {
+        const { data, error } = await supabase.functions.invoke("retry-mock-section", { body: { job_id: j.id } });
+        if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+        ok++;
+      } catch {
+        fail++;
+      }
     }
+    setLoading(false);
+    if (fail === 0) toast.success(`Re-queued ${ok} failed section${ok === 1 ? "" : "s"}`);
+    else toast.warning(`Re-queued ${ok}, failed to retry ${fail}`);
+  };
+  return (
+    <Button size="sm" className="mt-2 h-8 gap-1.5 bg-rose-600 hover:bg-rose-700" onClick={onClick} disabled={loading}>
+      {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+      Retry all {jobs.length} failed section{jobs.length === 1 ? "" : "s"}
+    </Button>
+  );
+}
   };
   return (
     <Button size="sm" variant="outline" className="h-7 px-2 gap-1 border-amber-300 text-amber-700 hover:bg-amber-50" onClick={onClick} disabled={loading}>
