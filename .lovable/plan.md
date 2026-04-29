@@ -1,90 +1,65 @@
-## Goal
+## Mock System with Bundle-Based Access — Implementation Plan
 
-Deliver a deeply detailed, **100% system-generated** mock report covering all 10 sections you listed. AI analysis becomes **opt-in** (button click only). **Daily Tests** remain AI-free.
+The core infra (mock_bundles, mock_bundle_items, mock_bundle_enrollments, FeatureGate, CourseMockPicker, AdminMockBundles 3-step wizard) already exists. This plan fills the four real gaps: (1) bundles are not yet linked to `mba_compass_courses`, (2) only `full_length` and `sectional` test types exist, (3) StudentMocks is split by exam series only — not by Full/Sectional/Topic/Practice, (4) there is no consistent locked-mock card or "Attempted" bucket on the frontend.
 
-## Scope
+---
 
-Rebuild the report UI for:
-1. **Full-length & sectional mocks** → `MockResultPage` (`/mocks/result/:attemptId`)
-2. **Personalized hub mocks** → `PersonalizedMockResultPage` (`/student/personalized/result/:attemptId`)
-3. **Daily Test report** → `StudentDailyTestReportPage` — keep system-only; remove any AI link/CTA.
+### 1. Database changes (one migration)
 
-No backend or schema changes. AI uses existing `generate-mock-insights` and `student-mock-deep-analysis` edge functions, but only when the user clicks **"Run AI Analysis"**.
+- Extend the `test_type` enum: add `topic_wise` and `practice_set`.
+- New table `course_bundles` — many-to-many between `mba_compass_courses` and `mock_bundles`:
+  ```text
+  course_id uuid → mba_compass_courses(id) on delete cascade
+  bundle_id uuid → mock_bundles(id)        on delete cascade
+  sort_order int default 0
+  PRIMARY KEY (course_id, bundle_id)
+  ```
+  RLS: public can SELECT (catalog visibility); admins can write.
+- New trigger function `unlock_course_bundles_on_enrollment()` on `course_enrollments` AFTER INSERT — for every linked bundle, call existing `public.unlock_bundle_mocks(user_id, bundle_id)`. This means buying ONE course auto-grants all its bundles → all their mocks via the existing `mock_enrollments` cascade.
+- Backfill: for any existing `course_enrollments`, insert matching `mock_bundle_enrollments` for already-linked bundles.
 
-## The 10 report sections (built from existing data)
+### 2. Admin Panel
 
-Built using `mock_attempts`, `mock_responses`, `mock_questions`, `mock_question_options`, `mock_sections` — all already loaded.
+**a. Courses ↔ Bundles linker** — `src/pages/admin/AdminMBACompassCourses.tsx`
+Add a "Bundles" step/section to the course edit dialog: multi-select chip list of all published bundles (`mock_bundles`), persisted to `course_bundles`. Show count on course card.
 
-| # | Section | Components / Charts |
-|---|---|---|
-| 1 | **Overall Performance Summary** | KPI cards: Total Score, Percentile, Accuracy, Attempted/Total, Time Utilization. Percentile gauge. |
-| 2 | **Performance Comparison** | Grouped bar (You vs Avg vs Top 10% vs Topper). Accuracy-vs-Attempts scatter. Percentile distribution histogram with "you" highlighted. |
-| 3 | **Section-Wise Analysis** | Expandable card per section: score bar, accuracy donut, time-spent vs ideal-time bar, attempts/correct/incorrect. |
-| 4 | **Question-Level Analysis** | Filterable table (Correct/Incorrect/Skipped × Easy/Med/Hard). Outcome pie. Difficulty-attempt distribution. Tags: silly mistake (correct topic but wrong & <30s), conceptual (wrong & >ideal time), missed easy (skipped easy Qs). |
-| 5 | **Time Management** | Stacked bar — time per section. Per-question time histogram. Speed-vs-accuracy line (rolling). |
-| 6 | **Attempt Strategy** | Classifier → Aggressive / Balanced / Conservative based on (attempts/total) & accuracy. Quadrant chart (attempts vs accuracy). |
-| 7 | **Difficulty Analysis** | Difficulty-wise accuracy bar, attempts distribution. Insight tags ("Weak in Easy", "Strong in Hard"). |
-| 8 | **Peer Benchmarking** | You vs Top 10% vs Avg comparison bars + score-gap bar. |
-| 9 | **Strengths & Weaknesses** | 2-column layout + topic mastery heatmap. |
-| 10 | **Progress Tracking** | If ≥2 attempts on same exam_code: line charts for Score, Accuracy, Percentile across last 5 mocks. |
+**b. Mock Test type selector** — `src/pages/admin/AdminMockTests.tsx`
+Add `topic_wise` and `practice_set` to the test_type dropdown with labels "Topic-wise Test" and "Practice Set".
 
-## AI Analysis (manual only)
+**c. AdminMockBundles** — already 3-step. Update `CourseMockPicker` Type sub-tabs to include the two new types so admins can pick topic/practice mocks into a bundle. Already wired via `included_categories`; just extend the type list.
 
-- Remove the auto `useEffect → generateInsights()` in `MockResultPage`.
-- Add a dedicated "🤖 Run AI Analysis" panel at the bottom with a single CTA button.
-- On click → call `generate-mock-insights` (existing). Show loader, then render: AI summary, recommendations, priority weaknesses, 7-day study plan in a clean formatted block.
-- Cache result in component state so re-clicks aren't needed in the same session.
-- Daily Test report: remove any AI mentions/buttons (currently none, just verify).
+### 3. Student Frontend — `/student/mocks` (`StudentMocks.tsx`)
 
-## Personalized hub report
+Restructure into a **two-level tab system**:
 
-Upgrade `PersonalizedMockResultPage` to show sections 1, 3, 4, 5, 6, 7, 9 (skipping peer & progress where data is unavailable). Same manual AI button using `generate-mock-insights` (works on `mock_attempts` only — for personalized we'll do a lightweight inline rule-based summary instead, no AI dependency since attempts table is different).
+- **Primary tabs (test type):** Full Length · Sectional · Topic-wise · Practice Sets · Attempted
+- **Secondary chip filters (exam):** All · CAT · XAT · NMAT · SNAP · IIFT · CMAT · MAT · TISSNET
 
-## Reusable building blocks
+Behavior:
+- Query both `mock_enrollments` (for owned/accessible mocks) AND a catalog of all published mocks matching the user's enrolled bundle types — so unowned mocks render as locked cards instead of being hidden. Use the existing `<FeatureGate>`/`UpgradeDialog` pattern.
+- **Coming Soon:** any mock with `launch_date > now()` OR `scheduled_start_at > now()` shows a "Coming Soon · DD MMM" badge and disables the Start button.
+- **Attempted tab:** mocks where the user has at least one `submitted`/`auto_submitted` `mock_attempts` row, showing score, percentile, accuracy with Result + Review CTAs.
+- **Empty state per tab:** "No [Topic-wise] mocks in your active courses yet — Upgrade course to unlock this content." with a "Browse Courses" CTA to `/courses`.
 
-Create small reusable components in `src/components/mock/report/`:
-- `KPIGrid.tsx` — section 1 cards
-- `ComparisonPanel.tsx` — section 2
-- `SectionWiseCards.tsx` — section 3 (donut + bars)
-- `QuestionLevelTable.tsx` — section 4 (filters + pie)
-- `TimeManagementCharts.tsx` — section 5
-- `StrategyClassifier.tsx` — section 6
-- `DifficultyAnalysis.tsx` — section 7
-- `PeerBenchmark.tsx` — section 8
-- `StrengthsWeaknesses.tsx` — section 9 (incl. heatmap)
-- `ProgressTrend.tsx` — section 10
-- `AIAnalysisPanel.tsx` — manual-trigger AI block (used by both Mock + Personalized pages)
+### 4. Locked content card
 
-`MockResultPage` and `PersonalizedMockResultPage` become orchestrators that load data and render these blocks in order.
+Reuse `<FeatureGate>` visual: blurred mock card + lock icon + message "Upgrade course to unlock this content." + "Upgrade" button → `UpgradeDialog`. Apply when a mock appears in the catalog (matches user's exam interest / is published) but the user has no active enrollment for it.
 
-## Charts
+### 5. Memory update
 
-Continue using `recharts` (already used). All colors via tailwind tokens / HSL. No emojis (per project rule).
+Update `mem://features/mock-bundles` to note: (a) bundles now link to courses via `course_bundles`, (b) test_type enum includes `topic_wise` and `practice_set`, (c) StudentMocks is structured by type × exam with an Attempted tab.
 
-## Files
+---
 
-**New**
-- `src/components/mock/report/` (11 files above)
+### Out of scope (already working)
 
-**Edited**
-- `src/pages/mocks/MockResultPage.tsx` — refactor to use new blocks, remove auto-AI, add manual AI panel
-- `src/pages/student/PersonalizedMockResultPage.tsx` — expand with system-generated sections + manual AI
-- `src/pages/student/StudentDailyTestReportPage.tsx` — verify no AI hooks (likely no change; just confirm)
+- Bundle creation wizard, feature toggles, FeatureGate, UpgradeDialog
+- `unlock_bundle_mocks` RPC and `mock_bundle_enrollments → mock_enrollments` sync trigger
+- Razorpay course/bundle checkout
+- Admin Students panel (already at `/admin/student-mocks`)
 
-**Untouched**
-- Edge functions, DB schema, daily-test logic, mock generation pipeline.
+### Risk notes
 
-## Out of scope
-
-- No new edge functions
-- No DB migrations
-- No changes to test runner / question generation
-- Daily Test report stays as-is (system-only, no AI)
-
-## QA
-
-After build, navigate to a recent mock result and verify:
-- All 10 sections render
-- AI panel does not auto-fire (network logs)
-- Clicking "Run AI Analysis" calls `generate-mock-insights`
-- Daily test report has no AI button
+- Adding enum values is non-destructive; existing rows unchanged.
+- The trigger on `course_enrollments` is additive — it won't revoke access if a course's bundle list is later edited (intentional; revocation would need explicit admin tooling).
+- Catalog query for locked cards must respect `is_published = true` to avoid leaking drafts.
