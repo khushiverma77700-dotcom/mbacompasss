@@ -216,7 +216,7 @@ export default function StudentLayout() {
 
         {/* Top alert bar — surfaces newest unread update */}
         {latestUnread && !bannerDismissed && (
-          <div className="sticky top-14 z-20 bg-gradient-to-r from-sky-500 via-blue-500 to-sky-500 text-white shadow-md animate-in slide-in-from-top duration-300">
+          <div className="fixed top-14 left-0 right-0 z-20 bg-gradient-to-r from-sky-500 via-blue-500 to-sky-500 text-white shadow-md animate-in slide-in-from-top duration-300">
             <div className="flex items-center gap-2 px-4 sm:px-6 h-9 text-xs sm:text-sm">
               <Bell className="h-3.5 w-3.5 shrink-0 animate-pulse" />
               <span className="hidden sm:inline font-semibold uppercase tracking-wider opacity-90">New update:</span>
