@@ -274,6 +274,14 @@ function RetryButton({ jobId, sectionName }: { jobId: string; sectionName: strin
       toast.error(e?.message || "Retry failed");
     } finally {
       setLoading(false);
+    }
+  };
+  return (
+    <Button size="sm" variant="outline" className="h-7 px-2 gap-1 border-amber-300 text-amber-700 hover:bg-amber-50" onClick={onClick} disabled={loading}>
+      {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
+      Retry
+    </Button>
+  );
 }
 
 function RetryAllFailedButton({ jobs }: { jobs: { id: string; name: string }[] }) {
@@ -299,14 +307,6 @@ function RetryAllFailedButton({ jobs }: { jobs: { id: string; name: string }[] }
     <Button size="sm" className="mt-2 h-8 gap-1.5 bg-rose-600 hover:bg-rose-700" onClick={onClick} disabled={loading}>
       {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
       Retry all {jobs.length} failed section{jobs.length === 1 ? "" : "s"}
-    </Button>
-  );
-}
-  };
-  return (
-    <Button size="sm" variant="outline" className="h-7 px-2 gap-1 border-amber-300 text-amber-700 hover:bg-amber-50" onClick={onClick} disabled={loading}>
-      {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <RotateCcw className="w-3 h-3" />}
-      Retry
     </Button>
   );
 }
