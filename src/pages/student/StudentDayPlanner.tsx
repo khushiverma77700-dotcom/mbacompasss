@@ -128,7 +128,7 @@ export default function StudentDayPlanner() {
 
   // ---------- Mutations ----------
 
-  const upsertTask = async (v: TaskFormValue) => {
+  const upsertTask = async (v: TaskFormValue): Promise<void> => {
     if (!user) return;
     const series_id =
       v.recurrence === "none" ? null
