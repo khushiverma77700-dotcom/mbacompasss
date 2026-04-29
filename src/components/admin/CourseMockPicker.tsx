@@ -62,7 +62,8 @@ export default function CourseMockPicker({ selectedCategories, selectedTestIds, 
 
   const filtered = useMemo(() => {
     return mocks.filter((m) => {
-      if (activeType !== "all" && (m.category ?? "full_length") !== activeType) return false;
+      const kind = m.test_type || m.category || "full_length";
+      if (activeType !== "all" && kind !== activeType) return false;
       if (q && !m.name.toLowerCase().includes(q.toLowerCase())) return false;
       return true;
     });
