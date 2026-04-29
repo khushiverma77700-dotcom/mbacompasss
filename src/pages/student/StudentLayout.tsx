@@ -347,13 +347,17 @@ function SidebarContent() {
     );
   };
 
-  // Place the "My Mocks" group right after Overview.
+  // Order: Overview → Updates → My Mocks group → rest.
   const overview = visibleItems.find((i) => i.to === "/student");
-  const restItems = visibleItems.filter((i) => i.to !== "/student");
+  const updates = visibleItems.find((i) => i.to === "/student/notifications");
+  const restItems = visibleItems.filter(
+    (i) => i.to !== "/student" && i.to !== "/student/notifications"
+  );
 
   return (
     <nav className="w-full p-3 space-y-0.5">
       {overview && renderRow(overview)}
+      {updates && renderRow(updates)}
 
       {/* My Mocks — subtle highlight so students immediately recognise it as the primary section */}
       <div
