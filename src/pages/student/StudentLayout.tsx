@@ -154,10 +154,10 @@ export default function StudentLayout() {
       <div className="min-h-screen bg-gradient-to-br from-sky-50/40 via-white to-blue-50/30 dark:from-background dark:via-background dark:to-background text-foreground">
         {/* Top bar */}
         <header className="sticky top-0 z-30 bg-card/90 backdrop-blur border-b border-border">
-          <div className="flex items-center justify-between px-4 sm:px-6 h-14">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between gap-2 px-3 sm:px-6 h-14">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
               <button
-                className="lg:hidden p-2 rounded-md hover:bg-accent"
+                className="lg:hidden p-2 -ml-1 rounded-md hover:bg-accent shrink-0"
                 onClick={() => setMobileOpen((o) => !o)}
                 aria-label="Toggle menu"
               >
@@ -169,21 +169,21 @@ export default function StudentLayout() {
                 </div>
                 <div className="leading-tight min-w-0">
                   <div className="text-sm font-semibold flex items-center gap-1.5 min-w-0">
-                    <span>Student Dashboard</span>
+                    <span className="truncate">Student Dashboard</span>
                     {displayName && (
                       <>
-                        <span className="hidden sm:inline text-muted-foreground/60">·</span>
-                        <span className="hidden sm:inline text-sky-600 dark:text-sky-300 font-semibold truncate max-w-[160px]">
+                        <span className="hidden md:inline text-muted-foreground/60">·</span>
+                        <span className="hidden md:inline text-sky-600 dark:text-sky-300 font-semibold truncate max-w-[160px]">
                           {displayName}
                         </span>
                       </>
                     )}
                   </div>
-                  <div className="text-[10px] text-muted-foreground">MBA Compass LMS</div>
+                  <div className="text-[10px] text-muted-foreground hidden sm:block">MBA Compass LMS</div>
                 </div>
               </Link>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <ThemeToggle />
               <NotificationBell />
               <div className="hidden md:flex items-center gap-2 pl-2 ml-1 border-l border-border">
@@ -198,12 +198,15 @@ export default function StudentLayout() {
               <Button
                 variant="ghost"
                 size="sm"
+                className="px-2 sm:px-3"
                 onClick={async () => {
                   await supabase.auth.signOut();
                   navigate("/student/login", { replace: true });
                 }}
+                aria-label="Logout"
               >
-                <LogOut className="h-4 w-4 mr-1" /> Logout
+                <LogOut className="h-4 w-4 sm:mr-1" />
+                <span className="hidden sm:inline">Logout</span>
               </Button>
             </div>
           </div>
