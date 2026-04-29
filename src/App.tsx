@@ -160,6 +160,7 @@ const StudentPersonalizedHub = lazyWithPreload(() => import("./pages/student/Stu
 const PersonalizedMockRunnerPage = lazyWithPreload(() => import("./pages/student/PersonalizedMockRunnerPage"));
 const PersonalizedMockResultPage = lazyWithPreload(() => import("./pages/student/PersonalizedMockResultPage"));
 const StudentLogin = lazyWithPreload(() => import("./pages/student/StudentLogin"));
+const StudentSOPReview = lazyWithPreload(() => import("./pages/student/StudentSOPReview"));
 const AdminPersonalizedHub = lazyWithPreload(() => import("./pages/admin/AdminPersonalizedHub"));
 const AdminDailyTests = lazyWithPreload(() => import("./pages/admin/AdminDailyTests"));
 const AdminStudentNotificationsBroadcast = lazyWithPreload(() => import("./pages/admin/AdminStudentNotificationsBroadcast"));
@@ -628,6 +629,7 @@ const App = () => (
               <Route path="personalized-hub" element={<LazyPage><StudentPersonalizedHub /></LazyPage>} />
               <Route path="personalized-hub/attempt/:attemptId" element={<LazyPage><PersonalizedMockRunnerPage /></LazyPage>} />
               <Route path="personalized-hub/result/:attemptId" element={<LazyPage><PersonalizedMockResultPage /></LazyPage>} />
+              <Route path="sop-review" element={<LazyPage><StudentSOPReview /></LazyPage>} />
             </Route>
             <Route path="/mba-compass" element={<PublicLayout><LazyPage><MBACompassCoursesPage /></LazyPage></PublicLayout>} />
             <Route path="/mba-compass/compare" element={<PublicLayout><LazyPage><MBACompassComparePage /></LazyPage></PublicLayout>} />
