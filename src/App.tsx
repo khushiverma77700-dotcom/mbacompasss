@@ -421,6 +421,7 @@ const OnboardingGate = () => {
   }, [loading, user, checked]);
 
   if (!showOnboarding || !user) return null;
+  if (typeof window !== "undefined" && window.location.pathname.startsWith("/student")) return null;
 
   return (
     <Suspense fallback={null}>
