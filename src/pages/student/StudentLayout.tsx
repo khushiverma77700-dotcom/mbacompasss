@@ -164,49 +164,164 @@ export default function StudentLayout() {
 function SidebarContent() {
   const { counts, markSeen } = useStudentNavBadges();
   const { isEnabled, loading: featuresLoading } = useEnrolledBundleFeatures();
-  // Hide locked items entirely once features have loaded.
+  const location = useLocation();
+
+  // Filter top-level items by enrolled-bundle features.
   const visibleItems = navItems.filter((item) => {
     if (!item.feature) return true;
     if (featuresLoading) return true;
     return isEnabled(item.feature);
   });
-  return (
-    <nav className="w-full p-4 space-y-1">
-      {visibleItems.map((item) => {
-        const badge = counts[item.to] ?? 0;
-        return (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            onClick={() => badge > 0 && markSeen(item.to)}
-            className={({ isActive }) =>
-              cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors relative",
-                isActive
-                  ? "bg-gradient-to-r from-sky-100 to-blue-50 text-sky-700 shadow-sm dark:from-sky-500/15 dark:to-blue-500/10 dark:text-sky-200"
-                  : "text-foreground/80 hover:bg-accent hover:text-foreground"
-              )
-            }
-          >
-            <span className="relative">
-              <item.icon className="h-4 w-4" />
-              {badge > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500 ring-2 ring-card" />
-                </span>
-              )}
+
+  // Mocks group: keep all items visible, but mark locked ones so the student
+  // can see what they're missing and tap "Upgrade" to unlock.
+  const mocksItems = mocksGroup.map((item) => ({
+    ...item,
+    enabled: !item.feature || featuresLoading || isEnabled(item.feature),
+  }));
+  const anyMockEnabled = mocksItems.some((m) => m.enabled);
+
+  // Auto-open the group when any mock-related route is active.
+  const isMocksActive =
+    location.pathname.startsWith("/student/mocks") ||
+    location.pathname.startsWith("/student/daily-test") ||
+    location.pathname.startsWith("/student/personalized-hub");
+
+  const [mocksOpen, setMocksOpen] = useState(isMocksActive);
+  useEffect(() => {
+    if (isMocksActive) setMocksOpen(true);
+  }, [isMocksActive]);
+
+  const groupBadgeTotal = mocksItems.reduce((s, m) => s + (counts[m.to] ?? 0), 0);
+
+  // Single row renderer used by top-level items and group children.
+  const renderRow = (
+    item: NavItem & { enabled?: boolean },
+    opts: { indent?: boolean; locked?: boolean } = {}
+  ) => {
+    const Icon = item.icon;
+    if (opts.locked) {
+      return (
+        <Link
+          key={item.to}
+          to="/courses"
+          title="Upgrade your course to access this section"
+          className={cn(
+            "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors relative",
+            opts.indent && "ml-3",
+            "text-muted-foreground/70 hover:bg-accent/60 hover:text-foreground"
+          )}
+        >
+          <Icon className="h-4 w-4 opacity-70" />
+          <span className="flex-1 truncate">{item.label}</span>
+          <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-300 font-semibold">
+            Locked
+          </span>
+        </Link>
+      );
+    }
+    const badge = counts[item.to] ?? 0;
+    return (
+      <NavLink
+        key={item.to}
+        to={item.to}
+        end={item.end}
+        onClick={() => badge > 0 && markSeen(item.to)}
+        className={({ isActive }) =>
+          cn(
+            "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors relative",
+            opts.indent && "ml-3 py-1.5 text-[13px]",
+            isActive
+              ? "bg-gradient-to-r from-sky-100 to-blue-50 text-sky-700 shadow-sm dark:from-sky-500/20 dark:to-blue-500/10 dark:text-sky-200"
+              : "text-foreground/80 hover:bg-accent hover:text-foreground"
+          )
+        }
+      >
+        <span className="relative">
+          <Icon className="h-4 w-4" />
+          {badge > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500 ring-2 ring-card" />
             </span>
-            <span className="flex-1">{item.label}</span>
-            {badge > 0 && (
-              <span className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold bg-rose-500 text-white">
-                {badge > 9 ? "9+" : badge}
-              </span>
+          )}
+        </span>
+        <span className="flex-1 truncate">{item.label}</span>
+        {badge > 0 && (
+          <span className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold bg-rose-500 text-white">
+            {badge > 9 ? "9+" : badge}
+          </span>
+        )}
+      </NavLink>
+    );
+  };
+
+  // Place the "My Mocks" group right after Overview.
+  const overview = visibleItems.find((i) => i.to === "/student");
+  const restItems = visibleItems.filter((i) => i.to !== "/student");
+
+  return (
+    <nav className="w-full p-3 space-y-0.5">
+      {overview && renderRow(overview)}
+
+      {/* My Mocks — subtle highlight so students immediately recognise it as the primary section */}
+      <div
+        className={cn(
+          "rounded-xl border my-2 overflow-hidden transition-colors",
+          isMocksActive
+            ? "border-sky-200/80 bg-gradient-to-br from-sky-50/70 to-blue-50/40 dark:border-sky-500/25 dark:from-sky-500/10 dark:to-blue-500/5"
+            : "border-border/60 bg-muted/30 dark:bg-muted/20"
+        )}
+      >
+        <button
+          type="button"
+          onClick={() => setMocksOpen((v) => !v)}
+          aria-expanded={mocksOpen}
+          className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-accent/40 transition-colors"
+        >
+          <span className="h-7 w-7 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white shadow-sm">
+            <FlaskConical className="h-3.5 w-3.5" />
+          </span>
+          <span className="flex-1 text-left">My Mocks</span>
+          {groupBadgeTotal > 0 && (
+            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold bg-rose-500 text-white">
+              {groupBadgeTotal > 9 ? "9+" : groupBadgeTotal}
+            </span>
+          )}
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 text-muted-foreground transition-transform duration-300",
+              mocksOpen && "rotate-180"
             )}
-          </NavLink>
-        );
-      })}
+          />
+        </button>
+
+        {/* Smooth grid-row collapse — animates to natural height */}
+        <div
+          className={cn(
+            "grid transition-[grid-template-rows] duration-300 ease-out",
+            mocksOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+          )}
+        >
+          <div className="overflow-hidden">
+            <div className="px-2 pb-2 pt-1 space-y-0.5">
+              {!anyMockEnabled && !featuresLoading ? (
+                <div className="px-3 py-3 text-xs text-muted-foreground">
+                  No mock sections in your course yet.{" "}
+                  <Link to="/courses" className="text-sky-600 dark:text-sky-300 font-medium hover:underline">
+                    Browse courses
+                  </Link>
+                </div>
+              ) : (
+                mocksItems.map((m) => renderRow(m, { indent: true, locked: !m.enabled }))
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {restItems.map((item) => renderRow(item))}
+
       <div className="pt-4 mt-4 border-t border-border">
         <Link
           to="/mocks"
