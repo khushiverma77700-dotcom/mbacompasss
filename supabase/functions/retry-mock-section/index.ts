@@ -62,8 +62,16 @@ function mapPersonalizedDifficulty(d: string): "easy" | "moderate" | "difficult"
 function normalizeDifficulty(value: unknown, requestedLevel: string): "easy" | "medium" | "hard" {
   const raw = String(value || requestedLevel || "medium").toLowerCase();
   if (["easy", "easier", "low"].includes(raw)) return "easy";
-  if (["hard", "difficult", "advanced", "high"].includes(raw)) return "hard";
+  if (["hard", "difficult", "advanced", "high", "very_hard", "very hard", "extremely_hard", "extremely hard", "cat_pyq", "cat pyq", "cat-level", "cat_level"].includes(raw)) return "hard";
   return "medium";
+}
+
+function levelGuidanceText(level: string): string {
+  const lvl = String(level || "mixed").toLowerCase();
+  if (lvl === "very_hard") return `Difficulty target: VERY HARD — every question must be measurably harder than a normal Hard question. Use multi-step reasoning, deeper traps, longer logic chains. Set "difficulty" field to "hard".`;
+  if (lvl === "extremely_hard") return `Difficulty target: EXTREMELY HARD — questions should take significant time and effort even for strong aspirants. Dense data, layered concepts, multi-stage computation. Set "difficulty" field to "hard".`;
+  if (lvl === "cat_pyq") return `Difficulty target: CAT LEVEL based on real CAT Previous Year Questions, but with names, numbers, entities and values CHANGED — never reproduce originals verbatim. Set "difficulty" field to "hard".`;
+  return `Difficulty target: ${lvl}.`;
 }
 
 function normalizeForHash(s: string): string {
@@ -84,7 +92,7 @@ async function callOpenAIBatch(opts: {
   const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
 
-  const sys = `You are an elite ${opts.exam_code} question setter writing 100% original questions for the ${opts.section_name} (${opts.section_code}) section. Difficulty target: ${opts.level}. ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} Use fresh numbers, fresh names, fresh contexts. Each MCQ has 4 options A-D with one correct; each TITA has numeric answer(s). Include detailed 200-400 word explanations. Output ONLY valid JSON. STRICT FORMATTING: "question_html" must contain ONLY the pure question text — never prefix with "Q1.", "Question 1:", "Set 1:", "1.", "1)" or any numbering. "options[].text" must contain ONLY pure option text — never prefix with "A)", "(A)", "A.", "1)" or any label. The UI renders these labels statically.`;
+  const sys = `You are an elite ${opts.exam_code} question setter writing 100% original questions for the ${opts.section_name} (${opts.section_code}) section. ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} Use fresh numbers, fresh names, fresh contexts. Each MCQ has 4 options A-D with one correct; each TITA has numeric answer(s). Include detailed 200-400 word explanations. Output ONLY valid JSON. STRICT FORMATTING: "question_html" must contain ONLY the pure question text — never prefix with "Q1.", "Question 1:", "Set 1:", "1.", "1)" or any numbering. "options[].text" must contain ONLY pure option text — never prefix with "A)", "(A)", "A.", "1)" or any label. The UI renders these labels statically.`;
   const user = `Generate exactly ${opts.count} questions: ${opts.mcq} MCQ + ${opts.tita} TITA. Marking +${opts.positive}/-${opts.negative}. JSON shape: {"questions":[{"question_type":"mcq"|"tita","question_html":"...","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"tita_answers":["..."],"tita_tolerance":0.01,"explanation_html":"..."}]}`;
 
   const ctrl = new AbortController();

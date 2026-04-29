@@ -115,6 +115,9 @@ const LEVELS = [
   { value: "easy", label: "Easy" },
   { value: "moderate", label: "Moderate" },
   { value: "hard", label: "Hard" },
+  { value: "very_hard", label: "Very Hard" },
+  { value: "extremely_hard", label: "Extremely Hard" },
+  { value: "cat_pyq", label: "CAT Level (Based on PYQ, values changed)" },
   { value: "mixed", label: "Mixed" },
 ];
 

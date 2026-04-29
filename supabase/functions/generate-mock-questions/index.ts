@@ -196,7 +196,7 @@ function sectionFamily(code: string) {
 function normalizeDifficulty(value: unknown, requestedLevel: string): "easy" | "medium" | "hard" {
   const raw = String(value || requestedLevel || "medium").toLowerCase();
   if (["easy", "easier", "low"].includes(raw)) return "easy";
-  if (["hard", "difficult", "advanced", "high"].includes(raw)) return "hard";
+  if (["hard", "difficult", "advanced", "high", "very_hard", "very hard", "extremely_hard", "extremely hard", "cat_pyq", "cat pyq", "cat-level", "cat_level"].includes(raw)) return "hard";
   return "medium";
 }
 
@@ -210,9 +210,19 @@ function buildSystemPrompt(opts: {
   mcq_count?: number | null;
   tita_count?: number | null;
 }) {
-  const levelGuidance = opts.level === "mixed"
-    ? "Mix Easy (~30%), Moderate (~40%), Hard (~30%)."
-    : `Strictly target ${normalizeDifficulty(null, opts.level).toUpperCase()} difficulty. Every returned question difficulty must be exactly "${normalizeDifficulty(null, opts.level)}".`;
+  const lvl = String(opts.level || "mixed").toLowerCase();
+  let levelGuidance: string;
+  if (lvl === "mixed") {
+    levelGuidance = "Mix Easy (~30%), Moderate (~40%), Hard (~30%).";
+  } else if (lvl === "very_hard") {
+    levelGuidance = `Strictly target VERY HARD difficulty — every question must be MEASURABLY HARDER than a normal "Hard" question. Use multi-step reasoning, deeper traps, longer chains of logic, and uncommon question patterns. Set every returned question's "difficulty" field to exactly "hard".`;
+  } else if (lvl === "extremely_hard") {
+    levelGuidance = `Strictly target EXTREMELY HARD difficulty — questions should take a strong aspirant significant time and effort to solve. Use dense data, layered concepts, multi-stage computation, edge cases, and high cognitive load. No trivial shortcuts. Set every returned question's "difficulty" field to exactly "hard".`;
+  } else if (lvl === "cat_pyq") {
+    levelGuidance = `CAT LEVEL — based on real CAT Previous Year Questions, but with names, numbers, entities and values CHANGED so the question is not identical to the original. Preserve the structure, concept and difficulty of authentic CAT PYQs. Do NOT reproduce the original numbers or names verbatim. Set every returned question's "difficulty" field to exactly "hard".`;
+  } else {
+    levelGuidance = `Strictly target ${normalizeDifficulty(null, opts.level).toUpperCase()} difficulty. Every returned question difficulty must be exactly "${normalizeDifficulty(null, opts.level)}".`;
+  }
 
   const topicLock = opts.strict_topic
     ? `\n\nSTRICT TOPIC LOCK (Topic-wise Test):\n- EVERY question MUST be exclusively from the topic: "${opts.strict_topic}".\n- The "topic" field on every question MUST be "${opts.strict_topic}".`
@@ -587,7 +597,7 @@ Deno.serve(async (req) => {
         exam_code,
         launch_date,
         total_duration_minutes: sectionPlan.reduce((s, x) => s + x.duration, 0),
-        difficulty: level === "mixed" ? "medium" : (level === "moderate" ? "medium" : level),
+        difficulty: normalizeDifficulty(null, level),
         is_published: false,
         generated_by_ai: true,
         generation_meta: { request: body, set_index: setIdx, total_sets: setsCount, generation_id: genId },
