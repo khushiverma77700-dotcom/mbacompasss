@@ -154,14 +154,14 @@ export default function StudentDayPlanner() {
 
     if (editing) {
       const { error } = await supabase.from("student_planner_tasks").update(payload).eq("id", editing.id);
-      if (error) return toast.error(error.message);
+      if (error) { toast.error(error.message); return; }
       toast.success("Task updated");
       setEditing(null);
     } else {
       payload.original_date = v.scheduled_date;
       payload.status = "pending";
       const { error } = await supabase.from("student_planner_tasks").insert(payload);
-      if (error) return toast.error(error.message);
+      if (error) { toast.error(error.message); return; }
       toast.success(v.recurrence === "none" ? "Task added" : "Recurring task scheduled");
     }
 
