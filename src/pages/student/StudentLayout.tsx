@@ -52,6 +52,7 @@ const mocksGroup: NavItem[] = [
 
 const navItems: NavItem[] = [
   { to: "/student", label: "Overview", icon: LayoutDashboard, end: true },
+  { to: "/student/notifications", label: "Updates", icon: Bell },
   // "My Mocks" group is rendered separately as an expandable section.
   { to: "/student/buy-mocks", label: "Buy Mocks", icon: ShoppingBag, feature: "buy_mocks" },
   { to: "/student/performance", label: "Performance", icon: BarChart3, feature: "performance_tracker" },
@@ -73,6 +74,8 @@ export default function StudentLayout() {
   const [displayName, setDisplayName] = useState<string>("");
   const [accessChecked, setAccessChecked] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
+  const [latestUnread, setLatestUnread] = useState<{ id: string; title: string } | null>(null);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -113,6 +116,36 @@ export default function StudentLayout() {
   }, [user]);
 
   useEffect(() => setMobileOpen(false), [location.pathname]);
+
+  // Track latest unread notification for the top alert bar
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    const loadLatest = async () => {
+      const { data } = await supabase
+        .from("student_notifications")
+        .select("id, title")
+        .eq("user_id", user.id)
+        .eq("is_read", false)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (alive) setLatestUnread(data ?? null);
+    };
+    loadLatest();
+    const ch = supabase
+      .channel(`layout-notif-${user.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "student_notifications", filter: `user_id=eq.${user.id}` },
+        (p: any) => { setLatestUnread({ id: p.new.id, title: p.new.title }); setBannerDismissed(false); })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "student_notifications", filter: `user_id=eq.${user.id}` }, loadLatest)
+      .subscribe();
+    return () => { alive = false; supabase.removeChannel(ch); };
+  }, [user]);
+
+  // Auto-hide banner when user is on the timeline page itself
+  useEffect(() => {
+    if (location.pathname.startsWith("/student/notifications")) setBannerDismissed(true);
+  }, [location.pathname]);
 
   if (loading || !user || !accessChecked || !hasAccess) return <div className="p-8 text-muted-foreground">Loading…</div>;
 
@@ -175,6 +208,23 @@ export default function StudentLayout() {
             </div>
           </div>
         </header>
+
+        {/* Top alert bar — surfaces newest unread update */}
+        {latestUnread && !bannerDismissed && (
+          <div className="sticky top-14 z-20 bg-gradient-to-r from-sky-500 via-blue-500 to-sky-500 text-white shadow-md animate-in slide-in-from-top duration-300">
+            <div className="flex items-center gap-2 px-4 sm:px-6 h-9 text-xs sm:text-sm">
+              <Bell className="h-3.5 w-3.5 shrink-0 animate-pulse" />
+              <span className="hidden sm:inline font-semibold uppercase tracking-wider opacity-90">New update:</span>
+              <span className="truncate flex-1">{latestUnread.title}</span>
+              <Link to="/student/notifications" className="px-2 py-0.5 rounded-md bg-white/20 hover:bg-white/30 font-medium whitespace-nowrap">
+                View
+              </Link>
+              <button onClick={() => setBannerDismissed(true)} aria-label="Dismiss" className="p-1 rounded hover:bg-white/20">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="flex">
           {/* Sidebar - desktop: FIXED. Scrolls independently of main content. */}

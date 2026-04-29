@@ -45,7 +45,7 @@ export function useStudentNavBadges(): StudentNavBadges {
       const seenMocks = seen["/student/mocks"] ?? "1970-01-01";
       const seenAnn = seen["/student/announcements"] ?? "1970-01-01";
 
-      const [dailyRes, enrollRes, attemptsRes, annRes] = await Promise.all([
+      const [dailyRes, enrollRes, attemptsRes, annRes, notifRes] = await Promise.all([
         // Daily tests scheduled in last 30d
         supabase.from("daily_test_assignments")
           .select("assigned_date, test_id, created_at")
@@ -65,6 +65,11 @@ export function useStudentNavBadges(): StudentNavBadges {
           .select("id, created_at, published")
           .order("created_at", { ascending: false })
           .limit(50),
+        // Updates timeline (per-user notifications) — true unread count
+        supabase.from("student_notifications")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("is_read", false),
       ]);
 
       if (!alive) return;
@@ -93,6 +98,7 @@ export function useStudentNavBadges(): StudentNavBadges {
         "/student/daily-test": dailyNew,
         "/student/mocks": mocksNew,
         "/student/announcements": annNew,
+        "/student/notifications": notifRes.count ?? 0,
       });
     };
 
