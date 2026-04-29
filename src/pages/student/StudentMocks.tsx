@@ -7,69 +7,150 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Search, Clock, CheckCircle2, Play, Trophy, FileText, ShoppingBag, Calendar, Rocket, Sparkles } from "lucide-react";
+import {
+  Search, Clock, CheckCircle2, Play, Trophy, FileText, ShoppingBag,
+  Lock, Sparkles, Calendar, BookOpen, Layers, Target, Repeat, History,
+} from "lucide-react";
+import UpgradeDialog from "@/components/student/UpgradeDialog";
 
-const SERIES = ["CAT", "XAT", "SNAP", "NMAT", "IIFT", "CMAT", "TISSNET"];
+const EXAM_FILTERS = ["All", "CAT", "XAT", "NMAT", "SNAP", "IIFT", "CMAT", "MAT", "TISSNET"];
+
+type TypeKey = "full_length" | "sectional" | "topic_wise" | "practice_set" | "attempted";
+
+const TYPE_TABS: { key: TypeKey; label: string; icon: any }[] = [
+  { key: "full_length",  label: "Full Length",   icon: Layers },
+  { key: "sectional",    label: "Sectional",     icon: Target },
+  { key: "topic_wise",   label: "Topic-wise",    icon: BookOpen },
+  { key: "practice_set", label: "Practice Sets", icon: Repeat },
+  { key: "attempted",    label: "Attempted",     icon: History },
+];
+
+type Test = {
+  id: string;
+  name: string;
+  slug: string;
+  total_duration_minutes: number | null;
+  difficulty: string | null;
+  exam_code: string | null;
+  category: string | null;
+  test_type: string | null;
+  is_live: boolean | null;
+  scheduled_start_at: string | null;
+  launch_date: string | null;
+  banner_url: string | null;
+  is_published: boolean | null;
+};
+
+type Enrollment = { id: string; test_id: string; source: string; expires_at: string | null; admin_notes: string | null };
+
+type Attempt = {
+  id: string; test_id: string; status: string; started_at: string | null; submitted_at: string | null;
+  total_score: number | null; max_score: number | null; percentile: number | null;
+  total_correct: number | null; total_attempted: number | null;
+};
 
 export default function StudentMocks() {
   const { user } = useAuth();
-  const [enrollments, setEnrollments] = useState<any[]>([]);
-  const [attempts, setAttempts] = useState<any[]>([]);
+  const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [attempts, setAttempts] = useState<Attempt[]>([]);
+  const [tests, setTests] = useState<Record<string, Test>>({});
+  const [catalog, setCatalog] = useState<Test[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [examFilter, setExamFilter] = useState<string>("All");
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [{ data: e }, { data: a }] = await Promise.all([
-        supabase.from("mock_enrollments")
-          .select("id, test_id, source, expires_at, enrolled_at, admin_notes, test:mock_tests(name, slug, total_duration_minutes, difficulty, exam_code, category, is_live, scheduled_start_at, launch_date, banner_url)")
-          .eq("user_id", user.id).order("enrolled_at", { ascending: false }),
-        supabase.from("mock_attempts")
-          .select("id, test_id, status, started_at, submitted_at, total_score, max_score, percentile, total_correct, total_attempted, test:mock_tests(name, slug)")
-          .eq("user_id", user.id).order("started_at", { ascending: false }),
+      setLoading(true);
+      const [{ data: e }, { data: a }, { data: c }] = await Promise.all([
+        supabase
+          .from("mock_enrollments")
+          .select("id, test_id, source, expires_at, admin_notes, test:mock_tests(id, name, slug, total_duration_minutes, difficulty, exam_code, category, test_type, is_live, scheduled_start_at, launch_date, banner_url, is_published)")
+          .eq("user_id", user.id)
+          .order("enrolled_at", { ascending: false }),
+        supabase
+          .from("mock_attempts")
+          .select("id, test_id, status, started_at, submitted_at, total_score, max_score, percentile, total_correct, total_attempted")
+          .eq("user_id", user.id)
+          .order("started_at", { ascending: false }),
+        supabase
+          .from("mock_tests")
+          .select("id, name, slug, total_duration_minutes, difficulty, exam_code, category, test_type, is_live, scheduled_start_at, launch_date, banner_url, is_published")
+          .eq("is_published", true)
+          .order("name"),
       ]);
-      setEnrollments(e ?? []);
-      setAttempts(a ?? []);
+
+      const enr: Enrollment[] = [];
+      const tMap: Record<string, Test> = {};
+      (e ?? []).forEach((row: any) => {
+        enr.push({ id: row.id, test_id: row.test_id, source: row.source, expires_at: row.expires_at, admin_notes: row.admin_notes });
+        if (row.test) tMap[row.test.id] = row.test;
+      });
+      (c ?? []).forEach((t: any) => { if (!tMap[t.id]) tMap[t.id] = t; });
+
+      setEnrollments(enr);
+      setAttempts((a ?? []) as Attempt[]);
+      setTests(tMap);
+      setCatalog((c ?? []) as Test[]);
       setLoading(false);
     })();
   }, [user]);
 
-  const items = useMemo(() => {
-    return enrollments.map((e) => {
-      const myAttempts = attempts.filter((a) => a.test_id === e.test_id);
-      const inProgress = myAttempts.find((a) => a.status === "in_progress");
-      const completed = myAttempts.find((a) => a.status === "submitted" || a.status === "auto_submitted");
-      return { ...e, inProgress, completed, attemptCount: myAttempts.length };
-    });
-  }, [enrollments, attempts]);
+  const enrolledTestIds = useMemo(() => new Set(enrollments.map((e) => e.test_id)), [enrollments]);
+  const attemptedByTest = useMemo(() => {
+    const m: Record<string, Attempt[]> = {};
+    attempts.forEach((a) => { (m[a.test_id] = m[a.test_id] || []).push(a); });
+    return m;
+  }, [attempts]);
 
-  const filtered = items.filter((i) => !q || i.test?.name?.toLowerCase().includes(q.toLowerCase()));
+  const matchesExam = (t: Test) => {
+    if (examFilter === "All") return true;
+    const code = (t.exam_code || t.category || "").toUpperCase();
+    return code.includes(examFilter);
+  };
+  const matchesQuery = (t: Test) => !q || t.name.toLowerCase().includes(q.toLowerCase());
 
-  // Status buckets
-  const now = Date.now();
-  const launched = filtered.filter((i) => {
-    const start = i.test?.scheduled_start_at ? new Date(i.test.scheduled_start_at).getTime() : null;
-    return i.test?.is_live === true || (start && start <= now);
-  });
-  const scheduled = filtered.filter((i) => {
-    const start = i.test?.scheduled_start_at ? new Date(i.test.scheduled_start_at).getTime() : null;
-    return start && start > now && start - now <= 7 * 24 * 3600 * 1000;
-  });
-  const upcoming = filtered.filter((i) => {
-    const start = i.test?.scheduled_start_at ? new Date(i.test.scheduled_start_at).getTime() : null;
-    return start && start - now > 7 * 24 * 3600 * 1000;
-  });
+  const getKind = (t: Test): TypeKey | null => {
+    const k = (t.test_type || "").toLowerCase();
+    if (k === "full_length" || k === "sectional" || k === "topic_wise" || k === "practice_set") return k as TypeKey;
+    return "full_length";
+  };
 
-  // Series buckets
-  const seriesMap: Record<string, any[]> = {};
-  for (const s of SERIES) seriesMap[s] = [];
-  for (const i of filtered) {
-    const code = (i.test?.exam_code || i.test?.category || "").toString().toUpperCase();
-    const matched = SERIES.find((s) => code.includes(s));
-    if (matched) seriesMap[matched].push(i);
-  }
+  const buildBucket = (typeKey: TypeKey) => {
+    if (typeKey === "attempted") {
+      const items: { test: Test; attempt: Attempt }[] = [];
+      attempts
+        .filter((a) => a.status === "submitted" || a.status === "auto_submitted")
+        .forEach((a) => {
+          const t = tests[a.test_id];
+          if (t && matchesExam(t) && matchesQuery(t)) items.push({ test: t, attempt: a });
+        });
+      // dedupe by test_id keeping best/latest
+      const seen = new Set<string>();
+      return items.filter((i) => {
+        if (seen.has(i.test.id)) return false;
+        seen.add(i.test.id); return true;
+      });
+    }
 
+    // For each test of this type matching filters, classify owned vs locked
+    const list = Object.values(tests)
+      .filter((t) => getKind(t) === typeKey)
+      .filter(matchesExam)
+      .filter(matchesQuery)
+      .filter((t) => t.is_published !== false);
+
+    return list.map((t) => ({
+      test: t,
+      owned: enrolledTestIds.has(t.id),
+      inProgress: attemptedByTest[t.id]?.find((x) => x.status === "in_progress") ?? null,
+      latestSubmitted: attemptedByTest[t.id]?.find((x) => x.status === "submitted" || x.status === "auto_submitted") ?? null,
+    }));
+  };
+
+  if (!user) return <div className="text-muted-foreground">Please sign in.</div>;
   if (loading) return <div className="text-muted-foreground">Loading mocks…</div>;
 
   return (
@@ -77,15 +158,16 @@ export default function StudentMocks() {
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold">My Mocks</h1>
-          <p className="text-sm text-muted-foreground">All mocks assigned or purchased — sorted by status and series.</p>
+          <p className="text-sm text-muted-foreground">Structured by format and exam — locked mocks are part of bundles you haven't unlocked yet.</p>
         </div>
-        <Link to="/student/buy-mocks">
+        <Link to="/courses">
           <Button className="gap-2">
-            <ShoppingBag className="h-4 w-4" /> Buy More Mocks
+            <ShoppingBag className="h-4 w-4" /> Browse Courses
           </Button>
         </Link>
       </div>
 
+      {/* Search */}
       <div className="flex gap-2">
         <div className="relative flex-1 max-w-sm">
           <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -93,100 +175,183 @@ export default function StudentMocks() {
         </div>
       </div>
 
-      <Tabs defaultValue="launched">
+      {/* Exam chip filter */}
+      <div className="flex flex-wrap gap-1.5">
+        {EXAM_FILTERS.map((f) => (
+          <button
+            key={f}
+            onClick={() => setExamFilter(f)}
+            className={`px-3 py-1 rounded-full text-xs border transition-colors ${
+              examFilter === f
+                ? "bg-sky-600 text-white border-sky-600"
+                : "bg-white text-foreground border-sky-100 hover:bg-sky-50"
+            }`}
+          >
+            {f}
+          </button>
+        ))}
+      </div>
+
+      {/* Type tabs */}
+      <Tabs defaultValue="full_length">
         <TabsList className="flex-wrap h-auto">
-          <TabsTrigger value="launched"><Rocket className="h-3 w-3 mr-1" /> Launched ({launched.length})</TabsTrigger>
-          <TabsTrigger value="scheduled"><Calendar className="h-3 w-3 mr-1" /> Scheduled ({scheduled.length})</TabsTrigger>
-          <TabsTrigger value="upcoming"><Sparkles className="h-3 w-3 mr-1" /> Upcoming ({upcoming.length})</TabsTrigger>
-          {SERIES.map((s) => (
-            <TabsTrigger key={s} value={s}>{s} ({seriesMap[s].length})</TabsTrigger>
-          ))}
+          {TYPE_TABS.map((t) => {
+            const Icon = t.icon;
+            const count = buildBucket(t.key).length;
+            return (
+              <TabsTrigger key={t.key} value={t.key} className="gap-1.5">
+                <Icon className="h-3.5 w-3.5" /> {t.label} ({count})
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
 
-        <TabsContent value="launched" className="mt-4">
-          <BucketGrid items={launched} emptyKey="launched" />
-        </TabsContent>
-        <TabsContent value="scheduled" className="mt-4">
-          <BucketGrid items={scheduled} emptyKey="scheduled" />
-        </TabsContent>
-        <TabsContent value="upcoming" className="mt-4">
-          <BucketGrid items={upcoming} emptyKey="upcoming" />
-        </TabsContent>
-        {SERIES.map((s) => (
-          <TabsContent key={s} value={s} className="mt-4">
-            <BucketGrid items={seriesMap[s]} emptyKey={s} />
+        {TYPE_TABS.map((t) => (
+          <TabsContent key={t.key} value={t.key} className="mt-4">
+            {t.key === "attempted" ? (
+              <AttemptedGrid items={buildBucket("attempted") as any} />
+            ) : (
+              <BucketGrid
+                items={buildBucket(t.key) as any}
+                typeLabel={t.label}
+                examFilter={examFilter}
+                onUpgrade={() => setUpgradeOpen(true)}
+              />
+            )}
           </TabsContent>
         ))}
       </Tabs>
+
+      <UpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} featureLabel="this mock" />
     </div>
   );
 }
 
-function BucketGrid({ items, emptyKey }: { items: any[]; emptyKey: string }) {
+function comingSoon(t: Test): string | null {
+  const launch = t.launch_date ? new Date(t.launch_date) : null;
+  const sched = t.scheduled_start_at ? new Date(t.scheduled_start_at) : null;
+  const future = [launch, sched].filter((d): d is Date => !!d && d.getTime() > Date.now());
+  if (future.length === 0) return null;
+  const earliest = future.sort((a, b) => a.getTime() - b.getTime())[0];
+  return earliest.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function BucketGrid({
+  items, typeLabel, examFilter, onUpgrade,
+}: {
+  items: { test: Test; owned: boolean; inProgress: Attempt | null; latestSubmitted: Attempt | null }[];
+  typeLabel: string; examFilter: string; onUpgrade: () => void;
+}) {
   if (!items.length) {
-    const label = ["CAT", "XAT", "SNAP", "NMAT", "IIFT", "CMAT", "TISSNET"].includes(emptyKey)
-      ? `You don't own any ${emptyKey} mocks yet.`
-      : `No ${emptyKey} mocks right now.`;
     return (
       <Card className="p-8 text-center">
-        <ShoppingBag className="h-8 w-8 text-sky-500 mx-auto mb-3" />
-        <div className="font-medium">{label}</div>
-        <p className="text-sm text-muted-foreground mt-1 mb-4">
-          Browse our mock catalog and add a series to your dashboard.
-        </p>
-        <Link to="/student/buy-mocks">
-          <Button className="gap-2"><ShoppingBag className="h-4 w-4" /> Buy Mocks</Button>
+        <Lock className="h-8 w-8 text-sky-500 mx-auto mb-3" />
+        <div className="font-medium">
+          No {typeLabel}{examFilter !== "All" ? ` (${examFilter})` : ""} mocks in your active courses yet.
+        </div>
+        <p className="text-sm text-muted-foreground mt-1 mb-4">Upgrade course to unlock this content.</p>
+        <Link to="/courses">
+          <Button className="gap-2"><ShoppingBag className="h-4 w-4" /> Browse Courses</Button>
         </Link>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {items.map(({ test, owned, inProgress, latestSubmitted }) => {
+        const soon = comingSoon(test);
+        return (
+          <Card key={test.id} className={`p-4 flex flex-col relative ${!owned ? "border-sky-100" : ""}`}>
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="font-semibold leading-tight">{test.name}</div>
+              {!owned && <Badge variant="outline" className="shrink-0 text-[10px] gap-0.5"><Lock className="h-3 w-3" /> Locked</Badge>}
+              {owned && soon && <Badge className="shrink-0 text-[10px] bg-amber-500 hover:bg-amber-500"><Sparkles className="h-3 w-3 mr-0.5" /> Coming Soon</Badge>}
+            </div>
+            <div className="text-xs text-muted-foreground space-y-0.5 mb-3">
+              {test.exam_code && <div>{test.exam_code}</div>}
+              <div>{test.total_duration_minutes ?? "—"} min · {test.difficulty ?? "—"}</div>
+              {soon && <div className="flex items-center gap-1"><Calendar className="h-3 w-3" /> Launches {soon}</div>}
+            </div>
+
+            {owned && latestSubmitted && latestSubmitted.total_score != null && (
+              <div className="bg-emerald-50 border border-emerald-100 rounded-md p-2 mb-2 text-xs">
+                <div className="flex justify-between"><span>Score</span><span className="font-semibold">{latestSubmitted.total_score}/{latestSubmitted.max_score}</span></div>
+                <div className="flex justify-between"><span>Percentile</span><span className="font-semibold">{latestSubmitted.percentile ?? 0}</span></div>
+              </div>
+            )}
+
+            <div className="mt-auto flex flex-wrap gap-2">
+              {!owned ? (
+                <Button size="sm" className="w-full gap-1" onClick={onUpgrade}>
+                  <Sparkles className="h-3 w-3" /> Upgrade to unlock
+                </Button>
+              ) : soon ? (
+                <Button size="sm" disabled className="w-full gap-1">
+                  <Calendar className="h-3 w-3" /> Coming Soon
+                </Button>
+              ) : inProgress ? (
+                <Link to={`/mocks/attempt/${inProgress.id}`} className="flex-1">
+                  <Button size="sm" className="w-full gap-1"><Clock className="h-3 w-3" /> Resume</Button>
+                </Link>
+              ) : latestSubmitted ? (
+                <>
+                  <Link to={`/mocks/result/${latestSubmitted.id}`} className="flex-1">
+                    <Button size="sm" variant="outline" className="w-full gap-1"><FileText className="h-3 w-3" /> Result</Button>
+                  </Link>
+                  <Link to={`/mocks/${test.slug}`} className="flex-1">
+                    <Button size="sm" className="w-full gap-1"><Play className="h-3 w-3" /> Retake</Button>
+                  </Link>
+                </>
+              ) : (
+                test.slug && (
+                  <Link to={`/mocks/${test.slug}`} className="flex-1">
+                    <Button size="sm" className="w-full gap-1"><Play className="h-3 w-3" /> Start</Button>
+                  </Link>
+                )
+              )}
+            </div>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+function AttemptedGrid({ items }: { items: { test: Test; attempt: Attempt }[] }) {
+  if (!items.length) {
+    return (
+      <Card className="p-8 text-center">
+        <History className="h-8 w-8 text-sky-500 mx-auto mb-3" />
+        <div className="font-medium">No mocks attempted yet.</div>
+        <p className="text-sm text-muted-foreground mt-1">Once you submit a mock it will appear here with your result.</p>
       </Card>
     );
   }
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      {items.map((i) => (
-        <Card key={i.id} className="p-4 hover:shadow-md transition-shadow flex flex-col">
-          <div className="flex items-start justify-between gap-2 mb-2">
-            <div className="font-semibold leading-tight">{i.test?.name ?? "Mock"}</div>
-            {i.source === "admin" && <Badge variant="secondary" className="shrink-0 text-[10px]">Assigned</Badge>}
+      {items.map(({ test, attempt }) => (
+        <Card key={attempt.id} className="p-4 flex flex-col">
+          <div className="font-semibold leading-tight mb-1">{test.name}</div>
+          <div className="text-xs text-muted-foreground mb-3">
+            {test.exam_code ?? "—"} · Submitted {attempt.submitted_at ? new Date(attempt.submitted_at).toLocaleDateString() : "—"}
           </div>
-          <div className="text-xs text-muted-foreground space-y-0.5 mb-3">
-            {i.test?.exam_code && <div>{i.test.exam_code}</div>}
-            <div>{i.test?.total_duration_minutes ?? "—"} min · {i.test?.difficulty ?? "—"}</div>
-            {i.test?.scheduled_start_at && (
-              <div>Starts {new Date(i.test.scheduled_start_at).toLocaleString()}</div>
-            )}
-            {i.expires_at && <div>Expires {new Date(i.expires_at).toLocaleDateString()}</div>}
+          <div className="bg-emerald-50 border border-emerald-100 rounded-md p-2 mb-3 text-xs grid grid-cols-2 gap-y-1">
+            <span>Score</span><span className="text-right font-semibold">{attempt.total_score ?? 0}/{attempt.max_score ?? 0}</span>
+            <span>Percentile</span><span className="text-right font-semibold">{attempt.percentile ?? 0}</span>
+            <span>Accuracy</span><span className="text-right font-semibold">{attempt.total_attempted ? Math.round(((attempt.total_correct ?? 0) / attempt.total_attempted) * 100) : 0}%</span>
           </div>
-          {i.completed && i.completed.total_score != null && (
-            <div className="bg-emerald-50 border border-emerald-100 rounded-md p-2 mb-2 text-xs">
-              <div className="flex justify-between"><span>Score</span><span className="font-semibold">{i.completed.total_score}/{i.completed.max_score}</span></div>
-              <div className="flex justify-between"><span>Percentile</span><span className="font-semibold">{i.completed.percentile ?? 0}</span></div>
-            </div>
-          )}
-          <div className="mt-auto flex flex-wrap gap-2">
-            {i.inProgress ? (
-              <Link to={`/mocks/attempt/${i.inProgress.id}`} className="flex-1">
-                <Button size="sm" className="w-full gap-1"><Clock className="h-3 w-3" /> Resume</Button>
+          <div className="mt-auto flex gap-2">
+            <Link to={`/mocks/result/${attempt.id}`} className="flex-1">
+              <Button size="sm" variant="outline" className="w-full gap-1"><FileText className="h-3 w-3" /> Result</Button>
+            </Link>
+            <Link to={`/mocks/review/${attempt.id}`} className="flex-1">
+              <Button size="sm" className="w-full gap-1"><CheckCircle2 className="h-3 w-3" /> Review</Button>
+            </Link>
+            {test.slug && (
+              <Link to={`/mocks/leaderboard/${test.slug}`}>
+                <Button size="sm" variant="ghost"><Trophy className="h-4 w-4" /></Button>
               </Link>
-            ) : i.completed ? (
-              <>
-                <Link to={`/mocks/result/${i.completed.id}`} className="flex-1">
-                  <Button size="sm" variant="outline" className="w-full gap-1"><FileText className="h-3 w-3" /> Result</Button>
-                </Link>
-                <Link to={`/mocks/review/${i.completed.id}`} className="flex-1">
-                  <Button size="sm" className="w-full gap-1"><CheckCircle2 className="h-3 w-3" /> Review</Button>
-                </Link>
-                {i.test?.slug && (
-                  <Link to={`/mocks/leaderboard/${i.test.slug}`}>
-                    <Button size="sm" variant="ghost"><Trophy className="h-4 w-4" /></Button>
-                  </Link>
-                )}
-              </>
-            ) : (
-              i.test?.slug && (
-                <Link to={`/mocks/${i.test.slug}`} className="flex-1">
-                  <Button size="sm" className="w-full gap-1"><Play className="h-3 w-3" /> Start</Button>
-                </Link>
-              )
             )}
           </div>
         </Card>
