@@ -300,6 +300,14 @@ Deno.serve(async (req) => {
         const target = job.total_questions || 0;
 
         const seen = await loadExistingQuestionHashes(admin);
+        const corpus = await loadSectionCorpus(admin, job.section_id);
+
+        // Persisted dedup counters — preserve any value already on the row.
+        let dupHash = job.dup_hash || 0;
+        let dupSimilarity = job.dup_similarity || 0;
+        let dupParaphrase = job.dup_paraphrase || 0;
+        let dupDb = job.dup_db_conflict || 0;
+        let rejectedInvalid = job.rejected_invalid || 0;
 
         let attempts = 0;
         const maxAttempts = Math.max(20, (target - produced) * MAX_ATTEMPTS_PER_QUESTION);
