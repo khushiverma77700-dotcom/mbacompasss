@@ -52,6 +52,7 @@ const mocksGroup: NavItem[] = [
 
 const navItems: NavItem[] = [
   { to: "/student", label: "Overview", icon: LayoutDashboard, end: true },
+  { to: "/student/notifications", label: "Updates", icon: Bell },
   // "My Mocks" group is rendered separately as an expandable section.
   { to: "/student/buy-mocks", label: "Buy Mocks", icon: ShoppingBag, feature: "buy_mocks" },
   { to: "/student/performance", label: "Performance", icon: BarChart3, feature: "performance_tracker" },
