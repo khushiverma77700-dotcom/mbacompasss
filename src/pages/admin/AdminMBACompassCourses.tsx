@@ -233,6 +233,7 @@ export default function AdminMBACompassCourses() {
                   <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
                   <TabsTrigger value="instructors">Instructors</TabsTrigger>
                   <TabsTrigger value="faqs">FAQs</TabsTrigger>
+                  <TabsTrigger value="bundles">Bundles ({editBundleIds.length})</TabsTrigger>
                   <TabsTrigger value="seo">SEO</TabsTrigger>
                 </TabsList>
 
