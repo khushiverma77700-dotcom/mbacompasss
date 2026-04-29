@@ -169,10 +169,27 @@ export default function AdminMBACompassCourses() {
       instructors: edit.instructors ?? [],
       gallery_images: edit.gallery_images ?? [],
     };
+    let courseId = edit.id;
     let error;
-    if (edit.id) ({ error } = await supabase.from("mba_compass_courses").update(payload as any).eq("id", edit.id));
-    else ({ error } = await supabase.from("mba_compass_courses").insert(payload as any));
+    if (edit.id) {
+      ({ error } = await supabase.from("mba_compass_courses").update(payload as any).eq("id", edit.id));
+    } else {
+      const ins = await supabase.from("mba_compass_courses").insert(payload as any).select("id").single();
+      error = ins.error;
+      courseId = ins.data?.id;
+    }
     if (error) return toast.error(error.message);
+
+    // Sync course_bundles: replace links for this course
+    if (courseId) {
+      await supabase.from("course_bundles").delete().eq("course_id", courseId);
+      if (editBundleIds.length > 0) {
+        const rows = editBundleIds.map((bundle_id, sort_order) => ({ course_id: courseId, bundle_id, sort_order }));
+        const linkRes = await supabase.from("course_bundles").insert(rows);
+        if (linkRes.error) toast.error("Course saved, but bundle links failed: " + linkRes.error.message);
+      }
+    }
+
     toast.success("Course saved");
     setEdit(null); load();
   };
