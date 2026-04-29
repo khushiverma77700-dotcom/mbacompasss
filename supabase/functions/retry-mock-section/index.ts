@@ -352,7 +352,7 @@ Deno.serve(async (req) => {
                     explanation: q.explanation_html || null,
                     topic: q.topic || job.topic || null,
                     source: "mock-mirror-retry",
-                    created_by: user.id,
+                    created_by: userId,
                   });
                 }
               } else {
