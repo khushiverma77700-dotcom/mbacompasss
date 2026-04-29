@@ -597,7 +597,7 @@ Deno.serve(async (req) => {
         exam_code,
         launch_date,
         total_duration_minutes: sectionPlan.reduce((s, x) => s + x.duration, 0),
-        difficulty: level === "mixed" ? "medium" : (level === "moderate" ? "medium" : level),
+        difficulty: normalizeDifficulty(null, level),
         is_published: false,
         generated_by_ai: true,
         generation_meta: { request: body, set_index: setIdx, total_sets: setsCount, generation_id: genId },
