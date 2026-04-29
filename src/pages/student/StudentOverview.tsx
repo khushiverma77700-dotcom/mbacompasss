@@ -61,7 +61,7 @@ export default function StudentOverview() {
     (async () => {
       const today = new Date().toISOString().slice(0, 10);
       const [
-        { data: e }, { data: g }, { data: ann }, { data: pf }, { data: tk }, { data: wk },
+        { data: e }, { data: g }, { data: ann }, { data: pf }, { data: tk }, { data: wk }, { data: prof },
       ] = await Promise.all([
         supabase.from("mock_enrollments")
           .select("id, test_id, source, expires_at, enrolled_at, test:mock_tests(name, slug, exam_code)")
@@ -73,6 +73,7 @@ export default function StudentOverview() {
         supabase.from("student_study_profile").select("*").eq("user_id", user.id).maybeSingle(),
         supabase.from("student_daily_tasks").select("*").eq("user_id", user.id).eq("task_date", today),
         supabase.from("student_weak_topics").select("*").eq("user_id", user.id).order("level", { ascending: true }).limit(12),
+        supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle(),
       ]);
       setEnrollments(e ?? []);
       setGoals(g ?? []);
@@ -80,6 +81,7 @@ export default function StudentOverview() {
       setProfile(pf);
       setTasks(tk ?? []);
       setWeak(wk ?? []);
+      setDisplayName(prof?.display_name ?? user.email?.split("@")[0] ?? "Student");
       setSideLoading(false);
     })();
   }, [user]);
