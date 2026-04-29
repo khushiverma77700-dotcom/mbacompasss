@@ -12,7 +12,7 @@ export type SectionJob = {
   current_step: string | null;
   error_message: string | null;
   updated_at: string | null;
-  /** True if status=processing but updated_at is older than STALL_MS — shows "Stuck" UI + retry button. */
+  /** Kept for UI compatibility; long AI calls are no longer marked stuck client-side. */
   isStalled?: boolean;
 };
 
@@ -38,9 +38,6 @@ export type MockGenerationProgress = {
   qps: number;          // questions per second
   etaSec: number | null;
 };
-
-// A processing job that hasn't updated in this long is considered stuck
-const STALL_MS = 90_000;
 
 export function useMockGenerationProgress(generationId: string | null, intervalMs = 1500): MockGenerationProgress {
   const [jobs, setJobs] = useState<SectionJob[]>([]);
@@ -73,13 +70,8 @@ export function useMockGenerationProgress(generationId: string | null, intervalM
     return () => { alive = false; clearInterval(t); clearInterval(tick); };
   }, [generationId, intervalMs]);
 
-  // Compute stall flag client-side from updated_at
-  const annotatedJobs: SectionJob[] = jobs.map((j) => {
-    if (j.status !== "processing" || !j.updated_at) return { ...j, isStalled: false };
-    const updatedMs = new Date(j.updated_at).getTime();
-    const isStalled = !Number.isNaN(updatedMs) && (now - updatedMs) > STALL_MS;
-    return { ...j, isStalled };
-  });
+  // Single-question generation can legitimately take a long time; do not show false "stuck" errors.
+  const annotatedJobs: SectionJob[] = jobs.map((j) => ({ ...j, isStalled: false }));
 
   const totalSections = annotatedJobs.length;
   const doneSections = annotatedJobs.filter((j) => j.status === "completed").length;

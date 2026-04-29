@@ -39,9 +39,9 @@ function stripPrefixes(html: string | null | undefined, patterns: RegExp[]): str
 const cleanQuestionHtml = (h: string | null | undefined) => stripPrefixes(h, Q_PREFIX_PATTERNS);
 const cleanOptionHtml = (h: string | null | undefined) => stripPrefixes(h, OPT_PREFIX_PATTERNS);
 
-const OPENAI_TIMEOUT_MS = 90_000;
-const SECTION_WALL_CLOCK_MS = 8 * 60_000;
-const BATCH_SIZE = 8;
+const OPENAI_TIMEOUT_MS = 120_000;
+const BATCH_SIZE = 1;
+const MAX_ATTEMPTS_PER_QUESTION = 60;
 
 const PERSONALIZED_SECTION_MAP: Record<string, Record<string, string>> = {
   CAT:  { VARC: "VARC", DILR: "DILR", QA: "QA" },
@@ -84,6 +84,24 @@ async function sha256(text: string): Promise<string> {
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+async function loadExistingQuestionHashes(admin: any): Promise<Set<string>> {
+  const seen = new Set<string>();
+  const pageSize = 1000;
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await admin
+      .from("mock_questions")
+      .select("content_hash, question_html")
+      .range(from, from + pageSize - 1);
+    if (error) throw new Error(`Could not load existing question hashes: ${error.message}`);
+    for (const row of data || []) {
+      if ((row as any).content_hash) seen.add((row as any).content_hash);
+      else if ((row as any).question_html) seen.add(await sha256(normalizeForHash((row as any).question_html)));
+    }
+    if (!data || data.length < pageSize) break;
+  }
+  return seen;
+}
+
 const EXAM_BASELINE: Record<string, string> = {
   CAT: "HIGH baseline (CAT 85-95 percentile difficulty). Elegant single-insight questions, RC-heavy VARC, dense DILR caselets, arithmetic-heavy QA. No GK.",
   XAT: "VERY HIGH baseline — HARDER than CAT. Verbose passages, ethical Decision Making dilemmas with no single right answer, harder Modern Math + Geometry. GK section, no negative on GK.",
@@ -120,15 +138,19 @@ async function callOpenAIBatch(opts: {
 
   const lvlLower = String(opts.level || "").toLowerCase();
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
-  const modelId = isHardVariant ? "gpt-5" : "gpt-4o";
+  const modelId = "gpt-4o";
   const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.4;
   const reqBody: Record<string, unknown> = {
     model: modelId,
     messages: [{ role: "system", content: sys }, { role: "user", content: user }],
     response_format: { type: "json_object" },
-    max_tokens: 16000,
   };
-  if (modelId !== "gpt-5") reqBody.temperature = temp;
+  if (modelId === "gpt-5") {
+    reqBody.max_completion_tokens = 16000;
+  } else {
+    reqBody.max_tokens = 16000;
+    reqBody.temperature = temp;
+  }
 
   // Inline retry with exponential backoff for transient errors (429 / 5xx).
   const MAX_INLINE_RETRIES = 4;
@@ -220,12 +242,10 @@ Deno.serve(async (req) => {
         let produced = existingCount || 0;
         const target = job.total_questions || 0;
 
-        const { data: existingHashes } = await admin.from("mock_questions").select("content_hash").not("content_hash", "is", null);
-        const seen = new Set<string>((existingHashes || []).map((r: any) => r.content_hash).filter(Boolean));
+        const seen = await loadExistingQuestionHashes(admin);
 
-        const startedAt = Date.now();
         let attempts = 0;
-        const maxAttempts = Math.ceil((target - produced) / BATCH_SIZE) + 4;
+        const maxAttempts = Math.max(20, (target - produced) * MAX_ATTEMPTS_PER_QUESTION);
 
         // Mirror to Personalized Hub ONLY if the parent test is Daily/sectional/topic.
         // Look up parent test_type via section → test.
@@ -242,24 +262,15 @@ Deno.serve(async (req) => {
         const hubSection = allowHubMirror ? (PERSONALIZED_SECTION_MAP[job.exam_code] || {})[job.section_code] : undefined;
 
         while (produced < target && attempts < maxAttempts) {
-          if (Date.now() - startedAt > SECTION_WALL_CLOCK_MS) {
-            await admin.from("mock_section_jobs").update({
-              status: "failed",
-              error_message: "Retry exceeded 8-min wall clock",
-              current_step: "Timed out",
-              updated_at: new Date().toISOString(),
-            }).eq("id", job_id);
-            return;
-          }
           attempts++;
           const remain = target - produced;
-          const batch = Math.min(BATCH_SIZE, remain);
-          const remainTita = Math.max(0, (job.tita_count || 0) - 0);
-          const batchTita = Math.min(remainTita, Math.round(batch * (remainTita / Math.max(1, remain))));
+          const batch = 1;
+          const remainTita = Math.max(0, (job.tita_count || 0) - produced);
+          const batchTita = remainTita > 0 && remain <= remainTita ? 1 : 0;
           const batchMcq = batch - batchTita;
 
           await admin.from("mock_section_jobs").update({
-            current_step: `Retry batch ${attempts}: requesting ${batch} questions…`,
+            current_step: `Retrying question ${produced + 1}/${target} — uniqueness check active…`,
             updated_at: new Date().toISOString(),
           }).eq("id", job_id);
 
@@ -350,11 +361,11 @@ Deno.serve(async (req) => {
           }).eq("id", job_id);
         }
 
-        const success = produced >= Math.ceil(target * 0.8);
+        const success = produced === target;
         await admin.from("mock_section_jobs").update({
           status: success ? "completed" : "failed",
           questions_done: produced,
-          current_step: success ? `Done — ${produced} questions saved` : `Incomplete — ${produced}/${target}`,
+          current_step: success ? `Done — exactly ${produced} questions saved` : `Incomplete — ${produced}/${target}`,
           error_message: success ? null : `Only ${produced} of ${target} after retry`,
           updated_at: new Date().toISOString(),
         }).eq("id", job_id);
