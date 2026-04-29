@@ -482,9 +482,20 @@ Deno.serve(async (req) => {
         }
 
         const success = produced === target;
+        const totalDup = dupHash + dupSimilarity + dupParaphrase + dupDb;
+        const finalReason = success
+          ? `Saved exactly ${produced}/${target} questions. Rejected ${totalDup} duplicates (${dupHash} hash, ${dupSimilarity} similarity, ${dupParaphrase} paraphrase, ${dupDb} db) and ${rejectedInvalid} invalid candidates across ${attempts} AI calls.`
+          : `Saved only ${produced}/${target} after ${attempts} AI calls. Rejected ${totalDup} duplicates (${dupHash} hash, ${dupSimilarity} similarity, ${dupParaphrase} paraphrase, ${dupDb} db) and ${rejectedInvalid} invalid candidates.`;
         await admin.from("mock_section_jobs").update({
           status: success ? "completed" : "failed",
           questions_done: produced,
+          duplicates_rejected: totalDup,
+          dup_hash: dupHash,
+          dup_similarity: dupSimilarity,
+          dup_paraphrase: dupParaphrase,
+          dup_db_conflict: dupDb,
+          rejected_invalid: rejectedInvalid,
+          final_reason: finalReason,
           current_step: success ? `Done — exactly ${produced} questions saved` : `Incomplete — ${produced}/${target}`,
           error_message: success ? null : `Only ${produced} of ${target} after retry`,
           worker_lock_until: null,
