@@ -790,26 +790,79 @@ export default function StudentOverview() {
 
 function Kpi({ label, value, icon }: any) {
   return (
-    <div className="bg-white/15 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/20">
-      <div className="text-[10px] uppercase tracking-wider text-white/80 flex items-center gap-1">
+    <div className="bg-white/10 hover:bg-white/15 transition-colors backdrop-blur-sm rounded-xl px-3 py-2.5 border border-white/20">
+      <div className="text-[10px] uppercase tracking-wider text-white/75 flex items-center gap-1">
         {icon} {label}
       </div>
-      <div className="text-lg font-bold">{value}</div>
+      <div className="text-xl font-bold mt-0.5">{value}</div>
     </div>
   );
 }
 
-function StatTile({ icon: Icon, label, value, sub, accent }: any) {
+const TONE_MAP: Record<string, { ring: string; icon: string; bg: string; bar: string }> = {
+  sky:     { ring: "ring-sky-100 dark:ring-sky-500/20",         icon: "text-sky-600 dark:text-sky-300 bg-sky-50 dark:bg-sky-500/10",       bg: "from-sky-500/10",       bar: "bg-sky-500" },
+  emerald: { ring: "ring-emerald-100 dark:ring-emerald-500/20", icon: "text-emerald-600 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10", bg: "from-emerald-500/10", bar: "bg-emerald-500" },
+  amber:   { ring: "ring-amber-100 dark:ring-amber-500/20",     icon: "text-amber-600 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10", bg: "from-amber-500/10",     bar: "bg-amber-500" },
+  rose:    { ring: "ring-rose-100 dark:ring-rose-500/20",       icon: "text-rose-600 dark:text-rose-300 bg-rose-50 dark:bg-rose-500/10",   bg: "from-rose-500/10",      bar: "bg-rose-500" },
+  violet:  { ring: "ring-violet-100 dark:ring-violet-500/20",   icon: "text-violet-600 dark:text-violet-300 bg-violet-50 dark:bg-violet-500/10", bg: "from-violet-500/10", bar: "bg-violet-500" },
+  cyan:    { ring: "ring-cyan-100 dark:ring-cyan-500/20",       icon: "text-cyan-600 dark:text-cyan-300 bg-cyan-50 dark:bg-cyan-500/10",   bg: "from-cyan-500/10",      bar: "bg-cyan-500" },
+  fuchsia: { ring: "ring-fuchsia-100 dark:ring-fuchsia-500/20", icon: "text-fuchsia-600 dark:text-fuchsia-300 bg-fuchsia-50 dark:bg-fuchsia-500/10", bg: "from-fuchsia-500/10", bar: "bg-fuchsia-500" },
+  green:   { ring: "ring-green-100 dark:ring-green-500/20",     icon: "text-green-600 dark:text-green-300 bg-green-50 dark:bg-green-500/10", bg: "from-green-500/10",   bar: "bg-green-500" },
+};
+
+function StatTile({ icon: Icon, label, value, sub, tone = "sky", trend }: any) {
+  const t = TONE_MAP[tone] ?? TONE_MAP.sky;
+  const trendColor = typeof trend === "number"
+    ? trend > 0 ? "text-emerald-600 dark:text-emerald-400" : trend < 0 ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground"
+    : "text-muted-foreground";
   return (
-    <Card className="p-4 relative overflow-hidden">
-      <div className={`absolute -top-6 -right-6 h-20 w-20 rounded-full bg-gradient-to-br ${accent} opacity-10 pointer-events-none`} />
-      <Icon className="h-5 w-5 text-sky-600" />
-      <div className="text-2xl font-bold mt-2">{value}</div>
-      <div className="text-xs text-muted-foreground">{label}</div>
-      {sub && <div className="text-[10px] text-muted-foreground mt-1 truncate">{sub}</div>}
+    <Card className={`group relative overflow-hidden p-4 ring-1 ${t.ring} hover:shadow-md hover:-translate-y-0.5 transition-all duration-200`}>
+      <div className={`absolute inset-0 bg-gradient-to-br ${t.bg} to-transparent opacity-60 pointer-events-none`} />
+      <div className="relative flex items-start justify-between">
+        <div className={`h-9 w-9 rounded-lg grid place-items-center ${t.icon}`}>
+          <Icon className="h-4.5 w-4.5" />
+        </div>
+        <div className={`absolute top-0 right-0 h-1 w-8 rounded-bl-md ${t.bar} opacity-80`} />
+      </div>
+      <div className="relative mt-3 text-[11px] uppercase tracking-wider text-muted-foreground font-medium">{label}</div>
+      <div className="relative text-2xl font-bold mt-0.5 tabular-nums">{value}</div>
+      {sub && <div className={`relative text-[11px] mt-1 truncate ${trendColor}`}>{sub}</div>}
     </Card>
   );
 }
+
+function QuickAction({ to, icon: Icon, label, desc, tone = "sky" }: any) {
+  const t = TONE_MAP[tone] ?? TONE_MAP.sky;
+  return (
+    <Link
+      to={to}
+      className={`group relative overflow-hidden rounded-xl border border-border bg-card p-4 ring-1 ${t.ring} hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-3`}
+    >
+      <div className={`h-11 w-11 rounded-xl grid place-items-center ${t.icon} group-hover:scale-110 transition-transform`}>
+        <Icon className="h-5 w-5" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="font-semibold text-sm truncate">{label}</div>
+        <div className="text-[11px] text-muted-foreground truncate">{desc}</div>
+      </div>
+      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground group-hover:translate-x-0.5 transition-all" />
+    </Link>
+  );
+}
+
+function SectionHeading({ icon: Icon, title, subtitle }: any) {
+  return (
+    <div className="flex items-end justify-between mb-3 gap-3">
+      <div className="min-w-0">
+        <h2 className="text-sm font-semibold flex items-center gap-2 text-foreground">
+          {Icon && <Icon className="h-4 w-4 text-sky-600 dark:text-sky-300" />} {title}
+        </h2>
+        {subtitle && <p className="text-[11px] text-muted-foreground mt-0.5">{subtitle}</p>}
+      </div>
+    </div>
+  );
+}
+
 function StatusLabel({ status }: { status: string }) {
   const map: Record<string, string> = {
     in_progress: "In progress", submitted: "Completed", auto_submitted: "Auto-submitted", abandoned: "Abandoned",
