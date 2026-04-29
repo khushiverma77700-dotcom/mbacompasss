@@ -27,9 +27,9 @@ const TYPE_TABS = [
   { value: "all", label: "All" },
   { value: "full_length", label: "Full-Length" },
   { value: "sectional", label: "Sectional" },
-  { value: "topic", label: "Topic-wise" },
+  { value: "topic_wise", label: "Topic-wise" },
+  { value: "practice_set", label: "Practice Set" },
   { value: "daily", label: "Daily" },
-  { value: "practice", label: "Practice" },
 ];
 
 export default function CourseMockPicker({ selectedCategories, selectedTestIds, onTestIdsChange }: Props) {
