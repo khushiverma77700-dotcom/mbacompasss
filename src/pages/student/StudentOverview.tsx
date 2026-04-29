@@ -232,6 +232,9 @@ export default function StudentOverview() {
 
   if (loading) return <div className="text-muted-foreground">Loading dashboard…</div>;
 
+  const noProfile = !profile;
+  const target = Number(profile?.target_percentile || 0);
+  const gap = target && predicted != null ? +(target - predicted).toFixed(1) : null;
   const firstName = (displayName || "Student").split(" ")[0];
   const initial = (displayName || "S").charAt(0).toUpperCase();
   const targetProgress = target > 0 && predicted != null ? Math.min(100, Math.round((predicted / target) * 100)) : 0;
