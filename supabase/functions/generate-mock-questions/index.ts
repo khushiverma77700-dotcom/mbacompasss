@@ -877,20 +877,25 @@ Deno.serve(async (req) => {
         questionNumberOffset += sec.questions;
       }
 
-      const firstJobId = sectionRecords.find((r) => r.jobId)?.jobId;
-      if (firstJobId) {
+      // Kick off EVERY section job in parallel using the service role key so the
+      // background workers don't depend on the user's JWT (which can expire mid-run).
+      const workerUrl = `${url}/functions/v1/retry-mock-section`;
+      const allJobIds = sectionRecords.map((r) => r.jobId).filter(Boolean) as string[];
+      for (const jId of allJobIds) {
         await admin.from("mock_section_jobs").update({
           status: "processing",
           current_step: "Queued reliable one-question worker…",
+          worker_lock_until: new Date(Date.now() + 8 * 60_000).toISOString(),
           updated_at: new Date().toISOString(),
-        }).eq("id", firstJobId);
-        // Each worker invocation generates at most one question and then re-invokes itself.
-        // This avoids Cloud function CPU/wall-clock limits that were breaking hard/extreme mocks.
-        const workerUrl = `${url}/functions/v1/retry-mock-section`;
+        }).eq("id", jId);
         const kick = fetch(workerUrl, {
           method: "POST",
-          headers: { Authorization: authHeader, apikey: anonKey, "Content-Type": "application/json" },
-          body: JSON.stringify({ job_id: firstJobId, auto: true }),
+          headers: {
+            Authorization: `Bearer ${serviceKey}`,
+            apikey: serviceKey,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ job_id: jId, auto: true, service: true }),
         }).catch((e) => console.error("[generate] worker kickoff failed", e));
         // @ts-ignore
         if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(kick);

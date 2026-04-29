@@ -208,14 +208,24 @@ Deno.serve(async (req) => {
 
     const authHeader = req.headers.get("Authorization") || "";
     if (!authHeader.startsWith("Bearer ")) return jsonResp(401, { error: "Missing auth" });
-    const userClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });
-    const { data: userRes } = await userClient.auth.getUser();
-    const user = userRes?.user;
-    if (!user) return jsonResp(401, { error: "Invalid auth" });
+    const bearerToken = authHeader.slice("Bearer ".length).trim();
 
     const admin = createClient(url, serviceKey);
-    const { data: roleRow } = await admin.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
-    if (!roleRow) return jsonResp(403, { error: "Admin role required" });
+
+    // Two valid auth modes:
+    //  1) Service-role token (background self-recursion / kickoff from generate-mock-questions)
+    //  2) End-user JWT (admin clicked "Retry section")
+    let userId: string | null = null;
+    const isServiceCall = bearerToken === serviceKey;
+    if (!isServiceCall) {
+      const userClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });
+      const { data: userRes } = await userClient.auth.getUser();
+      const user = userRes?.user;
+      if (!user) return jsonResp(401, { error: "Invalid auth" });
+      const { data: roleRow } = await admin.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle();
+      if (!roleRow) return jsonResp(403, { error: "Admin role required" });
+      userId = user.id;
+    }
 
     const { job_id, auto = false } = await req.json();
     if (!job_id) return jsonResp(400, { error: "job_id required" });
@@ -223,12 +233,15 @@ Deno.serve(async (req) => {
     const { data: job, error: jobErr } = await admin.from("mock_section_jobs").select("*").eq("id", job_id).single();
     if (jobErr || !job) return jsonResp(404, { error: "Job not found" });
 
-    // Re-arm the job
+    if (!userId) userId = job.created_by;
+
+    // Re-arm the job and grab a worker lock so the watchdog can recover us if we die.
     await admin.from("mock_section_jobs").update({
       status: "processing",
       current_step: "Restart requested — re-calling AI…",
       error_message: null,
       attempts: auto ? (job.attempts || 0) : (job.attempts || 0) + 1,
+      worker_lock_until: new Date(Date.now() + 8 * 60_000).toISOString(),
       updated_at: new Date().toISOString(),
     }).eq("id", job_id);
 
@@ -270,7 +283,8 @@ Deno.serve(async (req) => {
           const batchMcq = batch - batchTita;
 
           await admin.from("mock_section_jobs").update({
-            current_step: `Retrying question ${produced + 1}/${target} — uniqueness check active…`,
+            current_step: `Writing question ${produced + 1}/${target} — uniqueness check active…`,
+            worker_lock_until: new Date(Date.now() + 8 * 60_000).toISOString(),
             updated_at: new Date().toISOString(),
           }).eq("id", job_id);
 
@@ -339,7 +353,7 @@ Deno.serve(async (req) => {
                     explanation: q.explanation_html || null,
                     topic: q.topic || job.topic || null,
                     source: "mock-mirror-retry",
-                    created_by: user.id,
+                    created_by: userId,
                   });
                 }
               } else {
@@ -357,15 +371,22 @@ Deno.serve(async (req) => {
           await admin.from("mock_section_jobs").update({
             questions_done: produced,
             current_step: `Generated ${produced}/${target}`,
+            worker_lock_until: new Date(Date.now() + 8 * 60_000).toISOString(),
             updated_at: new Date().toISOString(),
           }).eq("id", job_id);
 
           if (auto && produced < target) {
             const workerUrl = `${url}/functions/v1/retry-mock-section`;
+            // ALWAYS use service-role for self-recursion so we don't depend on
+            // the (possibly expired) end-user JWT. Never forward `authHeader`.
             const next = fetch(workerUrl, {
               method: "POST",
-              headers: { Authorization: authHeader, apikey: anonKey, "Content-Type": "application/json" },
-              body: JSON.stringify({ job_id, auto: true }),
+              headers: {
+                Authorization: `Bearer ${serviceKey}`,
+                apikey: serviceKey,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ job_id, auto: true, service: true }),
             }).catch((e) => console.error("[retry-mock-section] next worker failed", e));
             // @ts-ignore
             if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
@@ -379,13 +400,47 @@ Deno.serve(async (req) => {
           questions_done: produced,
           current_step: success ? `Done — exactly ${produced} questions saved` : `Incomplete — ${produced}/${target}`,
           error_message: success ? null : `Only ${produced} of ${target} after retry`,
+          worker_lock_until: null,
           updated_at: new Date().toISOString(),
         }).eq("id", job_id);
+
+        // Chain to the next pending sibling section in the same generation.
+        if (job.generation_id) {
+          const { data: siblings } = await admin
+            .from("mock_section_jobs")
+            .select("id")
+            .eq("generation_id", job.generation_id)
+            .eq("status", "pending")
+            .order("created_at", { ascending: true })
+            .limit(1);
+          const nextJobId = siblings?.[0]?.id;
+          if (nextJobId) {
+            await admin.from("mock_section_jobs").update({
+              status: "processing",
+              current_step: "Queued reliable one-question worker…",
+              worker_lock_until: new Date(Date.now() + 8 * 60_000).toISOString(),
+              updated_at: new Date().toISOString(),
+            }).eq("id", nextJobId);
+            const workerUrl = `${url}/functions/v1/retry-mock-section`;
+            const next = fetch(workerUrl, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${serviceKey}`,
+                apikey: serviceKey,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ job_id: nextJobId, auto: true, service: true }),
+            }).catch((e) => console.error("[retry-mock-section] sibling kickoff failed", e));
+            // @ts-ignore
+            if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
+          }
+        }
       } catch (e) {
         await admin.from("mock_section_jobs").update({
           status: "failed",
           error_message: String((e as Error)?.message || e).slice(0, 500),
           current_step: "Retry failed",
+          worker_lock_until: null,
           updated_at: new Date().toISOString(),
         }).eq("id", job_id);
       }
