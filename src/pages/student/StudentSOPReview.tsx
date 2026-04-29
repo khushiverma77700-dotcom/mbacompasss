@@ -107,22 +107,72 @@ export default function StudentSOPReview() {
 
   const handleFile = async (file: File) => {
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "File too large", description: "Max 5 MB.", variant: "destructive" });
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Max 10 MB.", variant: "destructive" });
       return;
     }
-    const isText = file.type.startsWith("text/") || file.name.endsWith(".txt") || file.name.endsWith(".md");
-    if (isText) {
-      const text = await file.text();
+    const name = file.name.toLowerCase();
+    try {
+      let text = "";
+      if (name.endsWith(".txt") || name.endsWith(".md") || file.type.startsWith("text/")) {
+        text = await file.text();
+      } else if (name.endsWith(".pdf") || file.type === "application/pdf") {
+        toast({ title: "Parsing PDF...", description: "Extracting text, please wait." });
+        const pdfjs: any = await import("pdfjs-dist");
+        // @ts-ignore - worker URL
+        const workerSrc = (await import("pdfjs-dist/build/pdf.worker.min.mjs?url")).default;
+        pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+        const buf = await file.arrayBuffer();
+        const pdf = await pdfjs.getDocument({ data: buf }).promise;
+        const parts: string[] = [];
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          parts.push(content.items.map((it: any) => it.str).join(" "));
+        }
+        text = parts.join("\n\n").replace(/\s+\n/g, "\n").trim();
+      } else if (name.endsWith(".docx")) {
+        toast({ title: "Parsing DOCX...", description: "Extracting text, please wait." });
+        const mammoth: any = await import("mammoth/mammoth.browser");
+        const buf = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer: buf });
+        text = (result.value || "").trim();
+      } else if (name.endsWith(".doc")) {
+        toast({
+          title: "Legacy .doc not supported",
+          description: "Please save as .docx or .pdf, or paste the text below.",
+          variant: "destructive",
+        });
+        return;
+      } else {
+        toast({
+          title: "Unsupported format",
+          description: "Upload .pdf, .docx, .txt or .md — or paste text below.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!text || text.length < 50) {
+        toast({
+          title: "Could not extract text",
+          description: "The file appears empty or scanned. Please paste the SOP text manually.",
+          variant: "destructive",
+        });
+        set("file_name", file.name);
+        return;
+      }
+
       set("sop_text", text);
       set("file_name", file.name);
-      toast({ title: "File loaded", description: `${file.name} parsed.` });
-    } else {
+      toast({ title: "File loaded", description: `${file.name} parsed (${text.split(/\s+/).filter(Boolean).length} words).` });
+    } catch (err: any) {
+      console.error("File parse error", err);
       toast({
-        title: "Paste SOP text",
-        description: "For PDF/DOC, please copy the text and paste it into the editor below.",
+        title: "Failed to parse file",
+        description: err?.message || "Please paste the SOP text manually.",
+        variant: "destructive",
       });
-      set("file_name", file.name);
     }
   };
 
@@ -264,11 +314,11 @@ export default function StudentSOPReview() {
         <div className="flex flex-col sm:flex-row gap-3">
           <label className="flex-1 border-2 border-dashed border-sky-200 rounded-lg p-4 text-center cursor-pointer hover:bg-sky-50 transition">
             <Upload className="h-5 w-5 text-sky-600 mx-auto mb-1" />
-            <div className="text-sm font-medium">Upload SOP (.txt)</div>
-            <div className="text-xs text-muted-foreground">For PDF/DOC, paste text on the right</div>
+            <div className="text-sm font-medium">Upload SOP</div>
+            <div className="text-xs text-muted-foreground">PDF, DOCX, TXT or MD (max 10 MB)</div>
             <input
               type="file"
-              accept=".txt,.md,text/plain"
+              accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
               className="hidden"
               onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
             />
