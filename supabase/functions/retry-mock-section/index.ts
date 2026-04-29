@@ -370,15 +370,22 @@ Deno.serve(async (req) => {
           await admin.from("mock_section_jobs").update({
             questions_done: produced,
             current_step: `Generated ${produced}/${target}`,
+            worker_lock_until: new Date(Date.now() + 8 * 60_000).toISOString(),
             updated_at: new Date().toISOString(),
           }).eq("id", job_id);
 
           if (auto && produced < target) {
             const workerUrl = `${url}/functions/v1/retry-mock-section`;
+            // ALWAYS use service-role for self-recursion so we don't depend on
+            // the (possibly expired) end-user JWT. Never forward `authHeader`.
             const next = fetch(workerUrl, {
               method: "POST",
-              headers: { Authorization: authHeader, apikey: anonKey, "Content-Type": "application/json" },
-              body: JSON.stringify({ job_id, auto: true }),
+              headers: {
+                Authorization: `Bearer ${serviceKey}`,
+                apikey: serviceKey,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ job_id, auto: true, service: true }),
             }).catch((e) => console.error("[retry-mock-section] next worker failed", e));
             // @ts-ignore
             if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
@@ -392,13 +399,47 @@ Deno.serve(async (req) => {
           questions_done: produced,
           current_step: success ? `Done — exactly ${produced} questions saved` : `Incomplete — ${produced}/${target}`,
           error_message: success ? null : `Only ${produced} of ${target} after retry`,
+          worker_lock_until: null,
           updated_at: new Date().toISOString(),
         }).eq("id", job_id);
+
+        // Chain to the next pending sibling section in the same generation.
+        if (job.generation_id) {
+          const { data: siblings } = await admin
+            .from("mock_section_jobs")
+            .select("id")
+            .eq("generation_id", job.generation_id)
+            .eq("status", "pending")
+            .order("created_at", { ascending: true })
+            .limit(1);
+          const nextJobId = siblings?.[0]?.id;
+          if (nextJobId) {
+            await admin.from("mock_section_jobs").update({
+              status: "processing",
+              current_step: "Queued reliable one-question worker…",
+              worker_lock_until: new Date(Date.now() + 8 * 60_000).toISOString(),
+              updated_at: new Date().toISOString(),
+            }).eq("id", nextJobId);
+            const workerUrl = `${url}/functions/v1/retry-mock-section`;
+            const next = fetch(workerUrl, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${serviceKey}`,
+                apikey: serviceKey,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ job_id: nextJobId, auto: true, service: true }),
+            }).catch((e) => console.error("[retry-mock-section] sibling kickoff failed", e));
+            // @ts-ignore
+            if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
+          }
+        }
       } catch (e) {
         await admin.from("mock_section_jobs").update({
           status: "failed",
           error_message: String((e as Error)?.message || e).slice(0, 500),
           current_step: "Retry failed",
+          worker_lock_until: null,
           updated_at: new Date().toISOString(),
         }).eq("id", job_id);
       }
