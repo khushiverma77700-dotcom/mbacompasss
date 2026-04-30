@@ -53,7 +53,28 @@ function isAIRateLimitError(message: unknown): boolean {
 
 function isAIQuotaBlockedError(message: unknown): boolean {
   const m = String(message || "").toLowerCase();
-  return m.includes("insufficient_quota") || m.includes("exceeded your current quota") || m.includes("billing") || m.includes("quota/rate-limit blocked");
+  return m.includes("402") || m.includes("payment required") || m.includes("insufficient_quota") || m.includes("exceeded your current quota") || m.includes("billing") || m.includes("quota/rate-limit blocked");
+}
+
+function parseJsonContent(content: unknown): any {
+  if (typeof content !== "string") return content;
+  try { return JSON.parse(content); } catch {
+    const cleaned = content.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "");
+    const start = cleaned.indexOf("{");
+    const end = cleaned.lastIndexOf("}");
+    if (start >= 0 && end > start) return JSON.parse(cleaned.slice(start, end + 1));
+    throw new Error("AI returned non-JSON content");
+  }
+}
+
+async function fetchWithTimeout(promise: Promise<Response>, ms: number): Promise<Response> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await promise;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 async function rollupGeneration(admin: any, generationId: string | null | undefined) {
