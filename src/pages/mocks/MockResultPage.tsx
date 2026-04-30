@@ -314,8 +314,11 @@ export default function MockResultPage() {
       <div className="container mx-auto px-4 py-6 max-w-6xl">
         {/* Action bar */}
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-          <Link to="/mocks" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
-            <ChevronRight className="h-4 w-4 rotate-180" /> All mocks
+          <Link
+            to={isStudentMode() ? studentBackToMocksPath() : "/mocks"}
+            className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+          >
+            <ChevronRight className="h-4 w-4 rotate-180" /> {isStudentMode() ? "Back to dashboard" : "All mocks"}
           </Link>
           <div className="flex gap-2 flex-wrap">
             <Button onClick={downloadPDF} disabled={downloading} className="gap-2">
