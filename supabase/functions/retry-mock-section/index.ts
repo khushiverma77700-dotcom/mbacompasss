@@ -776,6 +776,7 @@ Deno.serve(async (req) => {
           worker_lock_until: null,
           updated_at: new Date().toISOString(),
         }).eq("id", job_id);
+        await rollupGeneration(admin, job.generation_id);
 
         // Chain to the next pending sibling section in the same generation.
         if (job.generation_id) {
@@ -816,6 +817,7 @@ Deno.serve(async (req) => {
           worker_lock_until: null,
           updated_at: new Date().toISOString(),
         }).eq("id", job_id);
+        await rollupGeneration(admin, job.generation_id);
       }
     };
 
