@@ -844,6 +844,32 @@ Deno.serve(async (req) => {
         }
         if (secTita < 0) { secTita = 0; secMcq = sec.questions; }
 
+        // ---- Derive sets / questions_per_set for this section ----
+        // Priority: custom plan from the admin > exam defaults (CAT VARC=3×4,
+        // CAT/IIFT DILR=4×5) > 0/0 (no sets, all standalone).
+        let secSets = 0;
+        let secQPerSet = 0;
+        if (customSec && Number(customSec.sets) > 0) {
+          secSets = Math.max(1, Math.floor(Number(customSec.sets)));
+          // questions_per_set if user provided it on the row, else infer
+          const customQPS = Number((customSec as any).questions_per_set || 0);
+          secQPerSet = customQPS > 0 ? customQPS : Math.floor(sec.questions / secSets);
+        } else if (category === "full_length") {
+          const ec = String(exam_code || "").toUpperCase();
+          const sc = String(sec.code || "").toUpperCase();
+          if ((ec === "CAT" || ec === "IIFT") && sc === "VARC") {
+            // 3 RCs × 4 = 12 set-questions, the rest standalone (parajumbles etc.)
+            secSets = 3; secQPerSet = 4;
+          } else if ((ec === "CAT" || ec === "IIFT") && sc === "DILR") {
+            // 4 caselets × 5 = 20; if section has fewer Qs, scale down qPerSet.
+            secSets = 4; secQPerSet = Math.max(4, Math.floor(sec.questions / 4));
+          }
+        }
+        // Safety: never let sets demand more questions than the section has
+        if (secSets * secQPerSet > sec.questions) {
+          secQPerSet = Math.max(1, Math.floor(sec.questions / Math.max(1, secSets)));
+        }
+
         // Create a progress job for the UI to poll
         let jobId: string | null = null;
         if (genId) {
@@ -864,6 +890,8 @@ Deno.serve(async (req) => {
             positive_marks: profile.default_positive,
             negative_marks: profile.default_negative,
             verify_internet: !!verify_internet,
+            sets: secSets,
+            questions_per_set: secQPerSet,
             status: "pending",
             attempts: 0,
             questions_done: 0,

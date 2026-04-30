@@ -39,9 +39,11 @@ function stripPrefixes(html: string | null | undefined, patterns: RegExp[]): str
 const cleanQuestionHtml = (h: string | null | undefined) => stripPrefixes(h, Q_PREFIX_PATTERNS);
 const cleanOptionHtml = (h: string | null | undefined) => stripPrefixes(h, OPT_PREFIX_PATTERNS);
 
-const OPENAI_TIMEOUT_MS = 120_000;
+const OPENAI_TIMEOUT_MS = 180_000;
 const BATCH_SIZE = 1;
-const MAX_ATTEMPTS_PER_QUESTION = 60;
+// We never give up early. The worker keeps re-invoking itself until either
+// the section reaches its target or the watchdog cancels it after hours.
+const MAX_ATTEMPTS_PER_QUESTION = 200;
 
 const PERSONALIZED_SECTION_MAP: Record<string, Record<string, string>> = {
   CAT:  { VARC: "VARC", DILR: "DILR", QA: "QA" },
@@ -173,12 +175,45 @@ async function callOpenAIBatch(opts: {
   exam_code: string; section_name: string; section_code: string;
   count: number; mcq: number; tita: number; level: string;
   positive: number; negative: number; topic?: string | null;
+  // ----- set mode -----
+  set_mode?: boolean;            // true ⇒ produce ONE passage + `count` tied questions
+  set_kind?: "rc" | "caselet" | "shared"; // verbal RC vs DI/LR caselet vs generic
+  set_label?: string;            // e.g. "Set 1 of 3"
 }) {
   const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
 
-  const sys = `You are an elite ${opts.exam_code} question setter writing 100% original questions for the ${opts.section_name} (${opts.section_code}) section.${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} Use fresh numbers, fresh names, fresh contexts. Each MCQ has 4 options A-D with one correct; each TITA has numeric answer(s). Include detailed 200-400 word explanations. Output ONLY valid JSON. STRICT FORMATTING: "question_html" must contain ONLY the pure question text — never prefix with "Q1.", "Question 1:", "Set 1:", "1.", "1)" or any numbering. "options[].text" must contain ONLY pure option text — never prefix with "A)", "(A)", "A.", "1)" or any label. The UI renders these labels statically.`;
-  const user = `Generate exactly ${opts.count} questions: ${opts.mcq} MCQ + ${opts.tita} TITA. Marking +${opts.positive}/-${opts.negative}. JSON shape: {"questions":[{"question_type":"mcq"|"tita","question_html":"...","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"tita_answers":["..."],"tita_tolerance":0.01,"explanation_html":"..."}]}`;
+  const mathRules = `MATH FORMATTING — CRITICAL: ALL math notation MUST be wrapped in LaTeX delimiters so the renderer can typeset it. Use $...$ for inline math and $$...$$ for block math. Examples:
+- powers: write $x^2$ NOT x² or x^2 in plain text
+- subscripts: $a_n$ NOT a_n
+- fractions: $\\frac{a}{b}$ NOT a/b when displayed as a fraction
+- square roots: $\\sqrt{3}$ NOT √3
+- summations: $\\sum_{i=1}^{n} i$
+- inequalities: $x \\leq 5$, $a \\neq b$
+- Greek letters: $\\alpha, \\beta, \\pi, \\theta$
+- log/trig: $\\log_2 8$, $\\sin\\theta$
+- multiplication dot: $a \\cdot b$
+- ANY equation, expression, variable with operators, or formula MUST be inside $...$.
+Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do NOT need LaTeX.`;
+
+  const formatRules = `STRICT FORMATTING — the UI renders question number, set badge and option letters as STATIC labels:
+- "question_html" must contain ONLY the pure question text. NEVER prefix with "Q1.", "Question 1:", "Set 1:", "1.", "1)" or any numbering.
+- "options[].text" must contain ONLY pure option text. NEVER prefix with "A)", "(A)", "A.", "1)" or any label.`;
+
+  let sys: string; let user: string;
+
+  if (opts.set_mode) {
+    const ctxLabel = opts.set_kind === "rc"
+      ? "an original Reading Comprehension passage of 500-700 words on an abstract / philosophical / social-science / business / economics theme"
+      : opts.set_kind === "caselet"
+        ? "an original DI/LR caselet with FULLY DETAILED DATA — include a properly formatted HTML <table> (rows × columns with concrete numbers/names) AND/OR an inline ASCII bar/line chart inside <pre> tags. Caselets must contain rich data such as sales figures, rankings, percentage shares, time series, tournament results, seating arrangements, family trees, blood relations, etc."
+        : "an original shared-context block";
+    sys = `You are an elite ${opts.exam_code} question setter writing a SET of ${opts.count} questions tied to ONE shared ${opts.set_kind === "rc" ? "passage" : "caselet"}.${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} ${mathRules} ${formatRules} Output ONLY valid JSON.`;
+    user = `Write ${ctxLabel}, then ${opts.count} questions ALL tied to that shared context. Use FRESH original content; do NOT reuse any famous passage / caselet. Each MCQ has 4 options A-D with one correct; include a 200-400 word explanation per question. JSON shape: {"passage_html":"<div>...full passage or caselet HTML here, with tables/charts if applicable...</div>","questions":[{"question_type":"mcq","question_html":"<question stem only — DO NOT include the passage>","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"explanation_html":"..."}]}`;
+  } else {
+    sys = `You are an elite ${opts.exam_code} question setter writing 100% original questions for the ${opts.section_name} (${opts.section_code}) section.${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} Use fresh numbers, fresh names, fresh contexts. Each MCQ has 4 options A-D with one correct; each TITA has numeric answer(s). Include detailed 200-400 word explanations. ${mathRules} ${formatRules} Output ONLY valid JSON.`;
+    user = `Generate exactly ${opts.count} questions: ${opts.mcq} MCQ + ${opts.tita} TITA. Marking +${opts.positive}/-${opts.negative}. JSON shape: {"questions":[{"question_type":"mcq"|"tita","question_html":"...","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"tita_answers":["..."],"tita_tolerance":0.01,"explanation_html":"..."}]}`;
+  }
 
   const lvlLower = String(opts.level || "").toLowerCase();
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
@@ -239,6 +274,12 @@ async function callOpenAIBatch(opts: {
   const data = await resp.json();
   const content = data?.choices?.[0]?.message?.content;
   const parsed = typeof content === "string" ? JSON.parse(content) : content;
+  if (opts.set_mode) {
+    return {
+      passage_html: typeof parsed?.passage_html === "string" ? parsed.passage_html : "",
+      questions: Array.isArray(parsed?.questions) ? parsed.questions : [],
+    };
+  }
   return Array.isArray(parsed?.questions) ? parsed.questions : [];
 }
 
@@ -310,10 +351,14 @@ Deno.serve(async (req) => {
         let rejectedInvalid = job.rejected_invalid || 0;
 
         let attempts = 0;
-        const maxAttempts = Math.max(20, (target - produced) * MAX_ATTEMPTS_PER_QUESTION);
+        const maxAttempts = Math.max(40, (target - produced) * MAX_ATTEMPTS_PER_QUESTION);
+
+        // Sets configuration on this job.
+        const setsTotal = Math.max(0, Number(job.sets) || 0);
+        const qPerSet = Math.max(0, Number(job.questions_per_set) || 0);
+        const setQuestionsTarget = setsTotal * qPerSet;
 
         // Mirror to Personalized Hub ONLY if the parent test is Daily/sectional/topic.
-        // Look up parent test_type via section → test.
         let allowHubMirror = false;
         try {
           const { data: secRow } = await admin.from("mock_sections").select("test_id").eq("id", job.section_id).maybeSingle();
@@ -326,6 +371,188 @@ Deno.serve(async (req) => {
         } catch { /* default false */ }
         const hubSection = allowHubMirror ? (PERSONALIZED_SECTION_MAP[job.exam_code] || {})[job.section_code] : undefined;
 
+        // Determine current set progress from existing passages on this section.
+        const { count: existingPassages } = await admin
+          .from("mock_passages")
+          .select("id", { count: "exact", head: true })
+          .eq("section_id", job.section_id);
+        let setsDone = existingPassages || 0;
+
+        const sectionFamilyOf = (code: string) => {
+          const c = String(code || "").toUpperCase();
+          if (["VARC", "VALR", "LS", "GE", "LC"].includes(c)) return "verbal";
+          if (["DILR", "LR", "AR", "DA", "QADS", "QADI"].includes(c)) return "logic-data";
+          return "general";
+        };
+        const setKind: "rc" | "caselet" | "shared" =
+          sectionFamilyOf(job.section_code) === "verbal" ? "rc"
+          : sectionFamilyOf(job.section_code) === "logic-data" ? "caselet"
+          : "shared";
+
+        // ===========================================================
+        // PHASE 1 — SET-BASED QUESTIONS (one set per worker tick)
+        // ===========================================================
+        const needSet = setsTotal > 0 && setsDone < setsTotal && produced < setQuestionsTarget;
+        if (needSet) {
+          attempts++;
+          const setIdx = setsDone + 1;
+          await admin.from("mock_section_jobs").update({
+            current_step: `Writing Set ${setIdx}/${setsTotal} (${qPerSet} questions on one ${setKind === "rc" ? "passage" : "caselet"})…`,
+            worker_lock_until: new Date(Date.now() + 10 * 60_000).toISOString(),
+            updated_at: new Date().toISOString(),
+          }).eq("id", job_id);
+
+          let setResp: { passage_html: string; questions: any[] } = { passage_html: "", questions: [] };
+          try {
+            setResp = await callOpenAIBatch({
+              exam_code: job.exam_code, section_code: job.section_code, section_name: job.section_name,
+              count: qPerSet, mcq: qPerSet, tita: 0, level: job.level || "mixed",
+              positive: job.positive_marks || 1, negative: job.negative_marks || 0,
+              topic: job.strict_topic || job.topic || null,
+              set_mode: true, set_kind: setKind, set_label: `Set ${setIdx} of ${setsTotal}`,
+            }) as any;
+          } catch (e) {
+            await admin.from("mock_section_jobs").update({
+              current_step: `Set ${setIdx} attempt failed, will retry: ${(e as Error)?.message?.slice(0, 120) || ""}`,
+              error_message: String((e as Error)?.message || e).slice(0, 400),
+              updated_at: new Date().toISOString(),
+            }).eq("id", job_id);
+            // schedule self-retry below
+            scheduleNext(true);
+            return;
+          }
+
+          const passageHtml = (setResp.passage_html || "").trim();
+          const setQs = Array.isArray(setResp.questions) ? setResp.questions : [];
+          if (!passageHtml || setQs.length < qPerSet) {
+            rejectedInvalid++;
+            await admin.from("mock_section_jobs").update({
+              rejected_invalid: rejectedInvalid,
+              current_step: `Set ${setIdx} returned ${setQs.length}/${qPerSet} questions, retrying…`,
+              updated_at: new Date().toISOString(),
+            }).eq("id", job_id);
+            scheduleNext(true);
+            return;
+          }
+
+          // Insert the passage
+          const { data: passageRow, error: passErr } = await admin
+            .from("mock_passages")
+            .insert({
+              section_id: job.section_id,
+              title: setKind === "rc" ? `Reading Passage ${setIdx}` : `Caselet ${setIdx}`,
+              content_html: passageHtml,
+              sort_order: setIdx - 1,
+            })
+            .select("id")
+            .single();
+          if (passErr || !passageRow) {
+            await admin.from("mock_section_jobs").update({
+              error_message: `Could not save passage: ${passErr?.message || "unknown"}`,
+              updated_at: new Date().toISOString(),
+            }).eq("id", job_id);
+            scheduleNext(true);
+            return;
+          }
+
+          const hubRows: any[] = [];
+          let inserted = 0;
+          for (const q of setQs.slice(0, qPerSet)) {
+            if (!q?.question_html) { rejectedInvalid++; continue; }
+            const norm = normalizeForHash(q.question_html);
+            const hash = await sha256(norm);
+            // For set-bound questions we ONLY check exact-hash duplicates.
+            // Section-corpus similarity / paraphrase checks are SKIPPED — siblings
+            // necessarily share the same passage and would be flagged otherwise.
+            if (seen.has(hash)) { dupHash++; continue; }
+            seen.add(hash);
+            const cleanedQ = cleanQuestionHtml(q.question_html);
+            const { data: qRow, error: insErr } = await admin.from("mock_questions").insert({
+              section_id: job.section_id,
+              passage_id: passageRow.id,
+              question_number: produced + inserted + 1,
+              question_type: "mcq",
+              question_html: cleanedQ,
+              tita_correct_answers: [],
+              positive_marks: job.positive_marks || 1,
+              negative_marks: job.negative_marks || 0,
+              difficulty: normalizeDifficulty(q.difficulty, job.level),
+              topic: q.topic || job.topic || null,
+              subtopic: q.subtopic || null,
+              explanation_html: q.explanation_html || "",
+              content_hash: hash,
+            }).select("id").single();
+            if (insErr || !qRow) { dupDb++; continue; }
+            if (Array.isArray(q.options)) {
+              const opts = q.options.slice(0, 4).map((o: any, idx: number) => ({
+                question_id: qRow.id,
+                option_label: o.label || ["A","B","C","D"][idx],
+                option_html: cleanOptionHtml(o.text || ""),
+                is_correct: !!o.is_correct,
+                sort_order: idx,
+              }));
+              if (opts.length === 4 && opts.some((o) => o.is_correct)) {
+                await admin.from("mock_question_options").insert(opts);
+                if (hubSection) {
+                  const correctIdx = opts.findIndex((o) => o.is_correct);
+                  hubRows.push({
+                    exam_code: job.exam_code, section: hubSection,
+                    difficulty: mapPersonalizedDifficulty(normalizeDifficulty(q.difficulty, job.level)),
+                    question_text: cleanedQ,
+                    options: opts.map((o) => ({ label: o.option_label, text: o.option_html })),
+                    correct_index: correctIdx >= 0 ? correctIdx : 0,
+                    explanation: q.explanation_html || null,
+                    topic: q.topic || job.topic || null,
+                    source: "mock-mirror-set",
+                    created_by: userId,
+                  });
+                }
+                inserted++;
+              } else {
+                await admin.from("mock_questions").delete().eq("id", qRow.id);
+                rejectedInvalid++;
+              }
+            }
+          }
+
+          if (inserted < qPerSet) {
+            // Set was incomplete — drop the passage and the partial questions to keep it clean.
+            await admin.from("mock_questions").delete().eq("passage_id", passageRow.id);
+            await admin.from("mock_passages").delete().eq("id", passageRow.id);
+            await admin.from("mock_section_jobs").update({
+              rejected_invalid: rejectedInvalid + 1,
+              current_step: `Set ${setIdx} incomplete (${inserted}/${qPerSet}), retrying entire set…`,
+              updated_at: new Date().toISOString(),
+            }).eq("id", job_id);
+            scheduleNext(true);
+            return;
+          }
+
+          if (hubRows.length > 0) await admin.from("personalized_questions").insert(hubRows);
+
+          produced += inserted;
+          setsDone++;
+          const totalDup = dupHash + dupSimilarity + dupParaphrase + dupDb;
+          await admin.from("mock_section_jobs").update({
+            questions_done: produced,
+            current_step: `Set ${setIdx}/${setsTotal} done (${produced}/${target})`,
+            duplicates_rejected: totalDup,
+            dup_hash: dupHash,
+            dup_similarity: dupSimilarity,
+            dup_paraphrase: dupParaphrase,
+            dup_db_conflict: dupDb,
+            rejected_invalid: rejectedInvalid,
+            worker_lock_until: new Date(Date.now() + 10 * 60_000).toISOString(),
+            updated_at: new Date().toISOString(),
+          }).eq("id", job_id);
+
+          if (produced < target) { scheduleNext(true); return; }
+          // else fall through to completion
+        }
+
+        // ===========================================================
+        // PHASE 2 — STANDALONE QUESTIONS (one at a time)
+        // ===========================================================
         while (produced < target && attempts < maxAttempts) {
           attempts++;
           const remain = target - produced;
@@ -347,7 +574,7 @@ Deno.serve(async (req) => {
               count: batch, mcq: batchMcq, tita: batchTita, level: job.level || "mixed",
               positive: job.positive_marks || 1, negative: job.negative_marks || 0,
               topic: job.strict_topic || job.topic || null,
-            });
+            }) as any[];
           } catch (e) {
             await admin.from("mock_section_jobs").update({
               current_step: `Retry batch ${attempts} failed, retrying again…`,
@@ -364,28 +591,30 @@ Deno.serve(async (req) => {
             const norm = normalizeForHash(q.question_html);
             const hash = await sha256(norm);
 
-            // Reason 1 — exact hash collision against the entire bank
             if (seen.has(hash)) { dupHash++; continue; }
 
-            // Reason 2 — high token Jaccard against any question in this section
+            // Soften thresholds as attempts mount so we don't hang forever on
+            // a difficult level where the bank is already crowded.
+            const simT = attempts > 80 ? 0.85 : SIM_THRESHOLD;
+            const shT  = attempts > 80 ? 0.55 : PARAPHRASE_THRESHOLD;
+
             const candTokens = tokenize(norm);
             let maxSim = 0;
             for (const t of corpus.tokens) {
               const s = jaccard(candTokens, t);
               if (s > maxSim) maxSim = s;
-              if (maxSim >= SIM_THRESHOLD) break;
+              if (maxSim >= simT) break;
             }
-            if (maxSim >= SIM_THRESHOLD) { dupSimilarity++; continue; }
+            if (maxSim >= simT) { dupSimilarity++; continue; }
 
-            // Reason 3 — near-paraphrase: 5-word shingle overlap
             const candShingles = buildShingles(norm, 5);
             let maxShingle = 0;
             for (const sh of corpus.shingles) {
               const s = jaccard(candShingles, sh);
               if (s > maxShingle) maxShingle = s;
-              if (maxShingle >= PARAPHRASE_THRESHOLD) break;
+              if (maxShingle >= shT) break;
             }
-            if (maxShingle >= PARAPHRASE_THRESHOLD) { dupParaphrase++; continue; }
+            if (maxShingle >= shT) { dupParaphrase++; continue; }
 
             seen.add(hash);
             corpus.tokens.push(candTokens);
@@ -462,24 +691,29 @@ Deno.serve(async (req) => {
             updated_at: new Date().toISOString(),
           }).eq("id", job_id);
 
-          if (auto && produced < target) {
-            const workerUrl = `${url}/functions/v1/retry-mock-section`;
-            // ALWAYS use service-role for self-recursion so we don't depend on
-            // the (possibly expired) end-user JWT. Never forward `authHeader`.
-            const next = fetch(workerUrl, {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${serviceKey}`,
-                apikey: serviceKey,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ job_id, auto: true, service: true }),
-            }).catch((e) => console.error("[retry-mock-section] next worker failed", e));
-            // @ts-ignore
-            if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
-            return;
-          }
+          if (auto && produced < target) { scheduleNext(false); return; }
         }
+
+        // ----- Helper: queue the next worker tick -----
+        function scheduleNext(_resetAttempts: boolean) {
+          if (!auto) return;
+          const workerUrl = `${url}/functions/v1/retry-mock-section`;
+          const next = fetch(workerUrl, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${serviceKey}`,
+              apikey: serviceKey,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ job_id, auto: true, service: true }),
+          }).catch((e) => console.error("[retry-mock-section] next worker failed", e));
+          // @ts-ignore
+          if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
+        }
+
+        // If we exited the standalone loop because attempts hit the cap but
+        // we're still short, queue another worker tick (don't fail the job).
+        if (auto && produced < target) { scheduleNext(true); return; }
 
         const success = produced === target;
         const totalDup = dupHash + dupSimilarity + dupParaphrase + dupDb;
