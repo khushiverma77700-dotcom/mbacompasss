@@ -195,6 +195,7 @@ export default function MockTestRunnerPage() {
 
   useEffect(() => {
     if (loading) return;
+    if (questions.length === 0) return;
     const onVis = () => {
       if (document.hidden) {
         setViolations((v) => {
@@ -254,7 +255,7 @@ export default function MockTestRunnerPage() {
       document.removeEventListener("paste", blockCopy);
       document.removeEventListener("cut", blockCopy);
     };
-  }, [loading, attemptId, handleAutoSubmit, isMobile]);
+  }, [loading, attemptId, handleAutoSubmit, isMobile, questions.length]);
 
   // ---------- DERIVED ----------
   const sectionQuestions = useMemo(
@@ -287,14 +288,16 @@ export default function MockTestRunnerPage() {
   // Auto-submit when overall expires
   useEffect(() => {
     if (loading || submitRef.current) return;
+    if (questions.length === 0) return;
     if (overallDeadline > 0 && overallRemaining <= 0) {
       handleAutoSubmit("time expired");
     }
-  }, [overallRemaining, overallDeadline, loading, handleAutoSubmit]);
+  }, [overallRemaining, overallDeadline, loading, handleAutoSubmit, questions.length]);
 
   // Auto-advance section when section deadline expires
   useEffect(() => {
     if (loading || submitRef.current) return;
+    if (questions.length === 0) return;
     if (sectionDeadline > 0 && sectionRemaining <= 0) {
       const idx = sections.findIndex((s) => s.id === currentSectionId);
       const next = sections[idx + 1];
@@ -456,6 +459,21 @@ export default function MockTestRunnerPage() {
   // ---------- RENDER ----------
   if (loading) {
     return <div className="p-8 text-muted-foreground">Loading test…</div>;
+  }
+
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6">
+        <div className="max-w-md text-center space-y-4">
+          <AlertTriangle className="h-10 w-10 text-destructive mx-auto" />
+          <h1 className="text-xl font-semibold">Mock is not ready yet</h1>
+          <p className="text-sm text-muted-foreground">
+            No questions are available for this mock, so the test timer has been stopped. Please wait until AI generation completes.
+          </p>
+          <Button onClick={() => navigate("/mocks")}>Back to mocks</Button>
+        </div>
+      </div>
+    );
   }
 
   return (

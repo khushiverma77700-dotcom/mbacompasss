@@ -4,6 +4,7 @@
 // Invoked from the admin progress panel "Retry section" button.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
+import { callAIGateway } from "../_shared/aiGateway.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,6 +45,32 @@ const BATCH_SIZE = 1;
 // We never give up early. The worker keeps re-invoking itself until either
 // the section reaches its target or the watchdog cancels it after hours.
 const MAX_ATTEMPTS_PER_QUESTION = 200;
+
+function isAIRateLimitError(message: unknown): boolean {
+  const m = String(message || "").toLowerCase();
+  return m.includes("429") || m.includes("rate limit") || m.includes("quota") || m.includes("too many requests");
+}
+
+async function rollupGeneration(admin: any, generationId: string | null | undefined) {
+  if (!generationId) return;
+  const { data: jobs } = await admin
+    .from("mock_section_jobs")
+    .select("status,total_questions,questions_done,duplicates_rejected,dup_hash,dup_similarity,dup_paraphrase,dup_db_conflict,rejected_invalid,error_message,final_reason")
+    .eq("generation_id", generationId);
+  const rows = jobs || [];
+  const requested = rows.reduce((s: number, j: any) => s + (Number(j.total_questions) || 0), 0);
+  const generated = rows.reduce((s: number, j: any) => s + (Number(j.questions_done) || 0), 0);
+  const pending = rows.filter((j: any) => ["pending", "processing"].includes(String(j.status))).length;
+  const failed = rows.filter((j: any) => String(j.status) === "failed").length;
+  const exact = requested > 0 && generated === requested && pending === 0 && failed === 0;
+  await admin.from("ai_mock_generations").update({
+    total_generated: generated,
+    total_rejected_duplicate: rows.reduce((s: number, j: any) => s + (Number(j.duplicates_rejected) || 0), 0),
+    status: pending > 0 ? "running" : (exact ? "completed" : "failed"),
+    error_message: pending > 0 ? null : (exact ? null : `Incomplete generation: ${generated}/${requested} questions saved`),
+    finished_at: pending > 0 ? null : new Date().toISOString(),
+  }).eq("id", generationId);
+}
 
 const PERSONALIZED_SECTION_MAP: Record<string, Record<string, string>> = {
   CAT:  { VARC: "VARC", DILR: "DILR", QA: "QA" },
@@ -180,9 +207,6 @@ async function callOpenAIBatch(opts: {
   set_kind?: "rc" | "caselet" | "shared"; // verbal RC vs DI/LR caselet vs generic
   set_label?: string;            // e.g. "Set 1 of 3"
 }) {
-  const apiKey = Deno.env.get("OPENAI_API_KEY");
-  if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
-
   const mathRules = `MATH FORMATTING — CRITICAL: ALL math notation MUST be wrapped in LaTeX delimiters so the renderer can typeset it. Use $...$ for inline math and $$...$$ for block math. Examples:
 - powers: write $x^2$ NOT x² or x^2 in plain text
 - subscripts: $a_n$ NOT a_n
@@ -217,7 +241,7 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
 
   const lvlLower = String(opts.level || "").toLowerCase();
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
-  const modelId = "gpt-4o";
+  const modelId = "google/gemini-2.5-flash";
   const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.4;
   const reqBody: Record<string, unknown> = {
     model: modelId,
@@ -239,24 +263,28 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), OPENAI_TIMEOUT_MS);
     try {
-      resp = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify(reqBody),
+      resp = await callAIGateway(reqBody as any, {
+        provider: "lovable",
+        feature: "mock-question-generator",
+        maxRetries: 2,
         signal: ctrl.signal,
+        skipLog: false,
+        purpose: "long",
       });
       clearTimeout(timer);
       if (resp.ok) break;
+      const txt = await resp.text();
+      const quotaBlocked = resp.status === 429 && /insufficient_quota|quota|billing/i.test(txt);
+      if (quotaBlocked) throw new Error(`AI quota/rate-limit blocked: ${txt.slice(0, 240)}`);
       if ([408, 425, 429, 500, 502, 503, 504].includes(resp.status) && attempt < MAX_INLINE_RETRIES) {
-        const txt = await resp.text();
         lastErr = `AI ${resp.status}: ${txt.slice(0, 200)}`;
         console.warn(`[retry-mock-section] transient ${resp.status}, retry ${attempt}/${MAX_INLINE_RETRIES - 1}`);
-        const backoff = Math.min(8000, 1000 * Math.pow(2, attempt - 1)) + Math.random() * 500;
+        const backoff = Math.min(20000, 2000 * Math.pow(2, attempt - 1)) + Math.random() * 1500;
         await new Promise((r) => setTimeout(r, backoff));
         resp = null;
         continue;
       }
-      throw new Error(`AI ${resp.status}: ${(await resp.text()).slice(0, 200)}`);
+      throw new Error(`AI ${resp.status}: ${txt.slice(0, 200)}`);
     } catch (e) {
       clearTimeout(timer);
       const msg = (e as Error)?.name === "AbortError" ? `OpenAI aborted after ${OPENAI_TIMEOUT_MS}ms` : `OpenAI fetch failed: ${(e as Error)?.message || e}`;
@@ -312,11 +340,19 @@ Deno.serve(async (req) => {
       userId = user.id;
     }
 
-    const { job_id, auto = false } = await req.json();
+    const { job_id, auto = false, continuation = false } = await req.json();
     if (!job_id) return jsonResp(400, { error: "job_id required" });
 
     const { data: job, error: jobErr } = await admin.from("mock_section_jobs").select("*").eq("id", job_id).single();
     if (jobErr || !job) return jsonResp(404, { error: "Job not found" });
+    if (job.status === "completed" && (job.questions_done || 0) >= (job.total_questions || 0)) {
+      return jsonResp(200, { ok: true, message: "Already completed" });
+    }
+    const lockUntil = job.worker_lock_until ? new Date(job.worker_lock_until).getTime() : 0;
+    const queuedProcessing = /queued reliable|watchdog kicked/i.test(String(job.current_step || ""));
+    if (auto && !continuation && job.status === "processing" && lockUntil > Date.now() + 30_000 && !queuedProcessing) {
+      return jsonResp(202, { ok: true, message: "Worker already active" });
+    }
 
     if (!userId) userId = job.created_by;
 
@@ -412,13 +448,15 @@ Deno.serve(async (req) => {
               set_mode: true, set_kind: setKind, set_label: `Set ${setIdx} of ${setsTotal}`,
             }) as any;
           } catch (e) {
+            const msg = String((e as Error)?.message || e);
             await admin.from("mock_section_jobs").update({
-              current_step: `Set ${setIdx} attempt failed, will retry: ${(e as Error)?.message?.slice(0, 120) || ""}`,
-              error_message: String((e as Error)?.message || e).slice(0, 400),
+              status: isAIRateLimitError(msg) ? "pending" : "processing",
+              current_step: isAIRateLimitError(msg) ? `AI rate limit hit — waiting before retrying Set ${setIdx}` : `Set ${setIdx} attempt failed, will retry: ${msg.slice(0, 120)}`,
+              error_message: msg.slice(0, 400),
+              worker_lock_until: isAIRateLimitError(msg) ? null : new Date(Date.now() + 8 * 60_000).toISOString(),
               updated_at: new Date().toISOString(),
             }).eq("id", job_id);
-            // schedule self-retry below
-            scheduleNext(true);
+            if (!isAIRateLimitError(msg)) scheduleNext(true);
             return;
           }
 
@@ -576,11 +614,15 @@ Deno.serve(async (req) => {
               topic: job.strict_topic || job.topic || null,
             }) as any[];
           } catch (e) {
+            const msg = String((e as Error)?.message || e);
             await admin.from("mock_section_jobs").update({
-              current_step: `Retry batch ${attempts} failed, retrying again…`,
-              error_message: String((e as Error)?.message || e).slice(0, 400),
+              status: isAIRateLimitError(msg) ? "pending" : "processing",
+              current_step: isAIRateLimitError(msg) ? "AI rate limit hit — queued to continue shortly…" : `Retry batch ${attempts} failed, retrying again…`,
+              error_message: msg.slice(0, 400),
+              worker_lock_until: isAIRateLimitError(msg) ? null : new Date(Date.now() + 8 * 60_000).toISOString(),
               updated_at: new Date().toISOString(),
             }).eq("id", job_id);
+            if (isAIRateLimitError(msg)) return;
             continue;
           }
 
@@ -705,7 +747,7 @@ Deno.serve(async (req) => {
               apikey: serviceKey,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ job_id, auto: true, service: true }),
+            body: JSON.stringify({ job_id, auto: true, service: true, continuation: true }),
           }).catch((e) => console.error("[retry-mock-section] next worker failed", e));
           // @ts-ignore
           if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
@@ -735,6 +777,7 @@ Deno.serve(async (req) => {
           worker_lock_until: null,
           updated_at: new Date().toISOString(),
         }).eq("id", job_id);
+        await rollupGeneration(admin, job.generation_id);
 
         // Chain to the next pending sibling section in the same generation.
         if (job.generation_id) {
@@ -775,6 +818,7 @@ Deno.serve(async (req) => {
           worker_lock_until: null,
           updated_at: new Date().toISOString(),
         }).eq("id", job_id);
+        await rollupGeneration(admin, job.generation_id);
       }
     };
 

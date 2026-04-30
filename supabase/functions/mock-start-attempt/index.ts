@@ -113,12 +113,23 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Build server-side section deadlines
+    // Build server-side section deadlines and verify the mock is complete before any timer starts.
     const { data: sections } = await admin
       .from("mock_sections")
-      .select("id, code, duration_minutes, sort_order")
+      .select("id, code, duration_minutes, sort_order, total_questions")
       .eq("test_id", test_id)
       .order("sort_order", { ascending: true });
+    const sectionIds = (sections ?? []).map((s: any) => s.id);
+    const expectedQuestions = (sections ?? []).reduce((sum: number, s: any) => sum + (Number(s.total_questions) || 0), 0);
+    const { count: savedQuestions } = sectionIds.length
+      ? await admin.from("mock_questions").select("id", { count: "exact", head: true }).in("section_id", sectionIds)
+      : { count: 0 };
+    if (expectedQuestions <= 0 || (savedQuestions || 0) < expectedQuestions) {
+      return new Response(JSON.stringify({ error: `Mock is still being generated (${savedQuestions || 0}/${expectedQuestions || 0} questions ready). Please start after generation is complete.` }), {
+        status: 409,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const now = Date.now();
     const sectionDeadlines: Record<string, string> = {};

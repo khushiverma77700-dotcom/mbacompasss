@@ -149,14 +149,25 @@ Deno.serve(async (req) => {
 
     const { data: pendingMockJobs, error: e3 } = await admin
       .from("mock_section_jobs")
-      .select("id,status,updated_at,worker_lock_until")
-      .eq("status", "pending");
+      .select("id,generation_id,status,updated_at,worker_lock_until")
+      .eq("status", "pending")
+      .order("created_at", { ascending: true });
 
     if (e3) (report.errors as string[]).push(`mock fetch: ${e3.message}`);
 
     const kickedMockJobs: string[] = [];
+    const kickedGenerations = new Set<string>();
     for (const job of (pendingMockJobs || [])) {
       try {
+        const generationId = String((job as any).generation_id || (job as any).id);
+        if (kickedGenerations.has(generationId)) continue;
+        const { count: activeCount } = await admin
+          .from("mock_section_jobs")
+          .select("id", { count: "exact", head: true })
+          .eq("generation_id", (job as any).generation_id)
+          .eq("status", "processing")
+          .gt("worker_lock_until", new Date().toISOString());
+        if ((activeCount || 0) > 0) continue;
         await admin
           .from("mock_section_jobs")
           .update({
@@ -178,6 +189,7 @@ Deno.serve(async (req) => {
         }).catch(() => {});
 
         kickedMockJobs.push((job as any).id);
+        kickedGenerations.add(generationId);
       } catch (err) {
         (report.errors as string[]).push(`mock kickoff ${(job as any).id}: ${(err as Error).message}`);
       }
