@@ -340,7 +340,7 @@ Deno.serve(async (req) => {
       userId = user.id;
     }
 
-    const { job_id, auto = false } = await req.json();
+    const { job_id, auto = false, continuation = false } = await req.json();
     if (!job_id) return jsonResp(400, { error: "job_id required" });
 
     const { data: job, error: jobErr } = await admin.from("mock_section_jobs").select("*").eq("id", job_id).single();
@@ -350,7 +350,7 @@ Deno.serve(async (req) => {
     }
     const lockUntil = job.worker_lock_until ? new Date(job.worker_lock_until).getTime() : 0;
     const queuedProcessing = /queued reliable|watchdog kicked/i.test(String(job.current_step || ""));
-    if (auto && job.status === "processing" && lockUntil > Date.now() + 30_000 && !queuedProcessing) {
+    if (auto && !continuation && job.status === "processing" && lockUntil > Date.now() + 30_000 && !queuedProcessing) {
       return jsonResp(202, { ok: true, message: "Worker already active" });
     }
 
@@ -747,7 +747,7 @@ Deno.serve(async (req) => {
               apikey: serviceKey,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ job_id, auto: true, service: true }),
+            body: JSON.stringify({ job_id, auto: true, service: true, continuation: true }),
           }).catch((e) => console.error("[retry-mock-section] next worker failed", e));
           // @ts-ignore
           if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
