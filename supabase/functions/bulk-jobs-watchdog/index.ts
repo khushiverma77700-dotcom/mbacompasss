@@ -159,18 +159,18 @@ Deno.serve(async (req) => {
     if (e3) (report.errors as string[]).push(`mock fetch: ${e3.message}`);
 
     const kickedMockJobs: string[] = [];
-    const kickedGenerations = new Set<string>();
+    const kickedPerGeneration = new Map<string, number>();
     for (const job of (pendingMockJobs || [])) {
       try {
         const generationId = String((job as any).generation_id || (job as any).id);
-        if (kickedGenerations.has(generationId)) continue;
+        if ((kickedPerGeneration.get(generationId) || 0) >= 3) continue;
         const { count: activeCount } = await admin
           .from("mock_section_jobs")
           .select("id", { count: "exact", head: true })
           .eq("generation_id", (job as any).generation_id)
           .eq("status", "processing")
           .gt("worker_lock_until", new Date().toISOString());
-        if ((activeCount || 0) > 0) continue;
+        if ((activeCount || 0) >= 3) continue;
         await admin
           .from("mock_section_jobs")
           .update({
@@ -192,7 +192,7 @@ Deno.serve(async (req) => {
         }).catch(() => {});
 
         kickedMockJobs.push((job as any).id);
-        kickedGenerations.add(generationId);
+        kickedPerGeneration.set(generationId, (kickedPerGeneration.get(generationId) || 0) + 1);
       } catch (err) {
         (report.errors as string[]).push(`mock kickoff ${(job as any).id}: ${(err as Error).message}`);
       }
