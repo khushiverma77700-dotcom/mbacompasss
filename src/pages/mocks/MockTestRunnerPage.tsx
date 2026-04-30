@@ -444,7 +444,10 @@ export default function MockTestRunnerPage() {
       if (document.fullscreenElement) {
         try { await document.exitFullscreen(); } catch {}
       }
-      navigate(`/mocks/result/${attemptId}`);
+      navigate(
+        isStudentMode() ? studentPostSubmitPath(attemptId) : `/mocks/result/${attemptId}`,
+        { replace: true }
+      );
     } catch (e: any) {
       toast.error(e.message ?? "Submit failed");
       setSubmitting(false);
