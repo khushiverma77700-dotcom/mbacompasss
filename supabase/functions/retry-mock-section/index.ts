@@ -264,7 +264,7 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
     const timer = setTimeout(() => ctrl.abort(), OPENAI_TIMEOUT_MS);
     try {
       resp = await callAIGateway(reqBody as any, {
-        provider: "gemini",
+        provider: "lovable",
         feature: "mock-question-generator",
         maxRetries: 2,
         signal: ctrl.signal,
