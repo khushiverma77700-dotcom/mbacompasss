@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trophy, Medal, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isStudentMode, studentBackToMocksPath } from "@/lib/studentModeNav";
 
 export default function MockLeaderboardPage() {
   const { slug } = useParams();
