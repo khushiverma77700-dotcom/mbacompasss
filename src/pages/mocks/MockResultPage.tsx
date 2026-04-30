@@ -39,7 +39,7 @@ export default function MockResultPage() {
     if (!attemptId) return;
     (async () => {
       const { data: a } = await supabase.from("mock_attempts").select("*").eq("id", attemptId).maybeSingle();
-      if (!a) { navigate("/mocks"); return; }
+      if (!a) { navigate(isStudentMode() ? studentBackToMocksPath() : "/mocks", { replace: true }); return; }
       const [{ data: t }, { data: secs }, { data: rsp }, { data: peers }] = await Promise.all([
         supabase.from("mock_tests").select("*").eq("id", a.test_id).maybeSingle(),
         supabase.from("mock_sections").select("*").eq("test_id", a.test_id).order("sort_order"),
