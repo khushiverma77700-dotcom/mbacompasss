@@ -207,9 +207,6 @@ async function callOpenAIBatch(opts: {
   set_kind?: "rc" | "caselet" | "shared"; // verbal RC vs DI/LR caselet vs generic
   set_label?: string;            // e.g. "Set 1 of 3"
 }) {
-  const apiKey = Deno.env.get("OPENAI_API_KEY");
-  if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
-
   const mathRules = `MATH FORMATTING — CRITICAL: ALL math notation MUST be wrapped in LaTeX delimiters so the renderer can typeset it. Use $...$ for inline math and $$...$$ for block math. Examples:
 - powers: write $x^2$ NOT x² or x^2 in plain text
 - subscripts: $a_n$ NOT a_n
@@ -244,7 +241,7 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
 
   const lvlLower = String(opts.level || "").toLowerCase();
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
-  const modelId = "gpt-4o";
+  const modelId = "google/gemini-2.5-flash";
   const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.4;
   const reqBody: Record<string, unknown> = {
     model: modelId,
@@ -266,24 +263,28 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), OPENAI_TIMEOUT_MS);
     try {
-      resp = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify(reqBody),
+      resp = await callAIGateway(reqBody as any, {
+        provider: "gemini",
+        feature: "mock-question-generator",
+        maxRetries: 2,
         signal: ctrl.signal,
+        skipLog: false,
+        purpose: "long",
       });
       clearTimeout(timer);
       if (resp.ok) break;
+      const txt = await resp.text();
+      const quotaBlocked = resp.status === 429 && /insufficient_quota|quota|billing/i.test(txt);
+      if (quotaBlocked) throw new Error(`AI quota/rate-limit blocked: ${txt.slice(0, 240)}`);
       if ([408, 425, 429, 500, 502, 503, 504].includes(resp.status) && attempt < MAX_INLINE_RETRIES) {
-        const txt = await resp.text();
         lastErr = `AI ${resp.status}: ${txt.slice(0, 200)}`;
         console.warn(`[retry-mock-section] transient ${resp.status}, retry ${attempt}/${MAX_INLINE_RETRIES - 1}`);
-        const backoff = Math.min(8000, 1000 * Math.pow(2, attempt - 1)) + Math.random() * 500;
+        const backoff = Math.min(20000, 2000 * Math.pow(2, attempt - 1)) + Math.random() * 1500;
         await new Promise((r) => setTimeout(r, backoff));
         resp = null;
         continue;
       }
-      throw new Error(`AI ${resp.status}: ${(await resp.text()).slice(0, 200)}`);
+      throw new Error(`AI ${resp.status}: ${txt.slice(0, 200)}`);
     } catch (e) {
       clearTimeout(timer);
       const msg = (e as Error)?.name === "AbortError" ? `OpenAI aborted after ${OPENAI_TIMEOUT_MS}ms` : `OpenAI fetch failed: ${(e as Error)?.message || e}`;
