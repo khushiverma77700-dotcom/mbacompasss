@@ -345,6 +345,13 @@ Deno.serve(async (req) => {
 
     const { data: job, error: jobErr } = await admin.from("mock_section_jobs").select("*").eq("id", job_id).single();
     if (jobErr || !job) return jsonResp(404, { error: "Job not found" });
+    if (job.status === "completed" && (job.questions_done || 0) >= (job.total_questions || 0)) {
+      return jsonResp(200, { ok: true, message: "Already completed" });
+    }
+    const lockUntil = job.worker_lock_until ? new Date(job.worker_lock_until).getTime() : 0;
+    if (auto && job.status === "processing" && lockUntil > Date.now() + 30_000) {
+      return jsonResp(202, { ok: true, message: "Worker already active" });
+    }
 
     if (!userId) userId = job.created_by;
 
@@ -440,13 +447,15 @@ Deno.serve(async (req) => {
               set_mode: true, set_kind: setKind, set_label: `Set ${setIdx} of ${setsTotal}`,
             }) as any;
           } catch (e) {
+            const msg = String((e as Error)?.message || e);
             await admin.from("mock_section_jobs").update({
-              current_step: `Set ${setIdx} attempt failed, will retry: ${(e as Error)?.message?.slice(0, 120) || ""}`,
-              error_message: String((e as Error)?.message || e).slice(0, 400),
+              status: isAIRateLimitError(msg) ? "pending" : "processing",
+              current_step: isAIRateLimitError(msg) ? `AI rate limit hit — waiting before retrying Set ${setIdx}` : `Set ${setIdx} attempt failed, will retry: ${msg.slice(0, 120)}`,
+              error_message: msg.slice(0, 400),
+              worker_lock_until: isAIRateLimitError(msg) ? null : new Date(Date.now() + 8 * 60_000).toISOString(),
               updated_at: new Date().toISOString(),
             }).eq("id", job_id);
-            // schedule self-retry below
-            scheduleNext(true);
+            if (!isAIRateLimitError(msg)) scheduleNext(true);
             return;
           }
 
@@ -604,11 +613,15 @@ Deno.serve(async (req) => {
               topic: job.strict_topic || job.topic || null,
             }) as any[];
           } catch (e) {
+            const msg = String((e as Error)?.message || e);
             await admin.from("mock_section_jobs").update({
-              current_step: `Retry batch ${attempts} failed, retrying again…`,
-              error_message: String((e as Error)?.message || e).slice(0, 400),
+              status: isAIRateLimitError(msg) ? "pending" : "processing",
+              current_step: isAIRateLimitError(msg) ? "AI rate limit hit — queued to continue shortly…" : `Retry batch ${attempts} failed, retrying again…`,
+              error_message: msg.slice(0, 400),
+              worker_lock_until: isAIRateLimitError(msg) ? null : new Date(Date.now() + 8 * 60_000).toISOString(),
               updated_at: new Date().toISOString(),
             }).eq("id", job_id);
+            if (isAIRateLimitError(msg)) return;
             continue;
           }
 
