@@ -71,7 +71,7 @@ Attempt data: ${JSON.stringify({
       topic_focus: parsed.topic_focus ?? [],
       time_insights: parsed.time_insights ?? {},
       next_steps: parsed.next_steps ?? [],
-      ai_model: "google/gemini-2.5-flash",
+      ai_model: "openai/gpt-5-mini",
     }).select().single();
 
     return new Response(JSON.stringify({ analysis: inserted }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
