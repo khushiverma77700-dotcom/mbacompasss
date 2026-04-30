@@ -710,19 +710,10 @@ Deno.serve(async (req) => {
           // @ts-ignore
           if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
         }
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${serviceKey}`,
-                apikey: serviceKey,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ job_id, auto: true, service: true }),
-            }).catch((e) => console.error("[retry-mock-section] next worker failed", e));
-            // @ts-ignore
-            if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
-            return;
-          }
-        }
+
+        // If we exited the standalone loop because attempts hit the cap but
+        // we're still short, queue another worker tick (don't fail the job).
+        if (auto && produced < target) { scheduleNext(true); return; }
 
         const success = produced === target;
         const totalDup = dupHash + dupSimilarity + dupParaphrase + dupDb;
