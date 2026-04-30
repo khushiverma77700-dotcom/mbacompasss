@@ -350,7 +350,18 @@ function buildSystemPrompt(opts: {
   const lvl = String(opts.level || "mixed").toLowerCase();
   let levelGuidance: string;
   if (lvl === "mixed") {
-    levelGuidance = "Mix Easy (~30%), Moderate (~40%), Hard (~30%).";
+    {
+      const sc = String(opts.section_code || "").toUpperCase();
+      if (["VARC", "VALR", "LS", "GE", "LC"].includes(sc)) {
+        levelGuidance = "Mix Easy ~30%, Moderate ~45%, Hard ~25%. Hard items must demand inference / scope-trap elimination, not vocabulary.";
+      } else if (["DILR", "LRDI", "DI", "LR", "AR"].includes(sc)) {
+        levelGuidance = "Mix Easy ~20%, Moderate ~40%, Hard ~40%. Hard caselets require multi-step constraint logic with dense data tables.";
+      } else if (["QA", "QADI", "QADS", "QS", "MS", "DA"].includes(sc)) {
+        levelGuidance = "Mix Easy ~25%, Moderate ~40%, Hard ~35%. Hard items must fuse 2+ topics or need a non-obvious insight — NO single-step formula plug-ins, NO trivial percentage/ratio sums, NO direct definition recall.";
+      } else {
+        levelGuidance = "Mix Easy ~30%, Moderate ~40%, Hard ~30%.";
+      }
+    }
   } else if (lvl === "very_hard") {
     levelGuidance = `DIFFICULTY = VERY HARD (CAT 95+ percentile band). ABSOLUTELY FORBIDDEN: single-step formula plug-ins, direct definition recall, simple percentage/ratio sums, basic syllogisms, vocabulary-only RC questions, two-line LR puzzles. EVERY question MUST require AT LEAST 3-5 non-obvious reasoning steps and take a 99-percentiler 2.5-3.5 minutes.
 
