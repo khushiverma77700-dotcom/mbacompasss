@@ -349,7 +349,8 @@ Deno.serve(async (req) => {
       return jsonResp(200, { ok: true, message: "Already completed" });
     }
     const lockUntil = job.worker_lock_until ? new Date(job.worker_lock_until).getTime() : 0;
-    if (auto && job.status === "processing" && lockUntil > Date.now() + 30_000) {
+    const queuedProcessing = /queued reliable|watchdog kicked/i.test(String(job.current_step || ""));
+    if (auto && job.status === "processing" && lockUntil > Date.now() + 30_000 && !queuedProcessing) {
       return jsonResp(202, { ok: true, message: "Worker already active" });
     }
 
