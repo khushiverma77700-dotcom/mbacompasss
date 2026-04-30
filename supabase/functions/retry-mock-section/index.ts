@@ -4,6 +4,7 @@
 // Invoked from the admin progress panel "Retry section" button.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
+import { callAIGateway } from "../_shared/aiGateway.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,6 +45,32 @@ const BATCH_SIZE = 1;
 // We never give up early. The worker keeps re-invoking itself until either
 // the section reaches its target or the watchdog cancels it after hours.
 const MAX_ATTEMPTS_PER_QUESTION = 200;
+
+function isAIRateLimitError(message: unknown): boolean {
+  const m = String(message || "").toLowerCase();
+  return m.includes("429") || m.includes("rate limit") || m.includes("quota") || m.includes("too many requests");
+}
+
+async function rollupGeneration(admin: any, generationId: string | null | undefined) {
+  if (!generationId) return;
+  const { data: jobs } = await admin
+    .from("mock_section_jobs")
+    .select("status,total_questions,questions_done,duplicates_rejected,dup_hash,dup_similarity,dup_paraphrase,dup_db_conflict,rejected_invalid,error_message,final_reason")
+    .eq("generation_id", generationId);
+  const rows = jobs || [];
+  const requested = rows.reduce((s: number, j: any) => s + (Number(j.total_questions) || 0), 0);
+  const generated = rows.reduce((s: number, j: any) => s + (Number(j.questions_done) || 0), 0);
+  const pending = rows.filter((j: any) => ["pending", "processing"].includes(String(j.status))).length;
+  const failed = rows.filter((j: any) => String(j.status) === "failed").length;
+  const exact = requested > 0 && generated === requested && pending === 0 && failed === 0;
+  await admin.from("ai_mock_generations").update({
+    total_generated: generated,
+    total_rejected_duplicate: rows.reduce((s: number, j: any) => s + (Number(j.duplicates_rejected) || 0), 0),
+    status: pending > 0 ? "running" : (exact ? "completed" : "failed"),
+    error_message: pending > 0 ? null : (exact ? null : `Incomplete generation: ${generated}/${requested} questions saved`),
+    finished_at: pending > 0 ? null : new Date().toISOString(),
+  }).eq("id", generationId);
+}
 
 const PERSONALIZED_SECTION_MAP: Record<string, Record<string, string>> = {
   CAT:  { VARC: "VARC", DILR: "DILR", QA: "QA" },
