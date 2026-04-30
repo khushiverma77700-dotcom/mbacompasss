@@ -8,7 +8,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -33,14 +33,15 @@ Deno.serve(async (req) => {
     const prompt = `You are an MBA admissions analyst. Based on the IIM/IIT/Non-IIM 2026 waitlist data below, write EXACTLY 6 short, punchy insights (max 22 words each) for aspirants. Mix of: trend observation, opportunity, warning, prediction, comparison, action tip. Output strict JSON: {"insights":[{"icon":"trending|alert|sparkle|target|clock|trophy","title":"...","text":"..."}]}.
 DATA: ${JSON.stringify(summary).slice(0, 6000)}`;
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_API_KEY}` },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash-lite",
+        model: "gpt-5-nano",
         messages: [{ role: "user", content: prompt }],
         response_format: { type: "json_object" },
-        max_tokens: 600,
+        max_completion_tokens: 2400,
+        reasoning_effort: "minimal",
       }),
     });
 
