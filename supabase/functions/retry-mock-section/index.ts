@@ -40,7 +40,7 @@ function stripPrefixes(html: string | null | undefined, patterns: RegExp[]): str
 const cleanQuestionHtml = (h: string | null | undefined) => stripPrefixes(h, Q_PREFIX_PATTERNS);
 const cleanOptionHtml = (h: string | null | undefined) => stripPrefixes(h, OPT_PREFIX_PATTERNS);
 
-const OPENAI_TIMEOUT_MS = 90_000;
+const OPENAI_TIMEOUT_MS = 60_000;
 const BATCH_SIZE = 5; // optimized: 5 questions per AI call (was 1) — 80% less prompt overhead
 // We never give up early. The worker keeps re-invoking itself until either
 // the section reaches its target or the watchdog cancels it after hours.
@@ -249,11 +249,10 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
   // Use OpenAI directly (user's personal key) — no Lovable AI credits consumed.
   const modelId = "gpt-4o-mini";
   const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.4;
-  // ~1100 tokens per question is sufficient (stem + 4 options + 200-400 word explanation).
-  // Set-mode adds passage room. Hard cap at 8k to avoid runaway responses.
-  const perQ = 1200;
-  const passageBudget = opts.set_mode ? 2500 : 0;
-  const tokenBudget = Math.min(8000, passageBudget + perQ * Math.max(1, opts.count));
+  // Keep output concise enough to finish quickly; editors can polish further in the builder.
+  const perQ = 700;
+  const passageBudget = opts.set_mode ? 1800 : 0;
+  const tokenBudget = Math.min(6500, passageBudget + perQ * Math.max(1, opts.count));
   const reqBody: Record<string, unknown> = {
     model: modelId,
     messages: [{ role: "system", content: sys }, { role: "user", content: user }],
