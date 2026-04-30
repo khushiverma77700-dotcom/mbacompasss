@@ -282,7 +282,7 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
       resp = await callAIGateway(reqBody as any, {
         signal: ctrl.signal,
         feature: "mock-question-generation",
-        provider: "lovable",
+        provider: "gemini",
         purpose: isHardVariant ? "premium" : "long",
         maxRetries: 1,
       });
