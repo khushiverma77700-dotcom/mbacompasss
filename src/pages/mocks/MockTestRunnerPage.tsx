@@ -484,7 +484,7 @@ export default function MockTestRunnerPage() {
           <p className="text-sm text-muted-foreground">
             No questions are available for this mock, so the test timer has been stopped. Please wait until AI generation completes.
           </p>
-          <Button onClick={() => navigate("/mocks")}>Back to mocks</Button>
+          <Button onClick={() => navigate(isStudentMode() ? studentBackToMocksPath() : "/mocks")}>Back to mocks</Button>
         </div>
       </div>
     );
