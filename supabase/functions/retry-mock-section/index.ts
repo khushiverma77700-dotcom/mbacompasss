@@ -41,7 +41,7 @@ const cleanQuestionHtml = (h: string | null | undefined) => stripPrefixes(h, Q_P
 const cleanOptionHtml = (h: string | null | undefined) => stripPrefixes(h, OPT_PREFIX_PATTERNS);
 
 const OPENAI_TIMEOUT_MS = 180_000;
-const BATCH_SIZE = 1;
+const BATCH_SIZE = 5; // optimized: 5 questions per AI call (was 1) — 80% less prompt overhead
 // We never give up early. The worker keeps re-invoking itself until either
 // the section reaches its target or the watchdog cancels it after hours.
 const MAX_ATTEMPTS_PER_QUESTION = 200;
@@ -241,19 +241,24 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
 
   const lvlLower = String(opts.level || "").toLowerCase();
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
-  const modelId = "google/gemini-2.5-flash";
+  // Use OpenAI directly (user's personal key) — no Lovable AI credits consumed.
+  const modelId = "gpt-4o-mini";
   const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.4;
+  // ~1100 tokens per question is sufficient (stem + 4 options + 200-400 word explanation).
+  // Set-mode adds passage room. Hard cap at 8k to avoid runaway responses.
+  const perQ = 1200;
+  const passageBudget = opts.set_mode ? 2500 : 0;
+  const tokenBudget = Math.min(8000, passageBudget + perQ * Math.max(1, opts.count));
   const reqBody: Record<string, unknown> = {
     model: modelId,
     messages: [{ role: "system", content: sys }, { role: "user", content: user }],
     response_format: { type: "json_object" },
+    max_tokens: tokenBudget,
+    temperature: temp,
   };
-  if (modelId === "gpt-5") {
-    reqBody.max_completion_tokens = 16000;
-  } else {
-    reqBody.max_tokens = 16000;
-    reqBody.temperature = temp;
-  }
+
+  const apiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
 
   // Inline retry with exponential backoff for transient errors (429 / 5xx).
   const MAX_INLINE_RETRIES = 4;
@@ -263,13 +268,11 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), OPENAI_TIMEOUT_MS);
     try {
-      resp = await callAIGateway(reqBody as any, {
-        provider: "lovable",
-        feature: "mock-question-generator",
-        maxRetries: 2,
+      resp = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify(reqBody),
         signal: ctrl.signal,
-        skipLog: false,
-        purpose: "long",
       });
       clearTimeout(timer);
       if (resp.ok) break;
