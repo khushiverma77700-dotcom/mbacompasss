@@ -37,7 +37,6 @@ import { useEnrolledBundleFeatures } from "@/hooks/useEnrolledBundleFeatures";
 import type { FeatureKey } from "@/lib/courseFeatures";
 import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
 import { markStudentMode, clearStudentMode } from "@/lib/studentModeNav";
-import { onDashboardHost } from "@/lib/subdomainRouter";
 
 type NavItem = { to: string; label: string; icon: any; end?: boolean; feature?: FeatureKey };
 
@@ -119,7 +118,7 @@ export default function StudentLayout() {
     const keepInsideDashboard = () => {
       window.setTimeout(() => {
         const path = window.location.pathname;
-        const shouldReturn = onDashboardHost() || path === "/student/login" || !path.startsWith("/student");
+        const shouldReturn = path === "/student/login" || !path.startsWith("/student");
         if (shouldReturn) navigate("/student", { replace: true });
       }, 0);
     };
