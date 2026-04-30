@@ -540,15 +540,15 @@ Deno.serve(async (req) => {
                 is_correct: !!o.is_correct,
                 sort_order: idx,
               }));
-              if (opts.length === 4 && opts.some((o) => o.is_correct)) {
+              if (opts.length === 4 && opts.some((o: any) => o.is_correct)) {
                 await admin.from("mock_question_options").insert(opts);
                 if (hubSection) {
-                  const correctIdx = opts.findIndex((o) => o.is_correct);
+                  const correctIdx = opts.findIndex((o: any) => o.is_correct);
                   hubRows.push({
                     exam_code: job.exam_code, section: hubSection,
                     difficulty: mapPersonalizedDifficulty(normalizeDifficulty(q.difficulty, job.level)),
                     question_text: cleanedQ,
-                    options: opts.map((o) => ({ label: o.option_label, text: o.option_html })),
+                    options: opts.map((o: any) => ({ label: o.option_label, text: o.option_html })),
                     correct_index: correctIdx >= 0 ? correctIdx : 0,
                     explanation: q.explanation_html || null,
                     topic: q.topic || job.topic || null,
@@ -705,15 +705,15 @@ Deno.serve(async (req) => {
                 is_correct: !!o.is_correct,
                 sort_order: idx,
               }));
-              if (opts.length === 4 && opts.some((o) => o.is_correct)) {
+              if (opts.length === 4 && opts.some((o: any) => o.is_correct)) {
                 await admin.from("mock_question_options").insert(opts);
                 if (hubSection) {
-                  const correctIdx = opts.findIndex((o) => o.is_correct);
+                  const correctIdx = opts.findIndex((o: any) => o.is_correct);
                   hubRows.push({
                     exam_code: job.exam_code, section: hubSection,
                     difficulty: mapPersonalizedDifficulty(normalizeDifficulty(q.difficulty, job.level)),
                     question_text: cleanedQHtml,
-                    options: opts.map((o) => ({ label: o.option_label, text: o.option_html })),
+                    options: opts.map((o: any) => ({ label: o.option_label, text: o.option_html })),
                     correct_index: correctIdx >= 0 ? correctIdx : 0,
                     explanation: q.explanation_html || null,
                     topic: q.topic || job.topic || null,
