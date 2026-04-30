@@ -816,11 +816,8 @@ function PaletteContent({
         <Legend color="bg-purple-600" label="Marked for review" />
         <Legend color="bg-white border" label="Not Visited" />
       </div>
-      <div className="p-3 border-t">
-        <Button onClick={handleManualSubmit} disabled={submitting} className="w-full" variant="destructive">
-          {submitting ? "Submitting…" : "Submit Test"}
-        </Button>
-      </div>
+      {/* Submit lives only in the bottom action bar — palette no longer
+          duplicates the button to avoid two competing "Submit" CTAs. */}
     </>
   );
 }
