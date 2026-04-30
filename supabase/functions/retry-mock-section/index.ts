@@ -601,6 +601,10 @@ Deno.serve(async (req) => {
           let inserted = 0;
           for (const q of setQs.slice(0, qPerSet)) {
             if (!q?.question_html) { rejectedInvalid++; continue; }
+            if (!isQuestionInSection(job.exam_code, job.section_code, q.question_html, q.topic)) {
+              console.warn(`[retry-mock-section] Rejected cross-section drift in set for ${job.exam_code}/${job.section_code}: topic="${q.topic}"`);
+              rejectedInvalid++; continue;
+            }
             const norm = normalizeForHash(q.question_html);
             const hash = await sha256(norm);
             // For set-bound questions we ONLY check exact-hash duplicates.
