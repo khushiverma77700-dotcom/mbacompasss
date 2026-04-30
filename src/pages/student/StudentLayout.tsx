@@ -90,28 +90,11 @@ export default function StudentLayout() {
     }
   }, [loading, user, navigate, location.pathname]);
 
-  // Verify the student has at least one purchased course/mock/bundle.
-  useEffect(() => {
-    if (!user) return;
-    let cancelled = false;
-    (async () => {
-      const [mocks, bundles, courses] = await Promise.all([
-        supabase.from("mock_enrollments").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-        supabase.from("mock_bundle_enrollments").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-        supabase.from("course_enrollments").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-      ]);
-      if (cancelled) return;
-      const ok = (mocks.count ?? 0) > 0 || (bundles.count ?? 0) > 0 || (courses.count ?? 0) > 0;
-      setHasAccess(ok);
-      setAccessChecked(true);
-      if (!ok) {
-        clearStudentMode();
-        await supabase.auth.signOut();
-        navigate("/student/login?reason=no-course", { replace: true });
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [user, navigate]);
+  // Note: we no longer block the dashboard or sign the user out when they
+  // have no purchased course. Students who land here from the credentials
+  // popup after buying may take a moment for enrollments to propagate, and
+  // logging them out caused a confusing "kicked back to login" experience.
+  // Empty-state CTAs inside the dashboard guide them to /courses to purchase.
 
   useEffect(() => {
     if (!user) return;
