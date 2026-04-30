@@ -36,6 +36,7 @@ import { StudentThemeProvider } from "@/contexts/StudentThemeContext";
 import { useEnrolledBundleFeatures } from "@/hooks/useEnrolledBundleFeatures";
 import type { FeatureKey } from "@/lib/courseFeatures";
 import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
+import { markStudentMode, clearStudentMode } from "@/lib/studentModeNav";
 
 type NavItem = { to: string; label: string; icon: any; end?: boolean; feature?: FeatureKey };
 
