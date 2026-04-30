@@ -742,6 +742,10 @@ Deno.serve(async (req) => {
           for (const q of qs) {
             if (produced >= target) break;
             if (!q?.question_html) { rejectedInvalid++; continue; }
+            if (!isQuestionInSection(job.exam_code, job.section_code, q.question_html, q.topic)) {
+              console.warn(`[retry-mock-section] Rejected cross-section drift for ${job.exam_code}/${job.section_code}: topic="${q.topic}"`);
+              rejectedInvalid++; continue;
+            }
             const norm = normalizeForHash(q.question_html);
             const hash = await sha256(norm);
 
