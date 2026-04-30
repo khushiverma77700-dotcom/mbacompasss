@@ -107,6 +107,7 @@ export default function StudentLayout() {
       setHasAccess(ok);
       setAccessChecked(true);
       if (!ok) {
+        clearStudentMode();
         await supabase.auth.signOut();
         navigate("/student/login?reason=no-course", { replace: true });
       }
