@@ -48,7 +48,12 @@ const MAX_ATTEMPTS_PER_QUESTION = 200;
 
 function isAIRateLimitError(message: unknown): boolean {
   const m = String(message || "").toLowerCase();
-  return m.includes("429") || m.includes("rate limit") || m.includes("quota") || m.includes("too many requests");
+  return m.includes("429") || m.includes("rate limit") || m.includes("too many requests");
+}
+
+function isAIQuotaBlockedError(message: unknown): boolean {
+  const m = String(message || "").toLowerCase();
+  return m.includes("insufficient_quota") || m.includes("exceeded your current quota") || m.includes("billing") || m.includes("quota/rate-limit blocked");
 }
 
 async function rollupGeneration(admin: any, generationId: string | null | undefined) {
@@ -292,6 +297,7 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
       clearTimeout(timer);
       const msg = (e as Error)?.name === "AbortError" ? `OpenAI aborted after ${OPENAI_TIMEOUT_MS}ms` : `OpenAI fetch failed: ${(e as Error)?.message || e}`;
       lastErr = msg;
+      if (isAIQuotaBlockedError(msg)) throw new Error(msg);
       if (attempt < MAX_INLINE_RETRIES) {
         const backoff = Math.min(8000, 1000 * Math.pow(2, attempt - 1)) + Math.random() * 500;
         await new Promise((r) => setTimeout(r, backoff));
