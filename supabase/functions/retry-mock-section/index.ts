@@ -4,7 +4,7 @@
 // Invoked from the admin progress panel "Retry section" button.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
-// callAIGateway removed: this worker now calls OpenAI directly via OPENAI_API_KEY (no Lovable credits)
+import { callAIGateway } from "../_shared/aiGateway.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -40,7 +40,7 @@ function stripPrefixes(html: string | null | undefined, patterns: RegExp[]): str
 const cleanQuestionHtml = (h: string | null | undefined) => stripPrefixes(h, Q_PREFIX_PATTERNS);
 const cleanOptionHtml = (h: string | null | undefined) => stripPrefixes(h, OPT_PREFIX_PATTERNS);
 
-const OPENAI_TIMEOUT_MS = 60_000;
+const AI_TIMEOUT_MS = 60_000;
 const BATCH_SIZE = 5; // optimized: 5 questions per AI call (was 1) — 80% less prompt overhead
 // We never give up early. The worker keeps re-invoking itself until either
 // the section reaches its target or the watchdog cancels it after hours.
@@ -53,7 +53,18 @@ function isAIRateLimitError(message: unknown): boolean {
 
 function isAIQuotaBlockedError(message: unknown): boolean {
   const m = String(message || "").toLowerCase();
-  return m.includes("insufficient_quota") || m.includes("exceeded your current quota") || m.includes("billing") || m.includes("quota/rate-limit blocked");
+  return m.includes("402") || m.includes("403") || m.includes("payment required") || m.includes("permission_denied") || m.includes("denied access") || m.includes("insufficient_quota") || m.includes("exceeded your current quota") || m.includes("billing") || m.includes("quota/rate-limit blocked");
+}
+
+function parseJsonContent(content: unknown): any {
+  if (typeof content !== "string") return content;
+  try { return JSON.parse(content); } catch {
+    const cleaned = content.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/i, "");
+    const start = cleaned.indexOf("{");
+    const end = cleaned.lastIndexOf("}");
+    if (start >= 0 && end > start) return JSON.parse(cleaned.slice(start, end + 1));
+    throw new Error("AI returned non-JSON content");
+  }
 }
 
 async function rollupGeneration(admin: any, generationId: string | null | undefined) {
@@ -246,8 +257,7 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
 
   const lvlLower = String(opts.level || "").toLowerCase();
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
-  // Use OpenAI directly (user's personal key) — no Lovable AI credits consumed.
-  const modelId = "gpt-4o-mini";
+  const modelId = isHardVariant ? "google/gemini-2.5-flash" : "google/gemini-3-flash-preview";
   const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.4;
   // Keep output concise enough to finish quickly; editors can polish further in the builder.
   const perQ = 700;
@@ -261,27 +271,25 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
     temperature: temp,
   };
 
-  const apiKey = Deno.env.get("OPENAI_API_KEY");
-  if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
-
   // Inline retry with exponential backoff for transient errors (429 / 5xx).
   const MAX_INLINE_RETRIES = 4;
   let resp: Response | null = null;
   let lastErr: string | null = null;
   for (let attempt = 1; attempt <= MAX_INLINE_RETRIES; attempt++) {
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), OPENAI_TIMEOUT_MS);
+    const timer = setTimeout(() => ctrl.abort(), AI_TIMEOUT_MS);
     try {
-      resp = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify(reqBody),
+      resp = await callAIGateway(reqBody as any, {
         signal: ctrl.signal,
+        feature: "mock-question-generation",
+        provider: "gemini",
+        purpose: isHardVariant ? "premium" : "long",
+        maxRetries: 1,
       });
       clearTimeout(timer);
       if (resp.ok) break;
       const txt = await resp.text();
-      const quotaBlocked = resp.status === 429 && /insufficient_quota|quota|billing/i.test(txt);
+      const quotaBlocked = resp.status === 402 || resp.status === 403 || /payment required|permission_denied|denied access|insufficient_quota|quota|billing/i.test(txt);
       if (quotaBlocked) throw new Error(`AI quota/rate-limit blocked: ${txt.slice(0, 240)}`);
       if ([408, 425, 429, 500, 502, 503, 504].includes(resp.status) && attempt < MAX_INLINE_RETRIES) {
         lastErr = `AI ${resp.status}: ${txt.slice(0, 200)}`;
@@ -294,7 +302,7 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
       throw new Error(`AI ${resp.status}: ${txt.slice(0, 200)}`);
     } catch (e) {
       clearTimeout(timer);
-      const msg = (e as Error)?.name === "AbortError" ? `OpenAI aborted after ${OPENAI_TIMEOUT_MS}ms` : `OpenAI fetch failed: ${(e as Error)?.message || e}`;
+      const msg = (e as Error)?.name === "AbortError" ? `AI request aborted after ${AI_TIMEOUT_MS}ms` : `AI fetch failed: ${(e as Error)?.message || e}`;
       lastErr = msg;
       if (isAIQuotaBlockedError(msg)) throw new Error(msg);
       if (attempt < MAX_INLINE_RETRIES) {
@@ -309,7 +317,7 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
   if (!resp || !resp.ok) throw new Error(lastErr || "AI call failed after retries");
   const data = await resp.json();
   const content = data?.choices?.[0]?.message?.content;
-  const parsed = typeof content === "string" ? JSON.parse(content) : content;
+  const parsed = parseJsonContent(content);
   if (opts.set_mode) {
     return {
       passage_html: typeof parsed?.passage_html === "string" ? parsed.passage_html : "",
@@ -357,7 +365,7 @@ Deno.serve(async (req) => {
       return jsonResp(200, { ok: true, message: "Already completed" });
     }
     const lockUntil = job.worker_lock_until ? new Date(job.worker_lock_until).getTime() : 0;
-    const queuedProcessing = /queued reliable|watchdog kicked/i.test(String(job.current_step || ""));
+    const queuedProcessing = /queued reliable|queued fast|watchdog kicked/i.test(String(job.current_step || ""));
     if (auto && !continuation && job.status === "processing" && lockUntil > Date.now() + 30_000 && !queuedProcessing) {
       return jsonResp(202, { ok: true, message: "Worker already active" });
     }
@@ -460,8 +468,8 @@ Deno.serve(async (req) => {
             const quotaBlocked = isAIQuotaBlockedError(msg);
             await admin.from("mock_section_jobs").update({
               status: quotaBlocked ? "failed" : (isAIRateLimitError(msg) ? "pending" : "processing"),
-              current_step: quotaBlocked ? "OpenAI quota/billing blocked — add credits or raise limit" : (isAIRateLimitError(msg) ? `AI rate limit hit — waiting before retrying Set ${setIdx}` : `Set ${setIdx} attempt failed, will retry: ${msg.slice(0, 120)}`),
-              error_message: quotaBlocked ? "OpenAI API quota/billing limit reached. Check your OpenAI account credits/billing, then retry this generation." : msg.slice(0, 400),
+              current_step: quotaBlocked ? "AI quota/billing blocked — add credits or raise limit" : (isAIRateLimitError(msg) ? `AI rate limit hit — waiting before retrying Set ${setIdx}` : `Set ${setIdx} attempt failed, will retry: ${msg.slice(0, 120)}`),
+              error_message: quotaBlocked ? "AI quota/billing limit reached. Check your AI credits/billing, then retry this generation." : msg.slice(0, 400),
               worker_lock_until: (quotaBlocked || isAIRateLimitError(msg)) ? null : new Date(Date.now() + 8 * 60_000).toISOString(),
               updated_at: new Date().toISOString(),
             }).eq("id", job_id);
@@ -630,8 +638,8 @@ Deno.serve(async (req) => {
             const quotaBlocked = isAIQuotaBlockedError(msg);
             await admin.from("mock_section_jobs").update({
               status: quotaBlocked ? "failed" : (isAIRateLimitError(msg) ? "pending" : "processing"),
-              current_step: quotaBlocked ? "OpenAI quota/billing blocked — add credits or raise limit" : (isAIRateLimitError(msg) ? "AI rate limit hit — queued to continue shortly…" : `Retry batch ${attempts} failed, retrying again…`),
-              error_message: quotaBlocked ? "OpenAI API quota/billing limit reached. Check your OpenAI account credits/billing, then retry this generation." : msg.slice(0, 400),
+              current_step: quotaBlocked ? "AI quota/billing blocked — add credits or raise limit" : (isAIRateLimitError(msg) ? "AI rate limit hit — queued to continue shortly…" : `Retry batch ${attempts} failed, retrying again…`),
+              error_message: quotaBlocked ? "AI quota/billing limit reached. Check your AI credits/billing, then retry this generation." : msg.slice(0, 400),
               worker_lock_until: (quotaBlocked || isAIRateLimitError(msg)) ? null : new Date(Date.now() + 8 * 60_000).toISOString(),
               updated_at: new Date().toISOString(),
             }).eq("id", job_id);

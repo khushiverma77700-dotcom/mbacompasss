@@ -939,17 +939,17 @@ Deno.serve(async (req) => {
         questionNumberOffset += sec.questions;
       }
 
-      // Kick off up to three section workers in parallel. One-at-a-time made a
-      // full mock wait section-by-section; three keeps CAT back near 3–5 min
-      // while staying conservative for OpenAI rate limits.
+      // Kick off up to three section workers in parallel. Do NOT pre-lock the
+      // row here: retry-mock-section owns the lock. Pre-locking made the worker
+      // think another worker was active and exit without generating anything.
       const workerUrl = `${url}/functions/v1/retry-mock-section`;
       const allJobIds = sectionRecords.map((r) => r.jobId).filter(Boolean) as string[];
       const initialJobIds = allJobIds.slice(0, 3);
       for (const firstJobId of initialJobIds) {
         await admin.from("mock_section_jobs").update({
-          status: "processing",
+          status: "pending",
           current_step: "Queued fast section worker…",
-          worker_lock_until: new Date(Date.now() + 8 * 60_000).toISOString(),
+          worker_lock_until: null,
           updated_at: new Date().toISOString(),
         }).eq("id", firstJobId);
         const kick = fetch(workerUrl, {
