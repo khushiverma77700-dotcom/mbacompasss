@@ -1,5 +1,5 @@
 // AI Mock Question Generator
-// - Calls Gemini via shared aiGateway with structured JSON output
+// - Calls OpenAI via the configured OPENAI_API_KEY with structured JSON output
 // - De-duplicates against existing mock_questions via SHA-256 content_hash
 // - Optionally verifies uniqueness via Firecrawl web search
 // - Persists sections + questions + options into the target mock_test
