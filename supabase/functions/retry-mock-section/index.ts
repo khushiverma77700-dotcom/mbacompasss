@@ -4,7 +4,6 @@
 // Invoked from the admin progress panel "Retry section" button.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
-import { callAIGateway } from "../_shared/aiGateway.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -255,9 +254,12 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
     user = `Generate exactly ${opts.count} questions: ${opts.mcq} MCQ + ${opts.tita} TITA. Marking +${opts.positive}/-${opts.negative}. JSON shape: {"questions":[{"question_type":"mcq"|"tita","question_html":"...","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"tita_answers":["..."],"tita_tolerance":0.01,"explanation_html":"..."}]}`;
   }
 
+  const apiKey = Deno.env.get("OPENAI_API_KEY");
+  if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
+
   const lvlLower = String(opts.level || "").toLowerCase();
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
-  const modelId = isHardVariant ? "google/gemini-2.5-flash" : "google/gemini-3-flash-preview";
+  const modelId = "gpt-4o-mini";
   const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.4;
   // Keep output concise enough to finish quickly; editors can polish further in the builder.
   const perQ = 700;
@@ -279,30 +281,29 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), AI_TIMEOUT_MS);
     try {
-      resp = await callAIGateway(reqBody as any, {
+      resp = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify(reqBody),
         signal: ctrl.signal,
-        feature: "mock-question-generation",
-        provider: "gemini",
-        purpose: isHardVariant ? "premium" : "long",
-        maxRetries: 1,
       });
       clearTimeout(timer);
       if (resp.ok) break;
       const txt = await resp.text();
-      const quotaBlocked = resp.status === 402 || resp.status === 403 || /payment required|permission_denied|denied access|insufficient_quota|quota|billing/i.test(txt);
-      if (quotaBlocked) throw new Error(`AI quota/rate-limit blocked: ${txt.slice(0, 240)}`);
+      const quotaBlocked = resp.status === 401 || resp.status === 402 || resp.status === 403 || /invalid_api_key|payment required|permission_denied|denied access|insufficient_quota|quota|billing/i.test(txt);
+      if (quotaBlocked) throw new Error(`OpenAI API blocked: ${txt.slice(0, 240)}`);
       if ([408, 425, 429, 500, 502, 503, 504].includes(resp.status) && attempt < MAX_INLINE_RETRIES) {
-        lastErr = `AI ${resp.status}: ${txt.slice(0, 200)}`;
+        lastErr = `OpenAI ${resp.status}: ${txt.slice(0, 200)}`;
         console.warn(`[retry-mock-section] transient ${resp.status}, retry ${attempt}/${MAX_INLINE_RETRIES - 1}`);
         const backoff = Math.min(20000, 2000 * Math.pow(2, attempt - 1)) + Math.random() * 1500;
         await new Promise((r) => setTimeout(r, backoff));
         resp = null;
         continue;
       }
-      throw new Error(`AI ${resp.status}: ${txt.slice(0, 200)}`);
+      throw new Error(`OpenAI ${resp.status}: ${txt.slice(0, 200)}`);
     } catch (e) {
       clearTimeout(timer);
-      const msg = (e as Error)?.name === "AbortError" ? `AI request aborted after ${AI_TIMEOUT_MS}ms` : `AI fetch failed: ${(e as Error)?.message || e}`;
+      const msg = (e as Error)?.name === "AbortError" ? `OpenAI request aborted after ${AI_TIMEOUT_MS}ms` : `OpenAI fetch failed: ${(e as Error)?.message || e}`;
       lastErr = msg;
       if (isAIQuotaBlockedError(msg)) throw new Error(msg);
       if (attempt < MAX_INLINE_RETRIES) {
