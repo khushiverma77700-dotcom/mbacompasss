@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import ScrollToTop from "@/components/ScrollToTop";
 import BackButton from "@/components/BackButton";
+import { computeSubdomainRedirect } from "@/lib/subdomainRouter";
 import { consumePostAuthRedirect } from "@/lib/authRedirect";
 import { supabase } from "@/integrations/supabase/client";
 import { useAllSiteSettings } from "@/hooks/useSiteSettings";
@@ -299,6 +300,21 @@ const GlobalNavigationPrefetch = () => {
   return null;
 };
 
+/**
+ * Runtime guard for SPA navigations across the dashboard ↔ marketing split.
+ * The inline script in index.html catches the very first request; this catches
+ * client-side route changes (e.g. clicking a /colleges link while on dashboard.*).
+ */
+const SubdomainGuard = () => {
+  const location = useLocation();
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const target = computeSubdomainRedirect(window.location);
+    if (target) window.location.replace(target);
+  }, [location.pathname, location.search]);
+  return null;
+};
+
 const PageLoader = () => (
   <div className="min-h-[40vh] bg-background">
     <div className="container mx-auto flex min-h-[40vh] items-center justify-center px-4">
@@ -483,6 +499,7 @@ const App = () => (
       <DeferredToasters />
       <SettingsPrefetcher />
       <BrowserRouter>
+        <SubdomainGuard />
         <GlobalNavigationPrefetch />
         <ScrollToTop />
         <AuthProvider>

@@ -3,6 +3,33 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      Subdomain redirect (runs before anything else on the page).
+      - dashboard.mbacompass.in → forces every visit into /student/* (or auth pages).
+      - mbacompass.in / www.* with /student/* → hops over to dashboard subdomain.
+      Mock pages (/mocks, /courses) stay accessible on the dashboard host because
+      students reach them from inside the LMS.
+    -->
+    <script>
+      (function () {
+        try {
+          var h = window.location.hostname;
+          var p = window.location.pathname;
+          var s = window.location.search || "";
+          var hh = window.location.hash || "";
+          var allowed = ["/student", "/mocks", "/courses", "/dashboard", "/auth", "/forgot-password", "/reset-password"];
+          var startsWithAllowed = allowed.some(function (x) { return p === x || p.indexOf(x + "/") === 0; });
+          if (h === "dashboard.mbacompass.in" && !startsWithAllowed) {
+            window.location.replace("https://dashboard.mbacompass.in/student" + s + hh);
+            return;
+          }
+          if ((h === "mbacompass.in" || h === "www.mbacompass.in") && (p === "/student" || p.indexOf("/student/") === 0)) {
+            window.location.replace("https://dashboard.mbacompass.in" + p + s + hh);
+            return;
+          }
+        } catch (e) { /* noop */ }
+      })();
+    </script>
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/favicon.png" />
     <title>MBA Compass — Find &amp; Compare Top MBA Colleges &amp; Coaching in India</title>
