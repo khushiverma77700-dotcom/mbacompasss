@@ -151,26 +151,25 @@ Deno.serve(async (req) => {
       .from("mock_section_jobs")
       .select("id,generation_id,status,updated_at,worker_lock_until,error_message,current_step")
       .eq("status", "pending")
-      .not("error_message", "ilike", "%exceeded your current quota%")
-      .not("error_message", "ilike", "%quota/rate-limit blocked%")
-      .not("error_message", "ilike", "%billing%")
       .order("created_at", { ascending: true });
 
     if (e3) (report.errors as string[]).push(`mock fetch: ${e3.message}`);
 
     const kickedMockJobs: string[] = [];
-    const kickedGenerations = new Set<string>();
+    const kickedPerGeneration = new Map<string, number>();
     for (const job of (pendingMockJobs || [])) {
       try {
+        const errText = String((job as any).error_message || "").toLowerCase();
+        if (errText.includes("exceeded your current quota") || errText.includes("quota/rate-limit blocked") || errText.includes("billing")) continue;
         const generationId = String((job as any).generation_id || (job as any).id);
-        if (kickedGenerations.has(generationId)) continue;
+        if ((kickedPerGeneration.get(generationId) || 0) >= 3) continue;
         const { count: activeCount } = await admin
           .from("mock_section_jobs")
           .select("id", { count: "exact", head: true })
           .eq("generation_id", (job as any).generation_id)
           .eq("status", "processing")
           .gt("worker_lock_until", new Date().toISOString());
-        if ((activeCount || 0) > 0) continue;
+        if ((activeCount || 0) >= 3) continue;
         await admin
           .from("mock_section_jobs")
           .update({
@@ -192,7 +191,7 @@ Deno.serve(async (req) => {
         }).catch(() => {});
 
         kickedMockJobs.push((job as any).id);
-        kickedGenerations.add(generationId);
+        kickedPerGeneration.set(generationId, (kickedPerGeneration.get(generationId) || 0) + 1);
       } catch (err) {
         (report.errors as string[]).push(`mock kickoff ${(job as any).id}: ${(err as Error).message}`);
       }

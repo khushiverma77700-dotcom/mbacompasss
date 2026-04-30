@@ -40,7 +40,7 @@ function stripPrefixes(html: string | null | undefined, patterns: RegExp[]): str
 const cleanQuestionHtml = (h: string | null | undefined) => stripPrefixes(h, Q_PREFIX_PATTERNS);
 const cleanOptionHtml = (h: string | null | undefined) => stripPrefixes(h, OPT_PREFIX_PATTERNS);
 
-const OPENAI_TIMEOUT_MS = 90_000;
+const OPENAI_TIMEOUT_MS = 60_000;
 const BATCH_SIZE = 5; // optimized: 5 questions per AI call (was 1) — 80% less prompt overhead
 // We never give up early. The worker keeps re-invoking itself until either
 // the section reaches its target or the watchdog cancels it after hours.
@@ -238,9 +238,9 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
         ? "an original DI/LR caselet with FULLY DETAILED DATA — include a properly formatted HTML <table> (rows × columns with concrete numbers/names) AND/OR an inline ASCII bar/line chart inside <pre> tags. Caselets must contain rich data such as sales figures, rankings, percentage shares, time series, tournament results, seating arrangements, family trees, blood relations, etc."
         : "an original shared-context block";
     sys = `You are an elite ${opts.exam_code} question setter writing a SET of ${opts.count} questions tied to ONE shared ${opts.set_kind === "rc" ? "passage" : "caselet"}.${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} ${mathRules} ${formatRules} Output ONLY valid JSON.`;
-    user = `Write ${ctxLabel}, then ${opts.count} questions ALL tied to that shared context. Use FRESH original content; do NOT reuse any famous passage / caselet. Each MCQ has 4 options A-D with one correct; include a 200-400 word explanation per question. JSON shape: {"passage_html":"<div>...full passage or caselet HTML here, with tables/charts if applicable...</div>","questions":[{"question_type":"mcq","question_html":"<question stem only — DO NOT include the passage>","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"explanation_html":"..."}]}`;
+    user = `Write ${ctxLabel}, then ${opts.count} questions ALL tied to that shared context. Use FRESH original content; do NOT reuse any famous passage / caselet. Each MCQ has 4 options A-D with one correct; include a clear 120-180 word explanation per question. JSON shape: {"passage_html":"<div>...full passage or caselet HTML here, with tables/charts if applicable...</div>","questions":[{"question_type":"mcq","question_html":"<question stem only — DO NOT include the passage>","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"explanation_html":"..."}]}`;
   } else {
-    sys = `You are an elite ${opts.exam_code} question setter writing 100% original questions for the ${opts.section_name} (${opts.section_code}) section.${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} Use fresh numbers, fresh names, fresh contexts. Each MCQ has 4 options A-D with one correct; each TITA has numeric answer(s). Include detailed 200-400 word explanations. ${mathRules} ${formatRules} Output ONLY valid JSON.`;
+    sys = `You are an elite ${opts.exam_code} question setter writing 100% original questions for the ${opts.section_name} (${opts.section_code}) section.${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} Use fresh numbers, fresh names, fresh contexts. Each MCQ has 4 options A-D with one correct; each TITA has numeric answer(s). Include clear 120-180 word explanations. ${mathRules} ${formatRules} Output ONLY valid JSON.`;
     user = `Generate exactly ${opts.count} questions: ${opts.mcq} MCQ + ${opts.tita} TITA. Marking +${opts.positive}/-${opts.negative}. JSON shape: {"questions":[{"question_type":"mcq"|"tita","question_html":"...","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"tita_answers":["..."],"tita_tolerance":0.01,"explanation_html":"..."}]}`;
   }
 
@@ -249,11 +249,10 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
   // Use OpenAI directly (user's personal key) — no Lovable AI credits consumed.
   const modelId = "gpt-4o-mini";
   const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.4;
-  // ~1100 tokens per question is sufficient (stem + 4 options + 200-400 word explanation).
-  // Set-mode adds passage room. Hard cap at 8k to avoid runaway responses.
-  const perQ = 1200;
-  const passageBudget = opts.set_mode ? 2500 : 0;
-  const tokenBudget = Math.min(8000, passageBudget + perQ * Math.max(1, opts.count));
+  // Keep output concise enough to finish quickly; editors can polish further in the builder.
+  const perQ = 700;
+  const passageBudget = opts.set_mode ? 1800 : 0;
+  const tokenBudget = Math.min(6500, passageBudget + perQ * Math.max(1, opts.count));
   const reqBody: Record<string, unknown> = {
     model: modelId,
     messages: [{ role: "system", content: sys }, { role: "user", content: user }],
@@ -613,7 +612,7 @@ Deno.serve(async (req) => {
           const batchMcq = batch - batchTita;
 
           await admin.from("mock_section_jobs").update({
-            current_step: `Writing question ${produced + 1}/${target} — uniqueness check active…`,
+            current_step: `Writing questions ${produced + 1}-${Math.min(target, produced + batch)}/${target} — uniqueness check active…`,
             worker_lock_until: new Date(Date.now() + 8 * 60_000).toISOString(),
             updated_at: new Date().toISOString(),
           }).eq("id", job_id);

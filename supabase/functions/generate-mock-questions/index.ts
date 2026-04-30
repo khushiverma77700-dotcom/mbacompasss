@@ -756,7 +756,7 @@ Deno.serve(async (req) => {
       exam_code, category, level,
       request: body, status: "running",
       total_requested: safePerSet * setsCount,
-      ai_model: "google/gemini-2.5-flash",
+      ai_model: "gpt-4o-mini",
       created_by: user.id,
     }).select("id").single();
     const genId = gen?.id;
@@ -847,11 +847,23 @@ Deno.serve(async (req) => {
         // CAT/IIFT DILR=4×5) > 0/0 (no sets, all standalone).
         let secSets = 0;
         let secQPerSet = 0;
-        if (customSec && Number(customSec.sets) > 0) {
+          if (customSec && Number(customSec.sets) > 0) {
           secSets = Math.max(1, Math.floor(Number(customSec.sets)));
           // questions_per_set if user provided it on the row, else infer
           const customQPS = Number((customSec as any).questions_per_set || 0);
-          secQPerSet = customQPS > 0 ? customQPS : Math.floor(sec.questions / secSets);
+            if (customQPS > 0) {
+              secQPerSet = customQPS;
+            } else {
+              const ec = String(exam_code || "").toUpperCase();
+              const sc = String(sec.code || "").toUpperCase();
+              // Keep RC/LRDI sets exam-realistic and small. Previously a custom
+              // full-length CAT plan inferred VARC as 3×8-question RCs, creating
+              // huge prompts that could run for 20–30 minutes.
+              if ((ec === "CAT" || ec === "IIFT") && sc === "VARC") secQPerSet = 4;
+              else if ((ec === "CAT" || ec === "IIFT") && sc === "DILR") secQPerSet = 5;
+              else if (sc === "VALR" || sc === "VARC" || sc === "LS" || sc === "GE" || sc === "LC") secQPerSet = 4;
+              else secQPerSet = Math.max(1, Math.floor(sec.questions / secSets));
+            }
         } else if (category === "full_length") {
           const ec = String(exam_code || "").toUpperCase();
           const sc = String(sec.code || "").toUpperCase();
@@ -903,15 +915,16 @@ Deno.serve(async (req) => {
         questionNumberOffset += sec.questions;
       }
 
-      // Kick off only ONE section job at a time. Parallel AI workers were causing
-      // upstream 429/quota errors and leaving mocks with missing questions.
+      // Kick off up to three section workers in parallel. One-at-a-time made a
+      // full mock wait section-by-section; three keeps CAT back near 3–5 min
+      // while staying conservative for OpenAI rate limits.
       const workerUrl = `${url}/functions/v1/retry-mock-section`;
       const allJobIds = sectionRecords.map((r) => r.jobId).filter(Boolean) as string[];
-      const firstJobId = allJobIds[0];
-      if (firstJobId) {
+      const initialJobIds = allJobIds.slice(0, 3);
+      for (const firstJobId of initialJobIds) {
         await admin.from("mock_section_jobs").update({
           status: "processing",
-          current_step: "Queued reliable one-question worker…",
+          current_step: "Queued fast section worker…",
           worker_lock_until: new Date(Date.now() + 8 * 60_000).toISOString(),
           updated_at: new Date().toISOString(),
         }).eq("id", firstJobId);
