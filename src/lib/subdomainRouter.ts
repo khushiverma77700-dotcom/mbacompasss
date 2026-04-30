@@ -1,20 +1,21 @@
 /**
  * Subdomain routing for dashboard.mbacompass.in
  *
- * Same codebase serves two hosts:
+ * Same codebase serves two hosts, but they own different sections:
  *   - mbacompass.in / www.mbacompass.in → public marketing site
- *   - dashboard.mbacompass.in           → student LMS (/student/*)
+ *       Owns: home, /colleges, /exams, /coaching, /mocks, /courses, /blog,
+ *             /auth, etc. (everything public)
+ *   - dashboard.mbacompass.in           → student LMS only
+ *       Owns: /student/* and shared /auth + password reset.
  *
  * Rules:
- *   1. On the dashboard host, force every visit into /student/* (or auth pages).
- *      Anyone landing on "/" or a marketing path is redirected to /student.
- *   2. On the main host, /student/* gets redirected over to the dashboard host
- *      so SEO + branding stay clean.
- *   3. Mock runner / result / review / leaderboard / intro pages are allowed
- *      on the dashboard host because students reach them from inside /student/*.
- *      The student-mode nav helper keeps post-submit redirects inside /student/*.
- *   4. Localhost + Lovable preview hosts behave normally — no redirects, so
- *      development is unaffected.
+ *   1. On the dashboard host, only /student/* and auth pages render. Anything
+ *      else (someone typing dashboard.mbacompass.in/mocks) is bounced to
+ *      /student so the dashboard subdomain stays a clean LMS surface.
+ *   2. On the main marketing host we DO NOT redirect anything. /mocks,
+ *      /courses, /student all render normally on bschoolbuzz / mbacompass.
+ *      The two hosts operate independently — no cross-host hops.
+ *   3. Localhost + Lovable preview hosts behave normally — no redirects.
  */
 
 export const DASHBOARD_HOST = "dashboard.mbacompass.in";
@@ -23,10 +24,7 @@ export const MAIN_HOSTS = ["mbacompass.in", "www.mbacompass.in"];
 /** Paths that are allowed on the dashboard subdomain. */
 const DASHBOARD_ALLOWED_PREFIXES = [
   "/student",
-  "/mocks",         // mock runner / result / review / intro / leaderboard
-  "/courses",       // mock bundle pages students buy from
-  "/dashboard",     // legacy generic dashboard
-  "/auth",          // shared sign-in
+  "/auth",
   "/forgot-password",
   "/reset-password",
 ];
@@ -42,25 +40,16 @@ const isMainHost = (hostname: string) => MAIN_HOSTS.includes(hostname);
 export const computeSubdomainRedirect = (loc: Location): string | null => {
   const { hostname, pathname, search, hash, protocol } = loc;
 
-  // ---- Dashboard host ----
+  // ---- Dashboard host: lock to /student/* + auth ----
   if (isDashboardHost(hostname)) {
     const allowed = DASHBOARD_ALLOWED_PREFIXES.some(
       (p) => pathname === p || pathname.startsWith(p + "/")
     );
     if (allowed) return null;
-    // Anything else on dashboard.* → send to /student
     return `${protocol}//${hostname}/student${search}${hash}`;
   }
 
-  // ---- Main marketing host ----
-  if (isMainHost(hostname)) {
-    if (pathname === "/student" || pathname.startsWith("/student/")) {
-      return `${protocol}//${DASHBOARD_HOST}${pathname}${search}${hash}`;
-    }
-    return null;
-  }
-
-  // Localhost / preview / custom — leave alone.
+  // ---- Main marketing host: no redirects, hosts are independent. ----
   return null;
 };
 
@@ -77,15 +66,11 @@ export const onMainHost = (): boolean => {
 };
 
 /**
- * Build an absolute URL for a /student/* path, hopping to the dashboard
- * subdomain when the user is currently on the main marketing host.
- * Returns the path unchanged in dev / preview / on the dashboard host already.
+ * Build a path/URL for a /student/* destination.
+ * Returns a same-origin path unchanged. We intentionally do NOT auto-hop to
+ * the dashboard subdomain here — the two hosts operate independently and a
+ * student visiting the main site can still use /student locally.
  */
 export const studentUrl = (path: string): string => {
-  if (typeof window === "undefined") return path;
-  const safePath = path.startsWith("/") ? path : `/${path}`;
-  if (onMainHost()) {
-    return `https://${DASHBOARD_HOST}${safePath}`;
-  }
-  return safePath;
+  return path.startsWith("/") ? path : `/${path}`;
 };
