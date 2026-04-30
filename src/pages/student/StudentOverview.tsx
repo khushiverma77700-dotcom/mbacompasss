@@ -60,10 +60,14 @@ export default function StudentOverview() {
 
   useEffect(() => {
     if (!user) return;
+    let cancelled = false;
     (async () => {
       const today = new Date().toISOString().slice(0, 10);
+      // Single parallel fan-out — every dashboard query starts at the same time
+      // so the page is ready as soon as the slowest one returns instead of
+      // waiting for them sequentially.
       const [
-        { data: e }, { data: g }, { data: ann }, { data: pf }, { data: tk }, { data: wk }, { data: prof },
+        { data: e }, { data: g }, { data: ann }, { data: pf }, { data: tk }, { data: wk }, { data: prof }, { data: exRows },
       ] = await Promise.all([
         supabase.from("mock_enrollments")
           .select("id, test_id, source, expires_at, enrolled_at, test:mock_tests(name, slug, exam_code)")
@@ -76,7 +80,9 @@ export default function StudentOverview() {
         supabase.from("student_daily_tasks").select("*").eq("user_id", user.id).eq("task_date", today),
         supabase.from("student_weak_topics").select("*").eq("user_id", user.id).order("level", { ascending: true }).limit(12),
         supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle(),
+        supabase.from("exams").select("name, slug, exam_date").not("exam_date", "is", null).order("exam_date", { ascending: true }).limit(20),
       ]);
+      if (cancelled) return;
       setEnrollments(e ?? []);
       setGoals(g ?? []);
       setAnnouncements(ann ?? []);
@@ -85,12 +91,6 @@ export default function StudentOverview() {
       setWeak(wk ?? []);
       setDisplayName(prof?.display_name ?? user.email?.split("@")[0] ?? "Student");
 
-      // Exam countdowns — admin-managed via the existing exams table.
-      const { data: exRows } = await supabase
-        .from("exams")
-        .select("name, slug, exam_date")
-        .not("exam_date", "is", null)
-        .order("exam_date", { ascending: true });
       const upcoming = (exRows ?? [])
         .filter((x: any) => x.exam_date && new Date(x.exam_date).getTime() >= Date.now() - 86400000)
         .slice(0, 8);
@@ -98,6 +98,7 @@ export default function StudentOverview() {
 
       setSideLoading(false);
     })();
+    return () => { cancelled = true; };
   }, [user]);
 
   // Re-render every minute so countdowns stay live without manual refresh.
