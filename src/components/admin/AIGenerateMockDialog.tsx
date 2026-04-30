@@ -163,7 +163,7 @@ type SectionRow = {
 // Default number of sets (passages/caselets) per section per exam.
 // 0 means questions are standalone (no shared passage/caselet).
 const DEFAULT_SETS: Record<string, Record<string, number>> = {
-  CAT:  { VARC: 3, DILR: 3, QA: 0 },
+  CAT:  { VARC: 3, DILR: 4, QA: 0 },
   XAT:  { VALR: 3, DM: 0, QADI: 0, GK: 0 },
   SNAP: { GE: 0, AR: 0, QADS: 0 },
   NMAT: { LS: 0, LR: 0, QS: 0 },
