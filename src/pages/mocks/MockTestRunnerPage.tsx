@@ -195,6 +195,7 @@ export default function MockTestRunnerPage() {
 
   useEffect(() => {
     if (loading) return;
+    if (questions.length === 0) return;
     const onVis = () => {
       if (document.hidden) {
         setViolations((v) => {
@@ -254,7 +255,7 @@ export default function MockTestRunnerPage() {
       document.removeEventListener("paste", blockCopy);
       document.removeEventListener("cut", blockCopy);
     };
-  }, [loading, attemptId, handleAutoSubmit, isMobile]);
+  }, [loading, attemptId, handleAutoSubmit, isMobile, questions.length]);
 
   // ---------- DERIVED ----------
   const sectionQuestions = useMemo(
