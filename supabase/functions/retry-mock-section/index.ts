@@ -267,8 +267,7 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
 
   const lvlLower = String(opts.level || "").toLowerCase();
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
-  // Use OpenAI directly (user's personal key) — no Lovable AI credits consumed.
-  const modelId = "gpt-4o-mini";
+  const modelId = isHardVariant ? "google/gemini-2.5-flash" : "google/gemini-3-flash-preview";
   const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.4;
   // Keep output concise enough to finish quickly; editors can polish further in the builder.
   const perQ = 700;
@@ -282,27 +281,25 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
     temperature: temp,
   };
 
-  const apiKey = Deno.env.get("OPENAI_API_KEY");
-  if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
-
   // Inline retry with exponential backoff for transient errors (429 / 5xx).
   const MAX_INLINE_RETRIES = 4;
   let resp: Response | null = null;
   let lastErr: string | null = null;
   for (let attempt = 1; attempt <= MAX_INLINE_RETRIES; attempt++) {
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), OPENAI_TIMEOUT_MS);
+    const timer = setTimeout(() => ctrl.abort(), AI_TIMEOUT_MS);
     try {
-      resp = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-        body: JSON.stringify(reqBody),
+      resp = await callAIGateway(reqBody as any, {
         signal: ctrl.signal,
+        feature: "mock-question-generation",
+        provider: "lovable",
+        purpose: isHardVariant ? "premium" : "long",
+        maxRetries: 1,
       });
       clearTimeout(timer);
       if (resp.ok) break;
       const txt = await resp.text();
-      const quotaBlocked = resp.status === 429 && /insufficient_quota|quota|billing/i.test(txt);
+      const quotaBlocked = resp.status === 402 || /payment required|insufficient_quota|quota|billing/i.test(txt);
       if (quotaBlocked) throw new Error(`AI quota/rate-limit blocked: ${txt.slice(0, 240)}`);
       if ([408, 425, 429, 500, 502, 503, 504].includes(resp.status) && attempt < MAX_INLINE_RETRIES) {
         lastErr = `AI ${resp.status}: ${txt.slice(0, 200)}`;
@@ -315,7 +312,7 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
       throw new Error(`AI ${resp.status}: ${txt.slice(0, 200)}`);
     } catch (e) {
       clearTimeout(timer);
-      const msg = (e as Error)?.name === "AbortError" ? `OpenAI aborted after ${OPENAI_TIMEOUT_MS}ms` : `OpenAI fetch failed: ${(e as Error)?.message || e}`;
+      const msg = (e as Error)?.name === "AbortError" ? `AI request aborted after ${AI_TIMEOUT_MS}ms` : `AI fetch failed: ${(e as Error)?.message || e}`;
       lastErr = msg;
       if (isAIQuotaBlockedError(msg)) throw new Error(msg);
       if (attempt < MAX_INLINE_RETRIES) {
@@ -330,7 +327,7 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
   if (!resp || !resp.ok) throw new Error(lastErr || "AI call failed after retries");
   const data = await resp.json();
   const content = data?.choices?.[0]?.message?.content;
-  const parsed = typeof content === "string" ? JSON.parse(content) : content;
+  const parsed = parseJsonContent(content);
   if (opts.set_mode) {
     return {
       passage_html: typeof parsed?.passage_html === "string" ? parsed.passage_html : "",
