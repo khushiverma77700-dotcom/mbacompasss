@@ -202,9 +202,9 @@ Deno.serve(async (req) => {
       top_weak_topics: topWeak,
     };
 
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
+    const apiKey = Deno.env.get("OPENAI_API_KEY");
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: "AI not configured" }), {
+      return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -244,16 +244,18 @@ Rules:
 
     const user_msg = "Diagnostics:\n" + JSON.stringify(diagnostics, null, 2);
 
-    const aiRes = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
+        model: "gpt-5-mini",
         messages: [
           { role: "system", content: sys },
           { role: "user", content: user_msg },
         ],
         response_format: { type: "json_object" },
+        max_completion_tokens: 8000,
+        reasoning_effort: "minimal",
       }),
     });
 

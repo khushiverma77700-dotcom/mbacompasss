@@ -41,13 +41,15 @@ Attempt data: ${JSON.stringify({
       sections: attempt.sections_data, percentile: attempt.percentile,
     }).slice(0, 6000)}`;
 
-    const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiResp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${Deno.env.get("LOVABLE_API_KEY")}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${Deno.env.get("OPENAI_API_KEY")}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gpt-5-mini",
         messages: [{ role: "user", content: prompt }],
         response_format: { type: "json_object" },
+        max_completion_tokens: 5000,
+        reasoning_effort: "minimal",
       }),
     });
     if (!aiResp.ok) {
@@ -69,7 +71,7 @@ Attempt data: ${JSON.stringify({
       topic_focus: parsed.topic_focus ?? [],
       time_insights: parsed.time_insights ?? {},
       next_steps: parsed.next_steps ?? [],
-      ai_model: "google/gemini-2.5-flash",
+      ai_model: "openai/gpt-5-mini",
     }).select().single();
 
     return new Response(JSON.stringify({ analysis: inserted }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
