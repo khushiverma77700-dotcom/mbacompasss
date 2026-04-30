@@ -53,7 +53,7 @@ function isAIRateLimitError(message: unknown): boolean {
 
 function isAIQuotaBlockedError(message: unknown): boolean {
   const m = String(message || "").toLowerCase();
-  return m.includes("402") || m.includes("payment required") || m.includes("insufficient_quota") || m.includes("exceeded your current quota") || m.includes("billing") || m.includes("quota/rate-limit blocked");
+  return m.includes("402") || m.includes("403") || m.includes("payment required") || m.includes("permission_denied") || m.includes("denied access") || m.includes("insufficient_quota") || m.includes("exceeded your current quota") || m.includes("billing") || m.includes("quota/rate-limit blocked");
 }
 
 function parseJsonContent(content: unknown): any {
@@ -289,7 +289,7 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
       clearTimeout(timer);
       if (resp.ok) break;
       const txt = await resp.text();
-      const quotaBlocked = resp.status === 402 || /payment required|insufficient_quota|quota|billing/i.test(txt);
+      const quotaBlocked = resp.status === 402 || resp.status === 403 || /payment required|permission_denied|denied access|insufficient_quota|quota|billing/i.test(txt);
       if (quotaBlocked) throw new Error(`AI quota/rate-limit blocked: ${txt.slice(0, 240)}`);
       if ([408, 425, 429, 500, 502, 503, 504].includes(resp.status) && attempt < MAX_INLINE_RETRIES) {
         lastErr = `AI ${resp.status}: ${txt.slice(0, 200)}`;
