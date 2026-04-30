@@ -165,7 +165,7 @@ export default function StudentLayout() {
               >
                 {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
-              <Link to="/" className="flex items-center gap-2 min-w-0">
+              <Link to="/student" className="flex items-center gap-2 min-w-0">
                 <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white shrink-0">
                   <GraduationCap className="h-4 w-4" />
                 </div>
@@ -424,7 +424,7 @@ function SidebarContent() {
 
       <div className="pt-4 mt-4 border-t border-border">
         <Link
-          to="/mocks"
+          to="/student/mocks/full-length"
           className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground px-3 py-2"
         >
           Browse all mocks →

@@ -350,7 +350,18 @@ function buildSystemPrompt(opts: {
   const lvl = String(opts.level || "mixed").toLowerCase();
   let levelGuidance: string;
   if (lvl === "mixed") {
-    levelGuidance = "Mix Easy (~30%), Moderate (~40%), Hard (~30%).";
+    {
+      const sc = String(opts.section_code || "").toUpperCase();
+      if (["VARC", "VALR", "LS", "GE", "LC"].includes(sc)) {
+        levelGuidance = "Mix Easy ~30%, Moderate ~45%, Hard ~25%. Hard items must demand inference / scope-trap elimination, not vocabulary.";
+      } else if (["DILR", "LRDI", "DI", "LR", "AR"].includes(sc)) {
+        levelGuidance = "Mix Easy ~20%, Moderate ~40%, Hard ~40%. Hard caselets require multi-step constraint logic with dense data tables.";
+      } else if (["QA", "QADI", "QADS", "QS", "MS", "DA"].includes(sc)) {
+        levelGuidance = "Mix Easy ~25%, Moderate ~40%, Hard ~35%. Hard items must fuse 2+ topics or need a non-obvious insight — NO single-step formula plug-ins, NO trivial percentage/ratio sums, NO direct definition recall.";
+      } else {
+        levelGuidance = "Mix Easy ~30%, Moderate ~40%, Hard ~30%.";
+      }
+    }
   } else if (lvl === "very_hard") {
     levelGuidance = `DIFFICULTY = VERY HARD (CAT 95+ percentile band). ABSOLUTELY FORBIDDEN: single-step formula plug-ins, direct definition recall, simple percentage/ratio sums, basic syllogisms, vocabulary-only RC questions, two-line LR puzzles. EVERY question MUST require AT LEAST 3-5 non-obvious reasoning steps and take a 99-percentiler 2.5-3.5 minutes.
 
@@ -456,7 +467,9 @@ CRITICAL RULES:
 9. STRICT FORMATTING — the UI renders question number, set badge and option letters (A/B/C/D) as STATIC labels:
    - "question_html" must contain ONLY the pure question text. Do NOT prefix it with "Q1.", "Q.1", "Question 1:", "Question:", "1.", "1)", "(1)", "Set 1:", or any numbering/labeling.
    - "options[].text" must contain ONLY the pure option text. Do NOT prefix it with "A)", "(A)", "A.", "a)", "1)" or any letter/number label.
-   - For set-bound questions, keep the shared passage/caselet INSIDE <div class="passage">…</div> exactly as instructed; do NOT write "Question 1 of Set 2", "Set 1 — Q3" etc. anywhere.`;
+   - For set-bound questions, keep the shared passage/caselet INSIDE <div class="passage">…</div> exactly as instructed; do NOT write "Question 1 of Set 2", "Set 1 — Q3" etc. anywhere.
+10. MATH RENDERING — render every fraction, root, exponent, summation or symbol with LaTeX delimited by $...$ for inline (e.g. $\\frac{a}{b}$, $\\sqrt{x^2+1}$, $x_1 \\le x_2$) or $$...$$ for block. Never write fractions as "a/b" when they should be stacked. Never use Unicode hacks for math operators when LaTeX is clearer.
+11. DI-LR VISUALS — when a caselet needs a chart, ALWAYS emit a clean inline <svg viewBox="0 0 600 300">…</svg> with proper <rect>/<line>/<text> elements (or a well-formatted HTML <table>). NEVER emit base64 images, NEVER reference external image URLs, NEVER write "see image below". The SVG must be self-contained and human-readable.`;
 }
 
 function buildUserPrompt(opts: {
@@ -874,6 +887,17 @@ Deno.serve(async (req) => {
             // 4 caselets × 5 = 20; if section has fewer Qs, scale down qPerSet.
             secSets = 4; secQPerSet = Math.max(4, Math.floor(sec.questions / 4));
           }
+        }
+        // ── HARD CAP: any RC-style verbal section must have 4–5 Qs per passage.
+        // CAT/XAT/IIFT/SNAP RCs never exceed 5 questions. Prevents the bug
+        // where a single passage was rendering 8–9 questions.
+        const verbalCodes = new Set(["VARC", "VALR", "LS", "GE", "LC", "VABI"]);
+        if (verbalCodes.has(String(sec.code || "").toUpperCase()) && secSets > 0) {
+          secQPerSet = Math.min(5, Math.max(4, secQPerSet));
+        }
+        // Also cap DILR caselets at a sane max of 6 questions per set
+        if (["DILR", "LRDI", "DI", "LR"].includes(String(sec.code || "").toUpperCase()) && secSets > 0) {
+          secQPerSet = Math.min(6, Math.max(4, secQPerSet));
         }
         // Safety: never let sets demand more questions than the section has
         if (secSets * secQPerSet > sec.questions) {

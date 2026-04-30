@@ -162,11 +162,14 @@ export function useStudentPerformance(): StudentPerformanceData {
         agg[k].count += 1;
       }
     }
+    // Guard every divisor — sectional_scores can have zeroed/empty entries
+    // which previously rendered NaN values into the dashboard.
+    const safe = (n: number) => (Number.isFinite(n) ? n : 0);
     return Object.entries(agg).map(([name, v]) => ({
       name,
-      avgScore: +(v.score / v.count).toFixed(1),
+      avgScore: v.count > 0 ? +safe(v.score / v.count).toFixed(1) : 0,
       avgAccuracy: v.attempted > 0 ? Math.round((v.correct / v.attempted) * 100) : 0,
-      avgPercentile: Math.round(v.percentile / v.count),
+      avgPercentile: v.count > 0 ? Math.round(safe(v.percentile / v.count)) : 0,
       pctOfMax: v.max > 0 ? Math.round((v.score / v.max) * 100) : 0,
     }));
   }, [submitted]);

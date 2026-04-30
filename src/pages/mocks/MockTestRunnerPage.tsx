@@ -491,7 +491,11 @@ export default function MockTestRunnerPage() {
             <span className="hidden sm:inline">Total: </span>
             <strong className="font-mono">{fmt(overallRemaining)}</strong>
           </span>
-          <MockCalculator />
+          {/* On-screen calculator: CAT rules — available only in DILR + QA, hidden in VARC.
+              Remains visible regardless of MCQ/TITA so Quant TITA also has access. */}
+          {currentSection && ["DILR", "LRDI", "QA", "QADI", "QADS", "QS", "MS", "DA", "ICR"].includes(
+            String(currentSection.code).toUpperCase(),
+          ) && <MockCalculator />}
           <button
             type="button"
             onClick={() => setPaletteOpen(true)}
@@ -812,11 +816,8 @@ function PaletteContent({
         <Legend color="bg-purple-600" label="Marked for review" />
         <Legend color="bg-white border" label="Not Visited" />
       </div>
-      <div className="p-3 border-t">
-        <Button onClick={handleManualSubmit} disabled={submitting} className="w-full" variant="destructive">
-          {submitting ? "Submitting…" : "Submit Test"}
-        </Button>
-      </div>
+      {/* Submit lives only in the bottom action bar — palette no longer
+          duplicates the button to avoid two competing "Submit" CTAs. */}
     </>
   );
 }

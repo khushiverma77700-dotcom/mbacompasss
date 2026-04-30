@@ -348,12 +348,18 @@ const DeferredChrome = () => {
 
   if (!show) return null;
 
-  // Popup never shows on home / admin / profile-analyzer — skip importing it there
+  // Popup never shows on home / admin / profile-analyzer / student dashboard / mock test runner —
+  // skip importing it there so AI pop-ups don't disrupt focused experiences.
   const path = location.pathname;
   const skipPopup =
     path === "/" ||
     path === "/profile-analyzer" ||
-    path.startsWith("/admin");
+    path.startsWith("/admin") ||
+    path.startsWith("/student") ||
+    path.startsWith("/mocks/attempt") ||
+    path.startsWith("/mocks/test") ||
+    path.startsWith("/mocks/result") ||
+    path.startsWith("/mocks/review");
 
   return (
     <Suspense fallback={null}>

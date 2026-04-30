@@ -67,9 +67,9 @@ export default function AIAnalysisPanel({ attemptId }: { attemptId: string }) {
             {loading ? "Analyzing…" : "Run AI Analysis"}
           </Button>
         ) : (
-          <Button variant="outline" size="sm" onClick={run} disabled={loading}>
-            {loading ? "Regenerating…" : "Regenerate"}
-          </Button>
+          <span className="text-xs text-muted-foreground inline-flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-sky-600" /> Report generated
+          </span>
         )}
       </div>
 
