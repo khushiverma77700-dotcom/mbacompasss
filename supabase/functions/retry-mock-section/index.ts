@@ -213,6 +213,88 @@ function buildExamCalibration(examCode: string, level: string): string {
   return ` EXAM BLUEPRINT — ${code}: ${baseline} EXAM-NORMALIZED DIFFICULTY: ${cal} Difficulty is RELATIVE to ${code}, never absolute. The mock must feel indistinguishable from a real ${code} paper.`;
 }
 
+// ── Section scope locks ──────────────────────────────────────────────
+// Per (exam, section) we store: ALLOWED topics (must be in syllabus) and
+// FORBIDDEN topics that belong to OTHER sections of the same exam. The model
+// receives this as a hard guardrail; we ALSO post-validate AI output and reject
+// any question whose stem clearly belongs to a forbidden section.
+const SECTION_SCOPE: Record<string, Record<string, { allowed: string; forbiddenKeywords: string[] }>> = {
+  CAT: {
+    VARC: {
+      allowed: "Reading Comprehension passages (4-RC structure), parajumbles, para-summary, odd-sentence-out, sentence completion, vocabulary-in-context, inference, tone, main idea. Verbal Ability ONLY.",
+      forbiddenKeywords: ["arithmetic", "algebra", "geometry", "number system", "probability", "permutation", "combination", "trigonometry", "data interpretation", "caselet", "bar chart", "pie chart", "seating arrangement", "blood relation", "syllogism"],
+    },
+    DILR: {
+      allowed: "Data Interpretation caselets (tables, bar/line/pie charts) and Logical Reasoning sets (arrangements, distributions, games, networks, puzzles).",
+      forbiddenKeywords: ["reading comprehension", "parajumble", "vocabulary", "sentence completion", "quadratic equation", "trigonometric identity"],
+    },
+    QA: {
+      allowed: "Pure Quantitative Aptitude — Arithmetic, Algebra, Geometry & Mensuration, Number Systems, Modern Math (P&C, probability). Single-question format.",
+      forbiddenKeywords: ["reading comprehension", "parajumble", "vocabulary", "data interpretation caselet", "seating arrangement", "blood relation", "syllogism"],
+    },
+  },
+  NMAT: {
+    LS: { allowed: "Language Skills — vocab, grammar, RC, fill-in-the-blanks, analogies, antonyms.", forbiddenKeywords: ["arithmetic", "algebra", "geometry", "data interpretation", "syllogism", "seating arrangement"] },
+    QS: { allowed: "Quantitative Skills — arithmetic, algebra, modern math, basic DI/DS.", forbiddenKeywords: ["reading comprehension", "vocabulary", "parajumble", "syllogism puzzle", "seating arrangement"] },
+    LR: { allowed: "Logical Reasoning — puzzles, syllogism, statement-conclusion, coding-decoding, arrangements.", forbiddenKeywords: ["reading comprehension", "vocabulary", "arithmetic word problem", "algebra equation", "geometry"] },
+  },
+  XAT: {
+    VALR: { allowed: "Verbal + Logical Ability — RC, critical reasoning, parajumbles, vocabulary.", forbiddenKeywords: ["arithmetic word problem", "algebra equation", "geometry", "data interpretation table"] },
+    DM: { allowed: "Decision Making — ethical/business case-lets requiring choice of BEST option among plausible alternatives.", forbiddenKeywords: ["reading comprehension passage", "vocabulary", "arithmetic", "algebra", "geometry", "data interpretation chart", "syllogism"] },
+    QADI: { allowed: "Quant + heavy DI.", forbiddenKeywords: ["reading comprehension passage", "vocabulary", "ethical dilemma"] },
+    GK: { allowed: "Static GK + current affairs (business, economy, sports, awards).", forbiddenKeywords: ["arithmetic", "algebra", "geometry", "reading comprehension passage", "data interpretation chart"] },
+  },
+  SNAP: {
+    GE: { allowed: "General English — vocab, grammar, short RC, idioms.", forbiddenKeywords: ["arithmetic", "algebra", "geometry", "data interpretation", "syllogism"] },
+    QADS: { allowed: "Quant + DI + DS.", forbiddenKeywords: ["reading comprehension", "vocabulary", "syllogism puzzle", "seating arrangement"] },
+    AR: { allowed: "Analytical & Logical Reasoning.", forbiddenKeywords: ["reading comprehension", "vocabulary", "arithmetic word problem", "algebra equation", "geometry"] },
+  },
+  IIFT: {
+    VARC: { allowed: "Verbal Ability + RC — vocab, idioms, analogies, RC.", forbiddenKeywords: ["arithmetic", "algebra equation", "geometry", "data interpretation chart", "current affairs"] },
+    QA: { allowed: "Quantitative Analysis — arithmetic, algebra, geometry.", forbiddenKeywords: ["reading comprehension", "vocabulary", "data interpretation caselet", "current affairs"] },
+    DILR: { allowed: "DI (multi-table caselets) + Logical Reasoning.", forbiddenKeywords: ["reading comprehension", "vocabulary", "current affairs"] },
+    GK: { allowed: "GK — current affairs, business, sports, awards.", forbiddenKeywords: ["arithmetic", "algebra", "geometry", "reading comprehension passage", "data interpretation chart"] },
+  },
+  CMAT: {
+    QADI: { allowed: "Quantitative Techniques + DI.", forbiddenKeywords: ["reading comprehension", "vocabulary", "current affairs", "innovation startup"] },
+    LR: { allowed: "Logical Reasoning.", forbiddenKeywords: ["reading comprehension", "vocabulary", "arithmetic word problem", "algebra equation", "geometry", "current affairs", "innovation startup"] },
+    LC: { allowed: "Language Comprehension — RC, vocab, grammar.", forbiddenKeywords: ["arithmetic", "algebra", "geometry", "data interpretation", "current affairs", "innovation startup"] },
+    GA: { allowed: "General Awareness — current affairs + static GK.", forbiddenKeywords: ["arithmetic", "algebra equation", "geometry", "reading comprehension passage", "innovation startup"] },
+    IE: { allowed: "Innovation & Entrepreneurship — Indian startups, unicorns, business jargon, government schemes.", forbiddenKeywords: ["arithmetic", "algebra equation", "geometry", "reading comprehension passage", "vocabulary"] },
+  },
+  MAT: {
+    LC: { allowed: "Language Comprehension.", forbiddenKeywords: ["arithmetic word problem", "algebra equation", "geometry", "data interpretation", "current affairs"] },
+    MS: { allowed: "Mathematical Skills — basic arithmetic & algebra.", forbiddenKeywords: ["reading comprehension", "vocabulary", "current affairs"] },
+    DA: { allowed: "Data Analysis & Sufficiency.", forbiddenKeywords: ["reading comprehension", "vocabulary", "current affairs"] },
+    ICR: { allowed: "Intelligence & Critical Reasoning.", forbiddenKeywords: ["reading comprehension", "vocabulary", "arithmetic word problem", "geometry", "current affairs"] },
+    IGE: { allowed: "Indian & Global Environment — current affairs + static GK.", forbiddenKeywords: ["arithmetic", "algebra equation", "geometry", "reading comprehension passage"] },
+  },
+};
+
+function buildSectionScopeLock(examCode: string, sectionCode: string, sectionName: string): string {
+  const ex = String(examCode || "").toUpperCase();
+  const sc = String(sectionCode || "").toUpperCase();
+  const entry = SECTION_SCOPE[ex]?.[sc];
+  if (!entry) {
+    return `STRICT SCOPE LOCK: Every question MUST belong only to the ${sectionName} (${sc}) section's syllabus. Do NOT generate questions from any other section of ${ex}.`;
+  }
+  return `STRICT SCOPE LOCK — DO NOT VIOLATE: Every question MUST be from the ${sectionName} (${sc}) section of ${ex} ONLY. ALLOWED CONTENT: ${entry.allowed} FORBIDDEN (these belong to OTHER sections of ${ex} and MUST NOT appear here): ${entry.forbiddenKeywords.join(", ")}. If a question would naturally fit a forbidden section, STOP and write a different in-section question instead. The "topic" field must reflect a topic that belongs to the ${sc} section.`;
+}
+
+// Lightweight server-side validator: rejects an obvious cross-section drift.
+// Returns true if the question text appears compatible with the section.
+function isQuestionInSection(examCode: string, sectionCode: string, questionHtml: string, topic?: string): boolean {
+  const ex = String(examCode || "").toUpperCase();
+  const sc = String(sectionCode || "").toUpperCase();
+  const entry = SECTION_SCOPE[ex]?.[sc];
+  if (!entry) return true;
+  const haystack = (String(questionHtml || "") + " " + String(topic || "")).toLowerCase().replace(/<[^>]+>/g, " ");
+  for (const kw of entry.forbiddenKeywords) {
+    if (haystack.includes(kw.toLowerCase())) return false;
+  }
+  return true;
+}
+
 async function callOpenAIBatch(opts: {
   exam_code: string; section_name: string; section_code: string;
   count: number; mcq: number; tita: number; level: string;
@@ -241,17 +323,20 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
 
   let sys: string; let user: string;
 
+  // Build a hard section-scope lock so the model NEVER drifts into another section.
+  const sectionScopeLock = buildSectionScopeLock(opts.exam_code, opts.section_code, opts.section_name);
+
   if (opts.set_mode) {
     const ctxLabel = opts.set_kind === "rc"
       ? "an original Reading Comprehension passage of 500-700 words on an abstract / philosophical / social-science / business / economics theme"
       : opts.set_kind === "caselet"
         ? "an original DI/LR caselet with FULLY DETAILED DATA — include a properly formatted HTML <table> (rows × columns with concrete numbers/names) AND/OR an inline ASCII bar/line chart inside <pre> tags. Caselets must contain rich data such as sales figures, rankings, percentage shares, time series, tournament results, seating arrangements, family trees, blood relations, etc."
         : "an original shared-context block";
-    sys = `You are an elite ${opts.exam_code} question setter writing a SET of ${opts.count} questions tied to ONE shared ${opts.set_kind === "rc" ? "passage" : "caselet"}.${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} ${mathRules} ${formatRules} Output ONLY valid JSON.`;
-    user = `Write ${ctxLabel}, then ${opts.count} questions ALL tied to that shared context. Use FRESH original content; do NOT reuse any famous passage / caselet. Each MCQ has 4 options A-D with one correct; include a clear 120-180 word explanation per question. JSON shape: {"passage_html":"<div>...full passage or caselet HTML here, with tables/charts if applicable...</div>","questions":[{"question_type":"mcq","question_html":"<question stem only — DO NOT include the passage>","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"explanation_html":"..."}]}`;
+    sys = `You are an elite ${opts.exam_code} question setter writing a SET of ${opts.count} questions for the ${opts.section_name} (${opts.section_code}) section ONLY, all tied to ONE shared ${opts.set_kind === "rc" ? "passage" : "caselet"}. ${sectionScopeLock}${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} ${mathRules} ${formatRules} Output ONLY valid JSON.`;
+    user = `SECTION = ${opts.section_name} (${opts.section_code}) of ${opts.exam_code}. Every question MUST belong to this section's syllabus only. Write ${ctxLabel}, then ${opts.count} questions ALL tied to that shared context AND ALL strictly within the ${opts.section_code} section's syllabus. Use FRESH original content; do NOT reuse any famous passage / caselet. Each MCQ has 4 options A-D with one correct; include a clear 120-180 word explanation per question. JSON shape: {"passage_html":"<div>...full passage or caselet HTML here, with tables/charts if applicable...</div>","questions":[{"question_type":"mcq","question_html":"<question stem only — DO NOT include the passage>","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"explanation_html":"..."}]}`;
   } else {
-    sys = `You are an elite ${opts.exam_code} question setter writing 100% original questions for the ${opts.section_name} (${opts.section_code}) section.${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} Use fresh numbers, fresh names, fresh contexts. Each MCQ has 4 options A-D with one correct; each TITA has numeric answer(s). Include clear 120-180 word explanations. ${mathRules} ${formatRules} Output ONLY valid JSON.`;
-    user = `Generate exactly ${opts.count} questions: ${opts.mcq} MCQ + ${opts.tita} TITA. Marking +${opts.positive}/-${opts.negative}. JSON shape: {"questions":[{"question_type":"mcq"|"tita","question_html":"...","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"tita_answers":["..."],"tita_tolerance":0.01,"explanation_html":"..."}]}`;
+    sys = `You are an elite ${opts.exam_code} question setter writing 100% original questions for the ${opts.section_name} (${opts.section_code}) section ONLY. ${sectionScopeLock}${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} Use fresh numbers, fresh names, fresh contexts. Each MCQ has 4 options A-D with one correct; each TITA has numeric answer(s). Include clear 120-180 word explanations. ${mathRules} ${formatRules} Output ONLY valid JSON.`;
+    user = `SECTION = ${opts.section_name} (${opts.section_code}) of ${opts.exam_code}. EVERY question MUST be strictly from this section's syllabus — DO NOT include any topic that belongs to another section of ${opts.exam_code}. Generate exactly ${opts.count} questions: ${opts.mcq} MCQ + ${opts.tita} TITA. Marking +${opts.positive}/-${opts.negative}. JSON shape: {"questions":[{"question_type":"mcq"|"tita","question_html":"...","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"tita_answers":["..."],"tita_tolerance":0.01,"explanation_html":"..."}]}`;
   }
 
   const apiKey = Deno.env.get("OPENAI_API_KEY");
@@ -516,6 +601,10 @@ Deno.serve(async (req) => {
           let inserted = 0;
           for (const q of setQs.slice(0, qPerSet)) {
             if (!q?.question_html) { rejectedInvalid++; continue; }
+            if (!isQuestionInSection(job.exam_code, job.section_code, q.question_html, q.topic)) {
+              console.warn(`[retry-mock-section] Rejected cross-section drift in set for ${job.exam_code}/${job.section_code}: topic="${q.topic}"`);
+              rejectedInvalid++; continue;
+            }
             const norm = normalizeForHash(q.question_html);
             const hash = await sha256(norm);
             // For set-bound questions we ONLY check exact-hash duplicates.
@@ -653,6 +742,10 @@ Deno.serve(async (req) => {
           for (const q of qs) {
             if (produced >= target) break;
             if (!q?.question_html) { rejectedInvalid++; continue; }
+            if (!isQuestionInSection(job.exam_code, job.section_code, q.question_html, q.topic)) {
+              console.warn(`[retry-mock-section] Rejected cross-section drift for ${job.exam_code}/${job.section_code}: topic="${q.topic}"`);
+              rejectedInvalid++; continue;
+            }
             const norm = normalizeForHash(q.question_html);
             const hash = await sha256(norm);
 
