@@ -1,79 +1,69 @@
-## Goal
-Turn the existing `My Day Planner` into a complete personal productivity assistant: editable tasks with recurrence, automatic rollover of unfinished tasks, smart suggestions linked to platform actions (mocks, daily test), and a dedicated Performance dashboard with daily/weekly/monthly/custom views + 12-week heatmap.
+# CAT Mock Platform — Bug Fix Plan
 
-## Database (one migration)
+Ten separate issues. I'll address each in scope, frontend-first where possible, touching AI generation only where the bug is server-side.
 
-Extend `student_planner_tasks`:
-- `recurrence` text (`none` | `daily` | `weekly` | `weekdays` | `custom`)
-- `recurrence_days` int[] — for weekly/custom (0=Sun … 6=Sat)
-- `recurrence_until` date — optional end
-- `series_id` uuid — groups all instances of one recurring template
-- `linked_action` text — e.g. `daily_test`, `mock:<slug>`, `personalized_hub`
-- `linked_ref` text — slug / id used by the action button
-- `rolled_over_from` date — last date this task was carried from
-- `auto_rollover` boolean default true — chosen at create time
-- `original_date` date — first scheduled date (for streak math)
+## 1. VARC: 4–5 questions per passage, one passage at a time
+- **Generation fix** (`generate-mock-questions/index.ts`): enforce in the VARC prompt + post-validation that each RC passage has min 4 / max 5 questions. Reject and re-bucket if a passage exceeds 5.
+- **Runner fix** (`MockTestRunnerPage.tsx`): show only the *current question's passage*, never stack multiple passages. Already keyed by `currentQuestion.passage_id` — verify no list rendering of all passages and remove any that exists.
 
-New table `student_planner_skips` (user_id, series_id, skipped_date) so a student can permanently skip one occurrence of a recurring template without deleting the series.
+## 2. Remove the duplicate "Submit Now" button
+- In `MockTestRunnerPage.tsx`, locate the top-bar "Submit" button and remove it. Keep only the bottom "Submit Test" button.
 
-RLS: owner-only on both. Indexes on `(user_id, scheduled_date)` and `(user_id, series_id)`.
+## 3. On-screen calculator in DILR + Quant
+- `MockCalculator` already exists and is mounted in the top header for all sections.
+- Change: only show calculator button when `currentSection.code` ∈ {`DILR`, `QA`} (CAT rule — VARC has no calculator). Ensure it's visible for both MCQ and TITA Quant questions (no conditional hiding by question type).
 
-DB function `rollover_planner_tasks(_user_id uuid)` — SECURITY DEFINER, idempotent. For every task where `scheduled_date < CURRENT_DATE`, `status = 'pending'` and `auto_rollover = true`, advance to today and stamp `rolled_over_from`. Called from the client on first load each day (cheap, indexed).
+## 4. Math rendering + DI-LR visuals
+- `MathContent.tsx` uses KaTeX already. Issues:
+  - Add support for `\(...\)` and `\[...\]` LaTeX delimiters (some AI output uses these).
+  - Improve regex to not break on `$` used as currency.
+  - Apply `MathContent` to **options** too (not just questions) — currently options may render raw HTML.
+- DI-LR visuals: update generation prompt to instruct AI to emit clean SVG `<svg>` tables/charts instead of base64 images. Add SVG to DOMPurify allow-list in `MathContent`.
 
-DB function `materialize_recurring_tasks(_user_id uuid, _through date)` — generates concrete instances from a series template through `_through` (default today + 14d), skipping dates in `student_planner_skips`. Called from the client.
+## 5. Upgrade question difficulty
+- In `generate-mock-questions/index.ts`, change difficulty distribution prompts:
+  - VARC: 30% easy / 45% medium / 25% hard
+  - DILR: 20% easy / 40% medium / 40% hard
+  - QA: 25% easy / 40% medium / 35% hard
+- Add explicit CAT-level reference (CAT 2022–2024 difficulty band) and ban "trivial arithmetic" patterns.
 
-## Frontend
+## 6. Remove "Regenerate" from AI analysis report
+- Locate the regenerate button in `student-mock-deep-analysis` UI (likely `StudentDeepAnalysis.tsx` / `MockResultPage.tsx`). Remove the button + handler. Report stays static after first generation.
 
-### `src/pages/student/StudentDayPlanner.tsx` (refactored)
-Three top-level tabs:
-1. **Yesterday** — read-only review; missed pending tasks show "Move to today" / "Skip permanently".
-2. **Today** — pending highlighted at top, completed collapsed at bottom. Smart suggestion strip ("Today's daily test not attempted → Start now") wired to `useEnrolledBundleFeatures` + `get_today_daily_test` RPC.
-3. **Tomorrow** — preview + add buttons.
+## 7. Disable AI pop-ups during test + dashboard
+- Audit any `<Dialog>` / `toast` AI-suggestion triggers inside `StudentLayout.tsx`, `StudentOverview.tsx`, `MockTestRunnerPage.tsx` (e.g. ProfileAnalyzerPopup, AI insight dialog auto-open). Gate them with a guard that returns null on `/student/*` and `/mocks/test/*` routes.
 
-`+ Add Task` dialog gets:
-- Recurrence select (One-time / Daily / Weekdays / Weekly on selected days / Custom)
-- "Auto-move if not done" toggle (default ON) — controls `auto_rollover`.
-- Optional "Link to action": Daily Test / a mock slug / Personalized Hub. Renders inline `Start` button on the task card.
+## 8. Dashboard isolation — back button + logout
+- `StudentLayout.tsx`: intercept browser back. If user tries to navigate outside `/student/*`, push them back to `/student`.
+- Logout handler: redirect to `/student/login` (currently goes to `/`).
 
-Edit task: same dialog reused, prefilled.
+## 9. Calculator alongside TITA in Quant
+- Same as #3 — ensure calculator button is in the persistent header, not inside the MCQ-only render path.
 
-### `src/pages/student/StudentPlannerPerformance.tsx` (new)
-Dedicated route `/student/day-planner/performance`. Range selector (Day / Week / Month / Custom date range using shadcn DatePicker). Shows:
-- Completion %, current streak, longest streak, total focus minutes — KPI cards
-- Area chart: planned vs completed over selected range
-- Bar chart: focus minutes per day
-- Pie: time by category
-- 12-week heatmap (existing, polished)
-- Best day / hardest weekday insights
+## 10. Performance overview — broken code rendering
+- In `StudentPerformance.tsx` / `useStudentPerformance.ts`, locate places where raw HTML or `null`/`undefined` strings render. Likely culprits:
+  - Avg score showing `NaN%` when no attempts → guard with `Number.isFinite` and show `—`.
+  - Section-wise metrics rendering raw `${...}` template strings or unparsed JSON. Replace with proper formatted numbers / `MathContent` where needed.
 
-Charts powered by existing `recharts`; data derived purely from `student_planner_tasks` rows fetched once, filtered client-side per range.
+---
 
-### `src/components/student/PlannerSuggestions.tsx` (new)
-Reads `get_today_daily_test` + recent `mock_attempts`. Surfaces 1–3 contextual cards ("Attempt today's daily test", "Resume CAT Mock 3", "Hub session pending"). Single-click adds them as today's tasks with `linked_action`.
+## Technical execution order
 
-### Sidebar
-Add second nav row inside the existing "My Day Planner" item: small `Performance` link beneath, gated by enrolled features same as parent.
+1. Frontend quick wins (no AI roundtrip): #2, #3, #6, #7, #8, #9, #10, plus runner-side of #1 and #4.
+2. Edge function changes: #1 generation enforcement, #4 SVG instructions, #5 difficulty bump in `generate-mock-questions/index.ts`.
 
-## Auto-rollover trigger point
-On `StudentDayPlanner` mount, if `localStorage["planner_rollover_date"] !== today`, call `rollover_planner_tasks` + `materialize_recurring_tasks`, then set the flag. Cheap and runs at most once per browser per day.
+Each issue is independent and can be reverted individually if needed. No DB migrations required.
 
-## Out of scope
-- Email/push reminders (in-dashboard notification only via existing `NotificationBell`).
-- Sharing tasks across users.
-- Native mobile.
+---
 
-## Files
+## Files I'll touch (estimated)
 
-Create:
-- `supabase/migrations/<ts>_planner_v2.sql`
-- `src/pages/student/StudentPlannerPerformance.tsx`
-- `src/components/student/PlannerSuggestions.tsx`
-- `src/components/student/PlannerTaskDialog.tsx` (extracted reusable create/edit)
-- `src/lib/plannerRecurrence.ts` (helpers)
+- `src/pages/mocks/MockTestRunnerPage.tsx` — #1 (passage isolation), #2 (remove top submit), #3/#9 (calculator gating)
+- `src/components/mock/MathContent.tsx` — #4 (delimiters, SVG)
+- `src/pages/mocks/MockResultPage.tsx` or `src/pages/student/StudentDeepAnalysis.tsx` — #6
+- `src/pages/student/StudentLayout.tsx` — #7 (popup gate), #8 (back + logout)
+- `src/pages/student/StudentOverview.tsx` — #7
+- `src/pages/student/StudentPerformance.tsx` + `src/hooks/useStudentPerformance.ts` — #10
+- `supabase/functions/generate-mock-questions/index.ts` — #1, #4, #5
 
-Edit:
-- `src/pages/student/StudentDayPlanner.tsx` — tabs, suggestions, edit support, auto-rollover trigger
-- `src/pages/student/StudentLayout.tsx` — sidebar sub-link
-- `src/App.tsx` — new route
-
-Routes touched: `/student/day-planner`, `/student/day-planner/performance`.
+Confirm and I'll start implementing. If you want to drop or reorder any item, tell me now.
