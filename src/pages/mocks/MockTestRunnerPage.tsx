@@ -126,11 +126,14 @@ export default function MockTestRunnerPage() {
         .maybeSingle();
       if (!a) {
         toast.error("Attempt not found");
-        navigate("/mocks");
+        navigate(isStudentMode() ? studentBackToMocksPath() : "/mocks", { replace: true });
         return;
       }
       if (a.status !== "in_progress") {
-        navigate(`/mocks/result/${a.id}`);
+        navigate(
+          isStudentMode() ? studentPostSubmitPath(a.id) : `/mocks/result/${a.id}`,
+          { replace: true }
+        );
         return;
       }
       const { data: s } = await supabase
