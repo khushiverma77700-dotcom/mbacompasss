@@ -75,8 +75,6 @@ export default function StudentLayout() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [displayName, setDisplayName] = useState<string>("");
-  const [accessChecked, setAccessChecked] = useState(false);
-  const [hasAccess, setHasAccess] = useState(false);
   const [latestUnread, setLatestUnread] = useState<{ id: string; title: string } | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
