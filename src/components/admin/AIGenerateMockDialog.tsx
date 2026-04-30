@@ -191,13 +191,15 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
         .maybeSingle();
       if (!row) return;
       const summary = (row.result_summary || {}) as any;
+      // Prefer authoritative totals from the row (updated by the worker rollup)
+      // over summary.stats which is written once at queue time and stays at 0.
       setResult({
         ok: row.status === "completed",
         tests: summary.tests || [],
-        stats: summary.stats || {
-          generated: row.total_generated || 0,
-          rejected_dup_db: row.total_rejected_duplicate || 0,
-          rejected_dup_internet: row.total_rejected_web_match || 0,
+        stats: {
+          generated: row.total_generated ?? summary.stats?.generated ?? 0,
+          rejected_dup_db: row.total_rejected_duplicate ?? summary.stats?.rejected_dup_db ?? 0,
+          rejected_dup_internet: row.total_rejected_web_match ?? summary.stats?.rejected_dup_internet ?? 0,
         },
       });
       toast({
