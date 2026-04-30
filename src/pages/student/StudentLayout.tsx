@@ -138,7 +138,7 @@ export default function StudentLayout() {
     if (location.pathname.startsWith("/student/notifications")) setBannerDismissed(true);
   }, [location.pathname]);
 
-  if (loading || !user || !accessChecked || !hasAccess) return <div className="p-8 text-muted-foreground">Loading…</div>;
+  if (loading || !user) return <div className="p-8 text-muted-foreground">Loading…</div>;
 
   return (
     <StudentThemeProvider>
