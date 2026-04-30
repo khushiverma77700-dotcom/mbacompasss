@@ -48,7 +48,12 @@ const MAX_ATTEMPTS_PER_QUESTION = 200;
 
 function isAIRateLimitError(message: unknown): boolean {
   const m = String(message || "").toLowerCase();
-  return m.includes("429") || m.includes("rate limit") || m.includes("quota") || m.includes("too many requests");
+  return m.includes("429") || m.includes("rate limit") || m.includes("too many requests");
+}
+
+function isAIQuotaBlockedError(message: unknown): boolean {
+  const m = String(message || "").toLowerCase();
+  return m.includes("insufficient_quota") || m.includes("exceeded your current quota") || m.includes("billing") || m.includes("quota/rate-limit blocked");
 }
 
 async function rollupGeneration(admin: any, generationId: string | null | undefined) {
@@ -292,6 +297,7 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
       clearTimeout(timer);
       const msg = (e as Error)?.name === "AbortError" ? `OpenAI aborted after ${OPENAI_TIMEOUT_MS}ms` : `OpenAI fetch failed: ${(e as Error)?.message || e}`;
       lastErr = msg;
+      if (isAIQuotaBlockedError(msg)) throw new Error(msg);
       if (attempt < MAX_INLINE_RETRIES) {
         const backoff = Math.min(8000, 1000 * Math.pow(2, attempt - 1)) + Math.random() * 500;
         await new Promise((r) => setTimeout(r, backoff));
@@ -452,13 +458,15 @@ Deno.serve(async (req) => {
             }) as any;
           } catch (e) {
             const msg = String((e as Error)?.message || e);
+            const quotaBlocked = isAIQuotaBlockedError(msg);
             await admin.from("mock_section_jobs").update({
-              status: isAIRateLimitError(msg) ? "pending" : "processing",
-              current_step: isAIRateLimitError(msg) ? `AI rate limit hit — waiting before retrying Set ${setIdx}` : `Set ${setIdx} attempt failed, will retry: ${msg.slice(0, 120)}`,
-              error_message: msg.slice(0, 400),
-              worker_lock_until: isAIRateLimitError(msg) ? null : new Date(Date.now() + 8 * 60_000).toISOString(),
+              status: quotaBlocked ? "failed" : (isAIRateLimitError(msg) ? "pending" : "processing"),
+              current_step: quotaBlocked ? "OpenAI quota/billing blocked — add credits or raise limit" : (isAIRateLimitError(msg) ? `AI rate limit hit — waiting before retrying Set ${setIdx}` : `Set ${setIdx} attempt failed, will retry: ${msg.slice(0, 120)}`),
+              error_message: quotaBlocked ? "OpenAI API quota/billing limit reached. Check your OpenAI account credits/billing, then retry this generation." : msg.slice(0, 400),
+              worker_lock_until: (quotaBlocked || isAIRateLimitError(msg)) ? null : new Date(Date.now() + 8 * 60_000).toISOString(),
               updated_at: new Date().toISOString(),
             }).eq("id", job_id);
+            if (quotaBlocked) { await rollupGeneration(admin, job.generation_id); return; }
             if (!isAIRateLimitError(msg)) scheduleNext(true);
             return;
           }
@@ -532,15 +540,15 @@ Deno.serve(async (req) => {
                 is_correct: !!o.is_correct,
                 sort_order: idx,
               }));
-              if (opts.length === 4 && opts.some((o) => o.is_correct)) {
+              if (opts.length === 4 && opts.some((o: any) => o.is_correct)) {
                 await admin.from("mock_question_options").insert(opts);
                 if (hubSection) {
-                  const correctIdx = opts.findIndex((o) => o.is_correct);
+                  const correctIdx = opts.findIndex((o: any) => o.is_correct);
                   hubRows.push({
                     exam_code: job.exam_code, section: hubSection,
                     difficulty: mapPersonalizedDifficulty(normalizeDifficulty(q.difficulty, job.level)),
                     question_text: cleanedQ,
-                    options: opts.map((o) => ({ label: o.option_label, text: o.option_html })),
+                    options: opts.map((o: any) => ({ label: o.option_label, text: o.option_html })),
                     correct_index: correctIdx >= 0 ? correctIdx : 0,
                     explanation: q.explanation_html || null,
                     topic: q.topic || job.topic || null,
@@ -620,13 +628,15 @@ Deno.serve(async (req) => {
             }) as any[];
           } catch (e) {
             const msg = String((e as Error)?.message || e);
+            const quotaBlocked = isAIQuotaBlockedError(msg);
             await admin.from("mock_section_jobs").update({
-              status: isAIRateLimitError(msg) ? "pending" : "processing",
-              current_step: isAIRateLimitError(msg) ? "AI rate limit hit — queued to continue shortly…" : `Retry batch ${attempts} failed, retrying again…`,
-              error_message: msg.slice(0, 400),
-              worker_lock_until: isAIRateLimitError(msg) ? null : new Date(Date.now() + 8 * 60_000).toISOString(),
+              status: quotaBlocked ? "failed" : (isAIRateLimitError(msg) ? "pending" : "processing"),
+              current_step: quotaBlocked ? "OpenAI quota/billing blocked — add credits or raise limit" : (isAIRateLimitError(msg) ? "AI rate limit hit — queued to continue shortly…" : `Retry batch ${attempts} failed, retrying again…`),
+              error_message: quotaBlocked ? "OpenAI API quota/billing limit reached. Check your OpenAI account credits/billing, then retry this generation." : msg.slice(0, 400),
+              worker_lock_until: (quotaBlocked || isAIRateLimitError(msg)) ? null : new Date(Date.now() + 8 * 60_000).toISOString(),
               updated_at: new Date().toISOString(),
             }).eq("id", job_id);
+            if (quotaBlocked) { await rollupGeneration(admin, job.generation_id); return; }
             if (isAIRateLimitError(msg)) return;
             continue;
           }
@@ -695,15 +705,15 @@ Deno.serve(async (req) => {
                 is_correct: !!o.is_correct,
                 sort_order: idx,
               }));
-              if (opts.length === 4 && opts.some((o) => o.is_correct)) {
+              if (opts.length === 4 && opts.some((o: any) => o.is_correct)) {
                 await admin.from("mock_question_options").insert(opts);
                 if (hubSection) {
-                  const correctIdx = opts.findIndex((o) => o.is_correct);
+                  const correctIdx = opts.findIndex((o: any) => o.is_correct);
                   hubRows.push({
                     exam_code: job.exam_code, section: hubSection,
                     difficulty: mapPersonalizedDifficulty(normalizeDifficulty(q.difficulty, job.level)),
                     question_text: cleanedQHtml,
-                    options: opts.map((o) => ({ label: o.option_label, text: o.option_html })),
+                    options: opts.map((o: any) => ({ label: o.option_label, text: o.option_html })),
                     correct_index: correctIdx >= 0 ? correctIdx : 0,
                     explanation: q.explanation_html || null,
                     topic: q.topic || job.topic || null,

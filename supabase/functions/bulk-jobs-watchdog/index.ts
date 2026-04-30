@@ -149,8 +149,11 @@ Deno.serve(async (req) => {
 
     const { data: pendingMockJobs, error: e3 } = await admin
       .from("mock_section_jobs")
-      .select("id,generation_id,status,updated_at,worker_lock_until")
+      .select("id,generation_id,status,updated_at,worker_lock_until,error_message,current_step")
       .eq("status", "pending")
+      .not("error_message", "ilike", "%exceeded your current quota%")
+      .not("error_message", "ilike", "%quota/rate-limit blocked%")
+      .not("error_message", "ilike", "%billing%")
       .order("created_at", { ascending: true });
 
     if (e3) (report.errors as string[]).push(`mock fetch: ${e3.message}`);
