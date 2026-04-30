@@ -12,6 +12,7 @@ import TimeManagementCharts from "@/components/mock/report/TimeManagementCharts"
 import StrategyClassifier from "@/components/mock/report/StrategyClassifier";
 import DifficultyAnalysis, { DiffRow } from "@/components/mock/report/DifficultyAnalysis";
 import StrengthsWeaknesses, { TopicRow } from "@/components/mock/report/StrengthsWeaknesses";
+import MathContent from "@/components/mock/MathContent";
 
 export default function PersonalizedMockResultPage() {
   const { attemptId } = useParams();
@@ -253,7 +254,7 @@ export default function PersonalizedMockResultPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="text-xs text-muted-foreground mb-1">Q{i + 1} · {q.section}</div>
-                    <p className="text-sm font-medium">{q.question_text}</p>
+                    <MathContent html={q.question_text} className="prose prose-sm max-w-none text-sm font-medium" />
                   </div>
                 </div>
                 <div className="ml-7 space-y-1">
@@ -265,16 +266,20 @@ export default function PersonalizedMockResultPage() {
                       : "border-gray-100 text-gray-700";
                     return (
                       <div key={j} className={`p-2 rounded border text-sm ${cls}`}>
-                        <span className="font-semibold mr-2">{String.fromCharCode(65 + j)}.</span>{opt}
-                        {isAns && <Badge variant="outline" className="ml-2 text-emerald-700 border-emerald-300">Correct</Badge>}
-                        {isPick && !isAns && <Badge variant="outline" className="ml-2 text-rose-700 border-rose-300">Your answer</Badge>}
+                        <div className="flex items-start gap-2">
+                          <span className="font-semibold">{String.fromCharCode(65 + j)}.</span>
+                          <MathContent html={opt} className="prose prose-sm max-w-none flex-1" />
+                          {isAns && <Badge variant="outline" className="ml-2 text-emerald-700 border-emerald-300">Correct</Badge>}
+                          {isPick && !isAns && <Badge variant="outline" className="ml-2 text-rose-700 border-rose-300">Your answer</Badge>}
+                        </div>
                       </div>
                     );
                   })}
                 </div>
                 {q.explanation && (
                   <div className="ml-7 mt-2 p-3 rounded bg-sky-50/60 border border-sky-100 text-sm">
-                    <span className="font-semibold text-sky-800">Explanation: </span>{q.explanation}
+                    <span className="font-semibold text-sky-800">Explanation: </span>
+                    <MathContent html={q.explanation} className="prose prose-sm max-w-none inline" />
                   </div>
                 )}
               </div>
