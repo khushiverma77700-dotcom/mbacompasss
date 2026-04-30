@@ -402,7 +402,7 @@ export function isQuestionInSectionGen(examCode: string, sectionCode: string, qu
   return true;
 }
 
-
+function buildSystemPrompt(opts: {
   exam: string; exam_full: string; category: string; level: string;
   section_code: string; section_name: string;
   strict_topic?: string | null;
