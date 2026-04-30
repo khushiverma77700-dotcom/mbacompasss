@@ -594,9 +594,11 @@ Deno.serve(async (req) => {
         while (produced < target && attempts < maxAttempts) {
           attempts++;
           const remain = target - produced;
-          const batch = 1;
+          // Batch up to 5 questions per AI call to cut prompt overhead ~80%.
+          const batch = Math.min(BATCH_SIZE, remain);
           const remainTita = Math.max(0, (job.tita_count || 0) - produced);
-          const batchTita = remainTita > 0 && remain <= remainTita ? 1 : 0;
+          // Pull TITA quota into this batch when we're near the end of MCQs.
+          const batchTita = Math.min(batch, remainTita);
           const batchMcq = batch - batchTita;
 
           await admin.from("mock_section_jobs").update({
