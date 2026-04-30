@@ -10,6 +10,7 @@ import { Bookmark, BookmarkCheck, CheckCircle2, XCircle, MinusCircle, ChevronLef
 import MathContent from "@/components/mock/MathContent";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { isStudentMode, studentBackToMocksPath } from "@/lib/studentModeNav";
 
 export default function MockReviewPage() {
   const { attemptId } = useParams();
