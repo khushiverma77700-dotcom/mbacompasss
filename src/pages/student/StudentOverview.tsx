@@ -212,13 +212,14 @@ export default function StudentOverview() {
         agg[k].count += 1;
       }
     }
+    const safe = (n: number) => (Number.isFinite(n) ? n : 0);
     return Object.entries(agg).map(([name, v]) => ({
       name,
-      avgScore: +(v.score / v.count).toFixed(1),
-      avgMax: +(v.max / v.count).toFixed(1),
-      avgPercentile: Math.round(v.percentile / v.count),
+      avgScore: v.count > 0 ? +safe(v.score / v.count).toFixed(1) : 0,
+      avgMax: v.count > 0 ? +safe(v.max / v.count).toFixed(1) : 0,
+      avgPercentile: v.count > 0 ? Math.round(safe(v.percentile / v.count)) : 0,
       avgAccuracy: v.attempted > 0 ? Math.round((v.correct / v.attempted) * 100) : 0,
-      avgAttempted: Math.round(v.attempted / v.count),
+      avgAttempted: v.count > 0 ? Math.round(safe(v.attempted / v.count)) : 0,
       pctOfMax: v.max > 0 ? Math.round((v.score / v.max) * 100) : 0,
       fill: SECTION_COLORS[name] || "#0284c7",
     }));
