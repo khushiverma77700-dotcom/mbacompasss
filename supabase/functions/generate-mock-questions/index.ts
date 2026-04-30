@@ -467,7 +467,9 @@ CRITICAL RULES:
 9. STRICT FORMATTING — the UI renders question number, set badge and option letters (A/B/C/D) as STATIC labels:
    - "question_html" must contain ONLY the pure question text. Do NOT prefix it with "Q1.", "Q.1", "Question 1:", "Question:", "1.", "1)", "(1)", "Set 1:", or any numbering/labeling.
    - "options[].text" must contain ONLY the pure option text. Do NOT prefix it with "A)", "(A)", "A.", "a)", "1)" or any letter/number label.
-   - For set-bound questions, keep the shared passage/caselet INSIDE <div class="passage">…</div> exactly as instructed; do NOT write "Question 1 of Set 2", "Set 1 — Q3" etc. anywhere.`;
+   - For set-bound questions, keep the shared passage/caselet INSIDE <div class="passage">…</div> exactly as instructed; do NOT write "Question 1 of Set 2", "Set 1 — Q3" etc. anywhere.
+10. MATH RENDERING — render every fraction, root, exponent, summation or symbol with LaTeX delimited by $...$ for inline (e.g. $\\frac{a}{b}$, $\\sqrt{x^2+1}$, $x_1 \\le x_2$) or $$...$$ for block. Never write fractions as "a/b" when they should be stacked. Never use Unicode hacks for math operators when LaTeX is clearer.
+11. DI-LR VISUALS — when a caselet needs a chart, ALWAYS emit a clean inline <svg viewBox="0 0 600 300">…</svg> with proper <rect>/<line>/<text> elements (or a well-formatted HTML <table>). NEVER emit base64 images, NEVER reference external image URLs, NEVER write "see image below". The SVG must be self-contained and human-readable.
 }
 
 function buildUserPrompt(opts: {
