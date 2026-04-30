@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Flag, Timer, CheckCircle2 } from "lucide-react";
 import { useForceLightTheme } from "@/hooks/useForceLightTheme";
+import MathContent from "@/components/mock/MathContent";
 
 type Q = { id: string; section: string; difficulty: string; question_text: string; options: string[]; topic?: string };
 
@@ -111,7 +112,7 @@ export default function PersonalizedMockRunnerPage() {
               <Badge variant="outline" className="capitalize">{current.difficulty}</Badge>
               {current.topic && <Badge variant="outline">{current.topic}</Badge>}
             </div>
-            <p className="text-base leading-relaxed whitespace-pre-wrap">{current.question_text}</p>
+            <MathContent html={current.question_text} className="prose prose-sm max-w-none text-base leading-relaxed" />
             <div className="space-y-2">
               {current.options.map((opt, i) => {
                 const picked = answers[current.id] === i;
@@ -125,7 +126,7 @@ export default function PersonalizedMockRunnerPage() {
                       <div className={`h-6 w-6 rounded-full border flex-shrink-0 grid place-items-center text-xs font-semibold ${picked ? "bg-sky-600 border-sky-600 text-white" : "border-gray-300"}`}>
                         {String.fromCharCode(65 + i)}
                       </div>
-                      <span className="text-sm leading-relaxed">{opt}</span>
+                      <MathContent html={opt} className="prose prose-sm max-w-none text-sm leading-relaxed" />
                     </div>
                   </button>
                 );
