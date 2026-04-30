@@ -424,7 +424,7 @@ function SidebarContent() {
 
       <div className="pt-4 mt-4 border-t border-border">
         <Link
-          to="/mocks"
+          to="/student/mocks/full-length"
           className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground px-3 py-2"
         >
           Browse all mocks →
