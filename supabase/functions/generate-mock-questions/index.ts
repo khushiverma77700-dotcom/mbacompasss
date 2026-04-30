@@ -337,7 +337,72 @@ ${calibration}
 CRITICAL: Difficulty is RELATIVE to ${examCode}, not absolute. ${examCode} ${lvl.toUpperCase()} ≠ any other exam's ${lvl.toUpperCase()}. The mock must feel indistinguishable from a real ${examCode} paper in pattern, tone, topic distribution and question style. NO out-of-syllabus questions. NO unrealistic difficulty spikes. NO generic content.`;
 }
 
-function buildSystemPrompt(opts: {
+// ── Section scope lock (mirrors retry-mock-section) ──────────────────
+const SECTION_SCOPE_GEN: Record<string, Record<string, { allowed: string; forbiddenKeywords: string[] }>> = {
+  CAT: {
+    VARC: { allowed: "RC, parajumbles, para-summary, odd-one-out, sentence completion, vocab-in-context.", forbiddenKeywords: ["arithmetic", "algebra", "geometry", "number system", "probability", "permutation", "trigonometry", "data interpretation", "caselet", "bar chart", "pie chart", "seating arrangement", "blood relation", "syllogism"] },
+    DILR: { allowed: "DI caselets + LR sets (arrangements, distributions, puzzles).", forbiddenKeywords: ["reading comprehension", "parajumble", "vocabulary", "sentence completion", "quadratic equation", "trigonometric identity"] },
+    QA: { allowed: "Pure QA — Arithmetic, Algebra, Geometry, Number Systems, Modern Math.", forbiddenKeywords: ["reading comprehension", "parajumble", "vocabulary", "data interpretation caselet", "seating arrangement", "blood relation", "syllogism"] },
+  },
+  NMAT: {
+    LS: { allowed: "Language Skills — vocab, grammar, RC.", forbiddenKeywords: ["arithmetic", "algebra", "geometry", "data interpretation", "syllogism", "seating arrangement"] },
+    QS: { allowed: "Quantitative Skills.", forbiddenKeywords: ["reading comprehension", "vocabulary", "parajumble", "syllogism puzzle", "seating arrangement"] },
+    LR: { allowed: "Logical Reasoning.", forbiddenKeywords: ["reading comprehension", "vocabulary", "arithmetic word problem", "algebra equation", "geometry"] },
+  },
+  XAT: {
+    VALR: { allowed: "Verbal + Logical Ability.", forbiddenKeywords: ["arithmetic word problem", "algebra equation", "geometry", "data interpretation table"] },
+    DM: { allowed: "Decision Making case-lets.", forbiddenKeywords: ["reading comprehension passage", "vocabulary", "arithmetic", "algebra", "geometry", "syllogism"] },
+    QADI: { allowed: "Quant + DI.", forbiddenKeywords: ["reading comprehension passage", "vocabulary", "ethical dilemma"] },
+    GK: { allowed: "GK + current affairs.", forbiddenKeywords: ["arithmetic", "algebra", "geometry", "reading comprehension passage", "data interpretation chart"] },
+  },
+  SNAP: {
+    GE: { allowed: "General English.", forbiddenKeywords: ["arithmetic", "algebra", "geometry", "data interpretation", "syllogism"] },
+    QADS: { allowed: "Quant + DI + DS.", forbiddenKeywords: ["reading comprehension", "vocabulary", "syllogism puzzle", "seating arrangement"] },
+    AR: { allowed: "Analytical & Logical Reasoning.", forbiddenKeywords: ["reading comprehension", "vocabulary", "arithmetic word problem", "algebra equation", "geometry"] },
+  },
+  IIFT: {
+    VARC: { allowed: "Verbal + RC.", forbiddenKeywords: ["arithmetic", "algebra equation", "geometry", "data interpretation chart", "current affairs"] },
+    QA: { allowed: "Quant.", forbiddenKeywords: ["reading comprehension", "vocabulary", "data interpretation caselet", "current affairs"] },
+    DILR: { allowed: "DI + LR.", forbiddenKeywords: ["reading comprehension", "vocabulary", "current affairs"] },
+    GK: { allowed: "GK.", forbiddenKeywords: ["arithmetic", "algebra", "geometry", "reading comprehension passage", "data interpretation chart"] },
+  },
+  CMAT: {
+    QADI: { allowed: "Quant + DI.", forbiddenKeywords: ["reading comprehension", "vocabulary", "current affairs", "innovation startup"] },
+    LR: { allowed: "Logical Reasoning.", forbiddenKeywords: ["reading comprehension", "vocabulary", "arithmetic word problem", "algebra equation", "geometry", "current affairs", "innovation startup"] },
+    LC: { allowed: "Language Comprehension.", forbiddenKeywords: ["arithmetic", "algebra", "geometry", "data interpretation", "current affairs", "innovation startup"] },
+    GA: { allowed: "General Awareness.", forbiddenKeywords: ["arithmetic", "algebra equation", "geometry", "reading comprehension passage", "innovation startup"] },
+    IE: { allowed: "Innovation & Entrepreneurship.", forbiddenKeywords: ["arithmetic", "algebra equation", "geometry", "reading comprehension passage", "vocabulary"] },
+  },
+  MAT: {
+    LC: { allowed: "Language Comprehension.", forbiddenKeywords: ["arithmetic word problem", "algebra equation", "geometry", "data interpretation", "current affairs"] },
+    MS: { allowed: "Mathematical Skills.", forbiddenKeywords: ["reading comprehension", "vocabulary", "current affairs"] },
+    DA: { allowed: "Data Analysis & Sufficiency.", forbiddenKeywords: ["reading comprehension", "vocabulary", "current affairs"] },
+    ICR: { allowed: "Intelligence & Critical Reasoning.", forbiddenKeywords: ["reading comprehension", "vocabulary", "arithmetic word problem", "geometry", "current affairs"] },
+    IGE: { allowed: "Indian & Global Environment.", forbiddenKeywords: ["arithmetic", "algebra equation", "geometry", "reading comprehension passage"] },
+  },
+};
+
+function buildSectionScopeLockGen(examCode: string, sectionCode: string, sectionName: string): string {
+  const ex = String(examCode || "").toUpperCase();
+  const sc = String(sectionCode || "").toUpperCase();
+  const entry = SECTION_SCOPE_GEN[ex]?.[sc];
+  if (!entry) return `STRICT SCOPE LOCK: Every question MUST belong only to the ${sectionName} (${sc}) section's syllabus. Do NOT generate questions from any other section of ${ex}.`;
+  return `STRICT SCOPE LOCK — DO NOT VIOLATE: Every question MUST be from the ${sectionName} (${sc}) section of ${ex} ONLY. ALLOWED: ${entry.allowed} FORBIDDEN (these belong to OTHER sections of ${ex}): ${entry.forbiddenKeywords.join(", ")}. If a topic feels like it belongs to another section, write a different in-section topic instead. The "topic" field must reflect a topic of the ${sc} section.`;
+}
+
+export function isQuestionInSectionGen(examCode: string, sectionCode: string, questionHtml: string, topic?: string): boolean {
+  const ex = String(examCode || "").toUpperCase();
+  const sc = String(sectionCode || "").toUpperCase();
+  const entry = SECTION_SCOPE_GEN[ex]?.[sc];
+  if (!entry) return true;
+  const haystack = (String(questionHtml || "") + " " + String(topic || "")).toLowerCase().replace(/<[^>]+>/g, " ");
+  for (const kw of entry.forbiddenKeywords) {
+    if (haystack.includes(kw.toLowerCase())) return false;
+  }
+  return true;
+}
+
+
   exam: string; exam_full: string; category: string; level: string;
   section_code: string; section_name: string;
   strict_topic?: string | null;
