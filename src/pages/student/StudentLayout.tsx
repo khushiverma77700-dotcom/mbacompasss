@@ -209,6 +209,7 @@ export default function StudentLayout() {
                 size="sm"
                 className="px-2 sm:px-3"
                 onClick={async () => {
+                  clearStudentMode();
                   await supabase.auth.signOut();
                   navigate("/student/login", { replace: true });
                 }}
