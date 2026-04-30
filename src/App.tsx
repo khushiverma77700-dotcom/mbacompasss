@@ -314,6 +314,8 @@ const SubdomainGuard = () => {
   }, [location.pathname, location.search]);
   return null;
 };
+
+const PageLoader = () => (
   <div className="min-h-[40vh] bg-background">
     <div className="container mx-auto flex min-h-[40vh] items-center justify-center px-4">
       <div className="flex items-center gap-3 rounded-md border border-border bg-card px-4 py-3 shadow-sm">
