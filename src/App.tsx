@@ -499,6 +499,7 @@ const App = () => (
       <DeferredToasters />
       <SettingsPrefetcher />
       <BrowserRouter>
+        <SubdomainGuard />
         <GlobalNavigationPrefetch />
         <ScrollToTop />
         <AuthProvider>
