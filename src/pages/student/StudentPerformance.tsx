@@ -47,14 +47,15 @@ export default function StudentPerformance() {
       Object.entries(s).forEach(([code, v]: any) => {
         if (!sums[code]) sums[code] = { score: 0, max: 0, attempts: 0 };
         sums[code].score += Number(v?.score || 0);
-        sums[code].max += Number(v?.max || 0);
+        sums[code].max += Number(v?.max || v?.max_score || 0);
         sums[code].attempts += 1;
       });
     });
+    const safe = (n: number) => (Number.isFinite(n) ? n : 0);
     return Object.entries(sums).map(([code, v]) => ({
       section: code,
-      score: v.attempts ? Math.round(v.score / v.attempts) : 0,
-      max: v.attempts ? Math.round(v.max / v.attempts) : 0,
+      score: v.attempts > 0 ? Math.round(safe(v.score / v.attempts)) : 0,
+      max: v.attempts > 0 ? Math.round(safe(v.max / v.attempts)) : 0,
     }));
   }, [attempts]);
 
