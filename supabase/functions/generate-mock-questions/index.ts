@@ -132,8 +132,8 @@ const EXAM_PROFILES: Record<string, {
   },
 };
 
-const BATCH_SIZE = 1; // reliability mode: generate + validate + save exactly one question per AI call
-const OPENAI_TIMEOUT_MS = 120_000;      // single-question calls get a little more room, no batch pressure
+const BATCH_SIZE = 5; // optimized: generate 5 questions per AI call to reduce prompt overhead ~80%
+const OPENAI_TIMEOUT_MS = 90_000;       // tighter timeout; batched calls return faster than single ones in practice
 const FIRECRAWL_TIMEOUT_MS = 6_000;     // single web-check hard timeout
 const MAX_FIRECRAWL_CHECKS_PER_SECTION = 4; // cap web-checks tightly to avoid stalls
 const MAX_ATTEMPTS_PER_QUESTION = 60;   // no wall-clock cutoff; retry enough times to hit exact count
@@ -527,8 +527,10 @@ async function callOpenAIBatch(args: {
 
   const lvlLower = String(args.level || "").toLowerCase();
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
-  const modelId = "gpt-4o";
+  const modelId = "gpt-4o-mini";
   const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.35;
+  // ~1100 tokens per question is plenty (stem + 4 options + explanation). Cap by batch size.
+  const tokenBudget = Math.min(8000, 1200 * Math.max(1, args.count));
   const reqBody: Record<string, unknown> = {
     model: modelId,
     messages: [
@@ -536,13 +538,9 @@ async function callOpenAIBatch(args: {
       { role: "user", content: user },
     ],
     response_format: { type: "json_object" },
+    max_tokens: tokenBudget,
+    temperature: temp,
   };
-  if (modelId === "gpt-5") {
-    reqBody.max_completion_tokens = 16000;
-  } else {
-    reqBody.max_tokens = 16000;
-    reqBody.temperature = temp;
-  }
 
   // Inline retry with exponential backoff for transient errors (429 / 5xx / network).
   // OpenAI 502s in the field were causing whole batches to be discarded.
