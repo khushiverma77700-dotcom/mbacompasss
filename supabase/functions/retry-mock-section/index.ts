@@ -612,7 +612,7 @@ Deno.serve(async (req) => {
           const batchMcq = batch - batchTita;
 
           await admin.from("mock_section_jobs").update({
-            current_step: `Writing question ${produced + 1}/${target} — uniqueness check active…`,
+            current_step: `Writing questions ${produced + 1}-${Math.min(target, produced + batch)}/${target} — uniqueness check active…`,
             worker_lock_until: new Date(Date.now() + 8 * 60_000).toISOString(),
             updated_at: new Date().toISOString(),
           }).eq("id", job_id);
