@@ -3691,10 +3691,12 @@ export type Database = {
           negative_marks: number
           positive_marks: number
           questions_done: number
+          questions_per_set: number
           rejected_invalid: number
           section_code: string
           section_id: string
           section_name: string
+          sets: number
           status: string
           strict_topic: string | null
           test_id: string
@@ -3726,10 +3728,12 @@ export type Database = {
           negative_marks?: number
           positive_marks?: number
           questions_done?: number
+          questions_per_set?: number
           rejected_invalid?: number
           section_code: string
           section_id: string
           section_name: string
+          sets?: number
           status?: string
           strict_topic?: string | null
           test_id: string
@@ -3761,10 +3765,12 @@ export type Database = {
           negative_marks?: number
           positive_marks?: number
           questions_done?: number
+          questions_per_set?: number
           rejected_invalid?: number
           section_code?: string
           section_id?: string
           section_name?: string
+          sets?: number
           status?: string
           strict_topic?: string | null
           test_id?: string
@@ -5905,10 +5911,12 @@ export type Database = {
           negative_marks: number
           positive_marks: number
           questions_done: number
+          questions_per_set: number
           rejected_invalid: number
           section_code: string
           section_id: string
           section_name: string
+          sets: number
           status: string
           strict_topic: string | null
           test_id: string
