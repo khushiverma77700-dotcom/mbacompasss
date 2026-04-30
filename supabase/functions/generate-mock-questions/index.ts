@@ -758,7 +758,7 @@ Deno.serve(async (req) => {
       exam_code, category, level,
       request: body, status: "running",
       total_requested: safePerSet * setsCount,
-      ai_model: "openai/gpt-4o",
+      ai_model: "google/gemini-2.5-flash",
       created_by: user.id,
     }).select("id").single();
     const genId = gen?.id;
@@ -905,17 +905,18 @@ Deno.serve(async (req) => {
         questionNumberOffset += sec.questions;
       }
 
-      // Kick off EVERY section job in parallel using the service role key so the
-      // background workers don't depend on the user's JWT (which can expire mid-run).
+      // Kick off only ONE section job at a time. Parallel AI workers were causing
+      // upstream 429/quota errors and leaving mocks with missing questions.
       const workerUrl = `${url}/functions/v1/retry-mock-section`;
       const allJobIds = sectionRecords.map((r) => r.jobId).filter(Boolean) as string[];
-      for (const jId of allJobIds) {
+      const firstJobId = allJobIds[0];
+      if (firstJobId) {
         await admin.from("mock_section_jobs").update({
           status: "processing",
           current_step: "Queued reliable one-question worker…",
           worker_lock_until: new Date(Date.now() + 8 * 60_000).toISOString(),
           updated_at: new Date().toISOString(),
-        }).eq("id", jId);
+        }).eq("id", firstJobId);
         const kick = fetch(workerUrl, {
           method: "POST",
           headers: {
@@ -923,7 +924,7 @@ Deno.serve(async (req) => {
             apikey: serviceKey,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ job_id: jId, auto: true, service: true }),
+          body: JSON.stringify({ job_id: firstJobId, auto: true, service: true }),
         }).catch((e) => console.error("[generate] worker kickoff failed", e));
         // @ts-ignore
         if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(kick);
