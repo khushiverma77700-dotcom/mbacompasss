@@ -875,6 +875,17 @@ Deno.serve(async (req) => {
             secSets = 4; secQPerSet = Math.max(4, Math.floor(sec.questions / 4));
           }
         }
+        // ── HARD CAP: any RC-style verbal section must have 4–5 Qs per passage.
+        // CAT/XAT/IIFT/SNAP RCs never exceed 5 questions. Prevents the bug
+        // where a single passage was rendering 8–9 questions.
+        const verbalCodes = new Set(["VARC", "VALR", "LS", "GE", "LC", "VABI"]);
+        if (verbalCodes.has(String(sec.code || "").toUpperCase()) && secSets > 0) {
+          secQPerSet = Math.min(5, Math.max(4, secQPerSet));
+        }
+        // Also cap DILR caselets at a sane max of 6 questions per set
+        if (["DILR", "LRDI", "DI", "LR"].includes(String(sec.code || "").toUpperCase()) && secSets > 0) {
+          secQPerSet = Math.min(6, Math.max(4, secQPerSet));
+        }
         // Safety: never let sets demand more questions than the section has
         if (secSets * secQPerSet > sec.questions) {
           secQPerSet = Math.max(1, Math.floor(sec.questions / Math.max(1, secSets)));
