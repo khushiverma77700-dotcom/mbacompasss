@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import ScrollToTop from "@/components/ScrollToTop";
 import BackButton from "@/components/BackButton";
+import { computeSubdomainRedirect } from "@/lib/subdomainRouter";
 import { consumePostAuthRedirect } from "@/lib/authRedirect";
 import { supabase } from "@/integrations/supabase/client";
 import { useAllSiteSettings } from "@/hooks/useSiteSettings";
