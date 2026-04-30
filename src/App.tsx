@@ -11,6 +11,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import BackButton from "@/components/BackButton";
 import { computeSubdomainRedirect } from "@/lib/subdomainRouter";
 import { consumePostAuthRedirect } from "@/lib/authRedirect";
+import { isStudentMode } from "@/lib/studentModeNav";
 import { supabase } from "@/integrations/supabase/client";
 import { useAllSiteSettings } from "@/hooks/useSiteSettings";
 
@@ -315,6 +316,31 @@ const SubdomainGuard = () => {
   return null;
 };
 
+const StudentBackGuard = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const backPressedRef = React.useRef(false);
+
+  useEffect(() => {
+    const markBackPress = () => { backPressedRef.current = true; };
+    window.addEventListener("popstate", markBackPress);
+    return () => window.removeEventListener("popstate", markBackPress);
+  }, []);
+
+  useEffect(() => {
+    if (!backPressedRef.current) return;
+    backPressedRef.current = false;
+    if (!isStudentMode()) return;
+
+    const path = location.pathname;
+    if (path === "/student/login" || !path.startsWith("/student")) {
+      navigate("/student", { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
+  return null;
+};
+
 const PageLoader = () => (
   <div className="min-h-[40vh] bg-background">
     <div className="container mx-auto flex min-h-[40vh] items-center justify-center px-4">
@@ -500,6 +526,7 @@ const App = () => (
       <SettingsPrefetcher />
       <BrowserRouter>
         <SubdomainGuard />
+        <StudentBackGuard />
         <GlobalNavigationPrefetch />
         <ScrollToTop />
         <AuthProvider>

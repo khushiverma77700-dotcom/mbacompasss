@@ -108,6 +108,25 @@ export default function StudentLayout() {
 
   useEffect(() => setMobileOpen(false), [location.pathname]);
 
+  // Keep aggressive/mobile repeated Back presses inside the LMS instead of
+  // falling through to public pages or login history entries.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const state = window.history.state ?? {};
+    window.history.replaceState({ ...state, mbcStudentSafe: true }, "", window.location.href);
+
+    const keepInsideDashboard = () => {
+      window.setTimeout(() => {
+        const path = window.location.pathname;
+        const shouldReturn = path === "/student/login" || !path.startsWith("/student");
+        if (shouldReturn) navigate("/student", { replace: true });
+      }, 0);
+    };
+
+    window.addEventListener("popstate", keepInsideDashboard);
+    return () => window.removeEventListener("popstate", keepInsideDashboard);
+  }, [navigate]);
+
   // Track latest unread notification for the top alert bar
   useEffect(() => {
     if (!user) return;

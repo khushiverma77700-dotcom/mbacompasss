@@ -23,47 +23,29 @@ export default function StudentLogin() {
   const location = useLocation();
   const { toast } = useToast();
   const params = new URLSearchParams(location.search);
-  const redirectTo = params.get("redirect") || "/student";
-  const reason = params.get("reason");
+  const redirectParam = params.get("redirect");
+  const redirectTo = redirectParam?.startsWith("/student") ? redirectParam : "/student";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
-  const [error, setError] = useState<string | null>(
-    reason === "no-course"
-      ? "No active course found on this account. Please purchase a course to access the student dashboard."
-      : null,
-  );
+  const [error, setError] = useState<string | null>(null);
 
-  // If already logged in AND has access, send to dashboard.
+  // If already logged in, stay inside the student dashboard.
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (cancelled) return;
       if (session?.user) {
-        const hasAccess = await checkCourseAccess(session.user.id);
-        if (hasAccess) {
-          navigate(redirectTo, { replace: true });
-          return;
-        }
-        // Logged in but no course → sign out so login screen is clean.
-        await supabase.auth.signOut();
+        navigate(redirectTo, { replace: true });
+        return;
       }
       setCheckingSession(false);
     })();
     return () => { cancelled = true; };
   }, [navigate, redirectTo]);
-
-  const checkCourseAccess = async (userId: string): Promise<boolean> => {
-    const [mocks, bundles, courses] = await Promise.all([
-      supabase.from("mock_enrollments").select("id", { count: "exact", head: true }).eq("user_id", userId),
-      supabase.from("mock_bundle_enrollments").select("id", { count: "exact", head: true }).eq("user_id", userId),
-      supabase.from("course_enrollments").select("id", { count: "exact", head: true }).eq("user_id", userId),
-    ]);
-    return (mocks.count ?? 0) > 0 || (bundles.count ?? 0) > 0 || (courses.count ?? 0) > 0;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,13 +58,6 @@ export default function StudentLogin() {
       });
       if (signInError || !data.user) {
         setError("Invalid email or password. Please try again.");
-        setLoading(false);
-        return;
-      }
-      const hasAccess = await checkCourseAccess(data.user.id);
-      if (!hasAccess) {
-        await supabase.auth.signOut();
-        setError("No active course found on this account. Please purchase a course to access the student dashboard.");
         setLoading(false);
         return;
       }
