@@ -39,9 +39,11 @@ function stripPrefixes(html: string | null | undefined, patterns: RegExp[]): str
 const cleanQuestionHtml = (h: string | null | undefined) => stripPrefixes(h, Q_PREFIX_PATTERNS);
 const cleanOptionHtml = (h: string | null | undefined) => stripPrefixes(h, OPT_PREFIX_PATTERNS);
 
-const OPENAI_TIMEOUT_MS = 120_000;
+const OPENAI_TIMEOUT_MS = 180_000;
 const BATCH_SIZE = 1;
-const MAX_ATTEMPTS_PER_QUESTION = 60;
+// We never give up early. The worker keeps re-invoking itself until either
+// the section reaches its target or the watchdog cancels it after hours.
+const MAX_ATTEMPTS_PER_QUESTION = 200;
 
 const PERSONALIZED_SECTION_MAP: Record<string, Record<string, string>> = {
   CAT:  { VARC: "VARC", DILR: "DILR", QA: "QA" },
