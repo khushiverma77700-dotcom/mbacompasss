@@ -175,12 +175,45 @@ async function callOpenAIBatch(opts: {
   exam_code: string; section_name: string; section_code: string;
   count: number; mcq: number; tita: number; level: string;
   positive: number; negative: number; topic?: string | null;
+  // ----- set mode -----
+  set_mode?: boolean;            // true ⇒ produce ONE passage + `count` tied questions
+  set_kind?: "rc" | "caselet" | "shared"; // verbal RC vs DI/LR caselet vs generic
+  set_label?: string;            // e.g. "Set 1 of 3"
 }) {
   const apiKey = Deno.env.get("OPENAI_API_KEY");
   if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
 
-  const sys = `You are an elite ${opts.exam_code} question setter writing 100% original questions for the ${opts.section_name} (${opts.section_code}) section.${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} Use fresh numbers, fresh names, fresh contexts. Each MCQ has 4 options A-D with one correct; each TITA has numeric answer(s). Include detailed 200-400 word explanations. Output ONLY valid JSON. STRICT FORMATTING: "question_html" must contain ONLY the pure question text — never prefix with "Q1.", "Question 1:", "Set 1:", "1.", "1)" or any numbering. "options[].text" must contain ONLY pure option text — never prefix with "A)", "(A)", "A.", "1)" or any label. The UI renders these labels statically.`;
-  const user = `Generate exactly ${opts.count} questions: ${opts.mcq} MCQ + ${opts.tita} TITA. Marking +${opts.positive}/-${opts.negative}. JSON shape: {"questions":[{"question_type":"mcq"|"tita","question_html":"...","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"tita_answers":["..."],"tita_tolerance":0.01,"explanation_html":"..."}]}`;
+  const mathRules = `MATH FORMATTING — CRITICAL: ALL math notation MUST be wrapped in LaTeX delimiters so the renderer can typeset it. Use $...$ for inline math and $$...$$ for block math. Examples:
+- powers: write $x^2$ NOT x² or x^2 in plain text
+- subscripts: $a_n$ NOT a_n
+- fractions: $\\frac{a}{b}$ NOT a/b when displayed as a fraction
+- square roots: $\\sqrt{3}$ NOT √3
+- summations: $\\sum_{i=1}^{n} i$
+- inequalities: $x \\leq 5$, $a \\neq b$
+- Greek letters: $\\alpha, \\beta, \\pi, \\theta$
+- log/trig: $\\log_2 8$, $\\sin\\theta$
+- multiplication dot: $a \\cdot b$
+- ANY equation, expression, variable with operators, or formula MUST be inside $...$.
+Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do NOT need LaTeX.`;
+
+  const formatRules = `STRICT FORMATTING — the UI renders question number, set badge and option letters as STATIC labels:
+- "question_html" must contain ONLY the pure question text. NEVER prefix with "Q1.", "Question 1:", "Set 1:", "1.", "1)" or any numbering.
+- "options[].text" must contain ONLY pure option text. NEVER prefix with "A)", "(A)", "A.", "1)" or any label.`;
+
+  let sys: string; let user: string;
+
+  if (opts.set_mode) {
+    const ctxLabel = opts.set_kind === "rc"
+      ? "an original Reading Comprehension passage of 500-700 words on an abstract / philosophical / social-science / business / economics theme"
+      : opts.set_kind === "caselet"
+        ? "an original DI/LR caselet with FULLY DETAILED DATA — include a properly formatted HTML <table> (rows × columns with concrete numbers/names) AND/OR an inline ASCII bar/line chart inside <pre> tags. Caselets must contain rich data such as sales figures, rankings, percentage shares, time series, tournament results, seating arrangements, family trees, blood relations, etc."
+        : "an original shared-context block";
+    sys = `You are an elite ${opts.exam_code} question setter writing a SET of ${opts.count} questions tied to ONE shared ${opts.set_kind === "rc" ? "passage" : "caselet"}.${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} ${mathRules} ${formatRules} Output ONLY valid JSON.`;
+    user = `Write ${ctxLabel}, then ${opts.count} questions ALL tied to that shared context. Use FRESH original content; do NOT reuse any famous passage / caselet. Each MCQ has 4 options A-D with one correct; include a 200-400 word explanation per question. JSON shape: {"passage_html":"<div>...full passage or caselet HTML here, with tables/charts if applicable...</div>","questions":[{"question_type":"mcq","question_html":"<question stem only — DO NOT include the passage>","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"explanation_html":"..."}]}`;
+  } else {
+    sys = `You are an elite ${opts.exam_code} question setter writing 100% original questions for the ${opts.section_name} (${opts.section_code}) section.${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} Use fresh numbers, fresh names, fresh contexts. Each MCQ has 4 options A-D with one correct; each TITA has numeric answer(s). Include detailed 200-400 word explanations. ${mathRules} ${formatRules} Output ONLY valid JSON.`;
+    user = `Generate exactly ${opts.count} questions: ${opts.mcq} MCQ + ${opts.tita} TITA. Marking +${opts.positive}/-${opts.negative}. JSON shape: {"questions":[{"question_type":"mcq"|"tita","question_html":"...","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"tita_answers":["..."],"tita_tolerance":0.01,"explanation_html":"..."}]}`;
+  }
 
   const lvlLower = String(opts.level || "").toLowerCase();
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
@@ -241,6 +274,12 @@ async function callOpenAIBatch(opts: {
   const data = await resp.json();
   const content = data?.choices?.[0]?.message?.content;
   const parsed = typeof content === "string" ? JSON.parse(content) : content;
+  if (opts.set_mode) {
+    return {
+      passage_html: typeof parsed?.passage_html === "string" ? parsed.passage_html : "",
+      questions: Array.isArray(parsed?.questions) ? parsed.questions : [],
+    };
+  }
   return Array.isArray(parsed?.questions) ? parsed.questions : [];
 }
 
