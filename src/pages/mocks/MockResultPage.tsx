@@ -19,6 +19,7 @@ import PeerBenchmark from "@/components/mock/report/PeerBenchmark";
 import StrengthsWeaknesses, { TopicRow } from "@/components/mock/report/StrengthsWeaknesses";
 import ProgressTrend, { TrendPoint } from "@/components/mock/report/ProgressTrend";
 import AIAnalysisPanel from "@/components/mock/report/AIAnalysisPanel";
+import { isStudentMode, studentBackToMocksPath } from "@/lib/studentModeNav";
 
 export default function MockResultPage() {
   const { attemptId } = useParams();
