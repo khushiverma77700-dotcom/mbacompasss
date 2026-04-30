@@ -526,6 +526,7 @@ const App = () => (
       <SettingsPrefetcher />
       <BrowserRouter>
         <SubdomainGuard />
+        <StudentBackGuard />
         <GlobalNavigationPrefetch />
         <ScrollToTop />
         <AuthProvider>
