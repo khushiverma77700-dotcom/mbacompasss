@@ -67,16 +67,6 @@ function parseJsonContent(content: unknown): any {
   }
 }
 
-async function fetchWithTimeout(promise: Promise<Response>, ms: number): Promise<Response> {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), ms);
-  try {
-    return await promise;
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 async function rollupGeneration(admin: any, generationId: string | null | undefined) {
   if (!generationId) return;
   const { data: jobs } = await admin
