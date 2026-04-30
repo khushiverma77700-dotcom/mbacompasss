@@ -468,8 +468,8 @@ Deno.serve(async (req) => {
             const quotaBlocked = isAIQuotaBlockedError(msg);
             await admin.from("mock_section_jobs").update({
               status: quotaBlocked ? "failed" : (isAIRateLimitError(msg) ? "pending" : "processing"),
-              current_step: quotaBlocked ? "OpenAI quota/billing blocked — add credits or raise limit" : (isAIRateLimitError(msg) ? `AI rate limit hit — waiting before retrying Set ${setIdx}` : `Set ${setIdx} attempt failed, will retry: ${msg.slice(0, 120)}`),
-              error_message: quotaBlocked ? "OpenAI API quota/billing limit reached. Check your OpenAI account credits/billing, then retry this generation." : msg.slice(0, 400),
+              current_step: quotaBlocked ? "AI quota/billing blocked — add credits or raise limit" : (isAIRateLimitError(msg) ? `AI rate limit hit — waiting before retrying Set ${setIdx}` : `Set ${setIdx} attempt failed, will retry: ${msg.slice(0, 120)}`),
+              error_message: quotaBlocked ? "AI quota/billing limit reached. Check your AI credits/billing, then retry this generation." : msg.slice(0, 400),
               worker_lock_until: (quotaBlocked || isAIRateLimitError(msg)) ? null : new Date(Date.now() + 8 * 60_000).toISOString(),
               updated_at: new Date().toISOString(),
             }).eq("id", job_id);
@@ -638,8 +638,8 @@ Deno.serve(async (req) => {
             const quotaBlocked = isAIQuotaBlockedError(msg);
             await admin.from("mock_section_jobs").update({
               status: quotaBlocked ? "failed" : (isAIRateLimitError(msg) ? "pending" : "processing"),
-              current_step: quotaBlocked ? "OpenAI quota/billing blocked — add credits or raise limit" : (isAIRateLimitError(msg) ? "AI rate limit hit — queued to continue shortly…" : `Retry batch ${attempts} failed, retrying again…`),
-              error_message: quotaBlocked ? "OpenAI API quota/billing limit reached. Check your OpenAI account credits/billing, then retry this generation." : msg.slice(0, 400),
+              current_step: quotaBlocked ? "AI quota/billing blocked — add credits or raise limit" : (isAIRateLimitError(msg) ? "AI rate limit hit — queued to continue shortly…" : `Retry batch ${attempts} failed, retrying again…`),
+              error_message: quotaBlocked ? "AI quota/billing limit reached. Check your AI credits/billing, then retry this generation." : msg.slice(0, 400),
               worker_lock_until: (quotaBlocked || isAIRateLimitError(msg)) ? null : new Date(Date.now() + 8 * 60_000).toISOString(),
               updated_at: new Date().toISOString(),
             }).eq("id", job_id);
