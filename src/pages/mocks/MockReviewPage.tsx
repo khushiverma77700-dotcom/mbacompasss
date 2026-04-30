@@ -10,6 +10,7 @@ import { Bookmark, BookmarkCheck, CheckCircle2, XCircle, MinusCircle, ChevronLef
 import MathContent from "@/components/mock/MathContent";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { isStudentMode, studentBackToMocksPath } from "@/lib/studentModeNav";
 
 export default function MockReviewPage() {
   const { attemptId } = useParams();
@@ -132,7 +133,7 @@ export default function MockReviewPage() {
     <div className="container mx-auto px-4 py-6 max-w-6xl">
       <header className="mb-4 flex items-center justify-between flex-wrap gap-2">
         <div>
-          <Link to="/dashboard/mocks" className="text-sm text-muted-foreground hover:underline">← My Mocks</Link>
+          <Link to={isStudentMode() ? studentBackToMocksPath() : "/dashboard/mocks"} className="text-sm text-muted-foreground hover:underline">← {isStudentMode() ? "Back to dashboard" : "My Mocks"}</Link>
           <h1 className="text-2xl font-bold mt-1">{test?.name} — Review</h1>
         </div>
         <Link to={`/mocks/result/${attempt.id}`}><Button variant="outline">View Score Summary</Button></Link>

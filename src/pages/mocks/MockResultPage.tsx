@@ -19,6 +19,7 @@ import PeerBenchmark from "@/components/mock/report/PeerBenchmark";
 import StrengthsWeaknesses, { TopicRow } from "@/components/mock/report/StrengthsWeaknesses";
 import ProgressTrend, { TrendPoint } from "@/components/mock/report/ProgressTrend";
 import AIAnalysisPanel from "@/components/mock/report/AIAnalysisPanel";
+import { isStudentMode, studentBackToMocksPath } from "@/lib/studentModeNav";
 
 export default function MockResultPage() {
   const { attemptId } = useParams();
@@ -38,7 +39,7 @@ export default function MockResultPage() {
     if (!attemptId) return;
     (async () => {
       const { data: a } = await supabase.from("mock_attempts").select("*").eq("id", attemptId).maybeSingle();
-      if (!a) { navigate("/mocks"); return; }
+      if (!a) { navigate(isStudentMode() ? studentBackToMocksPath() : "/mocks", { replace: true }); return; }
       const [{ data: t }, { data: secs }, { data: rsp }, { data: peers }] = await Promise.all([
         supabase.from("mock_tests").select("*").eq("id", a.test_id).maybeSingle(),
         supabase.from("mock_sections").select("*").eq("test_id", a.test_id).order("sort_order"),
@@ -313,8 +314,11 @@ export default function MockResultPage() {
       <div className="container mx-auto px-4 py-6 max-w-6xl">
         {/* Action bar */}
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-          <Link to="/mocks" className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1">
-            <ChevronRight className="h-4 w-4 rotate-180" /> All mocks
+          <Link
+            to={isStudentMode() ? studentBackToMocksPath() : "/mocks"}
+            className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+          >
+            <ChevronRight className="h-4 w-4 rotate-180" /> {isStudentMode() ? "Back to dashboard" : "All mocks"}
           </Link>
           <div className="flex gap-2 flex-wrap">
             <Button onClick={downloadPDF} disabled={downloading} className="gap-2">

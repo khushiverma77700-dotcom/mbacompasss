@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trophy, Medal, Award } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isStudentMode, studentBackToMocksPath } from "@/lib/studentModeNav";
 
 export default function MockLeaderboardPage() {
   const { slug } = useParams();
@@ -34,7 +35,7 @@ export default function MockLeaderboardPage() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <header className="mb-6">
-        <Link to="/mocks" className="text-sm text-muted-foreground hover:underline">← All mocks</Link>
+        <Link to={isStudentMode() ? studentBackToMocksPath() : "/mocks"} className="text-sm text-muted-foreground hover:underline">← {isStudentMode() ? "Back to dashboard" : "All mocks"}</Link>
         <h1 className="text-3xl font-bold mt-2 flex items-center gap-2">
           <Trophy className="h-7 w-7 text-amber-500" />
           {test.name} — Leaderboard

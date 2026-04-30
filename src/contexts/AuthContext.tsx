@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { clearStudentMode } from "@/lib/studentModeNav";
 
 interface AuthContextType {
   user: User | null;
@@ -143,6 +144,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    clearStudentMode();
     setUser(null);
     setSession(null);
     setIsAdmin(false);

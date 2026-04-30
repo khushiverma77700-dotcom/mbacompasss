@@ -36,6 +36,7 @@ import { StudentThemeProvider } from "@/contexts/StudentThemeContext";
 import { useEnrolledBundleFeatures } from "@/hooks/useEnrolledBundleFeatures";
 import type { FeatureKey } from "@/lib/courseFeatures";
 import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
+import { markStudentMode, clearStudentMode } from "@/lib/studentModeNav";
 
 type NavItem = { to: string; label: string; icon: any; end?: boolean; feature?: FeatureKey };
 
@@ -79,6 +80,12 @@ export default function StudentLayout() {
   const [latestUnread, setLatestUnread] = useState<{ id: string; title: string } | null>(null);
   const [bannerDismissed, setBannerDismissed] = useState(false);
 
+  // Mark "student mode" so mock pages know the user lives inside the dashboard
+  // and route their back / post-submit navigation back into /student/*.
+  useEffect(() => {
+    markStudentMode();
+  }, []);
+
   useEffect(() => {
     if (!loading && !user) {
       navigate("/student/login?redirect=" + encodeURIComponent(location.pathname), { replace: true });
@@ -100,6 +107,7 @@ export default function StudentLayout() {
       setHasAccess(ok);
       setAccessChecked(true);
       if (!ok) {
+        clearStudentMode();
         await supabase.auth.signOut();
         navigate("/student/login?reason=no-course", { replace: true });
       }
@@ -202,6 +210,7 @@ export default function StudentLayout() {
                 size="sm"
                 className="px-2 sm:px-3"
                 onClick={async () => {
+                  clearStudentMode();
                   await supabase.auth.signOut();
                   navigate("/student/login", { replace: true });
                 }}

@@ -17,6 +17,11 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Flag, Bookmark, ChevronLeft, ChevronRight, AlertTriangle, LayoutGrid, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  isStudentMode,
+  studentPostSubmitPath,
+  studentBackToMocksPath,
+} from "@/lib/studentModeNav";
 import { useForceLightTheme } from "@/hooks/useForceLightTheme";
 
 const isMobileDevice = () =>
@@ -121,11 +126,14 @@ export default function MockTestRunnerPage() {
         .maybeSingle();
       if (!a) {
         toast.error("Attempt not found");
-        navigate("/mocks");
+        navigate(isStudentMode() ? studentBackToMocksPath() : "/mocks", { replace: true });
         return;
       }
       if (a.status !== "in_progress") {
-        navigate(`/mocks/result/${a.id}`);
+        navigate(
+          isStudentMode() ? studentPostSubmitPath(a.id) : `/mocks/result/${a.id}`,
+          { replace: true }
+        );
         return;
       }
       const { data: s } = await supabase
@@ -190,7 +198,10 @@ export default function MockTestRunnerPage() {
     if (document.fullscreenElement) {
       try { await document.exitFullscreen(); } catch {}
     }
-    navigate(`/mocks/result/${attemptId}`);
+    navigate(
+      isStudentMode() ? studentPostSubmitPath(attemptId) : `/mocks/result/${attemptId}`,
+      { replace: true }
+    );
   }, [attemptId, navigate]);
 
   useEffect(() => {
@@ -433,7 +444,10 @@ export default function MockTestRunnerPage() {
       if (document.fullscreenElement) {
         try { await document.exitFullscreen(); } catch {}
       }
-      navigate(`/mocks/result/${attemptId}`);
+      navigate(
+        isStudentMode() ? studentPostSubmitPath(attemptId) : `/mocks/result/${attemptId}`,
+        { replace: true }
+      );
     } catch (e: any) {
       toast.error(e.message ?? "Submit failed");
       setSubmitting(false);
@@ -470,7 +484,7 @@ export default function MockTestRunnerPage() {
           <p className="text-sm text-muted-foreground">
             No questions are available for this mock, so the test timer has been stopped. Please wait until AI generation completes.
           </p>
-          <Button onClick={() => navigate("/mocks")}>Back to mocks</Button>
+          <Button onClick={() => navigate(isStudentMode() ? studentBackToMocksPath() : "/mocks")}>Back to mocks</Button>
         </div>
       </div>
     );

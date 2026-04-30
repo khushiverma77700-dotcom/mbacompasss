@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Clock, AlertTriangle, Layers, ShieldAlert } from "lucide-react";
+import { isStudentMode, studentBackToMocksPath } from "@/lib/studentModeNav";
 
 
 export default function MockTestIntroPage() {
@@ -147,7 +148,7 @@ export default function MockTestIntroPage() {
         </label>
 
         <div className="flex gap-3">
-          <Button variant="outline" onClick={() => navigate("/mocks")}>Back</Button>
+          <Button variant="outline" onClick={() => navigate(isStudentMode() ? studentBackToMocksPath() : "/mocks")}>Back</Button>
           <Button onClick={handleStart} disabled={!agreed || starting} className="flex-1">
             {starting ? "Starting…" : "Start Mock Test"}
           </Button>
