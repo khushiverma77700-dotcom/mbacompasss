@@ -446,12 +446,16 @@ For STANDALONE questions:
 
   const examCalibration = buildExamCalibrationBlock(opts.exam, opts.level, opts.section_code);
 
+  const sectionScopeLock = buildSectionScopeLockGen(opts.exam, opts.section_code, opts.section_name);
+
   return `You are an elite ${opts.exam_full} (${opts.exam}) question setter with 15+ years of experience writing original mock questions for top MBA coaching institutes in India.
 ${examCalibration}
 
+${sectionScopeLock}
+
 GENERATE 100% ORIGINAL questions for:
 - Exam: ${opts.exam} (${opts.exam_full})
-- Section: ${opts.section_name} (${opts.section_code})
+- Section: ${opts.section_name} (${opts.section_code}) — STRICTLY this section's syllabus only
 - Category: ${opts.category}
 - Difficulty: ${levelGuidance}${topicLock}${setsBlock}
 
