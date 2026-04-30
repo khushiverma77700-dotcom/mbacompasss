@@ -77,7 +77,7 @@ export default function StudentPersonalizedHub() {
   };
 
   const onGenerate = async () => {
-    if (!user) { navigate("/auth"); return; }
+    if (!user) { navigate("/student/login?redirect=/student/personalized-hub", { replace: true }); return; }
     if (!hasAccess) { toast.error("Your access is not active. Contact admin."); return; }
     if (remaining <= 0) { toast.error(`Daily quota reached (${access.daily_quota}/day).`); return; }
     if (!sections.length) { toast.error("Pick at least one section."); return; }
