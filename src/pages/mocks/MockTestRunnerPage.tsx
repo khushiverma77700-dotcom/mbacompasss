@@ -491,7 +491,11 @@ export default function MockTestRunnerPage() {
             <span className="hidden sm:inline">Total: </span>
             <strong className="font-mono">{fmt(overallRemaining)}</strong>
           </span>
-          <MockCalculator />
+          {/* On-screen calculator: CAT rules — available only in DILR + QA, hidden in VARC.
+              Remains visible regardless of MCQ/TITA so Quant TITA also has access. */}
+          {currentSection && ["DILR", "LRDI", "QA", "QADI", "QADS", "QS", "MS", "DA", "ICR"].includes(
+            String(currentSection.code).toUpperCase(),
+          ) && <MockCalculator />}
           <button
             type="button"
             onClick={() => setPaletteOpen(true)}
