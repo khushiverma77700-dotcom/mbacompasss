@@ -10,6 +10,24 @@
       are NOT redirected — the two hosts operate independently.
     -->
     <script>
+      // ── Canonical host enforcement ──
+      // Always serve the non-www version of mbacompass.in. If a visitor (or
+      // crawler that doesn't honor a server 301) lands on www.mbacompass.in,
+      // redirect them to the apex domain immediately. location.replace keeps
+      // it out of the back-button history and Googlebot treats it as a
+      // permanent canonical signal alongside the rel=canonical tag.
+      (function () {
+        try {
+          var h = window.location.hostname;
+          if (h === "www.mbacompass.in") {
+            var newUrl = "https://mbacompass.in" + window.location.pathname + window.location.search + window.location.hash;
+            window.location.replace(newUrl);
+            return;
+          }
+        } catch (e) { /* noop */ }
+      })();
+    </script>
+    <script>
       (function () {
         try {
           var h = window.location.hostname;
