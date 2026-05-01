@@ -160,32 +160,6 @@ const ProgrammePortfolioTable = ({ collegeSlug, programmes, fallbackCourses }: P
                         </div>
                         {p.fees_year && <div className="text-[10px] text-muted-foreground">{p.fees_year}</div>}
                       </td>
-                      <td className="py-3 px-3 text-right">
-                        {p.source_url ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <a
-                                href={p.source_url}
-                                target="_blank"
-                                rel="noreferrer noopener nofollow"
-                                className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                              >
-                                Verify <ExternalLink className="w-3 h-3" />
-                              </a>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs">
-                              <p className="text-xs italic">"{p.evidence_snippet || "Verified from official source."}"</p>
-                              {p.source_brochure_url && (
-                                <a href={p.source_brochure_url} target="_blank" rel="noreferrer noopener nofollow" className="text-xs text-primary inline-flex items-center gap-1 mt-1.5">
-                                  <FileText className="w-3 h-3" /> Brochure
-                                </a>
-                              )}
-                            </TooltipContent>
-                          </Tooltip>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                      </td>
                     </motion.tr>
                   );
                 })}
