@@ -38,6 +38,21 @@ const writeAdminCache = (userId: string, value: Omit<AdminCacheEntry, "expiresAt
   }
 };
 
+const readStoredSession = (): Session | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    for (const key of Object.keys(window.localStorage)) {
+      if (!key.startsWith("sb-") || !key.endsWith("-auth-token")) continue;
+      const value = JSON.parse(window.localStorage.getItem(key) || "null");
+      const session = (value?.currentSession ?? value) as Session | null;
+      if (session?.access_token && session?.user) return session;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+};
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -52,9 +67,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const initialSession = useRef<Session | null>(readStoredSession());
+  const [user, setUser] = useState<User | null>(initialSession.current?.user ?? null);
+  const [session, setSession] = useState<Session | null>(initialSession.current);
+  const [loading, setLoading] = useState(!initialSession.current);
   const [isAdmin, setIsAdmin] = useState(false);
   const [allowedSections, setAllowedSections] = useState<string[] | null>(null);
   const resolvedAdminUserIdRef = useRef<string | null>(null);
