@@ -62,9 +62,23 @@
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700&family=DM+Sans:wght@400;500&display=swap" /></noscript>
     <!-- Inline critical CSS for faster FP -->
     <style>
-      body{margin:0;font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:#fff;color:#0f172a}
+      body{margin:0;font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:#fff;color:#0f172a;-webkit-font-smoothing:antialiased}
       #root{min-height:100vh}
       h1,h2,h3{font-family:'Plus Jakarta Sans',system-ui,sans-serif;margin:0}
+      /* Branded SEO fallback / loading state (hidden once React mounts) */
+      #seo-fallback{max-width:1100px;margin:0 auto;padding:48px 24px;font-family:'DM Sans',system-ui,sans-serif;color:#0f172a}
+      #seo-fallback .sf-brand{display:inline-flex;align-items:center;gap:10px;padding:6px 14px;border-radius:999px;background:#eff6ff;color:#1d4ed8;font-weight:600;font-size:13px;letter-spacing:.02em;margin-bottom:20px}
+      #seo-fallback .sf-brand::before{content:"";width:8px;height:8px;border-radius:999px;background:#3b82f6;box-shadow:0 0 0 4px rgba(59,130,246,.18)}
+      #seo-fallback h1{font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:34px;line-height:1.2;font-weight:800;margin:0 0 14px;letter-spacing:-.01em}
+      #seo-fallback p.lead{font-size:16px;line-height:1.65;color:#475569;margin:0 0 28px;max-width:820px}
+      #seo-fallback h2{font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:18px;font-weight:700;margin:0 0 12px;color:#0f172a}
+      #seo-fallback .sf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;list-style:none;padding:0;margin:0 0 28px}
+      #seo-fallback .sf-grid li a{display:block;padding:12px 14px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;color:#0f172a;text-decoration:none;font-size:14px;font-weight:500;transition:all .15s ease}
+      #seo-fallback .sf-grid li a:hover{border-color:#bfdbfe;background:#f0f7ff;color:#1d4ed8}
+      #seo-fallback .sf-loader{display:inline-flex;align-items:center;gap:10px;color:#64748b;font-size:14px}
+      #seo-fallback .sf-spin{width:16px;height:16px;border-radius:999px;border:2px solid #dbeafe;border-top-color:#3b82f6;animation:sfspin .7s linear infinite}
+      @keyframes sfspin{to{transform:rotate(360deg)}}
+      @media (max-width:640px){#seo-fallback{padding:32px 18px}#seo-fallback h1{font-size:26px}}
     </style>
 
     <meta property="og:type" content="website" />
