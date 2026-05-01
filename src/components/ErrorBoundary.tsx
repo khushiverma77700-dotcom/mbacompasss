@@ -24,6 +24,25 @@ class ErrorBoundary extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     this.setState({ errorInfo });
     console.error("[ErrorBoundary] Caught error:", error, errorInfo);
+
+    // Stale chunk recovery: after a deploy, the cached index.html may reference
+    // hashed JS/CSS chunks that no longer exist. Detect that specific failure
+    // and force ONE hard reload (guarded by sessionStorage) so users land on
+    // the new build instead of seeing a blank error screen.
+    const msg = String(error?.message || "");
+    const isChunkError =
+      /Failed to fetch dynamically imported module/i.test(msg) ||
+      /Importing a module script failed/i.test(msg) ||
+      /Loading chunk [\w-]+ failed/i.test(msg) ||
+      /ChunkLoadError/i.test(error?.name || "");
+    if (isChunkError && typeof window !== "undefined") {
+      const KEY = "__chunk_reload_attempted__";
+      if (!sessionStorage.getItem(KEY)) {
+        sessionStorage.setItem(KEY, "1");
+        // Cache-bust to make sure the browser fetches the fresh index.html
+        window.location.reload();
+      }
+    }
   }
 
   handleReload = () => {
