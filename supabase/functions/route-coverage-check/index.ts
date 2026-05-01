@@ -386,6 +386,92 @@ async function checkUnknownPathStatus(findings: Finding[]) {
   }));
 }
 
+function normalizeQuestion(q: unknown) {
+  return String(q ?? "").toLowerCase().replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function extractFaqItems(value: unknown): { q: string; a: string }[] {
+  const list = Array.isArray(value)
+    ? value
+    : value && typeof value === "object" && Array.isArray((value as any).items)
+      ? (value as any).items
+      : value && typeof value === "object" && Array.isArray((value as any).faqs)
+        ? (value as any).faqs
+        : [];
+  return list.map((item: any) => ({
+    q: String(item?.q ?? item?.question ?? item?.name ?? "").trim(),
+    a: String(item?.a ?? item?.answer ?? item?.acceptedAnswer?.text ?? "").trim(),
+  })).filter((item) => item.q && item.a);
+}
+
+function pushDuplicateFaqFindings(findings: Finding[], scope: { url: string; page_type: string }, faqs: { q: string; a: string }[]) {
+  const seen = new Map<string, string[]>();
+  for (const faq of faqs) {
+    const key = normalizeQuestion(faq.q);
+    if (!key) continue;
+    const list = seen.get(key) ?? [];
+    list.push(faq.q);
+    seen.set(key, list);
+  }
+  for (const [key, copies] of seen) {
+    if (copies.length <= 1) continue;
+    findings.push({
+      category: "duplicate_faq",
+      severity: "warning",
+      url: scope.url,
+      page_type: scope.page_type,
+      issue_code: "duplicate_faq_question",
+      message: `${copies.length} FAQ entries repeat the same question: "${copies[0].slice(0, 90)}".`,
+      fix_suggestion: "Keep one canonical FAQ answer and remove duplicate questions from the page/FAQ settings before requesting indexing again.",
+    });
+  }
+}
+
+async function checkDuplicateFaqSources(supabase: ReturnType<typeof createClient>, findings: Finding[]) {
+  const [{ data: supportFaqs }, { data: siteSettings }, { data: courses }, { data: mocksLanding }, { data: cityPages }] = await Promise.all([
+    supabase.from("support_faqs").select("category,question,answer,is_published").eq("is_published", true).limit(5000),
+    supabase.from("site_settings").select("key,value").or("key.eq.faqs,key.like.seo_page__%").limit(5000),
+    supabase.from("mba_compass_courses").select("slug,faqs,is_active").eq("is_active", true).limit(2000),
+    supabase.from("mocks_landing_settings").select("faqs").limit(5),
+    supabase.from("city_pages").select("slug,faq_content,active").eq("active", true).limit(2000),
+  ]);
+
+  const supportByCategory = new Map<string, { q: string; a: string }[]>();
+  for (const row of supportFaqs ?? []) {
+    const key = String((row as any).category ?? "uncategorized");
+    const list = supportByCategory.get(key) ?? [];
+    list.push({ q: (row as any).question, a: (row as any).answer });
+    supportByCategory.set(key, list);
+  }
+  for (const [category, faqs] of supportByCategory) {
+    pushDuplicateFaqFindings(findings, { url: `${SITE}/student/support#${category}`, page_type: "support_faq" }, faqs);
+  }
+
+  for (const row of siteSettings ?? []) {
+    const key = String((row as any).key ?? "");
+    const faqs = extractFaqItems((row as any).value);
+    if (!faqs.length) continue;
+    const parts = key.split("__");
+    const pageType = parts[1] || "site_setting";
+    const recordId = parts[2] || "homepage";
+    pushDuplicateFaqFindings(findings, { url: key === "faqs" ? SITE : `${SITE}/admin/seo-dashboard?record=${recordId}`, page_type: `seo_snapshot_${pageType}` }, faqs);
+  }
+
+  for (const row of courses ?? []) {
+    const slug = (row as any).slug;
+    pushDuplicateFaqFindings(findings, { url: `${SITE}/mba-compass/${slug}`, page_type: "mba_compass_course" }, extractFaqItems((row as any).faqs));
+  }
+  for (const row of mocksLanding ?? []) {
+    pushDuplicateFaqFindings(findings, { url: `${SITE}/mocks`, page_type: "mocks_landing" }, extractFaqItems((row as any).faqs));
+  }
+  for (const row of cityPages ?? []) {
+    const html = String((row as any).faq_content ?? "");
+    const matches = Array.from(html.matchAll(/<h[23][^>]*>([\s\S]*?\?)<\/h[23]>\s*<p[^>]*>([\s\S]*?)<\/p>/gi));
+    const faqs = matches.map((m) => ({ q: m[1].replace(/<[^>]+>/g, " "), a: m[2].replace(/<[^>]+>/g, " ") }));
+    pushDuplicateFaqFindings(findings, { url: `${SITE}/colleges/${(row as any).slug}`, page_type: "city_page" }, faqs);
+  }
+}
+
 // ─── handler ─────────────────────────────────────────────────────────────────
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
