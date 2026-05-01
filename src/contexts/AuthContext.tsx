@@ -3,6 +3,41 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { clearStudentMode } from "@/lib/studentModeNav";
 
+const ADMIN_CACHE_TTL_MS = 5 * 60 * 1000;
+
+type AdminCacheEntry = {
+  isAdmin: boolean;
+  allowedSections: string[] | null;
+  expiresAt: number;
+};
+
+const getAdminCacheKey = (userId: string) => `mbc-admin-status:${userId}`;
+
+const readAdminCache = (userId: string): AdminCacheEntry | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(getAdminCacheKey(userId));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as AdminCacheEntry;
+    if (!parsed || parsed.expiresAt < Date.now()) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const writeAdminCache = (userId: string, value: Omit<AdminCacheEntry, "expiresAt">) => {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(
+      getAdminCacheKey(userId),
+      JSON.stringify({ ...value, expiresAt: Date.now() + ADMIN_CACHE_TTL_MS })
+    );
+  } catch {
+    // Ignore storage failures; backend/RLS remains authoritative.
+  }
+};
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -26,6 +61,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let cancelled = false;
+    const bootTimeout = window.setTimeout(() => {
+      if (!cancelled) setLoading(false);
+    }, 1200);
 
     const applySession = (nextSession: Session | null) => {
       if (cancelled) return;
@@ -36,6 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser((prev) =>
         prev?.id === nextSession?.user?.id ? prev : nextSession?.user ?? null
       );
+      window.clearTimeout(bootTimeout);
       setLoading(false);
     };
 
@@ -45,12 +84,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session: nextSession } }) => {
-      applySession(nextSession);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session: nextSession } }) => applySession(nextSession))
+      .catch(() => applySession(null));
 
     return () => {
       cancelled = true;
+      window.clearTimeout(bootTimeout);
       subscription.unsubscribe();
     };
   }, []);
@@ -76,6 +116,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (resolvedAdminUserIdRef.current === user.id) return;
       resolvedAdminUserIdRef.current = user.id;
 
+      const cached = readAdminCache(user.id);
+      if (cached) {
+        setIsAdmin(cached.isAdmin);
+        setAllowedSections(cached.allowedSections);
+        return;
+      }
+
       try {
         const { data } = await supabase
           .from("user_roles")
@@ -90,6 +137,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsAdmin(adminStatus);
 
         if (!adminStatus) {
+          writeAdminCache(user.id, { isAdmin: false, allowedSections: null });
           setAllowedSections(null);
           return;
         }
@@ -101,7 +149,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           .maybeSingle();
 
         if (!cancelled) {
-          setAllowedSections((permData?.allowed_sections as string[] | null) ?? null);
+          const nextAllowedSections = (permData?.allowed_sections as string[] | null) ?? null;
+          setAllowedSections(nextAllowedSections);
+          writeAdminCache(user.id, { isAdmin: true, allowedSections: nextAllowedSections });
         }
       } catch {
         resolvedAdminUserIdRef.current = null;
