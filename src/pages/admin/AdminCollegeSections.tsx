@@ -598,6 +598,34 @@ const AdminCollegeSections = () => {
         resultsHint={`${filteredSections.length} of ${sections.length} sections`}
       />
 
+      {collegeSuggestions.length > 0 && (
+        <Card className="mb-4 border-primary/30">
+          <CardContent className="p-3">
+            <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+              Matching colleges — click to view their sections
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {collegeSuggestions.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => {
+                    setFilter("college", c.id);
+                    setFilter("search", "");
+                  }}
+                  className="text-left px-3 py-1.5 rounded-md border border-border bg-muted/30 hover:bg-primary/10 hover:border-primary/40 transition-colors"
+                >
+                  <div className="text-sm font-medium text-foreground">{c.name}</div>
+                  <div className="text-[10px] text-muted-foreground">
+                    {[c.city, c.state].filter(Boolean).join(", ") || c.slug}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardContent className="p-0">
           <Table>
