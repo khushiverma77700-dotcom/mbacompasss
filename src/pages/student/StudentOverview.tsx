@@ -96,6 +96,28 @@ export default function StudentOverview() {
     [attempts]
   );
 
+  // Fetch section id → name map for all tests the student has attempted, so the
+  // Sectional Average Performance card shows readable names (e.g. "VARC", "DILR")
+  // instead of raw UUID keys from sectional_scores.
+  useEffect(() => {
+    const testIds = Array.from(new Set(submitted.map((a: any) => a.test_id).filter(Boolean)));
+    if (testIds.length === 0) { setSectionNameMap({}); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("mock_sections")
+        .select("id, name, code")
+        .in("test_id", testIds);
+      if (cancelled) return;
+      const map: Record<string, string> = {};
+      for (const s of data ?? []) {
+        map[s.id] = s.name || (s as any).code || s.id;
+      }
+      setSectionNameMap(map);
+    })();
+    return () => { cancelled = true; };
+  }, [submitted]);
+
   const stats = useMemo(() => {
     const inProgress = attempts.filter((x) => x.status === "in_progress");
     const avgPercentile = submitted.length
