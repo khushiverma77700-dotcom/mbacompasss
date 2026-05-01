@@ -12,8 +12,10 @@ export default function DailyTestCard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    (async () => {
+    let active = true;
+    const load = async () => {
       const { data } = await supabase.rpc("get_today_daily_test");
+      if (!active) return;
       const t = (data as any[])?.[0] ?? null;
       setToday(t);
       if (t?.test_id) {
@@ -21,11 +23,19 @@ export default function DailyTestCard() {
           supabase.from("mock_sections").select("total_questions").eq("test_id", t.test_id),
           supabase.from("mock_tests").select("difficulty").eq("id", t.test_id).maybeSingle(),
         ]);
+        if (!active) return;
         const q = (secs ?? []).reduce((acc: number, s: any) => acc + (s.total_questions || 0), 0);
         setMeta({ qCount: q, difficulty: (m as any)?.difficulty ?? null });
       }
       setLoading(false);
-    })();
+    };
+    const w = window as any;
+    const handle = w.requestIdleCallback ? w.requestIdleCallback(load, { timeout: 2000 }) : window.setTimeout(load, 900);
+    return () => {
+      active = false;
+      const cancel = w.cancelIdleCallback ?? window.clearTimeout;
+      try { cancel(handle); } catch {}
+    };
   }, []);
 
   if (loading || !today) return null;
