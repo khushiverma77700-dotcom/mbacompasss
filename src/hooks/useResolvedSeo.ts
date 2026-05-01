@@ -22,11 +22,32 @@ export const useResolvedSeo = (
 
   const snap = snapshot as any;
 
-  // Auto-inject FAQ schema if snapshot has FAQs
-  const baseJsonLd = snap?.schemaMarkup || baseSeo.jsonLd;
-  let mergedJsonLd = baseJsonLd;
-  if (Array.isArray(snap?.faqs) && snap.faqs.length > 0) {
-    const faqSchema = {
+  // Resolve base JSON-LD (may be an array, object, or undefined)
+  const rawBase = snap?.schemaMarkup || baseSeo.jsonLd;
+  const baseArr: Record<string, any>[] = rawBase
+    ? Array.isArray(rawBase) ? rawBase.filter(Boolean) : [rawBase]
+    : [];
+
+  // Deduplicate by @type — keep first occurrence of FAQPage / BreadcrumbList / etc.
+  // Google flags duplicate FAQPage schemas as a critical error.
+  const seenTypes = new Set<string>();
+  const dedupedBase: Record<string, any>[] = [];
+  for (const node of baseArr) {
+    const t = (node as any)?.["@type"];
+    const key = Array.isArray(t) ? t.join("|") : String(t || "");
+    // Only dedupe singleton schema types that should never repeat per page
+    const singletonTypes = new Set(["FAQPage", "BreadcrumbList", "WebPage", "Organization"]);
+    if (key && singletonTypes.has(key)) {
+      if (seenTypes.has(key)) continue;
+      seenTypes.add(key);
+    }
+    dedupedBase.push(node);
+  }
+
+  // Only synthesize a FAQPage from snap.faqs if base does NOT already contain one
+  const hasFaqPage = dedupedBase.some((n) => (n as any)?.["@type"] === "FAQPage");
+  if (!hasFaqPage && Array.isArray(snap?.faqs) && snap.faqs.length > 0) {
+    dedupedBase.push({
       "@context": "https://schema.org",
       "@type": "FAQPage",
       mainEntity: snap.faqs.map((f: any) => ({
@@ -34,11 +55,11 @@ export const useResolvedSeo = (
         name: f.question || f.q,
         acceptedAnswer: { "@type": "Answer", text: f.answer || f.a },
       })),
-    };
-    mergedJsonLd = baseJsonLd
-      ? [...(Array.isArray(baseJsonLd) ? baseJsonLd : [baseJsonLd]), faqSchema]
-      : faqSchema;
+    });
   }
+
+  const mergedJsonLd =
+    dedupedBase.length === 0 ? undefined : dedupedBase.length === 1 ? dedupedBase[0] : dedupedBase;
 
   return {
     snapshot,
