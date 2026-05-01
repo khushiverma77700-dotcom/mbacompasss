@@ -136,16 +136,47 @@ const AdminCollegeSections = () => {
   const fetchColleges = async () => { const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, tier, established").order("name"); if (data) setColleges(data); };
   const fetchSections = async () => { const query = supabase.from("college_sections").select("*, colleges(name, slug, city, state)").order("sort_order"); const { data } = selectedCollege ? await query.eq("college_id", selectedCollege) : await query; if (data) setSections(data); };
 
+  // Extract a college slug from a pasted URL or raw slug. Examples:
+  //   "https://mbacompass.in/college/iim-bangalore" -> "iim-bangalore"
+  //   "/college/iim-bangalore"                     -> "iim-bangalore"
+  //   "iim-bangalore"                              -> "iim-bangalore"
+  const extractCollegeSlug = (raw: string): string | null => {
+    const t = raw.trim();
+    if (!t) return null;
+    const urlMatch = t.match(/\/college\/([a-z0-9-]+)/i);
+    if (urlMatch) return urlMatch[1].toLowerCase();
+    // bare slug heuristic: lowercase letters/numbers/hyphens, has at least one hyphen, no spaces
+    if (/^[a-z0-9-]+$/i.test(t) && t.includes("-")) return t.toLowerCase();
+    return null;
+  };
+
+  // Auto-resolve pasted URL/slug in the search box -> apply college filter
+  useEffect(() => {
+    const slug = extractCollegeSlug(filters.search || "");
+    if (!slug || !colleges.length) return;
+    const match = colleges.find((c) => (c.slug || "").toLowerCase() === slug);
+    if (match && filters.college !== match.id) {
+      setFilter("college", match.id);
+      setFilter("search", "");
+      toast({ title: "College selected", description: match.name });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.search, colleges]);
+
   const filteredSections = useMemo(() => {
     const search = (filters.search || "").trim().toLowerCase();
     const sectionType = filters.section;
     return sections.filter((s) => {
       if (sectionType && sectionType !== "all" && s.section_type !== sectionType) return false;
       if (!search) return true;
+      const c = (s as any).colleges || {};
       const hay = [
         s.title,
         s.content,
-        (s as any).colleges?.name,
+        c.name,
+        c.city,
+        c.state,
+        c.slug,
         SECTION_TYPES.find((t) => t.value === s.section_type)?.label,
       ].filter(Boolean).join(" ").toLowerCase();
       return hay.includes(search);
