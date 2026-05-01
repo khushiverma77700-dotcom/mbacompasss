@@ -98,6 +98,7 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Website Optimizer", path: "/admin/website-optimizer", icon: Sparkles },
       { label: "Static Page SEO", path: "/admin/static-seo", icon: Globe },
       { label: "Google Indexing", path: "/admin/google-indexing", icon: Globe },
+      { label: "Indexing Audit", path: "/admin/indexing-audit", icon: ShieldCheck },
       { label: "Indexing Requeue", path: "/admin/indexing-requeue", icon: RefreshCw },
       { label: "Old-Domain Audit", path: "/admin/domain-audit", icon: ShieldCheck },
       { label: "Meta Tag Validator", path: "/admin/meta-validator", icon: ShieldCheck },

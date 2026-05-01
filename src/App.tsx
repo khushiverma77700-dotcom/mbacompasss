@@ -103,6 +103,7 @@ const AdminCourseCategories = lazyWithPreload(() => import("./pages/admin/AdminC
 const AdminCATScores = lazyWithPreload(() => import("./pages/admin/AdminCATScores"));
 const AdminMegaMenu = lazyWithPreload(() => import("./pages/admin/AdminMegaMenu"));
 const AdminGoogleIndexing = lazyWithPreload(() => import("./pages/admin/AdminGoogleIndexing"));
+const AdminIndexingAudit = lazyWithPreload(() => import("./pages/admin/AdminIndexingAudit"));
 const AdminIndexingRequeue = lazyWithPreload(() => import("./pages/admin/AdminIndexingRequeue"));
 const AdminSpecializations = lazyWithPreload(() => import("./pages/admin/AdminSpecializations"));
 const AdminDomainAudit = lazyWithPreload(() => import("./pages/admin/AdminDomainAudit"));
@@ -576,6 +577,7 @@ const App = () => (
               <Route path="cat-scores" element={<LazyPage><AdminCATScores /></LazyPage>} />
               <Route path="mega-menu" element={<LazyPage><AdminMegaMenu /></LazyPage>} />
               <Route path="google-indexing" element={<LazyPage><AdminGoogleIndexing /></LazyPage>} />
+              <Route path="indexing-audit" element={<LazyPage><AdminIndexingAudit /></LazyPage>} />
               <Route path="indexing-requeue" element={<LazyPage><AdminIndexingRequeue /></LazyPage>} />
               <Route path="specializations" element={<LazyPage><AdminSpecializations /></LazyPage>} />
               <Route path="domain-audit" element={<LazyPage><AdminDomainAudit /></LazyPage>} />
