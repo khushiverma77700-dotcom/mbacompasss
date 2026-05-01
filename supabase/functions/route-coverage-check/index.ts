@@ -525,6 +525,10 @@ Deno.serve(async (req: Request) => {
       }
     });
     await Promise.all(workers);
+    await Promise.all([
+      checkUnknownPathStatus(findings),
+      checkDuplicateFaqSources(supabase, findings),
+    ]);
 
     if (findings.length > 0) {
       // Insert in chunks of 500.
@@ -550,6 +554,7 @@ Deno.serve(async (req: Request) => {
         kind: "route_coverage",
         sitemap_size: sitemap.size,
         robots_disallow_count: robots.disallow.length,
+        unknown_paths_checked: SENTINEL_UNKNOWN_PATHS.length,
         sampled: sample > 0,
       },
     }).eq("id", runId);
