@@ -43,6 +43,9 @@ const AuthPage = () => {
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const autoVerifiedRef = (typeof window !== "undefined")
+    ? (window as any).__otpAutoVerifyRef ||= { current: false }
+    : { current: false };
 
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
