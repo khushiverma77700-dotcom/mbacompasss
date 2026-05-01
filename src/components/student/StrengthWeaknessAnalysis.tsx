@@ -288,7 +288,7 @@ export function useStrengthWeaknessData() {
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [user]);
+  }, [user, refreshTick]);
 
   // ─── Derived: weak + strong topic lists ──────────────────────────────────────
   const allTopics = useMemo(
@@ -310,6 +310,13 @@ export function useStrengthWeaknessData() {
     const tot = sections.reduce((s, x) => s + x.total, 0);
     return readinessScore(att, cor, tot);
   }, [sections]);
+
+  return { loading, hasData, sections, allTopics, weakTopics, strongTopics, overallReadiness, refresh };
+}
+
+// ─── Default component (kept for backwards compatibility — Overview etc.) ─────
+export default function StrengthWeaknessAnalysis() {
+  const { loading, hasData, sections, weakTopics, strongTopics, overallReadiness } = useStrengthWeaknessData();
 
   if (loading) {
     return (
@@ -340,7 +347,6 @@ export function useStrengthWeaknessData() {
 
   return (
     <div className="space-y-4">
-      {/* ── Header summary ─────────────────────────────────────────────────────── */}
       <Card className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -359,7 +365,6 @@ export function useStrengthWeaknessData() {
           </div>
         </div>
 
-        {/* Section bar chart */}
         <div className="mt-5 h-56">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={sections.map((s) => ({
@@ -377,7 +382,6 @@ export function useStrengthWeaknessData() {
         </div>
       </Card>
 
-      {/* ── Tabs: Weak / Strength / Full Table ─────────────────────────────────── */}
       <Tabs defaultValue="weak" className="w-full">
         <TabsList className="grid grid-cols-3 w-full max-w-md">
           <TabsTrigger value="weak" className="gap-2"><AlertTriangle className="h-3.5 w-3.5" /> Weak</TabsTrigger>
@@ -386,23 +390,11 @@ export function useStrengthWeaknessData() {
         </TabsList>
 
         <TabsContent value="weak" className="mt-4">
-          <TopicAnalysisPanel
-            heading="My Weak Areas"
-            description="Lowest-readiness topics across all your mocks. Fix these first for biggest score gains."
-            topics={weakTopics}
-            tone="weak"
-          />
+          <TopicAnalysisPanel heading="My Weak Areas" description="Lowest-readiness topics across all your mocks. Fix these first for biggest score gains." topics={weakTopics} tone="weak" />
         </TabsContent>
-
         <TabsContent value="strong" className="mt-4">
-          <TopicAnalysisPanel
-            heading="My Strength Areas"
-            description="Topics where you are consistent and accurate. Maintain through revision and speed drills."
-            topics={strongTopics}
-            tone="strong"
-          />
+          <TopicAnalysisPanel heading="My Strength Areas" description="Topics where you are consistent and accurate." topics={strongTopics} tone="strong" />
         </TabsContent>
-
         <TabsContent value="all" className="mt-4">
           <FullReportTable sections={sections} />
         </TabsContent>
@@ -410,6 +402,7 @@ export function useStrengthWeaknessData() {
     </div>
   );
 }
+
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
