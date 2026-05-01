@@ -406,7 +406,7 @@ export default function StrengthWeaknessAnalysis() {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function ReadinessBadge({ label, value, suffix = "%", tone }: { label: string; value: number; suffix?: string; tone?: "weak" | "strong" }) {
+export function ReadinessBadge({ label, value, suffix = "%", tone }: { label: string; value: number; suffix?: string; tone?: "weak" | "strong" }) {
   const color = tone === "weak" ? "text-red-600" : tone === "strong" ? "text-sky-700" : "text-slate-900";
   return (
     <div className="text-right">
@@ -416,7 +416,7 @@ function ReadinessBadge({ label, value, suffix = "%", tone }: { label: string; v
   );
 }
 
-function TopicAnalysisPanel({ heading, description, topics, tone }: {
+export function TopicAnalysisPanel({ heading, description, topics, tone }: {
   heading: string; description: string; topics: TopicAgg[]; tone: "weak" | "strong";
 }) {
   if (topics.length === 0) {
@@ -602,7 +602,7 @@ function buildTrend(t: TopicAgg) {
   }));
 }
 
-function FullReportTable({ sections }: { sections: SectionAgg[] }) {
+export function FullReportTable({ sections }: { sections: SectionAgg[] }) {
   const rows: Array<{
     section: string; topic: string; subtopic: string;
     attempts: number; total: number; correct: number; incorrect: number;
