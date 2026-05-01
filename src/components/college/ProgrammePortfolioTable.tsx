@@ -154,7 +154,7 @@ const ProgrammePortfolioTable = ({ collegeSlug, programmes, fallbackCourses }: P
                           {specs.length > 3 && <span className="text-[10px] text-muted-foreground self-center">+{specs.length - 3}</span>}
                         </div>
                       </td>
-                      <td className="py-3 px-3 text-right">
+                      <td className="py-3 px-3 text-right whitespace-nowrap">
                         <div className="font-heading font-bold text-primary">
                           {p.fees_total_lakhs ? `₹${p.fees_total_lakhs} L` : "—"}
                         </div>
