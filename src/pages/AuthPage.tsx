@@ -367,7 +367,7 @@ const AuthPage = () => {
                       </InputOTPGroup>
                     </InputOTP>
                   </div>
-                  <Button onClick={handleVerifyAndCreate} className="w-full h-11"
+                  <Button onClick={() => handleVerifyAndCreate()} className="w-full h-11"
                     disabled={otpVerifying || otpValue.length !== 6}>
                     {otpVerifying ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating account…</> : <>Verify & Continue <ArrowRight className="w-4 h-4 ml-1" /></>}
                   </Button>
