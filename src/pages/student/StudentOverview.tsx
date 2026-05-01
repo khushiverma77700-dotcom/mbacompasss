@@ -12,28 +12,14 @@ import {
   Percent, ListChecks, Gauge, LineChart as LineIcon, Award, AlertTriangle,
   CalendarDays, GraduationCap, Rocket, ChevronRight, Star, Compass, Layers,
 } from "lucide-react";
-import {
-  LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid,
-  AreaChart, Area, BarChart, Bar, RadialBarChart, RadialBar, PolarAngleAxis,
-  ComposedChart, Legend, ReferenceLine,
-} from "recharts";
 import DailyTestCard from "@/components/student/DailyTestCard";
 import { useStudentPerformance } from "@/hooks/useStudentPerformance";
-
-const SECTION_COLORS: Record<string, string> = {
-  QA: "#0284c7",
-  VARC: "#0ea5e9",
-  DILR: "#38bdf8",
-  LRDI: "#38bdf8",
-  RC: "#7dd3fc",
-  GK: "#0369a1",
-};
 
 export default function StudentOverview() {
   const { user } = useAuth();
   // Central performance engine — shared with /student/performance, /student/mocks etc.
   // Realtime: auto-refreshes the moment a mock is submitted.
-  const { attempts, loading: perfLoading } = useStudentPerformance();
+  const { attempts } = useStudentPerformance();
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [goals, setGoals] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -43,8 +29,6 @@ export default function StudentOverview() {
   const [displayName, setDisplayName] = useState<string>("");
   const [examCountdowns, setExamCountdowns] = useState<any[]>([]);
   const [, setNowTick] = useState(0);
-  const [sideLoading, setSideLoading] = useState(true);
-  const loading = perfLoading || sideLoading;
 
   // Greeting changes by time of day — small touch that makes the dashboard feel alive
   const greeting = useMemo(() => {
@@ -96,7 +80,6 @@ export default function StudentOverview() {
         .slice(0, 8);
       setExamCountdowns(upcoming);
 
-      setSideLoading(false);
     })();
     return () => { cancelled = true; };
   }, [user]);
@@ -222,7 +205,6 @@ export default function StudentOverview() {
       avgAccuracy: v.attempted > 0 ? Math.round((v.correct / v.attempted) * 100) : 0,
       avgAttempted: v.count > 0 ? Math.round(safe(v.attempted / v.count)) : 0,
       pctOfMax: v.max > 0 ? Math.round((v.score / v.max) * 100) : 0,
-      fill: SECTION_COLORS[name] || "#0284c7",
     }));
   }, [submitted]);
 
@@ -252,7 +234,6 @@ export default function StudentOverview() {
     (e) => !attempts.some((a) => a.test_id === e.test_id && (a.status === "in_progress" || a.status === "submitted" || a.status === "auto_submitted"))
   );
 
-  if (loading) return <div className="text-muted-foreground">Loading dashboard…</div>;
 
   const noProfile = !profile;
   const target = Number(profile?.target_percentile || 0);
@@ -470,18 +451,7 @@ export default function StudentOverview() {
               Submit at least one mock to see your projection.
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={170}>
-              <RadialBarChart innerRadius="65%" outerRadius="100%" data={[{ name: "p", value: predicted, fill: "#0284c7" }]} startAngle={210} endAngle={-30}>
-                <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-                <RadialBar background dataKey="value" cornerRadius={20} />
-              </RadialBarChart>
-            </ResponsiveContainer>
-          )}
-          {predicted != null && (
-            <div className="text-center -mt-24 mb-6">
-              <div className="text-3xl font-bold text-sky-700">{predicted}</div>
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">projected %ile</div>
-            </div>
+            <PredictorGauge value={predicted} />
           )}
           {target > 0 && predicted != null && (
             <div className="mt-4 text-xs flex items-center justify-between">
@@ -510,18 +480,7 @@ export default function StudentOverview() {
               Take a mock to see your trend chart
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <ComposedChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
-                <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                <YAxis stroke="#64748b" fontSize={11} domain={[0, 100]} />
-                <Tooltip />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="percentile" name="Mock %ile" fill="#bae6fd" radius={[4, 4, 0, 0]} />
-                <Line type="monotone" dataKey="cumPercentile" name="Cumulative Avg" stroke="#0284c7" strokeWidth={2.5} dot={{ r: 3 }} />
-                {target > 0 && <ReferenceLine y={target} stroke="#16a34a" strokeDasharray="4 4" label={{ value: `Target ${target}`, fill: "#16a34a", fontSize: 10, position: "right" }} />}
-              </ComposedChart>
-            </ResponsiveContainer>
+            <MiniTrendChart data={trendData} barKey="percentile" lineKey="cumPercentile" max={100} target={target} />
           )}
         </Card>
       </div>
@@ -536,23 +495,7 @@ export default function StudentOverview() {
           {trendData.length === 0 ? (
             <div className="h-48 grid place-items-center text-sm text-muted-foreground">No data yet</div>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={trendData}>
-                <defs>
-                  <linearGradient id="sgrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#0284c7" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="#0284c7" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
-                <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                <YAxis stroke="#64748b" fontSize={11} />
-                <Tooltip />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Area type="monotone" dataKey="score" name="Score" stroke="#0284c7" strokeWidth={2.5} fill="url(#sgrad)" />
-                <Line type="monotone" dataKey="cumScore" name="Cumulative Avg" stroke="#1d4ed8" strokeWidth={2} dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
+            <MiniTrendChart data={trendData} barKey="score" lineKey="cumScore" />
           )}
         </Card>
 
@@ -564,17 +507,7 @@ export default function StudentOverview() {
           {trendData.length === 0 ? (
             <div className="h-48 grid place-items-center text-sm text-muted-foreground">No data yet</div>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <ComposedChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
-                <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                <YAxis stroke="#64748b" fontSize={11} domain={[0, 100]} />
-                <Tooltip />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="accuracy" name="Accuracy %" fill="#7dd3fc" radius={[4, 4, 0, 0]} />
-                <Line type="monotone" dataKey="cumAccuracy" name="Cumulative Avg" stroke="#0369a1" strokeWidth={2.5} dot={{ r: 3 }} />
-              </ComposedChart>
-            </ResponsiveContainer>
+            <MiniTrendChart data={trendData} barKey="accuracy" lineKey="cumAccuracy" max={100} />
           )}
         </Card>
       </div>
@@ -596,29 +529,9 @@ export default function StudentOverview() {
         ) : (
           <>
             <div className="grid md:grid-cols-2 gap-6">
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={sectional}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
-                  <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                  <YAxis stroke="#64748b" fontSize={11} />
-                  <Tooltip />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Bar dataKey="avgScore" name="Avg Score" fill="#0284c7" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="avgMax" name="Max Score" fill="#bae6fd" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <MiniGroupedBars data={sectional} firstKey="avgScore" secondKey="avgMax" />
 
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={sectional}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
-                  <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                  <YAxis stroke="#64748b" fontSize={11} domain={[0, 100]} />
-                  <Tooltip />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Bar dataKey="avgPercentile" name="Avg %ile" fill="#0ea5e9" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="avgAccuracy" name="Accuracy %" fill="#38bdf8" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <MiniGroupedBars data={sectional} firstKey="avgPercentile" secondKey="avgAccuracy" max={100} />
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5">
@@ -655,15 +568,7 @@ export default function StudentOverview() {
           {submitted.length === 0 ? (
             <div className="h-40 grid place-items-center text-sm text-muted-foreground">No mocks yet</div>
           ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={bandData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
-                <XAxis dataKey="name" stroke="#64748b" fontSize={10} />
-                <YAxis stroke="#64748b" fontSize={11} allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="count" name="Mocks" fill="#0284c7" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <MiniDistribution data={bandData} />
           )}
         </Card>
 
@@ -785,6 +690,99 @@ export default function StudentOverview() {
           <ToolCard title="MBA ROI Calculator" desc="Project your ROI across top B-schools." href="/roi-calculator" />
         </div>
       </Card>
+    </div>
+  );
+}
+
+function PredictorGauge({ value }: { value: number }) {
+  const pct = Math.max(0, Math.min(100, value));
+  return (
+    <div className="h-44 grid place-items-center">
+      <div
+        className="relative h-36 w-36 rounded-full p-3 shadow-inner"
+        style={{ background: `conic-gradient(hsl(var(--primary)) ${pct * 3.6}deg, hsl(var(--muted)) 0deg)` }}
+      >
+        <div className="h-full w-full rounded-full bg-card grid place-items-center border border-border">
+          <div className="text-center">
+            <div className="text-3xl font-bold text-primary tabular-nums">{value}</div>
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">projected %ile</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MiniTrendChart({ data, barKey, lineKey, max, target }: { data: any[]; barKey: string; lineKey?: string; max?: number; target?: number }) {
+  const rows = data.slice(-12);
+  const width = 640;
+  const height = 220;
+  const pad = 28;
+  const innerW = width - pad * 2;
+  const innerH = height - pad * 2;
+  const values = rows.flatMap((r) => [Number(r[barKey] || 0), lineKey ? Number(r[lineKey] || 0) : 0, target || 0]);
+  const top = max ?? Math.max(10, ...values);
+  const step = rows.length > 1 ? innerW / (rows.length - 1) : innerW;
+  const y = (v: number) => pad + innerH - (Math.max(0, Math.min(top, v)) / top) * innerH;
+  const points = rows.map((r, i) => `${pad + i * step},${y(Number(r[lineKey || barKey] || 0))}`).join(" ");
+  const barW = Math.max(12, Math.min(34, innerW / Math.max(1, rows.length) - 10));
+
+  return (
+    <div className="h-[240px] w-full rounded-lg border border-border bg-card/60 p-2">
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-full w-full" role="img" aria-label="Performance trend">
+        <line x1={pad} x2={width - pad} y1={height - pad} y2={height - pad} stroke="hsl(var(--border))" />
+        <line x1={pad} x2={pad} y1={pad} y2={height - pad} stroke="hsl(var(--border))" />
+        {target && target > 0 && <line x1={pad} x2={width - pad} y1={y(target)} y2={y(target)} stroke="hsl(var(--accent-foreground))" strokeDasharray="6 6" opacity="0.65" />}
+        {rows.map((r, i) => {
+          const v = Number(r[barKey] || 0);
+          const x = pad + i * step - barW / 2;
+          const barH = height - pad - y(v);
+          return <rect key={`${r.name}-${i}`} x={x} y={y(v)} width={barW} height={Math.max(2, barH)} rx="5" fill="hsl(var(--secondary))" />;
+        })}
+        {lineKey && rows.length > 1 && <polyline points={points} fill="none" stroke="hsl(var(--primary))" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />}
+        {rows.map((r, i) => (
+          <text key={`label-${i}`} x={pad + i * step} y={height - 8} textAnchor="middle" className="fill-muted-foreground text-[18px]">{r.name}</text>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function MiniGroupedBars({ data, firstKey, secondKey, max }: { data: any[]; firstKey: string; secondKey: string; max?: number }) {
+  const rows = data.slice(0, 8);
+  const top = max ?? Math.max(10, ...rows.flatMap((r) => [Number(r[firstKey] || 0), Number(r[secondKey] || 0)]));
+  return (
+    <div className="h-[240px] space-y-3 rounded-lg border border-border bg-card/60 p-4 overflow-hidden">
+      {rows.map((r) => {
+        const first = Math.min(100, (Number(r[firstKey] || 0) / top) * 100);
+        const second = Math.min(100, (Number(r[secondKey] || 0) / top) * 100);
+        return (
+          <div key={r.name} className="grid grid-cols-[46px_1fr] items-center gap-3 text-xs">
+            <div className="truncate font-medium text-muted-foreground">{r.name}</div>
+            <div className="space-y-1.5">
+              <div className="h-2 rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-primary" style={{ width: `${first}%` }} /></div>
+              <div className="h-2 rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-secondary-foreground/40" style={{ width: `${second}%` }} /></div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function MiniDistribution({ data }: { data: any[] }) {
+  const top = Math.max(1, ...data.map((d) => Number(d.count || 0)));
+  return (
+    <div className="h-[200px] flex items-end gap-2 rounded-lg border border-border bg-card/60 p-4">
+      {data.map((d) => {
+        const h = Math.max(6, (Number(d.count || 0) / top) * 150);
+        return (
+          <div key={d.name} className="flex-1 min-w-0 text-center">
+            <div className="mx-auto w-full max-w-8 rounded-t-md bg-primary" style={{ height: h }} />
+            <div className="mt-2 truncate text-[10px] text-muted-foreground">{d.name}</div>
+          </div>
+        );
+      })}
     </div>
   );
 }

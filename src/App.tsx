@@ -6,9 +6,7 @@ import { BrowserRouter, Route, Routes, matchPath, useLocation, useNavigate } fro
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useAuth } from "@/contexts/AuthContext";
-import Navbar from "@/components/Navbar";
 import ScrollToTop from "@/components/ScrollToTop";
-import BackButton from "@/components/BackButton";
 import { computeSubdomainRedirect } from "@/lib/subdomainRouter";
 import { consumePostAuthRedirect } from "@/lib/authRedirect";
 import { isStudentMode } from "@/lib/studentModeNav";
@@ -28,12 +26,13 @@ const lazyWithPreload = <T extends React.ComponentType<any>>(
 };
 
 // Lazy below-the-fold + interaction-only chrome (keep out of initial bundle)
+const Navbar = lazyWithPreload(() => import("@/components/Navbar"));
 const Footer = lazyWithPreload(() => import("@/components/Footer"));
 const Toaster = lazyWithPreload(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
 const Sonner = lazyWithPreload(() => import("@/components/ui/sonner").then(m => ({ default: m.Toaster })));
 
-// Home eager so first paint is instant; everything else lazy to shrink initial bundle
-import Index from "./pages/Index";
+// Pages are lazy so dashboard visits do not download public homepage/admin code first.
+const Index = lazyWithPreload(() => import("./pages/Index"));
 const CategoryPage = lazyWithPreload(() => import("./pages/CategoryPage"));
 const BlogPage = lazyWithPreload(() => import("./pages/BlogPage"));
 const CollegesPage = lazyWithPreload(() => import("./pages/CollegesPage"));
@@ -434,7 +433,7 @@ const DeferredToasters = () => {
 
 const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   <>
-    <Navbar />
+    <Suspense fallback={null}><Navbar /></Suspense>
     {children}
     <DeferredChrome />
   </>
@@ -607,8 +606,8 @@ const App = () => (
               <Route path="iim-waitlist" element={<LazyPage><AdminIIMWaitlist /></LazyPage>} />
             </Route>
 
-            {/* Home eager; rest lazy with invisible fallback */}
-            <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
+            {/* Routes */}
+            <Route path="/" element={<PublicLayout><LazyPage><Index /></LazyPage></PublicLayout>} />
             <Route path="/category/:slug" element={<PublicLayout><LazyPage><CategoryPage /></LazyPage></PublicLayout>} />
             <Route path="/blog" element={<PublicLayout><LazyPage><BlogPage /></LazyPage></PublicLayout>} />
             <Route path="/colleges" element={<PublicLayout><LazyPage><CollegesPage /></LazyPage></PublicLayout>} />

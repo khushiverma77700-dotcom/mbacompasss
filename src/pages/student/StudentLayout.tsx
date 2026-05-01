@@ -30,10 +30,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import NotificationBell from "@/components/student/NotificationBell";
 import ThemeToggle from "@/components/student/ThemeToggle";
 import { StudentThemeProvider } from "@/contexts/StudentThemeContext";
-import { useEnrolledBundleFeatures } from "@/hooks/useEnrolledBundleFeatures";
 import type { FeatureKey } from "@/lib/courseFeatures";
 import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
 import { markStudentMode, clearStudentMode } from "@/lib/studentModeNav";
@@ -74,9 +72,7 @@ export default function StudentLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [displayName, setDisplayName] = useState<string>("");
-  const [latestUnread, setLatestUnread] = useState<{ id: string; title: string } | null>(null);
-  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const displayName = (user?.user_metadata?.display_name as string | undefined) || user?.email?.split("@")[0] || "Student";
 
   // Mark "student mode" so mock pages know the user lives inside the dashboard
   // and route their back / post-submit navigation back into /student/*.
@@ -95,16 +91,6 @@ export default function StudentLayout() {
   // popup after buying may take a moment for enrollments to propagate, and
   // logging them out caused a confusing "kicked back to login" experience.
   // Empty-state CTAs inside the dashboard guide them to /courses to purchase.
-
-  useEffect(() => {
-    if (!user) return;
-    supabase
-      .from("profiles")
-      .select("display_name")
-      .eq("user_id", user.id)
-      .maybeSingle()
-      .then(({ data }) => setDisplayName(data?.display_name ?? user.email?.split("@")[0] ?? "Student"));
-  }, [user]);
 
   useEffect(() => setMobileOpen(false), [location.pathname]);
 
@@ -126,36 +112,6 @@ export default function StudentLayout() {
     window.addEventListener("popstate", keepInsideDashboard);
     return () => window.removeEventListener("popstate", keepInsideDashboard);
   }, [navigate]);
-
-  // Track latest unread notification for the top alert bar
-  useEffect(() => {
-    if (!user) return;
-    let alive = true;
-    const loadLatest = async () => {
-      const { data } = await supabase
-        .from("student_notifications")
-        .select("id, title")
-        .eq("user_id", user.id)
-        .eq("is_read", false)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (alive) setLatestUnread(data ?? null);
-    };
-    loadLatest();
-    const ch = supabase
-      .channel(`layout-notif-${user.id}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "student_notifications", filter: `user_id=eq.${user.id}` },
-        (p: any) => { setLatestUnread({ id: p.new.id, title: p.new.title }); setBannerDismissed(false); })
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "student_notifications", filter: `user_id=eq.${user.id}` }, loadLatest)
-      .subscribe();
-    return () => { alive = false; supabase.removeChannel(ch); };
-  }, [user]);
-
-  // Auto-hide banner when user is on the timeline page itself
-  useEffect(() => {
-    if (location.pathname.startsWith("/student/notifications")) setBannerDismissed(true);
-  }, [location.pathname]);
 
   if (loading || !user) return <div className="p-8 text-muted-foreground">Loading…</div>;
 
@@ -195,7 +151,9 @@ export default function StudentLayout() {
             </div>
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <ThemeToggle />
-              <NotificationBell />
+              <Link to="/student/notifications" className="relative p-2 rounded-md hover:bg-accent" aria-label="Notifications">
+                <Bell className="h-5 w-5 text-foreground/70" />
+              </Link>
               <div className="hidden md:flex items-center gap-2 pl-2 ml-1 border-l border-border">
                 <div className="h-8 w-8 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white text-xs font-semibold">
                   {(displayName || "S").charAt(0).toUpperCase()}
@@ -223,26 +181,9 @@ export default function StudentLayout() {
           </div>
         </header>
 
-        {/* Top alert bar — surfaces newest unread update */}
-        {latestUnread && !bannerDismissed && (
-          <div className="fixed top-14 left-0 right-0 z-20 bg-gradient-to-r from-sky-500 via-blue-500 to-sky-500 text-white shadow-md animate-in slide-in-from-top duration-300">
-            <div className="flex items-center gap-2 px-4 sm:px-6 h-9 text-xs sm:text-sm">
-              <Bell className="h-3.5 w-3.5 shrink-0 animate-pulse" />
-              <span className="hidden sm:inline font-semibold uppercase tracking-wider opacity-90">New update:</span>
-              <span className="truncate flex-1">{latestUnread.title}</span>
-              <Link to="/student/notifications" className="px-2 py-0.5 rounded-md bg-white/20 hover:bg-white/30 font-medium whitespace-nowrap">
-                View
-              </Link>
-              <button onClick={() => setBannerDismissed(true)} aria-label="Dismiss" className="p-1 rounded hover:bg-white/20">
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        <div className={cn("flex pt-14", latestUnread && !bannerDismissed && "pt-[5.75rem]")}>
+        <div className="flex pt-14">
           {/* Sidebar - desktop: FIXED. Scrolls independently of main content. */}
-          <aside className={cn("hidden lg:flex flex-col w-64 shrink-0 border-r border-border bg-card/80 backdrop-blur fixed left-0 bottom-0 overflow-y-auto z-20", latestUnread && !bannerDismissed ? "top-[5.75rem]" : "top-14")}>
+          <aside className="hidden lg:flex flex-col w-64 shrink-0 border-r border-border bg-card/80 backdrop-blur fixed left-0 bottom-0 overflow-y-auto z-20 top-14">
             <SidebarContent />
           </aside>
 
@@ -268,23 +209,10 @@ export default function StudentLayout() {
 
 function SidebarContent() {
   const { counts, markSeen } = useStudentNavBadges();
-  const { isEnabled, loading: featuresLoading } = useEnrolledBundleFeatures();
   const location = useLocation();
 
-  // Filter top-level items by enrolled-bundle features.
-  const visibleItems = navItems.filter((item) => {
-    if (!item.feature) return true;
-    if (featuresLoading) return true;
-    return isEnabled(item.feature);
-  });
-
-  // Mocks group: keep all items visible, but mark locked ones so the student
-  // can see what they're missing and tap "Upgrade" to unlock.
-  const mocksItems = mocksGroup.map((item) => ({
-    ...item,
-    enabled: !item.feature || featuresLoading || isEnabled(item.feature),
-  }));
-  const anyMockEnabled = mocksItems.some((m) => m.enabled);
+  const visibleItems = navItems;
+  const mocksItems = mocksGroup.map((item) => ({ ...item, enabled: true }));
 
   // Auto-open the group when any mock-related route is active.
   const isMocksActive =
@@ -414,16 +342,7 @@ function SidebarContent() {
         >
           <div className="overflow-hidden">
             <div className="px-2 pb-2 pt-1 space-y-0.5">
-              {!anyMockEnabled && !featuresLoading ? (
-                <div className="px-3 py-3 text-xs text-muted-foreground">
-                  No mock sections in your course yet.{" "}
-                  <Link to="/courses" className="text-sky-600 dark:text-sky-300 font-medium hover:underline">
-                    Browse courses
-                  </Link>
-                </div>
-              ) : (
-                mocksItems.map((m) => renderRow(m, { indent: true, locked: !m.enabled }))
-              )}
+              {mocksItems.map((m) => renderRow(m, { indent: true }))}
             </div>
           </div>
         </div>

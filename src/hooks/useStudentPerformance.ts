@@ -24,7 +24,6 @@ type MockAttempt = {
   total_incorrect?: number | null;
   accuracy: number | null;
   sectional_scores: any;
-  topic_breakdown?: any;
   test?: { name?: string; slug?: string; exam_code?: string } | null;
 };
 
@@ -53,10 +52,11 @@ async function fetchAttempts(userId: string): Promise<MockAttempt[]> {
   const { data, error } = await supabase
     .from("mock_attempts")
     .select(
-      "id, test_id, status, started_at, submitted_at, total_score, max_score, percentile, total_correct, total_attempted, total_incorrect, accuracy, sectional_scores, topic_breakdown, test:mock_tests(name, slug, exam_code)"
+      "id, test_id, status, started_at, submitted_at, total_score, max_score, percentile, total_correct, total_attempted, total_incorrect, accuracy, sectional_scores, test:mock_tests(name, slug, exam_code)"
     )
     .eq("user_id", userId)
-    .order("started_at", { ascending: false });
+    .order("started_at", { ascending: false })
+    .limit(100);
   if (error) throw error;
   return ((data ?? []) as unknown) as MockAttempt[];
 }
