@@ -32,8 +32,8 @@ const Footer = lazyWithPreload(() => import("@/components/Footer"));
 const Toaster = lazyWithPreload(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
 const Sonner = lazyWithPreload(() => import("@/components/ui/sonner").then(m => ({ default: m.Toaster })));
 
-// Home eager so first paint is instant; everything else lazy to shrink initial bundle
-import Index from "./pages/Index";
+// Pages are lazy so dashboard visits do not download public homepage/admin code first.
+const Index = lazyWithPreload(() => import("./pages/Index"));
 const CategoryPage = lazyWithPreload(() => import("./pages/CategoryPage"));
 const BlogPage = lazyWithPreload(() => import("./pages/BlogPage"));
 const CollegesPage = lazyWithPreload(() => import("./pages/CollegesPage"));
@@ -607,8 +607,8 @@ const App = () => (
               <Route path="iim-waitlist" element={<LazyPage><AdminIIMWaitlist /></LazyPage>} />
             </Route>
 
-            {/* Home eager; rest lazy with invisible fallback */}
-            <Route path="/" element={<PublicLayout><Index /></PublicLayout>} />
+            {/* Routes */}
+            <Route path="/" element={<PublicLayout><LazyPage><Index /></LazyPage></PublicLayout>} />
             <Route path="/category/:slug" element={<PublicLayout><LazyPage><CategoryPage /></LazyPage></PublicLayout>} />
             <Route path="/blog" element={<PublicLayout><LazyPage><BlogPage /></LazyPage></PublicLayout>} />
             <Route path="/colleges" element={<PublicLayout><LazyPage><CollegesPage /></LazyPage></PublicLayout>} />
