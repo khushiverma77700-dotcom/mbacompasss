@@ -152,7 +152,9 @@ export default function StudentLayout() {
             </div>
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <ThemeToggle />
-              <NotificationBell />
+              <Link to="/student/notifications" className="relative p-2 rounded-md hover:bg-accent" aria-label="Notifications">
+                <Bell className="h-5 w-5 text-foreground/70" />
+              </Link>
               <div className="hidden md:flex items-center gap-2 pl-2 ml-1 border-l border-border">
                 <div className="h-8 w-8 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white text-xs font-semibold">
                   {(displayName || "S").charAt(0).toUpperCase()}
@@ -180,26 +182,9 @@ export default function StudentLayout() {
           </div>
         </header>
 
-        {/* Top alert bar — surfaces newest unread update */}
-        {latestUnread && !bannerDismissed && (
-          <div className="fixed top-14 left-0 right-0 z-20 bg-gradient-to-r from-sky-500 via-blue-500 to-sky-500 text-white shadow-md animate-in slide-in-from-top duration-300">
-            <div className="flex items-center gap-2 px-4 sm:px-6 h-9 text-xs sm:text-sm">
-              <Bell className="h-3.5 w-3.5 shrink-0 animate-pulse" />
-              <span className="hidden sm:inline font-semibold uppercase tracking-wider opacity-90">New update:</span>
-              <span className="truncate flex-1">{latestUnread.title}</span>
-              <Link to="/student/notifications" className="px-2 py-0.5 rounded-md bg-white/20 hover:bg-white/30 font-medium whitespace-nowrap">
-                View
-              </Link>
-              <button onClick={() => setBannerDismissed(true)} aria-label="Dismiss" className="p-1 rounded hover:bg-white/20">
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        <div className={cn("flex pt-14", latestUnread && !bannerDismissed && "pt-[5.75rem]")}>
+        <div className="flex pt-14">
           {/* Sidebar - desktop: FIXED. Scrolls independently of main content. */}
-          <aside className={cn("hidden lg:flex flex-col w-64 shrink-0 border-r border-border bg-card/80 backdrop-blur fixed left-0 bottom-0 overflow-y-auto z-20", latestUnread && !bannerDismissed ? "top-[5.75rem]" : "top-14")}>
+          <aside className="hidden lg:flex flex-col w-64 shrink-0 border-r border-border bg-card/80 backdrop-blur fixed left-0 bottom-0 overflow-y-auto z-20 top-14">
             <SidebarContent />
           </aside>
 
