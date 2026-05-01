@@ -113,12 +113,14 @@ const COLORS = {
   muted: "#94a3b8",
 };
 
-// ─── Component ─────────────────────────────────────────────────────────────────
-export default function StrengthWeaknessAnalysis() {
+// ─── Hook (shared by Overview, Weak page, Strength page) ───────────────────────
+export function useStrengthWeaknessData() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [sections, setSections] = useState<SectionAgg[]>([]);
   const [hasData, setHasData] = useState(false);
+  const [refreshTick, setRefreshTick] = useState(0);
+  const refresh = () => setRefreshTick((t) => t + 1);
 
   useEffect(() => {
     if (!user) return;
