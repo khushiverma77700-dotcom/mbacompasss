@@ -303,7 +303,7 @@ async function generateOneSection(
   anchorFacts: any,
   cancelFlag?: { v: boolean },
   tracker?: TelemetryTracker,
-  aiProvider: "gemini" | "gemini-lite" | "lovable" | "openai-mini" | "openai-nano" = "gemini",
+  aiProvider: "gemini" | "gemini-lite" | "lovable" | "openai-mini" | "openai-nano" = "lovable",
 ) {
   const cy = new Date().getFullYear();
   const body = {
@@ -550,7 +550,7 @@ async function processOneSectionStep(
   cancelFlag: { v: boolean },
   tracker: TelemetryTracker,
   workerId: string,
-  aiProvider: "gemini" | "gemini-lite" | "lovable" | "openai-mini" | "openai-nano" = "gemini",
+  aiProvider: "gemini" | "gemini-lite" | "lovable" | "openai-mini" | "openai-nano" = "lovable",
 ): Promise<boolean> {
   const row = rowsRef.value
     .filter(r => r.status !== "not_found" && r.status !== "succeeded")
@@ -681,8 +681,8 @@ async function runJob(job_id: string, authHeader: string) {
   }
   type AIProvider = "gemini" | "gemini-lite" | "lovable" | "openai-mini" | "openai-nano";
   const ALLOWED_PROVIDERS = new Set<AIProvider>(["gemini", "gemini-lite", "lovable", "openai-mini", "openai-nano"]);
-  const rawProvider = String((job as any).ai_provider || "gemini").toLowerCase() as AIProvider;
-  const aiProvider: AIProvider = ALLOWED_PROVIDERS.has(rawProvider) ? rawProvider : "gemini";
+  const rawProvider = String((job as any).ai_provider || "lovable").toLowerCase() as AIProvider;
+  const aiProvider: AIProvider = ALLOWED_PROVIDERS.has(rawProvider) ? rawProvider : "lovable";
 
   const workerId = crypto.randomUUID();
   const claimed = await claimWorkerLock(admin, "bulk_section_jobs", job_id, workerId);
