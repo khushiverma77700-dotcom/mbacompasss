@@ -139,6 +139,8 @@ const StudentOverview = lazyWithPreload(() => import("./pages/student/StudentOve
 const StudentMocks = lazyWithPreload(() => import("./pages/student/StudentMocks"));
 const StudentBuyMocks = lazyWithPreload(() => import("./pages/student/StudentBuyMocks"));
 const StudentPerformance = lazyWithPreload(() => import("./pages/student/StudentPerformance"));
+const StudentWeakAreas = lazyWithPreload(() => import("./pages/student/StudentWeakAreas"));
+const StudentStrengthAreas = lazyWithPreload(() => import("./pages/student/StudentStrengthAreas"));
 const StudentGoals = lazyWithPreload(() => import("./pages/student/StudentGoals"));
 const StudentAnnouncements = lazyWithPreload(() => import("./pages/student/StudentAnnouncements"));
 const StudentTools = lazyWithPreload(() => import("./pages/student/StudentTools"));
