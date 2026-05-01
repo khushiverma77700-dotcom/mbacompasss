@@ -4815,6 +4815,116 @@ export type Database = {
           },
         ]
       }
+      seo_audit_findings: {
+        Row: {
+          auto_fixed: boolean
+          category: string
+          created_at: string
+          fix_action: string | null
+          fix_suggestion: string | null
+          id: string
+          issue_code: string
+          message: string
+          meta: Json
+          page_type: string | null
+          record_id: string | null
+          run_id: string
+          severity: string
+          url: string | null
+        }
+        Insert: {
+          auto_fixed?: boolean
+          category: string
+          created_at?: string
+          fix_action?: string | null
+          fix_suggestion?: string | null
+          id?: string
+          issue_code: string
+          message: string
+          meta?: Json
+          page_type?: string | null
+          record_id?: string | null
+          run_id: string
+          severity?: string
+          url?: string | null
+        }
+        Update: {
+          auto_fixed?: boolean
+          category?: string
+          created_at?: string
+          fix_action?: string | null
+          fix_suggestion?: string | null
+          id?: string
+          issue_code?: string
+          message?: string
+          meta?: Json
+          page_type?: string | null
+          record_id?: string | null
+          run_id?: string
+          severity?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seo_audit_findings_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "seo_audit_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seo_audit_runs: {
+        Row: {
+          created_at: string
+          critical_issues: number
+          error: string | null
+          finished_at: string | null
+          id: string
+          info_issues: number
+          scope: string
+          started_at: string
+          started_by: string | null
+          status: string
+          summary: Json
+          total_issues: number
+          total_urls: number
+          warning_issues: number
+        }
+        Insert: {
+          created_at?: string
+          critical_issues?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          info_issues?: number
+          scope?: string
+          started_at?: string
+          started_by?: string | null
+          status?: string
+          summary?: Json
+          total_issues?: number
+          total_urls?: number
+          warning_issues?: number
+        }
+        Update: {
+          created_at?: string
+          critical_issues?: number
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          info_issues?: number
+          scope?: string
+          started_at?: string
+          started_by?: string | null
+          status?: string
+          summary?: Json
+          total_issues?: number
+          total_urls?: number
+          warning_issues?: number
+        }
+        Relationships: []
+      }
       seo_keyword_research: {
         Row: {
           content_type: string
