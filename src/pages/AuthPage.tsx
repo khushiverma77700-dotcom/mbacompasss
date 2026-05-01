@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Mail, Lock, User, ShieldCheck, ArrowRight, Loader2, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,6 +43,7 @@ const AuthPage = () => {
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const autoVerifiedRef = useRef(false);
 
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -122,10 +123,19 @@ const AuthPage = () => {
       return;
     }
 
+    setOtpSending(true);
+    autoVerifiedRef.current = false;
+    setOtpValue("");
+
     try {
-      const { data: dup } = await supabase.functions.invoke("check-duplicate", {
-        body: { phone, email },
-      });
+      // Run duplicate check + send OTP in parallel to halve latency.
+      const [dupRes, otpRes] = await Promise.all([
+        supabase.functions.invoke("check-duplicate", { body: { phone, email } })
+          .catch(() => ({ data: null, error: null } as any)),
+        supabase.functions.invoke("send-otp", { body: { phone } }),
+      ]);
+
+      const dup: any = dupRes?.data;
       if (dup?.phoneExists) {
         toast({ title: "Account exists", description: "This mobile is already registered. Please sign in.", variant: "destructive" });
         setIsLogin(true);
@@ -136,13 +146,10 @@ const AuthPage = () => {
         setIsLogin(true);
         return;
       }
-    } catch { /* non-fatal */ }
 
-    setOtpSending(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("send-otp", { body: { phone } });
-      if (error) throw new Error(error.message);
-      if (data?.error) throw new Error(data.error);
+      if (otpRes.error) throw new Error(otpRes.error.message);
+      if ((otpRes.data as any)?.error) throw new Error((otpRes.data as any).error);
+
       toast({ title: "OTP sent", description: `We sent a 6-digit code to +91 ${phone}.` });
       setOtpStep(true);
       setResendTimer(30);
@@ -153,27 +160,22 @@ const AuthPage = () => {
     }
   };
 
-  const handleVerifyAndCreate = async () => {
-    if (otpValue.length !== 6) {
+  const handleVerifyAndCreate = async (codeOverride?: string) => {
+    const code = (codeOverride ?? otpValue).trim();
+    if (code.length !== 6) {
       toast({ title: "Enter the 6-digit OTP", variant: "destructive" });
       return;
     }
+    if (otpVerifying) return;
     setOtpVerifying(true);
     try {
-      const { data: verifyData, error: verifyErr } = await supabase.functions.invoke("verify-otp", {
-        body: { phone, otp: otpValue },
-      });
-      if (verifyErr) throw new Error(verifyErr.message);
-      if (verifyData?.error) throw new Error(verifyData.error);
-      if (!verifyData?.verified) throw new Error("OTP verification failed");
-
-      setPhoneVerified(true);
-
       const displayName = `${firstName.trim()} ${lastName.trim()}`.trim();
       const signupPageUrl = window.location.pathname;
       const signupPageName = document.title || "Unknown";
 
-      const { error: signUpErr } = await supabase.auth.signUp({
+      // Verify OTP and create the account in parallel for lower perceived latency.
+      const verifyP = supabase.functions.invoke("verify-otp", { body: { phone, otp: code } });
+      const signUpP = supabase.auth.signUp({
         email: email.trim(),
         password: signupPassword,
         options: {
@@ -188,34 +190,43 @@ const AuthPage = () => {
           },
         },
       });
+
+      const [{ data: verifyData, error: verifyErr }, { error: signUpErr }] =
+        await Promise.all([verifyP, signUpP]);
+
+      if (verifyErr) throw new Error(verifyErr.message);
+      if ((verifyData as any)?.error) throw new Error((verifyData as any).error);
+      if (!(verifyData as any)?.verified) throw new Error("OTP verification failed");
       if (signUpErr) throw signUpErr;
 
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user?.id) {
-          await supabase
-            .from("profiles")
-            .update({
-              phone,
-              display_name: displayName,
-              onboarding_completed: true,
-            } as any)
-            .eq("user_id", user.id);
-        }
-      } catch { /* non-fatal */ }
-
-      try {
-        await supabase.auth.signInWithPassword({ email: email.trim(), password: signupPassword });
-      } catch { /* signup typically creates a session */ }
+      setPhoneVerified(true);
+      // Profile is created by the handle_new_user trigger and signUp returns a
+      // session (auto-confirm is on), so we skip extra getUser / profile-update /
+      // signInWithPassword round-trips that previously cost ~1.5s.
 
       toast({ title: "Welcome to MBA Compass!", description: "Your account is ready." });
       navigate(redirectTo, { replace: true });
     } catch (err: any) {
+      autoVerifiedRef.current = false; // allow retry
       toast({ title: "Signup failed", description: err.message, variant: "destructive" });
     } finally {
       setOtpVerifying(false);
     }
   };
+
+  // Auto-verify when the user finishes entering 6 digits.
+  useEffect(() => {
+    if (!otpStep || phoneVerified) return;
+    if (otpValue.length === 6 && !autoVerifiedRef.current && !otpVerifying) {
+      autoVerifiedRef.current = true;
+      void handleVerifyAndCreate(otpValue);
+    }
+    if (otpValue.length < 6) {
+      autoVerifiedRef.current = false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otpValue, otpStep, phoneVerified]);
+
 
   const canSendOtp =
     firstName.trim().length > 0 &&
@@ -356,7 +367,7 @@ const AuthPage = () => {
                       </InputOTPGroup>
                     </InputOTP>
                   </div>
-                  <Button onClick={handleVerifyAndCreate} className="w-full h-11"
+                  <Button onClick={() => handleVerifyAndCreate()} className="w-full h-11"
                     disabled={otpVerifying || otpValue.length !== 6}>
                     {otpVerifying ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Creating account…</> : <>Verify & Continue <ArrowRight className="w-4 h-4 ml-1" /></>}
                   </Button>
