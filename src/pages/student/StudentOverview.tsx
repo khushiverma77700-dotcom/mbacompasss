@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import DailyTestCard from "@/components/student/DailyTestCard";
 import { useStudentPerformance } from "@/hooks/useStudentPerformance";
+import StrengthWeaknessAnalysis from "@/components/student/StrengthWeaknessAnalysis";
 
 export default function StudentOverview() {
   const { user } = useAuth();
@@ -709,6 +710,22 @@ export default function StudentOverview() {
           )}
         </Card>
       </div>
+
+      {/* ── Weak & Strength Analysis (between My Mocks and Buy Mocks) ─────────── */}
+      <StrengthWeaknessAnalysis />
+
+      {/* ── Buy Mocks CTA ─────────────────────────────────────────────────────── */}
+      <Card className="p-5 border-sky-100 bg-gradient-to-r from-sky-50 to-white">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h3 className="font-semibold text-slate-900 flex items-center gap-2">
+              <ShoppingBag className="h-4 w-4 text-sky-600" /> Buy more mocks
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1">Unlock full-length tests and sectional drills to fix the weak areas above.</p>
+          </div>
+          <Link to="/student/buy-mocks"><Button>Browse mocks</Button></Link>
+        </div>
+      </Card>
 
       {/* Free AI tools */}
       <Card className="p-5">
