@@ -45,11 +45,11 @@ const SECTION_ORDER: Record<string, number> = SECTION_TYPES.reduce((acc, s, i) =
 
 const emptyForm = {
   college_id: "",
-  section_type: "courses_fees",
+  section_type: "why_join",
   title: "",
   content: "",
   data: {} as any,
-  sort_order: 0,
+  sort_order: 1,
 };
 
 const ListEditor = ({ items, onChange, fields, addLabel }: {
