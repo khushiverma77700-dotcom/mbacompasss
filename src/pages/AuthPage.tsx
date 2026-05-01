@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { Mail, Lock, User, ShieldCheck, ArrowRight, Loader2, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,9 +43,7 @@ const AuthPage = () => {
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
-  const autoVerifiedRef = (typeof window !== "undefined")
-    ? (window as any).__otpAutoVerifyRef ||= { current: false }
-    : { current: false };
+  const autoVerifiedRef = useRef(false);
 
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
