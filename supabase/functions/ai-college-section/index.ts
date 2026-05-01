@@ -578,7 +578,8 @@ Deno.serve(async (req) => {
   // Caller can pick which AI backend to use (set by the bulk dashboard).
   const providerHeader = (req.headers.get("X-AI-Provider") || "").toLowerCase();
   const ALLOWED_PROVIDERS = new Set(["gemini", "gemini-lite", "lovable", "openai-mini", "openai-nano"]);
-  const provider = (ALLOWED_PROVIDERS.has(providerHeader) ? providerHeader : "gemini") as
+  // Default to "lovable" — direct GEMINI_API_KEY was denied by Google (403 PERMISSION_DENIED).
+  const provider = (ALLOWED_PROVIDERS.has(providerHeader) ? providerHeader : "lovable") as
     "gemini" | "gemini-lite" | "lovable" | "openai-mini" | "openai-nano";
 
   try {

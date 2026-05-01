@@ -518,8 +518,8 @@ async function runJob(job_id: string, authHeader: string) {
   }
   type AIProvider = "gemini" | "gemini-lite" | "lovable" | "openai-mini" | "openai-nano";
   const ALLOWED_PROVIDERS = new Set<AIProvider>(["gemini", "gemini-lite", "lovable", "openai-mini", "openai-nano"]);
-  const rawProvider = String((job as any).ai_provider || "gemini").toLowerCase() as AIProvider;
-  const aiProvider: AIProvider = ALLOWED_PROVIDERS.has(rawProvider) ? rawProvider : "gemini";
+  const rawProvider = String((job as any).ai_provider || "lovable").toLowerCase() as AIProvider;
+  const aiProvider: AIProvider = ALLOWED_PROVIDERS.has(rawProvider) ? rawProvider : "lovable";
 
   const workerId = crypto.randomUUID();
   const claimed = await claimWorkerLock(admin, "bulk_college_jobs", job_id, workerId);
