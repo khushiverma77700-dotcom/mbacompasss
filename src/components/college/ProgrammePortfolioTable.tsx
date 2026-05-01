@@ -103,7 +103,7 @@ const ProgrammePortfolioTable = ({ collegeSlug, programmes, fallbackCourses }: P
                   <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Duration</th>
                   <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border min-w-[140px]">Exams</th>
                   <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border min-w-[180px]">Specialisations</th>
-                  <th className="text-right py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Fees</th>
+                  <th className="text-right py-3 px-3 font-heading font-semibold text-foreground border-b border-border whitespace-nowrap min-w-[110px]">Fees</th>
                 </tr>
               </thead>
               <tbody>
@@ -154,7 +154,7 @@ const ProgrammePortfolioTable = ({ collegeSlug, programmes, fallbackCourses }: P
                           {specs.length > 3 && <span className="text-[10px] text-muted-foreground self-center">+{specs.length - 3}</span>}
                         </div>
                       </td>
-                      <td className="py-3 px-3 text-right">
+                      <td className="py-3 px-3 text-right whitespace-nowrap">
                         <div className="font-heading font-bold text-primary">
                           {p.fees_total_lakhs ? `₹${p.fees_total_lakhs} L` : "—"}
                         </div>
