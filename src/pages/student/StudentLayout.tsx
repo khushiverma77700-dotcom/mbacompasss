@@ -32,7 +32,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/student/ThemeToggle";
 import { StudentThemeProvider } from "@/contexts/StudentThemeContext";
-import { useEnrolledBundleFeatures } from "@/hooks/useEnrolledBundleFeatures";
 import type { FeatureKey } from "@/lib/courseFeatures";
 import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
 import { markStudentMode, clearStudentMode } from "@/lib/studentModeNav";
@@ -210,23 +209,10 @@ export default function StudentLayout() {
 
 function SidebarContent() {
   const { counts, markSeen } = useStudentNavBadges();
-  const { isEnabled, loading: featuresLoading } = useEnrolledBundleFeatures();
   const location = useLocation();
 
-  // Filter top-level items by enrolled-bundle features.
-  const visibleItems = navItems.filter((item) => {
-    if (!item.feature) return true;
-    if (featuresLoading) return true;
-    return isEnabled(item.feature);
-  });
-
-  // Mocks group: keep all items visible, but mark locked ones so the student
-  // can see what they're missing and tap "Upgrade" to unlock.
-  const mocksItems = mocksGroup.map((item) => ({
-    ...item,
-    enabled: !item.feature || featuresLoading || isEnabled(item.feature),
-  }));
-  const anyMockEnabled = mocksItems.some((m) => m.enabled);
+  const visibleItems = navItems;
+  const mocksItems = mocksGroup.map((item) => ({ ...item, enabled: true }));
 
   // Auto-open the group when any mock-related route is active.
   const isMocksActive =
@@ -356,16 +342,7 @@ function SidebarContent() {
         >
           <div className="overflow-hidden">
             <div className="px-2 pb-2 pt-1 space-y-0.5">
-              {!anyMockEnabled && !featuresLoading ? (
-                <div className="px-3 py-3 text-xs text-muted-foreground">
-                  No mock sections in your course yet.{" "}
-                  <Link to="/courses" className="text-sky-600 dark:text-sky-300 font-medium hover:underline">
-                    Browse courses
-                  </Link>
-                </div>
-              ) : (
-                mocksItems.map((m) => renderRow(m, { indent: true, locked: !m.enabled }))
-              )}
+              {mocksItems.map((m) => renderRow(m, { indent: true }))}
             </div>
           </div>
         </div>
