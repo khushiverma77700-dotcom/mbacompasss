@@ -194,20 +194,22 @@ Deno.serve(async (req) => {
 
           const aiResponse = await callAIGateway({
               model: STANDARD_MODEL,
-              generationConfig: { maxOutputTokens: 2048 },
-              max_tokens: 2048,
+              max_tokens: 4000,
+              reasoning: { effort: "low" },
               messages: [
                 {
                   role: "system",
-                  content: `You are an SEO engine for Indian MBA education. Generate unique SEO data.
-RULES:
-- meta_title: MUST be unique, UNDER 60 chars, include primary keyword
-- meta_description: MUST be unique, 150-160 chars, include CTA
-- keywords: 5-7 short-tail AND 8-12 long-tail keywords specific to THIS page
-- Ensure NO duplicates with existing meta titles
-- Be specific to the page content, not generic
+                  content: `You are a senior SEO strategist for Indian MBA education (CAT/XAT/GMAT/SNAP/NMAT/CMAT/IIFT/MAT). Generate UNIQUE, research-driven, page-specific SEO data — never generic, never duplicates of other pages.
 
-Existing meta titles to AVOID: ${existingMetas.map((m: any) => m.title).filter(Boolean).slice(0, 30).join(" | ")}`,
+RULES:
+- meta_title: UNIQUE, UNDER 60 chars, primary keyword near start, power word (Best/Top/Guide/Compare/Review). Include city/year qualifier when relevant.
+- meta_description: UNIQUE, 150-160 chars, includes primary + secondary keyword, ends with a clear CTA (Apply Now / Compare / Check Fees / Read Guide).
+- h1_tag: Different wording from meta_title; keyword-rich, student-facing.
+- shortTailKeywords: 8-12 short 1-3 word keywords actually searched in India.
+- longTailKeywords: 15-20 specific 4-8 word phrases reflecting real search intent (e.g., "best mba colleges in mumbai for working professionals 2026", "iim ahmedabad fees and placement details"). Avoid filler.
+- Be SPECIFIC to THIS page's content/city/category — never use placeholders.
+
+NEVER reuse these existing meta titles: ${existingMetas.map((m: any) => m.title).filter(Boolean).slice(0, 30).join(" | ")}`,
                 },
                 {
                   role: "user",
@@ -215,13 +217,16 @@ Existing meta titles to AVOID: ${existingMetas.map((m: any) => m.title).filter(B
 Name: ${getName(page)}
 Slug: ${page.slug}
 City: ${page.city || "N/A"}
+State: ${page.state || "N/A"}
 Word Count: ${wordCount}
 Content (truncated): ${truncatedContent}
 ${page.courses ? `Courses: ${(page.courses || []).join(", ")}` : ""}
 ${page.fees ? `Fees: ${page.fees}` : ""}
 ${page.ranking ? `Ranking: #${page.ranking}` : ""}
+${page.tier ? `Tier: ${page.tier}` : ""}
+${page.exams_accepted ? `Exams: ${(page.exams_accepted || []).join(", ")}` : ""}
 
-Generate unique, page-specific SEO optimization.`,
+Produce premium, unique SEO optimization for THIS page.`,
                 },
               ],
               tools: [{
@@ -246,7 +251,7 @@ Generate unique, page-specific SEO optimization.`,
                 },
               }],
               tool_choice: { type: "function", function: { name: "page_seo" } },
-            });
+            }, { provider: "openai-mini", feature: "auto-seo-bulk" });
 
           if (!aiResponse.ok) {
             if (aiResponse.status === 429) {
