@@ -487,9 +487,9 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
                     </div>
                     <div className="space-y-1.5 p-2 rounded bg-green-50/50 dark:bg-green-950/10 border border-green-100 dark:border-green-900/30">
                       <p className="font-semibold text-green-700 dark:text-green-400 text-[11px] uppercase tracking-wide">After (AI Optimized)</p>
-                      <p className="text-green-600">Meta Title: {suggestions.meta_title.length} chars</p>
-                      <p className="text-green-600">Meta Desc: {suggestions.meta_description.length} chars</p>
-                      <p className="text-green-600">H1 Tag: Optimized</p>
+                      <p className="text-green-600">Meta Title: {(suggestions.meta_title || "").length} chars</p>
+                      <p className="text-green-600">Meta Desc: {(suggestions.meta_description || "").length} chars</p>
+                      <p className="text-green-600">H1 Tag: {suggestions.h1_tag ? "Optimized" : "—"}</p>
                       <p className="text-green-600">Keywords: {totalKeywords} keywords</p>
                       <p className="text-green-600">Schema: {schemaCount} schemas</p>
                       <p className="text-green-600">Social Meta: OG + Twitter</p>
