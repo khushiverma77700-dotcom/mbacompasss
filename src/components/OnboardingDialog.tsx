@@ -21,6 +21,7 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [phoneTouched, setPhoneTouched] = useState(false);
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -56,6 +57,14 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
 
   const finalize = async () => {
     setLoading(true);
+    // Set the password on the Google-authenticated user so they can also log in
+    // with email/password and mobile/password later.
+    if (password.length >= 6) {
+      try {
+        await supabase.auth.updateUser({ password });
+      } catch { /* non-fatal */ }
+    }
+
     const { error } = await supabase
       .from("profiles")
       .update({
