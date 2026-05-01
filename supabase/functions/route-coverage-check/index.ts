@@ -347,6 +347,45 @@ async function collectRoutes(supabase: ReturnType<typeof createClient>) {
   });
 }
 
+async function checkUnknownPathStatus(findings: Finding[]) {
+  await Promise.all(SENTINEL_UNKNOWN_PATHS.map(async (path) => {
+    const fullUrl = `${SITE}${path}`;
+    const { status, canonical, robots, title } = await fetchRouteHtml(fullUrl);
+    if (status !== 404 && status !== 410) {
+      findings.push({
+        category: "route_soft404",
+        severity: "critical",
+        url: fullUrl,
+        page_type: "unknown_route",
+        issue_code: "unknown_route_returns_200",
+        message: `Unknown route returned HTTP ${status || "network error"} instead of a real 404/410. Google will classify this as Soft 404 at scale.`,
+        fix_suggestion: "Configure host-level routing for unknown slugs to return a real 404 status, not the generic SPA shell.",
+      });
+    } else if (!/noindex/i.test(robots || "") && !/not found|404/i.test(title || "")) {
+      findings.push({
+        category: "route_soft404",
+        severity: "warning",
+        url: fullUrl,
+        page_type: "unknown_route",
+        issue_code: "unknown_404_missing_noindex_signal",
+        message: "Unknown route returns 404 but the HTML does not clearly include noindex or 404/not-found title text.",
+        fix_suggestion: "Keep 404 pages noindex and clearly titled as not found so Google does not treat them as duplicate content.",
+      });
+    }
+    if (canonical && normalizeUrl(canonical) === normalizeUrl(SITE)) {
+      findings.push({
+        category: "route_soft404",
+        severity: "warning",
+        url: fullUrl,
+        page_type: "unknown_route",
+        issue_code: "unknown_route_home_canonical",
+        message: "Unknown route carries the homepage canonical, which is a common Soft 404/duplicate signal.",
+        fix_suggestion: "Remove homepage canonical from unknown-route responses and serve a real noindex 404 page.",
+      });
+    }
+  }));
+}
+
 // ─── handler ─────────────────────────────────────────────────────────────────
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
