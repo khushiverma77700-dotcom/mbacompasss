@@ -207,7 +207,7 @@ const AdminCollegeSections = () => {
   const filteredSections = useMemo(() => {
     const search = (filters.search || "").trim().toLowerCase();
     const sectionType = filters.section;
-    return sections.filter((s) => {
+    const list = sections.filter((s) => {
       if (sectionType && sectionType !== "all" && s.section_type !== sectionType) return false;
       if (!search) return true;
       const c = (s as any).colleges || {};
@@ -221,6 +221,16 @@ const AdminCollegeSections = () => {
         SECTION_TYPES.find((t) => t.value === s.section_type)?.label,
       ].filter(Boolean).join(" ").toLowerCase();
       return hay.includes(search);
+    });
+    // Always render in the canonical on-page sequence so admins edit
+    // top-to-bottom in the same order users read the page.
+    return [...list].sort((a, b) => {
+      const collegeA = ((a as any).colleges?.name || "").toLowerCase();
+      const collegeB = ((b as any).colleges?.name || "").toLowerCase();
+      if (collegeA !== collegeB) return collegeA.localeCompare(collegeB);
+      const orderA = SECTION_ORDER[a.section_type] ?? 999;
+      const orderB = SECTION_ORDER[b.section_type] ?? 999;
+      return orderA - orderB;
     });
   }, [sections, filters.search, filters.section]);
 
