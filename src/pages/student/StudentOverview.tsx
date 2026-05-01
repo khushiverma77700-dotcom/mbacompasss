@@ -694,6 +694,99 @@ export default function StudentOverview() {
   );
 }
 
+function PredictorGauge({ value }: { value: number }) {
+  const pct = Math.max(0, Math.min(100, value));
+  return (
+    <div className="h-44 grid place-items-center">
+      <div
+        className="relative h-36 w-36 rounded-full p-3 shadow-inner"
+        style={{ background: `conic-gradient(hsl(var(--primary)) ${pct * 3.6}deg, hsl(var(--muted)) 0deg)` }}
+      >
+        <div className="h-full w-full rounded-full bg-card grid place-items-center border border-border">
+          <div className="text-center">
+            <div className="text-3xl font-bold text-primary tabular-nums">{value}</div>
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">projected %ile</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MiniTrendChart({ data, barKey, lineKey, max, target }: { data: any[]; barKey: string; lineKey?: string; max?: number; target?: number }) {
+  const rows = data.slice(-12);
+  const width = 640;
+  const height = 220;
+  const pad = 28;
+  const innerW = width - pad * 2;
+  const innerH = height - pad * 2;
+  const values = rows.flatMap((r) => [Number(r[barKey] || 0), lineKey ? Number(r[lineKey] || 0) : 0, target || 0]);
+  const top = max ?? Math.max(10, ...values);
+  const step = rows.length > 1 ? innerW / (rows.length - 1) : innerW;
+  const y = (v: number) => pad + innerH - (Math.max(0, Math.min(top, v)) / top) * innerH;
+  const points = rows.map((r, i) => `${pad + i * step},${y(Number(r[lineKey || barKey] || 0))}`).join(" ");
+  const barW = Math.max(12, Math.min(34, innerW / Math.max(1, rows.length) - 10));
+
+  return (
+    <div className="h-[240px] w-full rounded-lg border border-border bg-card/60 p-2">
+      <svg viewBox={`0 0 ${width} ${height}`} className="h-full w-full" role="img" aria-label="Performance trend">
+        <line x1={pad} x2={width - pad} y1={height - pad} y2={height - pad} stroke="hsl(var(--border))" />
+        <line x1={pad} x2={pad} y1={pad} y2={height - pad} stroke="hsl(var(--border))" />
+        {target && target > 0 && <line x1={pad} x2={width - pad} y1={y(target)} y2={y(target)} stroke="hsl(var(--accent-foreground))" strokeDasharray="6 6" opacity="0.65" />}
+        {rows.map((r, i) => {
+          const v = Number(r[barKey] || 0);
+          const x = pad + i * step - barW / 2;
+          const barH = height - pad - y(v);
+          return <rect key={`${r.name}-${i}`} x={x} y={y(v)} width={barW} height={Math.max(2, barH)} rx="5" fill="hsl(var(--secondary))" />;
+        })}
+        {lineKey && rows.length > 1 && <polyline points={points} fill="none" stroke="hsl(var(--primary))" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />}
+        {rows.map((r, i) => (
+          <text key={`label-${i}`} x={pad + i * step} y={height - 8} textAnchor="middle" className="fill-muted-foreground text-[18px]">{r.name}</text>
+        ))}
+      </svg>
+    </div>
+  );
+}
+
+function MiniGroupedBars({ data, firstKey, secondKey, max }: { data: any[]; firstKey: string; secondKey: string; max?: number }) {
+  const rows = data.slice(0, 8);
+  const top = max ?? Math.max(10, ...rows.flatMap((r) => [Number(r[firstKey] || 0), Number(r[secondKey] || 0)]));
+  return (
+    <div className="h-[240px] space-y-3 rounded-lg border border-border bg-card/60 p-4 overflow-hidden">
+      {rows.map((r) => {
+        const first = Math.min(100, (Number(r[firstKey] || 0) / top) * 100);
+        const second = Math.min(100, (Number(r[secondKey] || 0) / top) * 100);
+        return (
+          <div key={r.name} className="grid grid-cols-[46px_1fr] items-center gap-3 text-xs">
+            <div className="truncate font-medium text-muted-foreground">{r.name}</div>
+            <div className="space-y-1.5">
+              <div className="h-2 rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-primary" style={{ width: `${first}%` }} /></div>
+              <div className="h-2 rounded-full bg-muted overflow-hidden"><div className="h-full rounded-full bg-secondary-foreground/40" style={{ width: `${second}%` }} /></div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function MiniDistribution({ data }: { data: any[] }) {
+  const top = Math.max(1, ...data.map((d) => Number(d.count || 0)));
+  return (
+    <div className="h-[200px] flex items-end gap-2 rounded-lg border border-border bg-card/60 p-4">
+      {data.map((d) => {
+        const h = Math.max(6, (Number(d.count || 0) / top) * 150);
+        return (
+          <div key={d.name} className="flex-1 min-w-0 text-center">
+            <div className="mx-auto w-full max-w-8 rounded-t-md bg-primary" style={{ height: h }} />
+            <div className="mt-2 truncate text-[10px] text-muted-foreground">{d.name}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function Kpi({ label, value, icon }: any) {
   return (
     <div className="bg-white/10 hover:bg-white/15 transition-colors backdrop-blur-sm rounded-xl px-2.5 sm:px-3 py-2 sm:py-2.5 border border-white/20 min-w-0">
