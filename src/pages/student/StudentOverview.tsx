@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import DailyTestCard from "@/components/student/DailyTestCard";
 import { useStudentPerformance } from "@/hooks/useStudentPerformance";
-import StrengthWeaknessAnalysis from "@/components/student/StrengthWeaknessAnalysis";
+
 
 export default function StudentOverview() {
   const { user } = useAuth();
