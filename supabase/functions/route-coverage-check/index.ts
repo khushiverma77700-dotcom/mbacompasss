@@ -35,7 +35,7 @@ const SITEMAP_FN = `${Deno.env.get("SUPABASE_URL")}/functions/v1/serve-sitemap`;
 
 type Severity = "critical" | "warning" | "info";
 type Finding = {
-  category: "route_robots" | "route_canonical" | "route_sitemap";
+  category: "route_robots" | "route_canonical" | "route_sitemap" | "route_status" | "route_soft404" | "duplicate_faq";
   severity: Severity;
   url: string;
   page_type: string;
@@ -47,17 +47,26 @@ type Finding = {
 const STATIC_ROUTES: { path: string; type: string }[] = [
   { path: "/", type: "home" },
   { path: "/colleges", type: "list" },
+  { path: "/coaching", type: "list" },
   { path: "/blog", type: "list" },
-  { path: "/exams", type: "list" },
-  { path: "/institutes", type: "list" },
+  { path: "/compare", type: "tool" },
   { path: "/mocks", type: "landing" },
   { path: "/courses", type: "landing" },
   { path: "/mba-compass", type: "landing" },
   { path: "/college-shortlister", type: "tool" },
+  { path: "/college-finder", type: "tool" },
+  { path: "/profile-analyzer", type: "tool" },
+  { path: "/cat-score-calculator", type: "tool" },
+  { path: "/roi-calculator", type: "tool" },
+  { path: "/iim-waitlist-movement", type: "tool" },
   { path: "/about", type: "static" },
   { path: "/contact", type: "static" },
-  { path: "/privacy", type: "static" },
-  { path: "/terms", type: "static" },
+];
+
+const SENTINEL_UNKNOWN_PATHS = [
+  "/__google-soft-404-check__",
+  "/college/__missing-college-soft-404-check__",
+  "/article/__missing-article-soft-404-check__",
 ];
 
 // ─── robots.txt parsing ──────────────────────────────────────────────────────
