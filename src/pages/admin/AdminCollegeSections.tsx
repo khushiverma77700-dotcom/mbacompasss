@@ -31,7 +31,7 @@ const SECTION_TYPES = [
   { value: "hostel", label: "Hostel & Campus Life" },
   { value: "qa", label: "Frequently Asked Questions" },
   { value: "quick_info", label: "Quick Info / Sidebar" },
-  { value: "why_join", label: "Why Join (Ratings)" },
+  { value: "why_join", label: "About / Overview (shown in 'About {College}' card)" },
   { value: "news", label: "Latest News & Articles" },
 ];
 
