@@ -308,8 +308,38 @@ export function useStrengthWeaknessData() {
       });
 
       sectionAggs.sort((a, b) => b.attempted - a.attempted);
+
+      // Build per-exam topic aggregation overlay (use response questions joined to attempt's exam)
+      const attemptExam = new Map<string, string>();
+      (attempts ?? []).forEach((a: any) => attemptExam.set(a.id, (a.test?.exam_code || "GENERAL").toUpperCase()));
+      const examQ: Record<string, { att: number; cor: number; tot: Set<string> }> = {};
+      for (const r of (responses ?? []) as Resp[]) {
+        const code = attemptExam.get(r.attempt_id) || "GENERAL";
+        if (!examQ[code]) examQ[code] = { att: 0, cor: 0, tot: new Set() };
+        examQ[code].tot.add(r.question_id);
+        if (r.status === "answered" || r.status === "marked_answered") {
+          examQ[code].att += 1;
+          if (r.is_correct) examQ[code].cor += 1;
+        }
+      }
+      const examList: ExamAgg[] = Array.from(examMap.entries()).map(([exam, v]) => {
+        const eq = examQ[exam] || { att: 0, cor: 0, tot: new Set() };
+        return {
+          exam,
+          attempts: v.attempts,
+          attempted: eq.att,
+          correct: eq.cor,
+          total: eq.tot.size,
+          accuracy: v.accN > 0 ? Math.round(v.accSum / v.accN) : pct(eq.cor, eq.att),
+          readiness: readinessScore(eq.att, eq.cor, eq.tot.size),
+          avgScore: v.attempts > 0 ? +(v.scoreSum / v.attempts).toFixed(1) : 0,
+          bestScore: +v.bestScore.toFixed(1),
+        };
+      }).sort((a, b) => b.attempts - a.attempts);
+
       setSections(sectionAggs);
-      setHasData(sectionAggs.some((s) => s.attempted > 0));
+      setExamAggs(examList);
+      setHasData(sectionAggs.some((s) => s.attempted > 0) || examList.length > 0);
       setLoading(false);
     })();
     return () => { cancelled = true; };
