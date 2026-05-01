@@ -343,15 +343,16 @@ ${data.college_category ? `College Category: ${data.college_category}` : ""}
 
 Perform COMPREHENSIVE, DEEP SEO analysis. Score the CURRENT state honestly. Show what's wrong and provide the BEST possible suggestions.`;
 
-    console.log(`[ai-seo-enhance] Calling AI with deep analysis prompt...`);
+    console.log(`[ai-seo-enhance] Calling AI with deep analysis prompt (premium GPT-5)...`);
     const aiStartTime = Date.now();
+    // PREMIUM SEO: route through OpenAI GPT-5 for top-tier copywriting + research depth.
+    // Bigger token budget (12K) so the model can produce all 50+ keywords + tips
+    // without truncation. The aiGateway helper auto-pads to max_completion_tokens
+    // for GPT-5 reasoning models.
     const response = await callAIGateway({
-        // COST OPT: gemini-3-flash-preview is preview-tier and pricier; the SEO
-        // suggestion schema is fully tool-constrained, so 2.5-flash matches quality
-        // at production-tier cost. Cap completion to 4K tokens (the schema asks for
-        // ~30 short fields — never needs more than ~3K).
-        model: "google/gemini-2.5-flash",
-        max_tokens: 8192,
+        model: "openai/gpt-5",
+        max_tokens: 12000,
+        reasoning: { effort: "low" },
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -438,7 +439,7 @@ Perform COMPREHENSIVE, DEEP SEO analysis. Score the CURRENT state honestly. Show
             },
           },
         }],
-      });
+      }, { provider: "openai-mini", feature: "ai-seo-enhance" });
 
     if (!response.ok) {
       if (response.status === 429) {
@@ -457,7 +458,7 @@ Perform COMPREHENSIVE, DEEP SEO analysis. Score the CURRENT state honestly. Show
     }
 
     const aiData = await response.json();
-    await logAIUsage("seo-enhance", "google/gemini-2.5-flash", aiData);
+    await logAIUsage("seo-enhance", "openai/gpt-5", aiData);
     console.log(`[ai-seo-enhance] AI analysis completed in ${Date.now() - aiStartTime}ms`);
 
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
@@ -494,37 +495,86 @@ Perform COMPREHENSIVE, DEEP SEO analysis. Score the CURRENT state honestly. Show
     // Include current state for before/after comparison
     suggestions.currentState = currentState;
 
-    // Ensure all fields have defaults
+    // ─── DEFENSIVE NORMALIZATION ────────────────────────────────────────────
+    // Hard-guarantee every field the frontend reads is present and correctly
+    // typed. If GPT-5 returned anything sparse (rare but possible on truncation
+    // or safety-filter), we fall back to derived defaults so the React tree
+    // never crashes with "Cannot read properties of undefined".
+    const safeStr = (v: any, fb = ""): string => (typeof v === "string" && v.trim() ? v : fb);
+    const safeArr = (v: any): string[] => (Array.isArray(v) ? v.filter((x) => typeof x === "string") : []);
+    const pageName = data.title || data.name || data.full_name || "Untitled";
+    const slugBase = data.slug || pageName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+
+    suggestions.meta_title = safeStr(suggestions.meta_title, `${pageName} | MBA Compass`).slice(0, 60);
+    suggestions.meta_description = safeStr(
+      suggestions.meta_description,
+      `Explore ${pageName} on MBA Compass. Find detailed information, fees, placements and admission insights for Indian MBA aspirants.`,
+    ).slice(0, 165);
+    suggestions.h1_tag = safeStr(suggestions.h1_tag, pageName);
+
     suggestions.keywords = {
-      primary: suggestions.keywords?.primary || [],
-      shortTail: suggestions.keywords?.shortTail || [],
-      longTail: suggestions.keywords?.longTail || [],
-      faq: suggestions.keywords?.faq || [],
-      trending: suggestions.keywords?.trending || [],
-      lsi: suggestions.keywords?.lsi || [],
+      primary: safeArr(suggestions.keywords?.primary),
+      shortTail: safeArr(suggestions.keywords?.shortTail),
+      longTail: safeArr(suggestions.keywords?.longTail),
+      faq: safeArr(suggestions.keywords?.faq),
+      trending: safeArr(suggestions.keywords?.trending),
+      lsi: safeArr(suggestions.keywords?.lsi),
     };
-    suggestions.onPageTips = suggestions.onPageTips || [];
-    suggestions.contentSuggestions = suggestions.contentSuggestions || [];
-    suggestions.competitorInsights = suggestions.competitorInsights || [];
+    suggestions.onPageTips = safeArr(suggestions.onPageTips);
+    suggestions.contentSuggestions = safeArr(suggestions.contentSuggestions);
+    suggestions.competitorInsights = safeArr(suggestions.competitorInsights);
+
+    const ts = suggestions.technicalSEO || {};
     suggestions.technicalSEO = {
-      canonicalUrl: suggestions.technicalSEO?.canonicalUrl || "",
-      urlSlugSuggestion: suggestions.technicalSEO?.urlSlugSuggestion || "",
-      imageAltTags: suggestions.technicalSEO?.imageAltTags || [],
-      contentLengthAnalysis: suggestions.technicalSEO?.contentLengthAnalysis || { currentWordCount: wordCount, recommendedMinimum: 1500, verdict: wordCount >= 1500 ? "adequate" : "needs more content" },
-      headerStructure: suggestions.technicalSEO?.headerStructure || [],
-      pagespeedTips: suggestions.technicalSEO?.pagespeedTips || [],
-      mobileTips: suggestions.technicalSEO?.mobileTips || [],
-      securityChecks: suggestions.technicalSEO?.securityChecks || [],
-      crawlabilityTips: suggestions.technicalSEO?.crawlabilityTips || [],
-      backlinkIdeas: suggestions.technicalSEO?.backlinkIdeas || [],
-      engagementTips: suggestions.technicalSEO?.engagementTips || [],
-      freshnessTips: suggestions.technicalSEO?.freshnessTips || [],
-      keywordPlacementTips: suggestions.technicalSEO?.keywordPlacementTips || [],
+      canonicalUrl: safeStr(ts.canonicalUrl, `${siteUrl}/${contentType === "cityPage" ? "colleges" : contentType}/${slugBase}`),
+      urlSlugSuggestion: safeStr(ts.urlSlugSuggestion, slugBase),
+      imageAltTags: safeArr(ts.imageAltTags),
+      contentLengthAnalysis: {
+        currentWordCount: typeof ts.contentLengthAnalysis?.currentWordCount === "number" ? ts.contentLengthAnalysis.currentWordCount : wordCount,
+        recommendedMinimum: typeof ts.contentLengthAnalysis?.recommendedMinimum === "number" ? ts.contentLengthAnalysis.recommendedMinimum : 1500,
+        verdict: safeStr(ts.contentLengthAnalysis?.verdict, wordCount >= 1500 ? "adequate" : "needs more content"),
+      },
+      headerStructure: safeArr(ts.headerStructure),
+      pagespeedTips: safeArr(ts.pagespeedTips),
+      mobileTips: safeArr(ts.mobileTips),
+      securityChecks: safeArr(ts.securityChecks),
+      crawlabilityTips: safeArr(ts.crawlabilityTips),
+      backlinkIdeas: safeArr(ts.backlinkIdeas),
+      engagementTips: safeArr(ts.engagementTips),
+      freshnessTips: safeArr(ts.freshnessTips),
+      keywordPlacementTips: safeArr(ts.keywordPlacementTips),
     };
-    suggestions.socialMeta = suggestions.socialMeta || {};
-    suggestions.internalLinks = { suggested: suggestions.internalLinks?.suggested || [], anchorTexts: suggestions.internalLinks?.anchorTexts || [] };
-    suggestions.seoScore = suggestions.seoScore || { overall: 0, breakdown: {}, criticalIssues: [], warnings: [], passed: [] };
-    suggestions.seoScore.projectedScore = suggestions.seoScore.projectedScore || Math.min(95, (suggestions.seoScore.overall || 0) + 30);
+
+    const sm = suggestions.socialMeta || {};
+    suggestions.socialMeta = {
+      ogTitle: safeStr(sm.ogTitle, suggestions.meta_title),
+      ogDescription: safeStr(sm.ogDescription, suggestions.meta_description),
+      twitterTitle: safeStr(sm.twitterTitle, suggestions.meta_title),
+      twitterDescription: safeStr(sm.twitterDescription, suggestions.meta_description),
+    };
+
+    suggestions.internalLinks = {
+      suggested: safeArr(suggestions.internalLinks?.suggested),
+      anchorTexts: safeArr(suggestions.internalLinks?.anchorTexts),
+    };
+
+    const sc = suggestions.seoScore || {};
+    const overall = typeof sc.overall === "number" ? sc.overall : 30;
+    suggestions.seoScore = {
+      overall,
+      breakdown: {
+        metaTags: typeof sc.breakdown?.metaTags === "number" ? sc.breakdown.metaTags : 0,
+        keywords: typeof sc.breakdown?.keywords === "number" ? sc.breakdown.keywords : 0,
+        technicalSEO: typeof sc.breakdown?.technicalSEO === "number" ? sc.breakdown.technicalSEO : 0,
+        schema: typeof sc.breakdown?.schema === "number" ? sc.breakdown.schema : 0,
+        contentStructure: typeof sc.breakdown?.contentStructure === "number" ? sc.breakdown.contentStructure : 0,
+        socialMeta: typeof sc.breakdown?.socialMeta === "number" ? sc.breakdown.socialMeta : 0,
+      },
+      projectedScore: typeof sc.projectedScore === "number" ? sc.projectedScore : Math.min(95, overall + 30),
+      criticalIssues: safeArr(sc.criticalIssues),
+      warnings: safeArr(sc.warnings),
+      passed: safeArr(sc.passed),
+    };
 
     console.log(`[ai-seo-enhance] Total time: ${Date.now() - startTime}ms. Score: ${suggestions.seoScore.overall}/100 → projected ${suggestions.seoScore.projectedScore}/100`);
 
