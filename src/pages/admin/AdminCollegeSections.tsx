@@ -150,18 +150,51 @@ const AdminCollegeSections = () => {
     return null;
   };
 
-  // Auto-resolve pasted URL/slug in the search box -> apply college filter
+  // Auto-resolve pasted URL/slug OR a typed college name in the search box -> apply college filter.
+  // This lets admins find a college (e.g. "IIM Bangalore") even if it has zero sections yet.
   useEffect(() => {
-    const slug = extractCollegeSlug(filters.search || "");
-    if (!slug || !colleges.length) return;
-    const match = colleges.find((c) => (c.slug || "").toLowerCase() === slug);
-    if (match && filters.college !== match.id) {
-      setFilter("college", match.id);
+    const raw = (filters.search || "").trim();
+    if (!raw || !colleges.length) return;
+
+    // 1. URL / slug paste
+    const slug = extractCollegeSlug(raw);
+    if (slug) {
+      const match = colleges.find((c) => (c.slug || "").toLowerCase() === slug);
+      if (match && filters.college !== match.id) {
+        setFilter("college", match.id);
+        setFilter("search", "");
+        toast({ title: "College selected", description: match.name });
+        return;
+      }
+    }
+
+    // 2. Typed name match — only auto-select on an exact (case-insensitive) full name match
+    //    so we don't hijack partial typing. Partial matches still work via the dropdown
+    //    suggestions below the search box.
+    const lower = raw.toLowerCase();
+    const exact = colleges.find(
+      (c) => (c.name || "").toLowerCase() === lower || (c.slug || "").toLowerCase() === lower,
+    );
+    if (exact && filters.college !== exact.id) {
+      setFilter("college", exact.id);
       setFilter("search", "");
-      toast({ title: "College selected", description: match.name });
+      toast({ title: "College selected", description: exact.name });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.search, colleges]);
+
+  // Suggestions: when the user is typing a college name and there are no matching sections yet,
+  // show a small dropdown of colleges that match by name/city/slug so they can jump to one.
+  const collegeSuggestions = useMemo(() => {
+    const q = (filters.search || "").trim().toLowerCase();
+    if (q.length < 2 || filters.college !== "all") return [];
+    return colleges
+      .filter((c) => {
+        const hay = [c.name, c.city, c.state, c.slug].filter(Boolean).join(" ").toLowerCase();
+        return hay.includes(q);
+      })
+      .slice(0, 8);
+  }, [filters.search, filters.college, colleges]);
 
   const filteredSections = useMemo(() => {
     const search = (filters.search || "").trim().toLowerCase();
