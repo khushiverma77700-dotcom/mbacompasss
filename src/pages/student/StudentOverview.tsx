@@ -748,31 +748,64 @@ function MiniTrendChart({ data, barKey, lineKey, max, target }: { data: any[]; b
   const rows = data.slice(-12);
   const width = 640;
   const height = 220;
-  const pad = 28;
+  const pad = 32;
   const innerW = width - pad * 2;
   const innerH = height - pad * 2;
   const values = rows.flatMap((r) => [Number(r[barKey] || 0), lineKey ? Number(r[lineKey] || 0) : 0, target || 0]);
-  const top = max ?? Math.max(10, ...values);
-  const step = rows.length > 1 ? innerW / (rows.length - 1) : innerW;
+  const top = max ?? Math.max(10, ...values) * 1.15;
+  // Center bars in equal-width slots so 2 mocks don't sit at the extreme edges.
+  const slot = rows.length > 0 ? innerW / rows.length : innerW;
+  const xCenter = (i: number) => pad + slot * i + slot / 2;
   const y = (v: number) => pad + innerH - (Math.max(0, Math.min(top, v)) / top) * innerH;
-  const points = rows.map((r, i) => `${pad + i * step},${y(Number(r[lineKey || barKey] || 0))}`).join(" ");
-  const barW = Math.max(12, Math.min(34, innerW / Math.max(1, rows.length) - 10));
+  const points = rows.map((r, i) => `${xCenter(i)},${y(Number(r[lineKey || barKey] || 0))}`).join(" ");
+  const barW = Math.max(18, Math.min(48, slot * 0.55));
+  // 4 horizontal gridlines for visual scale reference
+  const gridYs = [0.25, 0.5, 0.75, 1].map((f) => pad + innerH * (1 - f));
+
+  if (rows.length === 0) {
+    return (
+      <div className="h-[240px] w-full rounded-lg border border-border bg-card/60 grid place-items-center text-xs text-muted-foreground">
+        No data yet
+      </div>
+    );
+  }
 
   return (
     <div className="h-[240px] w-full rounded-lg border border-border bg-card/60 p-2">
       <svg viewBox={`0 0 ${width} ${height}`} className="h-full w-full" role="img" aria-label="Performance trend">
+        {/* Gridlines */}
+        {gridYs.map((gy, i) => (
+          <line key={`g-${i}`} x1={pad} x2={width - pad} y1={gy} y2={gy} stroke="hsl(var(--border))" strokeDasharray="3 4" opacity="0.5" />
+        ))}
         <line x1={pad} x2={width - pad} y1={height - pad} y2={height - pad} stroke="hsl(var(--border))" />
         <line x1={pad} x2={pad} y1={pad} y2={height - pad} stroke="hsl(var(--border))" />
-        {target && target > 0 && <line x1={pad} x2={width - pad} y1={y(target)} y2={y(target)} stroke="hsl(var(--accent-foreground))" strokeDasharray="6 6" opacity="0.65" />}
+        {target && target > 0 && <line x1={pad} x2={width - pad} y1={y(target)} y2={y(target)} stroke="hsl(var(--primary))" strokeDasharray="6 6" opacity="0.7" />}
         {rows.map((r, i) => {
           const v = Number(r[barKey] || 0);
-          const x = pad + i * step - barW / 2;
+          const cx = xCenter(i);
+          const x = cx - barW / 2;
           const barH = height - pad - y(v);
-          return <rect key={`${r.name}-${i}`} x={x} y={y(v)} width={barW} height={Math.max(2, barH)} rx="5" fill="hsl(var(--secondary))" />;
+          return (
+            <g key={`${r.name}-${i}`}>
+              <rect x={x} y={y(v)} width={barW} height={Math.max(2, barH)} rx="6" fill="hsl(var(--primary) / 0.18)" stroke="hsl(var(--primary) / 0.45)" />
+              <text x={cx} y={y(v) - 6} textAnchor="middle" className="fill-foreground" style={{ fontSize: 16, fontWeight: 600 }}>
+                {Number.isInteger(v) ? v : v.toFixed(1)}
+              </text>
+            </g>
+          );
         })}
-        {lineKey && rows.length > 1 && <polyline points={points} fill="none" stroke="hsl(var(--primary))" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />}
+        {lineKey && rows.length > 1 && (
+          <>
+            <polyline points={points} fill="none" stroke="hsl(var(--primary))" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            {rows.map((r, i) => (
+              <circle key={`p-${i}`} cx={xCenter(i)} cy={y(Number(r[lineKey] || 0))} r="4" fill="hsl(var(--primary))" />
+            ))}
+          </>
+        )}
         {rows.map((r, i) => (
-          <text key={`label-${i}`} x={pad + i * step} y={height - 8} textAnchor="middle" className="fill-muted-foreground text-[18px]">{r.name}</text>
+          <text key={`label-${i}`} x={xCenter(i)} y={height - 10} textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 14 }}>
+            {r.name}
+          </text>
         ))}
       </svg>
     </div>
