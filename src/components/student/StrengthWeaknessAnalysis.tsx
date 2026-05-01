@@ -150,9 +150,21 @@ export function useStrengthWeaknessData() {
 
       const attemptIds = (attempts ?? []).map((a) => a.id);
       if (attemptIds.length === 0) {
-        if (!cancelled) { setSections([]); setHasData(false); setLoading(false); }
+        if (!cancelled) { setSections([]); setExamAggs([]); setHasData(false); setLoading(false); }
         return;
       }
+
+      // Exam-wise aggregation from attempts (works even with no responses)
+      const examMap = new Map<string, { attempts: number; scoreSum: number; bestScore: number; accSum: number; accN: number }>();
+      (attempts ?? []).forEach((a: any) => {
+        const code = (a.test?.exam_code || "GENERAL").toUpperCase();
+        if (!examMap.has(code)) examMap.set(code, { attempts: 0, scoreSum: 0, bestScore: 0, accSum: 0, accN: 0 });
+        const e = examMap.get(code)!;
+        e.attempts += 1;
+        e.scoreSum += Number(a.total_score || 0);
+        e.bestScore = Math.max(e.bestScore, Number(a.total_score || 0));
+        if (a.accuracy != null) { e.accSum += Number(a.accuracy); e.accN += 1; }
+      });
 
       // 2. Pull all responses for those attempts
       const { data: responses } = await supabase
