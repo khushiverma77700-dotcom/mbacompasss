@@ -15,15 +15,6 @@ import {
 import DailyTestCard from "@/components/student/DailyTestCard";
 import { useStudentPerformance } from "@/hooks/useStudentPerformance";
 
-const SECTION_COLORS: Record<string, string> = {
-  QA: "#0284c7",
-  VARC: "#0ea5e9",
-  DILR: "#38bdf8",
-  LRDI: "#38bdf8",
-  RC: "#7dd3fc",
-  GK: "#0369a1",
-};
-
 export default function StudentOverview() {
   const { user } = useAuth();
   // Central performance engine — shared with /student/performance, /student/mocks etc.
@@ -214,7 +205,6 @@ export default function StudentOverview() {
       avgAccuracy: v.attempted > 0 ? Math.round((v.correct / v.attempted) * 100) : 0,
       avgAttempted: v.count > 0 ? Math.round(safe(v.attempted / v.count)) : 0,
       pctOfMax: v.max > 0 ? Math.round((v.score / v.max) * 100) : 0,
-      fill: SECTION_COLORS[name] || "#0284c7",
     }));
   }, [submitted]);
 
