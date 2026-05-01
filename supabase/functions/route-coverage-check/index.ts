@@ -165,20 +165,25 @@ function normalizeUrl(u: string): string {
   }
 }
 
-// ─── canonical extraction ────────────────────────────────────────────────────
-async function fetchCanonical(url: string): Promise<{ status: number; canonical: string | null }> {
+// ─── live HTML extraction ────────────────────────────────────────────────────
+async function fetchRouteHtml(url: string): Promise<{ status: number; canonical: string | null; title: string | null; robots: string | null; h1Count: number; textLength: number }> {
   try {
     const r = await fetch(url, {
       redirect: "follow",
-      headers: { "User-Agent": "MBACompass-RouteAudit/1.0" },
+      headers: { "User-Agent": "Googlebot/2.1 (+http://www.google.com/bot.html)" },
       cache: "no-store",
     });
     const html = await r.text();
-    const m = /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i.exec(html)
+    const canonicalMatch = /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i.exec(html)
           ?? /<link[^>]+href=["']([^"']+)["'][^>]+rel=["']canonical["']/i.exec(html);
-    return { status: r.status, canonical: m?.[1] ?? null };
+    const titleMatch = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html);
+    const robotsMatch = /<meta[^>]+name=["']robots["'][^>]+content=["']([^"']+)["']/i.exec(html)
+      ?? /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']robots["']/i.exec(html);
+    const h1Count = (html.match(/<h1\b/gi) || []).length;
+    const textLength = html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().length;
+    return { status: r.status, canonical: canonicalMatch?.[1] ?? null, title: titleMatch?.[1]?.trim() ?? null, robots: robotsMatch?.[1]?.trim() ?? null, h1Count, textLength };
   } catch {
-    return { status: 0, canonical: null };
+    return { status: 0, canonical: null, title: null, robots: null, h1Count: 0, textLength: 0 };
   }
 }
 
