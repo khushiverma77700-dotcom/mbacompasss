@@ -350,6 +350,9 @@ function SidebarContent() {
         </div>
       </div>
 
+      {renderRow({ to: "/student/weak-areas", label: "My Weak Areas", icon: AlertTriangle })}
+      {renderRow({ to: "/student/strength-areas", label: "My Strength Areas", icon: Award })}
+
       {restItems.map((item) => renderRow(item))}
 
       <div className="pt-4 mt-4 border-t border-border">
