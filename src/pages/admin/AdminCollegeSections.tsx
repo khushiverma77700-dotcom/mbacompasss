@@ -133,8 +133,8 @@ const AdminCollegeSections = () => {
   const [bulkProgress, setBulkProgress] = useState<{ total: number; done: number; ok: number; fail: number; current: string; results: { type: string; label: string; status: "pending" | "ok" | "fail"; error?: string }[] } | null>(null);
   const { toast } = useToast();
 
-  const fetchColleges = async () => { const { data } = await supabase.from("colleges").select("id, name, city, state, type, tier, established").order("name"); if (data) setColleges(data); };
-  const fetchSections = async () => { let query = supabase.from("college_sections").select("*, colleges(name)").order("sort_order"); if (selectedCollege) query = query.eq("college_id", selectedCollege); const { data } = await query; if (data) setSections(data); };
+  const fetchColleges = async () => { const { data } = await supabase.from("colleges").select("id, name, slug, city, state, type, tier, established").order("name"); if (data) setColleges(data); };
+  const fetchSections = async () => { const query = supabase.from("college_sections").select("*, colleges(name, slug, city, state)").order("sort_order"); const { data } = selectedCollege ? await query.eq("college_id", selectedCollege) : await query; if (data) setSections(data); };
 
   const filteredSections = useMemo(() => {
     const search = (filters.search || "").trim().toLowerCase();
