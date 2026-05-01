@@ -1,6 +1,7 @@
 # Hostinger / Apache routing for the MBA Compass SPA.
 #
 # Behavior:
+#   0. Canonical host: 301-redirect www.mbacompass.in -> mbacompass.in.
 #   1. Real files & directories are served as-is.
 #   2. Known SPA paths fall through to index.html (HTTP 200) so React Router
 #      can render them.
@@ -16,14 +17,13 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-
   # 0) Canonical host: permanent 301 from www.mbacompass.in -> mbacompass.in.
-  #    Non-www is the only version submitted to Google Search Console.
+  #    Non-www is the only version submitted to Google Search Console and the
+  #    only host emitted in <link rel="canonical"> tags + sitemap.xml.
   RewriteCond %{HTTP_HOST} ^www\.mbacompass\.in$ [NC]
   RewriteRule ^(.*)$ https://mbacompass.in/$1 [R=301,L]
 
+  # 1) Send obvious "this can never be a page" requests to a real 404.
   #    - Files with non-web extensions commonly probed by scanners
   #    - WordPress / phpMyAdmin paths we don't host
   RewriteRule \.(php|aspx|jsp|bak|env|sql|tar|gz|zip)$ \
