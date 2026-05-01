@@ -366,7 +366,7 @@ export function useStrengthWeaknessData() {
     return readinessScore(att, cor, tot);
   }, [sections]);
 
-  return { loading, hasData, sections, allTopics, weakTopics, strongTopics, overallReadiness, refresh };
+  return { loading, hasData, sections, examAggs, allTopics, weakTopics, strongTopics, overallReadiness, refresh };
 }
 
 // ─── Default component (kept for backwards compatibility — Overview etc.) ─────
