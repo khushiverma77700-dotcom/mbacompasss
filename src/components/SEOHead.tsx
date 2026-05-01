@@ -1,7 +1,21 @@
 import { useEffect } from "react";
 
 const DEFAULT_SITE_URL = "https://mbacompass.in";
-const SITE_URL = typeof window !== "undefined" ? window.location.origin : DEFAULT_SITE_URL;
+
+// Force the non-www apex as the canonical host. Even if the page is being
+// served from www.mbacompass.in (or any other host alias), every canonical /
+// og:url / JSON-LD URL we emit points at https://mbacompass.in.
+const stripWww = (origin: string) => origin.replace(/^https?:\/\/www\./i, "https://");
+
+const SITE_URL =
+  typeof window !== "undefined" ? stripWww(window.location.origin) : DEFAULT_SITE_URL;
+
+// Rewrite any absolute URL on www.mbacompass.in -> mbacompass.in. Leaves
+// other hosts (preview / dashboard subdomain) untouched.
+const toCanonicalHost = (url?: string) => {
+  if (!url) return url;
+  return url.replace(/^https?:\/\/www\.mbacompass\.in/i, "https://mbacompass.in");
+};
 
 interface SEOHeadProps {
   title?: string;
