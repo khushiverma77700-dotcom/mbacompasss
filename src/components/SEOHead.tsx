@@ -1,7 +1,21 @@
 import { useEffect } from "react";
 
 const DEFAULT_SITE_URL = "https://mbacompass.in";
-const SITE_URL = typeof window !== "undefined" ? window.location.origin : DEFAULT_SITE_URL;
+
+// Force the non-www apex as the canonical host. Even if the page is being
+// served from www.mbacompass.in (or any other host alias), every canonical /
+// og:url / JSON-LD URL we emit points at https://mbacompass.in.
+const stripWww = (origin: string) => origin.replace(/^https?:\/\/www\./i, "https://");
+
+const SITE_URL =
+  typeof window !== "undefined" ? stripWww(window.location.origin) : DEFAULT_SITE_URL;
+
+// Rewrite any absolute URL on www.mbacompass.in -> mbacompass.in. Leaves
+// other hosts (preview / dashboard subdomain) untouched.
+const toCanonicalHost = (url?: string) => {
+  if (!url) return url;
+  return url.replace(/^https?:\/\/www\.mbacompass\.in/i, "https://mbacompass.in");
+};
 
 interface SEOHeadProps {
   title?: string;
@@ -61,13 +75,17 @@ const SEOHead = ({
     syncMeta("description", description);
     syncMeta("keywords", keywords?.length ? keywords.join(", ") : undefined);
 
+    // Always force the non-www apex on canonical / og:url, regardless of
+    // whether the page is currently being viewed on www.mbacompass.in.
+    const canonicalHref = toCanonicalHost(canonical);
+
     // Open Graph
     syncMeta("og:title", ogTitle || title, "property");
     syncMeta("og:description", ogDescription || description, "property");
     syncMeta("og:image", resolvedOgImage, "property");
     syncMeta("og:site_name", "MBA Compass", "property");
     syncMeta("og:type", ogType, "property");
-    syncMeta("og:url", canonical, "property");
+    syncMeta("og:url", canonicalHref, "property");
 
     // Twitter Card
     syncMeta("twitter:card", twitterCard);
@@ -78,15 +96,15 @@ const SEOHead = ({
     // Robots
     syncMeta("robots", noIndex ? "noindex, nofollow" : "index, follow");
 
-    // Canonical
+    // Canonical — always non-www
     let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-    if (canonical) {
+    if (canonicalHref) {
       if (!link) {
         link = document.createElement("link");
         link.setAttribute("rel", "canonical");
         document.head.appendChild(link);
       }
-      link.setAttribute("href", canonical);
+      link.setAttribute("href", canonicalHref);
     } else {
       link?.remove();
     }
