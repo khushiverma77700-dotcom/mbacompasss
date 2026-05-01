@@ -409,7 +409,7 @@ Deno.serve(async (req) => {
 
     // 8) Internal linking — orphan colleges/institutes (no inbound link)
     const { data: orphanColleges } = await supabase.from("colleges")
-      .select("id,slug,name").is("city_id", null).limit(20);
+      .select("id,slug,name").or("city.is.null,city.eq.").limit(20);
     for (const c of orphanColleges ?? []) {
       findings.push({
         category: "internal_linking", severity: "warning",
