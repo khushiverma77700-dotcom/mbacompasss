@@ -347,7 +347,7 @@ const AuthPage = () => {
                 <div className="space-y-3 p-4 rounded-lg border border-border bg-muted/40">
                   <p className="text-sm text-foreground font-medium text-center">Verify your mobile number</p>
                   <p className="text-xs text-muted-foreground text-center">
-                    We sent a 6-digit OTP to <span className="font-med="text-foreground">+91 {phone}</span>
+                    We sent a 6-digit OTP to <span className="font-medium text-foreground">+91 {phone}</span>
                   </p>
                   <div className="flex justify-center">
                     <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
