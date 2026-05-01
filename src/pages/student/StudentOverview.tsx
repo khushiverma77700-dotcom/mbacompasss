@@ -12,11 +12,6 @@ import {
   Percent, ListChecks, Gauge, LineChart as LineIcon, Award, AlertTriangle,
   CalendarDays, GraduationCap, Rocket, ChevronRight, Star, Compass, Layers,
 } from "lucide-react";
-import {
-  LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid,
-  AreaChart, Area, BarChart, Bar, RadialBarChart, RadialBar, PolarAngleAxis,
-  ComposedChart, Legend, ReferenceLine,
-} from "recharts";
 import DailyTestCard from "@/components/student/DailyTestCard";
 import { useStudentPerformance } from "@/hooks/useStudentPerformance";
 
@@ -33,7 +28,7 @@ export default function StudentOverview() {
   const { user } = useAuth();
   // Central performance engine — shared with /student/performance, /student/mocks etc.
   // Realtime: auto-refreshes the moment a mock is submitted.
-  const { attempts, loading: perfLoading } = useStudentPerformance();
+  const { attempts } = useStudentPerformance();
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [goals, setGoals] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<any[]>([]);
@@ -43,8 +38,6 @@ export default function StudentOverview() {
   const [displayName, setDisplayName] = useState<string>("");
   const [examCountdowns, setExamCountdowns] = useState<any[]>([]);
   const [, setNowTick] = useState(0);
-  const [sideLoading, setSideLoading] = useState(true);
-  const loading = perfLoading || sideLoading;
 
   // Greeting changes by time of day — small touch that makes the dashboard feel alive
   const greeting = useMemo(() => {
@@ -96,7 +89,6 @@ export default function StudentOverview() {
         .slice(0, 8);
       setExamCountdowns(upcoming);
 
-      setSideLoading(false);
     })();
     return () => { cancelled = true; };
   }, [user]);
@@ -252,7 +244,6 @@ export default function StudentOverview() {
     (e) => !attempts.some((a) => a.test_id === e.test_id && (a.status === "in_progress" || a.status === "submitted" || a.status === "auto_submitted"))
   );
 
-  if (loading) return <div className="text-muted-foreground">Loading dashboard…</div>;
 
   const noProfile = !profile;
   const target = Number(profile?.target_percentile || 0);
