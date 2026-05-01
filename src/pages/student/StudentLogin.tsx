@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,27 +26,19 @@ export default function StudentLogin() {
   const params = new URLSearchParams(location.search);
   const redirectParam = params.get("redirect");
   const redirectTo = redirectParam?.startsWith("/student") ? redirectParam : "/student";
+  const { user, loading: authLoading } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [checkingSession, setCheckingSession] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // If already logged in, stay inside the student dashboard.
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (cancelled) return;
-      if (session?.user) {
-        navigate(redirectTo, { replace: true });
-        return;
-      }
-      setCheckingSession(false);
-    })();
-    return () => { cancelled = true; };
-  }, [navigate, redirectTo]);
+    if (!authLoading && user) {
+      navigate(redirectTo, { replace: true });
+    }
+  }, [authLoading, user, navigate, redirectTo]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +62,7 @@ export default function StudentLogin() {
     }
   };
 
-  if (checkingSession) {
+  if (authLoading) {
     return (
       <div className="min-h-screen grid place-items-center bg-gradient-to-br from-sky-50 via-white to-blue-50">
         <Loader2 className="h-6 w-6 animate-spin text-sky-600" />
