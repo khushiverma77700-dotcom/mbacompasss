@@ -75,13 +75,17 @@ const SEOHead = ({
     syncMeta("description", description);
     syncMeta("keywords", keywords?.length ? keywords.join(", ") : undefined);
 
+    // Always force the non-www apex on canonical / og:url, regardless of
+    // whether the page is currently being viewed on www.mbacompass.in.
+    const canonicalHref = toCanonicalHost(canonical);
+
     // Open Graph
     syncMeta("og:title", ogTitle || title, "property");
     syncMeta("og:description", ogDescription || description, "property");
     syncMeta("og:image", resolvedOgImage, "property");
     syncMeta("og:site_name", "MBA Compass", "property");
     syncMeta("og:type", ogType, "property");
-    syncMeta("og:url", canonical, "property");
+    syncMeta("og:url", canonicalHref, "property");
 
     // Twitter Card
     syncMeta("twitter:card", twitterCard);
@@ -92,15 +96,15 @@ const SEOHead = ({
     // Robots
     syncMeta("robots", noIndex ? "noindex, nofollow" : "index, follow");
 
-    // Canonical
+    // Canonical — always non-www
     let link = document.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-    if (canonical) {
+    if (canonicalHref) {
       if (!link) {
         link = document.createElement("link");
         link.setAttribute("rel", "canonical");
         document.head.appendChild(link);
       }
-      link.setAttribute("href", canonical);
+      link.setAttribute("href", canonicalHref);
     } else {
       link?.remove();
     }
