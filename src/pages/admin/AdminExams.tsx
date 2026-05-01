@@ -15,6 +15,7 @@ import RichTextEditor from "@/components/admin/RichTextEditor";
 import SEOChecklist from "@/components/admin/SEOChecklist";
 import SeoEnhanceFields from "@/components/admin/SeoEnhanceFields";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
+import { SEOValidationButton } from "@/components/admin/SEOValidationButton";
 
 const emptyForm = {
   name: "", slug: "", full_name: "", description: "", conducting_body: "",
@@ -121,17 +122,20 @@ const AdminExams = () => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>{editId ? "Edit" : "Add"} Exam</CardTitle>
-              <AISEOButton
-                contentType="exam"
-                recordId={editId || undefined}
-                data={{ name: form.name, full_name: form.full_name, description: form.description, conducting_body: form.conducting_body, slug: form.slug }}
-                onApply={(s) => setForm(f => ({
-                  ...f,
-                  ...(s.meta_title && { meta_title: s.meta_title }),
-                  ...(s.meta_description && { meta_description: s.meta_description }),
-                  ...(s.keywords && { keywords: s.keywords }),
-                }))}
-              />
+              <div className="flex items-center gap-2">
+                <SEOValidationButton contentType="exam" recordId={editId || undefined} data={form as any} />
+                <AISEOButton
+                  contentType="exam"
+                  recordId={editId || undefined}
+                  data={{ name: form.name, full_name: form.full_name, description: form.description, conducting_body: form.conducting_body, slug: form.slug }}
+                  onApply={(s) => setForm(f => ({
+                    ...f,
+                    ...(s.meta_title && { meta_title: s.meta_title }),
+                    ...(s.meta_description && { meta_description: s.meta_description }),
+                    ...(s.keywords && { keywords: s.keywords }),
+                  }))}
+                />
+              </div>
             </div>
           </CardHeader>
           <CardContent>

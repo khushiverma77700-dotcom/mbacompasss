@@ -25,6 +25,7 @@ import ResponsiveImageUpload from "@/components/admin/ResponsiveImageUpload";
 import SEOChecklist from "@/components/admin/SEOChecklist";
 import SeoEnhanceFields from "@/components/admin/SeoEnhanceFields";
 import { AISEOButton } from "@/components/admin/AISEOSuggestions";
+import { SEOValidationButton } from "@/components/admin/SEOValidationButton";
 import MultiSelectTags from "@/components/admin/MultiSelectTags";
 import { useSpecializations } from "@/hooks/useSpecializations";
 import RefreshContentButton from "@/components/admin/RefreshContentButton";
@@ -293,17 +294,20 @@ const AdminColleges = () => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>{editId ? "Edit" : "Add"} College</CardTitle>
-              <AISEOButton
-                contentType="college"
-                recordId={editId || undefined}
-                data={{ name: form.name, description: form.description, city: form.city, state: form.state, slug: form.slug, courses: form.courses, fees: form.fees }}
-                onApply={(s) => setForm(f => ({
-                  ...f,
-                  ...(s.meta_title && { meta_title: s.meta_title }),
-                  ...(s.meta_description && { meta_description: s.meta_description }),
-                  ...(s.keywords && { keywords: s.keywords }),
-                }))}
-              />
+              <div className="flex items-center gap-2">
+                <SEOValidationButton contentType="college" recordId={editId || undefined} data={form as any} />
+                <AISEOButton
+                  contentType="college"
+                  recordId={editId || undefined}
+                  data={{ name: form.name, description: form.description, city: form.city, state: form.state, slug: form.slug, courses: form.courses, fees: form.fees }}
+                  onApply={(s) => setForm(f => ({
+                    ...f,
+                    ...(s.meta_title && { meta_title: s.meta_title }),
+                    ...(s.meta_description && { meta_description: s.meta_description }),
+                    ...(s.keywords && { keywords: s.keywords }),
+                  }))}
+                />
+              </div>
             </div>
           </CardHeader>
           <CardContent>
