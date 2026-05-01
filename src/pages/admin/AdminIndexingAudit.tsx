@@ -7,7 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import {
   Loader2, Play, AlertTriangle, AlertCircle, Info, Wrench, ExternalLink,
-  RefreshCw, ShieldAlert, FileText, Globe, Link2, Search, Server, Layers,
+  RefreshCw, ShieldAlert, FileText, Globe, Link2, Search, Server, Layers, Route,
 } from "lucide-react";
 
 type Finding = {
@@ -45,6 +45,9 @@ const CATEGORY_META: Record<string, { label: string; icon: any }> = {
   technical_seo: { label: "Technical SEO", icon: Server },
   search_console: { label: "Search Console", icon: Globe },
   crawl_budget: { label: "Crawl Budget", icon: RefreshCw },
+  route_robots: { label: "Route · Robots", icon: ShieldAlert },
+  route_canonical: { label: "Route · Canonical", icon: Link2 },
+  route_sitemap: { label: "Route · Sitemap", icon: Route },
 };
 
 const severityColor = (s: string) =>
@@ -101,6 +104,29 @@ const AdminIndexingAudit = () => {
     }
   };
 
+  // Lightweight, focused check: walks every public route and verifies that it
+  // is (a) not blocked by robots.txt, (b) has a self-referencing canonical
+  // tag, and (c) appears in /sitemap.xml. Designed to catch the most common
+  // Soft 404 / "Discovered – not indexed" causes before Google sees them.
+  const runRouteCoverage = async () => {
+    setRunning(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("route-coverage-check", {
+        body: {},
+      });
+      if (error) throw error;
+      toast({
+        title: "Route Coverage Check Complete",
+        description: `${data.routes_checked} routes scanned · ${data.findings} issues (${data.critical} critical).`,
+      });
+      await loadLatest();
+    } catch (err: any) {
+      toast({ title: "Route check failed", description: err.message, variant: "destructive" });
+    } finally {
+      setRunning(false);
+    }
+  };
+
   const applyFix = async (finding: Finding) => {
     setFixingId(finding.id);
     try {
@@ -130,10 +156,16 @@ const AdminIndexingAudit = () => {
             End-to-end Google indexing & crawlability check across all 8 dimensions.
           </p>
         </div>
-        <Button onClick={runAudit} disabled={running} size="lg">
-          {running ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Play className="w-4 h-4 mr-2" />}
-          {running ? "Running full audit (60–90s)..." : "Run Full Audit"}
-        </Button>
+        <div className="flex gap-2 flex-wrap">
+          <Button onClick={runRouteCoverage} disabled={running} size="lg" variant="outline">
+            {running ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Route className="w-4 h-4 mr-2" />}
+            Route Coverage Check
+          </Button>
+          <Button onClick={runAudit} disabled={running} size="lg">
+            {running ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Play className="w-4 h-4 mr-2" />}
+            {running ? "Running..." : "Run Full Audit"}
+          </Button>
+        </div>
       </div>
 
       {latestRun && (
