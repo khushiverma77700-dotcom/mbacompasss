@@ -66,7 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/admin")) {
+      if (typeof window !== "undefined" && window.location.pathname.startsWith("/student")) {
         resolvedAdminUserIdRef.current = null;
         setIsAdmin(false);
         setAllowedSections(null);
