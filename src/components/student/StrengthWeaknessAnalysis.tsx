@@ -114,10 +114,23 @@ const COLORS = {
 };
 
 // ─── Hook (shared by Overview, Weak page, Strength page) ───────────────────────
+export type ExamAgg = {
+  exam: string;
+  attempts: number;
+  attempted: number;
+  correct: number;
+  total: number;
+  accuracy: number;
+  readiness: number;
+  avgScore: number;
+  bestScore: number;
+};
+
 export function useStrengthWeaknessData() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [sections, setSections] = useState<SectionAgg[]>([]);
+  const [examAggs, setExamAggs] = useState<ExamAgg[]>([]);
   const [hasData, setHasData] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
   const refresh = () => setRefreshTick((t) => t + 1);
@@ -128,18 +141,30 @@ export function useStrengthWeaknessData() {
     (async () => {
       setLoading(true);
 
-      // 1. Get all submitted attempts for this user
+      // 1. Get all submitted attempts for this user (with exam_code & score)
       const { data: attempts } = await supabase
         .from("mock_attempts")
-        .select("id, submitted_at, status")
+        .select("id, submitted_at, status, total_score, max_score, accuracy, test:mock_tests(exam_code, name)")
         .eq("user_id", user.id)
         .in("status", ["submitted", "auto_submitted"]);
 
       const attemptIds = (attempts ?? []).map((a) => a.id);
       if (attemptIds.length === 0) {
-        if (!cancelled) { setSections([]); setHasData(false); setLoading(false); }
+        if (!cancelled) { setSections([]); setExamAggs([]); setHasData(false); setLoading(false); }
         return;
       }
+
+      // Exam-wise aggregation from attempts (works even with no responses)
+      const examMap = new Map<string, { attempts: number; scoreSum: number; bestScore: number; accSum: number; accN: number }>();
+      (attempts ?? []).forEach((a: any) => {
+        const code = (a.test?.exam_code || "GENERAL").toUpperCase();
+        if (!examMap.has(code)) examMap.set(code, { attempts: 0, scoreSum: 0, bestScore: 0, accSum: 0, accN: 0 });
+        const e = examMap.get(code)!;
+        e.attempts += 1;
+        e.scoreSum += Number(a.total_score || 0);
+        e.bestScore = Math.max(e.bestScore, Number(a.total_score || 0));
+        if (a.accuracy != null) { e.accSum += Number(a.accuracy); e.accN += 1; }
+      });
 
       // 2. Pull all responses for those attempts
       const { data: responses } = await supabase
@@ -283,8 +308,38 @@ export function useStrengthWeaknessData() {
       });
 
       sectionAggs.sort((a, b) => b.attempted - a.attempted);
+
+      // Build per-exam topic aggregation overlay (use response questions joined to attempt's exam)
+      const attemptExam = new Map<string, string>();
+      (attempts ?? []).forEach((a: any) => attemptExam.set(a.id, (a.test?.exam_code || "GENERAL").toUpperCase()));
+      const examQ: Record<string, { att: number; cor: number; tot: Set<string> }> = {};
+      for (const r of (responses ?? []) as Resp[]) {
+        const code = attemptExam.get(r.attempt_id) || "GENERAL";
+        if (!examQ[code]) examQ[code] = { att: 0, cor: 0, tot: new Set() };
+        examQ[code].tot.add(r.question_id);
+        if (r.status === "answered" || r.status === "marked_answered") {
+          examQ[code].att += 1;
+          if (r.is_correct) examQ[code].cor += 1;
+        }
+      }
+      const examList: ExamAgg[] = Array.from(examMap.entries()).map(([exam, v]) => {
+        const eq = examQ[exam] || { att: 0, cor: 0, tot: new Set() };
+        return {
+          exam,
+          attempts: v.attempts,
+          attempted: eq.att,
+          correct: eq.cor,
+          total: eq.tot.size,
+          accuracy: v.accN > 0 ? Math.round(v.accSum / v.accN) : pct(eq.cor, eq.att),
+          readiness: readinessScore(eq.att, eq.cor, eq.tot.size),
+          avgScore: v.attempts > 0 ? +(v.scoreSum / v.attempts).toFixed(1) : 0,
+          bestScore: +v.bestScore.toFixed(1),
+        };
+      }).sort((a, b) => b.attempts - a.attempts);
+
       setSections(sectionAggs);
-      setHasData(sectionAggs.some((s) => s.attempted > 0));
+      setExamAggs(examList);
+      setHasData(sectionAggs.some((s) => s.attempted > 0) || examList.length > 0);
       setLoading(false);
     })();
     return () => { cancelled = true; };
@@ -311,7 +366,7 @@ export function useStrengthWeaknessData() {
     return readinessScore(att, cor, tot);
   }, [sections]);
 
-  return { loading, hasData, sections, allTopics, weakTopics, strongTopics, overallReadiness, refresh };
+  return { loading, hasData, sections, examAggs, allTopics, weakTopics, strongTopics, overallReadiness, refresh };
 }
 
 // ─── Default component (kept for backwards compatibility — Overview etc.) ─────
