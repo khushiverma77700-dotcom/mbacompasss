@@ -129,8 +129,8 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
   // Separate issues into AI-fixed vs manual-only
   const { fixedByAI, manualIssues, manualWarnings } = useMemo(() => {
     if (!suggestions) return { fixedByAI: [] as string[], manualIssues: [] as string[], manualWarnings: [] as string[] };
-    const allCritical = suggestions.seoScore.criticalIssues || [];
-    const allWarnings = suggestions.seoScore.warnings || [];
+    const allCritical = suggestions.seoScore?.criticalIssues || [];
+    const allWarnings = suggestions.seoScore?.warnings || [];
     const fixed: string[] = [];
     const manual: string[] = [];
     const manualWarn: string[] = [];
@@ -153,20 +153,20 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
   }, [suggestions, autoApplied]);
 
   // After auto-apply, the effective score is the projected score
-  const displayScore = autoApplied && suggestions?.seoScore.projectedScore
+  const displayScore = autoApplied && suggestions?.seoScore?.projectedScore
     ? suggestions.seoScore.projectedScore
-    : suggestions?.seoScore.overall || 0;
+    : suggestions?.seoScore?.overall || 0;
 
   // Projected breakdown after AI fixes
   const displayBreakdown = useMemo(() => {
     if (!suggestions) return {} as Record<string, number>;
-    const bd = { ...suggestions.seoScore.breakdown };
+    const bd: Record<string, number> = { ...(suggestions.seoScore?.breakdown || {}) } as Record<string, number>;
     if (autoApplied) {
       // After auto-apply: meta, keywords, schema, socialMeta are fixed
-      bd.metaTags = Math.max(bd.metaTags, 85);
-      bd.keywords = Math.max(bd.keywords, 80);
-      bd.schema = Math.max(bd.schema, 90);
-      bd.socialMeta = Math.max(bd.socialMeta, 85);
+      bd.metaTags = Math.max(bd.metaTags || 0, 85);
+      bd.keywords = Math.max(bd.keywords || 0, 80);
+      bd.schema = Math.max(bd.schema || 0, 90);
+      bd.socialMeta = Math.max(bd.socialMeta || 0, 85);
     }
     return bd;
   }, [suggestions, autoApplied]);
@@ -339,7 +339,7 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
     : score >= 50 ? "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800"
     : "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800";
 
-  const totalKeywords = suggestions ? Object.values(suggestions.keywords).flat().length : 0;
+  const totalKeywords = suggestions?.keywords ? Object.values(suggestions.keywords).flat().filter(Boolean).length : 0;
   const schemaCount = suggestions?.schemaMarkup
     ? Array.isArray(suggestions.schemaMarkup) ? suggestions.schemaMarkup.length : 1
     : 0;
