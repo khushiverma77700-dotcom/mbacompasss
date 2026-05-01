@@ -746,64 +746,128 @@ function PredictorGauge({ value }: { value: number }) {
 
 function MiniTrendChart({ data, barKey, lineKey, max, target }: { data: any[]; barKey: string; lineKey?: string; max?: number; target?: number }) {
   const rows = data.slice(-12);
-  const width = 640;
-  const height = 220;
-  const pad = 32;
-  const innerW = width - pad * 2;
-  const innerH = height - pad * 2;
-  const values = rows.flatMap((r) => [Number(r[barKey] || 0), lineKey ? Number(r[lineKey] || 0) : 0, target || 0]);
-  const top = max ?? Math.max(10, ...values) * 1.15;
-  // Center bars in equal-width slots so 2 mocks don't sit at the extreme edges.
-  const slot = rows.length > 0 ? innerW / rows.length : innerW;
-  const xCenter = (i: number) => pad + slot * i + slot / 2;
-  const y = (v: number) => pad + innerH - (Math.max(0, Math.min(top, v)) / top) * innerH;
-  const points = rows.map((r, i) => `${xCenter(i)},${y(Number(r[lineKey || barKey] || 0))}`).join(" ");
-  const barW = Math.max(18, Math.min(48, slot * 0.55));
-  // 4 horizontal gridlines for visual scale reference
-  const gridYs = [0.25, 0.5, 0.75, 1].map((f) => pad + innerH * (1 - f));
 
   if (rows.length === 0) {
     return (
-      <div className="h-[240px] w-full rounded-lg border border-border bg-card/60 grid place-items-center text-xs text-muted-foreground">
-        No data yet
+      <div className="h-[260px] w-full rounded-lg border border-border bg-card/60 grid place-items-center text-xs text-muted-foreground">
+        No data yet — submit a mock to see your trend
       </div>
     );
   }
 
+  const width = 640;
+  const height = 240;
+  const padL = 44;   // room for Y-axis labels
+  const padR = 16;
+  const padT = 24;
+  const padB = 36;   // room for X-axis labels
+  const innerW = width - padL - padR;
+  const innerH = height - padT - padB;
+
+  // Compute min/max across bars + line + target. Always include 0 so a zero
+  // baseline is visible and negative values render below it.
+  const allVals = rows.flatMap((r) => [
+    Number(r[barKey] || 0),
+    lineKey ? Number(r[lineKey] || 0) : 0,
+  ]);
+  if (target) allVals.push(target);
+  allVals.push(0);
+
+  const rawMin = Math.min(...allVals);
+  const rawMax = Math.max(...allVals);
+  // Pad the range so labels don't kiss the edges. Use max prop as upper cap if given.
+  const span = Math.max(1, rawMax - rawMin);
+  let yMin = rawMin < 0 ? rawMin - span * 0.1 : 0;
+  let yMax = max ?? Math.max(rawMax + span * 0.15, rawMin + 10);
+  if (max && rawMin >= 0) yMin = 0;
+  if (yMax === yMin) yMax = yMin + 10;
+
+  const slot = innerW / rows.length;
+  const xCenter = (i: number) => padL + slot * i + slot / 2;
+  const y = (v: number) => padT + innerH - ((v - yMin) / (yMax - yMin)) * innerH;
+  const yZero = y(0);
+  const barW = Math.max(20, Math.min(56, slot * 0.5));
+
+  // 4 evenly-spaced gridlines with numeric labels
+  const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => yMin + (yMax - yMin) * f);
+  const fmtTick = (v: number) => {
+    if (Math.abs(v) >= 100) return Math.round(v).toString();
+    if (Math.abs(v) >= 10) return v.toFixed(0);
+    return v.toFixed(1);
+  };
+
+  const linePoints = lineKey
+    ? rows.map((r, i) => `${xCenter(i)},${y(Number(r[lineKey] || 0))}`).join(" ")
+    : "";
+
   return (
-    <div className="h-[240px] w-full rounded-lg border border-border bg-card/60 p-2">
+    <div className="h-[260px] w-full rounded-lg border border-border bg-card/60 p-2">
       <svg viewBox={`0 0 ${width} ${height}`} className="h-full w-full" role="img" aria-label="Performance trend">
-        {/* Gridlines */}
-        {gridYs.map((gy, i) => (
-          <line key={`g-${i}`} x1={pad} x2={width - pad} y1={gy} y2={gy} stroke="hsl(var(--border))" strokeDasharray="3 4" opacity="0.5" />
+        {/* Y-axis gridlines + labels */}
+        {ticks.map((t, i) => (
+          <g key={`tick-${i}`}>
+            <line x1={padL} x2={width - padR} y1={y(t)} y2={y(t)} stroke="hsl(var(--border))" strokeDasharray="3 4" opacity="0.5" />
+            <text x={padL - 6} y={y(t) + 4} textAnchor="end" className="fill-muted-foreground" style={{ fontSize: 11 }}>
+              {fmtTick(t)}
+            </text>
+          </g>
         ))}
-        <line x1={pad} x2={width - pad} y1={height - pad} y2={height - pad} stroke="hsl(var(--border))" />
-        <line x1={pad} x2={pad} y1={pad} y2={height - pad} stroke="hsl(var(--border))" />
-        {target && target > 0 && <line x1={pad} x2={width - pad} y1={y(target)} y2={y(target)} stroke="hsl(var(--primary))" strokeDasharray="6 6" opacity="0.7" />}
+
+        {/* Axes */}
+        <line x1={padL} x2={padL} y1={padT} y2={padT + innerH} stroke="hsl(var(--border))" />
+        {/* Zero baseline (highlighted if negatives exist) */}
+        <line x1={padL} x2={width - padR} y1={yZero} y2={yZero} stroke="hsl(var(--border))" strokeWidth={yMin < 0 ? 1.5 : 1} />
+
+        {/* Optional target */}
+        {target && target > 0 && (
+          <line x1={padL} x2={width - padR} y1={y(target)} y2={y(target)} stroke="hsl(var(--primary))" strokeDasharray="6 6" opacity="0.7" />
+        )}
+
+        {/* Bars (above or below zero) */}
         {rows.map((r, i) => {
           const v = Number(r[barKey] || 0);
           const cx = xCenter(i);
           const x = cx - barW / 2;
-          const barH = height - pad - y(v);
+          const top = Math.min(y(v), yZero);
+          const barH = Math.max(2, Math.abs(y(v) - yZero));
+          const isNeg = v < 0;
           return (
             <g key={`${r.name}-${i}`}>
-              <rect x={x} y={y(v)} width={barW} height={Math.max(2, barH)} rx="6" fill="hsl(var(--primary) / 0.18)" stroke="hsl(var(--primary) / 0.45)" />
-              <text x={cx} y={y(v) - 6} textAnchor="middle" className="fill-foreground" style={{ fontSize: 16, fontWeight: 600 }}>
+              <rect
+                x={x}
+                y={top}
+                width={barW}
+                height={barH}
+                rx="6"
+                fill={isNeg ? "hsl(0 70% 60% / 0.18)" : "hsl(var(--primary) / 0.2)"}
+                stroke={isNeg ? "hsl(0 70% 55% / 0.6)" : "hsl(var(--primary) / 0.5)"}
+              />
+              <text
+                x={cx}
+                y={isNeg ? y(v) + 16 : y(v) - 6}
+                textAnchor="middle"
+                className="fill-foreground"
+                style={{ fontSize: 13, fontWeight: 600 }}
+              >
                 {Number.isInteger(v) ? v : v.toFixed(1)}
               </text>
             </g>
           );
         })}
+
+        {/* Cumulative line */}
         {lineKey && rows.length > 1 && (
           <>
-            <polyline points={points} fill="none" stroke="hsl(var(--primary))" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            <polyline points={linePoints} fill="none" stroke="hsl(var(--primary))" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
             {rows.map((r, i) => (
-              <circle key={`p-${i}`} cx={xCenter(i)} cy={y(Number(r[lineKey] || 0))} r="4" fill="hsl(var(--primary))" />
+              <circle key={`p-${i}`} cx={xCenter(i)} cy={y(Number(r[lineKey] || 0))} r="3.5" fill="hsl(var(--primary))" />
             ))}
           </>
         )}
+
+        {/* X-axis labels */}
         {rows.map((r, i) => (
-          <text key={`label-${i}`} x={xCenter(i)} y={height - 10} textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 14 }}>
+          <text key={`label-${i}`} x={xCenter(i)} y={height - 12} textAnchor="middle" className="fill-muted-foreground" style={{ fontSize: 12 }}>
             {r.name}
           </text>
         ))}
