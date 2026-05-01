@@ -114,10 +114,23 @@ const COLORS = {
 };
 
 // ─── Hook (shared by Overview, Weak page, Strength page) ───────────────────────
+export type ExamAgg = {
+  exam: string;
+  attempts: number;
+  attempted: number;
+  correct: number;
+  total: number;
+  accuracy: number;
+  readiness: number;
+  avgScore: number;
+  bestScore: number;
+};
+
 export function useStrengthWeaknessData() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [sections, setSections] = useState<SectionAgg[]>([]);
+  const [examAggs, setExamAggs] = useState<ExamAgg[]>([]);
   const [hasData, setHasData] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
   const refresh = () => setRefreshTick((t) => t + 1);
@@ -128,10 +141,10 @@ export function useStrengthWeaknessData() {
     (async () => {
       setLoading(true);
 
-      // 1. Get all submitted attempts for this user
+      // 1. Get all submitted attempts for this user (with exam_code & score)
       const { data: attempts } = await supabase
         .from("mock_attempts")
-        .select("id, submitted_at, status")
+        .select("id, submitted_at, status, total_score, max_score, accuracy, test:mock_tests(exam_code, name)")
         .eq("user_id", user.id)
         .in("status", ["submitted", "auto_submitted"]);
 
