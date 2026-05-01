@@ -274,7 +274,7 @@ async function checkRoute(
         });
       }
     }
-    if (status === 200 && normalizeUrl(canonical || "") === SITE && path !== "/") {
+    if (status === 200 && normalizeUrl(canonical || "") === normalizeUrl(SITE) && path !== "/") {
       findings.push({
         category: "route_soft404",
         severity: "critical",
@@ -328,10 +328,15 @@ async function collectRoutes(supabase: ReturnType<typeof createClient>) {
     }
   };
 
-  await pull("colleges", s => `/colleges/${s}`, "college");
-  await pull("articles", s => `/blog/${s}`, "article", { col: "published", val: true });
-  await pull("exams", s => `/exams/${s}`, "exam");
+  await pull("colleges", s => `/college/${s}`, "college");
+  await pull("articles", s => `/article/${s}`, "article", { col: "published", val: true });
+  await pull("exams", s => `/exam/${s}`, "exam");
   await pull("institutes", s => `/institute/${s}`, "institute");
+  await pull("categories", s => `/category/${s}`, "category");
+  await pull("city_pages", s => `/colleges/${s}`, "city_page", { col: "active", val: true });
+  await pull("mock_tests", s => `/mocks/${s}`, "mock", { col: "is_published", val: true });
+  await pull("mock_bundles", s => `/courses/${s}`, "mock_bundle", { col: "is_published", val: true });
+  await pull("mba_compass_courses", s => `/mba-compass/${s}`, "mba_compass_course", { col: "is_active", val: true });
 
   // Deduplicate
   const seen = new Set<string>();
