@@ -119,7 +119,7 @@ const SectionFormRenderer = ({ type, data, onChange, content, onContentChange }:
 
 const AdminCollegeSections = () => {
   const [sections, setSections] = useState<any[]>([]);
-  const [colleges, setColleges] = useState<{ id: string; name: string; city?: string | null; state?: string | null; type?: string | null; tier?: string | null; established?: number | null }[]>([]);
+  const [colleges, setColleges] = useState<{ id: string; name: string; slug?: string | null; city?: string | null; state?: string | null; type?: string | null; tier?: string | null; established?: number | null }[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState<string | null>(null);
