@@ -188,7 +188,28 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
           </div>
 
           {!otpStep && !phoneVerified && (
-            <Button onClick={handleSendOtp} className="w-full h-11" disabled={otpSending || phone.length !== 10}>
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 flex items-center gap-1.5">
+                <Lock className="w-4 h-4" />
+                Create Password <span className="text-destructive">*</span>
+              </label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 6 characters"
+                className="h-11"
+                minLength={6}
+                autoComplete="new-password"
+              />
+              <p className="text-[11px] text-muted-foreground mt-1.5">
+                Use this to log in later with your email or mobile.
+              </p>
+            </div>
+          )}
+
+          {!otpStep && !phoneVerified && (
+            <Button onClick={handleSendOtp} className="w-full h-11" disabled={otpSending || phone.length !== 10 || password.length < 6}>
               {otpSending ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending OTP…</> : <>Send OTP <ArrowRight className="w-4 h-4 ml-1" /></>}
             </Button>
           )}
