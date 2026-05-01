@@ -343,15 +343,16 @@ ${data.college_category ? `College Category: ${data.college_category}` : ""}
 
 Perform COMPREHENSIVE, DEEP SEO analysis. Score the CURRENT state honestly. Show what's wrong and provide the BEST possible suggestions.`;
 
-    console.log(`[ai-seo-enhance] Calling AI with deep analysis prompt...`);
+    console.log(`[ai-seo-enhance] Calling AI with deep analysis prompt (premium GPT-5)...`);
     const aiStartTime = Date.now();
+    // PREMIUM SEO: route through OpenAI GPT-5 for top-tier copywriting + research depth.
+    // Bigger token budget (12K) so the model can produce all 50+ keywords + tips
+    // without truncation. The aiGateway helper auto-pads to max_completion_tokens
+    // for GPT-5 reasoning models.
     const response = await callAIGateway({
-        // COST OPT: gemini-3-flash-preview is preview-tier and pricier; the SEO
-        // suggestion schema is fully tool-constrained, so 2.5-flash matches quality
-        // at production-tier cost. Cap completion to 4K tokens (the schema asks for
-        // ~30 short fields — never needs more than ~3K).
-        model: "google/gemini-2.5-flash",
-        max_tokens: 8192,
+        model: "openai/gpt-5",
+        max_tokens: 12000,
+        reasoning: { effort: "low" },
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
