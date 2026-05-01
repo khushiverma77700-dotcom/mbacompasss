@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { Mail, Lock, User, Phone, ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
+import { Mail, Lock, User, ShieldCheck, ArrowRight, Loader2, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -14,27 +14,29 @@ import { getAuthRedirectUri, normalizeRedirectPath, storePostAuthRedirect } from
 import mbahubLogo from "@/assets/brandLogo";
 
 /**
- * Simplified auth flow:
- *  - Sign Up: Google (primary) OR manual (First name, Last name, Email, Mobile + OTP).
- *    No password screen, no exam questions. After OTP we create the account with an
- *    auto-generated password and immediately sign the user in.
- *  - Sign In: email + password (kept for returning users) + Google.
+ * Frictionless auth:
+ *  Sign Up:
+ *    1) Continue with Google  → OnboardingDialog asks mobile OTP + password.
+ *    2) Sign up with mobile   → first/last name + email + mobile + OTP + password.
+ *  Sign In:
+ *    - Google (one click)
+ *    - Email OR 10-digit mobile + password (auto-detected).
  */
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
 
-  // Shared
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-
-  // Login fields
+  // Login: identifier can be email OR 10-digit phone.
+  const [loginId, setLoginId] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
 
-  // Signup fields
+  // Signup
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
 
-  // OTP state
+  // OTP
   const [otpStep, setOtpStep] = useState(false);
   const [otpValue, setOtpValue] = useState("");
   const [otpSending, setOtpSending] = useState(false);
@@ -81,12 +83,25 @@ const AuthPage = () => {
     }
   };
 
-  // ---------- Login ----------
+  // ---------- Login (email OR phone + password) ----------
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await signIn(email, loginPassword);
+      const id = loginId.trim();
+      let emailToUse = id;
+
+      // If it's a 10-digit phone, look up the linked email.
+      if (/^\d{10}$/.test(id)) {
+        const { data, error } = await supabase.functions.invoke("lookup-email-by-phone", {
+          body: { phone: id },
+        });
+        if (error) throw new Error(error.message);
+        if (!data?.email) throw new Error("No account found for this mobile number.");
+        emailToUse = data.email;
+      }
+
+      await signIn(emailToUse, loginPassword);
       toast({ title: "Welcome back!" });
       navigate(redirectTo, { replace: true });
     } catch (err: any) {
@@ -102,8 +117,11 @@ const AuthPage = () => {
       toast({ title: "Invalid phone", description: "Enter a valid 10-digit mobile number.", variant: "destructive" });
       return;
     }
+    if (signupPassword.length < 6) {
+      toast({ title: "Weak password", description: "Use at least 6 characters.", variant: "destructive" });
+      return;
+    }
 
-    // Block duplicate phone/email up front
     try {
       const { data: dup } = await supabase.functions.invoke("check-duplicate", {
         body: { phone, email },
@@ -142,7 +160,6 @@ const AuthPage = () => {
     }
     setOtpVerifying(true);
     try {
-      // 1. Verify OTP
       const { data: verifyData, error: verifyErr } = await supabase.functions.invoke("verify-otp", {
         body: { phone, otp: otpValue },
       });
@@ -152,16 +169,13 @@ const AuthPage = () => {
 
       setPhoneVerified(true);
 
-      // 2. Create the account behind the scenes
       const displayName = `${firstName.trim()} ${lastName.trim()}`.trim();
-      const autoPassword = `${crypto.randomUUID()}A1!`; // strong, unguessable
-
       const signupPageUrl = window.location.pathname;
       const signupPageName = document.title || "Unknown";
 
       const { error: signUpErr } = await supabase.auth.signUp({
         email: email.trim(),
-        password: autoPassword,
+        password: signupPassword,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
           data: {
@@ -176,7 +190,6 @@ const AuthPage = () => {
       });
       if (signUpErr) throw signUpErr;
 
-      // 3. Mark onboarding as completed so we don't ask anything else
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (user?.id) {
@@ -191,10 +204,9 @@ const AuthPage = () => {
         }
       } catch { /* non-fatal */ }
 
-      // 4. Auto sign-in (auto-confirm email is ON per project setup)
       try {
-        await supabase.auth.signInWithPassword({ email: email.trim(), password: autoPassword });
-      } catch { /* if blocked, the signup itself usually creates a session */ }
+        await supabase.auth.signInWithPassword({ email: email.trim(), password: signupPassword });
+      } catch { /* signup typically creates a session */ }
 
       toast({ title: "Welcome to MBA Compass!", description: "Your account is ready." });
       navigate(redirectTo, { replace: true });
@@ -209,7 +221,8 @@ const AuthPage = () => {
     firstName.trim().length > 0 &&
     lastName.trim().length > 0 &&
     /\S+@\S+\.\S+/.test(email) &&
-    /^\d{10}$/.test(phone);
+    /^\d{10}$/.test(phone) &&
+    signupPassword.length >= 6;
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center bg-background px-4 py-8">
@@ -220,7 +233,7 @@ const AuthPage = () => {
             {isLogin ? "Welcome back" : "Create your account"}
           </CardTitle>
           <CardDescription>
-            {isLogin ? "Sign in to continue." : "It only takes a few seconds."}
+            {isLogin ? "Sign in with email or mobile number." : "It only takes a few seconds."}
           </CardDescription>
         </CardHeader>
 
@@ -244,7 +257,7 @@ const AuthPage = () => {
           <div className="relative py-1">
             <Separator />
             <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground">
-              or {isLogin ? "sign in with email" : "use email"}
+              or {isLogin ? "use email or mobile" : "sign up with mobile"}
             </span>
           </div>
 
@@ -252,13 +265,28 @@ const AuthPage = () => {
             <form onSubmit={handleLogin} className="space-y-3">
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input type="email" placeholder="Email address" value={email}
-                  onChange={(e) => setEmail(e.target.value)} className="pl-10 h-11" required />
+                <Input
+                  type="text"
+                  placeholder="Email or 10-digit mobile"
+                  value={loginId}
+                  onChange={(e) => setLoginId(e.target.value)}
+                  className="pl-10 h-11"
+                  required
+                  autoComplete="username"
+                />
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input type="password" placeholder="Password" value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)} className="pl-10 h-11" required minLength={6} />
+                <Input
+                  type="password"
+                  placeholder="Password"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  className="pl-10 h-11"
+                  required
+                  minLength={6}
+                  autoComplete="current-password"
+                />
               </div>
               <Button type="submit" className="w-full h-11" disabled={loading}>
                 {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Signing in…</> : <>Sign in <ArrowRight className="w-4 h-4 ml-1" /></>}
@@ -286,15 +314,32 @@ const AuthPage = () => {
                       onChange={(e) => setEmail(e.target.value)} className="pl-10 h-11" required />
                   </div>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium select-none">+91</span>
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <span className="absolute left-9 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium select-none">+91</span>
                     <Input type="tel" inputMode="numeric" placeholder="10-digit mobile number"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                      className="pl-12 h-11" maxLength={10} required />
+                      className="pl-[4.25rem] h-11" maxLength={10} required />
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="password"
+                      placeholder="Create password (min 6 characters)"
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
+                      className="pl-10 h-11"
+                      required
+                      minLength={6}
+                      autoComplete="new-password"
+                    />
                   </div>
                   <Button onClick={handleSendOtp} className="w-full h-11" disabled={!canSendOtp || otpSending}>
                     {otpSending ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending OTP…</> : <>Send OTP <ArrowRight className="w-4 h-4 ml-1" /></>}
                   </Button>
+                  <p className="text-[11px] text-muted-foreground text-center">
+                    The same password works with both email and mobile login.
+                  </p>
                 </>
               )}
 

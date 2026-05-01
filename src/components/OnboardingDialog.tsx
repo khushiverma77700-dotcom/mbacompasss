@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Phone, AlertCircle, ShieldCheck, Loader2, ArrowRight } from "lucide-react";
+import { Phone, AlertCircle, ShieldCheck, Loader2, ArrowRight, Lock } from "lucide-react";
 
 interface OnboardingDialogProps {
   open: boolean;
@@ -21,6 +21,7 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [phoneTouched, setPhoneTouched] = useState(false);
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -56,6 +57,14 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
 
   const finalize = async () => {
     setLoading(true);
+    // Set the password on the Google-authenticated user so they can also log in
+    // with email/password and mobile/password later.
+    if (password.length >= 6) {
+      try {
+        await supabase.auth.updateUser({ password });
+      } catch { /* non-fatal */ }
+    }
+
     const { error } = await supabase
       .from("profiles")
       .update({
@@ -75,6 +84,10 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
   const handleSendOtp = async () => {
     const err = validatePhone(phone);
     if (err) { setPhoneError(err); setPhoneTouched(true); return; }
+    if (password.length < 6) {
+      toast({ title: "Create a password", description: "Use at least 6 characters.", variant: "destructive" });
+      return;
+    }
 
     // Admin bypass
     try {
@@ -143,7 +156,7 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
             Verify your mobile number
           </DialogTitle>
           <DialogDescription>
-            One last step — verify your number to finish creating your account.
+            Verify your mobile and create a password to finish setting up your account.
           </DialogDescription>
         </DialogHeader>
 
@@ -175,7 +188,28 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
           </div>
 
           {!otpStep && !phoneVerified && (
-            <Button onClick={handleSendOtp} className="w-full h-11" disabled={otpSending || phone.length !== 10}>
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 flex items-center gap-1.5">
+                <Lock className="w-4 h-4" />
+                Create Password <span className="text-destructive">*</span>
+              </label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="At least 6 characters"
+                className="h-11"
+                minLength={6}
+                autoComplete="new-password"
+              />
+              <p className="text-[11px] text-muted-foreground mt-1.5">
+                Use this to log in later with your email or mobile.
+              </p>
+            </div>
+          )}
+
+          {!otpStep && !phoneVerified && (
+            <Button onClick={handleSendOtp} className="w-full h-11" disabled={otpSending || phone.length !== 10 || password.length < 6}>
               {otpSending ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Sending OTP…</> : <>Send OTP <ArrowRight className="w-4 h-4 ml-1" /></>}
             </Button>
           )}
