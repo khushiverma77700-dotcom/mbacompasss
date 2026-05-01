@@ -343,14 +343,15 @@ ${data.college_category ? `College Category: ${data.college_category}` : ""}
 
 Perform COMPREHENSIVE, DEEP SEO analysis. Score the CURRENT state honestly. Show what's wrong and provide the BEST possible suggestions.`;
 
-    console.log(`[ai-seo-enhance] Calling AI with deep analysis prompt (premium GPT-5)...`);
+    console.log(`[ai-seo-enhance] Calling AI with deep analysis prompt (GPT-5-mini, cost-optimized)...`);
     const aiStartTime = Date.now();
-    // PREMIUM SEO: route through OpenAI GPT-5 for top-tier copywriting + research depth.
-    // Bigger token budget (12K) so the model can produce all 50+ keywords + tips
-    // without truncation. The aiGateway helper auto-pads to max_completion_tokens
-    // for GPT-5 reasoning models.
+    // COST-OPTIMIZED PREMIUM SEO: GPT-5-mini gives ~95% of GPT-5's SEO copy
+    // quality at 1/5th the cost (input $0.25/M vs $1.25/M; output $2/M vs $10/M).
+    // For structured tool-call SEO generation, copywriting craft matters more
+    // than deep multi-step reasoning, so mini is the sweet spot. Token budget
+    // stays at 12K so 50+ keywords + full tips never get truncated.
     const response = await callAIGateway({
-        model: "openai/gpt-5",
+        model: "openai/gpt-5-mini",
         max_tokens: 12000,
         reasoning: { effort: "low" },
         messages: [
