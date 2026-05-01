@@ -27,6 +27,8 @@ import {
   History,
   FlaskConical,
   FileText,
+  AlertTriangle,
+  Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -347,6 +349,9 @@ function SidebarContent() {
           </div>
         </div>
       </div>
+
+      {renderRow({ to: "/student/weak-areas", label: "My Weak Areas", icon: AlertTriangle })}
+      {renderRow({ to: "/student/strength-areas", label: "My Strength Areas", icon: Award })}
 
       {restItems.map((item) => renderRow(item))}
 

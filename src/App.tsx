@@ -139,6 +139,8 @@ const StudentOverview = lazyWithPreload(() => import("./pages/student/StudentOve
 const StudentMocks = lazyWithPreload(() => import("./pages/student/StudentMocks"));
 const StudentBuyMocks = lazyWithPreload(() => import("./pages/student/StudentBuyMocks"));
 const StudentPerformance = lazyWithPreload(() => import("./pages/student/StudentPerformance"));
+const StudentWeakAreas = lazyWithPreload(() => import("./pages/student/StudentWeakAreas"));
+const StudentStrengthAreas = lazyWithPreload(() => import("./pages/student/StudentStrengthAreas"));
 const StudentGoals = lazyWithPreload(() => import("./pages/student/StudentGoals"));
 const StudentAnnouncements = lazyWithPreload(() => import("./pages/student/StudentAnnouncements"));
 const StudentTools = lazyWithPreload(() => import("./pages/student/StudentTools"));
@@ -661,6 +663,8 @@ const App = () => (
               <Route path="mocks/topic-wise" element={<LazyPage><StudentMocks /></LazyPage>} />
               <Route path="mocks/practice" element={<LazyPage><StudentMocks /></LazyPage>} />
               <Route path="mocks/attempted" element={<LazyPage><StudentMocks /></LazyPage>} />
+              <Route path="weak-areas" element={<LazyPage><StudentWeakAreas /></LazyPage>} />
+              <Route path="strength-areas" element={<LazyPage><StudentStrengthAreas /></LazyPage>} />
               <Route path="buy-mocks" element={<LazyPage><StudentBuyMocks /></LazyPage>} />
               <Route path="performance" element={<LazyPage><StudentPerformance /></LazyPage>} />
               <Route path="goals" element={<LazyPage><StudentGoals /></LazyPage>} />

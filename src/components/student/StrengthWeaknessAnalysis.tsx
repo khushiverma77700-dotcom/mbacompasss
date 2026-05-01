@@ -113,12 +113,14 @@ const COLORS = {
   muted: "#94a3b8",
 };
 
-// ─── Component ─────────────────────────────────────────────────────────────────
-export default function StrengthWeaknessAnalysis() {
+// ─── Hook (shared by Overview, Weak page, Strength page) ───────────────────────
+export function useStrengthWeaknessData() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [sections, setSections] = useState<SectionAgg[]>([]);
   const [hasData, setHasData] = useState(false);
+  const [refreshTick, setRefreshTick] = useState(0);
+  const refresh = () => setRefreshTick((t) => t + 1);
 
   useEffect(() => {
     if (!user) return;
@@ -286,7 +288,7 @@ export default function StrengthWeaknessAnalysis() {
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [user]);
+  }, [user, refreshTick]);
 
   // ─── Derived: weak + strong topic lists ──────────────────────────────────────
   const allTopics = useMemo(
@@ -308,6 +310,13 @@ export default function StrengthWeaknessAnalysis() {
     const tot = sections.reduce((s, x) => s + x.total, 0);
     return readinessScore(att, cor, tot);
   }, [sections]);
+
+  return { loading, hasData, sections, allTopics, weakTopics, strongTopics, overallReadiness, refresh };
+}
+
+// ─── Default component (kept for backwards compatibility — Overview etc.) ─────
+export default function StrengthWeaknessAnalysis() {
+  const { loading, hasData, sections, weakTopics, strongTopics, overallReadiness } = useStrengthWeaknessData();
 
   if (loading) {
     return (
@@ -338,7 +347,6 @@ export default function StrengthWeaknessAnalysis() {
 
   return (
     <div className="space-y-4">
-      {/* ── Header summary ─────────────────────────────────────────────────────── */}
       <Card className="p-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -357,7 +365,6 @@ export default function StrengthWeaknessAnalysis() {
           </div>
         </div>
 
-        {/* Section bar chart */}
         <div className="mt-5 h-56">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={sections.map((s) => ({
@@ -375,7 +382,6 @@ export default function StrengthWeaknessAnalysis() {
         </div>
       </Card>
 
-      {/* ── Tabs: Weak / Strength / Full Table ─────────────────────────────────── */}
       <Tabs defaultValue="weak" className="w-full">
         <TabsList className="grid grid-cols-3 w-full max-w-md">
           <TabsTrigger value="weak" className="gap-2"><AlertTriangle className="h-3.5 w-3.5" /> Weak</TabsTrigger>
@@ -384,23 +390,11 @@ export default function StrengthWeaknessAnalysis() {
         </TabsList>
 
         <TabsContent value="weak" className="mt-4">
-          <TopicAnalysisPanel
-            heading="My Weak Areas"
-            description="Lowest-readiness topics across all your mocks. Fix these first for biggest score gains."
-            topics={weakTopics}
-            tone="weak"
-          />
+          <TopicAnalysisPanel heading="My Weak Areas" description="Lowest-readiness topics across all your mocks. Fix these first for biggest score gains." topics={weakTopics} tone="weak" />
         </TabsContent>
-
         <TabsContent value="strong" className="mt-4">
-          <TopicAnalysisPanel
-            heading="My Strength Areas"
-            description="Topics where you are consistent and accurate. Maintain through revision and speed drills."
-            topics={strongTopics}
-            tone="strong"
-          />
+          <TopicAnalysisPanel heading="My Strength Areas" description="Topics where you are consistent and accurate." topics={strongTopics} tone="strong" />
         </TabsContent>
-
         <TabsContent value="all" className="mt-4">
           <FullReportTable sections={sections} />
         </TabsContent>
@@ -409,9 +403,10 @@ export default function StrengthWeaknessAnalysis() {
   );
 }
 
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function ReadinessBadge({ label, value, suffix = "%", tone }: { label: string; value: number; suffix?: string; tone?: "weak" | "strong" }) {
+export function ReadinessBadge({ label, value, suffix = "%", tone }: { label: string; value: number; suffix?: string; tone?: "weak" | "strong" }) {
   const color = tone === "weak" ? "text-red-600" : tone === "strong" ? "text-sky-700" : "text-slate-900";
   return (
     <div className="text-right">
@@ -421,7 +416,7 @@ function ReadinessBadge({ label, value, suffix = "%", tone }: { label: string; v
   );
 }
 
-function TopicAnalysisPanel({ heading, description, topics, tone }: {
+export function TopicAnalysisPanel({ heading, description, topics, tone }: {
   heading: string; description: string; topics: TopicAgg[]; tone: "weak" | "strong";
 }) {
   if (topics.length === 0) {
@@ -607,7 +602,7 @@ function buildTrend(t: TopicAgg) {
   }));
 }
 
-function FullReportTable({ sections }: { sections: SectionAgg[] }) {
+export function FullReportTable({ sections }: { sections: SectionAgg[] }) {
   const rows: Array<{
     section: string; topic: string; subtopic: string;
     attempts: number; total: number; correct: number; incorrect: number;
