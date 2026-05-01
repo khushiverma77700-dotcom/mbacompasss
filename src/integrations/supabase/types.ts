@@ -4815,6 +4815,87 @@ export type Database = {
           },
         ]
       }
+      seo_keyword_research: {
+        Row: {
+          content_type: string
+          generated_at: string
+          generated_by: string | null
+          id: string
+          keywords: Json
+          mode: string | null
+          primary_keyword: string | null
+          record_id: string
+          total_count: number
+          updated_at: string
+        }
+        Insert: {
+          content_type: string
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          keywords?: Json
+          mode?: string | null
+          primary_keyword?: string | null
+          record_id: string
+          total_count?: number
+          updated_at?: string
+        }
+        Update: {
+          content_type?: string
+          generated_at?: string
+          generated_by?: string | null
+          id?: string
+          keywords?: Json
+          mode?: string | null
+          primary_keyword?: string | null
+          record_id?: string
+          total_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      seo_validation_reports: {
+        Row: {
+          content_type: string
+          error_count: number
+          errors: Json
+          id: string
+          passed: boolean
+          record_id: string
+          url: string | null
+          validated_at: string
+          validated_by: string | null
+          warning_count: number
+          warnings: Json
+        }
+        Insert: {
+          content_type: string
+          error_count?: number
+          errors?: Json
+          id?: string
+          passed: boolean
+          record_id: string
+          url?: string | null
+          validated_at?: string
+          validated_by?: string | null
+          warning_count?: number
+          warnings?: Json
+        }
+        Update: {
+          content_type?: string
+          error_count?: number
+          errors?: Json
+          id?: string
+          passed?: boolean
+          record_id?: string
+          url?: string | null
+          validated_at?: string
+          validated_by?: string | null
+          warning_count?: number
+          warnings?: Json
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           id: string
