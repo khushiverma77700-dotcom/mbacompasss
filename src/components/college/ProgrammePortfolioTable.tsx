@@ -104,7 +104,6 @@ const ProgrammePortfolioTable = ({ collegeSlug, programmes, fallbackCourses }: P
                   <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border min-w-[140px]">Exams</th>
                   <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border min-w-[180px]">Specialisations</th>
                   <th className="text-right py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Fees</th>
-                  <th className="text-right py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Source</th>
                 </tr>
               </thead>
               <tbody>
@@ -160,32 +159,6 @@ const ProgrammePortfolioTable = ({ collegeSlug, programmes, fallbackCourses }: P
                           {p.fees_total_lakhs ? `₹${p.fees_total_lakhs} L` : "—"}
                         </div>
                         {p.fees_year && <div className="text-[10px] text-muted-foreground">{p.fees_year}</div>}
-                      </td>
-                      <td className="py-3 px-3 text-right">
-                        {p.source_url ? (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <a
-                                href={p.source_url}
-                                target="_blank"
-                                rel="noreferrer noopener nofollow"
-                                className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
-                              >
-                                Verify <ExternalLink className="w-3 h-3" />
-                              </a>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs">
-                              <p className="text-xs italic">"{p.evidence_snippet || "Verified from official source."}"</p>
-                              {p.source_brochure_url && (
-                                <a href={p.source_brochure_url} target="_blank" rel="noreferrer noopener nofollow" className="text-xs text-primary inline-flex items-center gap-1 mt-1.5">
-                                  <FileText className="w-3 h-3" /> Brochure
-                                </a>
-                              )}
-                            </TooltipContent>
-                          </Tooltip>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
                       </td>
                     </motion.tr>
                   );
