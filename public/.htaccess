@@ -1,0 +1,41 @@
+# Hostinger / Apache routing for the MBA Compass SPA.
+#
+# Behavior:
+#   1. Real files & directories are served as-is.
+#   2. Known SPA paths fall through to index.html (HTTP 200) so React Router
+#      can render them.
+#   3. Anything matching the `NOT_FOUND_PATHS` rule (dotfiles, missing assets
+#      with extensions like .php/.aspx/.jsp/.bak, common scanner paths) is
+#      forwarded to the `not-found` edge function which returns a real
+#      HTTP 404 — eliminating Google "Soft 404" verdicts on junk URLs.
+#
+# Copy this file to your Hostinger `public_html/` root after deploying the
+# built `dist/` folder. Lovable's own hosting handles SPA fallback natively
+# and ignores .htaccess.
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # 1) Send obvious "this can never be a page" requests to a real 404.
+  #    - Files with non-web extensions commonly probed by scanners
+  #    - WordPress / phpMyAdmin paths we don't host
+  RewriteRule \.(php|aspx|jsp|bak|env|sql|tar|gz|zip)$ \
+    https://mttoiqruzzxooveooldo.supabase.co/functions/v1/not-found?path=%{REQUEST_URI} [R=404,L]
+  RewriteRule ^(wp-admin|wp-login|phpmyadmin|xmlrpc) \
+    https://mttoiqruzzxooveooldo.supabase.co/functions/v1/not-found?path=%{REQUEST_URI} [R=404,L]
+
+  # 2) Asset requests (have a file extension) that don't exist => real 404
+  #    via the edge function. Skip this for .html which is the SPA shell.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_URI} \.(js|css|png|jpe?g|gif|svg|webp|ico|woff2?|ttf|map|json|xml|txt|pdf)$
+  RewriteRule .* https://mttoiqruzzxooveooldo.supabase.co/functions/v1/not-found?path=%{REQUEST_URI} [R=404,L]
+
+  # 3) Standard SPA fallback — serve index.html for everything else.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
+
+# As a final safety net, point Apache's built-in 404 at the edge function.
+ErrorDocument 404 https://mttoiqruzzxooveooldo.supabase.co/functions/v1/not-found
