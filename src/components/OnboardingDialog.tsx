@@ -84,6 +84,10 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
   const handleSendOtp = async () => {
     const err = validatePhone(phone);
     if (err) { setPhoneError(err); setPhoneTouched(true); return; }
+    if (password.length < 6) {
+      toast({ title: "Create a password", description: "Use at least 6 characters.", variant: "destructive" });
+      return;
+    }
 
     // Admin bypass
     try {
