@@ -459,7 +459,7 @@ Perform COMPREHENSIVE, DEEP SEO analysis. Score the CURRENT state honestly. Show
     }
 
     const aiData = await response.json();
-    await logAIUsage("seo-enhance", "openai/gpt-5", aiData);
+    await logAIUsage("seo-enhance", "openai/gpt-5-mini", aiData);
     console.log(`[ai-seo-enhance] AI analysis completed in ${Date.now() - aiStartTime}ms`);
 
     const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
