@@ -37,6 +37,8 @@ export function useStudentNavBadges(): StudentNavBadges {
   useEffect(() => {
     if (!user) return;
     let alive = true;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+    let idleId: number | null = null;
 
     const compute = async () => {
       const todayStr = new Date().toISOString().slice(0, 10);
@@ -102,9 +104,26 @@ export function useStudentNavBadges(): StudentNavBadges {
       });
     };
 
-    compute();
-    const t = setInterval(compute, 60_000); // refresh every minute
-    return () => { alive = false; clearInterval(t); };
+    const start = () => {
+      compute();
+      intervalId = setInterval(compute, 60_000); // refresh every minute
+    };
+
+    const w = window as any;
+    if (w.requestIdleCallback) {
+      idleId = w.requestIdleCallback(start, { timeout: 2500 });
+    } else {
+      idleId = window.setTimeout(start, 1200) as unknown as number;
+    }
+
+    return () => {
+      alive = false;
+      if (intervalId) clearInterval(intervalId);
+      if (idleId !== null) {
+        const cancel = w.cancelIdleCallback ?? window.clearTimeout;
+        try { cancel(idleId); } catch {}
+      }
+    };
   }, [user?.id, seen]);
 
   return { counts, markSeen };
