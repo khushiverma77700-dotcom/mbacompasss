@@ -66,6 +66,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/admin")) {
+        resolvedAdminUserIdRef.current = null;
+        setIsAdmin(false);
+        setAllowedSections(null);
+        return;
+      }
+
       if (resolvedAdminUserIdRef.current === user.id) return;
       resolvedAdminUserIdRef.current = user.id;
 
