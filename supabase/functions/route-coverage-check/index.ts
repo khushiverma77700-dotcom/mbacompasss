@@ -226,12 +226,12 @@ async function checkRoute(
     });
   }
 
-  // 3) canonical (only spend a fetch if not already blocked, and skip noindex zones)
+  // 3) live Googlebot-facing status + canonical + soft-404 signals
   if (!blockedBy && !intentionallyExcluded) {
-    const { status, canonical } = await fetchCanonical(fullUrl);
+    const { status, canonical, title, robots: metaRobots, h1Count, textLength } = await fetchRouteHtml(fullUrl);
     if (status === 0 || status >= 500) {
       findings.push({
-        category: "route_canonical",
+        category: "route_status",
         severity: "critical",
         url: fullUrl,
         page_type: pageType,
@@ -241,7 +241,7 @@ async function checkRoute(
       });
     } else if (status >= 400) {
       findings.push({
-        category: "route_canonical",
+        category: "route_status",
         severity: "critical",
         url: fullUrl,
         page_type: pageType,
@@ -273,6 +273,39 @@ async function checkRoute(
             "If this page should be indexed, the canonical must be self-referencing. Otherwise remove it from the sitemap to match the canonical signal.",
         });
       }
+    }
+    if (status === 200 && normalizeUrl(canonical || "") === SITE && path !== "/") {
+      findings.push({
+        category: "route_soft404",
+        severity: "critical",
+        url: fullUrl,
+        page_type: pageType,
+        issue_code: "generic_homepage_shell",
+        message: "Googlebot receives a generic homepage canonical/title for this route, which can make every page look duplicate or like a Soft 404.",
+        fix_suggestion: "Add route-specific prerender/HTML fallback for this URL, or remove the static homepage canonical from the HTML shell before publish.",
+      });
+    }
+    if (status === 200 && (h1Count === 0 || textLength < 500 || /not found|page not found|404/i.test(title || ""))) {
+      findings.push({
+        category: "route_soft404",
+        severity: "warning",
+        url: fullUrl,
+        page_type: pageType,
+        issue_code: "thin_or_not_found_html",
+        message: `Googlebot-facing HTML is thin or error-like (H1 count: ${h1Count}, visible text: ${textLength} chars).`,
+        fix_suggestion: "Ensure the initial HTML contains real page-specific heading/body content before JavaScript hydration.",
+      });
+    }
+    if (metaRobots && /noindex/i.test(metaRobots)) {
+      findings.push({
+        category: "route_soft404",
+        severity: "critical",
+        url: fullUrl,
+        page_type: pageType,
+        issue_code: "route_noindex",
+        message: `Route contains a noindex robots directive: ${metaRobots}`,
+        fix_suggestion: "Remove noindex from public pages that should be crawled and indexed.",
+      });
     }
   }
 }
