@@ -40,13 +40,15 @@ function getTextContent(item: Record<string, any>) {
   );
 }
 
-// ─── COST OPTIMIZATION HELPERS (Balanced Tier) ───────────────
-// Cheap model for structured/templated tasks (scoring, schema, keywords, image audit)
+// ─── MODEL TIERS (Quality-First) ─────────────────────────────
+// Cheap model for purely templated structural tasks (schema scaffolding only).
 const CHEAP_MODEL = "google/gemini-2.5-flash-lite";
-// Standard model for nuanced output (meta titles/descriptions, FAQs)
-const STANDARD_MODEL = "google/gemini-2.5-flash";
-// Premium reserved only for FAQ generation where quality matters most
-const PREMIUM_MODEL = "google/gemini-2.5-pro";
+// Standard model for nuanced output (per-page SEO copy, FAQs, audits).
+// Switched to OpenAI GPT-5 for premium SEO quality — better keyword research,
+// better title craftsmanship, no random/repetitive outputs.
+const STANDARD_MODEL = "openai/gpt-5";
+// Premium reserved for deep analysis where multi-step reasoning matters.
+const PREMIUM_MODEL = "openai/gpt-5";
 
 // SHA-256 hash of text content — used to skip pages that haven't changed since last refresh
 async function computeContentHash(text: string): Promise<string> {
