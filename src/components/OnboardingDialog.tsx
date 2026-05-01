@@ -94,7 +94,7 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
     try {
       const [adminRes, dupRes, otpRes] = await Promise.all([
         userEmail
-          ? supabase.rpc("is_admin_email", { _email: userEmail }).catch(() => ({ data: false } as any))
+          ? Promise.resolve(supabase.rpc("is_admin_email", { _email: userEmail })).catch(() => ({ data: false } as any))
           : Promise.resolve({ data: false } as any),
         supabase.functions.invoke("check-duplicate", { body: { phone } }).catch(() => ({ data: null } as any)),
         supabase.functions.invoke("send-otp", { body: { phone } }),
