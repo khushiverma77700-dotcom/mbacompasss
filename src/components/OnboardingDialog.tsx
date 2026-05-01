@@ -11,13 +11,14 @@ interface OnboardingDialogProps {
   open: boolean;
   onComplete: () => void;
   userId: string;
+  userEmail?: string | null;
 }
 
 /**
  * Minimal post-Google onboarding: only verify mobile via OTP, then mark complete.
  * No exam or experience questions.
  */
-const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) => {
+const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDialogProps) => {
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [phoneTouched, setPhoneTouched] = useState(false);
@@ -89,35 +90,30 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
       return;
     }
 
-    // Admin bypass
+    setOtpSending(true);
     try {
-      const { data: userRes } = await supabase.auth.getUser();
-      const adminEmail = userRes?.user?.email;
-      if (adminEmail) {
-        const { data: isAdminEmail } = await supabase.rpc("is_admin_email", { _email: adminEmail });
-        if (isAdminEmail) {
-          setPhoneVerified(true);
-          setOtpStep(false);
-          await finalize();
-          return;
-        }
-      }
-    } catch { /* non-fatal */ }
+      const [adminRes, dupRes, otpRes] = await Promise.all([
+        userEmail
+          ? supabase.rpc("is_admin_email", { _email: userEmail }).catch(() => ({ data: false } as any))
+          : Promise.resolve({ data: false } as any),
+        supabase.functions.invoke("check-duplicate", { body: { phone } }).catch(() => ({ data: null } as any)),
+        supabase.functions.invoke("send-otp", { body: { phone } }),
+      ]);
 
-    // Block duplicate phone
-    try {
-      const { data: dup } = await supabase.functions.invoke("check-duplicate", { body: { phone } });
-      if (dup?.phoneExists) {
+      if (adminRes?.data) {
+        setPhoneVerified(true);
+        setOtpStep(false);
+        await finalize();
+        return;
+      }
+
+      if (dupRes?.data?.phoneExists) {
         toast({ title: "Number already in use", description: "This mobile is registered to another account.", variant: "destructive" });
         return;
       }
-    } catch { /* non-fatal */ }
 
-    setOtpSending(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("send-otp", { body: { phone } });
-      if (error) throw new Error(error.message);
-      if (data?.error) throw new Error(data.error);
+      if (otpRes.error) throw new Error(otpRes.error.message);
+      if (otpRes.data?.error) throw new Error(otpRes.data.error);
       toast({ title: "OTP sent", description: `6-digit code sent to +91 ${phone}.` });
       setOtpStep(true);
       setResendTimer(30);
