@@ -2,12 +2,31 @@ import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import SEOHead from "@/components/SEOHead";
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+
 const NotFound = () => {
   const location = useLocation();
 
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
-  }, [location.pathname]);
+
+    // Fire a real HTTP 404 to the `not-found` edge function so that:
+    //   - Server / edge logs record a genuine 404 for this URL.
+    //   - Any crawler / monitoring tool that follows the beacon sees a real
+    //     404 status instead of the SPA's default 200.
+    //   - GSC URL inspection follow-up fetches can pick up the 404 signal.
+    if (SUPABASE_URL) {
+      const beacon = `${SUPABASE_URL}/functions/v1/not-found?path=${encodeURIComponent(
+        location.pathname + location.search,
+      )}`;
+      // `keepalive` lets it complete even if the user navigates away.
+      fetch(beacon, { method: "HEAD", keepalive: true, cache: "no-store" }).catch(
+        () => {
+          /* network errors here are non-fatal */
+        },
+      );
+    }
+  }, [location.pathname, location.search]);
 
   return (
     <>
