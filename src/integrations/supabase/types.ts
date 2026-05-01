@@ -6125,6 +6125,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      dedupe_faq_jsonb: { Args: { _faqs: Json }; Returns: Json }
+      dedupe_site_settings_faqs: { Args: { _value: Json }; Returns: Json }
       generate_ticket_code: { Args: never; Returns: string }
       get_global_leaderboard: {
         Args: { _limit?: number }
@@ -6186,6 +6188,7 @@ export type Database = {
         Args: { _through?: string; _user_id: string }
         Returns: number
       }
+      normalize_faq_question: { Args: { _question: string }; Returns: string }
       personalized_hub_today_count: {
         Args: { _user_id: string }
         Returns: number
