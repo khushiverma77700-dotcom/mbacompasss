@@ -18,30 +18,38 @@ import { useAdminFilters } from "@/hooks/useAdminFilters";
 import AdminFilterBar from "@/components/admin/AdminFilterBar";
 import { useMemo } from "react";
 
+// Order matches the exact sequence sections appear on the public college page.
+// Edit top-to-bottom and the page reads top-to-bottom.
 const SECTION_TYPES = [
-  { value: "courses_fees", label: "Courses & Fee Structure" },
-  { value: "admission", label: "Admission Process" },
-  { value: "placements", label: "Placement Statistics" },
-  { value: "cutoff", label: "Cutoff Details" },
-  { value: "rankings", label: "Rankings & Accreditations" },
-  { value: "reviews", label: "Student Reviews" },
-  { value: "gallery", label: "Campus Gallery" },
-  { value: "scholarships", label: "Scholarships" },
-  { value: "faculty", label: "Faculty Profiles" },
-  { value: "hostel", label: "Hostel & Campus Life" },
-  { value: "qa", label: "Frequently Asked Questions" },
-  { value: "quick_info", label: "Quick Info / Sidebar" },
-  { value: "why_join", label: "About the College" },
-  { value: "news", label: "Latest News & Articles" },
+  { value: "why_join",     label: "1. About the College" },
+  { value: "courses_fees", label: "2. Courses & Fees" },
+  { value: "admission",    label: "3. Admission Process" },
+  { value: "placements",   label: "4. Placements" },
+  { value: "cutoff",       label: "5. Cutoffs" },
+  { value: "rankings",     label: "6. Rankings & Accreditations" },
+  { value: "reviews",      label: "7. Student Reviews" },
+  { value: "gallery",      label: "8. Campus Gallery" },
+  { value: "scholarships", label: "9. Scholarships" },
+  { value: "faculty",      label: "10. Faculty" },
+  { value: "hostel",       label: "11. Hostel & Campus Life" },
+  { value: "qa",           label: "12. FAQs" },
+  { value: "news",         label: "13. Latest News" },
+  { value: "quick_info",   label: "14. Sidebar Quick Info" },
 ];
+
+// Default sort_order for each section so the admin list also shows them in page order.
+const SECTION_ORDER: Record<string, number> = SECTION_TYPES.reduce((acc, s, i) => {
+  acc[s.value] = i + 1;
+  return acc;
+}, {} as Record<string, number>);
 
 const emptyForm = {
   college_id: "",
-  section_type: "courses_fees",
+  section_type: "why_join",
   title: "",
   content: "",
   data: {} as any,
-  sort_order: 0,
+  sort_order: 1,
 };
 
 const ListEditor = ({ items, onChange, fields, addLabel }: {
@@ -199,7 +207,7 @@ const AdminCollegeSections = () => {
   const filteredSections = useMemo(() => {
     const search = (filters.search || "").trim().toLowerCase();
     const sectionType = filters.section;
-    return sections.filter((s) => {
+    const list = sections.filter((s) => {
       if (sectionType && sectionType !== "all" && s.section_type !== sectionType) return false;
       if (!search) return true;
       const c = (s as any).colleges || {};
@@ -213,6 +221,16 @@ const AdminCollegeSections = () => {
         SECTION_TYPES.find((t) => t.value === s.section_type)?.label,
       ].filter(Boolean).join(" ").toLowerCase();
       return hay.includes(search);
+    });
+    // Always render in the canonical on-page sequence so admins edit
+    // top-to-bottom in the same order users read the page.
+    return [...list].sort((a, b) => {
+      const collegeA = ((a as any).colleges?.name || "").toLowerCase();
+      const collegeB = ((b as any).colleges?.name || "").toLowerCase();
+      if (collegeA !== collegeB) return collegeA.localeCompare(collegeB);
+      const orderA = SECTION_ORDER[a.section_type] ?? 999;
+      const orderB = SECTION_ORDER[b.section_type] ?? 999;
+      return orderA - orderB;
     });
   }, [sections, filters.search, filters.section]);
 
