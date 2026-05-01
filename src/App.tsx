@@ -6,9 +6,7 @@ import { BrowserRouter, Route, Routes, matchPath, useLocation, useNavigate } fro
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useAuth } from "@/contexts/AuthContext";
-import Navbar from "@/components/Navbar";
 import ScrollToTop from "@/components/ScrollToTop";
-import BackButton from "@/components/BackButton";
 import { computeSubdomainRedirect } from "@/lib/subdomainRouter";
 import { consumePostAuthRedirect } from "@/lib/authRedirect";
 import { isStudentMode } from "@/lib/studentModeNav";
@@ -28,6 +26,7 @@ const lazyWithPreload = <T extends React.ComponentType<any>>(
 };
 
 // Lazy below-the-fold + interaction-only chrome (keep out of initial bundle)
+const Navbar = lazyWithPreload(() => import("@/components/Navbar"));
 const Footer = lazyWithPreload(() => import("@/components/Footer"));
 const Toaster = lazyWithPreload(() => import("@/components/ui/toaster").then(m => ({ default: m.Toaster })));
 const Sonner = lazyWithPreload(() => import("@/components/ui/sonner").then(m => ({ default: m.Toaster })));
@@ -434,7 +433,7 @@ const DeferredToasters = () => {
 
 const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   <>
-    <Navbar />
+    <Suspense fallback={null}><Navbar /></Suspense>
     {children}
     <DeferredChrome />
   </>
