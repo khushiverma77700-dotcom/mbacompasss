@@ -156,7 +156,7 @@ const OnboardingDialog = ({ open, onComplete, userId }: OnboardingDialogProps) =
             Verify your mobile number
           </DialogTitle>
           <DialogDescription>
-            One last step — verify your number to finish creating your account.
+            Verify your mobile and create a password to finish setting up your account.
           </DialogDescription>
         </DialogHeader>
 
