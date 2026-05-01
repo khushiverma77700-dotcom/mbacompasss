@@ -203,33 +203,41 @@ export default function StudentOverview() {
     });
   }, [submitted]);
 
-  // Sectional aggregates: avg score, avg accuracy, avg attempted, avg percentile
+  // Sectional aggregates: avg score, avg accuracy, avg attempted, avg percentile.
+  // Keys in sectional_scores are mock_section UUIDs — resolve them to readable
+  // names via sectionNameMap and aggregate by name so the same section across
+  // multiple mocks (e.g. "VARC" in CAT mocks) collapses into one row.
   const sectional = useMemo(() => {
     const agg: Record<string, { score: number; max: number; correct: number; attempted: number; percentile: number; count: number }> = {};
+    const isUuid = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
     for (const a of submitted) {
       const ss = a.sectional_scores || {};
       for (const k of Object.keys(ss)) {
         const sec = (ss as any)[k] || {};
-        if (!agg[k]) agg[k] = { score: 0, max: 0, correct: 0, attempted: 0, percentile: 0, count: 0 };
-        agg[k].score += Number(sec.score || 0);
-        agg[k].max += Number(sec.max_score || sec.max || 0);
-        agg[k].correct += Number(sec.correct || 0);
-        agg[k].attempted += Number(sec.attempted || 0);
-        agg[k].percentile += Number(sec.percentile || 0);
-        agg[k].count += 1;
+        const resolved = sectionNameMap[k] || (isUuid(k) ? null : k);
+        if (!resolved) continue; // skip rows we can't label yet
+        if (!agg[resolved]) agg[resolved] = { score: 0, max: 0, correct: 0, attempted: 0, percentile: 0, count: 0 };
+        agg[resolved].score += Number(sec.score || 0);
+        agg[resolved].max += Number(sec.max_score || sec.max || 0);
+        agg[resolved].correct += Number(sec.correct || 0);
+        agg[resolved].attempted += Number(sec.attempted || 0);
+        agg[resolved].percentile += Number(sec.percentile || 0);
+        agg[resolved].count += 1;
       }
     }
     const safe = (n: number) => (Number.isFinite(n) ? n : 0);
-    return Object.entries(agg).map(([name, v]) => ({
-      name,
-      avgScore: v.count > 0 ? +safe(v.score / v.count).toFixed(1) : 0,
-      avgMax: v.count > 0 ? +safe(v.max / v.count).toFixed(1) : 0,
-      avgPercentile: v.count > 0 ? Math.round(safe(v.percentile / v.count)) : 0,
-      avgAccuracy: v.attempted > 0 ? Math.round((v.correct / v.attempted) * 100) : 0,
-      avgAttempted: v.count > 0 ? Math.round(safe(v.attempted / v.count)) : 0,
-      pctOfMax: v.max > 0 ? Math.round((v.score / v.max) * 100) : 0,
-    }));
-  }, [submitted]);
+    return Object.entries(agg)
+      .map(([name, v]) => ({
+        name,
+        avgScore: v.count > 0 ? +safe(v.score / v.count).toFixed(1) : 0,
+        avgMax: v.count > 0 ? +safe(v.max / v.count).toFixed(1) : 0,
+        avgPercentile: v.count > 0 ? Math.round(safe(v.percentile / v.count)) : 0,
+        avgAccuracy: v.attempted > 0 ? Math.round((v.correct / v.attempted) * 100) : 0,
+        avgAttempted: v.count > 0 ? Math.round(safe(v.attempted / v.count)) : 0,
+        pctOfMax: v.max > 0 ? Math.round((v.score / v.max) * 100) : 0,
+      }))
+      .sort((a, b) => b.avgPercentile - a.avgPercentile);
+  }, [submitted, sectionNameMap]);
 
   // Percentile band distribution
   const bandData = useMemo(() => {
