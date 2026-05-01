@@ -1,25 +1,23 @@
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
-import { Helmet } from "react-helmet-async";
+import SEOHead from "@/components/SEOHead";
 
 const NotFound = () => {
   const location = useLocation();
 
   useEffect(() => {
     console.error("404 Error: User attempted to access non-existent route:", location.pathname);
-    // Hint to crawlers via document title (in case Helmet hasn't applied yet)
-    document.title = "404 — Page Not Found | MBA Compass";
   }, [location.pathname]);
 
   return (
     <>
-      <Helmet>
-        <title>404 — Page Not Found | MBA Compass</title>
-        {/* CRITICAL: tell Google this URL should NOT be indexed (prevents Soft 404 in GSC) */}
-        <meta name="robots" content="noindex, follow" />
-        <meta name="googlebot" content="noindex, follow" />
-        <meta name="prerender-status-code" content="404" />
-      </Helmet>
+      {/* CRITICAL: noindex tells Google this URL should NOT be indexed
+          (prevents "Soft 404" verdicts in Google Search Console). */}
+      <SEOHead
+        title="404 — Page Not Found | MBA Compass"
+        description="The page you are looking for does not exist."
+        noIndex
+      />
       <div className="flex min-h-screen items-center justify-center bg-muted">
         <div className="text-center max-w-md px-4">
           <h1 className="mb-4 text-6xl font-bold text-foreground">404</h1>
