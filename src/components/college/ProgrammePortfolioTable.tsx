@@ -104,7 +104,6 @@ const ProgrammePortfolioTable = ({ collegeSlug, programmes, fallbackCourses }: P
                   <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border min-w-[140px]">Exams</th>
                   <th className="text-left py-3 px-3 font-heading font-semibold text-foreground border-b border-border min-w-[180px]">Specialisations</th>
                   <th className="text-right py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Fees</th>
-                  <th className="text-right py-3 px-3 font-heading font-semibold text-foreground border-b border-border">Source</th>
                 </tr>
               </thead>
               <tbody>
