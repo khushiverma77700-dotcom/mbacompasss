@@ -478,6 +478,7 @@ const OnboardingGate = () => {
         open={showOnboarding}
         onComplete={() => setShowOnboarding(false)}
         userId={user.id}
+        userEmail={user.email}
       />
     </Suspense>
   );
