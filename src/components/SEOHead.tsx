@@ -96,7 +96,20 @@ const SEOHead = ({
     existingScripts.forEach((s) => s.remove());
 
     if (jsonLd) {
-      const schemas = Array.isArray(jsonLd) ? jsonLd : [jsonLd];
+      const rawSchemas = Array.isArray(jsonLd) ? jsonLd : [jsonLd];
+      // Defensive dedupe: Google flags duplicate FAQPage / BreadcrumbList as critical errors
+      const singletonTypes = new Set(["FAQPage", "BreadcrumbList", "WebPage", "Organization"]);
+      const seen = new Set<string>();
+      const schemas = rawSchemas.filter((s) => {
+        if (!s) return false;
+        const t = (s as any)["@type"];
+        const key = Array.isArray(t) ? t.join("|") : String(t || "");
+        if (key && singletonTypes.has(key)) {
+          if (seen.has(key)) return false;
+          seen.add(key);
+        }
+        return true;
+      });
       schemas.forEach((schema, i) => {
         const script = document.createElement("script");
         script.type = "application/ld+json";
