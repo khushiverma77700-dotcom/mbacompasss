@@ -16,7 +16,14 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
 
-  # 1) Send obvious "this can never be a page" requests to a real 404.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # 0) Canonical host: permanent 301 from www.mbacompass.in -> mbacompass.in.
+  #    Non-www is the only version submitted to Google Search Console.
+  RewriteCond %{HTTP_HOST} ^www\.mbacompass\.in$ [NC]
+  RewriteRule ^(.*)$ https://mbacompass.in/$1 [R=301,L]
+
   #    - Files with non-web extensions commonly probed by scanners
   #    - WordPress / phpMyAdmin paths we don't host
   RewriteRule \.(php|aspx|jsp|bak|env|sql|tar|gz|zip)$ \
