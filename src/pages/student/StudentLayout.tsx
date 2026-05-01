@@ -27,6 +27,8 @@ import {
   History,
   FlaskConical,
   FileText,
+  AlertTriangle,
+  Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
