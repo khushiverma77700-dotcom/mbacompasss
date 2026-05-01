@@ -234,7 +234,7 @@ export default function StudentOverview() {
         avgPercentile: v.count > 0 ? Math.round(safe(v.percentile / v.count)) : 0,
         avgAccuracy: v.attempted > 0 ? Math.round((v.correct / v.attempted) * 100) : 0,
         avgAttempted: v.count > 0 ? Math.round(safe(v.attempted / v.count)) : 0,
-        pctOfMax: v.max > 0 ? Math.round((v.score / v.max) * 100) : 0,
+        pctOfMax: v.max > 0 ? Math.max(0, Math.round((v.score / v.max) * 100)) : 0,
       }))
       .sort((a, b) => b.avgPercentile - a.avgPercentile);
   }, [submitted, sectionNameMap]);
