@@ -48,6 +48,9 @@ const CATEGORY_META: Record<string, { label: string; icon: any }> = {
   route_robots: { label: "Route · Robots", icon: ShieldAlert },
   route_canonical: { label: "Route · Canonical", icon: Link2 },
   route_sitemap: { label: "Route · Sitemap", icon: Route },
+  route_status: { label: "Route · Status", icon: Server },
+  route_soft404: { label: "Soft 404 Risk", icon: AlertCircle },
+  duplicate_faq: { label: "Duplicate FAQ", icon: FileText },
 };
 
 const severityColor = (s: string) =>

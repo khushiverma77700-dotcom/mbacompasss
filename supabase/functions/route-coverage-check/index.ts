@@ -35,7 +35,7 @@ const SITEMAP_FN = `${Deno.env.get("SUPABASE_URL")}/functions/v1/serve-sitemap`;
 
 type Severity = "critical" | "warning" | "info";
 type Finding = {
-  category: "route_robots" | "route_canonical" | "route_sitemap";
+  category: "route_robots" | "route_canonical" | "route_sitemap" | "route_status" | "route_soft404" | "duplicate_faq";
   severity: Severity;
   url: string;
   page_type: string;
@@ -47,17 +47,26 @@ type Finding = {
 const STATIC_ROUTES: { path: string; type: string }[] = [
   { path: "/", type: "home" },
   { path: "/colleges", type: "list" },
+  { path: "/coaching", type: "list" },
   { path: "/blog", type: "list" },
-  { path: "/exams", type: "list" },
-  { path: "/institutes", type: "list" },
+  { path: "/compare", type: "tool" },
   { path: "/mocks", type: "landing" },
   { path: "/courses", type: "landing" },
   { path: "/mba-compass", type: "landing" },
   { path: "/college-shortlister", type: "tool" },
+  { path: "/college-finder", type: "tool" },
+  { path: "/profile-analyzer", type: "tool" },
+  { path: "/cat-score-calculator", type: "tool" },
+  { path: "/roi-calculator", type: "tool" },
+  { path: "/iim-waitlist-movement", type: "tool" },
   { path: "/about", type: "static" },
   { path: "/contact", type: "static" },
-  { path: "/privacy", type: "static" },
-  { path: "/terms", type: "static" },
+];
+
+const SENTINEL_UNKNOWN_PATHS = [
+  "/__google-soft-404-check__",
+  "/college/__missing-college-soft-404-check__",
+  "/article/__missing-article-soft-404-check__",
 ];
 
 // ─── robots.txt parsing ──────────────────────────────────────────────────────
@@ -156,20 +165,25 @@ function normalizeUrl(u: string): string {
   }
 }
 
-// ─── canonical extraction ────────────────────────────────────────────────────
-async function fetchCanonical(url: string): Promise<{ status: number; canonical: string | null }> {
+// ─── live HTML extraction ────────────────────────────────────────────────────
+async function fetchRouteHtml(url: string): Promise<{ status: number; canonical: string | null; title: string | null; robots: string | null; h1Count: number; textLength: number }> {
   try {
     const r = await fetch(url, {
       redirect: "follow",
-      headers: { "User-Agent": "MBACompass-RouteAudit/1.0" },
+      headers: { "User-Agent": "Googlebot/2.1 (+http://www.google.com/bot.html)" },
       cache: "no-store",
     });
     const html = await r.text();
-    const m = /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i.exec(html)
+    const canonicalMatch = /<link[^>]+rel=["']canonical["'][^>]+href=["']([^"']+)["']/i.exec(html)
           ?? /<link[^>]+href=["']([^"']+)["'][^>]+rel=["']canonical["']/i.exec(html);
-    return { status: r.status, canonical: m?.[1] ?? null };
+    const titleMatch = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html);
+    const robotsMatch = /<meta[^>]+name=["']robots["'][^>]+content=["']([^"']+)["']/i.exec(html)
+      ?? /<meta[^>]+content=["']([^"']+)["'][^>]+name=["']robots["']/i.exec(html);
+    const h1Count = (html.match(/<h1\b/gi) || []).length;
+    const textLength = html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().length;
+    return { status: r.status, canonical: canonicalMatch?.[1] ?? null, title: titleMatch?.[1]?.trim() ?? null, robots: robotsMatch?.[1]?.trim() ?? null, h1Count, textLength };
   } catch {
-    return { status: 0, canonical: null };
+    return { status: 0, canonical: null, title: null, robots: null, h1Count: 0, textLength: 0 };
   }
 }
 
@@ -212,12 +226,12 @@ async function checkRoute(
     });
   }
 
-  // 3) canonical (only spend a fetch if not already blocked, and skip noindex zones)
+  // 3) live Googlebot-facing status + canonical + soft-404 signals
   if (!blockedBy && !intentionallyExcluded) {
-    const { status, canonical } = await fetchCanonical(fullUrl);
+    const { status, canonical, title, robots: metaRobots, h1Count, textLength } = await fetchRouteHtml(fullUrl);
     if (status === 0 || status >= 500) {
       findings.push({
-        category: "route_canonical",
+        category: "route_status",
         severity: "critical",
         url: fullUrl,
         page_type: pageType,
@@ -227,7 +241,7 @@ async function checkRoute(
       });
     } else if (status >= 400) {
       findings.push({
-        category: "route_canonical",
+        category: "route_status",
         severity: "critical",
         url: fullUrl,
         page_type: pageType,
@@ -260,6 +274,39 @@ async function checkRoute(
         });
       }
     }
+    if (status === 200 && normalizeUrl(canonical || "") === normalizeUrl(SITE) && path !== "/") {
+      findings.push({
+        category: "route_soft404",
+        severity: "critical",
+        url: fullUrl,
+        page_type: pageType,
+        issue_code: "generic_homepage_shell",
+        message: "Googlebot receives a generic homepage canonical/title for this route, which can make every page look duplicate or like a Soft 404.",
+        fix_suggestion: "Add route-specific prerender/HTML fallback for this URL, or remove the static homepage canonical from the HTML shell before publish.",
+      });
+    }
+    if (status === 200 && (h1Count === 0 || textLength < 500 || /not found|page not found|404/i.test(title || ""))) {
+      findings.push({
+        category: "route_soft404",
+        severity: "warning",
+        url: fullUrl,
+        page_type: pageType,
+        issue_code: "thin_or_not_found_html",
+        message: `Googlebot-facing HTML is thin or error-like (H1 count: ${h1Count}, visible text: ${textLength} chars).`,
+        fix_suggestion: "Ensure the initial HTML contains real page-specific heading/body content before JavaScript hydration.",
+      });
+    }
+    if (metaRobots && /noindex/i.test(metaRobots)) {
+      findings.push({
+        category: "route_soft404",
+        severity: "critical",
+        url: fullUrl,
+        page_type: pageType,
+        issue_code: "route_noindex",
+        message: `Route contains a noindex robots directive: ${metaRobots}`,
+        fix_suggestion: "Remove noindex from public pages that should be crawled and indexed.",
+      });
+    }
   }
 }
 
@@ -281,10 +328,15 @@ async function collectRoutes(supabase: ReturnType<typeof createClient>) {
     }
   };
 
-  await pull("colleges", s => `/colleges/${s}`, "college");
-  await pull("articles", s => `/blog/${s}`, "article", { col: "published", val: true });
-  await pull("exams", s => `/exams/${s}`, "exam");
+  await pull("colleges", s => `/college/${s}`, "college");
+  await pull("articles", s => `/article/${s}`, "article", { col: "published", val: true });
+  await pull("exams", s => `/exam/${s}`, "exam");
   await pull("institutes", s => `/institute/${s}`, "institute");
+  await pull("categories", s => `/category/${s}`, "category");
+  await pull("city_pages", s => `/colleges/${s}`, "city_page", { col: "active", val: true });
+  await pull("mock_tests", s => `/mocks/${s}`, "mock", { col: "is_published", val: true });
+  await pull("mock_bundles", s => `/courses/${s}`, "mock_bundle", { col: "is_published", val: true });
+  await pull("mba_compass_courses", s => `/mba-compass/${s}`, "mba_compass_course", { col: "is_active", val: true });
 
   // Deduplicate
   const seen = new Set<string>();
@@ -293,6 +345,131 @@ async function collectRoutes(supabase: ReturnType<typeof createClient>) {
     seen.add(r.path);
     return true;
   });
+}
+
+async function checkUnknownPathStatus(findings: Finding[]) {
+  await Promise.all(SENTINEL_UNKNOWN_PATHS.map(async (path) => {
+    const fullUrl = `${SITE}${path}`;
+    const { status, canonical, robots, title } = await fetchRouteHtml(fullUrl);
+    if (status !== 404 && status !== 410) {
+      findings.push({
+        category: "route_soft404",
+        severity: "critical",
+        url: fullUrl,
+        page_type: "unknown_route",
+        issue_code: "unknown_route_returns_200",
+        message: `Unknown route returned HTTP ${status || "network error"} instead of a real 404/410. Google will classify this as Soft 404 at scale.`,
+        fix_suggestion: "Configure host-level routing for unknown slugs to return a real 404 status, not the generic SPA shell.",
+      });
+    } else if (!/noindex/i.test(robots || "") && !/not found|404/i.test(title || "")) {
+      findings.push({
+        category: "route_soft404",
+        severity: "warning",
+        url: fullUrl,
+        page_type: "unknown_route",
+        issue_code: "unknown_404_missing_noindex_signal",
+        message: "Unknown route returns 404 but the HTML does not clearly include noindex or 404/not-found title text.",
+        fix_suggestion: "Keep 404 pages noindex and clearly titled as not found so Google does not treat them as duplicate content.",
+      });
+    }
+    if (canonical && normalizeUrl(canonical) === normalizeUrl(SITE)) {
+      findings.push({
+        category: "route_soft404",
+        severity: "warning",
+        url: fullUrl,
+        page_type: "unknown_route",
+        issue_code: "unknown_route_home_canonical",
+        message: "Unknown route carries the homepage canonical, which is a common Soft 404/duplicate signal.",
+        fix_suggestion: "Remove homepage canonical from unknown-route responses and serve a real noindex 404 page.",
+      });
+    }
+  }));
+}
+
+function normalizeQuestion(q: unknown) {
+  return String(q ?? "").toLowerCase().replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function extractFaqItems(value: unknown): { q: string; a: string }[] {
+  const list = Array.isArray(value)
+    ? value
+    : value && typeof value === "object" && Array.isArray((value as any).items)
+      ? (value as any).items
+      : value && typeof value === "object" && Array.isArray((value as any).faqs)
+        ? (value as any).faqs
+        : [];
+  return list.map((item: any) => ({
+    q: String(item?.q ?? item?.question ?? item?.name ?? "").trim(),
+    a: String(item?.a ?? item?.answer ?? item?.acceptedAnswer?.text ?? "").trim(),
+  })).filter((item) => item.q && item.a);
+}
+
+function pushDuplicateFaqFindings(findings: Finding[], scope: { url: string; page_type: string }, faqs: { q: string; a: string }[]) {
+  const seen = new Map<string, string[]>();
+  for (const faq of faqs) {
+    const key = normalizeQuestion(faq.q);
+    if (!key) continue;
+    const list = seen.get(key) ?? [];
+    list.push(faq.q);
+    seen.set(key, list);
+  }
+  for (const [key, copies] of seen) {
+    if (copies.length <= 1) continue;
+    findings.push({
+      category: "duplicate_faq",
+      severity: "warning",
+      url: scope.url,
+      page_type: scope.page_type,
+      issue_code: "duplicate_faq_question",
+      message: `${copies.length} FAQ entries repeat the same question: "${copies[0].slice(0, 90)}".`,
+      fix_suggestion: "Keep one canonical FAQ answer and remove duplicate questions from the page/FAQ settings before requesting indexing again.",
+    });
+  }
+}
+
+async function checkDuplicateFaqSources(supabase: ReturnType<typeof createClient>, findings: Finding[]) {
+  const [{ data: supportFaqs }, { data: siteSettings }, { data: courses }, { data: mocksLanding }, { data: cityPages }] = await Promise.all([
+    supabase.from("support_faqs").select("category,question,answer,is_published").eq("is_published", true).limit(5000),
+    supabase.from("site_settings").select("key,value").or("key.eq.faqs,key.like.seo_page__%").limit(5000),
+    supabase.from("mba_compass_courses").select("slug,faqs,is_active").eq("is_active", true).limit(2000),
+    supabase.from("mocks_landing_settings").select("faqs").limit(5),
+    supabase.from("city_pages").select("slug,faq_content,active").eq("active", true).limit(2000),
+  ]);
+
+  const supportByCategory = new Map<string, { q: string; a: string }[]>();
+  for (const row of supportFaqs ?? []) {
+    const key = String((row as any).category ?? "uncategorized");
+    const list = supportByCategory.get(key) ?? [];
+    list.push({ q: (row as any).question, a: (row as any).answer });
+    supportByCategory.set(key, list);
+  }
+  for (const [category, faqs] of supportByCategory) {
+    pushDuplicateFaqFindings(findings, { url: `${SITE}/student/support#${category}`, page_type: "support_faq" }, faqs);
+  }
+
+  for (const row of siteSettings ?? []) {
+    const key = String((row as any).key ?? "");
+    const faqs = extractFaqItems((row as any).value);
+    if (!faqs.length) continue;
+    const parts = key.split("__");
+    const pageType = parts[1] || "site_setting";
+    const recordId = parts[2] || "homepage";
+    pushDuplicateFaqFindings(findings, { url: key === "faqs" ? SITE : `${SITE}/admin/seo-dashboard?record=${recordId}`, page_type: `seo_snapshot_${pageType}` }, faqs);
+  }
+
+  for (const row of courses ?? []) {
+    const slug = (row as any).slug;
+    pushDuplicateFaqFindings(findings, { url: `${SITE}/mba-compass/${slug}`, page_type: "mba_compass_course" }, extractFaqItems((row as any).faqs));
+  }
+  for (const row of mocksLanding ?? []) {
+    pushDuplicateFaqFindings(findings, { url: `${SITE}/mocks`, page_type: "mocks_landing" }, extractFaqItems((row as any).faqs));
+  }
+  for (const row of cityPages ?? []) {
+    const html = String((row as any).faq_content ?? "");
+    const matches = Array.from(html.matchAll(/<h[23][^>]*>([\s\S]*?\?)<\/h[23]>\s*<p[^>]*>([\s\S]*?)<\/p>/gi));
+    const faqs = matches.map((m) => ({ q: m[1].replace(/<[^>]+>/g, " "), a: m[2].replace(/<[^>]+>/g, " ") }));
+    pushDuplicateFaqFindings(findings, { url: `${SITE}/colleges/${(row as any).slug}`, page_type: "city_page" }, faqs);
+  }
 }
 
 // ─── handler ─────────────────────────────────────────────────────────────────
@@ -348,6 +525,10 @@ Deno.serve(async (req: Request) => {
       }
     });
     await Promise.all(workers);
+    await Promise.all([
+      checkUnknownPathStatus(findings),
+      checkDuplicateFaqSources(supabase, findings),
+    ]);
 
     if (findings.length > 0) {
       // Insert in chunks of 500.
@@ -373,6 +554,7 @@ Deno.serve(async (req: Request) => {
         kind: "route_coverage",
         sitemap_size: sitemap.size,
         robots_disallow_count: robots.disallow.length,
+        unknown_paths_checked: SENTINEL_UNKNOWN_PATHS.length,
         sampled: sample > 0,
       },
     }).eq("id", runId);
