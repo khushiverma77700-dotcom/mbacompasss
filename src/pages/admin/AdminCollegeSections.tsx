@@ -541,7 +541,7 @@ const AdminCollegeSections = () => {
       <AdminFilterBar
         searchValue={filters.search}
         onSearchChange={(v) => setFilter("search", v)}
-        searchPlaceholder="Search by title, content, college…"
+        searchPlaceholder="Search by college name, city, slug, or paste college URL…"
         values={filters}
         onFilterChange={setFilter}
         onClearAll={clearAll}
