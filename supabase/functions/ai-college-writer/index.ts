@@ -29,7 +29,9 @@ Deno.serve(async (req) => {
   // Caller (e.g. bulk dashboard) can pick which AI backend to use via header.
   const providerHeader = (req.headers.get("X-AI-Provider") || "").toLowerCase();
   const ALLOWED_PROVIDERS = new Set(["gemini", "gemini-lite", "lovable", "openai-mini", "openai-nano"]);
-  const provider = (ALLOWED_PROVIDERS.has(providerHeader) ? providerHeader : "gemini") as
+  // Default to "lovable" (Lovable AI Gateway) — direct GEMINI_API_KEY access was
+  // denied by Google (403 PERMISSION_DENIED). Lovable Gateway uses the same models reliably.
+  const provider = (ALLOWED_PROVIDERS.has(providerHeader) ? providerHeader : "lovable") as
     "gemini" | "gemini-lite" | "lovable" | "openai-mini" | "openai-nano";
 
   try {
