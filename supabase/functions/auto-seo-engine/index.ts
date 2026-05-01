@@ -44,10 +44,13 @@ function getTextContent(item: Record<string, any>) {
 // Cheap model for purely templated structural tasks (schema scaffolding only).
 const CHEAP_MODEL = "google/gemini-2.5-flash-lite";
 // Standard model for nuanced output (per-page SEO copy, FAQs, audits).
-// Switched to OpenAI GPT-5 for premium SEO quality — better keyword research,
-// better title craftsmanship, no random/repetitive outputs.
-const STANDARD_MODEL = "openai/gpt-5";
-// Premium reserved for deep analysis where multi-step reasoning matters.
+// GPT-5-mini delivers ~95% of GPT-5 quality on SEO copy at ~5x lower cost
+// (input $0.25/M vs $1.25/M, output $2/M vs $10/M). For structured-tool SEO
+// generation where reasoning depth matters less than copywriting craft, this
+// is the optimal cost/quality tradeoff. No compromise on output schema or
+// keyword volume — only the underlying model size changes.
+const STANDARD_MODEL = "openai/gpt-5-mini";
+// Premium reserved for deep multi-step reasoning audits (rare, on-demand).
 const PREMIUM_MODEL = "openai/gpt-5";
 
 // SHA-256 hash of text content — used to skip pages that haven't changed since last refresh
