@@ -461,18 +461,7 @@ export default function StudentOverview() {
               Submit at least one mock to see your projection.
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={170}>
-              <RadialBarChart innerRadius="65%" outerRadius="100%" data={[{ name: "p", value: predicted, fill: "#0284c7" }]} startAngle={210} endAngle={-30}>
-                <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-                <RadialBar background dataKey="value" cornerRadius={20} />
-              </RadialBarChart>
-            </ResponsiveContainer>
-          )}
-          {predicted != null && (
-            <div className="text-center -mt-24 mb-6">
-              <div className="text-3xl font-bold text-sky-700">{predicted}</div>
-              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">projected %ile</div>
-            </div>
+            <PredictorGauge value={predicted} />
           )}
           {target > 0 && predicted != null && (
             <div className="mt-4 text-xs flex items-center justify-between">
@@ -501,18 +490,7 @@ export default function StudentOverview() {
               Take a mock to see your trend chart
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <ComposedChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
-                <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                <YAxis stroke="#64748b" fontSize={11} domain={[0, 100]} />
-                <Tooltip />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="percentile" name="Mock %ile" fill="#bae6fd" radius={[4, 4, 0, 0]} />
-                <Line type="monotone" dataKey="cumPercentile" name="Cumulative Avg" stroke="#0284c7" strokeWidth={2.5} dot={{ r: 3 }} />
-                {target > 0 && <ReferenceLine y={target} stroke="#16a34a" strokeDasharray="4 4" label={{ value: `Target ${target}`, fill: "#16a34a", fontSize: 10, position: "right" }} />}
-              </ComposedChart>
-            </ResponsiveContainer>
+            <MiniTrendChart data={trendData} barKey="percentile" lineKey="cumPercentile" max={100} target={target} />
           )}
         </Card>
       </div>
@@ -527,23 +505,7 @@ export default function StudentOverview() {
           {trendData.length === 0 ? (
             <div className="h-48 grid place-items-center text-sm text-muted-foreground">No data yet</div>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={trendData}>
-                <defs>
-                  <linearGradient id="sgrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#0284c7" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="#0284c7" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
-                <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                <YAxis stroke="#64748b" fontSize={11} />
-                <Tooltip />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Area type="monotone" dataKey="score" name="Score" stroke="#0284c7" strokeWidth={2.5} fill="url(#sgrad)" />
-                <Line type="monotone" dataKey="cumScore" name="Cumulative Avg" stroke="#1d4ed8" strokeWidth={2} dot={false} />
-              </AreaChart>
-            </ResponsiveContainer>
+            <MiniTrendChart data={trendData} barKey="score" lineKey="cumScore" />
           )}
         </Card>
 
@@ -555,17 +517,7 @@ export default function StudentOverview() {
           {trendData.length === 0 ? (
             <div className="h-48 grid place-items-center text-sm text-muted-foreground">No data yet</div>
           ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <ComposedChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
-                <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                <YAxis stroke="#64748b" fontSize={11} domain={[0, 100]} />
-                <Tooltip />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="accuracy" name="Accuracy %" fill="#7dd3fc" radius={[4, 4, 0, 0]} />
-                <Line type="monotone" dataKey="cumAccuracy" name="Cumulative Avg" stroke="#0369a1" strokeWidth={2.5} dot={{ r: 3 }} />
-              </ComposedChart>
-            </ResponsiveContainer>
+            <MiniTrendChart data={trendData} barKey="accuracy" lineKey="cumAccuracy" max={100} />
           )}
         </Card>
       </div>
@@ -587,29 +539,9 @@ export default function StudentOverview() {
         ) : (
           <>
             <div className="grid md:grid-cols-2 gap-6">
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={sectional}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
-                  <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                  <YAxis stroke="#64748b" fontSize={11} />
-                  <Tooltip />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Bar dataKey="avgScore" name="Avg Score" fill="#0284c7" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="avgMax" name="Max Score" fill="#bae6fd" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <MiniGroupedBars data={sectional} firstKey="avgScore" secondKey="avgMax" />
 
-              <ResponsiveContainer width="100%" height={240}>
-                <BarChart data={sectional}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
-                  <XAxis dataKey="name" stroke="#64748b" fontSize={11} />
-                  <YAxis stroke="#64748b" fontSize={11} domain={[0, 100]} />
-                  <Tooltip />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Bar dataKey="avgPercentile" name="Avg %ile" fill="#0ea5e9" radius={[6, 6, 0, 0]} />
-                  <Bar dataKey="avgAccuracy" name="Accuracy %" fill="#38bdf8" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              <MiniGroupedBars data={sectional} firstKey="avgPercentile" secondKey="avgAccuracy" max={100} />
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5">
@@ -646,15 +578,7 @@ export default function StudentOverview() {
           {submitted.length === 0 ? (
             <div className="h-40 grid place-items-center text-sm text-muted-foreground">No mocks yet</div>
           ) : (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={bandData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
-                <XAxis dataKey="name" stroke="#64748b" fontSize={10} />
-                <YAxis stroke="#64748b" fontSize={11} allowDecimals={false} />
-                <Tooltip />
-                <Bar dataKey="count" name="Mocks" fill="#0284c7" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <MiniDistribution data={bandData} />
           )}
         </Card>
 
