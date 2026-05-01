@@ -711,8 +711,8 @@ export default function StudentOverview() {
         </Card>
       </div>
 
-      {/* ── Weak & Strength Analysis (between My Mocks and Buy Mocks) ─────────── */}
-      <StrengthWeaknessAnalysis />
+      {/* Weak & Strength analysis now lives on dedicated sidebar pages:
+          /student/weak-areas and /student/strength-areas */}
 
       {/* ── Buy Mocks CTA ─────────────────────────────────────────────────────── */}
       <Card className="p-5 border-sky-100 bg-gradient-to-r from-sky-50 to-white">
