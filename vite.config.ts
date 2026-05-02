@@ -48,5 +48,28 @@ export default defineConfig(({ mode }) => ({
     minify: "esbuild",
     sourcemap: false,
     chunkSizeWarningLimit: 600,
+    // Vite eagerly preloads every static dependency of the entry chunk via
+    // <link rel="modulepreload">. With the manual-chunks setup above, large
+    // admin-only chunks (TipTap editor 130KB gz, jspdf, html2canvas, mammoth,
+    // recharts) can leak into the entry preload list because Rollup hoists
+    // shared side-effect imports. We filter the preload set down to the
+    // chunks the public/student first paint actually needs — admin/PDF/editor
+    // chunks are still loaded on-demand when the user navigates to those
+    // routes via the regular dynamic import path.
+    modulePreload: {
+      resolveDependencies: (_filename, deps) => {
+        const ALLOW = new Set([
+          "react", "router", "query", "radix", "supabase", "icons", "forms",
+        ]);
+        return deps.filter((dep) => {
+          // Always keep the entry's own CSS preloads.
+          if (dep.endsWith(".css")) return true;
+          // Match "assets/<chunkname>-<hash>.js" → chunkname.
+          const m = dep.match(/assets\/([^/-]+)-[^/]+\.js$/);
+          if (!m) return true;
+          return ALLOW.has(m[1]);
+        });
+      },
+    },
   },
 }));
