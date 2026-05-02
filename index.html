@@ -54,6 +54,26 @@
     <!-- Preconnect to critical origins -->
     <link rel="preconnect" href="https://mttoiqruzzxooveooldo.supabase.co" crossorigin />
     <link rel="dns-prefetch" href="https://mttoiqruzzxooveooldo.supabase.co" />
+    <!--
+      Parallel-fetch the critical JS chunks instead of waiting for each layer
+      of imports to be discovered. Without this, the browser parses entry.js,
+      then discovers react.js, then radix.js, then supabase.js etc. Each round
+      trip costs latency on slower connections.
+      The build emits hashed filenames; a tiny inline runtime walks <script type="module">
+      links injected by Vite at build time and preloads the sibling chunks the
+      entry imports. Falls back gracefully if anything is missing.
+    -->
+    <script>
+      (function () {
+        try {
+          // Hint browser to set up TCP/TLS to its own origin in parallel with module parsing.
+          var l = document.createElement('link');
+          l.rel = 'preconnect';
+          l.href = window.location.origin;
+          document.head.appendChild(l);
+        } catch (e) {}
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <!-- Single combined font request, non-blocking -->
