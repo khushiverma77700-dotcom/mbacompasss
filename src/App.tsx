@@ -153,6 +153,7 @@ const MBACompassCourseDetailPage = lazyWithPreload(() => import("./pages/MBAComp
 const MBACompassComparePage = lazyWithPreload(() => import("./pages/MBACompassComparePage"));
 const AdminMBACompassCourses = lazyWithPreload(() => import("./pages/admin/AdminMBACompassCourses"));
 const StudentLeaderboard = lazyWithPreload(() => import("./pages/student/StudentLeaderboard"));
+const StudentPerformX = lazyWithPreload(() => import("./pages/student/StudentPerformX"));
 const StudentNotifications = lazyWithPreload(() => import("./pages/student/StudentNotifications"));
 const StudentOrders = lazyWithPreload(() => import("./pages/student/StudentOrders"));
 const StudentDeepAnalysis = lazyWithPreload(() => import("./pages/student/StudentDeepAnalysis"));
@@ -675,6 +676,7 @@ const App = () => (
               <Route path="day-planner" element={<InnerLazyPage><StudentDayPlanner /></InnerLazyPage>} />
               <Route path="day-planner/performance" element={<InnerLazyPage><StudentPlannerPerformance /></InnerLazyPage>} />
               <Route path="leaderboard" element={<InnerLazyPage><StudentLeaderboard /></InnerLazyPage>} />
+              <Route path="performx" element={<InnerLazyPage><StudentPerformX /></InnerLazyPage>} />
               <Route path="notifications" element={<InnerLazyPage><StudentNotifications /></InnerLazyPage>} />
               <Route path="orders" element={<InnerLazyPage><StudentOrders /></InnerLazyPage>} />
               <Route path="analysis/:attemptId" element={<InnerLazyPage><StudentDeepAnalysis /></InnerLazyPage>} />
