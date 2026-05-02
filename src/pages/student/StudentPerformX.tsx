@@ -54,6 +54,7 @@ export default function StudentPerformX() {
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [badges, setBadges] = useState<{ badge_key: string }[]>([]);
   const [global, setGlobal] = useState<LbRow[]>([]);
+  const [sectionMap, setSectionMap] = useState<Record<string, { name: string; code: string }>>({});
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<"global" | "peers" | "section">("global");
   const [pulseTick, setPulseTick] = useState(0);
@@ -77,9 +78,25 @@ export default function StudentPerformX() {
         supabase.rpc("get_global_leaderboard", { _limit: 50 }),
       ]);
       setRewards(r as any);
-      setAttempts((a ?? []) as any);
+      const attemptList = ((a ?? []) as any) as Attempt[];
+      setAttempts(attemptList);
       setBadges((b ?? []) as any);
       setGlobal((lb ?? []) as any);
+
+      // Resolve section UUID keys → human names so charts never show raw IDs
+      const sectionIds = Array.from(new Set(
+        attemptList.flatMap(at => Object.keys(at.sectional_scores || {}))
+          .filter(k => /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(k))
+      ));
+      if (sectionIds.length) {
+        const { data: secs } = await supabase
+          .from("mock_sections")
+          .select("id,name,code")
+          .in("id", sectionIds);
+        const map: Record<string, { name: string; code: string }> = {};
+        (secs ?? []).forEach((s: any) => { map[s.id] = { name: s.name, code: s.code }; });
+        setSectionMap(map);
+      }
       setLoading(false);
     })();
   }, [user]);
@@ -156,11 +173,19 @@ export default function StudentPerformX() {
         acc[k].count += 1;
       });
     });
-    return Object.entries(acc).map(([k, v]) => ({
-      section: SECTION_LABELS[k] ?? k,
-      value: v.count ? Math.round((v.sum / v.count / Math.max(1, v.max)) * 100) : 0,
-    }));
-  }, [attempts]);
+    return Object.entries(acc).map(([k, v]) => {
+      // Resolve label: built-in code → friendly name, else mock_sections lookup, else short fallback
+      const fromMap = sectionMap[k];
+      const friendly =
+        SECTION_LABELS[k] ??
+        (fromMap ? (SECTION_LABELS[fromMap.code] ?? fromMap.name) : null) ??
+        (k.length > 12 ? `Section ${Object.keys(acc).indexOf(k) + 1}` : k);
+      return {
+        section: friendly.length > 18 ? friendly.slice(0, 16) + "…" : friendly,
+        value: v.count ? Math.round((v.sum / v.count / Math.max(1, v.max)) * 100) : 0,
+      };
+    });
+  }, [attempts, sectionMap]);
 
   // Section bar (with rank simulation)
   const sectionRanks = useMemo(() => radarData.map((r, i) => ({
@@ -380,7 +405,129 @@ export default function StudentPerformX() {
         <KpiCard icon={Brain} label="Predicted Rank" value={`${predictedPercentile}`} suffix=" %ile" tone="violet" hint="If trend continues" />
       </div>
 
-      {/* ============ RADIAL SCORECARDS (4 dials) ============ */}
+      {/* ============ DAILY QUESTS + POWER SCORE + XP VAULT ============ */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* Power Score — single mega gauge */}
+        <Card className="lg:col-span-4 p-5 border-violet-100 bg-gradient-to-br from-violet-50/60 via-white to-fuchsia-50/40 dark:from-violet-500/15 dark:via-background dark:to-fuchsia-500/10 relative overflow-hidden">
+          <div className="absolute inset-0 pointer-events-none opacity-50">
+            <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-violet-300/40 blur-2xl animate-pulse" />
+          </div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Gauge className="h-5 w-5 text-violet-600" />
+                <div className="font-bold">Power Score</div>
+              </div>
+              <UIBadge className="bg-violet-600 hover:bg-violet-600 text-[10px]">LIVE</UIBadge>
+            </div>
+            <p className="text-[11px] text-muted-foreground mb-2">Overall mastery composite — weighted across accuracy, consistency, speed and rank.</p>
+            <div className="h-44 relative">
+              <ResponsiveContainer>
+                <RadialBarChart innerRadius="62%" outerRadius="100%" startAngle={210} endAngle={-30}
+                  data={[{ name: "Power", value: Math.round((avgAccuracy * 0.3) + (consistencyScore * 0.25) + (balanceScore * 0.2) + (bestPercentile * 0.25)), fill: "url(#powerGrad)" }]}>
+                  <defs>
+                    <linearGradient id="powerGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0%" stopColor="#8b5cf6" />
+                      <stop offset="50%" stopColor="#ec4899" />
+                      <stop offset="100%" stopColor="#f59e0b" />
+                    </linearGradient>
+                  </defs>
+                  <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+                  <RadialBar dataKey="value" cornerRadius={20} background={{ fill: "hsl(var(--muted))" }} />
+                </RadialBarChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 grid place-items-center text-center pointer-events-none">
+                <div>
+                  <div className="text-5xl font-black bg-gradient-to-r from-violet-600 via-fuchsia-600 to-amber-500 bg-clip-text text-transparent leading-none">
+                    {Math.round((avgAccuracy * 0.3) + (consistencyScore * 0.25) + (balanceScore * 0.2) + (bestPercentile * 0.25))}
+                  </div>
+                  <div className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1 font-bold">Power Score</div>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 gap-1 mt-2 text-[10px] text-center">
+              <div><div className="font-bold text-emerald-600">{Math.round(avgAccuracy)}</div><div className="text-muted-foreground">ACC</div></div>
+              <div><div className="font-bold text-sky-600">{consistencyScore}</div><div className="text-muted-foreground">CON</div></div>
+              <div><div className="font-bold text-violet-600">{balanceScore}</div><div className="text-muted-foreground">SPD</div></div>
+              <div><div className="font-bold text-amber-600">{Math.round(bestPercentile)}</div><div className="text-muted-foreground">PEAK</div></div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Daily Quests — 4 micro-tasks with rewards */}
+        <Card className="lg:col-span-5 p-5 border-emerald-100 bg-gradient-to-br from-emerald-50/40 to-sky-50/30 dark:from-emerald-500/10 dark:to-sky-500/5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              <div className="font-bold">Today's Quests</div>
+              <UIBadge variant="secondary" className="text-[10px]">Resets in 24h</UIBadge>
+            </div>
+            <div className="text-[11px] text-muted-foreground">Streak × {rewards?.streak_days ?? 0}</div>
+          </div>
+          <div className="space-y-2">
+            {[
+              { title: "Attempt 1 mock today", done: attempts.some(a => (a.submitted_at || a.created_at).slice(0,10) === new Date().toISOString().slice(0,10)), reward: "+50 XP" },
+              { title: "Hit 75%+ accuracy", done: attempts.some(a => (a.submitted_at || a.created_at).slice(0,10) === new Date().toISOString().slice(0,10) && Number(a.accuracy) >= 75), reward: "+100 XP" },
+              { title: "Beat your best percentile", done: attempts.some(a => Number(a.percentile) >= bestPercentile && bestPercentile > 0), reward: "+250 XP · Badge" },
+              { title: "Practice your weakest section", done: false, reward: "+150 XP" },
+            ].map((q, i) => (
+              <div key={i} className={cn(
+                "flex items-center gap-3 p-2.5 rounded-xl border transition-all",
+                q.done
+                  ? "bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30"
+                  : "bg-white/70 dark:bg-background/40 border-border/40 hover:border-emerald-300"
+              )}>
+                <div className={cn(
+                  "h-7 w-7 rounded-lg grid place-items-center shrink-0",
+                  q.done ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground"
+                )}>
+                  {q.done ? <CheckCircle2 className="h-4 w-4" /> : <Lock className="h-3.5 w-3.5" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className={cn("text-sm font-semibold truncate", q.done && "line-through text-muted-foreground")}>{q.title}</div>
+                  <div className="text-[11px] text-emerald-600 font-bold">{q.reward}</div>
+                </div>
+                {q.done && <Sparkles className="h-4 w-4 text-amber-500" />}
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 pt-3 border-t border-border/40 flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">Quest progress</span>
+            <span className="font-bold text-emerald-600">{[1,2,3,4].filter(() => false).length}/4</span>
+          </div>
+        </Card>
+
+        {/* XP Vault — next milestones to unlock */}
+        <Card className="lg:col-span-3 p-5 border-amber-100 bg-gradient-to-br from-amber-50/60 to-orange-50/40 dark:from-amber-500/10 dark:to-orange-500/5">
+          <div className="flex items-center gap-2 mb-3">
+            <Diamond className="h-5 w-5 text-amber-600" />
+            <div className="font-bold">XP Vault</div>
+          </div>
+          <div className="text-3xl font-black text-amber-600">{xp.toLocaleString()}</div>
+          <div className="text-[11px] text-muted-foreground mb-3">Total XP earned</div>
+          <div className="space-y-2">
+            {[
+              { goal: 500, label: "Tier I" },
+              { goal: 2500, label: "Tier II" },
+              { goal: 10000, label: "Tier III" },
+            ].map((g) => {
+              const pct = Math.min(100, (xp / g.goal) * 100);
+              const unlocked = xp >= g.goal;
+              return (
+                <div key={g.goal}>
+                  <div className="flex items-center justify-between text-[11px] mb-1">
+                    <span className={cn("font-semibold", unlocked && "text-amber-600")}>{g.label} · {g.goal.toLocaleString()} XP</span>
+                    <span className="text-muted-foreground">{unlocked ? "Unlocked" : `${Math.round(pct)}%`}</span>
+                  </div>
+                  <Progress value={pct} className="h-1.5 [&>div]:bg-gradient-to-r [&>div]:from-amber-500 [&>div]:to-orange-500" />
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      </div>
+
+      {/* ============ KPI extension below — unchanged below this point ============ */}
       <Card className="p-5 border-sky-100">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div className="flex items-center gap-2">
