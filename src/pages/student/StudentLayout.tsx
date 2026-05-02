@@ -234,7 +234,19 @@ function SidebarContent() {
     if (isMocksActive) setMocksOpen(true);
   }, [isMocksActive]);
 
+  // Auto-open the Insights group when on any of its routes.
+  const isInsightsActive =
+    location.pathname.startsWith("/student/strength-areas") ||
+    location.pathname.startsWith("/student/weak-areas") ||
+    location.pathname.startsWith("/student/performance") ||
+    location.pathname.startsWith("/student/leaderboard");
+  const [insightsOpen, setInsightsOpen] = useState(true);
+  useEffect(() => {
+    if (isInsightsActive) setInsightsOpen(true);
+  }, [isInsightsActive]);
+
   const groupBadgeTotal = mocksItems.reduce((s, m) => s + (counts[m.to] ?? 0), 0);
+  const insightsBadgeTotal = insightsGroup.reduce((s, m) => s + (counts[m.to] ?? 0), 0);
 
   // Single row renderer used by top-level items and group children.
   const renderRow = (
@@ -357,8 +369,50 @@ function SidebarContent() {
         </div>
       </div>
 
-      {renderRow({ to: "/student/weak-areas", label: "My Weak Areas", icon: AlertTriangle })}
-      {renderRow({ to: "/student/strength-areas", label: "My Strength Areas", icon: Award })}
+      {/* My Insights — highlighted analytics block (Strength, Weak, Performance, Leaderboard) */}
+      <div
+        className={cn(
+          "rounded-xl border my-2 overflow-hidden transition-colors",
+          isInsightsActive
+            ? "border-violet-200/80 bg-gradient-to-br from-violet-50/70 to-sky-50/40 dark:border-violet-500/25 dark:from-violet-500/10 dark:to-sky-500/5"
+            : "border-violet-200/60 bg-gradient-to-br from-violet-50/40 to-sky-50/20 dark:border-violet-500/15 dark:from-violet-500/5 dark:to-sky-500/5"
+        )}
+      >
+        <button
+          type="button"
+          onClick={() => setInsightsOpen((v) => !v)}
+          aria-expanded={insightsOpen}
+          className="w-full flex items-center gap-3 px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-accent/40 transition-colors"
+        >
+          <span className="h-7 w-7 rounded-lg bg-gradient-to-br from-violet-500 to-sky-600 grid place-items-center text-white shadow-sm">
+            <BarChart3 className="h-3.5 w-3.5" />
+          </span>
+          <span className="flex-1 text-left">My Insights</span>
+          {insightsBadgeTotal > 0 && (
+            <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold bg-rose-500 text-white">
+              {insightsBadgeTotal > 9 ? "9+" : insightsBadgeTotal}
+            </span>
+          )}
+          <ChevronDown
+            className={cn(
+              "h-4 w-4 text-muted-foreground transition-transform duration-300",
+              insightsOpen && "rotate-180"
+            )}
+          />
+        </button>
+        <div
+          className={cn(
+            "grid transition-[grid-template-rows] duration-300 ease-out",
+            insightsOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+          )}
+        >
+          <div className="overflow-hidden">
+            <div className="px-2 pb-2 pt-1 space-y-0.5">
+              {insightsGroup.map((m) => renderRow(m, { indent: true }))}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {restItems.map((item) => renderRow(item))}
 
