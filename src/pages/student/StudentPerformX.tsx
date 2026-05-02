@@ -78,9 +78,25 @@ export default function StudentPerformX() {
         supabase.rpc("get_global_leaderboard", { _limit: 50 }),
       ]);
       setRewards(r as any);
-      setAttempts((a ?? []) as any);
+      const attemptList = ((a ?? []) as any) as Attempt[];
+      setAttempts(attemptList);
       setBadges((b ?? []) as any);
       setGlobal((lb ?? []) as any);
+
+      // Resolve section UUID keys → human names so charts never show raw IDs
+      const sectionIds = Array.from(new Set(
+        attemptList.flatMap(at => Object.keys(at.sectional_scores || {}))
+          .filter(k => /^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(k))
+      ));
+      if (sectionIds.length) {
+        const { data: secs } = await supabase
+          .from("mock_sections")
+          .select("id,name,code")
+          .in("id", sectionIds);
+        const map: Record<string, { name: string; code: string }> = {};
+        (secs ?? []).forEach((s: any) => { map[s.id] = { name: s.name, code: s.code }; });
+        setSectionMap(map);
+      }
       setLoading(false);
     })();
   }, [user]);
