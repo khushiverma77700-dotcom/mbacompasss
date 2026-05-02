@@ -56,17 +56,24 @@ const navItems: NavItem[] = [
   { to: "/student", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/student/notifications", label: "Updates", icon: Bell },
   // "My Mocks" group is rendered separately as an expandable section.
+  // "My Insights" group (Strength / Weak / Performance / Leaderboard) is also rendered separately.
   { to: "/student/buy-mocks", label: "Buy Mocks", icon: ShoppingBag, feature: "buy_mocks" },
-  { to: "/student/performance", label: "Performance", icon: BarChart3, feature: "performance_tracker" },
   { to: "/student/goals", label: "CAT Score Engine", icon: Target, feature: "study_planner" },
   { to: "/student/day-planner", label: "My Day Planner", icon: CalendarCheck, feature: "day_planner" },
-  { to: "/student/leaderboard", label: "Leaderboard", icon: Trophy, feature: "leaderboard" },
   { to: "/student/orders", label: "My Orders", icon: Receipt },
   { to: "/student/announcements", label: "Announcements", icon: Bell },
   { to: "/student/tools", label: "AI Tools", icon: Sparkles, feature: "ai_tools" },
   { to: "/student/sop-review", label: "AI SOP Review", icon: FileText },
   { to: "/student/support", label: "Support Center", icon: LifeBuoy, feature: "support" },
   { to: "/student/profile", label: "My Profile", icon: UserIcon },
+];
+
+// "My Insights" — performance analytics group (Strength, Weak, Performance, Leaderboard)
+const insightsGroup: NavItem[] = [
+  { to: "/student/strength-areas", label: "My Strength Areas", icon: Award,          feature: "performance_tracker" },
+  { to: "/student/weak-areas",     label: "My Weak Areas",     icon: AlertTriangle,  feature: "performance_tracker" },
+  { to: "/student/performance",    label: "Performance",       icon: BarChart3,      feature: "performance_tracker" },
+  { to: "/student/leaderboard",    label: "Leaderboard",       icon: Trophy,         feature: "leaderboard" },
 ];
 
 export default function StudentLayout() {
