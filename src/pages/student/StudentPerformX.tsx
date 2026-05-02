@@ -54,6 +54,7 @@ export default function StudentPerformX() {
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [badges, setBadges] = useState<{ badge_key: string }[]>([]);
   const [global, setGlobal] = useState<LbRow[]>([]);
+  const [sectionMap, setSectionMap] = useState<Record<string, { name: string; code: string }>>({});
   const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<"global" | "peers" | "section">("global");
   const [pulseTick, setPulseTick] = useState(0);
