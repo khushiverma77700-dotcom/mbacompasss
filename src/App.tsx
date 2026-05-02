@@ -685,7 +685,7 @@ const App = () => (
               <Route path="personalized-hub" element={<InnerLazyPage><StudentPersonalizedHub /></InnerLazyPage>} />
               <Route path="personalized-hub/attempt/:attemptId" element={<InnerLazyPage><PersonalizedMockRunnerPage /></InnerLazyPage>} />
               <Route path="personalized-hub/result/:attemptId" element={<InnerLazyPage><PersonalizedMockResultPage /></InnerLazyPage>} />
-              <Route path="sop-review" element={<LazyPage><StudentSOPReview /></LazyPage>} />
+              <Route path="sop-review" element={<InnerLazyPage><StudentSOPReview /></InnerLazyPage>} />
             </Route>
             <Route path="/mba-compass" element={<PublicLayout><LazyPage><MBACompassCoursesPage /></LazyPage></PublicLayout>} />
             <Route path="/mba-compass/compare" element={<PublicLayout><LazyPage><MBACompassComparePage /></LazyPage></PublicLayout>} />
