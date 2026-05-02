@@ -32,7 +32,7 @@ import {
 } from "./StrengthWeaknessAnalysis";
 import { useStudentPerformance } from "@/hooks/useStudentPerformance";
 
-type Mode = "strength" | "weak";
+type Mode = "strength" | "weak" | "performance" | "leaderboard";
 
 export default function AnalysisDashboard({ mode }: { mode: Mode }) {
   const data = useStrengthWeaknessData();
