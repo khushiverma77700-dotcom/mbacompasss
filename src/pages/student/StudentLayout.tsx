@@ -122,7 +122,40 @@ export default function StudentLayout() {
     return () => window.removeEventListener("popstate", keepInsideDashboard);
   }, [navigate]);
 
-  if (loading || !user) return <div className="p-8 text-muted-foreground">Loading…</div>;
+  // Render an instant lightweight shell while auth resolves so the user never
+  // sees a blank screen on first hit. The auth check still runs in the
+  // background; once `user` is null we redirect from the effect above.
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sky-50/40 via-white to-blue-50/30 dark:from-background dark:via-background dark:to-background">
+        <div className="fixed top-0 left-0 right-0 z-30 bg-card/95 backdrop-blur border-b border-border h-14 flex items-center px-4 gap-2">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white">
+            <GraduationCap className="h-4 w-4" />
+          </div>
+          <div className="text-sm font-semibold">Student Dashboard</div>
+        </div>
+        <div className="flex pt-14">
+          <aside className="hidden lg:block w-64 shrink-0 border-r border-border bg-card/80 h-[calc(100vh-3.5rem)]">
+            <div className="p-4 space-y-2">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="h-9 rounded-md bg-muted/40 animate-pulse" />
+              ))}
+            </div>
+          </aside>
+          <main className="flex-1 p-6">
+            <div className="space-y-4 max-w-5xl">
+              <div className="h-8 w-64 bg-muted/40 rounded animate-pulse" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-28 bg-muted/30 rounded-xl animate-pulse" />
+                ))}
+              </div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <StudentThemeProvider>
