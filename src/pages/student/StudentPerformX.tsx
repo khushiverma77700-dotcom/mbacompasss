@@ -173,11 +173,19 @@ export default function StudentPerformX() {
         acc[k].count += 1;
       });
     });
-    return Object.entries(acc).map(([k, v]) => ({
-      section: SECTION_LABELS[k] ?? k,
-      value: v.count ? Math.round((v.sum / v.count / Math.max(1, v.max)) * 100) : 0,
-    }));
-  }, [attempts]);
+    return Object.entries(acc).map(([k, v]) => {
+      // Resolve label: built-in code → friendly name, else mock_sections lookup, else short fallback
+      const fromMap = sectionMap[k];
+      const friendly =
+        SECTION_LABELS[k] ??
+        (fromMap ? (SECTION_LABELS[fromMap.code] ?? fromMap.name) : null) ??
+        (k.length > 12 ? `Section ${Object.keys(acc).indexOf(k) + 1}` : k);
+      return {
+        section: friendly.length > 18 ? friendly.slice(0, 16) + "…" : friendly,
+        value: v.count ? Math.round((v.sum / v.count / Math.max(1, v.max)) * 100) : 0,
+      };
+    });
+  }, [attempts, sectionMap]);
 
   // Section bar (with rank simulation)
   const sectionRanks = useMemo(() => radarData.map((r, i) => ({
