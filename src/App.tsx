@@ -369,7 +369,10 @@ const DeferredChrome = () => {
   const [show, setShow] = useState(false);
   const location = useLocation();
 
+  // Reset on every route change so the footer never appears before the new
+  // page's content has had a chance to render.
   useEffect(() => {
+    setShow(false);
     const w = window as any;
     const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500));
     const handle = schedule(() => setShow(true), { timeout: 3000 });
@@ -377,7 +380,7 @@ const DeferredChrome = () => {
       const cancel = w.cancelIdleCallback ?? window.clearTimeout;
       try { cancel(handle); } catch {}
     };
-  }, []);
+  }, [location.pathname]);
 
   if (!show) return null;
 
@@ -431,9 +434,10 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   </>
 );
 
-// Keep route changes visually instant; lazy chunks load without showing a blocking loader.
+// Reserve viewport space while a lazy page chunk loads so the Footer (which
+// renders after children) cannot float up and appear at the top of the screen.
 const LazyPage = ({ children }: { children: React.ReactNode }) => (
-  <Suspense fallback={null}>{children}</Suspense>
+  <Suspense fallback={<div style={{ minHeight: "100vh" }} aria-hidden="true" />}>{children}</Suspense>
 );
 
 const OnboardingGate = () => {
