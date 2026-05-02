@@ -440,6 +440,13 @@ const LazyPage = ({ children }: { children: React.ReactNode }) => (
   <Suspense fallback={<div style={{ minHeight: "100vh" }} aria-hidden="true" />}>{children}</Suspense>
 );
 
+// For routes nested INSIDE a layout that already renders chrome (sidebar/header),
+// reserve only enough space to keep the main scroll area stable — using 100vh here
+// causes the parent layout to jump while the child chunk loads.
+const InnerLazyPage = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<div style={{ minHeight: "60vh" }} aria-hidden="true" />}>{children}</Suspense>
+);
+
 const OnboardingGate = () => {
   const { user, loading } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
