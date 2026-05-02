@@ -59,31 +59,26 @@ export default function AnalysisDashboard({ mode }: { mode: Mode }) {
     );
   }
 
-  const isStrength = mode === "strength";
+  const meta = {
+    strength:    { title: "My Strength Areas",   chip: "Strength Dashboard",     desc: "Topics, sections and exams where you are consistently strong. Maintain these for a higher percentile.", icon: <Award className="h-6 w-6" />,          accent: "emerald" as const, hero: "bg-gradient-to-br from-sky-50 via-white to-emerald-50/40", border: "text-emerald-700 border-emerald-200" },
+    weak:        { title: "My Weak Areas",       chip: "Improvement Dashboard",  desc: "Topics, sections and exams that need urgent work. Fix these first for the biggest score gains.",          icon: <AlertTriangle className="h-6 w-6" />,  accent: "rose"    as const, hero: "bg-gradient-to-br from-rose-50/60 via-white to-sky-50",    border: "text-rose-700 border-rose-200" },
+    performance: { title: "Performance Analysis",chip: "Performance Dashboard",  desc: "Topic-wise, section-wise and exam-wise performance across every mock you have submitted.",              icon: <Activity className="h-6 w-6" />,       accent: "sky"     as const, hero: "bg-gradient-to-br from-sky-50 via-white to-blue-50/30",    border: "text-sky-700 border-sky-200" },
+    leaderboard: { title: "Leaderboard",         chip: "Competitive Standing",   desc: "See where you stand against other aspirants based on XP, mocks completed and consistency.",              icon: <Trophy className="h-6 w-6" />,         accent: "amber"   as const, hero: "bg-gradient-to-br from-amber-50/50 via-white to-sky-50",   border: "text-amber-700 border-amber-200" },
+  }[mode];
 
   return (
     <div className="space-y-5 max-w-7xl">
       {/* Hero header */}
-      <Card className={`relative overflow-hidden border-sky-100 ${isStrength ? "bg-gradient-to-br from-sky-50 via-white to-emerald-50/40" : "bg-gradient-to-br from-rose-50/60 via-white to-sky-50"}`}>
+      <Card className={`relative overflow-hidden border-sky-100 ${meta.hero}`}>
         <div className="absolute inset-0 pointer-events-none opacity-30" style={{ backgroundImage: "radial-gradient(circle at 80% 20%, hsl(199 89% 48% / 0.18), transparent 45%)" }} />
         <div className="relative p-5 sm:p-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex items-start gap-3">
-              <div className={`p-3 rounded-xl border bg-white shadow-sm ${isStrength ? "text-sky-700 border-sky-200" : "text-rose-700 border-rose-200"}`}>
-                {isStrength ? <Award className="h-6 w-6" /> : <AlertTriangle className="h-6 w-6" />}
-              </div>
+              <div className={`p-3 rounded-xl border bg-white shadow-sm ${meta.border}`}>{meta.icon}</div>
               <div>
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-sky-700">
-                  {isStrength ? "Strength Dashboard" : "Improvement Dashboard"}
-                </div>
-                <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 leading-tight">
-                  {isStrength ? "My Strength Areas" : "My Weak Areas"}
-                </h1>
-                <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-                  {isStrength
-                    ? "Topics, sections and exams where you are consistently strong. Maintain these for a higher percentile."
-                    : "Topics, sections and exams that need urgent work. Fix these first for the biggest score gains."}
-                </p>
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-sky-700">{meta.chip}</div>
+                <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 leading-tight">{meta.title}</h1>
+                <p className="text-sm text-muted-foreground mt-1 max-w-2xl">{meta.desc}</p>
               </div>
             </div>
             <Button variant="outline" size="sm" onClick={data.refresh} className="gap-2">
@@ -94,57 +89,80 @@ export default function AnalysisDashboard({ mode }: { mode: Mode }) {
           {/* KPI strip */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
             <Kpi label="Overall Readiness" value={`${data.overallReadiness}%`} icon={<Target className="h-4 w-4" />} accent="sky" />
-            <Kpi label="Strong Topics" value={data.strongTopics.length} icon={<Award className="h-4 w-4" />} accent="emerald" />
-            <Kpi label="Weak Topics" value={data.weakTopics.length} icon={<AlertTriangle className="h-4 w-4" />} accent="rose" />
-            <Kpi label="Mocks Taken" value={perf.totalAttempts} icon={<BookOpenCheck className="h-4 w-4" />} accent="violet" />
+            <Kpi label="Strong Topics"   value={data.strongTopics.length} icon={<Award className="h-4 w-4" />}        accent="emerald" />
+            <Kpi label="Weak Topics"     value={data.weakTopics.length}   icon={<AlertTriangle className="h-4 w-4" />} accent="rose" />
+            <Kpi label="Mocks Taken"     value={perf.totalAttempts}       icon={<BookOpenCheck className="h-4 w-4" />} accent="violet" />
           </div>
+
+          {/* Inline section navigator — keeps all 4 sections visually connected */}
+          <SectionNav active={mode} />
         </div>
       </Card>
 
-      {/* Highlighted dropdown sections — order: Strong → Weak → Performance → Leaderboard */}
-      <HighlightSection
-        id="strength"
-        title="Strength Areas"
-        subtitle={`${data.strongTopics.length} topics where you score consistently well`}
-        icon={<Award className="h-5 w-5" />}
-        accent="emerald"
-        defaultOpen={isStrength}
-      >
-        <StrengthBlock data={data} />
-      </HighlightSection>
+      {/* Single focused, highlighted section per page */}
+      {mode === "strength" && (
+        <HighlightSection id="strength" title="Strength Areas"
+          subtitle={`${data.strongTopics.length} topics where you score consistently well`}
+          icon={<Award className="h-5 w-5" />} accent="emerald" defaultOpen>
+          <StrengthBlock data={data} />
+        </HighlightSection>
+      )}
 
-      <HighlightSection
-        id="weak"
-        title="Weak Areas"
-        subtitle={`${data.weakTopics.length} topics that need urgent attention`}
-        icon={<AlertTriangle className="h-5 w-5" />}
-        accent="rose"
-        defaultOpen={!isStrength}
-      >
-        <WeakBlock data={data} />
-      </HighlightSection>
+      {mode === "weak" && (
+        <HighlightSection id="weak" title="Weak Areas"
+          subtitle={`${data.weakTopics.length} topics that need urgent attention`}
+          icon={<AlertTriangle className="h-5 w-5" />} accent="rose" defaultOpen>
+          <WeakBlock data={data} />
+        </HighlightSection>
+      )}
 
-      <HighlightSection
-        id="performance"
-        title="Performance Analysis"
-        subtitle="Topic-wise, section-wise and exam-wise performance across every mock"
-        icon={<Activity className="h-5 w-5" />}
-        accent="sky"
-        defaultOpen={false}
-      >
-        <PerformanceBlock data={data} perf={perf} />
-      </HighlightSection>
+      {mode === "performance" && (
+        <HighlightSection id="performance" title="Performance Analysis"
+          subtitle="Topic-wise, section-wise and exam-wise performance across every mock"
+          icon={<Activity className="h-5 w-5" />} accent="sky" defaultOpen>
+          <PerformanceBlock data={data} perf={perf} />
+        </HighlightSection>
+      )}
 
-      <HighlightSection
-        id="leaderboard"
-        title="Leaderboard"
-        subtitle="See where you stand against other aspirants"
-        icon={<Trophy className="h-5 w-5" />}
-        accent="amber"
-        defaultOpen={false}
-      >
-        <LeaderboardBlock />
-      </HighlightSection>
+      {mode === "leaderboard" && (
+        <HighlightSection id="leaderboard" title="Leaderboard"
+          subtitle="See where you stand against other aspirants"
+          icon={<Trophy className="h-5 w-5" />} accent="amber" defaultOpen>
+          <LeaderboardBlock />
+        </HighlightSection>
+      )}
+    </div>
+  );
+}
+
+// ─── Inline navigator linking all 4 insight pages together ─────────────────
+function SectionNav({ active }: { active: Mode }) {
+  const items: Array<{ to: string; label: string; key: Mode; icon: React.ReactNode; tone: string }> = [
+    { to: "/student/strength-areas", label: "Strengths",   key: "strength",    icon: <Award className="h-3.5 w-3.5" />,         tone: "emerald" },
+    { to: "/student/weak-areas",     label: "Weak Areas",  key: "weak",        icon: <AlertTriangle className="h-3.5 w-3.5" />, tone: "rose" },
+    { to: "/student/performance",    label: "Performance", key: "performance", icon: <Activity className="h-3.5 w-3.5" />,      tone: "sky" },
+    { to: "/student/leaderboard",    label: "Leaderboard", key: "leaderboard", icon: <Trophy className="h-3.5 w-3.5" />,        tone: "amber" },
+  ];
+  const palette: Record<string, string> = {
+    emerald: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    rose:    "border-rose-200 bg-rose-50 text-rose-700",
+    sky:     "border-sky-200 bg-sky-50 text-sky-700",
+    amber:   "border-amber-200 bg-amber-50 text-amber-700",
+  };
+  return (
+    <div className="mt-5 flex flex-wrap gap-2">
+      {items.map((it) => {
+        const isActive = it.key === active;
+        return (
+          <Link key={it.key} to={it.to}
+            className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${
+              isActive ? palette[it.tone] + " shadow-sm ring-1 ring-offset-1 ring-current/20" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+            }`}
+          >
+            {it.icon} {it.label}
+          </Link>
+        );
+      })}
     </div>
   );
 }
