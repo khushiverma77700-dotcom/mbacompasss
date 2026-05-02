@@ -343,17 +343,6 @@ const StudentBackGuard = () => {
   return null;
 };
 
-const PageLoader = () => (
-  <div className="min-h-[40vh] bg-background">
-    <div className="container mx-auto flex min-h-[40vh] items-center justify-center px-4">
-      <div className="flex items-center gap-3 rounded-md border border-border bg-card px-4 py-3 shadow-sm">
-        <div className="h-2.5 w-2.5 animate-pulse rounded-full bg-primary" />
-        <span className="text-sm font-medium text-muted-foreground">Loading page…</span>
-      </div>
-    </div>
-  </div>
-);
-
 // Prefetch all site settings in one batch — but only after first paint to keep
 // Supabase calls off the LCP critical path.
 const SettingsPrefetcher = () => {
@@ -442,9 +431,9 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   </>
 );
 
-// Wrap only lazy pages in Suspense
+// Keep route changes visually instant; lazy chunks load without showing a blocking loader.
 const LazyPage = ({ children }: { children: React.ReactNode }) => (
-  <Suspense fallback={<PageLoader />}>{children}</Suspense>
+  <Suspense fallback={null}>{children}</Suspense>
 );
 
 const OnboardingGate = () => {
