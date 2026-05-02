@@ -414,6 +414,30 @@ function SidebarContent() {
         </div>
       </div>
 
+      {/* PerformX — premium gamification block (Apex Arena) */}
+      <NavLink
+        to="/student/performx"
+        className={({ isActive }) =>
+          cn(
+            "relative my-2 flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold overflow-hidden border transition-all group",
+            isActive
+              ? "border-amber-300/60 bg-gradient-to-r from-amber-100 via-rose-50 to-violet-100 text-rose-700 shadow-md dark:from-amber-500/20 dark:via-rose-500/15 dark:to-violet-500/20 dark:border-amber-400/30 dark:text-amber-200"
+              : "border-violet-200/60 bg-gradient-to-r from-amber-50/70 via-rose-50/50 to-violet-50/70 text-foreground hover:shadow-md dark:border-violet-500/20 dark:from-amber-500/10 dark:via-rose-500/5 dark:to-violet-500/10"
+          )
+        }
+      >
+        <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 -translate-x-full group-hover:translate-x-full" />
+        <span className="relative h-7 w-7 rounded-lg bg-gradient-to-br from-amber-500 via-rose-500 to-violet-600 grid place-items-center text-white shadow-md">
+          <Trophy className="h-3.5 w-3.5" />
+        </span>
+        <span className="relative flex-1 text-left flex items-center gap-1.5">
+          PerformX
+          <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-gradient-to-r from-amber-500 to-rose-500 text-white font-black">
+            New
+          </span>
+        </span>
+      </NavLink>
+
       {restItems.map((item) => renderRow(item))}
 
       <div className="pt-4 mt-4 border-t border-border">
