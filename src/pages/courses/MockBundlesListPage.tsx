@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { FEATURE_DEFINITIONS, type FeatureKey, type FeatureMap } from "@/lib/courseFeatures";
+import { useMetaPixel, pixelTrack } from "@/lib/metaPixel";
 
 type Bundle = {
   id: string;
