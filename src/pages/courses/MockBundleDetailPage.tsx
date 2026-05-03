@@ -15,6 +15,7 @@ import SEOHead from "@/components/SEOHead";
 import {
   HIGHLIGHT_DEFINITIONS, HighlightKey, HighlightMap, isHighlightOn, getHighlightValue,
 } from "@/lib/courseHighlights";
+import { useMetaPixel, pixelTrack } from "@/lib/metaPixel";
 
 const HIGHLIGHT_ICONS: Record<HighlightKey, any> = {
   daily_tests: Calendar,
@@ -127,6 +128,14 @@ export default function MockBundleDetailPage() {
       window.location.href = `/auth?redirect=/courses/${slug}`;
       return;
     }
+    pixelTrack("InitiateCheckout", {
+      content_name: bundle?.name,
+      content_ids: [bundle?.slug],
+      content_type: "product",
+      value: Number(bundle?.price_inr),
+      currency: "INR",
+      num_items: mocks.length,
+    });
     setPaying(true);
     try {
       const ok = await loadRzp();
@@ -148,6 +157,14 @@ export default function MockBundleDetailPage() {
             },
           });
           if (ve || !v?.success) { toast.error("Payment verification failed"); return; }
+          pixelTrack("Purchase", {
+            content_name: bundle?.name,
+            content_ids: [bundle?.slug],
+            content_type: "product",
+            value: Number(bundle?.price_inr),
+            currency: "INR",
+            num_items: mocks.length,
+          });
           toast.success("Bundle unlocked! All mocks are now in your dashboard.");
           setEnrolled(true);
         },
@@ -160,6 +177,19 @@ export default function MockBundleDetailPage() {
       setPaying(false);
     }
   };
+
+  // Pixel: ViewContent for this specific bundle once it loads
+  useMetaPixel(
+    bundle
+      ? {
+          contentName: bundle.name,
+          contentCategory: "course",
+          contentIds: [bundle.slug],
+          value: Number(bundle.price_inr),
+          currency: "INR",
+        }
+      : undefined,
+  );
 
   if (loading) return <div className="container mx-auto px-4 py-12 text-muted-foreground">Loading…</div>;
   if (!bundle) return (
@@ -191,7 +221,13 @@ export default function MockBundleDetailPage() {
 
   return (
     <div className="bg-background min-h-screen">
-      <SEOHead title={`${bundle.name} | MBA Compass`} description={bundle.description ?? `${bundle.name} — complete prep course with mocks, AI analysis and 24×7 support.`} />
+      <SEOHead
+        title={`${bundle.name} | MBA Compass`}
+        description={bundle.description ?? `${bundle.name} — complete prep course with mocks, AI analysis and 24×7 support.`}
+        canonical={`https://mbacompass.in/courses/${bundle.slug}`}
+        ogType="product"
+        ogImage={bundle.cover_image_url || undefined}
+      />
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-gradient-to-b from-sky-50 via-white to-white">

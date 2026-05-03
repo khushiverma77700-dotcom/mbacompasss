@@ -136,6 +136,7 @@ export default function MocksListPage() {
 
   useEffect(() => {
     if (settings?.meta_pixel_id) {
+      try { sessionStorage.setItem("mc_meta_pixel_id", settings.meta_pixel_id); } catch {}
       initMetaPixel(settings.meta_pixel_id);
       pixelTrack("ViewContent", { content_name: "CAT Mocks Landing", content_category: "mocks" });
     }
@@ -190,7 +191,12 @@ export default function MocksListPage() {
 
   return (
     <div className="bg-background">
-      <SEOHead title={settings.meta_title} description={settings.meta_description} />
+      <SEOHead
+        title={settings.meta_title}
+        description={settings.meta_description}
+        canonical="https://mbacompass.in/mocks"
+        ogImage={settings.hero_image_url || undefined}
+      />
 
       {/* HERO — HD 3D */}
       <section className="relative overflow-hidden bg-gradient-to-b from-sky-50 via-white to-white">

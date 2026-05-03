@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { FEATURE_DEFINITIONS, type FeatureKey, type FeatureMap } from "@/lib/courseFeatures";
+import { useMetaPixel, pixelTrack } from "@/lib/metaPixel";
 
 type Bundle = {
   id: string;
@@ -147,11 +148,14 @@ export default function MockBundlesListPage() {
   const clearFilters = () => { setQ(""); setExam("all"); setBucket("all"); setSort("newest"); setTab("all"); };
   const hasActiveFilters = q || exam !== "all" || bucket !== "all" || sort !== "newest" || tab !== "all";
 
+  useMetaPixel({ contentName: "Mock Bundles Catalog", contentCategory: "courses" });
+
   return (
     <div className="bg-background min-h-screen">
       <SEOHead
         title="Mock Test Courses & Bundles | MBA Compass"
         description="Buy curated CAT, XAT, NMAT, SNAP and IIFT mock test bundles. AI analytics, study planner, and full dashboard included with every course."
+        canonical="https://mbacompass.in/courses"
       />
 
       {/* HERO HEADER */}
@@ -513,7 +517,17 @@ export default function MockBundlesListPage() {
                               </div>
                             </div>
                             <Button asChild size="sm" className="shadow-md shadow-sky-500/30">
-                              <Link to={`/courses/${b.slug}`}>View <ChevronRight className="h-4 w-4 ml-1" /></Link>
+                              <Link
+                                to={`/courses/${b.slug}`}
+                                onClick={() => pixelTrack("ViewContent", {
+                                  content_name: b.name,
+                                  content_ids: [b.slug],
+                                  content_category: "course",
+                                  content_type: "product",
+                                  value: Number(b.price_inr),
+                                  currency: "INR",
+                                })}
+                              >View <ChevronRight className="h-4 w-4 ml-1" /></Link>
                             </Button>
                           </div>
                         </div>
