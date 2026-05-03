@@ -60,22 +60,9 @@ export default function AIStudyPlannerSection() {
                 <div className="text-[11px] text-muted-foreground">avg gain by Week 8</div>
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={240}>
-              <AreaChart data={trendData}>
-                <defs>
-                  <linearGradient id="planArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.6}/>
-                    <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="week" tick={{ fontSize: 12 }} />
-                <YAxis domain={[50, 100]} tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Area type="monotone" dataKey="percentile" stroke="#0ea5e9" strokeWidth={2.5} fill="url(#planArea)" />
-                <Area type="monotone" dataKey="target" stroke="#10b981" strokeDasharray="4 4" fill="none" />
-              </AreaChart>
-            </ResponsiveContainer>
+            <Suspense fallback={<ChartSkeleton h={240} />}>
+              <PercentileTrendChart />
+            </Suspense>
 
             <div className="grid grid-cols-3 gap-3 mt-4">
               <MiniStat icon={<Flame className="h-4 w-4 text-orange-500" />} label="Daily streak" value="42 days" />
