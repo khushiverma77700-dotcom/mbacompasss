@@ -517,7 +517,17 @@ export default function MockBundlesListPage() {
                               </div>
                             </div>
                             <Button asChild size="sm" className="shadow-md shadow-sky-500/30">
-                              <Link to={`/courses/${b.slug}`}>View <ChevronRight className="h-4 w-4 ml-1" /></Link>
+                              <Link
+                                to={`/courses/${b.slug}`}
+                                onClick={() => pixelTrack("ViewContent", {
+                                  content_name: b.name,
+                                  content_ids: [b.slug],
+                                  content_category: "course",
+                                  content_type: "product",
+                                  value: Number(b.price_inr),
+                                  currency: "INR",
+                                })}
+                              >View <ChevronRight className="h-4 w-4 ml-1" /></Link>
                             </Button>
                           </div>
                         </div>
