@@ -148,11 +148,14 @@ export default function MockBundlesListPage() {
   const clearFilters = () => { setQ(""); setExam("all"); setBucket("all"); setSort("newest"); setTab("all"); };
   const hasActiveFilters = q || exam !== "all" || bucket !== "all" || sort !== "newest" || tab !== "all";
 
+  useMetaPixel({ contentName: "Mock Bundles Catalog", contentCategory: "courses" });
+
   return (
     <div className="bg-background min-h-screen">
       <SEOHead
         title="Mock Test Courses & Bundles | MBA Compass"
         description="Buy curated CAT, XAT, NMAT, SNAP and IIFT mock test bundles. AI analytics, study planner, and full dashboard included with every course."
+        canonical="https://mbacompass.in/courses"
       />
 
       {/* HERO HEADER */}
