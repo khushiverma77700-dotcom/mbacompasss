@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import { MockCheckoutDialog } from "@/components/mock/MockCheckoutDialog";
 import SEOHead from "@/components/SEOHead";
-import { initMetaPixel, pixelTrack } from "@/lib/metaPixel";
+import { initMetaPixel, pixelTrack, useMetaPixel } from "@/lib/metaPixel";
 import { toast } from "sonner";
 import { SampleAIReport } from "@/components/mock/SampleAIReport";
 import { AutoTestimonialMarquee } from "@/components/mock/AutoTestimonialMarquee";
