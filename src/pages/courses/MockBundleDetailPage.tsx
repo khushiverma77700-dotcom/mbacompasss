@@ -128,6 +128,14 @@ export default function MockBundleDetailPage() {
       window.location.href = `/auth?redirect=/courses/${slug}`;
       return;
     }
+    pixelTrack("InitiateCheckout", {
+      content_name: bundle?.name,
+      content_ids: [bundle?.slug],
+      content_type: "product",
+      value: Number(bundle?.price_inr),
+      currency: "INR",
+      num_items: mocks.length,
+    });
     setPaying(true);
     try {
       const ok = await loadRzp();
@@ -149,6 +157,14 @@ export default function MockBundleDetailPage() {
             },
           });
           if (ve || !v?.success) { toast.error("Payment verification failed"); return; }
+          pixelTrack("Purchase", {
+            content_name: bundle?.name,
+            content_ids: [bundle?.slug],
+            content_type: "product",
+            value: Number(bundle?.price_inr),
+            currency: "INR",
+            num_items: mocks.length,
+          });
           toast.success("Bundle unlocked! All mocks are now in your dashboard.");
           setEnrolled(true);
         },
@@ -161,6 +177,19 @@ export default function MockBundleDetailPage() {
       setPaying(false);
     }
   };
+
+  // Pixel: ViewContent for this specific bundle once it loads
+  useMetaPixel(
+    bundle
+      ? {
+          contentName: bundle.name,
+          contentCategory: "course",
+          contentIds: [bundle.slug],
+          value: Number(bundle.price_inr),
+          currency: "INR",
+        }
+      : undefined,
+  );
 
   if (loading) return <div className="container mx-auto px-4 py-12 text-muted-foreground">Loading…</div>;
   if (!bundle) return (
