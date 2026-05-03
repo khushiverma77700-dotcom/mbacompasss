@@ -191,7 +191,12 @@ export default function MocksListPage() {
 
   return (
     <div className="bg-background">
-      <SEOHead title={settings.meta_title} description={settings.meta_description} />
+      <SEOHead
+        title={settings.meta_title}
+        description={settings.meta_description}
+        canonical="https://mbacompass.in/mocks"
+        ogImage={settings.hero_image_url || undefined}
+      />
 
       {/* HERO — HD 3D */}
       <section className="relative overflow-hidden bg-gradient-to-b from-sky-50 via-white to-white">
