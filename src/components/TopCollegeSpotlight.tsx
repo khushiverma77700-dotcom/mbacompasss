@@ -2,10 +2,10 @@ import { Link } from "react-router-dom";
 import { GraduationCap, MapPin, TrendingUp, ArrowRight, Award } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { useColleges } from "@/hooks/useInstitutes";
+import { useCollegesLight } from "@/hooks/useInstitutes";
 
 const TopCollegeSpotlight = () => {
-  const { data: colleges, isLoading } = useColleges();
+  const { data: colleges, isLoading } = useCollegesLight();
 
   if (isLoading || !colleges?.length) return null;
 
