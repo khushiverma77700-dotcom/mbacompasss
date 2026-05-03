@@ -78,21 +78,9 @@ export default function AIStudyPlannerSection() {
                 <Target className="h-4 w-4 text-sky-600" />
                 <h3 className="font-semibold text-sm text-gray-900">Sectional readiness</h3>
               </div>
-              <ResponsiveContainer width="100%" height={170}>
-                <RadialBarChart data={subjectFocus} innerRadius="35%" outerRadius="100%" startAngle={90} endAngle={-270}>
-                  <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-                  <RadialBar dataKey="value" background cornerRadius={6} />
-                  <Tooltip />
-                </RadialBarChart>
-              </ResponsiveContainer>
-              <div className="flex justify-around text-xs">
-                {subjectFocus.map((s) => (
-                  <div key={s.name} className="text-center">
-                    <div className="font-semibold" style={{ color: s.fill }}>{s.value}%</div>
-                    <div className="text-muted-foreground">{s.name}</div>
-                  </div>
-                ))}
-              </div>
+              <Suspense fallback={<ChartSkeleton h={170} />}>
+                <SectionalRadial />
+              </Suspense>
             </Card>
 
             <Card className="p-5 bg-white/90 backdrop-blur border-sky-100 shadow-sm">
