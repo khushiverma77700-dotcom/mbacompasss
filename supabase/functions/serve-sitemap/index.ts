@@ -1,7 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2?target=denonext";
 
 const SITE_URL = "https://mbacompass.in";
-const MAX_URLS_PER_SITEMAP = 1000;
+const MAX_URLS_PER_SITEMAP = 50000;
 
 type Entry = {
   loc: string;
@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
     );
 
     const url = new URL(req.url);
-    const segment = url.searchParams.get("segment"); // e.g. "pages" | "blogs" | "colleges" | "institutes" | "exams" | "categories"
+    const segment = url.searchParams.get("segment"); // e.g. "pages" | "blogs" | "colleges" | "institutes" | "exams" | "categories" | "courses" | "mocks"
 
     const today = fmtDate(new Date());
 
@@ -88,6 +88,9 @@ Deno.serve(async (req) => {
       { loc: "/about", changefreq: "monthly", priority: 0.5, lastmod: today },
       { loc: "/contact", changefreq: "monthly", priority: 0.5, lastmod: today },
       { loc: "/business-inquiry", changefreq: "monthly", priority: 0.5, lastmod: today },
+      { loc: "/list-your-business", changefreq: "monthly", priority: 0.5, lastmod: today },
+      { loc: "/mocks", changefreq: "weekly", priority: 0.8, lastmod: today },
+      { loc: "/courses", changefreq: "weekly", priority: 0.8, lastmod: today },
     ];
 
     const [
@@ -97,6 +100,8 @@ Deno.serve(async (req) => {
       { data: categories },
       { data: articles },
       { data: cityPages },
+      { data: mockBundles },
+      { data: mockTests },
     ] = await Promise.all([
       supabase.from("institutes").select("slug, updated_at"),
       supabase.from("colleges").select("slug, updated_at"),
@@ -104,6 +109,8 @@ Deno.serve(async (req) => {
       supabase.from("categories").select("slug, updated_at"),
       supabase.from("articles").select("slug, updated_at").eq("published", true),
       supabase.from("city_pages").select("slug, updated_at").eq("active", true),
+      supabase.from("mock_bundles").select("slug, updated_at").eq("is_published", true),
+      supabase.from("mock_tests").select("slug, updated_at").eq("is_published", true),
     ]);
 
     const blogs: Entry[] = (articles ?? []).flatMap((a: any) => a.slug
@@ -118,6 +125,10 @@ Deno.serve(async (req) => {
       ? [{ loc: `/exam/${e.slug}`, lastmod: fmtDate(e.created_at), changefreq: "monthly" as const, priority: 0.7 }] : []);
     const cityEntries: Entry[] = (cityPages ?? []).flatMap((cp: any) => cp.slug
       ? [{ loc: `/colleges/${cp.slug}`, lastmod: fmtDate(cp.updated_at), changefreq: "weekly" as const, priority: 0.7 }] : []);
+    const courseEntries: Entry[] = (mockBundles ?? []).flatMap((b: any) => b.slug
+      ? [{ loc: `/courses/${b.slug}`, lastmod: fmtDate(b.updated_at), changefreq: "weekly" as const, priority: 0.8 }] : []);
+    const mockEntries: Entry[] = (mockTests ?? []).flatMap((m: any) => m.slug
+      ? [{ loc: `/mocks/${m.slug}`, lastmod: fmtDate(m.updated_at), changefreq: "weekly" as const, priority: 0.7 }] : []);
 
     const segments: Record<string, Entry[]> = {
       pages: [...STATIC_PAGES, ...cityEntries],
@@ -126,6 +137,8 @@ Deno.serve(async (req) => {
       colleges: collegeEntries,
       institutes: instEntries,
       exams: examEntries,
+      courses: courseEntries,
+      mocks: mockEntries,
     };
 
     const headers = {
