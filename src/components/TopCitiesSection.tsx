@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Building2, Landmark, Cpu, BookOpen, Building, Church, Warehouse, BrickWall } from "lucide-react";
 import { motion } from "framer-motion";
 import { useCityPages } from "@/hooks/useCityPages";
-import { useColleges } from "@/hooks/useInstitutes";
+import { useCollegesLight } from "@/hooks/useInstitutes";
 
 const iconMap: Record<string, any> = {
   Delhi: Landmark, Mumbai: Building2, Bangalore: Cpu, Pune: BookOpen,
@@ -16,7 +16,7 @@ const colorCycle = [
 
 const TopCitiesSection = () => {
   const { data: cityPages } = useCityPages();
-  const { data: colleges } = useColleges();
+  const { data: colleges } = useCollegesLight();
 
   const cities = (cityPages || []).filter(p => p.type === "city").slice(0, 8).map((p, i) => {
     const aliases = p.city_aliases || [p.name.toLowerCase()];

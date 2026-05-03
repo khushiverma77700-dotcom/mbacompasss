@@ -4,13 +4,13 @@ import { MapPin, Building2, ArrowRight, GraduationCap, ChevronLeft, ChevronRight
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useCityPages } from "@/hooks/useCityPages";
-import { useColleges } from "@/hooks/useInstitutes";
+import { useCollegesLight } from "@/hooks/useInstitutes";
 import { getLocationImage, isGeneratedBanner } from "@/data/cityImages";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const BrowseByCitySection = () => {
   const { data: cityPages } = useCityPages();
-  const { data: colleges } = useColleges();
+  const { data: colleges } = useCollegesLight();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);

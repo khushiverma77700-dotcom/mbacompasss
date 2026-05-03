@@ -253,6 +253,14 @@ const prefetchRoute = (href?: string | null) => {
   if (url.origin !== window.location.origin) return;
 
   const path = url.pathname;
+
+  // Never prefetch heavy admin chunks (TipTap editor ~127KB, recharts, etc.)
+  // unless the user is already inside the admin area. Public hovers must
+  // never accidentally pull the admin bundle.
+  if (path.startsWith("/admin") && !window.location.pathname.startsWith("/admin")) {
+    return;
+  }
+
   const preloaders = new Set<() => Promise<unknown>>();
 
   ROUTE_PREFETCHERS[path as keyof typeof ROUTE_PREFETCHERS]?.forEach((preload) => preloaders.add(preload));
@@ -383,7 +391,8 @@ const DeferredChrome = () => {
     };
   }, [location.pathname]);
 
-  if (!show) return null;
+  // Reserve vertical space so the late-mounting Footer doesn't cause CLS jumps.
+  if (!show) return <div style={{ minHeight: 320 }} aria-hidden="true" />;
 
   // Popup never shows on home / admin / profile-analyzer / student dashboard / mock test runner —
   // skip importing it there so AI pop-ups don't disrupt focused experiences.
@@ -399,7 +408,7 @@ const DeferredChrome = () => {
     path.startsWith("/mocks/review");
 
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<div style={{ minHeight: 320 }} aria-hidden="true" />}>
       <Footer />
       {!skipPopup && <ProfileAnalyzerPopup />}
     </Suspense>

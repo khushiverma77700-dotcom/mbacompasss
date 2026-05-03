@@ -1,30 +1,22 @@
+import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   Brain, Target, TrendingUp, CalendarDays, Sparkles, CheckCircle2, BookOpenCheck, Flame,
 } from "lucide-react";
-import {
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  RadialBarChart, RadialBar, PolarAngleAxis,
-} from "recharts";
 
-const trendData = [
-  { week: "W1", percentile: 62, target: 95 },
-  { week: "W2", percentile: 68, target: 95 },
-  { week: "W3", percentile: 74, target: 95 },
-  { week: "W4", percentile: 79, target: 95 },
-  { week: "W5", percentile: 84, target: 95 },
-  { week: "W6", percentile: 88, target: 95 },
-  { week: "W7", percentile: 92, target: 95 },
-  { week: "W8", percentile: 95, target: 95 },
-];
+// Lazy-load recharts (~94KB) so it does not block homepage first paint.
+const PercentileTrendChart = lazy(() =>
+  import("./AIStudyPlannerCharts").then((m) => ({ default: m.PercentileTrendChart }))
+);
+const SectionalRadial = lazy(() =>
+  import("./AIStudyPlannerCharts").then((m) => ({ default: m.SectionalRadial }))
+);
 
-const subjectFocus = [
-  { name: "QA", value: 78, fill: "#0ea5e9" },
-  { name: "VARC", value: 86, fill: "#10b981" },
-  { name: "DILR", value: 71, fill: "#f59e0b" },
-];
+const ChartSkeleton = ({ h = 240 }: { h?: number }) => (
+  <div style={{ height: h }} className="w-full rounded-lg bg-sky-50/50 animate-pulse" aria-hidden="true" />
+);
 
 const todayPlan = [
   { time: "07:00", task: "VARC RC drill — 3 passages", mins: 45, done: true },
@@ -68,22 +60,9 @@ export default function AIStudyPlannerSection() {
                 <div className="text-[11px] text-muted-foreground">avg gain by Week 8</div>
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={240}>
-              <AreaChart data={trendData}>
-                <defs>
-                  <linearGradient id="planArea" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.6}/>
-                    <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                <XAxis dataKey="week" tick={{ fontSize: 12 }} />
-                <YAxis domain={[50, 100]} tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Area type="monotone" dataKey="percentile" stroke="#0ea5e9" strokeWidth={2.5} fill="url(#planArea)" />
-                <Area type="monotone" dataKey="target" stroke="#10b981" strokeDasharray="4 4" fill="none" />
-              </AreaChart>
-            </ResponsiveContainer>
+            <Suspense fallback={<ChartSkeleton h={240} />}>
+              <PercentileTrendChart />
+            </Suspense>
 
             <div className="grid grid-cols-3 gap-3 mt-4">
               <MiniStat icon={<Flame className="h-4 w-4 text-orange-500" />} label="Daily streak" value="42 days" />
@@ -99,21 +78,9 @@ export default function AIStudyPlannerSection() {
                 <Target className="h-4 w-4 text-sky-600" />
                 <h3 className="font-semibold text-sm text-gray-900">Sectional readiness</h3>
               </div>
-              <ResponsiveContainer width="100%" height={170}>
-                <RadialBarChart data={subjectFocus} innerRadius="35%" outerRadius="100%" startAngle={90} endAngle={-270}>
-                  <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-                  <RadialBar dataKey="value" background cornerRadius={6} />
-                  <Tooltip />
-                </RadialBarChart>
-              </ResponsiveContainer>
-              <div className="flex justify-around text-xs">
-                {subjectFocus.map((s) => (
-                  <div key={s.name} className="text-center">
-                    <div className="font-semibold" style={{ color: s.fill }}>{s.value}%</div>
-                    <div className="text-muted-foreground">{s.name}</div>
-                  </div>
-                ))}
-              </div>
+              <Suspense fallback={<ChartSkeleton h={170} />}>
+                <SectionalRadial />
+              </Suspense>
             </Card>
 
             <Card className="p-5 bg-white/90 backdrop-blur border-sky-100 shadow-sm">
