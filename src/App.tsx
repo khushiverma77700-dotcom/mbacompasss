@@ -253,6 +253,14 @@ const prefetchRoute = (href?: string | null) => {
   if (url.origin !== window.location.origin) return;
 
   const path = url.pathname;
+
+  // Never prefetch heavy admin chunks (TipTap editor ~127KB, recharts, etc.)
+  // unless the user is already inside the admin area. Public hovers must
+  // never accidentally pull the admin bundle.
+  if (path.startsWith("/admin") && !window.location.pathname.startsWith("/admin")) {
+    return;
+  }
+
   const preloaders = new Set<() => Promise<unknown>>();
 
   ROUTE_PREFETCHERS[path as keyof typeof ROUTE_PREFETCHERS]?.forEach((preload) => preloaders.add(preload));
