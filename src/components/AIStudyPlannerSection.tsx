@@ -1,30 +1,22 @@
+import { lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   Brain, Target, TrendingUp, CalendarDays, Sparkles, CheckCircle2, BookOpenCheck, Flame,
 } from "lucide-react";
-import {
-  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
-  RadialBarChart, RadialBar, PolarAngleAxis,
-} from "recharts";
 
-const trendData = [
-  { week: "W1", percentile: 62, target: 95 },
-  { week: "W2", percentile: 68, target: 95 },
-  { week: "W3", percentile: 74, target: 95 },
-  { week: "W4", percentile: 79, target: 95 },
-  { week: "W5", percentile: 84, target: 95 },
-  { week: "W6", percentile: 88, target: 95 },
-  { week: "W7", percentile: 92, target: 95 },
-  { week: "W8", percentile: 95, target: 95 },
-];
+// Lazy-load recharts (~94KB) so it does not block homepage first paint.
+const PercentileTrendChart = lazy(() =>
+  import("./AIStudyPlannerCharts").then((m) => ({ default: m.PercentileTrendChart }))
+);
+const SectionalRadial = lazy(() =>
+  import("./AIStudyPlannerCharts").then((m) => ({ default: m.SectionalRadial }))
+);
 
-const subjectFocus = [
-  { name: "QA", value: 78, fill: "#0ea5e9" },
-  { name: "VARC", value: 86, fill: "#10b981" },
-  { name: "DILR", value: 71, fill: "#f59e0b" },
-];
+const ChartSkeleton = ({ h = 240 }: { h?: number }) => (
+  <div style={{ height: h }} className="w-full rounded-lg bg-sky-50/50 animate-pulse" aria-hidden="true" />
+);
 
 const todayPlan = [
   { time: "07:00", task: "VARC RC drill — 3 passages", mins: 45, done: true },
