@@ -33,7 +33,7 @@ const AdminSitemap = () => {
         value: JSON.stringify({ xml, generated_at: new Date().toISOString(), url_count: totalUrls }),
       }, { onConflict: "key" });
 
-      toast({ title: "Sitemap Generated", description: `${totalUrls} URLs ready. Download and replace public/sitemap.xml to publish on your domain.` });
+      toast({ title: "Sitemap Checked", description: `${totalUrls} URLs found in the live sitemap engine. Publish the app after sitemap code changes so Google sees the updated domain file.` });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
@@ -74,7 +74,7 @@ const AdminSitemap = () => {
           <div className="space-y-1">
             <p className="font-semibold text-foreground">How publishing works</p>
             <p className="text-muted-foreground">
-              The live sitemap engine always returns fresh URLs from your database. To publish them at <code className="text-primary">{SITEMAP_URL}</code>, click <strong>Generate Sitemap</strong>, then <strong>Download .xml</strong>, and replace <code>public/sitemap.xml</code> in your project. A 6-hour cron also keeps the saved snapshot fresh.
+              The live sitemap engine returns fresh URLs from your database, and <code className="text-primary">{SITEMAP_URL}</code> is the same-domain file Google should read. This page checks the latest count; frontend sitemap file changes go live after publishing the app.
             </p>
           </div>
         </CardContent>

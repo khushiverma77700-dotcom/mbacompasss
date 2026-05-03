@@ -3,7 +3,7 @@ name: seo-architecture
 description: Sitemap delivery, canonical strategy, brand naming, and auto-indexing wiring for the BSchoolBuzz site
 type: feature
 ---
-- Sitemap: live auto-generated at https://mttoiqruzzxooveooldo.supabase.co/functions/v1/serve-sitemap (edge function `serve-sitemap`). A static sitemapindex at `public/sitemap.xml` references it so `https://bschoolbuzz.com/sitemap.xml` returns 200 (Lovable hosting does NOT process `public/_redirects` — that file was removed).
+- Sitemap: `public/sitemap.xml` must contain the full same-domain `<urlset>` for `https://mbacompass.in/sitemap.xml`; do NOT publish a sitemapindex pointing to the backend function because Google Search Console may only discover the old/stale subset. The `serve-sitemap` backend function remains the generator source for refreshing the static file.
 - robots.txt declares BOTH sitemap URLs.
 - Sitemap excludes query-parameter URLs (no more `?fee=`, `?specialization=`) — they self-canonicalize on the page.
 - Canonicals: CollegesPage / CoachingPage / CategoryPage emit a self-canonical based on `window.location` (path + query) so filtered URLs canonicalize to themselves.
