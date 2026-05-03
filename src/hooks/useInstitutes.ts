@@ -106,6 +106,7 @@ export const useCategories = () => {
   });
 };
 
+// Heavy variant — used ONLY on /colleges listing page (needs description, specializations, recruiters).
 export const useColleges = () => {
   return useQuery({
     queryKey: ["colleges"],
@@ -140,6 +141,25 @@ export const useColleges = () => {
       if (error) throw error;
       return data || [];
     },
+    staleTime: 10 * 60 * 1000,
+  });
+};
+
+// Light variant — for homepage city counts, spotlight cards, related-college sidebars.
+// Drops description (huge HTML blob) + specializations/recruiters/accreditations arrays.
+// Cuts the colleges payload from ~1.8s/large to a fast lean response.
+export const useCollegesLight = () => {
+  return useQuery({
+    queryKey: ["colleges_light"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("colleges")
+        .select("id, name, slug, city, state, logo_url, fees, placement_avg, placement_highest, ranking, type, exams_accepted")
+        .order("ranking");
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 10 * 60 * 1000,
   });
 };
 
