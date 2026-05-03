@@ -15,6 +15,7 @@ import SEOHead from "@/components/SEOHead";
 import {
   HIGHLIGHT_DEFINITIONS, HighlightKey, HighlightMap, isHighlightOn, getHighlightValue,
 } from "@/lib/courseHighlights";
+import { useMetaPixel, pixelTrack } from "@/lib/metaPixel";
 
 const HIGHLIGHT_ICONS: Record<HighlightKey, any> = {
   daily_tests: Calendar,
