@@ -221,7 +221,13 @@ export default function MockBundleDetailPage() {
 
   return (
     <div className="bg-background min-h-screen">
-      <SEOHead title={`${bundle.name} | MBA Compass`} description={bundle.description ?? `${bundle.name} — complete prep course with mocks, AI analysis and 24×7 support.`} />
+      <SEOHead
+        title={`${bundle.name} | MBA Compass`}
+        description={bundle.description ?? `${bundle.name} — complete prep course with mocks, AI analysis and 24×7 support.`}
+        canonical={`https://mbacompass.in/courses/${bundle.slug}`}
+        ogType="product"
+        ogImage={bundle.cover_image_url || undefined}
+      />
 
       {/* HERO */}
       <section className="relative overflow-hidden bg-gradient-to-b from-sky-50 via-white to-white">
