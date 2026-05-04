@@ -63,7 +63,7 @@ const AdminArticles = () => {
   };
 
   const fetchArticles = async () => {
-    const { data } = await supabase.from("articles").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase.from("articles").select("*").order("created_at", { ascending: false }).limit(10000);
     if (data) setArticles(data);
   };
 
