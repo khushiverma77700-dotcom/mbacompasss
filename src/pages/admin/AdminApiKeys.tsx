@@ -93,6 +93,16 @@ export default function AdminApiKeys() {
     else toast.success("Cache flushed — new values active now");
   }
 
+  async function syncFromEnv() {
+    const t = toast.loading("Importing keys from server environment…");
+    const { data, error } = await supabase.functions.invoke("seed-api-credentials");
+    toast.dismiss(t);
+    if (error) { toast.error(error.message); return; }
+    const filled = (data?.results || []).filter((r: any) => /filled|created/.test(r.status)).length;
+    toast.success(`Sync complete — ${filled} keys imported`);
+    load();
+  }
+
   const grouped = CATEGORIES.map((cat) => ({
     ...cat,
     items: credentials.filter((c) => c.category === cat.value),
