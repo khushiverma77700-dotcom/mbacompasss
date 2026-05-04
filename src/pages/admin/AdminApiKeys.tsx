@@ -93,6 +93,16 @@ export default function AdminApiKeys() {
     else toast.success("Cache flushed — new values active now");
   }
 
+  async function syncFromEnv() {
+    const t = toast.loading("Importing keys from server environment…");
+    const { data, error } = await supabase.functions.invoke("seed-api-credentials");
+    toast.dismiss(t);
+    if (error) { toast.error(error.message); return; }
+    const filled = (data?.results || []).filter((r: any) => /filled|created/.test(r.status)).length;
+    toast.success(`Sync complete — ${filled} keys imported`);
+    load();
+  }
+
   const grouped = CATEGORIES.map((cat) => ({
     ...cat,
     items: credentials.filter((c) => c.category === cat.value),
@@ -110,7 +120,10 @@ export default function AdminApiKeys() {
             Manage all third-party API keys used by the platform. Changes take effect within 60 seconds — or click <em>Flush Cache</em> for instant rollout.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" onClick={syncFromEnv}>
+            <RefreshCw className="w-4 h-4 mr-2" /> Sync from Env
+          </Button>
           <Button variant="outline" onClick={flushCache}>
             <RefreshCw className="w-4 h-4 mr-2" /> Flush Cache
           </Button>
