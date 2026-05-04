@@ -85,7 +85,7 @@ Rules:
 - Make it genuinely useful so the reader gets real value without reading the full page` },
             { role: "user", content: `Summarize this ${pageType || "article"} content:\n\n${stripped}` },
           ],
-        });
+        }, { feature: "ai-page-summary" });
 
       if (!resp.ok) {
         if (resp.status === 429) return new Response(JSON.stringify({ error: "Rate limited, try again shortly." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -189,7 +189,7 @@ Rules:
 - Write in a warm, mentor-like tone` },
             { role: "user", content: `Page context:\n${pageContent}\n\n${dbContext ? `Database context:\n${dbContext}\n\n` : ""}User question: ${question}` },
           ],
-        });
+        }, { feature: "ai-page-summary" });
 
       if (!resp.ok) {
         if (resp.status === 429) return new Response(JSON.stringify({ error: "Rate limited, try again shortly." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });

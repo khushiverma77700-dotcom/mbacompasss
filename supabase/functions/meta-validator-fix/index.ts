@@ -176,7 +176,7 @@ ${JSON.stringify(target.map((t) => ({
         },
       }],
       tool_choice: { type: "function", function: { name: "submit_meta_fixes" } },
-    });
+    }, { feature: "meta-validator-fix" });
 
   if (res.status === 429) throw new Error("AI rate limit reached, please retry shortly.");
   if (res.status === 402) throw new Error("AI credits exhausted. Top up in Settings → Workspace.");

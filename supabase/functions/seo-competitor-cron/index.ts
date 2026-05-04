@@ -122,7 +122,7 @@ Prioritize actions by impact. Focus on what we can implement TODAY.`,
           },
         }],
         tool_choice: { type: "function", function: { name: "competitor_report" } },
-      });
+      }, { feature: "seo-competitor-cron" });
 
     if (!aiResp.ok) {
       if (aiResp.status === 429) {

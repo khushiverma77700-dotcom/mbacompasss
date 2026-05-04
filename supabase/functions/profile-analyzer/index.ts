@@ -443,7 +443,7 @@ For improvement_roadmap, provide a month-by-month timeline with specific milesto
           },
         ],
         tool_choice: { type: "function", function: { name: "generate_profile_analysis" } },
-      });
+      }, { feature: "profile-analyzer" });
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();

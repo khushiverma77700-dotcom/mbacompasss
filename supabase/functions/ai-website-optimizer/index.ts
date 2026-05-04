@@ -98,7 +98,7 @@ async function aiRewrite(prompt: string, system: string): Promise<string | null>
           { role: "system", content: system },
           { role: "user", content: prompt },
         ],
-      });
+      }, { feature: "ai-website-optimizer" });
     if (!res.ok) return null;
     const data = await res.json();
     return data.choices?.[0]?.message?.content?.trim() ?? null;

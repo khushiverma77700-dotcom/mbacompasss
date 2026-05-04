@@ -388,7 +388,7 @@ Write a deeply personalized, long-form, advisor-style report. Address ${studentN
           },
         }],
         tool_choice: { type: "function", function: { name: "generate_roi_report" } },
-      });
+      }, { feature: "roi-calculator" });
 
     if (!aiResp.ok) {
       const t = await aiResp.text();
