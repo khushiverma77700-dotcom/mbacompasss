@@ -7,6 +7,7 @@
 // Auth: admin only (verifies JWT in code; verify_jwt = false in config.toml).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -604,7 +605,7 @@ async function callOpenAIBatch(args: {
     positive: args.positive, negative: args.negative,
   }) + avoidLine + seedLine;
 
-  const apiKey = Deno.env.get("OPENAI_API_KEY");
+  const apiKey = (await getCredential("OPENAI_API_KEY"));
   if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
 
   const lvlLower = String(args.level || "").toLowerCase();
@@ -695,7 +696,7 @@ async function callOpenAIBatch(args: {
 }
 
 async function firecrawlIsOnInternet(questionText: string): Promise<boolean> {
-  const apiKey = Deno.env.get("FIRECRAWL_API_KEY");
+  const apiKey = (await getCredential("FIRECRAWL_API_KEY"));
   if (!apiKey) return false; // skip if not configured
   // Trim to a sentence-ish probe
   const probe = normalizeForHash(questionText).slice(0, 220);

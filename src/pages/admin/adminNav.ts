@@ -6,7 +6,7 @@ import {
   GraduationCap, Mail, FileText, Tag, Menu, Settings, MessageCircle, Trophy,
   Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare,
   TrendingUp, Sparkles, ShieldCheck, Briefcase, Target, PhoneCall, Database,
-  Activity, Calculator, Bell, RefreshCw, PenLine, ClipboardList, Package,
+  Activity, Calculator, Bell, RefreshCw, PenLine, ClipboardList, Package, KeyRound,
 } from "lucide-react";
 
 export type AdminNavItem = {
@@ -124,6 +124,7 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Manage Admins", path: "/admin/manage-admins", icon: ShieldCheck },
       { label: "Database Backup", path: "/admin/database-backup", icon: Database },
       { label: "AI & Cloud Usage", path: "/admin/ai-usage", icon: Activity },
+      { label: "API Keys & Secrets", path: "/admin/api-keys", icon: KeyRound },
       { label: "Safe Browsing Guide", path: "/admin/safe-browsing-guide", icon: ShieldCheck },
       { label: "Clear Caches", path: "/admin/clear-cache", icon: Trash2 },
     ],

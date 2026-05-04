@@ -3,6 +3,7 @@
 // Public endpoint (verify_jwt = false in supabase/config.toml is the project default).
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
+import { getCredential } from "../_shared/getCredential.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -27,7 +28,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    const GEMINI_API_KEY = (await getCredential("GEMINI_API_KEY"));
     if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY is not configured");
 
     const brief = (await req.json()) as BlogBrief;

@@ -4,6 +4,7 @@
 // Invoked from the admin progress panel "Retry section" button.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -339,7 +340,7 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
     user = `SECTION = ${opts.section_name} (${opts.section_code}) of ${opts.exam_code}. EVERY question MUST be strictly from this section's syllabus — DO NOT include any topic that belongs to another section of ${opts.exam_code}. Generate exactly ${opts.count} questions: ${opts.mcq} MCQ + ${opts.tita} TITA. Marking +${opts.positive}/-${opts.negative}. JSON shape: {"questions":[{"question_type":"mcq"|"tita","question_html":"...","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"tita_answers":["..."],"tita_tolerance":0.01,"explanation_html":"..."}]}`;
   }
 
-  const apiKey = Deno.env.get("OPENAI_API_KEY");
+  const apiKey = (await getCredential("OPENAI_API_KEY"));
   if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
 
   const lvlLower = String(opts.level || "").toLowerCase();

@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,8 +9,8 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const KEY_ID = Deno.env.get("RAZORPAY_KEY_ID");
-    const KEY_SECRET = Deno.env.get("RAZORPAY_KEY_SECRET");
+    const KEY_ID = (await getCredential("RAZORPAY_KEY_ID"));
+    const KEY_SECRET = (await getCredential("RAZORPAY_KEY_SECRET"));
     if (!KEY_ID || !KEY_SECRET) throw new Error("Razorpay keys not configured");
 
     const authHeader = req.headers.get("Authorization");

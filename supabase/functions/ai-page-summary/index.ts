@@ -8,6 +8,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1?targe
 //  • ask → kept on gemini-2.5-flash for nuance, but capped completion to 400 tokens
 //  • all calls now send max_tokens to prevent runaway 8K-token responses
 import { callAIGateway } from "../_shared/aiGateway.ts";
+import { getCredential } from "../_shared/getCredential.ts";
 const SUMMARY_MODEL = "google/gemini-2.5-flash-lite";
 const ASK_MODEL = "google/gemini-2.5-flash";
 
@@ -42,7 +43,7 @@ Deno.serve(async (req) => {
 
   try {
     const { action, content, question, pageType, pageId } = await req.json();
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    const GEMINI_API_KEY = (await getCredential("GEMINI_API_KEY"));
     if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured");
 
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);

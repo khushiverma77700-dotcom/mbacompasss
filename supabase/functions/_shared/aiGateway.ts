@@ -16,6 +16,7 @@
 //   • No artificial timeouts on the upstream call.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
+import { getCredential } from "./getCredential.ts";
 
 const GEMINI_OPENAI_COMPAT_URL =
   "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
@@ -203,7 +204,7 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
 
   // ── Provider: Direct OpenAI (user's OPENAI_API_KEY) ──────────────────────────
   if (provider === "openai-mini" || provider === "openai-nano") {
-    const openaiKey = Deno.env.get("OPENAI_API_KEY");
+    const openaiKey = (await getCredential("OPENAI_API_KEY"));
     if (!openaiKey) {
       const err = "OPENAI_API_KEY is not configured.";
       console.error(`[aiGateway][${feature}] ${err}`);
@@ -238,7 +239,7 @@ export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Pro
   }
 
   // ── Provider: Direct Gemini (default `gemini` and `gemini-lite`) ─────────────
-  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+  const geminiKey = (await getCredential("GEMINI_API_KEY"));
   if (!geminiKey) {
     const err = "GEMINI_API_KEY is not configured.";
     console.error(`[aiGateway][${feature}] ${err}`);

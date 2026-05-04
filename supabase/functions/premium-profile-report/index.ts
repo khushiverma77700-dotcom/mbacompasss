@@ -4,6 +4,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
+import { getCredential } from "../_shared/getCredential.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -24,7 +25,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    const GEMINI_API_KEY = (await getCredential("GEMINI_API_KEY"));
     if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured");
 
     const body = await req.json() as ReqBody;

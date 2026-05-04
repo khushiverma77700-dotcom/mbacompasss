@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3?target=denonext";
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
+import { getCredential } from "../_shared/getCredential.ts";
 async function logAIUsage(feature: string, model: string, aiData: any, status = "success", errorMsg?: string) {
   try {
     const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -93,7 +94,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
+    const GEMINI_API_KEY = (await getCredential("GEMINI_API_KEY"));
     if (!GEMINI_API_KEY) throw new Error("GEMINI_API_KEY not configured");
 
     const body: ProfileInput & { user_id?: string } = await req.json();

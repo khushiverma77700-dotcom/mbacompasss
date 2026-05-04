@@ -4,6 +4,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0?target=denonext";
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
+import { getCredential } from "../_shared/getCredential.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -11,7 +12,7 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")!;
+const GEMINI_API_KEY = (await getCredential("GEMINI_API_KEY"))!;
 const SITE_URL = "https://mbacompass.in";
 
 const STEPS: { key: string; label: string }[] = [

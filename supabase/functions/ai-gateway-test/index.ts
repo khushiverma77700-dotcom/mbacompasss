@@ -1,3 +1,4 @@
+import { getCredential } from "../_shared/getCredential.ts";
 // AI Gateway Test Endpoint
 // POST /functions/v1/ai-gateway-test
 // Body: { prompt?: string, model?: string }
@@ -91,7 +92,7 @@ Deno.serve(async (req) => {
     const prompt: string = body.prompt || "Reply with exactly: 'AI gateway test OK' and nothing else.";
     const model: string = body.model || "google/gemini-2.5-flash";
 
-    const geminiKey = Deno.env.get("GEMINI_API_KEY");
+    const geminiKey = (await getCredential("GEMINI_API_KEY"));
     const lovableKey = Deno.env.get("LOVABLE_API_KEY");
 
     const results: ProviderResult[] = [];

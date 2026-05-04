@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1?target=denonext";
+import { getCredential } from "../_shared/getCredential.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -153,7 +154,7 @@ Deno.serve(async (req) => {
     const strategy = device === "desktop" ? "DESKTOP" : "MOBILE";
 
     const results: PageSpeedResult[] = [];
-    const apiKey = Deno.env.get("GOOGLE_PSI_API_KEY") || "";
+    const apiKey = (await getCredential("GOOGLE_PSI_API_KEY")) || "";
 
     // Process pages sequentially with delay to avoid rate limits
     for (let i = 0; i < Math.min(urls.length, 15); i++) {

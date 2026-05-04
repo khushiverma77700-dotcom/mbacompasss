@@ -210,6 +210,78 @@ export type Database = {
           },
         ]
       }
+      api_credential_audit: {
+        Row: {
+          action: string
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          id: string
+          key_name: string
+          new_value_masked: string | null
+          old_value_masked: string | null
+        }
+        Insert: {
+          action: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          key_name: string
+          new_value_masked?: string | null
+          old_value_masked?: string | null
+        }
+        Update: {
+          action?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          key_name?: string
+          new_value_masked?: string | null
+          old_value_masked?: string | null
+        }
+        Relationships: []
+      }
+      api_credentials: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          key_name: string
+          key_value: string
+          last_used_at: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          key_name: string
+          key_value?: string
+          last_used_at?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          key_name?: string
+          key_value?: string
+          last_used_at?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       articles: {
         Row: {
           author: string | null
@@ -6190,6 +6262,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin_email: { Args: { _email: string }; Returns: boolean }
+      mask_secret: { Args: { _v: string }; Returns: string }
       materialize_recurring_tasks: {
         Args: { _through?: string; _user_id: string }
         Returns: number

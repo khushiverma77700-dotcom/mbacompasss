@@ -1,9 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { createHmac } from "node:crypto";
+import { getCredential } from "../_shared/getCredential.ts";
 
 Deno.serve(async (req) => {
   try {
-    const SECRET = Deno.env.get("RAZORPAY_WEBHOOK_SECRET")!;
+    const SECRET = (await getCredential("RAZORPAY_WEBHOOK_SECRET"))!;
     const signature = req.headers.get("x-razorpay-signature") || "";
     const body = await req.text();
 

@@ -1,6 +1,7 @@
 // SEO Indexing Audit — runs an end-to-end crawlability + indexing audit and stores findings.
 // Actions: "run" | "fix" | "summary"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -26,9 +27,9 @@ type Finding = {
 
 // ---------- Google Search Console (uses existing service account) ----------
 async function getGoogleAccessToken(): Promise<string | null> {
-  const json = Deno.env.get("GOOGLE_INDEXING_SERVICE_ACCOUNT");
-  let clientEmail = Deno.env.get("GOOGLE_INDEXING_CLIENT_EMAIL");
-  let privateKey = Deno.env.get("GOOGLE_INDEXING_PRIVATE_KEY");
+  const json = (await getCredential("GOOGLE_INDEXING_SERVICE_ACCOUNT"));
+  let clientEmail = (await getCredential("GOOGLE_INDEXING_CLIENT_EMAIL"));
+  let privateKey = (await getCredential("GOOGLE_INDEXING_PRIVATE_KEY"));
   if (json) {
     try {
       const p = JSON.parse(json);
