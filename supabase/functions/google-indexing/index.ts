@@ -323,7 +323,7 @@ function parseServiceAccountSecret(rawSecret: string): ServiceAccount {
   );
 }
 
-function resolveServiceAccountFromEnv(): ServiceAccount {
+async function resolveServiceAccountFromEnv(): Promise<ServiceAccount> {
   const rawServiceAccount = (await getCredential("GOOGLE_INDEXING_SERVICE_ACCOUNT")) ?? null;
   const directClientEmail = (await getCredential("GOOGLE_INDEXING_CLIENT_EMAIL")) ?? null;
   const directPrivateKey = (await getCredential("GOOGLE_INDEXING_PRIVATE_KEY")) ?? null;
@@ -842,7 +842,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const getToken = async () => {
-      const serviceAccount = resolveServiceAccountFromEnv();
+      const serviceAccount = (await resolveServiceAccountFromEnv());
       return getAccessToken(serviceAccount);
     };
 
@@ -868,7 +868,7 @@ Deno.serve(async (req) => {
           hasSeparateTokenUri: Boolean(Deno.env.get("GOOGLE_INDEXING_TOKEN_URI")?.trim()),
           canResolveCredentials: (() => {
             try {
-              resolveServiceAccountFromEnv();
+              (await resolveServiceAccountFromEnv());
               return true;
             } catch {
               return false;
@@ -880,7 +880,7 @@ Deno.serve(async (req) => {
 
     if (action === "list_sites") {
       try {
-        const serviceAccount = resolveServiceAccountFromEnv();
+        const serviceAccount = (await resolveServiceAccountFromEnv());
         const accessToken = await getAccessToken(serviceAccount, [WEBMASTERS_READONLY_SCOPE]);
         const sites = await listSearchConsoleSites(accessToken);
         return respond({
@@ -1424,7 +1424,7 @@ Deno.serve(async (req) => {
       let availableSites: string[];
       let propertySiteUrl: string;
       try {
-        const serviceAccount = resolveServiceAccountFromEnv();
+        const serviceAccount = (await resolveServiceAccountFromEnv());
         accessToken = await getAccessToken(serviceAccount, [WEBMASTERS_READONLY_SCOPE]);
         availableSites = await listSearchConsoleSites(accessToken);
         const overrideSite =
