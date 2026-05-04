@@ -233,6 +233,7 @@ export type Database = {
           last_seo_refresh: string | null
           meta_description: string | null
           meta_title: string | null
+          mobile_banner_url: string | null
           primary_keyword: string | null
           priority: number | null
           published: boolean | null
@@ -263,6 +264,7 @@ export type Database = {
           last_seo_refresh?: string | null
           meta_description?: string | null
           meta_title?: string | null
+          mobile_banner_url?: string | null
           primary_keyword?: string | null
           priority?: number | null
           published?: boolean | null
@@ -293,6 +295,7 @@ export type Database = {
           last_seo_refresh?: string | null
           meta_description?: string | null
           meta_title?: string | null
+          mobile_banner_url?: string | null
           primary_keyword?: string | null
           priority?: number | null
           published?: boolean | null
