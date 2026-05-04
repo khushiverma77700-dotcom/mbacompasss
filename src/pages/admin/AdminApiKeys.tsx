@@ -120,7 +120,10 @@ export default function AdminApiKeys() {
             Manage all third-party API keys used by the platform. Changes take effect within 60 seconds — or click <em>Flush Cache</em> for instant rollout.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <Button variant="outline" onClick={syncFromEnv}>
+            <RefreshCw className="w-4 h-4 mr-2" /> Sync from Env
+          </Button>
           <Button variant="outline" onClick={flushCache}>
             <RefreshCw className="w-4 h-4 mr-2" /> Flush Cache
           </Button>
