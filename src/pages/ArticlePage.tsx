@@ -35,6 +35,10 @@ const ArticlePage = () => {
       return data;
     },
     enabled: !!slug,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 
   const { data: suggestedArticles } = useQuery({
@@ -50,6 +54,8 @@ const ArticlePage = () => {
       return data || [];
     },
     enabled: !!article,
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const articleKeywords = ((article as any)?.keywords || []) as string[];
