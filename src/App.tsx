@@ -529,6 +529,8 @@ const App = () => (
           const key = JSON.stringify(q.queryKey);
           // Skip user/auth-specific caches
           if (/profile|user_role|admin_perm|auth/i.test(key)) return false;
+          // Skip frequently-edited content so admin edits show immediately
+          if (/article|home-latest-articles|suggested-articles|blog/i.test(key)) return false;
           return true;
         },
       },
