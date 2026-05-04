@@ -317,9 +317,9 @@ const ArticlePage = () => {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {(suggestedArticles || []).slice(0, 3).map((r: any) => (
                 <Link key={r.id} to={`/article/${r.slug}`} className="group block bg-card rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-border hover:-translate-y-1">
-                  <div className="h-40 overflow-hidden relative">
+                  <div className="aspect-[16/9] overflow-hidden relative bg-muted">
                     {(r.image_url || r.banner_url) ? (
-                      <img src={(r.image_url || r.banner_url)!} alt={r.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                      <img src={(r.image_url || r.banner_url)!} alt={r.title} className="w-full h-full object-contain group-hover:scale-[1.02] transition-transform duration-500" loading="lazy" />
                     ) : (
                       <div className="w-full h-full hero-gradient flex items-center justify-center">
                         <span className="font-heading font-bold text-primary-foreground/30 text-sm">{r.category}</span>
