@@ -1,171 +1,103 @@
-## Goal
-Ship 5 connected SEO upgrades on top of the existing AI SEO engine — without breaking what's already working (`ai-seo-enhance`, `auto-seo-engine`, `full-page-seo-audit`, `ai-keyword-research`).
+# Admin API Key Manager
 
-Most of the building blocks already exist. This plan **enhances** them rather than rebuilding:
-- `ai_usage_logs` table already tracks provider, model, tokens, latency, status, error
-- `AdminAIUsage.tsx` page (1095 lines) already exists at `/admin/ai-usage`
-- `ai-keyword-research` function already returns intent + difficulty + volume
-- `AISEOSuggestions.tsx` already renders SEO output in the editors
-- `full-page-seo-audit` already calls Firecrawl and returns `competitors[]`
+Build a database-backed secrets registry editable from the admin panel, and migrate all existing edge functions to read keys from it.
 
----
+## 1. Database
 
-## 1. Competitor Gap Report (Firecrawl-powered)
+New table `public.api_credentials`:
+- `key_name` (text, unique) — e.g. `RAZORPAY_KEY_ID`
+- `key_value` (text) — actual secret value
+- `category` (text) — payments / ai / sms / seo / other
+- `description` (text) — human label e.g. "Razorpay Live Key ID"
+- `is_active` (boolean, default true)
+- `last_used_at` (timestamptz)
+- `updated_by` (uuid)
+- standard `id`, `created_at`, `updated_at`
 
-**Where:** `full-page-seo-audit` edge function + new component `src/components/admin/CompetitorGapReport.tsx`, surfaced inside `AISEOSuggestions.tsx`.
+**RLS**: Only users with `admin` role can SELECT / INSERT / UPDATE / DELETE. No public read at all. Edge functions bypass RLS via service-role client.
 
-**Backend changes** (`supabase/functions/full-page-seo-audit/index.ts`):
-- After Firecrawl returns the top 5 competing URLs, call Firecrawl `/scrape` (markdown + html, `onlyMainContent: true`) for the top 3 results in parallel.
-- Extract from each competitor: H1/H2/H3 list, FAQ blocks (`<h2>question?</h2>` patterns + `FAQPage` JSON-LD), schema types present (`Article`, `Course`, `Organization`, `FAQPage`, `BreadcrumbList`, `Review`, `Rating`).
-- Send the extracted competitor structure to the AI tool call as a new `competitorGap` field (`missingHeadings[]`, `missingFaqs[]`, `missingSchemas[]`, `contentDepthGap` = our wordCount vs avg competitor wordCount).
-- Add `competitor_gap` JSON column to AI response normalization.
+**Audit table** `api_credential_audit`: logs every change (who, when, action, key_name, old/new value masked).
 
-**Frontend:**
-- New collapsible card "Competitor Gap Report" inside `AISEOSuggestions.tsx` showing 3 columns: Missing Headings, FAQ Opportunities, Schema Gaps. Each item has a one-click "Add to suggestions" that appends to `contentSuggestions[]` / `faqs[]` / `schemaMarkup[]`.
+## 2. Seeding
 
-**Cost note:** scraping 3 competitor pages ≈ 3 Firecrawl credits per audit. Only runs when `runCompetitorScan: true` (already opt-in).
+Migration seeds rows for every key currently in Supabase Secrets, with empty values. Admin then pastes the actual values into the UI on first visit. (We can't read existing Supabase Secrets programmatically — they have to be re-entered once.)
 
----
+Categories seeded:
+- **Payments**: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`
+- **AI**: `OPENAI_API_KEY`, `GEMINI_API_KEY`
+- **SMS / OTP**: `MSG91_AUTH_KEY`, `MSG91_TEMPLATE_ID`, `FAST2SMS_API_KEY`, `TWILIO_FROM_NUMBER`
+- **SEO / Indexing**: `GOOGLE_INDEXING_SERVICE_ACCOUNT`, `GOOGLE_INDEXING_CLIENT_EMAIL`, `GOOGLE_INDEXING_PRIVATE_KEY`, `GOOGLE_PSI_API_KEY`
+- **Scraping**: `FIRECRAWL_API_KEY`
 
-## 2. Configurable Keyword Research Mode (50+ kw, intent-tagged, saved)
+(Locked-in-Supabase: `LOVABLE_API_KEY`, `SUPABASE_*`, `TWILIO_API_KEY` — these stay in env only, not exposed in admin UI.)
 
-**Where:** `ai-keyword-research` edge function (already returns intent) + new UI controls in `AISEOSuggestions.tsx`.
+## 3. Edge function helper
 
-**Backend changes:**
-- Already returns intent. Add a `mode` parameter: `"comprehensive"` (50+ kw, 6 buckets — current behavior) | `"focused"` (20 kw) | `"topic-cluster"` (existing) | `"voice-search"` (existing).
-- Add `save_to: { contentType, recordId }` optional param. When provided, the function writes the keyword set into a new `seo_keyword_research` table (one row per record, JSONB column `keywords` with full payload, `updated_at`).
+New shared helper `supabase/functions/_shared/getCredential.ts`:
+```
+getCredential(name) → checks in-memory cache (60s TTL)
+                    → falls back to DB lookup
+                    → falls back to Deno.env.get(name)
+                    → throws if missing
+```
+This means: if admin hasn't entered a value yet, function still works using the env var. Once admin saves a value, DB takes over. **Zero downtime migration.**
 
-**DB migration** — new table:
-```sql
-create table public.seo_keyword_research (
-  id uuid primary key default gen_random_uuid(),
-  content_type text not null,        -- 'college' | 'institute' | 'article'
-  record_id uuid not null,
-  primary_keyword text,
-  keywords jsonb not null default '[]'::jsonb,
-  total_count integer default 0,
-  generated_at timestamptz default now(),
-  unique(content_type, record_id)
-);
--- RLS: admins manage; public can SELECT (used by SEOHead too)
+Refactor ~30 edge functions to call `getCredential('RAZORPAY_KEY_SECRET')` instead of `Deno.env.get('RAZORPAY_KEY_SECRET')`. Done in batches by category.
+
+## 4. Admin UI — `/admin/api-keys`
+
+Single page, accessible to anyone with `admin` role.
+
+Layout:
+- Top bar: "Add New Key" button + category filter tabs.
+- Grouped cards by category (Payments / AI / SMS / SEO / Scraping / Other).
+- Each row: Key name, description, value (shown in full when editing per your choice), active toggle, "Last used" timestamp, Edit / Delete buttons.
+- "Add New Key" opens a dialog: name, value, category, description. Saves to DB. Immediately available to edge functions on next call (after 60s cache expiry, or manual "Refresh cache" button calls a `flush-credentials-cache` edge function).
+
+Validation: key name must match `^[A-Z][A-Z0-9_]*$`, no spaces.
+
+## 5. Audit log tab
+
+Sub-tab on the same page showing recent changes: who edited what key, when, action (created/updated/deleted/activated/deactivated). Values masked in audit log (only first 4 + last 4 chars shown).
+
+## 6. Files
+
+```
+supabase/migrations/<ts>_api_credentials.sql        (new)
+supabase/functions/_shared/getCredential.ts         (new)
+supabase/functions/flush-credentials-cache/index.ts (new)
+src/pages/admin/ApiKeysAdmin.tsx                    (new)
+src/components/admin/ApiKeyRow.tsx                  (new)
+src/components/admin/ApiKeyDialog.tsx               (new)
+src/App.tsx                                         (add route)
+src/components/admin/AdminSidebar.tsx               (add nav link)
+
+Refactored (replace Deno.env.get with getCredential):
+- razorpay-create-order, razorpay-verify, razorpay-webhook
+- send-otp, verify-otp, send-msg91-otp
+- profile-analyzer, ai-blog-writer, ai-coaching-finder, ai-course-writer,
+  ai-institute-writer, ai-keyword-research, ai-page-summary, ai-seo-enhance,
+  ai-website-optimizer, auto-seo-engine, college-shortlister, mba-college-finder,
+  meta-validator-fix, premium-profile-report, roi-calculator,
+  seo-competitor-cron, generate-mock-questions, personalized-mock-generate
+- google-indexing-submit, google-indexing-refresh
+- pagespeed-audit
+- firecrawl-scrape
 ```
 
-**Frontend:**
-- New "Deep Keyword Research" button in the SEO panel of each editor (`AdminWriteCollege`, `AdminWriteInstitute`, `AdminWriteBlog`). Opens a modal with mode dropdown + count slider (20–80).
-- On generate: shows table of keywords with columns Keyword, Volume, Difficulty, Intent badge (color-coded: informational=blue, commercial=amber, transactional=green, navigational=gray), Trending icon.
-- Bulk-select checkboxes → "Save selected to page keywords" (writes to existing `keywords[]` field) or "Save all to research store" (writes to `seo_keyword_research`).
+## 7. Security notes
 
----
+- Keys live in Postgres (encrypted at rest by Supabase).
+- Only `admin` role can read — RLS strictly enforced.
+- Edge functions use service-role to bypass RLS server-side.
+- All writes audit-logged.
+- Cache TTL keeps DB load low (one read per key per minute per function instance).
+- Existing Supabase Secrets remain as automatic fallback — nothing breaks if a row is empty.
 
-## 3. Pre-Publish Validation for Meta Tags + JSON-LD
+## 8. Out of scope
 
-**Where:** new shared lib `src/lib/seoValidator.ts` + integrated into `AdminWriteBlog`, `AdminWriteCollege`, `AdminWriteInstitute` save flows + a new edge function `validate-seo` (so bulk operations can validate too).
+- Rotating keys with a single click (could be a v2 — would call respective provider APIs).
+- Per-environment (test/live) split — single value per key for now.
+- Sharing keys across multiple Lovable projects.
 
-**Validation rules** (all configurable, but sensible defaults):
-- `meta_title`: 30–60 chars, must contain primary keyword, no duplicate across published pages of same type.
-- `meta_description`: 120–160 chars, must contain primary keyword, must end with sentence punctuation.
-- `h1_tag`: present, 20–70 chars, different from `meta_title`.
-- `slug`: kebab-case only, no stop words, ≤ 60 chars.
-- `keywords[]`: ≥ 5, ≤ 25 items.
-- `og_image` / `twitter_image`: URL reachable (HEAD 200), ≥ 1200×630.
-- `schema_markup`: each JSON-LD object validated:
-  - has `@context` = `https://schema.org`
-  - has `@type` from allowed set
-  - required fields per type (Article: headline+author+datePublished+image; FAQPage: mainEntity[]; Course: name+provider; etc.)
-  - parses as valid JSON
-- Returns `{ ok: boolean, errors: [{field, message, severity: 'error'|'warning'}] }`.
-
-**UI integration:**
-- "Validate before publish" button next to Save in each editor → shows a `Sheet` with grouped pass/warn/fail.
-- Block "Publish" toggle when severity=error exists; allow override with admin confirm dialog.
-- Reuse the same lib in `auto-seo-engine` bulk mode → write a `seo_validation_report` row per page so admins can see "47 pages have validation errors" in the SEO dashboard.
-
-**DB migration:**
-```sql
-create table public.seo_validation_reports (
-  id uuid primary key default gen_random_uuid(),
-  content_type text not null,
-  record_id uuid not null,
-  url text,
-  passed boolean not null,
-  errors jsonb default '[]'::jsonb,
-  warnings jsonb default '[]'::jsonb,
-  validated_at timestamptz default now()
-);
-create index on seo_validation_reports (content_type, record_id);
-create index on seo_validation_reports (passed, validated_at desc);
-```
-
----
-
-## 4. Detailed AI Usage Logs (already exists — enhance + filter)
-
-`ai_usage_logs` already captures `provider, model, prompt_tokens, completion_tokens, total_tokens, estimated_cost, latency_ms, status, error_message, feature, user_id, created_at`. The schema is fine.
-
-**Backend change** — make `logAIUsage` helper consistent across all SEO functions (currently some pass `"openai/gpt-5"`, others pass just `"gpt-5-nano"` — see sample query above). Normalize to `provider/model` format.
-
-**Frontend changes** to `AdminAIUsage.tsx`:
-- New "AI SEO" tab (filter `feature LIKE 'seo-%' OR feature IN ('ai-seo-enhance','auto-seo-engine','full-page-seo-audit','ai-keyword-research','meta-validator-fix','seo-auto-fix')`).
-- Per-feature breakdown table: Feature | Calls | Avg Tokens | Avg Latency | Total Cost | Error Rate.
-- Time-series chart: tokens & cost per day for last 30 days, grouped by feature.
-- Failures table at bottom (status='error') with `error_message` truncated + click to expand.
-
----
-
-## 5. Real-Time AI SEO Health Page
-
-**New page:** `/admin/seo-health` (`src/pages/admin/AdminSEOHealth.tsx`) + new edge function `seo-health-check`.
-
-**`seo-health-check` edge function** runs these probes in parallel and returns JSON:
-- For each SEO function (`ai-seo-enhance`, `auto-seo-engine`, `full-page-seo-audit`, `ai-keyword-research`, `meta-validator-fix`, `seo-auto-fix`, `validate-seo`, `seo-competitor-cron`):
-  - **Last call:** most recent `ai_usage_logs` row for that feature → status, latency, error.
-  - **Last 24h stats:** total calls, error rate, p95 latency.
-  - **Live ping:** lightweight `OPTIONS` request to confirm function boots (timeout 3s).
-- **External deps:**
-  - Firecrawl: `GET /v2/team/credits` → returns remaining credits.
-  - Lovable AI Gateway: tiny `HEAD`-style call to confirm key works.
-  - Supabase RLS: count `seo_validation_reports` to confirm DB writes work.
-
-**Frontend page:**
-- Header with global status traffic light (green = all healthy, amber = degraded, red = down).
-- 8 function cards in a grid. Each card: name, last-call timestamp, p95 latency sparkline, error count last 24h, live boot status badge.
-- "External services" row: Firecrawl credits remaining + last error, Lovable AI status + last 402/429.
-- "Recent failures" table (last 50 errors across all SEO features) with `error_message`, function, time, retry button (re-invokes the function with same payload from log).
-- Auto-refresh every 30s (toggle button to pause).
-
-Hooked into admin nav under "Diagnostics" group.
-
----
-
-## Build Order (so each step ships value independently)
-
-1. **DB migrations** (safe, additive): `seo_keyword_research`, `seo_validation_reports` tables.
-2. **`src/lib/seoValidator.ts`** + `validate-seo` edge function — pure logic, used by everything else.
-3. **Pre-publish validation UI** in 3 editors (`AdminWriteBlog/College/Institute`).
-4. **Keyword research modal** (mode selector + intent badges + save-to-record).
-5. **Competitor gap report** — extend `full-page-seo-audit`, render in `AISEOSuggestions.tsx`.
-6. **Normalize `logAIUsage`** + new "AI SEO" tab in `AdminAIUsage.tsx`.
-7. **`/admin/seo-health`** page + `seo-health-check` function.
-
----
-
-## Cost & risk notes
-
-- Competitor scrape: +3 Firecrawl credits per full audit (~$0.003). Stays opt-in.
-- Validation runs locally — zero AI cost.
-- Keyword research mode reuses existing `ai-keyword-research` (gemini-2.5-flash) — same cost as today.
-- Health page polls DB, not AI — zero AI cost.
-- All new tables have RLS (admins manage; public read where needed for SEO render).
-- No changes to `ai-seo-enhance` model selection — keeps the recent gpt-5-mini cost-optimization.
-
----
-
-## Files touched (summary)
-
-**Edge functions (new):** `validate-seo`, `seo-health-check`
-**Edge functions (modified):** `full-page-seo-audit`, `ai-keyword-research`, `auto-seo-engine`, `ai-seo-enhance` (just `logAIUsage` normalization)
-**Migrations:** 2 new tables + RLS
-**New pages:** `src/pages/admin/AdminSEOHealth.tsx`
-**New components:** `src/components/admin/CompetitorGapReport.tsx`, `src/components/admin/KeywordResearchModal.tsx`, `src/components/admin/SEOValidationSheet.tsx`
-**New libs:** `src/lib/seoValidator.ts`
-**Modified:** `src/components/admin/AISEOSuggestions.tsx`, `src/pages/admin/AdminAIUsage.tsx`, `src/pages/admin/AdminWriteBlog.tsx`, `src/pages/admin/AdminWriteCollege.tsx`, `src/pages/admin/AdminWriteInstitute.tsx`, `src/pages/admin/adminNav.ts`, `src/App.tsx`
+Once approved, I'll execute in this order: migration → helper → admin UI → batch-refactor edge functions by category.
