@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,22 +54,31 @@ export default function AdminApiKeys() {
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [editing, setEditing] = useState<Credential | null>(null);
   const [adding, setAdding] = useState(false);
+  const autoSyncAttempted = useRef(false);
 
-  async function load() {
+  async function load(options?: { autoSync?: boolean }) {
     setLoading(true);
     const [c, a] = await Promise.all([
       supabase.from("api_credentials").select("*").order("category").order("key_name"),
       supabase.from("api_credential_audit").select("*").order("created_at", { ascending: false }).limit(100),
     ]);
     if (c.error) toast.error(c.error.message);
-    else setCredentials((c.data as Credential[]) || []);
+    else {
+      const rows = (c.data as Credential[]) || [];
+      setCredentials(rows);
+      if (options?.autoSync && !autoSyncAttempted.current && rows.some((row) => !row.key_value)) {
+        autoSyncAttempted.current = true;
+        void syncFromEnv(true);
+      }
+    }
     if (!a.error) setAudit((a.data as AuditEntry[]) || []);
     setLoading(false);
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load({ autoSync: true }); }, []);
 
   async function toggleActive(row: Credential) {
     const { error } = await supabase
@@ -93,13 +102,17 @@ export default function AdminApiKeys() {
     else toast.success("Cache flushed — new values active now");
   }
 
-  async function syncFromEnv() {
-    const t = toast.loading("Importing keys from server environment…");
+  async function syncFromEnv(silent = false) {
+    if (syncing) return;
+    setSyncing(true);
+    const t = silent ? null : toast.loading("Importing existing API secrets…");
     const { data, error } = await supabase.functions.invoke("seed-api-credentials");
-    toast.dismiss(t);
-    if (error) { toast.error(error.message); return; }
+    if (t) toast.dismiss(t);
+    setSyncing(false);
+    if (error) { toast.error(`API import failed: ${error.message}`); return; }
     const filled = (data?.results || []).filter((r: any) => /filled|created/.test(r.status)).length;
-    toast.success(`Sync complete — ${filled} keys imported`);
+    if (filled > 0) toast.success(`API import complete — ${filled} keys saved`);
+    else if (!silent) toast.info("No new API secrets found to import");
     load();
   }
 
@@ -107,6 +120,7 @@ export default function AdminApiKeys() {
     ...cat,
     items: credentials.filter((c) => c.category === cat.value),
   })).filter((g) => g.items.length > 0);
+  const emptyCount = credentials.filter((row) => !row.key_value).length;
 
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-6 max-w-6xl">
@@ -121,8 +135,9 @@ export default function AdminApiKeys() {
           </p>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <Button variant="outline" onClick={syncFromEnv}>
-            <RefreshCw className="w-4 h-4 mr-2" /> Sync from Env
+          <Button variant="outline" onClick={() => syncFromEnv()} disabled={syncing}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
+            {syncing ? "Importing APIs…" : "Auto Import Existing APIs"}
           </Button>
           <Button variant="outline" onClick={flushCache}>
             <RefreshCw className="w-4 h-4 mr-2" /> Flush Cache
@@ -141,6 +156,21 @@ export default function AdminApiKeys() {
           </div>
         </CardContent>
       </Card>
+
+      {emptyCount > 0 && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 text-sm">
+            <div>
+              <strong>{emptyCount} API secret{emptyCount === 1 ? "" : "s"} still empty.</strong>
+              <span className="text-muted-foreground ml-1">Use the import button to save all existing configured secrets into Admin.</span>
+            </div>
+            <Button onClick={() => syncFromEnv()} disabled={syncing} className="md:w-auto w-full">
+              <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
+              {syncing ? "Importing…" : "Auto Import Now"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs defaultValue="keys">
         <TabsList>
