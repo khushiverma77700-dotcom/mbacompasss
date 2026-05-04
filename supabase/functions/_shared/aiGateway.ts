@@ -100,16 +100,18 @@ interface CallOptions {
 }
 
 // Cost-router: picks the cheapest Gemini model that preserves output quality.
-// Only downgrades from Flash → Flash-lite. Never touches Pro, image models,
-// non-Gemini models, or callers that explicitly opt into "premium".
+// Default behavior (no `purpose`) now downgrades Flash-class models to Flash-Lite
+// (~10× cheaper) to protect the AI budget. Callers that need full Flash quality
+// for long-form content must explicitly pass purpose: "long" or "premium".
+// Pro / image / non-Gemini models are never downgraded.
 function routeModelForPurpose(model: string | undefined, purpose?: CallOptions["purpose"]): string {
   const requested = (model || "").trim();
-  if (!purpose || purpose === "long" || purpose === "premium") return requested || "google/gemini-2.5-flash";
+  if (purpose === "long" || purpose === "premium") return requested || "google/gemini-2.5-flash";
 
   // Only auto-downgrade Flash-class models. Pro stays Pro, image stays image.
   const isFlashClass =
     requested === "" ||
-    /flash(?!-lite)/.test(requested.toLowerCase()) && !/image/.test(requested.toLowerCase());
+    (/flash(?!-lite)/.test(requested.toLowerCase()) && !/image/.test(requested.toLowerCase()));
   if (!isFlashClass) return requested;
 
   // Map to flash-lite, keeping the same provider-prefix style the caller used.
@@ -133,6 +135,10 @@ interface LogParams {
 
 export async function callAIGateway(body: ChatBody, opts: CallOptions = {}): Promise<Response> {
   const { signal, feature = "unknown", userId = null, maxRetries = 2, skipLog = false, provider = "openai-mini", purpose } = opts;
+  // Loud warning so any caller forgetting to tag itself surfaces in edge logs.
+  if (feature === "unknown") {
+    console.warn("[aiGateway] UNTAGGED CALL — caller did not pass opts.feature. Please add a feature label so usage can be attributed. Stack:", new Error().stack);
+  }
   // Cost router: rewrite body.model based on purpose before any downstream logic uses it.
   const routedModel = routeModelForPurpose(body.model, purpose);
   if (routedModel !== body.model) {

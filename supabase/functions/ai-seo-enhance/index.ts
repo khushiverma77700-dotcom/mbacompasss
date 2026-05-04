@@ -93,7 +93,7 @@ RULES:
           },
           { role: "user", content: prompt },
         ],
-      });
+      }, { feature: "ai-seo-enhance" });
 
     if (!response.ok) {
       console.error("Schema generation failed:", response.status);

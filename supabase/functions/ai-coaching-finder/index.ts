@@ -167,7 +167,7 @@ IMPORTANT: You MUST recommend at least 3 institutes. Return ONLY valid JSON. No 
           { role: "system", content: systemPrompt },
           { role: "user", content: userMessage },
         ],
-      });
+      }, { feature: "ai-coaching-finder" });
 
     if (!aiResponse.ok) {
       if (aiResponse.status === 429) {

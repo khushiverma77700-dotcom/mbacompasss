@@ -420,7 +420,7 @@ Produce premium, unique SEO optimization for THIS page.`,
             },
           }],
           tool_choice: { type: "function", function: { name: "content_gap_analysis" } },
-        });
+        }, { feature: "auto-seo-engine" });
 
       if (!aiResp.ok) throw new Error(`AI error: ${aiResp.status}`);
       const aiJson = await aiResp.json();
@@ -485,7 +485,7 @@ Produce premium, unique SEO optimization for THIS page.`,
             },
           }],
           tool_choice: { type: "function", function: { name: "interlink_suggestions" } },
-        });
+        }, { feature: "auto-seo-engine" });
 
       if (!aiResp.ok) throw new Error(`AI error: ${aiResp.status}`);
       const result = extractToolResult(await aiResp.json());
@@ -671,7 +671,7 @@ RULES:
                 },
               }],
               tool_choice: { type: "function", function: { name: "seo_fixes" } },
-            });
+            }, { feature: "auto-seo-engine" });
 
           if (aiResp.ok) {
             const aiData = await aiResp.json();
@@ -783,7 +783,7 @@ RULES:
                 },
               }],
               tool_choice: { type: "function", function: { name: "keywords" } },
-            });
+            }, { feature: "auto-seo-engine" });
 
           if (aiResp.ok) {
             const kws = extractToolResult(await aiResp.json());
@@ -943,7 +943,7 @@ RULES:
             },
           }],
           tool_choice: { type: "function", function: { name: "faqs" } },
-        });
+        }, { feature: "auto-seo-engine" });
       if (!aiResp.ok) throw new Error(`AI error ${aiResp.status}`);
       const aiJson = await aiResp.json();
       await logAIUsage("faq-generate", CHEAP_MODEL, aiJson);

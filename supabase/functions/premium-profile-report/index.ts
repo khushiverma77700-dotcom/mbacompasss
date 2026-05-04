@@ -122,7 +122,7 @@ No fluff. No generic advice. Reference numbers from the input.`;
         },
       }],
       tool_choice: { type: "function", function: { name: "premium_narrative" } },
-    });
+    }, { feature: "premium-profile-report" });
     const aiJson: any = await aiResp.json().catch(() => ({}));
 
     // Extract tool call arguments

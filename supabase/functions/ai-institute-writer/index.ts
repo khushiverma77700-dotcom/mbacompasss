@@ -224,7 +224,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
         tools: [tool],
         tool_choice: { type: "function", function: { name: "publish_institute_profile" } },
         max_tokens: 4000,
-      });
+      }, { feature: "ai-institute-writer" });
 
     if (!aiRes.ok) {
       const txt = await aiRes.text();
@@ -377,7 +377,7 @@ RULES:
           tools: [factCheckTool],
           tool_choice: { type: "function", function: { name: "audit_institute_facts" } },
           max_tokens: 2000,
-        });
+        }, { feature: "ai-institute-writer" });
       if (auditRes.ok) {
         const auditJson = await auditRes.json();
         const auditArgs = auditJson?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;

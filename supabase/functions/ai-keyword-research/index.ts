@@ -487,7 +487,7 @@ Deno.serve(async (req) => {
         max_tokens: 8192,
         tools: [payload.tool],
         tool_choice: { type: "function", function: { name: payload.toolName } },
-      });
+      }, { feature: "ai-keyword-research" });
 
     if (!response.ok) {
       if (response.status === 429) {

@@ -122,7 +122,7 @@ You MUST respond in valid JSON with this exact structure:
         { role: "user", content: `Find the best MBA colleges for me based on my preferences. Return JSON only.` },
       ],
       response_format: { type: "json_object" },
-    });
+    }, { feature: "mba-college-finder" });
     const aiData: any = await aiResp.json().catch(() => ({}));
 
     const content = aiData?.choices?.[0]?.message?.content || "{}";

@@ -382,7 +382,7 @@ async function handleEnrich(collegeName: string) {
 }
 Only return the JSON object.` },
       ],
-    });
+    }, { feature: "college-shortlister" });
 
   if (!aiResponse.ok) return { enriched: null };
   const aiData = await aiResponse.json();
@@ -562,7 +562,7 @@ Write 3-4 short paragraphs: what's working in their favor, what needs work, and 
 Give exactly 4 numbered action items. Each should be one concrete step (e.g., "Fill the XAT form before Dec 15", "Start WAT practice with 2 essays/week"). End with one motivational line.`,
               },
             ],
-          });
+          }, { feature: "college-shortlister" });
 
         if (aiResponse.ok) {
           const aiData = await aiResponse.json();

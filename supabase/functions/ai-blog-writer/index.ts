@@ -179,7 +179,7 @@ Deno.serve(async (req) => {
         ],
         tools: [tool],
         tool_choice: { type: "function", function: { name: "publish_blog_article" } },
-      });
+      }, { feature: "ai-blog-writer" });
 
     if (!aiRes.ok) {
       const txt = await aiRes.text();
