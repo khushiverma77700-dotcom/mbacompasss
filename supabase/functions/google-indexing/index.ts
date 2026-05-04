@@ -866,9 +866,9 @@ Deno.serve(async (req) => {
           hasSeparateClientEmail: Boolean((await getCredential("GOOGLE_INDEXING_CLIENT_EMAIL"))?.trim()),
           hasSeparatePrivateKey: Boolean((await getCredential("GOOGLE_INDEXING_PRIVATE_KEY"))?.trim()),
           hasSeparateTokenUri: Boolean(Deno.env.get("GOOGLE_INDEXING_TOKEN_URI")?.trim()),
-          canResolveCredentials: (() => {
+          canResolveCredentials: await (async () => {
             try {
-              (await resolveServiceAccountFromEnv());
+              await resolveServiceAccountFromEnv();
               return true;
             } catch {
               return false;
