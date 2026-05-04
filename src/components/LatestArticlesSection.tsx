@@ -17,6 +17,8 @@ const LatestArticlesSection = () => {
         .limit(4);
       return data || [];
     },
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   if (isLoading || !articles?.length) return null;

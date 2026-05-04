@@ -19,6 +19,8 @@ const NewsSection = () => {
         .limit(6);
       return data || [];
     },
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
   const getReadTime = (content: string | null) => {

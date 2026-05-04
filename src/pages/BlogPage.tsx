@@ -25,6 +25,9 @@ const BlogPage = () => {
         .order("created_at", { ascending: false });
       return data || [];
     },
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 
   const blogCategories = ["all", ...new Set((articles || []).map(n => n.category).filter(Boolean))];
