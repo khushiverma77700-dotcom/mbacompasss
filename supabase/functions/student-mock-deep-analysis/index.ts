@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,7 +44,7 @@ Attempt data: ${JSON.stringify({
 
     const aiResp = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${Deno.env.get("OPENAI_API_KEY")}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${(await getCredential("OPENAI_API_KEY"))}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "gpt-5-mini",
         messages: [{ role: "user", content: prompt }],

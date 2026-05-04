@@ -4,6 +4,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1?target=denonext";
 import { callAIGateway } from "../_shared/aiGateway.ts";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -133,7 +134,7 @@ async function runFirecrawlCompetitorScan(
   primaryKeyword: string,
   pageTitle: string,
 ): Promise<{ competitors: Array<{ url: string; title: string; snippet: string }>; gapInsights: string[] }> {
-  const apiKey = Deno.env.get("FIRECRAWL_API_KEY");
+  const apiKey = (await getCredential("FIRECRAWL_API_KEY"));
   if (!apiKey) {
     return { competitors: [], gapInsights: ["Firecrawl not configured — competitor scan skipped"] };
   }

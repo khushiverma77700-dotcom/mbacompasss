@@ -2,6 +2,7 @@
 // Computes deterministic diagnostics from responses+questions, then asks the
 // AI to produce a structured, human, coach-tone report.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0?target=denonext";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -202,7 +203,7 @@ Deno.serve(async (req) => {
       top_weak_topics: topWeak,
     };
 
-    const apiKey = Deno.env.get("OPENAI_API_KEY");
+    const apiKey = (await getCredential("OPENAI_API_KEY"));
     if (!apiKey) {
       return new Response(JSON.stringify({ error: "OPENAI_API_KEY not configured" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },

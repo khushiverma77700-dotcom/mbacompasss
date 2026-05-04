@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,7 +23,7 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const fast2smsKey = Deno.env.get("FAST2SMS_API_KEY");
+    const fast2smsKey = (await getCredential("FAST2SMS_API_KEY"));
 
     if (!fast2smsKey) throw new Error("FAST2SMS_API_KEY is not configured");
 

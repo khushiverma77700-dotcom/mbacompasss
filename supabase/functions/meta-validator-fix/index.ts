@@ -16,6 +16,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1?target=denonext";
 
 import { callAIGateway } from "../_shared/aiGateway.ts";
+import { getCredential } from "../_shared/getCredential.ts";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -104,7 +105,7 @@ async function requireAdmin(req: Request) {
 }
 
 async function callAI(samples: UrlSample[]): Promise<AiFix[]> {
-  const apiKey = Deno.env.get("GEMINI_API_KEY");
+  const apiKey = (await getCredential("GEMINI_API_KEY"));
   if (!apiKey) throw new Error("GEMINI_API_KEY missing");
 
   const failingOnly = samples.filter((s) => s.checks.some((c) => !c.ok));

@@ -9,6 +9,7 @@
 // Public endpoint — verify_jwt = false (project default). Calls Lovable AI Gateway via
 // tool-calling for strict structured output.
 import { callAIGateway } from "../_shared/aiGateway.ts";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -294,7 +295,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const apiKey = Deno.env.get("GEMINI_API_KEY");
+    const apiKey = (await getCredential("GEMINI_API_KEY"));
     if (!apiKey) throw new Error("GEMINI_API_KEY is not configured");
 
     const body = (await req.json()) as Body;

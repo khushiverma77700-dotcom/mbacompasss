@@ -1,5 +1,6 @@
 // Admin-only: bulk-generate MCQ questions via OpenAI gpt-4o
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.0?target=denonext";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,7 +39,7 @@ Deno.serve(async (req) => {
     }
     const n = Math.min(Math.max(parseInt(count), 1), 25);
 
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    const OPENAI_API_KEY = (await getCredential("OPENAI_API_KEY"));
     if (!OPENAI_API_KEY) return json({ error: "OPENAI_API_KEY missing" }, 500);
 
     const userPrompt = `Generate ${n} ${difficulty} difficulty multiple-choice questions for exam ${exam_code}, section ${section}${topic ? `, topic: ${topic}` : ""}.

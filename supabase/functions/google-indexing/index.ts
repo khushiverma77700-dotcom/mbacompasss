@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -323,9 +324,9 @@ function parseServiceAccountSecret(rawSecret: string): ServiceAccount {
 }
 
 function resolveServiceAccountFromEnv(): ServiceAccount {
-  const rawServiceAccount = Deno.env.get("GOOGLE_INDEXING_SERVICE_ACCOUNT") ?? null;
-  const directClientEmail = Deno.env.get("GOOGLE_INDEXING_CLIENT_EMAIL") ?? null;
-  const directPrivateKey = Deno.env.get("GOOGLE_INDEXING_PRIVATE_KEY") ?? null;
+  const rawServiceAccount = (await getCredential("GOOGLE_INDEXING_SERVICE_ACCOUNT")) ?? null;
+  const directClientEmail = (await getCredential("GOOGLE_INDEXING_CLIENT_EMAIL")) ?? null;
+  const directPrivateKey = (await getCredential("GOOGLE_INDEXING_PRIVATE_KEY")) ?? null;
   const directTokenUri = Deno.env.get("GOOGLE_INDEXING_TOKEN_URI") ?? null;
 
   const fallbackAccount = buildServiceAccountFromParts({
@@ -846,7 +847,7 @@ Deno.serve(async (req) => {
     };
 
     if (action === "debug_secret") {
-      const rawSecret = Deno.env.get("GOOGLE_INDEXING_SERVICE_ACCOUNT") || "";
+      const rawSecret = (await getCredential("GOOGLE_INDEXING_SERVICE_ACCOUNT")) || "";
       const unwrapped = rawSecret ? maybeUnwrapQuotedJson(rawSecret.trim()) ?? rawSecret.trim() : "";
       const secretShape = !rawSecret.trim()
         ? "missing"
@@ -862,8 +863,8 @@ Deno.serve(async (req) => {
           length: rawSecret.length,
           startsWithBrace: rawSecret.trimStart().startsWith("{"),
           secretShape,
-          hasSeparateClientEmail: Boolean(Deno.env.get("GOOGLE_INDEXING_CLIENT_EMAIL")?.trim()),
-          hasSeparatePrivateKey: Boolean(Deno.env.get("GOOGLE_INDEXING_PRIVATE_KEY")?.trim()),
+          hasSeparateClientEmail: Boolean((await getCredential("GOOGLE_INDEXING_CLIENT_EMAIL"))?.trim()),
+          hasSeparatePrivateKey: Boolean((await getCredential("GOOGLE_INDEXING_PRIVATE_KEY"))?.trim()),
           hasSeparateTokenUri: Boolean(Deno.env.get("GOOGLE_INDEXING_TOKEN_URI")?.trim()),
           canResolveCredentials: (() => {
             try {

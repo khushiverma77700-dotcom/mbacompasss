@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { createHmac } from "node:crypto";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,7 +10,7 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const KEY_SECRET = Deno.env.get("RAZORPAY_KEY_SECRET")!;
+    const KEY_SECRET = (await getCredential("RAZORPAY_KEY_SECRET"))!;
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Unauthorized");
 

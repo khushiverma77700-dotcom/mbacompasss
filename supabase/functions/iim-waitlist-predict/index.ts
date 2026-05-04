@@ -2,6 +2,7 @@
 // Uses Lovable AI Gateway with Perplexity-style grounding via the model's training,
 // combined with our internal RTI movement data for a calibrated probability.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1?target=denonext";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,7 +10,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+const OPENAI_API_KEY = (await getCredential("OPENAI_API_KEY"));
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 

@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -207,7 +208,7 @@ ${review.sop_text}
 
 Evaluate this SOP rigorously. Be specific, quantitative, and actionable. Use the submit_sop_evaluation function.`;
 
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    const OPENAI_API_KEY = (await getCredential("OPENAI_API_KEY"));
     if (!OPENAI_API_KEY) {
       await supabase.from("sop_reviews").update({ status: "failed", error_message: "OpenAI not configured" }).eq("id", reviewId);
       return;
