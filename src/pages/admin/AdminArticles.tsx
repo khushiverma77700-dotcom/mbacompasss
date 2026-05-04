@@ -63,7 +63,7 @@ const AdminArticles = () => {
   };
 
   const fetchArticles = async () => {
-    const { data } = await supabase.from("articles").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase.from("articles").select("*").order("created_at", { ascending: false }).limit(10000);
     if (data) setArticles(data);
   };
 
@@ -168,13 +168,34 @@ const AdminArticles = () => {
   };
 
   const filteredArticles = useMemo(() => {
-    const q = filters.search.trim().toLowerCase();
+    const raw = filters.search.trim().toLowerCase();
+    // Normalize: if user pastes a URL, extract the last meaningful path segment (the slug)
+    let q = raw;
+    let slugQ = raw;
+    if (raw) {
+      try {
+        const maybeUrl = raw.startsWith("http") ? new URL(raw) : null;
+        if (maybeUrl) {
+          const segs = maybeUrl.pathname.split("/").filter(Boolean);
+          slugQ = (segs[segs.length - 1] || "").toLowerCase();
+          q = slugQ;
+        } else if (raw.includes("/")) {
+          const segs = raw.split("/").filter(Boolean);
+          slugQ = (segs[segs.length - 1] || "").toLowerCase();
+          q = slugQ;
+        }
+      } catch { /* ignore */ }
+    }
     return articles.filter((a) => {
       if (filters.status !== "all" && (a.status || "draft") !== filters.status) return false;
       if (filters.category !== "all" && (a.category || "news") !== filters.category) return false;
       if (filters.featured === "yes" && !a.featured) return false;
       if (filters.featured === "no" && a.featured) return false;
-      if (q && !(a.title?.toLowerCase().includes(q) || a.slug?.toLowerCase().includes(q))) return false;
+      if (q) {
+        const title = a.title?.toLowerCase() || "";
+        const slug = a.slug?.toLowerCase() || "";
+        if (!(title.includes(q) || slug.includes(q) || slug === slugQ)) return false;
+      }
       return true;
     });
   }, [articles, filters]);
