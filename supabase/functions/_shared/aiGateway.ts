@@ -16,7 +16,7 @@
 //   • No artificial timeouts on the upstream call.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
-import { getCredential } from "../_shared/getCredential.ts";
+import { getCredential } from "./getCredential.ts";
 
 const GEMINI_OPENAI_COMPAT_URL =
   "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
