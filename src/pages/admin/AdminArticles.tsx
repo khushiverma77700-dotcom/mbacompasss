@@ -37,7 +37,7 @@ const emptyForm = {
   title: "", slug: "", excerpt: "", content: "", category: "news", author: "",
   published: false, meta_title: "", meta_description: "", keywords: [] as string[],
   priority: 0, featured: false, status: "draft", intro: "", banner_url: "",
-  image_url: "", h1_tag: "", is_comparison: false, comparison_id: "" as string,
+  mobile_banner_url: "", image_url: "", h1_tag: "", is_comparison: false, comparison_id: "" as string,
   primary_keyword: "" as string, funnel_stage: "" as string, cluster_id: "" as string,
 };
 
@@ -111,6 +111,7 @@ const AdminArticles = () => {
       keywords: form.keywords.length > 0 ? form.keywords : null,
       priority: form.priority, featured: form.featured, status: form.status,
       intro: form.intro || null, banner_url: form.banner_url || null,
+      mobile_banner_url: form.mobile_banner_url || null,
       image_url: form.image_url || null, h1_tag: form.h1_tag || null,
       is_comparison: form.is_comparison,
       comparison_id: form.is_comparison && form.comparison_id ? form.comparison_id : null,
@@ -147,6 +148,7 @@ const AdminArticles = () => {
       keywords: article.keywords || [], priority: article.priority || 0,
       featured: article.featured || false, status: article.status || "draft",
       intro: article.intro || "", banner_url: article.banner_url || "",
+      mobile_banner_url: article.mobile_banner_url || "",
       image_url: article.image_url || "", h1_tag: article.h1_tag || "",
       is_comparison: article.is_comparison || false, comparison_id: article.comparison_id || "",
       primary_keyword: article.primary_keyword || "",
@@ -318,7 +320,7 @@ const AdminArticles = () => {
                     </div>
                   )}
                 </div>
-                <ResponsiveImageUpload bucket="uploads" folder="articles/banners" label="Banner Image" desktopValue={form.banner_url} mobileValue={(form as any).mobile_banner_url || ""} onDesktopChange={(url) => setForm({ ...form, banner_url: url })} onMobileChange={(url) => setForm({ ...form, mobile_banner_url: url } as any)} desktopSpec={{ dimensions: "1200×400 px", ratio: "3:1, landscape", maxSize: "250 KB" }} mobileSpec={{ dimensions: "600×300 px", ratio: "2:1", maxSize: "120 KB" }} />
+                <ResponsiveImageUpload bucket="uploads" folder="articles/banners" label="Banner Image" desktopValue={form.banner_url} mobileValue={form.mobile_banner_url} onDesktopChange={(url) => setForm({ ...form, banner_url: url })} onMobileChange={(url) => setForm({ ...form, mobile_banner_url: url })} desktopSpec={{ dimensions: "1200×400 px", ratio: "3:1, landscape", maxSize: "250 KB" }} mobileSpec={{ dimensions: "600×300 px", ratio: "2:1", maxSize: "120 KB" }} />
                 <FileUpload bucket="uploads" folder="articles/images" value={form.image_url} onChange={(url) => setForm({ ...form, image_url: url })} accept="image/*" label="Featured/Thumbnail Image" sizeHint="800×450 px (16:9 ratio, JPG/PNG) • Max 200 KB" />
               </TabsContent>
             </Tabs>
