@@ -521,7 +521,7 @@ const App = () => (
     persistOptions={{
       persister: queryPersister!,
       maxAge: 24 * 60 * 60 * 1000,
-      buster: "v1",
+      buster: "v2-articles",
       dehydrateOptions: {
         // Only persist successful, "public" data — skip auth/user-specific queries
         shouldDehydrateQuery: (q) => {
@@ -529,6 +529,8 @@ const App = () => (
           const key = JSON.stringify(q.queryKey);
           // Skip user/auth-specific caches
           if (/profile|user_role|admin_perm|auth/i.test(key)) return false;
+          // Skip frequently-edited content so admin edits show immediately
+          if (/article|home-latest-articles|suggested-articles|blog/i.test(key)) return false;
           return true;
         },
       },
