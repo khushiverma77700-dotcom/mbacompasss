@@ -1,7 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import PageKeywords from "@/components/PageKeywords";
 import { useEffect } from "react";
-import { ArrowLeft, Calendar, Clock, User, Tag, Share2, ChevronRight, BookOpen, ArrowRight } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, User, Tag, Share2, BookOpen, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,6 +59,8 @@ const ArticlePage = () => {
   });
 
   const articleKeywords = ((article as any)?.keywords || []) as string[];
+  const heroImage = article?.banner_url || article?.image_url;
+  const mobileHeroImage = (article as any)?.mobile_banner_url || heroImage;
   const jsonLd = article ? generateArticleSchema(article) : undefined;
   const { seo: resolvedSeo } = useResolvedSeo(
     "article",
@@ -70,7 +72,7 @@ const ArticlePage = () => {
           keywords: articleKeywords,
           canonical: `${window.location.origin}/article/${article.slug}`,
           jsonLd,
-          ogImage: article.image_url || article.banner_url || undefined,
+          ogImage: article.image_url || article.banner_url || (article as any).mobile_banner_url || undefined,
         }
       : {},
   );
@@ -146,9 +148,22 @@ const ArticlePage = () => {
 
       {/* Cinematic Hero */}
       <div className="relative overflow-hidden min-h-[340px] md:min-h-[420px] lg:min-h-[460px] flex items-end">
-        {/* Background: always use rich gradient */}
+        {/* Background */}
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-[hsl(210,80%,30%)] via-[hsl(200,75%,35%)] to-[hsl(185,65%,40%)]" />
+          {heroImage ? (
+            <picture>
+              {mobileHeroImage && <source media="(max-width: 767px)" srcSet={mobileHeroImage} />}
+              <img
+                src={heroImage}
+                alt={article.title}
+                className="absolute inset-0 h-full w-full object-cover"
+                loading="eager"
+                fetchPriority="high"
+              />
+            </picture>
+          ) : (
+            <div className="absolute inset-0 bg-gradient-to-br from-[hsl(210,80%,30%)] via-[hsl(200,75%,35%)] to-[hsl(185,65%,40%)]" />
+          )}
           <div className="absolute inset-0 pointer-events-none" style={{
             background: 'radial-gradient(ellipse 70% 50% at 80% 20%, hsl(200 80% 55% / 0.35), transparent), radial-gradient(ellipse 60% 60% at 10% 80%, hsl(220 70% 50% / 0.25), transparent)'
           }} />
@@ -303,8 +318,8 @@ const ArticlePage = () => {
               {(suggestedArticles || []).slice(0, 3).map((r: any) => (
                 <Link key={r.id} to={`/article/${r.slug}`} className="group block bg-card rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border border-border hover:-translate-y-1">
                   <div className="h-40 overflow-hidden relative">
-                    {r.image_url ? (
-                      <img src={r.image_url} alt={r.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                    {(r.image_url || r.banner_url) ? (
+                      <img src={(r.image_url || r.banner_url)!} alt={r.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     ) : (
                       <div className="w-full h-full hero-gradient flex items-center justify-center">
                         <span className="font-heading font-bold text-primary-foreground/30 text-sm">{r.category}</span>
