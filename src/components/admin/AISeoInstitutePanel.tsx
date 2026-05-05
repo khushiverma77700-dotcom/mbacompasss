@@ -21,12 +21,14 @@ interface Props {
 
 type RowState = { id: string; label: string; status: "skip" | "pending" | "running" | "done" | "error"; before: number; after?: number; message?: string };
 
+const STRICT_KINDS = new Set(["fees", "study_material", "mock_tests", "admission_process", "eligibility", "scholarships", "demo_classes", "doubt_solving", "infrastructure", "tech_platform", "batch_details"]);
 const PROSE_KINDS = new Set(["overview", "teaching_methodology", "results", "fees", "study_material", "mock_tests", "admission_process", "eligibility", "scholarships", "demo_classes", "doubt_solving", "mentorship", "infrastructure", "tech_platform", "batch_details"]);
 
 const AISeoInstitutePanel = ({ open, onOpenChange, institute, sections, onApply }: Props) => {
   const { toast } = useToast();
   const [auditing, setAuditing] = useState(false);
   const [rewriting, setRewriting] = useState(false);
+  const [sourceUrl, setSourceUrl] = useState<string>(institute?.website || "");
   const [rows, setRows] = useState<RowState[]>([]);
 
   const primaryKw = institute?.primary_keyword || institute?.meta_title || institute?.name || "";
