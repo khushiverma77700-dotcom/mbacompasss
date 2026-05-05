@@ -1,4 +1,4 @@
-import React, { Suspense, useState, lazy, useEffect } from "react";
+import React, { Suspense, useState, lazy, useEffect, useDeferredValue } from "react";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
@@ -445,18 +445,54 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   </>
 );
 
-// Reserve viewport space while a lazy page chunk loads so the Footer (which
-// renders after children) cannot float up and appear at the top of the screen.
-const LazyPage = ({ children }: { children: React.ReactNode }) => (
-  <Suspense fallback={<div style={{ minHeight: "100vh" }} aria-hidden="true" />}>{children}</Suspense>
+// Top progress bar shown while a lazy route chunk is loading. Avoids the
+// "white screen" between clicks — the previous page stays visible (thanks to
+// the deferred Routes location below) and only this thin bar indicates work.
+const TopProgressBar = () => (
+  <div
+    aria-hidden="true"
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 3,
+      zIndex: 9999,
+      background: "linear-gradient(90deg, transparent, hsl(210 90% 55%), transparent)",
+      backgroundSize: "200% 100%",
+      animation: "lov-route-progress 1s linear infinite",
+      pointerEvents: "none",
+    }}
+  />
 );
 
-// For routes nested INSIDE a layout that already renders chrome (sidebar/header),
-// reserve only enough space to keep the main scroll area stable — using 100vh here
-// causes the parent layout to jump while the child chunk loads.
-const InnerLazyPage = ({ children }: { children: React.ReactNode }) => (
-  <Suspense fallback={<div style={{ minHeight: "60vh" }} aria-hidden="true" />}>{children}</Suspense>
+// Suspense fallback for a lazy page. We render NOTHING visible (no 100vh
+// placeholder) so the previous page remains on screen while the new chunk
+// downloads — eliminating the white flash. A top progress bar is shown
+// globally via DeferredRoutes whenever the deferred location is stale.
+const LazyPage = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={null}>{children}</Suspense>
 );
+
+const InnerLazyPage = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={null}>{children}</Suspense>
+);
+
+// Keeps the previous page mounted while the next route's chunk loads. The
+// route tree is rendered against a *deferred* location, so React only swaps
+// it in once the new lazy chunk has resolved. Until then the old page stays
+// visible and a thin top progress bar signals work — no white screen.
+const DeferredRoutes = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  const deferredLocation = useDeferredValue(location);
+  const isStale = deferredLocation !== location;
+  return (
+    <>
+      {isStale && <TopProgressBar />}
+      <Routes location={deferredLocation}>{children}</Routes>
+    </>
+  );
+};
 
 const OnboardingGate = () => {
   const { user, loading } = useAuth();
@@ -548,7 +584,7 @@ const App = () => (
         <AuthProvider>
           <OAuthRedirectHandler />
           <OnboardingGate />
-          <Routes>
+          <DeferredRoutes>
             <Route path="/admin" element={<LazyPage><AdminLayout /></LazyPage>}>
               <Route index element={<LazyPage><AdminDashboard /></LazyPage>} />
               <Route path="institutes" element={<LazyPage><AdminInstitutes /></LazyPage>} />
@@ -707,7 +743,7 @@ const App = () => (
             <Route path="/mba-compass/:slug" element={<PublicLayout><LazyPage><MBACompassCourseDetailPage /></LazyPage></PublicLayout>} />
             <Route path="/iim-waitlist-movement" element={<PublicLayout><LazyPage><IIMWaitlistPage /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />
-          </Routes>
+          </DeferredRoutes>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
