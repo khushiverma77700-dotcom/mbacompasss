@@ -90,9 +90,14 @@ const AdminCoachingInstitutes = () => {
           <h1 className="text-2xl font-bold">Coaching Institutes</h1>
           <p className="text-sm text-muted-foreground">Manage city-wise and hybrid (online + offline) institutes.</p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>
-          <Plus className="w-4 h-4 mr-1" /> New Institute
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setShowAI(true)}>
+            <Sparkles className="w-4 h-4 mr-1" /> Generate via AI
+          </Button>
+          <Button onClick={() => setShowCreate(true)}>
+            <Plus className="w-4 h-4 mr-1" /> New Institute
+          </Button>
+        </div>
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
