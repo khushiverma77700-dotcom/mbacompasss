@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import InstituteSectionRenderer from "@/components/institute/InstituteSectionRenderer";
 import { INSTITUTE_SECTIONS, getSection, isSectionEmpty } from "@/lib/instituteSections";
+import { slugify } from "@/lib/slugify";
 
 function stripHtml(html: string, max = 160): string {
   if (!html) return "";
