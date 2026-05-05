@@ -310,7 +310,7 @@ Deno.serve(async (req) => {
     }
 
     const aiJson = await aiRes.json();
-    await logAIUsage("ai-coaching-institute-generate", "google/gemini-2.5-flash", aiJson);
+    await logAIUsage("ai-coaching-institute-generate", "google/gemini-2.5-pro", aiJson);
     const rawArgs = aiJson?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
     if (!rawArgs) {
       return new Response(JSON.stringify({ error: "AI did not return structured output" }), {
