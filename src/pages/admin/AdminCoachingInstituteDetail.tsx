@@ -320,6 +320,45 @@ const AdminCoachingInstituteDetail = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      <AICoachingInstituteDialog
+        open={showAI}
+        onOpenChange={setShowAI}
+        defaults={{
+          name: inst.name,
+          city: inst.city || "",
+          state: inst.state || "",
+          website: inst.website || "",
+          primaryKeyword: inst.meta_title || inst.name,
+          instituteType: inst.institute_type,
+        }}
+        onGenerated={async ({ basic, sections: gen }) => {
+          setInst((p: any) => ({
+            ...p,
+            description: basic.description || p.description,
+            website: basic.website || p.website,
+            phone: basic.phone || p.phone,
+            email: basic.email || p.email,
+            meta_title: basic.meta_title || p.meta_title,
+            meta_description: basic.meta_description || p.meta_description,
+            rating: basic.rating || p.rating,
+            students_count: basic.students_count || p.students_count,
+            success_rate: basic.success_rate || p.success_rate,
+          }));
+          setSections((s: any) => ({ ...s, ...gen }));
+          toast({ title: "AI content loaded", description: "Review and click Save changes." });
+        }}
+      />
+
+      <AISeoInstitutePanel
+        open={showSeo}
+        onOpenChange={setShowSeo}
+        institute={inst}
+        sections={sections}
+        onApply={async ({ sections: nextSections }) => {
+          setSections(nextSections);
+          await supabase.from("institutes").update({ sections: nextSections }).eq("id", id!);
+        }}
+      />
     </div>
   );
 };
