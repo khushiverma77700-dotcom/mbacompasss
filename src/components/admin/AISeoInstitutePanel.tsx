@@ -119,6 +119,14 @@ const AISeoInstitutePanel = ({ open, onOpenChange, institute, sections, onApply 
         </DialogHeader>
 
         <div className="space-y-4">
+          <div className="rounded-md border p-3 bg-background space-y-2">
+            <Label className="text-xs font-semibold flex items-center gap-1"><Link2 className="w-3 h-3" /> Official Source URL (strict grounding for factual sections)</Label>
+            <Input value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder="https://imsindia.com/cat-coaching" />
+            <p className="text-[11px] text-muted-foreground">
+              Fees, courses, batch, faculty, eligibility, scholarships, infrastructure, demo and tech sections will be rewritten <strong>strictly from this URL</strong>. Reviews, FAQs and overview may use broader public knowledge.
+            </p>
+          </div>
+
           <div className="rounded-md border p-3 bg-muted/30">
             <div className="text-xs font-semibold mb-2">Page-level signals</div>
             <div className="flex flex-wrap gap-2 text-xs">
