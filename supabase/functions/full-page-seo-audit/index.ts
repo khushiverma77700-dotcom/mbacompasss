@@ -69,6 +69,23 @@ async function assemblePage(
     courses = cs || [];
     faculty = fs || [];
     results = rs || [];
+  } else if (contentType === "course") {
+    pathPrefix = "/course/";
+    const { data } = await supabase.from("courses").select("*").eq("id", recordId).maybeSingle();
+    base = data;
+    if (base?.institute_id) {
+      const { data: inst } = await supabase
+        .from("institutes")
+        .select("name, slug, city, state")
+        .eq("id", base.institute_id)
+        .maybeSingle();
+      if (inst) {
+        pathPrefix = `/institute/${inst.slug}/course/`;
+        base.city = base.city || inst.city;
+        base.state = base.state || inst.state;
+        base._institute_name = inst.name;
+      }
+    }
   } else {
     pathPrefix = "/article/";
     const { data } = await supabase.from("articles").select("*").eq("id", recordId).maybeSingle();
