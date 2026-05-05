@@ -203,7 +203,7 @@ const NavMegaMenu = ({ label, menuType, onNavigate }: MegaMenuProps) => {
             {/* Bottom bar */}
             <div className="bg-muted/30 border-t border-border px-5 py-2.5 flex items-center justify-between">
               <Link
-                to={menuType === "college" ? "/colleges" : "/category/cat"}
+                to={menuType === "college" ? "/colleges" : "/coaching"}
                 onClick={() => { setOpen(false); onNavigate?.(); }}
                 className="text-xs font-medium text-primary hover:underline"
               >
