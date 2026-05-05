@@ -142,25 +142,26 @@ Deno.serve(async (req) => {
             sections: {
               type: "object",
               properties: {
-                overview: richBody("Overview"),
-                key_highlights: bullets("Key highlights / USPs"),
-                courses_offered: bullets("Courses offered (CAT Classroom, NMAT Online, etc.)"),
-                course_formats: bullets("Course formats (Classroom / Live Online / Recorded / Crash / Test Series / 1:1)"),
-                batch_details: { type: "object", properties: { body: { type: "string", description: "Batch size, start dates, duration, weekday/weekend. 80-150 words." } }, required: ["body"] },
-                teaching_methodology: richBody("Teaching methodology"),
+                overview: longBody("Overview — what this institute is, who it's for, exam strengths, mode mix, brand positioning vs TIME/IMS/CL"),
+                key_highlights: bullets("Key highlights / USPs — concrete numbers (faculty count, batches, mock count, centres)", 7),
+                courses_offered: bullets("Programs offered — name + exam + format e.g. 'CAT Classic Classroom (12-month, weekend)'", 7),
+                course_formats: bullets("Course formats — Classroom / Live Online / Recorded / Crash / Test Series / 1:1 with hours and price band", 6),
+                batch_details: longBody("Batch details — batch size, weekday/weekend, start cycles, duration, intake months, language of instruction"),
+                teaching_methodology: longBody("Teaching methodology — pedagogy, sectional roadmap (VARC/DILR/QA), assessment cadence, personalisation"),
                 faculty: {
                   type: "object",
                   properties: {
                     items: {
                       type: "array",
-                      minItems: 3,
+                      minItems: 4,
+                      description: "4-6 faculty/mentors with realistic specifics.",
                       items: {
                         type: "object",
                         properties: {
                           name: { type: "string" },
-                          experience: { type: "string" },
-                          expertise: { type: "string" },
-                          achievements: { type: "string" },
+                          experience: { type: "string", description: "e.g. '14+ yrs in CAT QA prep'" },
+                          expertise: { type: "string", description: "subject + exam area" },
+                          achievements: { type: "string", description: "1-2 sentence credibility line — alma mater, percentile, mentees converted." },
                         },
                         required: ["name", "experience", "expertise", "achievements"],
                       },
@@ -168,17 +169,18 @@ Deno.serve(async (req) => {
                   },
                   required: ["items"],
                 },
-                study_material: { type: "object", properties: { body: { type: "string" } }, required: ["body"] },
-                mock_tests: { type: "object", properties: { body: { type: "string" } }, required: ["body"] },
-                results: richBody("Results & success rate (with year-wise selection numbers, never invented; use realistic ranges)"),
+                study_material: longBody("Study material — books, modules, PDFs, sectional workbooks, vocabulary tools, daily practice"),
+                mock_tests: longBody("Mock tests & practice — number of full mocks, sectional tests, AIMCAT/SimCAT-style analytics, percentile prediction"),
+                results: longBody("Results & success rate — 2-3 yr trends, top ranks, IIM-A/B/C/L/I/K calls, conversions across tiers (use realistic ranges, never invent exact unverifiable numbers)"),
                 topper_testimonials: {
                   type: "object",
                   properties: {
                     items: {
-                      type: "array", minItems: 4,
+                      type: "array", minItems: 6,
+                      description: "6-8 topper testimonials, each 30-50 words, exam + percentile + final B-school.",
                       items: {
                         type: "object",
-                        properties: { name: { type: "string" }, exam: { type: "string" }, text: { type: "string" } },
+                        properties: { name: { type: "string" }, exam: { type: "string", description: "e.g. 'CAT 2024 · 99.6%ile · IIM Lucknow'" }, text: { type: "string" } },
                         required: ["name", "exam", "text"],
                       },
                     },
@@ -189,7 +191,8 @@ Deno.serve(async (req) => {
                   type: "object",
                   properties: {
                     items: {
-                      type: "array", minItems: 3,
+                      type: "array", minItems: 5,
+                      description: "5-7 student reviews, each 25-45 words, balanced tone.",
                       items: {
                         type: "object",
                         properties: { name: { type: "string" }, rating: { type: "number" }, text: { type: "string" } },
@@ -199,26 +202,41 @@ Deno.serve(async (req) => {
                   },
                   required: ["items"],
                 },
-                admission_process: { type: "object", properties: { body: { type: "string" } }, required: ["body"] },
-                eligibility: { type: "object", properties: { body: { type: "string" } }, required: ["body"] },
-                fees: { type: "object", properties: { body: { type: "string", description: "Fee structure with realistic INR ranges, installments, refund." } }, required: ["body"] },
-                scholarships: { type: "object", properties: { body: { type: "string" } }, required: ["body"] },
-                demo_classes: { type: "object", properties: { body: { type: "string" } }, required: ["body"] },
-                doubt_solving: { type: "object", properties: { body: { type: "string" } }, required: ["body"] },
-                mentorship: { type: "object", properties: { body: { type: "string" } }, required: ["body"] },
-                infrastructure: { type: "object", properties: { body: { type: "string" } }, required: ["body"] },
-                tech_platform: { type: "object", properties: { body: { type: "string" } }, required: ["body"] },
-                why_choose: bullets("Why choose this institute (5-6 differentiators)"),
+                admission_process: longBody("Admission process — step-by-step (enquiry → counselling → diagnostic test → batch fitment → enrolment → onboarding)"),
+                eligibility: richBody("Eligibility criteria — graduates / final-year / repeaters / working professionals", 180, 280),
+                fees: longBody("Fee structure — realistic INR ranges per programme/format, EMI options, payment milestones, refund policy"),
+                scholarships: longBody("Scholarships & discounts — merit-based (CAT/XAT/AIMCAT percentile slabs), early-bird, referral, need-based, sibling"),
+                demo_classes: richBody("Demo classes — free demo formats, what's covered, how to book, duration", 180, 280),
+                doubt_solving: richBody("Doubt-solving support — WhatsApp groups, live doubt sessions, faculty access, response SLA", 180, 280),
+                mentorship: richBody("Mentorship programs — 1:1 mentor mapping, strategy calls, profile review, B-school selection", 200, 320),
+                infrastructure: richBody("Infrastructure & facilities — classrooms, library, study lounges, AV setup, hygiene, Wi-Fi", 180, 280),
+                tech_platform: richBody("Technology & learning platform — LMS, dashboard, attempt analytics, mobile app, recorded library", 200, 320),
+                why_choose: bullets("Why choose this institute — sharp differentiators with proof points", 6),
                 pros_cons: {
                   type: "object",
                   properties: {
                     items: {
                       type: "object",
                       properties: {
-                        pros: { type: "array", items: { type: "string" }, minItems: 3 },
-                        cons: { type: "array", items: { type: "string" }, minItems: 2 },
+                        pros: { type: "array", items: { type: "string", description: "12-22 words, concrete." }, minItems: 5 },
+                        cons: { type: "array", items: { type: "string", description: "Honest, balanced, 12-22 words." }, minItems: 3 },
                       },
                       required: ["pros", "cons"],
+                    },
+                  },
+                  required: ["items"],
+                },
+                comparison: {
+                  type: "object",
+                  properties: {
+                    items: {
+                      type: "array", minItems: 5,
+                      description: "5-7 honest comparison rows vs typical alternatives (TIME / IMS / CL / 2IIM).",
+                      items: {
+                        type: "object",
+                        properties: { point: { type: "string" }, us: { type: "string" }, others: { type: "string" } },
+                        required: ["point", "us", "others"],
+                      },
                     },
                   },
                   required: ["items"],
@@ -227,7 +245,8 @@ Deno.serve(async (req) => {
                   type: "object",
                   properties: {
                     items: {
-                      type: "array", minItems: 5,
+                      type: "array", minItems: 8,
+                      description: "8-10 FAQs covering fees, batch start, demo, refund, mode, mocks, results, mentorship. Answers 40-80 words each.",
                       items: {
                         type: "object",
                         properties: { q: { type: "string" }, a: { type: "string" } },
@@ -241,7 +260,7 @@ Deno.serve(async (req) => {
                   type: "object",
                   properties: {
                     items: {
-                      type: "array", minItems: 2,
+                      type: "array", minItems: 3,
                       items: {
                         type: "object",
                         properties: { label: { type: "string" }, url: { type: "string" }, style: { type: "string" } },
@@ -257,7 +276,7 @@ Deno.serve(async (req) => {
                 "teaching_methodology", "faculty", "study_material", "mock_tests", "results",
                 "topper_testimonials", "student_reviews", "admission_process", "eligibility",
                 "fees", "scholarships", "demo_classes", "doubt_solving", "mentorship",
-                "infrastructure", "tech_platform", "why_choose", "pros_cons", "faqs", "ctas",
+                "infrastructure", "tech_platform", "why_choose", "pros_cons", "comparison", "faqs", "ctas",
               ],
             },
           },
