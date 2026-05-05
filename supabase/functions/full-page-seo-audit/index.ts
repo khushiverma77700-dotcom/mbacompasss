@@ -15,7 +15,7 @@ const corsHeaders = {
 const SITE_URL = "https://mbacompass.in";
 
 interface AuditBody {
-  contentType: "college" | "institute" | "article";
+  contentType: "college" | "institute" | "article" | "course";
   recordId: string;
   runCompetitorScan?: boolean;
 }
