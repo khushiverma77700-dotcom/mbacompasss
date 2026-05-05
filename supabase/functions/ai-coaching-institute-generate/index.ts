@@ -3,8 +3,22 @@
 // the schema in src/lib/instituteSections.ts). Designed to be called from
 // the AICoachingInstituteDialog. Public — verify_jwt = false (project default).
 
-import { callAIGateway } from "../_shared/aiGateway.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
+
+const OPENAI_MODEL = "gpt-4o";
+
+async function callOpenAI(body: Record<string, unknown>) {
+  const key = Deno.env.get("OPENAI_API_KEY");
+  if (!key) throw new Error("OPENAI_API_KEY not configured");
+  return await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+}
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
