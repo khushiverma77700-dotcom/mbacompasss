@@ -44,6 +44,43 @@ const InstituteCoursePage = () => {
     return all.find((c: any) => slugify(c.name || "") === courseSlug) || null;
   }, [institute, courseSlug]);
 
+  const inst: any = institute || {};
+  const c: any = course || {};
+
+  const title = course
+    ? `${c.name} by ${inst.name}${inst.city ? ` in ${inst.city}` : ""} — Fees, Batch, Reviews`
+    : "Course";
+  const description = course
+    ? `${c.name} at ${inst.name}${inst.city ? ", " + inst.city : ""}. ${c.duration ? "Duration: " + c.duration + ". " : ""}${c.fees ? "Fees: ₹" + c.fees + ". " : ""}Get full curriculum, batch dates and admission help.`.slice(0, 160)
+    : "";
+
+  const courseSchema = course ? {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    name: c.name,
+    description: c.description ? c.description.replace(/<[^>]+>/g, " ").slice(0, 500) : description,
+    provider: {
+      "@type": "Organization",
+      name: inst.name,
+      url: typeof window !== "undefined" ? `${window.location.origin}/institute/${inst.slug}` : undefined,
+    },
+    ...(c.fees && {
+      offers: {
+        "@type": "Offer",
+        price: String(c.fees),
+        priceCurrency: "INR",
+      },
+    }),
+  } : undefined;
+
+  const { seo } = useResolvedSeo("course", c.id || "", {
+    title,
+    description,
+    canonical: typeof window !== "undefined" && course ? `${window.location.origin}/institute/${inst.slug}/course/${courseSlug}` : undefined,
+    jsonLd: courseSchema,
+    ogImage: inst.banner_url || inst.logo_url || undefined,
+  });
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-10 max-w-4xl space-y-4">
@@ -62,40 +99,8 @@ const InstituteCoursePage = () => {
     );
   }
 
-  const inst: any = institute;
-  const c: any = course;
   const highlights: string[] = Array.isArray(c.highlights) ? c.highlights : [];
   const curriculum: string[] = Array.isArray(c.curriculum) ? c.curriculum : [];
-
-  const title = `${c.name} by ${inst.name}${inst.city ? ` in ${inst.city}` : ""} — Fees, Batch, Reviews`;
-  const description = `${c.name} at ${inst.name}${inst.city ? ", " + inst.city : ""}. ${c.duration ? "Duration: " + c.duration + ". " : ""}${c.fees ? "Fees: ₹" + c.fees + ". " : ""}Get full curriculum, batch dates and admission help.`.slice(0, 160);
-
-  const courseSchema = {
-    "@context": "https://schema.org",
-    "@type": "Course",
-    name: c.name,
-    description: c.description ? c.description.replace(/<[^>]+>/g, " ").slice(0, 500) : description,
-    provider: {
-      "@type": "Organization",
-      name: inst.name,
-      url: typeof window !== "undefined" ? `${window.location.origin}/institute/${inst.slug}` : undefined,
-    },
-    ...(c.fees && {
-      offers: {
-        "@type": "Offer",
-        price: String(c.fees),
-        priceCurrency: "INR",
-      },
-    }),
-  };
-
-  const { seo } = useResolvedSeo("course", c.id, {
-    title,
-    description,
-    canonical: typeof window !== "undefined" ? `${window.location.origin}/institute/${inst.slug}/course/${courseSlug}` : undefined,
-    jsonLd: courseSchema,
-    ogImage: inst.banner_url || inst.logo_url || undefined,
-  });
 
   return (
     <>
