@@ -151,6 +151,141 @@ const AdminCoachingInstituteDetail = () => {
         </div>
       </div>
 
+      <div className="space-y-8">
+        <Card>
+          <CardHeader><CardTitle className="text-base">1. Basic information</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <Label>Institute name *</Label>
+                <Input value={inst.name || ""} onChange={(e) => setBasic({ name: e.target.value })} />
+              </div>
+              <div className="md:col-span-2">
+                <Label>Slug</Label>
+                <Input value={inst.slug || ""} onChange={(e) => setBasic({ slug: e.target.value })} placeholder="auto-generated from name" />
+              </div>
+              <div>
+                <Label>Type</Label>
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  {[["city", "City-wise", Building2], ["hybrid", "Hybrid", Globe]].map(([v, label, Icon]: any) => (
+                    <button key={v} type="button" onClick={() => setBasic({ institute_type: v })}
+                      className={`border rounded-md p-2 text-sm flex items-center gap-2 ${inst.institute_type === v ? "border-primary bg-primary/5" : ""}`}>
+                      <Icon className="w-4 h-4" /> {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-end gap-3">
+                <div className="flex items-center gap-2">
+                  <Switch checked={!!inst.featured} onCheckedChange={(v) => setBasic({ featured: v })} />
+                  <Label>Featured</Label>
+                </div>
+              </div>
+              {inst.institute_type === "city" && (
+                <div className="md:col-span-2">
+                  <StateCitySelect
+                    state={inst.state || ""}
+                    city={inst.city || ""}
+                    onStateChange={(s) => setBasic({ state: s, city: "" })}
+                    onCityChange={(c) => setBasic({ city: c })}
+                  />
+                </div>
+              )}
+              <div className="md:col-span-2">
+                <Label>Short description (rich text)</Label>
+                <RichTextEditor content={inst.description || ""} onChange={(v) => setBasic({ description: v })} />
+              </div>
+              <div><Label>Phone</Label><Input value={inst.phone || ""} onChange={(e) => setBasic({ phone: e.target.value })} /></div>
+              <div><Label>WhatsApp</Label><Input value={inst.whatsapp || ""} onChange={(e) => setBasic({ whatsapp: e.target.value })} /></div>
+              <div><Label>Email</Label><Input type="email" value={inst.email || ""} onChange={(e) => setBasic({ email: e.target.value })} /></div>
+              <div><Label>Website</Label><Input value={inst.website || ""} onChange={(e) => setBasic({ website: e.target.value })} /></div>
+              <div><Label>Logo</Label><FileUpload bucket="uploads" value={inst.logo_url || ""} onChange={(u) => setBasic({ logo_url: u })} /></div>
+              <div><Label>Banner</Label><FileUpload bucket="uploads" value={inst.banner_url || ""} onChange={(u) => setBasic({ banner_url: u })} /></div>
+              <div><Label>Rating (0-5)</Label><Input type="number" step="0.1" min={0} max={5} value={inst.rating || 0} onChange={(e) => setBasic({ rating: Number(e.target.value) })} /></div>
+              <div><Label>Students count</Label><Input type="number" value={inst.students_count || 0} onChange={(e) => setBasic({ students_count: Number(e.target.value) })} /></div>
+              <div><Label>Success rate (%)</Label><Input type="number" value={inst.success_rate || 0} onChange={(e) => setBasic({ success_rate: Number(e.target.value) })} /></div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">2. Linked courses ({linkedCourseIds.size})</CardTitle>
+            <p className="text-xs text-muted-foreground">Courses linked here appear automatically on the institute page.</p>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between gap-2 mb-3">
+              <Input placeholder="Search courses…" value={courseSearch} onChange={(e) => setCourseSearch(e.target.value)} className="max-w-sm" />
+              <Link to="/admin/courses" className="text-sm text-primary hover:underline">+ Manage course database</Link>
+            </div>
+            <div className="grid md:grid-cols-2 gap-2 max-h-[50vh] overflow-y-auto pr-1">
+              {filteredCourses.map((c) => {
+                const linked = linkedCourseIds.has(c.id);
+                return (
+                  <button key={c.id} type="button" onClick={() => toggleCourse(c.id)}
+                    className={`border rounded-md p-3 text-left flex items-center justify-between gap-3 ${linked ? "border-primary bg-primary/5" : "hover:border-muted-foreground/40"}`}>
+                    <div className="min-w-0">
+                      <div className="font-medium text-sm truncate">{c.name}</div>
+                      <div className="text-xs text-muted-foreground truncate">{[c.duration, c.mode, c.fees].filter(Boolean).join(" · ")}</div>
+                    </div>
+                    {linked ? <Badge>Linked</Badge> : <Plus className="w-4 h-4 text-muted-foreground" />}
+                  </button>
+                );
+              })}
+              {filteredCourses.length === 0 && (
+                <div className="col-span-2 text-sm text-muted-foreground text-center py-6">
+                  No courses found. <Link to="/admin/courses" className="text-primary hover:underline">Add courses</Link>.
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">3. Page sections ({filledSections} of {INSTITUTE_SECTIONS.length} enabled)</CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Toggle "Show on site" on each section. Every enabled section with content appears on the public page in the order below.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {INSTITUTE_SECTIONS.map((def) => {
+              const s = getSection(sections, def.id);
+              return (
+                <InstituteSectionEditor
+                  key={def.id}
+                  def={def}
+                  enabled={s.enabled}
+                  data={s.data}
+                  onChange={(next) => updateSection(def.id, next)}
+                />
+              );
+            })}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle className="text-base">4. SEO metadata</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <Label>Meta title (&lt;60 chars)</Label>
+              <Input value={inst.meta_title || ""} onChange={(e) => setBasic({ meta_title: e.target.value })} maxLength={70} />
+            </div>
+            <div>
+              <Label>Meta description (&lt;160 chars)</Label>
+              <Textarea rows={3} value={inst.meta_description || ""} onChange={(e) => setBasic({ meta_description: e.target.value })} maxLength={180} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="sticky bottom-3 z-10 flex justify-end">
+          <Button onClick={saveAll} disabled={saving} size="lg" className="shadow-lg">
+            {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
+            Save all changes
+          </Button>
+        </div>
+      </div>
+
       <AICoachingInstituteDialog
         open={showAI}
         onOpenChange={setShowAI}
