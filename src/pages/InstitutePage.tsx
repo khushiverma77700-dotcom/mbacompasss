@@ -343,16 +343,16 @@ const InstitutePage = () => {
           {/* ToC — always visible on desktop when there's any content */}
           {(activeSections.length > 0 || linkedCourses.length > 0) && (
             <aside className="hidden lg:block">
-              <div className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto space-y-1 bg-white border rounded-xl p-3 shadow-sm">
+              <div id="toc-scroll" className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto space-y-1 bg-white border rounded-xl p-3 shadow-sm scroll-smooth">
                 <div className="text-xs font-semibold uppercase text-muted-foreground mb-2 px-2">On this page</div>
                 {activeSections.map((s) => (
-                  <a key={s.id} href={`#sec-${s.id}`}
+                  <a key={s.id} id={`toc-link-${s.id}`} href={`#sec-${s.id}`}
                     className={`block text-sm px-3 py-2 rounded-lg transition hover:bg-sky-50 ${activeId === s.id ? "bg-sky-50 text-sky-700 font-semibold border-l-2 border-sky-600" : "text-slate-600"}`}>
                     {s.label}
                   </a>
                 ))}
                 {linkedCourses.length > 0 && (
-                  <a href="#courses" className={`block text-sm px-3 py-2 rounded-lg transition hover:bg-sky-50 ${activeId === "courses" ? "bg-sky-50 text-sky-700 font-semibold border-l-2 border-sky-600" : "text-slate-600"}`}>
+                  <a id="toc-link-courses" href="#courses" className={`block text-sm px-3 py-2 rounded-lg transition hover:bg-sky-50 ${activeId === "courses" ? "bg-sky-50 text-sky-700 font-semibold border-l-2 border-sky-600" : "text-slate-600"}`}>
                     Courses ({linkedCourses.length})
                   </a>
                 )}
