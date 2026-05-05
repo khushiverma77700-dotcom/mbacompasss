@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Sparkles, Plus, X } from "lucide-react";
 import StateCitySelect from "@/components/admin/StateCitySelect";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,8 +16,6 @@ interface Props {
   /** Returns generated payload so the parent decides what to do (insert vs merge into existing). */
   onGenerated: (payload: { basic: any; sections: Record<string, any>; brief: any }) => void;
 }
-
-const EXAM_DEFAULTS = ["CAT", "XAT", "NMAT", "SNAP", "CMAT"];
 
 const ChipInput = ({ values, onChange, placeholder }: { values: string[]; onChange: (v: string[]) => void; placeholder: string }) => {
   const [v, setV] = useState("");
@@ -53,40 +50,30 @@ const AICoachingInstituteDialog = ({ open, onOpenChange, defaults, onGenerated }
   const [website, setWebsite] = useState(defaults?.website || "");
   const [city, setCity] = useState(defaults?.city || "");
   const [state, setState] = useState(defaults?.state || "");
-  const [mode, setMode] = useState<string>("Hybrid");
-  const [instituteType, setInstituteType] = useState<"city" | "hybrid">(defaults?.instituteType || "hybrid");
   const [primaryKeyword, setPrimaryKeyword] = useState(defaults?.primaryKeyword || "");
   const [secondary, setSecondary] = useState<string[]>([]);
-  const [exams, setExams] = useState<string[]>(EXAM_DEFAULTS);
-  const [flagship, setFlagship] = useState<string[]>([]);
-  const [sourceUrl, setSourceUrl] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const showLocation = mode !== "Online"; // Online → no state/city; Offline required; Hybrid optional
 
   const submit = async () => {
     if (!name.trim()) return toast({ title: "Institute name is required", variant: "destructive" });
-    if (!primaryKeyword.trim()) return toast({ title: "Primary keyword is required", variant: "destructive" });
-    if (mode === "Offline" && (!state || !city)) {
-      return toast({ title: "Offline mode requires state & city", variant: "destructive" });
-    }
     setLoading(true);
     try {
-      const cleanCity = mode === "Online" ? "" : city;
-      const cleanState = mode === "Online" ? "" : state;
       const brief = {
-        name: name.trim(), website: website.trim() || undefined,
-        sourceUrl: sourceUrl.trim() || website.trim() || undefined,
-        city: cleanCity || undefined, state: cleanState || undefined,
-        mode, instituteType, primaryKeyword: primaryKeyword.trim(), secondaryKeywords: secondary,
-        examFocus: exams, flagshipPrograms: flagship,
+        name: name.trim(),
+        website: website.trim() || undefined,
+        city: city || undefined,
+        state: state || undefined,
+        primaryKeyword: primaryKeyword.trim() || `${name.trim()} coaching${city ? ` in ${city}` : ""}`,
+        secondaryKeywords: secondary,
+        instituteType: (city ? "city" : "hybrid") as "city" | "hybrid",
+        mode: city ? "Offline" : "Hybrid",
       };
       const { data, error } = await supabase.functions.invoke("ai-coaching-institute-generate", { body: brief });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
       onGenerated({ basic: data.basic, sections: data.sections, brief });
       onOpenChange(false);
-      toast({ title: "Generated", description: "Review and edit before saving." });
+      toast({ title: "Generated", description: "Profile saved. AI SEO ready to run." });
     } catch (e: any) {
       toast({ title: "Generation failed", description: e?.message || String(e), variant: "destructive" });
     } finally {
@@ -99,7 +86,9 @@ const AICoachingInstituteDialog = ({ open, onOpenChange, defaults, onGenerated }
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-primary" /> Generate Coaching Institute via AI</DialogTitle>
-          <DialogDescription>Tell us a few basics — AI will write the entire profile (overview, faculty, results, FAQs, SEO).</DialogDescription>
+          <DialogDescription>
+            Just tell us the basics. AI researches the institute and writes the entire profile — overview, courses, faculty, fees, results, FAQs, and SEO meta. Empty fields stay hidden on the live page.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>
@@ -108,71 +97,27 @@ const AICoachingInstituteDialog = ({ open, onOpenChange, defaults, onGenerated }
           </div>
           <div className="grid md:grid-cols-2 gap-3">
             <div>
-              <Label>Website</Label>
+              <Label>Official Website (optional)</Label>
               <Input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://imsindia.com" />
             </div>
             <div>
-              <Label>Primary Target Keyword *</Label>
-              <Input value={primaryKeyword} onChange={(e) => setPrimaryKeyword(e.target.value)} placeholder={`Best CAT coaching in ${city || "Mumbai"}`} />
-            </div>
-          </div>
-          <div className="grid md:grid-cols-2 gap-3">
-            <div>
-              <Label>Mode</Label>
-              <Select value={mode} onValueChange={setMode}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Online">Online</SelectItem>
-                  <SelectItem value="Offline">Offline</SelectItem>
-                  <SelectItem value="Hybrid">Hybrid</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Type</Label>
-              <Select value={instituteType} onValueChange={(v) => setInstituteType(v as any)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="city">City-wise</SelectItem>
-                  <SelectItem value="hybrid">Hybrid (pan-India)</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Primary Keyword (optional)</Label>
+              <Input value={primaryKeyword} onChange={(e) => setPrimaryKeyword(e.target.value)} placeholder={`Best CAT coaching${city ? ` in ${city}` : ""}`} />
             </div>
           </div>
           <div>
-            <Label>Official Source URL (strict grounding)</Label>
-            <Input value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder="https://imsindia.com/cat-coaching" />
-            <p className="text-[11px] text-muted-foreground mt-1">
-              Program details, courses, fees, faculty & batch info will be drawn strictly from this URL. Reviews/testimonials/FAQs may use broader public knowledge.
-            </p>
-          </div>
-          {showLocation ? (
-            <div>
-              <Label className="text-xs">Location {mode === "Offline" ? <span className="text-destructive">*</span> : <span className="text-muted-foreground">(optional for Hybrid)</span>}</Label>
-              <StateCitySelect state={state} city={city} onStateChange={(s) => { setState(s); setCity(""); }} onCityChange={setCity} showLabels={false} />
-            </div>
-          ) : (
-            <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground bg-muted/30">
-              Online-only institute — state & city are not required. The page will target nationwide search intent.
-            </div>
-          )}
-          <div>
-            <Label>Secondary Keywords</Label>
-            <ChipInput values={secondary} onChange={setSecondary} placeholder="e.g. CAT classroom coaching, GMAT prep" />
+            <Label className="text-xs">Location (optional — leave blank for online / pan-India)</Label>
+            <StateCitySelect state={state} city={city} onStateChange={(s) => { setState(s); setCity(""); }} onCityChange={setCity} showLabels={false} />
           </div>
           <div>
-            <Label>Exams Covered</Label>
-            <ChipInput values={exams} onChange={setExams} placeholder="e.g. CAT, XAT" />
-          </div>
-          <div>
-            <Label>Flagship Programs (optional)</Label>
-            <ChipInput values={flagship} onChange={setFlagship} placeholder="e.g. AIMCAT Test Series" />
+            <Label>Secondary Keywords (optional)</Label>
+            <ChipInput values={secondary} onChange={setSecondary} placeholder="e.g. CAT classroom coaching, NMAT prep" />
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={loading}>Cancel</Button>
             <Button onClick={submit} disabled={loading}>
               {loading ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Sparkles className="w-4 h-4 mr-1" />}
-              Generate Profile
+              Generate Full Profile
             </Button>
           </div>
         </div>
