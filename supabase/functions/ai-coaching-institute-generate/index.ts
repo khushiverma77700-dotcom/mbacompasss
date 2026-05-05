@@ -80,6 +80,12 @@ Deno.serve(async (req) => {
     const exams = (brief.examFocus || []).filter(Boolean);
     const flagship = (brief.flagshipPrograms || []).filter(Boolean);
     const mode = brief.mode || "Hybrid";
+    const sourceUrl = (brief.sourceUrl || brief.website || "").trim();
+    const sourceText = sourceUrl ? await fetchSourceText(sourceUrl) : "";
+
+    const groundingBlock = sourceText
+      ? `\n\n# OFFICIAL SOURCE (STRICT GROUNDING)\nURL: ${sourceUrl}\n\n--- BEGIN SOURCE ---\n${sourceText}\n--- END SOURCE ---\n\nGROUNDING RULES:\n- For these factual sections — courses_offered, course_formats, batch_details, fees, admission_process, eligibility, faculty, study_material, mock_tests, demo_classes, infrastructure, tech_platform, scholarships, mentorship, doubt_solving — use ONLY information that is supported by the SOURCE above. If the source is silent on a detail, OMIT that specific claim instead of inventing one. Use realistic ranges only when the source itself implies them.\n- For these soft sections — overview, key_highlights, why_choose, results, topper_testimonials, student_reviews, pros_cons, faqs, ctas, teaching_methodology — you MAY supplement with broader public knowledge about this institute and Indian MBA-entrance coaching norms.\n- Never contradict the source. Never copy >12 consecutive words verbatim — paraphrase.\n`
+      : `\n\n# NO OFFICIAL SOURCE PROVIDED\n- Use only well-established public knowledge about this institute. Avoid invented numbers; use clearly hedged realistic ranges.\n`;
 
     const systemPrompt = `You are a senior MBA-entrance coaching researcher and SEO writer for the Indian audience. You write like a sharp senior mentor talking to a CAT/XAT/GMAT aspirant — clear, friendly, plain English, contractions allowed.
 
@@ -92,21 +98,30 @@ Deno.serve(async (req) => {
 - Cover ONLY coaching for management-entrance exams: CAT, XAT, GMAT, GRE-for-MiM, NMAT, SNAP, CMAT, MAT, MAH-CET, IIFT, TISSNET, MICAT, KMAT.
 - DO NOT mention coaching for JEE, NEET, GATE, UPSC, SSC, banking, CA/CS, coding bootcamps, school tuition.
 
-# SEO RULES (NON-NEGOTIABLE)
+# MODE-AWARENESS
+- Mode is "${mode}". If Online: do NOT claim physical centres; emphasise nationwide live + recorded delivery, LMS, doubt-solving stack. Skip city/state-specific claims; target nationwide search intent.
+- If Offline: anchor every claim to ${brief.city || "the listed city"}, ${brief.state || "state"} centre. Mention local landmarks/coverage and city-specific keywords.
+- If Hybrid: cover both — nationwide online + named offline centres; cross-link.
+
+# SEO RULES (NON-NEGOTIABLE — DETAILED RESEARCH MODE)
 - Primary keyword: "${targetKw}". MUST appear in: meta_title, meta_description, overview body (first 60 words), at least 2 <h2> headings across rich sections, and in slug.
-- Secondary keywords (${secKws.join(", ") || "infer naturally"}) sprinkled naturally.
+- Secondary keywords (${secKws.join(", ") || "infer naturally"}) sprinkled naturally — also derive 6-10 long-tail variants like "[institute] CAT fees ${year}", "[institute] vs TIME/IMS", "[institute] reviews ${year}", "[city] CAT coaching near me".
+- Generate keyword-rich H2/H3 headings; use exact-match + synonym variants; natural keyword density 1.0-1.8%.
+- Cover search-intent quartet: Informational (what/how), Commercial (best/top/vs), Transactional (fees/enrol/demo), Navigational (login/centres/contact).
 - Each rich-text body uses semantic HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. Never <html>, <head>, <body>, <h1>, <font>, no class/id/style attributes.
-- Short paragraphs (2-4 sentences). Lists for 3+ items. Internal anchors like <a href="/coaching">top CAT coaching</a>, <a href="/exam/cat">CAT exam</a>, <a href="/colleges">top MBA colleges</a>.
+- 180-280 words per rich body, 2-4 sentence paragraphs, lists for 3+ items, comparison/fee tables where relevant.
+- Internal anchors: <a href="/coaching">top CAT coaching</a>, <a href="/exam/cat">CAT exam</a>, <a href="/colleges">top MBA colleges</a>, <a href="/profile-analyzer">AI Profile Analyzer</a>.
 - End the longest body with <p><em>Last updated: ${todayIso}</em></p>.
 - NEVER start any paragraph or heading with a question. Headings are declarative.
-- NEVER use phrases: "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving".`;
+- NEVER use phrases: "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving".${groundingBlock}`;
 
-    const userPrompt = `Generate a complete, ready-to-publish profile for the following Indian MBA-entrance coaching institute. Verify every factual claim against your training knowledge.
+    const userPrompt = `Generate a complete, ready-to-publish profile for the following Indian MBA-entrance coaching institute. Verify every factual claim against your training knowledge AND the strict source above when present.
 
 # INSTITUTE
 - Name: ${brief.name}
 - Website: ${brief.website || "(use the official site if you know it; else leave empty)"}
-- City: ${brief.city || "(use the actual HQ / primary centre city; never guess)"}
+- Official source URL: ${sourceUrl || "(none — use only well-established public knowledge)"}
+- City: ${brief.city || (mode === "Online" ? "(none — Online only, nationwide)" : "(use the actual HQ / primary centre city; never guess)")}
 - State: ${brief.state || ""}
 - Mode: ${mode}
 - Type: ${brief.instituteType || (mode === "Offline" ? "city" : "hybrid")}
