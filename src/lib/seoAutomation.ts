@@ -5,7 +5,7 @@ const DEFAULT_SITE_URL = "https://mbacompass.in";
 export const SITE_URL = typeof window !== "undefined" ? window.location.origin : DEFAULT_SITE_URL;
 export const SEO_SNAPSHOT_KEY_PREFIX = "seo_page__";
 
-export type SEOContentType = "article" | "institute" | "college" | "exam" | "cityPage" | "category";
+export type SEOContentType = "article" | "institute" | "college" | "exam" | "cityPage" | "category" | "course";
 
 export interface SEOKeywordBuckets {
   primary: string[];
@@ -98,6 +98,12 @@ export const contentTypeConfig: Record<
     table: "categories",
     supportsH1Column: false,
     getPath: (item) => `/category/${item.slug}`,
+  },
+  course: {
+    label: "Courses",
+    table: "courses",
+    supportsH1Column: false,
+    getPath: (item) => `/institute/${item.institute_slug || item._institute_slug || "institute"}/course/${item.slug}`,
   },
 };
 
