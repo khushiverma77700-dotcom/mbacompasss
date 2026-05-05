@@ -29,7 +29,8 @@ const InstitutePage = () => {
         .from("institutes")
         .select(`
           *,
-          institute_courses(course:courses(id, name, fees, duration, mode, description, course_category_id))
+          institute_courses(course:courses(id, name, fees, duration, mode, description, course_category_id)),
+          direct_courses:courses!courses_institute_id_fkey(id, name, fees, duration, mode, description, course_category_id)
         `)
         .eq("slug", slug!)
         .maybeSingle();
@@ -39,10 +40,13 @@ const InstitutePage = () => {
     enabled: !!slug,
   });
 
-  const linkedCourses = useMemo(
-    () => (institute?.institute_courses || []).map((r: any) => r.course).filter(Boolean),
-    [institute]
-  );
+  const linkedCourses = useMemo(() => {
+    const fromJoin = (institute?.institute_courses || []).map((r: any) => r.course).filter(Boolean);
+    const direct = (institute?.direct_courses || []).filter(Boolean);
+    const map = new Map<string, any>();
+    [...fromJoin, ...direct].forEach((c: any) => { if (c?.id) map.set(c.id, c); });
+    return Array.from(map.values());
+  }, [institute]);
 
   // Render every enabled section that has data, in the canonical order.
   const activeSections = useMemo(() => {
