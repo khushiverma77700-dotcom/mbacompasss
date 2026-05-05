@@ -8,19 +8,39 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import SEOHead, { generateInstituteSchema } from "@/components/SEOHead";
 import {
   ArrowLeft, MapPin, Star, Building2, Globe, Phone, Mail, MessageCircle,
   ChevronRight, Users, Award, Sparkles, CheckCircle2, ShieldCheck, TrendingUp,
-  GraduationCap, Calendar, BookOpen, Clock, Trophy
+  GraduationCap, Calendar, BookOpen, Clock, Trophy, X
 } from "lucide-react";
 import InstituteSectionRenderer from "@/components/institute/InstituteSectionRenderer";
 import { INSTITUTE_SECTIONS, getSection, isSectionEmpty } from "@/lib/instituteSections";
 
+function stripHtml(html: string, max = 160): string {
+  if (!html) return "";
+  const text = html
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/\s+/g, " ")
+    .replace(/\[src:[^\]]+\]/g, "")
+    .replace(/Quick Summary:\s*/i, "")
+    .trim();
+  return text.length > max ? text.slice(0, max).trimEnd() + "…" : text;
+}
+
 const InstitutePage = () => {
   const { slug } = useParams<{ slug: string }>();
   const [activeId, setActiveId] = useState<string>("");
+  const [openCourse, setOpenCourse] = useState<any | null>(null);
 
   const { data: institute, isLoading } = useQuery({
     queryKey: ["institute_full", slug],
@@ -29,8 +49,8 @@ const InstitutePage = () => {
         .from("institutes")
         .select(`
           *,
-          institute_courses(course:courses(id, name, fees, duration, mode, description, course_category_id)),
-          direct_courses:courses!courses_institute_id_fkey(id, name, fees, duration, mode, description, course_category_id)
+          institute_courses(course:courses(id, name, fees, duration, mode, description, course_category_id, curriculum, highlights, eligibility, batch_info, start_date, brochure_url, discount_text, total_seats, rating)),
+          direct_courses:courses!courses_institute_id_fkey(id, name, fees, duration, mode, description, course_category_id, curriculum, highlights, eligibility, batch_info, start_date, brochure_url, discount_text, total_seats, rating)
         `)
         .eq("slug", slug!)
         .maybeSingle();
@@ -287,17 +307,17 @@ const InstitutePage = () => {
             <aside className="hidden lg:block">
               <div className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto space-y-1 bg-white border rounded-xl p-3 shadow-sm">
                 <div className="text-xs font-semibold uppercase text-muted-foreground mb-2 px-2">On this page</div>
-                {linkedCourses.length > 0 && (
-                  <a href="#courses" className={`block text-sm px-3 py-2 rounded-lg transition hover:bg-sky-50 ${activeId === "courses" ? "bg-sky-50 text-sky-700 font-semibold border-l-2 border-sky-600" : "text-slate-600"}`}>
-                    Courses ({linkedCourses.length})
-                  </a>
-                )}
                 {activeSections.map((s) => (
                   <a key={s.id} href={`#sec-${s.id}`}
                     className={`block text-sm px-3 py-2 rounded-lg transition hover:bg-sky-50 ${activeId === s.id ? "bg-sky-50 text-sky-700 font-semibold border-l-2 border-sky-600" : "text-slate-600"}`}>
                     {s.label}
                   </a>
                 ))}
+                {linkedCourses.length > 0 && (
+                  <a href="#courses" className={`block text-sm px-3 py-2 rounded-lg transition hover:bg-sky-50 ${activeId === "courses" ? "bg-sky-50 text-sky-700 font-semibold border-l-2 border-sky-600" : "text-slate-600"}`}>
+                    Courses ({linkedCourses.length})
+                  </a>
+                )}
                 <a href="#enquiry" className="block text-sm px-3 py-2 rounded-lg text-sky-700 font-semibold hover:bg-sky-50 mt-2 border-t pt-3">
                   Enquire Now →
                 </a>
@@ -311,91 +331,16 @@ const InstitutePage = () => {
             {(activeSections.length > 0 || linkedCourses.length > 0) && (
               <div className="lg:hidden -mx-4 px-4 overflow-x-auto sticky top-14 z-30 bg-white/90 backdrop-blur border-b py-2">
                 <div className="flex gap-2 whitespace-nowrap">
-                  {linkedCourses.length > 0 && <a href="#courses" className="text-sm border rounded-full px-3 py-1.5 bg-white">Courses</a>}
                   {activeSections.map((s) => (
                     <a key={s.id} href={`#sec-${s.id}`} className="text-sm border rounded-full px-3 py-1.5 bg-white">{s.label}</a>
                   ))}
+                  {linkedCourses.length > 0 && <a href="#courses" className="text-sm border rounded-full px-3 py-1.5 bg-white">Courses</a>}
                 </div>
               </div>
             )}
 
-            {/* Linked courses */}
-            {linkedCourses.length > 0 && (
-              <SectionShell
-                id="courses"
-                eyebrow="Programs"
-                title={`Courses Offered (${linkedCourses.length})`}
-              >
-                <p className="text-sm text-slate-600 -mt-2 mb-5">
-                  Every program currently linked to {institute.name}. Tap a card for full details, fees, batch dates and mentors.
-                </p>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {linkedCourses.map((c: any, i: number) => {
-                    const accents = [
-                      "from-sky-500 to-blue-600",
-                      "from-emerald-500 to-teal-600",
-                      "from-amber-500 to-orange-600",
-                      "from-violet-500 to-fuchsia-600",
-                      "from-rose-500 to-pink-600",
-                    ];
-                    const accent = accents[i % accents.length];
-                    return (
-                      <div
-                        key={c.id}
-                        className="group relative rounded-2xl border border-sky-100 bg-white p-5 shadow-sm hover:shadow-lg hover:border-sky-300 transition-all overflow-hidden"
-                      >
-                        <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${accent}`} />
-                        <div className="flex items-start gap-3">
-                          <div className={`shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br ${accent} text-white grid place-items-center shadow-md`}>
-                            <GraduationCap className="w-5 h-5" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-slate-900 leading-snug line-clamp-2 group-hover:text-sky-700 transition-colors">
-                              {c.name}
-                            </h3>
-                            {c.description && (
-                              <p className="text-xs text-slate-600 mt-1.5 line-clamp-2 leading-relaxed">
-                                {c.description}
-                              </p>
-                            )}
-                          </div>
-                        </div>
+            {/* (courses moved below sections) */}
 
-                        <div className="mt-4 flex flex-wrap gap-1.5">
-                          {c.mode && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-100">
-                              <BookOpen className="w-3 h-3" /> {c.mode}
-                            </span>
-                          )}
-                          {c.duration && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
-                              <Clock className="w-3 h-3" /> {c.duration}
-                            </span>
-                          )}
-                          {c.fees && (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-100">
-                              ₹{c.fees}
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-                          <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
-                            Program #{i + 1}
-                          </span>
-                          <a
-                            href="#contact"
-                            className="inline-flex items-center gap-1 text-sm font-semibold text-sky-700 hover:text-sky-900"
-                          >
-                            Enquire <ChevronRight className="w-4 h-4" />
-                          </a>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </SectionShell>
-            )}
 
 
             {/* Dynamic sections */}
@@ -413,6 +358,99 @@ const InstitutePage = () => {
                 </SectionShell>
               );
             })}
+
+            {/* Linked courses — moved below sections */}
+            {linkedCourses.length > 0 && (
+              <SectionShell
+                id="courses"
+                eyebrow="Programs"
+                title={`Courses Offered (${linkedCourses.length})`}
+                subtitle={`Explore every program currently offered by ${institute.name}. Click a card for full details, fees, batch dates, curriculum and mentors.`}
+              >
+                <div className="grid sm:grid-cols-2 gap-5">
+                  {linkedCourses.map((c: any, i: number) => {
+                    const accents = [
+                      "from-sky-500 to-blue-600",
+                      "from-emerald-500 to-teal-600",
+                      "from-amber-500 to-orange-600",
+                      "from-violet-500 to-fuchsia-600",
+                      "from-rose-500 to-pink-600",
+                    ];
+                    const accent = accents[i % accents.length];
+                    const preview = stripHtml(c.description || "", 180);
+                    const highlights: string[] = Array.isArray(c.highlights) ? c.highlights : [];
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setOpenCourse(c)}
+                        className="group relative rounded-2xl border border-sky-100 bg-white p-5 text-left shadow-sm hover:shadow-xl hover:border-sky-300 hover:-translate-y-0.5 transition-all overflow-hidden"
+                      >
+                        <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${accent}`} />
+                        <div className="flex items-start gap-3">
+                          <div className={`shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br ${accent} text-white grid place-items-center shadow-md`}>
+                            <GraduationCap className="w-6 h-6" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Program #{String(i + 1).padStart(2, "0")}</div>
+                            <h3 className="font-bold text-[15px] text-slate-900 leading-snug line-clamp-2 group-hover:text-sky-700 transition-colors mt-0.5">
+                              {c.name}
+                            </h3>
+                          </div>
+                        </div>
+
+                        {preview && (
+                          <p className="mt-3 text-[13px] text-slate-600 line-clamp-3 leading-relaxed">
+                            {preview}
+                          </p>
+                        )}
+
+                        {highlights.length > 0 && (
+                          <ul className="mt-3 space-y-1.5">
+                            {highlights.slice(0, 3).map((h, idx) => (
+                              <li key={idx} className="flex items-start gap-1.5 text-[12px] text-slate-700">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                                <span className="line-clamp-1">{h}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+
+                        <div className="mt-4 flex flex-wrap gap-1.5">
+                          {c.mode && (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-100">
+                              <BookOpen className="w-3 h-3" /> {c.mode}
+                            </span>
+                          )}
+                          {c.duration && (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                              <Clock className="w-3 h-3" /> {c.duration}
+                            </span>
+                          )}
+                          {c.fees && (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-100">
+                              ₹{typeof c.fees === "number" ? c.fees.toLocaleString("en-IN") : c.fees}
+                            </span>
+                          )}
+                          {c.start_date && (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-violet-50 text-violet-700 border border-violet-100">
+                              <Calendar className="w-3 h-3" /> {c.start_date}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                          <span className="text-[11px] text-slate-500 font-medium">View full details</span>
+                          <span className="inline-flex items-center gap-1 text-sm font-semibold text-sky-700 group-hover:text-sky-900">
+                            Open <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </SectionShell>
+            )}
 
             {/* Why choose strip (always-on, content varies) */}
             <section className="rounded-2xl bg-gradient-to-br from-sky-600 to-blue-700 text-white p-6 md:p-8 shadow-lg">
@@ -490,6 +528,92 @@ const InstitutePage = () => {
           </a>
         )}
       </div>
+
+      {/* Course detail dialog */}
+      <Dialog open={!!openCourse} onOpenChange={(v) => !v && setOpenCourse(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {openCourse && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center gap-3">
+                  <div className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 text-white grid place-items-center shadow-md">
+                    <GraduationCap className="w-6 h-6" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[11px] uppercase tracking-wider text-sky-700 font-bold">{institute.name}</div>
+                    <DialogTitle className="text-xl text-left leading-tight">{openCourse.name}</DialogTitle>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {openCourse.mode && <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-100"><BookOpen className="w-3 h-3" /> {openCourse.mode}</span>}
+                {openCourse.duration && <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100"><Clock className="w-3 h-3" /> {openCourse.duration}</span>}
+                {openCourse.fees && <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-100">₹{typeof openCourse.fees === "number" ? openCourse.fees.toLocaleString("en-IN") : openCourse.fees}</span>}
+                {openCourse.start_date && <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-violet-50 text-violet-700 border border-violet-100"><Calendar className="w-3 h-3" /> {openCourse.start_date}</span>}
+                {openCourse.eligibility && <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-slate-50 text-slate-700 border border-slate-200">Eligibility: {openCourse.eligibility}</span>}
+              </div>
+
+              {Array.isArray(openCourse.highlights) && openCourse.highlights.length > 0 && (
+                <div className="mt-5">
+                  <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Key Highlights</h4>
+                  <ul className="mt-2 grid sm:grid-cols-2 gap-1.5">
+                    {openCourse.highlights.map((h: string, i: number) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                        <span>{h}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {openCourse.description && (
+                <div className="mt-5">
+                  <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">About this Program</h4>
+                  <div
+                    className="prose prose-sm max-w-none prose-headings:text-slate-900 prose-a:text-sky-700 prose-table:text-sm"
+                    dangerouslySetInnerHTML={{ __html: openCourse.description }}
+                  />
+                </div>
+              )}
+
+              {Array.isArray(openCourse.curriculum) && openCourse.curriculum.length > 0 && (
+                <div className="mt-5">
+                  <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Curriculum</h4>
+                  <ol className="mt-2 grid sm:grid-cols-2 gap-1.5 list-decimal list-inside text-sm text-slate-700">
+                    {openCourse.curriculum.map((m: string, i: number) => (
+                      <li key={i}>{m}</li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+
+              {openCourse.batch_info && (
+                <div className="mt-5 rounded-xl border border-sky-100 bg-sky-50/50 p-3 text-sm text-slate-700">
+                  <span className="font-semibold text-sky-800">Batch info: </span>{openCourse.batch_info}
+                </div>
+              )}
+
+              <div className="mt-6 flex flex-wrap gap-2">
+                <a href="#enquiry" onClick={() => setOpenCourse(null)} className="flex-1">
+                  <Button className="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700">Enquire about this course</Button>
+                </a>
+                {openCourse.brochure_url && (
+                  <a href={openCourse.brochure_url} target="_blank" rel="noreferrer">
+                    <Button variant="outline">Download brochure</Button>
+                  </a>
+                )}
+                {institute.phone && (
+                  <a href={`tel:${institute.phone}`}>
+                    <Button variant="outline" className="gap-1.5"><Phone className="w-4 h-4" /> Call</Button>
+                  </a>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
