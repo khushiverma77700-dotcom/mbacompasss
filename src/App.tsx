@@ -445,17 +445,37 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   </>
 );
 
-// Reserve viewport space while a lazy page chunk loads so the Footer (which
-// renders after children) cannot float up and appear at the top of the screen.
-const LazyPage = ({ children }: { children: React.ReactNode }) => (
-  <Suspense fallback={<div style={{ minHeight: "100vh" }} aria-hidden="true" />}>{children}</Suspense>
+// Top progress bar shown while a lazy route chunk is loading. Avoids the
+// "white screen" between clicks — the previous page stays visible (thanks to
+// the deferred Routes location below) and only this thin bar indicates work.
+const TopProgressBar = () => (
+  <div
+    aria-hidden="true"
+    style={{
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      height: 3,
+      zIndex: 9999,
+      background: "linear-gradient(90deg, transparent, hsl(210 90% 55%), transparent)",
+      backgroundSize: "200% 100%",
+      animation: "lov-route-progress 1s linear infinite",
+      pointerEvents: "none",
+    }}
+  />
 );
 
-// For routes nested INSIDE a layout that already renders chrome (sidebar/header),
-// reserve only enough space to keep the main scroll area stable — using 100vh here
-// causes the parent layout to jump while the child chunk loads.
+// Suspense fallback for a lazy page. We render NOTHING visible (no 100vh
+// placeholder) so the previous page remains on screen while the new chunk
+// downloads — eliminating the white flash. A top progress bar is shown
+// globally via DeferredRoutes whenever the deferred location is stale.
+const LazyPage = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={null}>{children}</Suspense>
+);
+
 const InnerLazyPage = ({ children }: { children: React.ReactNode }) => (
-  <Suspense fallback={<div style={{ minHeight: "60vh" }} aria-hidden="true" />}>{children}</Suspense>
+  <Suspense fallback={null}>{children}</Suspense>
 );
 
 const OnboardingGate = () => {
