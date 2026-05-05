@@ -331,10 +331,10 @@ const InstitutePage = () => {
             {(activeSections.length > 0 || linkedCourses.length > 0) && (
               <div className="lg:hidden -mx-4 px-4 overflow-x-auto sticky top-14 z-30 bg-white/90 backdrop-blur border-b py-2">
                 <div className="flex gap-2 whitespace-nowrap">
-                  {linkedCourses.length > 0 && <a href="#courses" className="text-sm border rounded-full px-3 py-1.5 bg-white">Courses</a>}
                   {activeSections.map((s) => (
                     <a key={s.id} href={`#sec-${s.id}`} className="text-sm border rounded-full px-3 py-1.5 bg-white">{s.label}</a>
                   ))}
+                  {linkedCourses.length > 0 && <a href="#courses" className="text-sm border rounded-full px-3 py-1.5 bg-white">Courses</a>}
                 </div>
               </div>
             )}
