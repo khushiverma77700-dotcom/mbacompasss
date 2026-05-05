@@ -568,7 +568,7 @@ const App = () => (
         <AuthProvider>
           <OAuthRedirectHandler />
           <OnboardingGate />
-          <Routes>
+          <DeferredRoutes>
             <Route path="/admin" element={<LazyPage><AdminLayout /></LazyPage>}>
               <Route index element={<LazyPage><AdminDashboard /></LazyPage>} />
               <Route path="institutes" element={<LazyPage><AdminInstitutes /></LazyPage>} />
