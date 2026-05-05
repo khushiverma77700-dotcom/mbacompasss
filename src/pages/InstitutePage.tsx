@@ -26,7 +26,7 @@ const InstitutePage = () => {
         .from("institutes")
         .select(`
           *,
-          institute_courses(course:courses(id, name, slug, fees, duration, mode, description, category_id))
+          institute_courses(course:courses(id, name, fees, duration, mode, description, course_category_id))
         `)
         .eq("slug", slug!)
         .maybeSingle();
