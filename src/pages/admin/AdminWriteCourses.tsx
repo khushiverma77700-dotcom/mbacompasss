@@ -196,25 +196,36 @@ const AdminWriteCourses = () => {
     setGenerating(true);
     setErrorMsg(null);
     try {
-      const { data, error } = await supabase.functions.invoke("ai-course-writer", {
-        body: {
-          mode: "generate",
-          contentDateContext,
-          institute: {
-            name: selectedInst.name,
-            city: selectedInst.city || undefined,
-            state: selectedInst.state || undefined,
-            mode: selectedInst.mode || undefined,
-            website: selectedInst.website || undefined,
-            examFocus,
+      // Chunk to avoid edge function 150s timeout. Generate 2 courses per call.
+      const CHUNK = 2;
+      const chunks: typeof seeds[] = [];
+      for (let i = 0; i < seeds.length; i += CHUNK) chunks.push(seeds.slice(i, i + CHUNK));
+      const all: Omit<GeneratedCourse, "_save">[] = [];
+      let idx = 0;
+      for (const chunk of chunks) {
+        idx += 1;
+        toast({ title: `Generating ${idx}/${chunks.length}…`, description: `${chunk.length} course(s) in this batch` });
+        const { data, error } = await supabase.functions.invoke("ai-course-writer", {
+          body: {
+            mode: "generate",
+            contentDateContext,
+            institute: {
+              name: selectedInst.name,
+              city: selectedInst.city || undefined,
+              state: selectedInst.state || undefined,
+              mode: selectedInst.mode || undefined,
+              website: selectedInst.website || undefined,
+              examFocus,
+            },
+            courses: chunk,
           },
-          courses: seeds,
-        },
-      });
-      if (error) throw error;
-      const gen = (data?.courses || []) as Omit<GeneratedCourse, "_save">[];
-      setGenerated(gen.map((g) => ({ ...g, _save: true })));
-      toast({ title: `Generated ${gen.length} courses`, description: "Review the results and save what you like." });
+        });
+        if (error) throw error;
+        const gen = (data?.courses || []) as Omit<GeneratedCourse, "_save">[];
+        all.push(...gen);
+        setGenerated((prev) => [...all].map((g) => ({ ...g, _save: true })));
+      }
+      toast({ title: `Generated ${all.length} courses`, description: "Review the results and save what you like." });
     } catch (e: any) {
       setErrorMsg(e?.message || "Generation failed");
       toast({ title: "Generation failed", description: e?.message, variant: "destructive" });
