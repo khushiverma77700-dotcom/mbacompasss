@@ -73,6 +73,10 @@ const AISeoInstitutePanel = ({ open, onOpenChange, institute, sections, onApply 
           body: {
             instituteName: institute.name,
             city: institute.city || "",
+            state: institute.state || "",
+            mode: institute.mode || "",
+            sourceUrl: sourceUrl?.trim() || institute?.website || "",
+            strict: STRICT_KINDS.has(r.id),
             primaryKeyword: primaryKw,
             secondaryKeywords: institute?.keywords || [],
             sectionId: r.id,
