@@ -85,6 +85,7 @@ const InstitutePage = () => {
     );
   }
 
+  const inst = institute as any;
   const isHybrid = institute.institute_type === "hybrid";
   const seoSchema = generateInstituteSchema(institute);
 
