@@ -59,15 +59,25 @@ const AICoachingInstituteDialog = ({ open, onOpenChange, defaults, onGenerated }
   const [secondary, setSecondary] = useState<string[]>([]);
   const [exams, setExams] = useState<string[]>(EXAM_DEFAULTS);
   const [flagship, setFlagship] = useState<string[]>([]);
+  const [sourceUrl, setSourceUrl] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const showLocation = mode !== "Online"; // Online → no state/city; Offline required; Hybrid optional
 
   const submit = async () => {
     if (!name.trim()) return toast({ title: "Institute name is required", variant: "destructive" });
     if (!primaryKeyword.trim()) return toast({ title: "Primary keyword is required", variant: "destructive" });
+    if (mode === "Offline" && (!state || !city)) {
+      return toast({ title: "Offline mode requires state & city", variant: "destructive" });
+    }
     setLoading(true);
     try {
+      const cleanCity = mode === "Online" ? "" : city;
+      const cleanState = mode === "Online" ? "" : state;
       const brief = {
-        name: name.trim(), website: website.trim() || undefined, city: city || undefined, state: state || undefined,
+        name: name.trim(), website: website.trim() || undefined,
+        sourceUrl: sourceUrl.trim() || website.trim() || undefined,
+        city: cleanCity || undefined, state: cleanState || undefined,
         mode, instituteType, primaryKeyword: primaryKeyword.trim(), secondaryKeywords: secondary,
         examFocus: exams, flagshipPrograms: flagship,
       };
