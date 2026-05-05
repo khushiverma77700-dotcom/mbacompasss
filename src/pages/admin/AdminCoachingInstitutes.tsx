@@ -33,6 +33,7 @@ const AdminCoachingInstitutes = () => {
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
   const [newType, setNewType] = useState<"city" | "hybrid">("city");
+  const [showAI, setShowAI] = useState(false);
   const { toast } = useToast();
 
   const load = async () => {
