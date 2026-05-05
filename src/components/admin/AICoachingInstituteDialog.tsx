@@ -59,15 +59,25 @@ const AICoachingInstituteDialog = ({ open, onOpenChange, defaults, onGenerated }
   const [secondary, setSecondary] = useState<string[]>([]);
   const [exams, setExams] = useState<string[]>(EXAM_DEFAULTS);
   const [flagship, setFlagship] = useState<string[]>([]);
+  const [sourceUrl, setSourceUrl] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const showLocation = mode !== "Online"; // Online → no state/city; Offline required; Hybrid optional
 
   const submit = async () => {
     if (!name.trim()) return toast({ title: "Institute name is required", variant: "destructive" });
     if (!primaryKeyword.trim()) return toast({ title: "Primary keyword is required", variant: "destructive" });
+    if (mode === "Offline" && (!state || !city)) {
+      return toast({ title: "Offline mode requires state & city", variant: "destructive" });
+    }
     setLoading(true);
     try {
+      const cleanCity = mode === "Online" ? "" : city;
+      const cleanState = mode === "Online" ? "" : state;
       const brief = {
-        name: name.trim(), website: website.trim() || undefined, city: city || undefined, state: state || undefined,
+        name: name.trim(), website: website.trim() || undefined,
+        sourceUrl: sourceUrl.trim() || website.trim() || undefined,
+        city: cleanCity || undefined, state: cleanState || undefined,
         mode, instituteType, primaryKeyword: primaryKeyword.trim(), secondaryKeywords: secondary,
         examFocus: exams, flagshipPrograms: flagship,
       };
@@ -129,7 +139,23 @@ const AICoachingInstituteDialog = ({ open, onOpenChange, defaults, onGenerated }
               </Select>
             </div>
           </div>
-          <StateCitySelect state={state} city={city} onStateChange={(s) => { setState(s); setCity(""); }} onCityChange={setCity} showLabels />
+          <div>
+            <Label>Official Source URL (strict grounding)</Label>
+            <Input value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder="https://imsindia.com/cat-coaching" />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Program details, courses, fees, faculty & batch info will be drawn strictly from this URL. Reviews/testimonials/FAQs may use broader public knowledge.
+            </p>
+          </div>
+          {showLocation ? (
+            <div>
+              <Label className="text-xs">Location {mode === "Offline" ? <span className="text-destructive">*</span> : <span className="text-muted-foreground">(optional for Hybrid)</span>}</Label>
+              <StateCitySelect state={state} city={city} onStateChange={(s) => { setState(s); setCity(""); }} onCityChange={setCity} showLabels={false} />
+            </div>
+          ) : (
+            <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground bg-muted/30">
+              Online-only institute — state & city are not required. The page will target nationwide search intent.
+            </div>
+          )}
           <div>
             <Label>Secondary Keywords</Label>
             <ChipInput values={secondary} onChange={setSecondary} placeholder="e.g. CAT classroom coaching, GMAT prep" />

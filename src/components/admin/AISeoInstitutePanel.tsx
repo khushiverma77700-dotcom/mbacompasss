@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Sparkles, CheckCircle2, AlertTriangle, RefreshCcw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2, Sparkles, CheckCircle2, AlertTriangle, RefreshCcw, Link2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { INSTITUTE_SECTIONS, getSection } from "@/lib/instituteSections";
@@ -19,12 +21,14 @@ interface Props {
 
 type RowState = { id: string; label: string; status: "skip" | "pending" | "running" | "done" | "error"; before: number; after?: number; message?: string };
 
+const STRICT_KINDS = new Set(["fees", "study_material", "mock_tests", "admission_process", "eligibility", "scholarships", "demo_classes", "doubt_solving", "infrastructure", "tech_platform", "batch_details"]);
 const PROSE_KINDS = new Set(["overview", "teaching_methodology", "results", "fees", "study_material", "mock_tests", "admission_process", "eligibility", "scholarships", "demo_classes", "doubt_solving", "mentorship", "infrastructure", "tech_platform", "batch_details"]);
 
 const AISeoInstitutePanel = ({ open, onOpenChange, institute, sections, onApply }: Props) => {
   const { toast } = useToast();
   const [auditing, setAuditing] = useState(false);
   const [rewriting, setRewriting] = useState(false);
+  const [sourceUrl, setSourceUrl] = useState<string>(institute?.website || "");
   const [rows, setRows] = useState<RowState[]>([]);
 
   const primaryKw = institute?.primary_keyword || institute?.meta_title || institute?.name || "";
@@ -69,6 +73,10 @@ const AISeoInstitutePanel = ({ open, onOpenChange, institute, sections, onApply 
           body: {
             instituteName: institute.name,
             city: institute.city || "",
+            state: institute.state || "",
+            mode: institute.mode || "",
+            sourceUrl: sourceUrl?.trim() || institute?.website || "",
+            strict: STRICT_KINDS.has(r.id),
             primaryKeyword: primaryKw,
             secondaryKeywords: institute?.keywords || [],
             sectionId: r.id,
@@ -111,6 +119,14 @@ const AISeoInstitutePanel = ({ open, onOpenChange, institute, sections, onApply 
         </DialogHeader>
 
         <div className="space-y-4">
+          <div className="rounded-md border p-3 bg-background space-y-2">
+            <Label className="text-xs font-semibold flex items-center gap-1"><Link2 className="w-3 h-3" /> Official Source URL (strict grounding for factual sections)</Label>
+            <Input value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder="https://imsindia.com/cat-coaching" />
+            <p className="text-[11px] text-muted-foreground">
+              Fees, courses, batch, faculty, eligibility, scholarships, infrastructure, demo and tech sections will be rewritten <strong>strictly from this URL</strong>. Reviews, FAQs and overview may use broader public knowledge.
+            </p>
+          </div>
+
           <div className="rounded-md border p-3 bg-muted/30">
             <div className="text-xs font-semibold mb-2">Page-level signals</div>
             <div className="flex flex-wrap gap-2 text-xs">
