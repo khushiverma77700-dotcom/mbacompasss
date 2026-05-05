@@ -39,6 +39,7 @@ const CollegesPage = lazyWithPreload(() => import("./pages/CollegesPage"));
 const CoachingPage = lazyWithPreload(() => import("./pages/CoachingPage"));
 const AuthPage = lazyWithPreload(() => import("./pages/AuthPage"));
 const InstitutePage = lazyWithPreload(() => import("./pages/InstitutePage"));
+const InstituteCoursePage = lazyWithPreload(() => import("./pages/InstituteCoursePage"));
 const ComparePage = lazyWithPreload(() => import("./pages/ComparePage"));
 const ArticlePage = lazyWithPreload(() => import("./pages/ArticlePage"));
 const ExamDetailPage = lazyWithPreload(() => import("./pages/ExamDetailPage"));
