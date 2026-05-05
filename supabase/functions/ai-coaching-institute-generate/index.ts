@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
 # INSTITUTE
 - Name: ${brief.name}
 - Website: ${brief.website || "(use the official site if you know it; else leave empty)"}
-- Official source URL: ${sourceUrl || "(none — use only well-established public knowledge)"}
+
 - City: ${brief.city || (mode === "Online" ? "(none — Online only, nationwide)" : "(use the actual HQ / primary centre city; never guess)")}
 - State: ${brief.state || ""}
 - Mode: ${mode}
