@@ -99,8 +99,8 @@ const InstitutePage = () => {
     institute.rating && {
       icon: Star, label: "Rating", value: `${institute.rating}/5`
     },
-    institute.years_experience && {
-      icon: Award, label: "Experience", value: `${institute.years_experience}+ yrs`
+    (institute as any).years_experience && {
+      icon: Award, label: "Experience", value: `${(institute as any).years_experience}+ yrs`
     },
   ].filter(Boolean) as { icon: any; label: string; value: string }[];
 
@@ -181,9 +181,9 @@ const InstitutePage = () => {
                       <Star className="w-3.5 h-3.5 fill-current" /> {institute.rating}
                     </span>
                   ) : null}
-                  {institute.established_year && (
+                  {(institute as any).established_year && (
                     <span className="inline-flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5" /> Est. {institute.established_year}
+                      <Calendar className="w-3.5 h-3.5" /> Est. {(institute as any).established_year}
                     </span>
                   )}
                 </div>
