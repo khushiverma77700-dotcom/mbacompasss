@@ -115,6 +115,20 @@ const InstitutePage = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, [activeSections]);
 
+  // Auto-scroll the sidebar TOC so the active item stays visible
+  useEffect(() => {
+    if (!activeId) return;
+    const container = document.getElementById("toc-scroll");
+    const item = document.getElementById(`toc-link-${activeId}`);
+    if (!container || !item) return;
+    const cRect = container.getBoundingClientRect();
+    const iRect = item.getBoundingClientRect();
+    if (iRect.top < cRect.top + 16 || iRect.bottom > cRect.bottom - 16) {
+      const offset = item.offsetTop - container.clientHeight / 2 + item.clientHeight / 2;
+      container.scrollTo({ top: offset, behavior: "smooth" });
+    }
+  }, [activeId]);
+
   if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-10 max-w-6xl space-y-4">
