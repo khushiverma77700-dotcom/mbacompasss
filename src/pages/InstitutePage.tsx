@@ -257,7 +257,7 @@ const InstitutePage = () => {
                   )}
                 </div>
                 {institute.description && (
-                  <p className="mt-4 text-[15px] text-slate-700 max-w-3xl leading-relaxed">{institute.description}</p>
+                  <p className="mt-4 text-[15px] text-slate-700 max-w-3xl leading-relaxed">{stripHtml(institute.description, 320)}</p>
                 )}
                 <div className="mt-6 flex flex-wrap gap-2.5">
                   <a href="#enquiry">
