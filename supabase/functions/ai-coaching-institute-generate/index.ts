@@ -300,8 +300,8 @@ Deno.serve(async (req) => {
       },
     };
 
-    const aiRes = await callAIGateway({
-      model: "google/gemini-2.5-pro",
+    const aiRes = await callOpenAI({
+      model: OPENAI_MODEL,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
@@ -309,7 +309,22 @@ Deno.serve(async (req) => {
       tools: [tool],
       tool_choice: { type: "function", function: { name: "publish_full_institute_profile" } },
       max_tokens: 16000,
-    }, { feature: "ai-coaching-institute-generate" });
+    });
+
+    if (!aiRes.ok) {
+      const txt = await aiRes.text();
+      console.error("OpenAI error", aiRes.status, txt);
+      const status = aiRes.status === 429 || aiRes.status === 402 ? aiRes.status : 500;
+      const msg = aiRes.status === 429 ? "Rate limit reached. Please try again in a minute."
+        : aiRes.status === 402 ? "OpenAI credits exhausted. Add funds to your OpenAI account."
+        : "AI generation failed";
+      return new Response(JSON.stringify({ error: msg, detail: txt.slice(0, 400) }), {
+        status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const aiJson = await aiRes.json();
+    await logAIUsage("ai-coaching-institute-generate", OPENAI_MODEL, aiJson);
 
     if (!aiRes.ok) {
       const txt = await aiRes.text();
