@@ -352,16 +352,6 @@ const AdminCoachingInstituteDetail = () => {
         }}
       />
 
-      <AISeoInstitutePanel
-        open={showSeo}
-        onOpenChange={setShowSeo}
-        institute={inst}
-        sections={sections}
-        onApply={async ({ sections: nextSections }) => {
-          setSections(nextSections);
-          await supabase.from("institutes").update({ sections: nextSections }).eq("id", id!);
-        }}
-      />
     </div>
   );
 };
