@@ -13,8 +13,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import {
   FileText, Loader2, Building2, BookOpen, ExternalLink, ArrowLeft,
-  CheckCircle2, AlertCircle, Search, Download, Sparkles, RefreshCw, ChevronRight,
+  CheckCircle2, AlertCircle, Search, Download, Sparkles, RefreshCw, ChevronRight, Wand2,
 } from "lucide-react";
+import { buildStoredSeoSnapshot, saveSeoSnapshot } from "@/lib/seoAutomation";
 
 /* ============================================================
    Coaching Detailed SEO Reports
@@ -54,6 +55,8 @@ type Report = {
   assembled?: any;
   competitors?: any[];
   error?: string;
+  applyStatus?: "idle" | "applying" | "applied" | "error";
+  applyError?: string;
 };
 
 const AdminCoachingSEOReports = () => {
