@@ -44,10 +44,15 @@ const InstitutePage = () => {
     [institute]
   );
 
+  // Only render these clean, focused sections on the public page.
+  const FRONTEND_SECTION_IDS = ["overview", "key_highlights", "courses_offered", "results", "faqs"] as const;
   const activeSections = useMemo(() => {
     if (!institute) return [];
     const sections = institute.sections || {};
-    return INSTITUTE_SECTIONS.filter((def) => {
+    const ordered = FRONTEND_SECTION_IDS
+      .map((id) => INSTITUTE_SECTIONS.find((d) => d.id === id))
+      .filter(Boolean) as typeof INSTITUTE_SECTIONS;
+    return ordered.filter((def) => {
       const s = getSection(sections, def.id);
       return s.enabled && !isSectionEmpty(def, s.data);
     });
@@ -316,28 +321,28 @@ const InstitutePage = () => {
 
             {/* Linked courses */}
             {linkedCourses.length > 0 && (
-              <SectionShell id="courses" eyebrow="Programs" title="Courses Available" subtitle="Choose the program that fits your target exam and learning style.">
-                <div className="grid md:grid-cols-2 gap-4">
-                  {linkedCourses.map((c: any) => (
-                    <Card key={c.id} className="group hover:shadow-lg transition border-slate-200 hover:border-sky-300">
-                      <CardContent className="p-5">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="font-semibold text-base text-slate-900 group-hover:text-sky-700 transition">{c.name}</div>
-                          {c.fees && <Badge variant="outline" className="shrink-0">{c.fees}</Badge>}
-                        </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2">
-                          {c.duration && <span className="inline-flex items-center gap-1"><Clock className="w-3 h-3" />{c.duration}</span>}
-                          {c.mode && <span className="inline-flex items-center gap-1"><Globe className="w-3 h-3" />{c.mode}</span>}
-                        </div>
-                        {c.description && <p className="text-sm text-slate-700 mt-3 line-clamp-3 leading-relaxed">{c.description}</p>}
-                        <div className="mt-3 flex items-center gap-2">
-                          <a href="#enquiry" className="text-xs font-semibold text-sky-700 hover:underline inline-flex items-center gap-1">
-                            Enquire <ChevronRight className="w-3 h-3" />
-                          </a>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+              <SectionShell id="courses" eyebrow="Programs" title="Courses Offered">
+                <div className="overflow-x-auto -mx-1 px-1">
+                  <table className="w-full text-sm border-collapse min-w-[480px]">
+                    <thead>
+                      <tr className="text-left bg-sky-50 text-slate-700">
+                        <th className="p-2.5 border-b font-semibold">Course</th>
+                        <th className="p-2.5 border-b font-semibold">Duration</th>
+                        <th className="p-2.5 border-b font-semibold">Mode</th>
+                        <th className="p-2.5 border-b font-semibold">Fees</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {linkedCourses.map((c: any) => (
+                        <tr key={c.id} className="border-b hover:bg-slate-50">
+                          <td className="p-2.5 font-medium text-slate-900">{c.name}</td>
+                          <td className="p-2.5 text-slate-600">{c.duration || "—"}</td>
+                          <td className="p-2.5 text-slate-600">{c.mode || "—"}</td>
+                          <td className="p-2.5 text-slate-600">{c.fees ? `₹${c.fees}` : "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </SectionShell>
             )}
@@ -352,7 +357,6 @@ const InstitutePage = () => {
                   id={`sec-${def.id}`}
                   eyebrow={eyebrow}
                   title={def.label}
-                  subtitle={def.shortHelp}
                 >
                   <InstituteSectionRenderer def={def} data={data} />
                 </SectionShell>
@@ -451,7 +455,7 @@ const SectionShell = ({
       {subtitle && <p className="text-sm text-muted-foreground mt-1 max-w-2xl">{subtitle}</p>}
       <div className="mt-3 h-1 w-12 rounded-full bg-gradient-to-r from-sky-500 to-blue-600" />
     </div>
-    <div className="rounded-2xl border bg-white p-5 md:p-6 shadow-sm">{children}</div>
+    <div className="rounded-2xl border bg-white p-5 md:p-6 shadow-sm overflow-x-auto">{children}</div>
   </section>
 );
 
