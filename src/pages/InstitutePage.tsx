@@ -85,6 +85,7 @@ const InstitutePage = () => {
     );
   }
 
+  const inst = institute as any;
   const isHybrid = institute.institute_type === "hybrid";
   const seoSchema = generateInstituteSchema(institute);
 
@@ -99,8 +100,8 @@ const InstitutePage = () => {
     institute.rating && {
       icon: Star, label: "Rating", value: `${institute.rating}/5`
     },
-    (institute as any).years_experience && {
-      icon: Award, label: "Experience", value: `${(institute as any).years_experience}+ yrs`
+    inst.years_experience && {
+      icon: Award, label: "Experience", value: `${inst.years_experience}+ yrs`
     },
   ].filter(Boolean) as { icon: any; label: string; value: string }[];
 
@@ -181,9 +182,9 @@ const InstitutePage = () => {
                       <Star className="w-3.5 h-3.5 fill-current" /> {institute.rating}
                     </span>
                   ) : null}
-                  {(institute as any).established_year && (
+                  {inst.established_year && (
                     <span className="inline-flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5" /> Est. {(institute as any).established_year}
+                      <Calendar className="w-3.5 h-3.5" /> Est. {inst.established_year}
                     </span>
                   )}
                 </div>
