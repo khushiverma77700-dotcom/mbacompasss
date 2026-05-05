@@ -8,15 +8,34 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import SEOHead, { generateInstituteSchema } from "@/components/SEOHead";
 import {
   ArrowLeft, MapPin, Star, Building2, Globe, Phone, Mail, MessageCircle,
   ChevronRight, Users, Award, Sparkles, CheckCircle2, ShieldCheck, TrendingUp,
-  GraduationCap, Calendar, BookOpen, Clock, Trophy
+  GraduationCap, Calendar, BookOpen, Clock, Trophy, X
 } from "lucide-react";
 import InstituteSectionRenderer from "@/components/institute/InstituteSectionRenderer";
 import { INSTITUTE_SECTIONS, getSection, isSectionEmpty } from "@/lib/instituteSections";
+
+function stripHtml(html: string, max = 160): string {
+  if (!html) return "";
+  const text = html
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/\s+/g, " ")
+    .replace(/\[src:[^\]]+\]/g, "")
+    .replace(/Quick Summary:\s*/i, "")
+    .trim();
+  return text.length > max ? text.slice(0, max).trimEnd() + "…" : text;
+}
 
 const InstitutePage = () => {
   const { slug } = useParams<{ slug: string }>();
