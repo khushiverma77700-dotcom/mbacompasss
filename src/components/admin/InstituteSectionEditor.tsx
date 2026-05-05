@@ -180,7 +180,7 @@ const ListFaculty = ({ value, onChange }: any) => (
             <Textarea className="md:col-span-2" rows={2} placeholder="Past achievements / bio (40–50 words)" value={row.achievements || ""} onChange={(e) => onChange(value.map((r: any, j: number) => j === i ? { ...r, achievements: e.target.value } : r))} />
             <div className="md:col-span-2">
               <Label className="text-xs">Photo</Label>
-              <FileUpload value={row.photo_url || ""} onChange={(url) => onChange(value.map((r: any, j: number) => j === i ? { ...r, photo_url: url } : r))} />
+              <FileUpload bucket="uploads" value={row.photo_url || ""} onChange={(url) => onChange(value.map((r: any, j: number) => j === i ? { ...r, photo_url: url } : r))} />
             </div>
           </div>
         </RowWrap>
@@ -201,7 +201,7 @@ const ListTestimonial = ({ value, onChange }: any) => (
             <Textarea className="md:col-span-2" rows={2} placeholder="Story (20–30 words)" value={row.text || ""} onChange={(e) => onChange(value.map((r: any, j: number) => j === i ? { ...r, text: e.target.value } : r))} />
             <div className="md:col-span-2">
               <Label className="text-xs">Photo (optional)</Label>
-              <FileUpload value={row.photo_url || ""} onChange={(url) => onChange(value.map((r: any, j: number) => j === i ? { ...r, photo_url: url } : r))} />
+              <FileUpload bucket="uploads" value={row.photo_url || ""} onChange={(url) => onChange(value.map((r: any, j: number) => j === i ? { ...r, photo_url: url } : r))} />
             </div>
           </div>
         </RowWrap>
