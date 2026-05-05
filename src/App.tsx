@@ -478,6 +478,22 @@ const InnerLazyPage = ({ children }: { children: React.ReactNode }) => (
   <Suspense fallback={null}>{children}</Suspense>
 );
 
+// Keeps the previous page mounted while the next route's chunk loads. The
+// route tree is rendered against a *deferred* location, so React only swaps
+// it in once the new lazy chunk has resolved. Until then the old page stays
+// visible and a thin top progress bar signals work — no white screen.
+const DeferredRoutes = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
+  const deferredLocation = useDeferredValue(location);
+  const isStale = deferredLocation !== location;
+  return (
+    <>
+      {isStale && <TopProgressBar />}
+      <Routes location={deferredLocation}>{children}</Routes>
+    </>
+  );
+};
+
 const OnboardingGate = () => {
   const { user, loading } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
