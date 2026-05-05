@@ -31,6 +31,7 @@ interface Brief {
   name: string;
   slug?: string;
   website?: string;
+  sourceUrl?: string;            // Official source for strict grounding
   city?: string;
   state?: string;
   mode?: string;                 // Online / Offline / Hybrid
@@ -39,6 +40,25 @@ interface Brief {
   secondaryKeywords?: string[];
   examFocus?: string[];
   flagshipPrograms?: string[];
+}
+
+async function fetchSourceText(url: string): Promise<string> {
+  try {
+    const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 MBAHubBot/1.0" } });
+    if (!res.ok) return "";
+    const html = await res.text();
+    // Strip scripts/styles, then tags, collapse whitespace.
+    const cleaned = html
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    return cleaned.slice(0, 18000);
+  } catch (e) {
+    console.warn("source fetch failed", e);
+    return "";
+  }
 }
 
 Deno.serve(async (req) => {
