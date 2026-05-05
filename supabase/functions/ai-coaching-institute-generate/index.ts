@@ -326,20 +326,7 @@ Deno.serve(async (req) => {
     const aiJson = await aiRes.json();
     await logAIUsage("ai-coaching-institute-generate", OPENAI_MODEL, aiJson);
 
-    if (!aiRes.ok) {
-      const txt = await aiRes.text();
-      console.error("AI gateway error", aiRes.status, txt);
-      const status = aiRes.status === 429 || aiRes.status === 402 ? aiRes.status : 500;
-      const msg = aiRes.status === 429 ? "Rate limit reached. Please try again in a minute."
-        : aiRes.status === 402 ? "AI credits exhausted. Add funds in workspace settings."
-        : "AI generation failed";
-      return new Response(JSON.stringify({ error: msg, detail: txt.slice(0, 400) }), {
-        status, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
-    const aiJson = await aiRes.json();
-    await logAIUsage("ai-coaching-institute-generate", "google/gemini-2.5-pro", aiJson);
     const rawArgs = aiJson?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
     if (!rawArgs) {
       return new Response(JSON.stringify({ error: "AI did not return structured output" }), {
