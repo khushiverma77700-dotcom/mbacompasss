@@ -30,6 +30,8 @@ const AdminCoachingInstituteDetail = () => {
   const [allCourses, setAllCourses] = useState<any[]>([]);
   const [linkedCourseIds, setLinkedCourseIds] = useState<Set<string>>(new Set());
   const [courseSearch, setCourseSearch] = useState("");
+  const [showAI, setShowAI] = useState(false);
+  const [showSeo, setShowSeo] = useState(false);
 
   useEffect(() => {
     if (!id) return;
