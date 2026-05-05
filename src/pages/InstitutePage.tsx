@@ -173,8 +173,8 @@ const InstitutePage = () => {
                   <Badge variant="outline" className="gap-1 bg-white text-[12px] py-0.5">
                     <ShieldCheck className="w-3 h-3 text-emerald-600" /> Verified
                   </Badge>
-                  {institute.category?.name && (
-                    <Badge variant="outline" className="gap-1 bg-white text-[12px] py-0.5">{institute.category.name}</Badge>
+                  {inst.category?.name && (
+                    <Badge variant="outline" className="gap-1 bg-white text-[12px] py-0.5">{inst.category.name}</Badge>
                   )}
                 </div>
                 <h1 className="font-heading text-[30px] md:text-[40px] leading-[1.1] font-extrabold mt-3 tracking-tight text-slate-900">
