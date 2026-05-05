@@ -727,7 +727,7 @@ const App = () => (
             <Route path="/mba-compass/:slug" element={<PublicLayout><LazyPage><MBACompassCourseDetailPage /></LazyPage></PublicLayout>} />
             <Route path="/iim-waitlist-movement" element={<PublicLayout><LazyPage><IIMWaitlistPage /></LazyPage></PublicLayout>} />
             <Route path="*" element={<PublicLayout><LazyPage><NotFound /></LazyPage></PublicLayout>} />
-          </Routes>
+          </DeferredRoutes>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
