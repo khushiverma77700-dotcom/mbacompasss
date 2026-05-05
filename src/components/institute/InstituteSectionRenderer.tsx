@@ -10,13 +10,26 @@ interface Props {
   data: any;
 }
 
+function stripLeadingHeadings(html: string): string {
+  if (!html) return "";
+  let out = html.trim();
+  // Remove repeated leading <h1>..</h1>, <h2>..</h2>, <h3>..</h3> blocks (and surrounding whitespace)
+  // These would just duplicate the SectionShell title.
+  for (let i = 0; i < 4; i++) {
+    const next = out.replace(/^\s*<h[1-3][^>]*>[\s\S]*?<\/h[1-3]>\s*/i, "");
+    if (next === out) break;
+    out = next;
+  }
+  return out;
+}
+
 const InstituteSectionRenderer = ({ def, data }: Props) => {
   switch (def.layout) {
     case "prose":
       return (
         <div
           className="prose prose-slate max-w-none prose-headings:font-bold prose-h2:text-xl prose-h3:text-base prose-h3:mt-5 prose-h3:text-sky-800 prose-p:leading-[1.75] prose-p:text-slate-700 prose-p:text-[15px] prose-li:text-[15px] prose-li:text-slate-700 prose-strong:text-slate-900 prose-a:text-sky-700 prose-a:no-underline hover:prose-a:underline prose-table:text-sm prose-th:bg-sky-50"
-          dangerouslySetInnerHTML={{ __html: data.body || "" }}
+          dangerouslySetInnerHTML={{ __html: stripLeadingHeadings(data.body || "") }}
         />
       );
 
