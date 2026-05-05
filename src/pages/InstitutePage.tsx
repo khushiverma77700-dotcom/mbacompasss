@@ -454,11 +454,10 @@ const InstitutePage = () => {
                     const preview = stripHtml(c.description || "", 180);
                     const highlights: string[] = Array.isArray(c.highlights) ? c.highlights : [];
                     return (
-                      <button
+                      <Link
                         key={c.id}
-                        type="button"
-                        onClick={() => setOpenCourse(c)}
-                        className="group relative rounded-2xl border border-sky-100 bg-white p-5 text-left shadow-sm hover:shadow-xl hover:border-sky-300 hover:-translate-y-0.5 transition-all overflow-hidden"
+                        to={`/institute/${institute.slug}/course/${slugify(c.name || "")}`}
+                        className="group relative rounded-2xl border border-sky-100 bg-white p-5 text-left shadow-sm hover:shadow-xl hover:border-sky-300 hover:-translate-y-0.5 transition-all overflow-hidden block"
                       >
                         <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${accent}`} />
                         <div className="flex items-start gap-3">
