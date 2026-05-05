@@ -128,12 +128,18 @@ const AdminCoachingInstituteDetail = () => {
             <span>{linkedCourseIds.size} courses linked</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {inst.slug && (
             <a href={`/institute/${inst.slug}`} target="_blank" rel="noreferrer">
               <Button variant="outline" size="sm"><ExternalLink className="w-4 h-4 mr-1" /> View live</Button>
             </a>
           )}
+          <Button variant="outline" size="sm" onClick={() => setShowAI(true)}>
+            <Sparkles className="w-4 h-4 mr-1" /> Generate via AI
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setShowSeo(true)}>
+            <Sparkles className="w-4 h-4 mr-1" /> Run AI SEO
+          </Button>
           <Button onClick={saveAll} disabled={saving}>
             {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
             Save changes
