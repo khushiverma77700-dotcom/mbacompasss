@@ -10,8 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Pencil, Trash2, Building2, Globe } from "lucide-react";
+import { Plus, Pencil, Trash2, Building2, Globe, Sparkles } from "lucide-react";
 import { slugify } from "@/lib/slugify";
+import AICoachingInstituteDialog from "@/components/admin/AICoachingInstituteDialog";
 
 type Institute = {
   id: string;
@@ -32,6 +33,7 @@ const AdminCoachingInstitutes = () => {
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
   const [newType, setNewType] = useState<"city" | "hybrid">("city");
+  const [showAI, setShowAI] = useState(false);
   const { toast } = useToast();
 
   const load = async () => {
@@ -88,9 +90,14 @@ const AdminCoachingInstitutes = () => {
           <h1 className="text-2xl font-bold">Coaching Institutes</h1>
           <p className="text-sm text-muted-foreground">Manage city-wise and hybrid (online + offline) institutes.</p>
         </div>
-        <Button onClick={() => setShowCreate(true)}>
-          <Plus className="w-4 h-4 mr-1" /> New Institute
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setShowAI(true)}>
+            <Sparkles className="w-4 h-4 mr-1" /> Generate via AI
+          </Button>
+          <Button onClick={() => setShowCreate(true)}>
+            <Plus className="w-4 h-4 mr-1" /> New Institute
+          </Button>
+        </div>
       </div>
 
       <Tabs value={tab} onValueChange={(v) => setTab(v as any)}>
@@ -157,6 +164,40 @@ const AdminCoachingInstitutes = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AICoachingInstituteDialog
+        open={showAI}
+        onOpenChange={setShowAI}
+        onGenerated={async ({ basic, sections, brief }) => {
+          const slug = (basic.slug || slugify(basic.name || brief.name)).slice(0, 80);
+          const { data, error } = await supabase
+            .from("institutes")
+            .insert({
+              name: basic.name || brief.name,
+              slug,
+              institute_type: brief.instituteType || "hybrid",
+              city: basic.city || brief.city || null,
+              state: basic.state || brief.state || null,
+              description: basic.description || null,
+              website: basic.website || brief.website || null,
+              phone: basic.phone || null,
+              email: basic.email || null,
+              meta_title: basic.meta_title || null,
+              meta_description: basic.meta_description || null,
+              rating: basic.rating || 0,
+              students_count: basic.students_count || 0,
+              success_rate: basic.success_rate || 0,
+              sections,
+            })
+            .select("id")
+            .single();
+          if (error) {
+            toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+            return;
+          }
+          window.location.href = `/admin/coaching-institutes/${data.id}`;
+        }}
+      />
     </div>
   );
 };

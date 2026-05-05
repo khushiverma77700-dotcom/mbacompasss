@@ -1,103 +1,59 @@
-# Admin API Key Manager
+## Goal
+Add proper "Generate via AI" flow + "AI SEO (audit + auto-rewrite)" to the new Coaching Institute admin so the entire 35-section profile + SEO can be produced automatically and Google-rankable.
 
-Build a database-backed secrets registry editable from the admin panel, and migrate all existing edge functions to read keys from it.
+## 1. Generate via AI dialog (new)
+Add a **Generate via AI** button to:
+- `/admin/coaching-institutes` list (top-right next to "Add Institute")
+- `/admin/coaching-institutes/:id` detail page header
 
-## 1. Database
+Clicking it opens a dialog (`AICoachingInstituteDialog`) asking:
+- Institute name *
+- Website
+- City + State (StateCitySelect)
+- Mode (Online / Offline / Hybrid)
+- Primary target keyword *
+- Secondary keywords (chips)
+- Exams covered (chips, defaults: CAT, XAT, NMAT, SNAP, CMAT)
+- Flagship programs (chips, optional)
 
-New table `public.api_credentials`:
-- `key_name` (text, unique) — e.g. `RAZORPAY_KEY_ID`
-- `key_value` (text) — actual secret value
-- `category` (text) — payments / ai / sms / seo / other
-- `description` (text) — human label e.g. "Razorpay Live Key ID"
-- `is_active` (boolean, default true)
-- `last_used_at` (timestamptz)
-- `updated_by` (uuid)
-- standard `id`, `created_at`, `updated_at`
+On submit → calls new edge function `ai-coaching-institute-generate` → on success either:
+- (from list) creates institute row → redirects to its detail page
+- (from detail) overwrites/merges into the current row
 
-**RLS**: Only users with `admin` role can SELECT / INSERT / UPDATE / DELETE. No public read at all. Edge functions bypass RLS via service-role client.
+## 2. New edge function `ai-coaching-institute-generate`
+Tool-calling JSON output that returns BOTH:
+- `basic`: { name, slug, institute_type, city, state, description, website, phone, email, mode, success_rate, students_count, rating, meta_title, meta_description, keywords, primary_keyword }
+- `sections`: object keyed by every `INSTITUTE_SECTIONS` id, each `{ enabled: true, data: <shape matching the field schema> }` — overview, key_highlights, courses_offered, faculty (3-5), pros_cons, why_choose, faqs (5-7), results, fees, locations, social, ctas, etc.
 
-**Audit table** `api_credential_audit`: logs every change (who, when, action, key_name, old/new value masked).
+System prompt re-uses the strict rules from `ai-institute-writer` (MBA-only, no blanks, real ${currentYear} data, semantic HTML, primary keyword in first 100 words, 2 H2s, internal links, last-updated stamp).
 
-## 2. Seeding
+Model: `google/gemini-2.5-flash` (cost-balanced, matches existing institute writer).
 
-Migration seeds rows for every key currently in Supabase Secrets, with empty values. Admin then pastes the actual values into the UI on first visit. (We can't read existing Supabase Secrets programmatically — they have to be re-entered once.)
+## 3. AI SEO button (audit + auto-rewrite)
+New **"Run AI SEO"** button in the editor header (next to Save). Opens `AISeoInstitutePanel`:
 
-Categories seeded:
-- **Payments**: `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`
-- **AI**: `OPENAI_API_KEY`, `GEMINI_API_KEY`
-- **SMS / OTP**: `MSG91_AUTH_KEY`, `MSG91_TEMPLATE_ID`, `FAST2SMS_API_KEY`, `TWILIO_FROM_NUMBER`
-- **SEO / Indexing**: `GOOGLE_INDEXING_SERVICE_ACCOUNT`, `GOOGLE_INDEXING_CLIENT_EMAIL`, `GOOGLE_INDEXING_PRIVATE_KEY`, `GOOGLE_PSI_API_KEY`
-- **Scraping**: `FIRECRAWL_API_KEY`
+Step A — Audit (calls existing `auto-seo-engine` with `mode: "full_audit"`, `contentType: "institute"`, `pageId`).
+Shows scorecard: title, meta, URL, keyword placement, content score, E-E-A-T, image audit (re-uses `seoValidators.ts` chips like `SeoEnhanceFields`).
 
-(Locked-in-Supabase: `LOVABLE_API_KEY`, `SUPABASE_*`, `TWILIO_API_KEY` — these stay in env only, not exposed in admin UI.)
+Step B — Auto-rewrite weak sections.
+Iterates over enabled prose sections (overview, why_choose, methodology, results, fees, etc.). For any section whose body text scores below 70 in `scoreContent` OR fails keyword placement, calls a new edge function `ai-coaching-institute-rewrite-section` which rewrites just that section's HTML with primary keyword + freshness + semantic structure. Updates `sections[id].data` in place and saves. Also runs `mode: "faq_generate"` to refresh FAQ schema.
 
-## 3. Edge function helper
+Live progress list shows each section with status (Skipped / Rewriting / Improved score).
 
-New shared helper `supabase/functions/_shared/getCredential.ts`:
-```
-getCredential(name) → checks in-memory cache (60s TTL)
-                    → falls back to DB lookup
-                    → falls back to Deno.env.get(name)
-                    → throws if missing
-```
-This means: if admin hasn't entered a value yet, function still works using the env var. Once admin saves a value, DB takes over. **Zero downtime migration.**
+## 4. Files
 
-Refactor ~30 edge functions to call `getCredential('RAZORPAY_KEY_SECRET')` instead of `Deno.env.get('RAZORPAY_KEY_SECRET')`. Done in batches by category.
+**New**
+- `supabase/functions/ai-coaching-institute-generate/index.ts` — full profile generator
+- `supabase/functions/ai-coaching-institute-rewrite-section/index.ts` — single-section rewriter
+- `src/components/admin/AICoachingInstituteDialog.tsx` — pre-generation brief dialog
+- `src/components/admin/AISeoInstitutePanel.tsx` — audit + auto-rewrite panel
 
-## 4. Admin UI — `/admin/api-keys`
+**Modified**
+- `src/pages/admin/AdminCoachingInstitutes.tsx` — add "Generate via AI" button
+- `src/pages/admin/AdminCoachingInstituteDetail.tsx` — add "Generate via AI" + "Run AI SEO" buttons in header
+- `src/lib/instituteSections.ts` — export helper `mergeGeneratedSections(existing, generated)` used by both flows
 
-Single page, accessible to anyone with `admin` role.
-
-Layout:
-- Top bar: "Add New Key" button + category filter tabs.
-- Grouped cards by category (Payments / AI / SMS / SEO / Scraping / Other).
-- Each row: Key name, description, value (shown in full when editing per your choice), active toggle, "Last used" timestamp, Edit / Delete buttons.
-- "Add New Key" opens a dialog: name, value, category, description. Saves to DB. Immediately available to edge functions on next call (after 60s cache expiry, or manual "Refresh cache" button calls a `flush-credentials-cache` edge function).
-
-Validation: key name must match `^[A-Z][A-Z0-9_]*$`, no spaces.
-
-## 5. Audit log tab
-
-Sub-tab on the same page showing recent changes: who edited what key, when, action (created/updated/deleted/activated/deactivated). Values masked in audit log (only first 4 + last 4 chars shown).
-
-## 6. Files
-
-```
-supabase/migrations/<ts>_api_credentials.sql        (new)
-supabase/functions/_shared/getCredential.ts         (new)
-supabase/functions/flush-credentials-cache/index.ts (new)
-src/pages/admin/ApiKeysAdmin.tsx                    (new)
-src/components/admin/ApiKeyRow.tsx                  (new)
-src/components/admin/ApiKeyDialog.tsx               (new)
-src/App.tsx                                         (add route)
-src/components/admin/AdminSidebar.tsx               (add nav link)
-
-Refactored (replace Deno.env.get with getCredential):
-- razorpay-create-order, razorpay-verify, razorpay-webhook
-- send-otp, verify-otp, send-msg91-otp
-- profile-analyzer, ai-blog-writer, ai-coaching-finder, ai-course-writer,
-  ai-institute-writer, ai-keyword-research, ai-page-summary, ai-seo-enhance,
-  ai-website-optimizer, auto-seo-engine, college-shortlister, mba-college-finder,
-  meta-validator-fix, premium-profile-report, roi-calculator,
-  seo-competitor-cron, generate-mock-questions, personalized-mock-generate
-- google-indexing-submit, google-indexing-refresh
-- pagespeed-audit
-- firecrawl-scrape
-```
-
-## 7. Security notes
-
-- Keys live in Postgres (encrypted at rest by Supabase).
-- Only `admin` role can read — RLS strictly enforced.
-- Edge functions use service-role to bypass RLS server-side.
-- All writes audit-logged.
-- Cache TTL keeps DB load low (one read per key per minute per function instance).
-- Existing Supabase Secrets remain as automatic fallback — nothing breaks if a row is empty.
-
-## 8. Out of scope
-
-- Rotating keys with a single click (could be a v2 — would call respective provider APIs).
-- Per-environment (test/live) split — single value per key for now.
-- Sharing keys across multiple Lovable projects.
-
-Once approved, I'll execute in this order: migration → helper → admin UI → batch-refactor edge functions by category.
+## Notes
+- No DB migration needed — `institutes.sections` JSONB and `institute_courses` already exist.
+- Re-uses `auto-seo-engine` so SEO rules stay identical to the college SEO engine.
+- All AI calls go through `callAIGateway` and log via `logAIUsage`.

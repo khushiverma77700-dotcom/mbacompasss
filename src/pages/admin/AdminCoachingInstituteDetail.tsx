@@ -10,10 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Save, ExternalLink, Loader2, Building2, Globe, Plus, X } from "lucide-react";
+import { ArrowLeft, Save, ExternalLink, Loader2, Building2, Globe, Plus, X, Sparkles } from "lucide-react";
 import StateCitySelect from "@/components/admin/StateCitySelect";
 import FileUpload from "@/components/admin/FileUpload";
 import InstituteSectionEditor from "@/components/admin/InstituteSectionEditor";
+import AICoachingInstituteDialog from "@/components/admin/AICoachingInstituteDialog";
+import AISeoInstitutePanel from "@/components/admin/AISeoInstitutePanel";
 import { INSTITUTE_SECTIONS, getSection } from "@/lib/instituteSections";
 import { slugify } from "@/lib/slugify";
 
@@ -28,6 +30,8 @@ const AdminCoachingInstituteDetail = () => {
   const [allCourses, setAllCourses] = useState<any[]>([]);
   const [linkedCourseIds, setLinkedCourseIds] = useState<Set<string>>(new Set());
   const [courseSearch, setCourseSearch] = useState("");
+  const [showAI, setShowAI] = useState(false);
+  const [showSeo, setShowSeo] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -124,12 +128,18 @@ const AdminCoachingInstituteDetail = () => {
             <span>{linkedCourseIds.size} courses linked</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {inst.slug && (
             <a href={`/institute/${inst.slug}`} target="_blank" rel="noreferrer">
               <Button variant="outline" size="sm"><ExternalLink className="w-4 h-4 mr-1" /> View live</Button>
             </a>
           )}
+          <Button variant="outline" size="sm" onClick={() => setShowAI(true)}>
+            <Sparkles className="w-4 h-4 mr-1" /> Generate via AI
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setShowSeo(true)}>
+            <Sparkles className="w-4 h-4 mr-1" /> Run AI SEO
+          </Button>
           <Button onClick={saveAll} disabled={saving}>
             {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
             Save changes
@@ -310,6 +320,45 @@ const AdminCoachingInstituteDetail = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      <AICoachingInstituteDialog
+        open={showAI}
+        onOpenChange={setShowAI}
+        defaults={{
+          name: inst.name,
+          city: inst.city || "",
+          state: inst.state || "",
+          website: inst.website || "",
+          primaryKeyword: inst.meta_title || inst.name,
+          instituteType: inst.institute_type,
+        }}
+        onGenerated={async ({ basic, sections: gen }) => {
+          setInst((p: any) => ({
+            ...p,
+            description: basic.description || p.description,
+            website: basic.website || p.website,
+            phone: basic.phone || p.phone,
+            email: basic.email || p.email,
+            meta_title: basic.meta_title || p.meta_title,
+            meta_description: basic.meta_description || p.meta_description,
+            rating: basic.rating || p.rating,
+            students_count: basic.students_count || p.students_count,
+            success_rate: basic.success_rate || p.success_rate,
+          }));
+          setSections((s: any) => ({ ...s, ...gen }));
+          toast({ title: "AI content loaded", description: "Review and click Save changes." });
+        }}
+      />
+
+      <AISeoInstitutePanel
+        open={showSeo}
+        onOpenChange={setShowSeo}
+        institute={inst}
+        sections={sections}
+        onApply={async ({ sections: nextSections }) => {
+          setSections(nextSections);
+          await supabase.from("institutes").update({ sections: nextSections }).eq("id", id!);
+        }}
+      />
     </div>
   );
 };
