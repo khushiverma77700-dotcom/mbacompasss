@@ -518,7 +518,7 @@ const InstitutePage = () => {
                             Open <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                           </span>
                         </div>
-                      </button>
+                      </Link>
                     );
                   })}
                 </div>
