@@ -321,31 +321,82 @@ const InstitutePage = () => {
 
             {/* Linked courses */}
             {linkedCourses.length > 0 && (
-              <SectionShell id="courses" eyebrow="Programs" title="Courses Offered">
-                <div className="overflow-x-auto -mx-1 px-1">
-                  <table className="w-full text-sm border-collapse min-w-[480px]">
-                    <thead>
-                      <tr className="text-left bg-sky-50 text-slate-700">
-                        <th className="p-2.5 border-b font-semibold">Course</th>
-                        <th className="p-2.5 border-b font-semibold">Duration</th>
-                        <th className="p-2.5 border-b font-semibold">Mode</th>
-                        <th className="p-2.5 border-b font-semibold">Fees</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {linkedCourses.map((c: any) => (
-                        <tr key={c.id} className="border-b hover:bg-slate-50">
-                          <td className="p-2.5 font-medium text-slate-900">{c.name}</td>
-                          <td className="p-2.5 text-slate-600">{c.duration || "—"}</td>
-                          <td className="p-2.5 text-slate-600">{c.mode || "—"}</td>
-                          <td className="p-2.5 text-slate-600">{c.fees ? `₹${c.fees}` : "—"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              <SectionShell
+                id="courses"
+                eyebrow="Programs"
+                title={`Courses Offered (${linkedCourses.length})`}
+              >
+                <p className="text-sm text-slate-600 -mt-2 mb-5">
+                  Every program currently linked to {institute.name}. Tap a card for full details, fees, batch dates and mentors.
+                </p>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {linkedCourses.map((c: any, i: number) => {
+                    const accents = [
+                      "from-sky-500 to-blue-600",
+                      "from-emerald-500 to-teal-600",
+                      "from-amber-500 to-orange-600",
+                      "from-violet-500 to-fuchsia-600",
+                      "from-rose-500 to-pink-600",
+                    ];
+                    const accent = accents[i % accents.length];
+                    return (
+                      <div
+                        key={c.id}
+                        className="group relative rounded-2xl border border-sky-100 bg-white p-5 shadow-sm hover:shadow-lg hover:border-sky-300 transition-all overflow-hidden"
+                      >
+                        <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${accent}`} />
+                        <div className="flex items-start gap-3">
+                          <div className={`shrink-0 w-11 h-11 rounded-xl bg-gradient-to-br ${accent} text-white grid place-items-center shadow-md`}>
+                            <GraduationCap className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-slate-900 leading-snug line-clamp-2 group-hover:text-sky-700 transition-colors">
+                              {c.name}
+                            </h3>
+                            {c.description && (
+                              <p className="text-xs text-slate-600 mt-1.5 line-clamp-2 leading-relaxed">
+                                {c.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="mt-4 flex flex-wrap gap-1.5">
+                          {c.mode && (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-100">
+                              <BookOpen className="w-3 h-3" /> {c.mode}
+                            </span>
+                          )}
+                          {c.duration && (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                              <Clock className="w-3 h-3" /> {c.duration}
+                            </span>
+                          )}
+                          {c.fees && (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-100">
+                              ₹{c.fees}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                          <span className="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">
+                            Program #{i + 1}
+                          </span>
+                          <a
+                            href="#contact"
+                            className="inline-flex items-center gap-1 text-sm font-semibold text-sky-700 hover:text-sky-900"
+                          >
+                            Enquire <ChevronRight className="w-4 h-4" />
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </SectionShell>
             )}
+
 
             {/* Dynamic sections */}
             {activeSections.map((def, idx) => {
