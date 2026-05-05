@@ -455,7 +455,7 @@ const SectionShell = ({
       {subtitle && <p className="text-sm text-muted-foreground mt-1 max-w-2xl">{subtitle}</p>}
       <div className="mt-3 h-1 w-12 rounded-full bg-gradient-to-r from-sky-500 to-blue-600" />
     </div>
-    <div className="rounded-2xl border bg-white p-5 md:p-6 shadow-sm">{children}</div>
+    <div className="rounded-2xl border bg-white p-5 md:p-6 shadow-sm overflow-x-auto">{children}</div>
   </section>
 );
 
