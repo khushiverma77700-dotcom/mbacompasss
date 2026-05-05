@@ -2342,6 +2342,45 @@ export type Database = {
           },
         ]
       }
+      institute_courses: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          institute_id: string
+          sort_order: number
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          institute_id: string
+          sort_order?: number
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          institute_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institute_courses_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institute_courses_institute_id_fkey"
+            columns: ["institute_id"]
+            isOneToOne: false
+            referencedRelation: "institutes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institute_results: {
         Row: {
           college_name: string
@@ -2399,6 +2438,7 @@ export type Database = {
           funnel_stage: string | null
           h1_tag: string | null
           id: string
+          institute_type: string
           keywords: string[] | null
           last_seo_refresh: string | null
           last_updated_by: string | null
@@ -2413,6 +2453,7 @@ export type Database = {
           phone: string | null
           primary_keyword: string | null
           rating: number | null
+          sections: Json
           slug: string
           source: string | null
           specializations: string[] | null
@@ -2443,6 +2484,7 @@ export type Database = {
           funnel_stage?: string | null
           h1_tag?: string | null
           id?: string
+          institute_type?: string
           keywords?: string[] | null
           last_seo_refresh?: string | null
           last_updated_by?: string | null
@@ -2457,6 +2499,7 @@ export type Database = {
           phone?: string | null
           primary_keyword?: string | null
           rating?: number | null
+          sections?: Json
           slug: string
           source?: string | null
           specializations?: string[] | null
@@ -2487,6 +2530,7 @@ export type Database = {
           funnel_stage?: string | null
           h1_tag?: string | null
           id?: string
+          institute_type?: string
           keywords?: string[] | null
           last_seo_refresh?: string | null
           last_updated_by?: string | null
@@ -2501,6 +2545,7 @@ export type Database = {
           phone?: string | null
           primary_keyword?: string | null
           rating?: number | null
+          sections?: Json
           slug?: string
           source?: string | null
           specializations?: string[] | null

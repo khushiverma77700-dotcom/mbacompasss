@@ -32,7 +32,8 @@ export const adminNavGroups: AdminNavGroup[] = [
   {
     label: "Institutes & Coaching",
     items: [
-      { label: "Institutes", path: "/admin/institutes", icon: Building2 },
+      { label: "Coaching Institutes", path: "/admin/coaching-institutes", icon: Building2 },
+      { label: "Institutes (legacy)", path: "/admin/institutes", icon: Building2 },
       { label: "Courses", path: "/admin/courses", icon: BookOpen },
       { label: "Course Categories", path: "/admin/course-categories", icon: Tag },
       { label: "Coaching of Week", path: "/admin/coaching-of-week", icon: Trophy },

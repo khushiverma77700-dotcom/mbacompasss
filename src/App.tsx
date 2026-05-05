@@ -62,6 +62,8 @@ const IIMWaitlistPage = lazyWithPreload(() => import("./pages/IIMWaitlistPage"))
 const AdminLayout = lazyWithPreload(() => import("./pages/admin/AdminLayout"));
 const AdminDashboard = lazyWithPreload(() => import("./pages/admin/AdminDashboard"));
 const AdminInstitutes = lazyWithPreload(() => import("./pages/admin/AdminInstitutes"));
+const AdminCoachingInstitutes = lazyWithPreload(() => import("./pages/admin/AdminCoachingInstitutes"));
+const AdminCoachingInstituteDetail = lazyWithPreload(() => import("./pages/admin/AdminCoachingInstituteDetail"));
 const AdminArticles = lazyWithPreload(() => import("./pages/admin/AdminArticles"));
 const AdminBanners = lazyWithPreload(() => import("./pages/admin/AdminBanners"));
 const AdminInquiries = lazyWithPreload(() => import("./pages/admin/AdminInquiries"));
@@ -604,6 +606,8 @@ const App = () => (
             <Route path="/admin" element={<LazyPage><AdminLayout /></LazyPage>}>
               <Route index element={<LazyPage><AdminDashboard /></LazyPage>} />
               <Route path="institutes" element={<LazyPage><AdminInstitutes /></LazyPage>} />
+              <Route path="coaching-institutes" element={<LazyPage><AdminCoachingInstitutes /></LazyPage>} />
+              <Route path="coaching-institutes/:id" element={<LazyPage><AdminCoachingInstituteDetail /></LazyPage>} />
               <Route path="articles" element={<LazyPage><AdminArticles /></LazyPage>} />
               <Route path="banners" element={<LazyPage><AdminBanners /></LazyPage>} />
               <Route path="inquiries" element={<LazyPage><AdminInquiries /></LazyPage>} />
