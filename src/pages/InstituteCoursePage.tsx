@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import SEOHead from "@/components/SEOHead";
+import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import {
   ChevronRight, ArrowLeft, GraduationCap, BookOpen, Clock, Calendar,
   CheckCircle2, Phone, MessageCircle, Mail, Trophy, Sparkles, ShieldCheck, Building2
@@ -88,14 +89,23 @@ const InstituteCoursePage = () => {
     }),
   };
 
+  const { seo } = useResolvedSeo("course", c.id, {
+    title,
+    description,
+    canonical: typeof window !== "undefined" ? `${window.location.origin}/institute/${inst.slug}/course/${courseSlug}` : undefined,
+    jsonLd: courseSchema,
+    ogImage: inst.banner_url || inst.logo_url || undefined,
+  });
+
   return (
     <>
       <SEOHead
-        title={title}
-        description={description}
-        canonical={typeof window !== "undefined" ? `${window.location.origin}/institute/${inst.slug}/course/${courseSlug}` : undefined}
-        jsonLd={courseSchema}
-        ogImage={inst.banner_url || inst.logo_url || undefined}
+        title={seo.title}
+        description={seo.description}
+        canonical={seo.canonical}
+        jsonLd={seo.jsonLd}
+        ogImage={seo.ogImage}
+        keywords={seo.keywords}
       />
 
       {/* Hero */}

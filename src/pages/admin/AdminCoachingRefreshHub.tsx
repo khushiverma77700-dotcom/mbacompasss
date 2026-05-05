@@ -404,6 +404,14 @@ const AdminCoachingRefreshHub = () => {
                           {live?.mode === "smart" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
                           Advanced SEO
                         </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-sky-300 text-sky-700 hover:bg-sky-50 gap-1.5"
+                          onClick={() => navigate(`/admin/coaching-seo-reports?institute=${inst.id}`)}
+                        >
+                          <Sparkles className="w-3.5 h-3.5" /> Detailed SEO Report
+                        </Button>
                         <Button asChild size="sm" variant="ghost" className="gap-1">
                           <Link to={`/institute/${inst.slug}`} target="_blank">
                             <ExternalLink className="w-3.5 h-3.5" />

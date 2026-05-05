@@ -13,8 +13,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import {
   FileText, Loader2, Building2, BookOpen, ExternalLink, ArrowLeft,
-  CheckCircle2, AlertCircle, Search, Download, Sparkles, RefreshCw, ChevronRight,
+  CheckCircle2, AlertCircle, Search, Download, Sparkles, RefreshCw, ChevronRight, Wand2,
 } from "lucide-react";
+import { buildStoredSeoSnapshot, saveSeoSnapshot } from "@/lib/seoAutomation";
 
 /* ============================================================
    Coaching Detailed SEO Reports
@@ -54,6 +55,8 @@ type Report = {
   assembled?: any;
   competitors?: any[];
   error?: string;
+  applyStatus?: "idle" | "applying" | "applied" | "error";
+  applyError?: string;
 };
 
 const AdminCoachingSEOReports = () => {
@@ -160,6 +163,60 @@ const AdminCoachingSEOReports = () => {
       title: `${pages.length} SEO reports ready`,
       description: `Generated detailed reports for ${inst.name} and its ${pages.length - 1} course page${pages.length - 1 === 1 ? "" : "s"}.`,
     });
+  };
+
+  const applyFix = async (instId: string, p: PageItem) => {
+    const key = reportKey(instId, p);
+    const r = reports[key];
+    if (!r?.data) return;
+    setReports(prev => ({ ...prev, [key]: { ...prev[key]!, applyStatus: "applying", applyError: undefined } }));
+    try {
+      const s = r.data;
+      const allKw: string[] = Array.from(new Set([
+        ...(s.keywords?.primary || []),
+        ...(s.keywords?.shortTail || []),
+        ...(s.keywords?.longTail || []),
+        ...(s.keywords?.lsi || []),
+      ].filter(Boolean)));
+
+      if (p.type === "institute") {
+        const { error } = await supabase.from("institutes").update({
+          meta_title: s.meta_title || null,
+          meta_description: s.meta_description || null,
+          h1_tag: s.h1_tag || null,
+          keywords: allKw.length ? allKw : null,
+          last_seo_refresh: new Date().toISOString(),
+        }).eq("id", p.id);
+        if (error) throw error;
+      }
+
+      const inst = institutes.find(i => i.id === instId);
+      const item: Record<string, any> = p.type === "institute"
+        ? { id: p.id, slug: p.slug }
+        : { id: p.id, slug: p.slug, _institute_slug: inst?.slug };
+      const snap = buildStoredSeoSnapshot(p.type, item, s);
+      await saveSeoSnapshot(snap);
+
+      setReports(prev => ({ ...prev, [key]: { ...prev[key]!, applyStatus: "applied" } }));
+    } catch (e) {
+      setReports(prev => ({
+        ...prev,
+        [key]: { ...prev[key]!, applyStatus: "error", applyError: e instanceof Error ? e.message : "Unknown" },
+      }));
+      toast({ title: "Apply failed", description: e instanceof Error ? e.message : "Unknown", variant: "destructive" });
+    }
+  };
+
+  const applyAllForInstitute = async (inst: InstituteRow) => {
+    const pages = buildPages(inst);
+    const ready = pages.filter(p => reports[reportKey(inst.id, p)]?.status === "done");
+    if (!ready.length) {
+      toast({ title: "Nothing to apply", description: "Generate reports first." });
+      return;
+    }
+    if (!confirm(`Apply AI SEO fixes to ${ready.length} page${ready.length === 1 ? "" : "s"} of ${inst.name}?\n\nThis updates meta title, description, H1 and keywords live.`)) return;
+    for (const p of ready) await applyFix(inst.id, p);
+    toast({ title: "SEO fixes applied", description: `${ready.length} page${ready.length === 1 ? "" : "s"} updated for ${inst.name}.` });
   };
 
   const downloadJson = (inst: InstituteRow) => {
@@ -297,6 +354,15 @@ const AdminCoachingSEOReports = () => {
                       Generate {pages.length} Reports
                     </Button>
                     {doneCount > 0 && (
+                      <Button
+                        size="sm"
+                        className="bg-emerald-600 hover:bg-emerald-700 gap-1.5"
+                        onClick={(e) => { e.stopPropagation(); applyAllForInstitute(inst); }}
+                      >
+                        <Wand2 className="w-3.5 h-3.5" /> Apply All Fixes ({doneCount})
+                      </Button>
+                    )}
+                    {doneCount > 0 && (
                       <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); downloadJson(inst); }} className="gap-1.5">
                         <Download className="w-3.5 h-3.5" /> Export
                       </Button>
@@ -322,6 +388,7 @@ const AdminCoachingSEOReports = () => {
                         page={p}
                         report={r}
                         onRun={() => runOne(inst.id, p)}
+                        onApply={() => applyFix(inst.id, p)}
                         disabled={isBusy}
                       />
                     );
@@ -346,8 +413,8 @@ const scoreColor = (n?: number) => {
 };
 
 const PageReportCard = ({
-  page, report, onRun, disabled,
-}: { page: PageItem; report?: Report; onRun: () => void; disabled?: boolean }) => {
+  page, report, onRun, onApply, disabled,
+}: { page: PageItem; report?: Report; onRun: () => void; onApply: () => void; disabled?: boolean }) => {
   const [open, setOpen] = useState(false);
   const s = report?.data;
   const a = report?.assembled;
@@ -393,6 +460,19 @@ const PageReportCard = ({
               {report?.status === "running" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
               {report?.status === "done" ? "Re-run" : "Generate report"}
             </Button>
+            {report?.status === "done" && (
+              <Button
+                size="sm"
+                className="bg-emerald-600 hover:bg-emerald-700 gap-1.5"
+                disabled={report?.applyStatus === "applying"}
+                onClick={onApply}
+              >
+                {report?.applyStatus === "applying" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> :
+                 report?.applyStatus === "applied" ? <CheckCircle2 className="w-3.5 h-3.5" /> :
+                 <Wand2 className="w-3.5 h-3.5" />}
+                {report?.applyStatus === "applied" ? "Applied" : report?.applyStatus === "applying" ? "Applying…" : "Apply Fix"}
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>
