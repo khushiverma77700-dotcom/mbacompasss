@@ -15,7 +15,7 @@ import StateCitySelect from "@/components/admin/StateCitySelect";
 import FileUpload from "@/components/admin/FileUpload";
 import InstituteSectionEditor from "@/components/admin/InstituteSectionEditor";
 import AICoachingInstituteDialog from "@/components/admin/AICoachingInstituteDialog";
-import AISeoInstitutePanel from "@/components/admin/AISeoInstitutePanel";
+import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import { INSTITUTE_SECTIONS, getSection } from "@/lib/instituteSections";
 import { slugify } from "@/lib/slugify";
 
