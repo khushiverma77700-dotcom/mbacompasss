@@ -139,7 +139,23 @@ const AICoachingInstituteDialog = ({ open, onOpenChange, defaults, onGenerated }
               </Select>
             </div>
           </div>
-          <StateCitySelect state={state} city={city} onStateChange={(s) => { setState(s); setCity(""); }} onCityChange={setCity} showLabels />
+          <div>
+            <Label>Official Source URL (strict grounding)</Label>
+            <Input value={sourceUrl} onChange={(e) => setSourceUrl(e.target.value)} placeholder="https://imsindia.com/cat-coaching" />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Program details, courses, fees, faculty & batch info will be drawn strictly from this URL. Reviews/testimonials/FAQs may use broader public knowledge.
+            </p>
+          </div>
+          {showLocation ? (
+            <div>
+              <Label className="text-xs">Location {mode === "Offline" ? <span className="text-destructive">*</span> : <span className="text-muted-foreground">(optional for Hybrid)</span>}</Label>
+              <StateCitySelect state={state} city={city} onStateChange={(s) => { setState(s); setCity(""); }} onCityChange={setCity} showLabels={false} />
+            </div>
+          ) : (
+            <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground bg-muted/30">
+              Online-only institute — state & city are not required. The page will target nationwide search intent.
+            </div>
+          )}
           <div>
             <Label>Secondary Keywords</Label>
             <ChipInput values={secondary} onChange={setSecondary} placeholder="e.g. CAT classroom coaching, GMAT prep" />
