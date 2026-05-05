@@ -165,6 +165,60 @@ const AdminCoachingSEOReports = () => {
     });
   };
 
+  const applyFix = async (instId: string, p: PageItem) => {
+    const key = reportKey(instId, p);
+    const r = reports[key];
+    if (!r?.data) return;
+    setReports(prev => ({ ...prev, [key]: { ...prev[key]!, applyStatus: "applying", applyError: undefined } }));
+    try {
+      const s = r.data;
+      const allKw: string[] = Array.from(new Set([
+        ...(s.keywords?.primary || []),
+        ...(s.keywords?.shortTail || []),
+        ...(s.keywords?.longTail || []),
+        ...(s.keywords?.lsi || []),
+      ].filter(Boolean)));
+
+      if (p.type === "institute") {
+        const { error } = await supabase.from("institutes").update({
+          meta_title: s.meta_title || null,
+          meta_description: s.meta_description || null,
+          h1_tag: s.h1_tag || null,
+          keywords: allKw.length ? allKw : null,
+          last_seo_refresh: new Date().toISOString(),
+        }).eq("id", p.id);
+        if (error) throw error;
+      }
+
+      const inst = institutes.find(i => i.id === instId);
+      const item: Record<string, any> = p.type === "institute"
+        ? { id: p.id, slug: p.slug }
+        : { id: p.id, slug: p.slug, _institute_slug: inst?.slug };
+      const snap = buildStoredSeoSnapshot(p.type, item, s);
+      await saveSeoSnapshot(snap);
+
+      setReports(prev => ({ ...prev, [key]: { ...prev[key]!, applyStatus: "applied" } }));
+    } catch (e) {
+      setReports(prev => ({
+        ...prev,
+        [key]: { ...prev[key]!, applyStatus: "error", applyError: e instanceof Error ? e.message : "Unknown" },
+      }));
+      toast({ title: "Apply failed", description: e instanceof Error ? e.message : "Unknown", variant: "destructive" });
+    }
+  };
+
+  const applyAllForInstitute = async (inst: InstituteRow) => {
+    const pages = buildPages(inst);
+    const ready = pages.filter(p => reports[reportKey(inst.id, p)]?.status === "done");
+    if (!ready.length) {
+      toast({ title: "Nothing to apply", description: "Generate reports first." });
+      return;
+    }
+    if (!confirm(`Apply AI SEO fixes to ${ready.length} page${ready.length === 1 ? "" : "s"} of ${inst.name}?\n\nThis updates meta title, description, H1 and keywords live.`)) return;
+    for (const p of ready) await applyFix(inst.id, p);
+    toast({ title: "SEO fixes applied", description: `${ready.length} page${ready.length === 1 ? "" : "s"} updated for ${inst.name}.` });
+  };
+
   const downloadJson = (inst: InstituteRow) => {
     const pages = buildPages(inst);
     const payload = pages.map(p => {
