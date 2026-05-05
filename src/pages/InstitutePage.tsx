@@ -359,6 +359,99 @@ const InstitutePage = () => {
               );
             })}
 
+            {/* Linked courses — moved below sections */}
+            {linkedCourses.length > 0 && (
+              <SectionShell
+                id="courses"
+                eyebrow="Programs"
+                title={`Courses Offered (${linkedCourses.length})`}
+                subtitle={`Explore every program currently offered by ${institute.name}. Click a card for full details, fees, batch dates, curriculum and mentors.`}
+              >
+                <div className="grid sm:grid-cols-2 gap-5">
+                  {linkedCourses.map((c: any, i: number) => {
+                    const accents = [
+                      "from-sky-500 to-blue-600",
+                      "from-emerald-500 to-teal-600",
+                      "from-amber-500 to-orange-600",
+                      "from-violet-500 to-fuchsia-600",
+                      "from-rose-500 to-pink-600",
+                    ];
+                    const accent = accents[i % accents.length];
+                    const preview = stripHtml(c.description || "", 180);
+                    const highlights: string[] = Array.isArray(c.highlights) ? c.highlights : [];
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setOpenCourse(c)}
+                        className="group relative rounded-2xl border border-sky-100 bg-white p-5 text-left shadow-sm hover:shadow-xl hover:border-sky-300 hover:-translate-y-0.5 transition-all overflow-hidden"
+                      >
+                        <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${accent}`} />
+                        <div className="flex items-start gap-3">
+                          <div className={`shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br ${accent} text-white grid place-items-center shadow-md`}>
+                            <GraduationCap className="w-6 h-6" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Program #{String(i + 1).padStart(2, "0")}</div>
+                            <h3 className="font-bold text-[15px] text-slate-900 leading-snug line-clamp-2 group-hover:text-sky-700 transition-colors mt-0.5">
+                              {c.name}
+                            </h3>
+                          </div>
+                        </div>
+
+                        {preview && (
+                          <p className="mt-3 text-[13px] text-slate-600 line-clamp-3 leading-relaxed">
+                            {preview}
+                          </p>
+                        )}
+
+                        {highlights.length > 0 && (
+                          <ul className="mt-3 space-y-1.5">
+                            {highlights.slice(0, 3).map((h, idx) => (
+                              <li key={idx} className="flex items-start gap-1.5 text-[12px] text-slate-700">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                                <span className="line-clamp-1">{h}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+
+                        <div className="mt-4 flex flex-wrap gap-1.5">
+                          {c.mode && (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-100">
+                              <BookOpen className="w-3 h-3" /> {c.mode}
+                            </span>
+                          )}
+                          {c.duration && (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                              <Clock className="w-3 h-3" /> {c.duration}
+                            </span>
+                          )}
+                          {c.fees && (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-100">
+                              ₹{typeof c.fees === "number" ? c.fees.toLocaleString("en-IN") : c.fees}
+                            </span>
+                          )}
+                          {c.start_date && (
+                            <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-violet-50 text-violet-700 border border-violet-100">
+                              <Calendar className="w-3 h-3" /> {c.start_date}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                          <span className="text-[11px] text-slate-500 font-medium">View full details</span>
+                          <span className="inline-flex items-center gap-1 text-sm font-semibold text-sky-700 group-hover:text-sky-900">
+                            Open <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </SectionShell>
+            )}
+
             {/* Why choose strip (always-on, content varies) */}
             <section className="rounded-2xl bg-gradient-to-br from-sky-600 to-blue-700 text-white p-6 md:p-8 shadow-lg">
               <div className="flex items-start gap-3">
