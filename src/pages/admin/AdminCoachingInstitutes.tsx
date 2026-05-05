@@ -10,8 +10,9 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Plus, Pencil, Trash2, Building2, Globe } from "lucide-react";
+import { Plus, Pencil, Trash2, Building2, Globe, Sparkles } from "lucide-react";
 import { slugify } from "@/lib/slugify";
+import AICoachingInstituteDialog from "@/components/admin/AICoachingInstituteDialog";
 
 type Institute = {
   id: string;
