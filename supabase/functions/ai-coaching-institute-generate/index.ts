@@ -31,7 +31,6 @@ interface Brief {
   name: string;
   slug?: string;
   website?: string;
-  sourceUrl?: string;            // Official source for strict grounding
   city?: string;
   state?: string;
   mode?: string;                 // Online / Offline / Hybrid
@@ -40,25 +39,6 @@ interface Brief {
   secondaryKeywords?: string[];
   examFocus?: string[];
   flagshipPrograms?: string[];
-}
-
-async function fetchSourceText(url: string): Promise<string> {
-  try {
-    const res = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 MBAHubBot/1.0" } });
-    if (!res.ok) return "";
-    const html = await res.text();
-    // Strip scripts/styles, then tags, collapse whitespace.
-    const cleaned = html
-      .replace(/<script[\s\S]*?<\/script>/gi, " ")
-      .replace(/<style[\s\S]*?<\/style>/gi, " ")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim();
-    return cleaned.slice(0, 18000);
-  } catch (e) {
-    console.warn("source fetch failed", e);
-    return "";
-  }
 }
 
 Deno.serve(async (req) => {
@@ -80,12 +60,6 @@ Deno.serve(async (req) => {
     const exams = (brief.examFocus || []).filter(Boolean);
     const flagship = (brief.flagshipPrograms || []).filter(Boolean);
     const mode = brief.mode || "Hybrid";
-    const sourceUrl = (brief.sourceUrl || brief.website || "").trim();
-    const sourceText = sourceUrl ? await fetchSourceText(sourceUrl) : "";
-
-    const groundingBlock = sourceText
-      ? `\n\n# OFFICIAL SOURCE (STRICT GROUNDING)\nURL: ${sourceUrl}\n\n--- BEGIN SOURCE ---\n${sourceText}\n--- END SOURCE ---\n\nGROUNDING RULES:\n- For these factual sections — courses_offered, course_formats, batch_details, fees, admission_process, eligibility, faculty, study_material, mock_tests, demo_classes, infrastructure, tech_platform, scholarships, mentorship, doubt_solving — use ONLY information that is supported by the SOURCE above. If the source is silent on a detail, OMIT that specific claim instead of inventing one. Use realistic ranges only when the source itself implies them.\n- For these soft sections — overview, key_highlights, why_choose, results, topper_testimonials, student_reviews, pros_cons, faqs, ctas, teaching_methodology — you MAY supplement with broader public knowledge about this institute and Indian MBA-entrance coaching norms.\n- Never contradict the source. Never copy >12 consecutive words verbatim — paraphrase.\n`
-      : `\n\n# NO OFFICIAL SOURCE PROVIDED\n- Use only well-established public knowledge about this institute. Avoid invented numbers; use clearly hedged realistic ranges.\n`;
 
     const systemPrompt = `You are a senior MBA-entrance coaching researcher and SEO writer for the Indian audience. You write like a sharp senior mentor talking to a CAT/XAT/GMAT aspirant — clear, friendly, plain English, contractions allowed.
 
@@ -113,7 +87,7 @@ Deno.serve(async (req) => {
 - Internal anchors: <a href="/coaching">top CAT coaching</a>, <a href="/exam/cat">CAT exam</a>, <a href="/colleges">top MBA colleges</a>, <a href="/profile-analyzer">AI Profile Analyzer</a>.
 - End the longest body with <p><em>Last updated: ${todayIso}</em></p>.
 - NEVER start any paragraph or heading with a question. Headings are declarative.
-- NEVER use phrases: "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving".${groundingBlock}`;
+- NEVER use phrases: "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving".`;
 
     const userPrompt = `Generate a complete, ready-to-publish profile for the following Indian MBA-entrance coaching institute. Verify every factual claim against your training knowledge AND the strict source above when present.
 
