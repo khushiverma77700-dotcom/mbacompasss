@@ -460,6 +460,19 @@ const PageReportCard = ({
               {report?.status === "running" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
               {report?.status === "done" ? "Re-run" : "Generate report"}
             </Button>
+            {report?.status === "done" && (
+              <Button
+                size="sm"
+                className="bg-emerald-600 hover:bg-emerald-700 gap-1.5"
+                disabled={report?.applyStatus === "applying"}
+                onClick={onApply}
+              >
+                {report?.applyStatus === "applying" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> :
+                 report?.applyStatus === "applied" ? <CheckCircle2 className="w-3.5 h-3.5" /> :
+                 <Wand2 className="w-3.5 h-3.5" />}
+                {report?.applyStatus === "applied" ? "Applied" : report?.applyStatus === "applying" ? "Applying…" : "Apply Fix"}
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>
