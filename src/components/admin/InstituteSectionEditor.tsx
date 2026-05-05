@@ -83,14 +83,14 @@ const FieldRenderer = ({ def, value, onChange }: { def: FieldDef; value: any; on
       return (
         <div>
           <Label>{def.label}</Label>
-          <RichTextEditor value={value ?? ""} onChange={onChange} />
+          <RichTextEditor content={value ?? ""} onChange={onChange} />
         </div>
       );
     case "image":
       return (
         <div>
           <Label>{def.label}</Label>
-          <FileUpload value={value ?? ""} onChange={onChange} />
+          <FileUpload value={value ?? ""} onChange={onChange} bucket="uploads" />
         </div>
       );
     case "list-bullet":
