@@ -164,6 +164,40 @@ const AdminCoachingInstitutes = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AICoachingInstituteDialog
+        open={showAI}
+        onOpenChange={setShowAI}
+        onGenerated={async ({ basic, sections, brief }) => {
+          const slug = (basic.slug || slugify(basic.name || brief.name)).slice(0, 80);
+          const { data, error } = await supabase
+            .from("institutes")
+            .insert({
+              name: basic.name || brief.name,
+              slug,
+              institute_type: brief.instituteType || "hybrid",
+              city: basic.city || brief.city || null,
+              state: basic.state || brief.state || null,
+              description: basic.description || null,
+              website: basic.website || brief.website || null,
+              phone: basic.phone || null,
+              email: basic.email || null,
+              meta_title: basic.meta_title || null,
+              meta_description: basic.meta_description || null,
+              rating: basic.rating || 0,
+              students_count: basic.students_count || 0,
+              success_rate: basic.success_rate || 0,
+              sections,
+            })
+            .select("id")
+            .single();
+          if (error) {
+            toast({ title: "Failed to save", description: error.message, variant: "destructive" });
+            return;
+          }
+          window.location.href = `/admin/coaching-institutes/${data.id}`;
+        }}
+      />
     </div>
   );
 };
