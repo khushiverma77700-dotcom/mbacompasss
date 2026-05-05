@@ -66,6 +66,7 @@ const AdminInstitutes = lazyWithPreload(() => import("./pages/admin/AdminInstitu
 const AdminCoachingInstitutes = lazyWithPreload(() => import("./pages/admin/AdminCoachingInstitutes"));
 const AdminCoachingInstituteDetail = lazyWithPreload(() => import("./pages/admin/AdminCoachingInstituteDetail"));
 const AdminCoachingRefreshHub = lazyWithPreload(() => import("./pages/admin/AdminCoachingRefreshHub"));
+const AdminCoachingSEOReports = lazyWithPreload(() => import("./pages/admin/AdminCoachingSEOReports"));
 const AdminArticles = lazyWithPreload(() => import("./pages/admin/AdminArticles"));
 const AdminBanners = lazyWithPreload(() => import("./pages/admin/AdminBanners"));
 const AdminInquiries = lazyWithPreload(() => import("./pages/admin/AdminInquiries"));
@@ -611,6 +612,7 @@ const App = () => (
               <Route path="coaching-institutes" element={<LazyPage><AdminCoachingInstitutes /></LazyPage>} />
               <Route path="coaching-institutes/:id" element={<LazyPage><AdminCoachingInstituteDetail /></LazyPage>} />
               <Route path="coaching-refresh-hub" element={<LazyPage><AdminCoachingRefreshHub /></LazyPage>} />
+              <Route path="coaching-seo-reports" element={<LazyPage><AdminCoachingSEOReports /></LazyPage>} />
               <Route path="articles" element={<LazyPage><AdminArticles /></LazyPage>} />
               <Route path="banners" element={<LazyPage><AdminBanners /></LazyPage>} />
               <Route path="inquiries" element={<LazyPage><AdminInquiries /></LazyPage>} />

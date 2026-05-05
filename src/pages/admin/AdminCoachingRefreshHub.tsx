@@ -220,6 +220,9 @@ const AdminCoachingRefreshHub = () => {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => navigate("/admin/coaching-seo-reports")} className="gap-2">
+            <Sparkles className="w-4 h-4" /> Detailed SEO Reports
+          </Button>
           <Button variant="outline" onClick={() => navigate("/admin/content-studio")} className="gap-2">
             <ClipboardList className="w-4 h-4" /> Approval Queue
           </Button>
