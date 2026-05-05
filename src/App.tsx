@@ -296,16 +296,32 @@ const GlobalNavigationPrefetch = () => {
       schedulePrefetch(anchor.href);
     };
 
+    // pointerenter = hover (desktop). pointerdown/touchstart = the moment a
+    // tap begins on mobile — fires ~100ms before "click", giving the chunk a
+    // head start so the new page is ready by the time the click lands.
     document.addEventListener("pointerenter", handlePointer, true);
+    document.addEventListener("pointerdown", handlePointer, true);
+    document.addEventListener("touchstart", handlePointer, { capture: true, passive: true });
     document.addEventListener("focusin", handlePointer, true);
 
-    // NOTE: Do NOT eagerly prefetch routes here.
-    // Previously prefetching "/admin" pulled the entire admin bundle (TipTap editor ~127KB,
-    // recharts, radix dialogs, ~30+ admin chunks) on every public page load, adding ~3-5s.
-    // Hover/focus-based prefetch above already handles real navigation intent.
+    // First-visit warmup: a user landing from Google has nothing cached.
+    // After first paint + idle, preload the most-likely next destinations so
+    // the very first link click feels instant. Admin chunks are excluded
+    // upstream by prefetchRoute().
+    const warmup = () => {
+      const w = window as any;
+      const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1500));
+      schedule(() => {
+        ["/colleges", "/coaching", "/blog", "/compare", "/mocks", "/courses", "/about"].forEach(prefetchRoute);
+      }, { timeout: 4000 });
+    };
+    if (document.readyState === "complete") warmup();
+    else window.addEventListener("load", warmup, { once: true });
 
     return () => {
       document.removeEventListener("pointerenter", handlePointer, true);
+      document.removeEventListener("pointerdown", handlePointer, true);
+      document.removeEventListener("touchstart", handlePointer, { capture: true } as any);
       document.removeEventListener("focusin", handlePointer, true);
     };
   }, []);
