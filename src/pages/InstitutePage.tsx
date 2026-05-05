@@ -71,6 +71,26 @@ const InstitutePage = () => {
     return Array.from(map.values());
   }, [institute]);
 
+  const courseModes = useMemo(() => {
+    const set = new Set<string>();
+    linkedCourses.forEach((c: any) => { if (c.mode) set.add(c.mode); });
+    return ["All", ...Array.from(set)];
+  }, [linkedCourses]);
+
+  const filteredCourses = useMemo(() => {
+    let list = [...linkedCourses];
+    if (courseMode !== "All") list = list.filter((c: any) => c.mode === courseMode);
+    if (courseSearch.trim()) {
+      const q = courseSearch.toLowerCase();
+      list = list.filter((c: any) => (c.name || "").toLowerCase().includes(q));
+    }
+    if (courseSort === "fees-asc") list.sort((a: any, b: any) => (Number(a.fees) || 0) - (Number(b.fees) || 0));
+    else if (courseSort === "fees-desc") list.sort((a: any, b: any) => (Number(b.fees) || 0) - (Number(a.fees) || 0));
+    else if (courseSort === "name") list.sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""));
+    return list;
+  }, [linkedCourses, courseMode, courseSearch, courseSort]);
+
+
   // Render every enabled section that has data, in the canonical order.
   const activeSections = useMemo(() => {
     if (!institute) return [];
