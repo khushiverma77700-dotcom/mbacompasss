@@ -14,8 +14,10 @@ const InstituteSectionRenderer = ({ def, data }: Props) => {
   switch (def.layout) {
     case "prose":
       return (
-        <div className="prose prose-slate max-w-none prose-p:leading-relaxed prose-p:text-slate-700"
-          dangerouslySetInnerHTML={{ __html: (data.body || "").replace(/\n/g, "<br/>") }} />
+        <div
+          className="prose prose-slate max-w-none prose-headings:font-bold prose-h2:text-xl prose-h3:text-base prose-h3:mt-5 prose-h3:text-sky-800 prose-p:leading-[1.75] prose-p:text-slate-700 prose-p:text-[15px] prose-li:text-[15px] prose-li:text-slate-700 prose-strong:text-slate-900 prose-a:text-sky-700 prose-a:no-underline hover:prose-a:underline prose-table:text-sm prose-th:bg-sky-50"
+          dangerouslySetInnerHTML={{ __html: data.body || "" }}
+        />
       );
 
     case "bullets": {
