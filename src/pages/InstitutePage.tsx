@@ -41,6 +41,9 @@ const InstitutePage = () => {
   const { slug } = useParams<{ slug: string }>();
   const [activeId, setActiveId] = useState<string>("");
   const [openCourse, setOpenCourse] = useState<any | null>(null);
+  const [courseMode, setCourseMode] = useState<string>("All");
+  const [courseSort, setCourseSort] = useState<string>("default");
+  const [courseSearch, setCourseSearch] = useState<string>("");
 
   const { data: institute, isLoading } = useQuery({
     queryKey: ["institute_full", slug],
