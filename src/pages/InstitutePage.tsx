@@ -41,6 +41,9 @@ const InstitutePage = () => {
   const { slug } = useParams<{ slug: string }>();
   const [activeId, setActiveId] = useState<string>("");
   const [openCourse, setOpenCourse] = useState<any | null>(null);
+  const [courseMode, setCourseMode] = useState<string>("All");
+  const [courseSort, setCourseSort] = useState<string>("default");
+  const [courseSearch, setCourseSearch] = useState<string>("");
 
   const { data: institute, isLoading } = useQuery({
     queryKey: ["institute_full", slug],
@@ -67,6 +70,26 @@ const InstitutePage = () => {
     [...fromJoin, ...direct].forEach((c: any) => { if (c?.id) map.set(c.id, c); });
     return Array.from(map.values());
   }, [institute]);
+
+  const courseModes = useMemo(() => {
+    const set = new Set<string>();
+    linkedCourses.forEach((c: any) => { if (c.mode) set.add(c.mode); });
+    return ["All", ...Array.from(set)];
+  }, [linkedCourses]);
+
+  const filteredCourses = useMemo(() => {
+    let list = [...linkedCourses];
+    if (courseMode !== "All") list = list.filter((c: any) => c.mode === courseMode);
+    if (courseSearch.trim()) {
+      const q = courseSearch.toLowerCase();
+      list = list.filter((c: any) => (c.name || "").toLowerCase().includes(q));
+    }
+    if (courseSort === "fees-asc") list.sort((a: any, b: any) => (Number(a.fees) || 0) - (Number(b.fees) || 0));
+    else if (courseSort === "fees-desc") list.sort((a: any, b: any) => (Number(b.fees) || 0) - (Number(a.fees) || 0));
+    else if (courseSort === "name") list.sort((a: any, b: any) => (a.name || "").localeCompare(b.name || ""));
+    return list;
+  }, [linkedCourses, courseMode, courseSearch, courseSort]);
+
 
   // Render every enabled section that has data, in the canonical order.
   const activeSections = useMemo(() => {
@@ -367,8 +390,58 @@ const InstitutePage = () => {
                 title={`Courses Offered (${linkedCourses.length})`}
                 subtitle={`Explore every program currently offered by ${institute.name}. Click a card for full details, fees, batch dates, curriculum and mentors.`}
               >
+                {/* Filters bar */}
+                <div className="mb-5 -mt-1 flex flex-wrap items-center gap-2">
+                  <div className="relative flex-1 min-w-[180px]">
+                    <Input
+                      value={courseSearch}
+                      onChange={(e) => setCourseSearch(e.target.value)}
+                      placeholder="Search programs…"
+                      className="h-9 text-sm pl-8 bg-white"
+                    />
+                    <BookOpen className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {courseModes.map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => setCourseMode(m)}
+                        className={`text-[12px] font-semibold px-3 py-1.5 rounded-full border transition ${courseMode === m ? "bg-sky-600 text-white border-sky-600 shadow-sm" : "bg-white text-slate-600 border-slate-200 hover:border-sky-400 hover:text-sky-700"}`}
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
+                  <select
+                    value={courseSort}
+                    onChange={(e) => setCourseSort(e.target.value)}
+                    className="h-9 text-[12px] font-medium border border-slate-200 rounded-md px-2 bg-white text-slate-700"
+                  >
+                    <option value="default">Sort: Default</option>
+                    <option value="name">Name A-Z</option>
+                    <option value="fees-asc">Fees: Low → High</option>
+                    <option value="fees-desc">Fees: High → Low</option>
+                  </select>
+                  <Link to="/compare" className="ml-auto">
+                    <Button variant="outline" size="sm" className="h-9 text-[12px] gap-1 border-sky-200 text-sky-700 hover:bg-sky-50">
+                      <TrendingUp className="w-3.5 h-3.5" /> Compare Coachings
+                    </Button>
+                  </Link>
+                </div>
+
+                <div className="text-[12px] text-slate-500 mb-3">
+                  Showing <span className="font-semibold text-slate-700">{filteredCourses.length}</span> of {linkedCourses.length} programs
+                </div>
+
+                {filteredCourses.length === 0 ? (
+                  <div className="text-center py-10 text-sm text-slate-500 border border-dashed rounded-xl">
+                    No programs match your filters.
+                    <button onClick={() => { setCourseMode("All"); setCourseSearch(""); setCourseSort("default"); }} className="ml-2 text-sky-700 font-semibold hover:underline">Reset</button>
+                  </div>
+                ) : (
                 <div className="grid sm:grid-cols-2 gap-5">
-                  {linkedCourses.map((c: any, i: number) => {
+                  {filteredCourses.map((c: any, i: number) => {
                     const accents = [
                       "from-sky-500 to-blue-600",
                       "from-emerald-500 to-teal-600",
@@ -449,6 +522,8 @@ const InstitutePage = () => {
                     );
                   })}
                 </div>
+                )}
+
               </SectionShell>
             )}
 
