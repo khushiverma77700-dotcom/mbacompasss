@@ -10,10 +10,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Save, ExternalLink, Loader2, Building2, Globe, Plus, X } from "lucide-react";
+import { ArrowLeft, Save, ExternalLink, Loader2, Building2, Globe, Plus, X, Sparkles } from "lucide-react";
 import StateCitySelect from "@/components/admin/StateCitySelect";
 import FileUpload from "@/components/admin/FileUpload";
 import InstituteSectionEditor from "@/components/admin/InstituteSectionEditor";
+import AICoachingInstituteDialog from "@/components/admin/AICoachingInstituteDialog";
+import AISeoInstitutePanel from "@/components/admin/AISeoInstitutePanel";
 import { INSTITUTE_SECTIONS, getSection } from "@/lib/instituteSections";
 import { slugify } from "@/lib/slugify";
 
