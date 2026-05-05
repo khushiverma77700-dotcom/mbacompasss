@@ -608,7 +608,7 @@ const InstitutePage = () => {
 const SectionShell = ({
   id, title, subtitle, children,
 }: { id: string; title: string; subtitle?: string; children: React.ReactNode }) => (
-  <section id={id} className="scroll-mt-24">
+  <section id={id} className="scroll-mt-36 md:scroll-mt-24">
     <div className="mb-5">
       <h2 className="text-2xl md:text-[26px] font-bold text-slate-900">{title}</h2>
       {subtitle && <p className="text-sm text-muted-foreground mt-1 max-w-2xl">{subtitle}</p>}
