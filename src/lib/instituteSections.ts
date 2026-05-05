@@ -77,7 +77,7 @@ export const INSTITUTE_SECTIONS: SectionDef[] = [
     fields: [{ key: "items", label: "Formats", kind: "list-bullet" }] },
 
   { id: "batch_details", label: "Batch Details", shortHelp: "Batch size, start dates, duration, weekday/weekend", layout: "prose",
-    fields: [{ key: "body", label: "Batch details", kind: "textarea", rows: 4 }] },
+    fields: [{ key: "body", label: "Batch details", kind: "richtext", rows: 4 }] },
 
   { id: "teaching_methodology", label: "Teaching Methodology", shortHelp: "80–120 words on pedagogy", layout: "prose",
     fields: [{ key: "body", label: "Methodology", kind: "richtext", rows: 6 }] },
@@ -86,13 +86,13 @@ export const INSTITUTE_SECTIONS: SectionDef[] = [
     fields: [{ key: "items", label: "Faculty members", kind: "list-faculty" }] },
 
   { id: "study_material", label: "Study Material", shortHelp: "Books, PDFs, assignments", layout: "prose",
-    fields: [{ key: "body", label: "Material", kind: "textarea", rows: 4 }] },
+    fields: [{ key: "body", label: "Material", kind: "richtext", rows: 4 }] },
 
   { id: "mock_tests", label: "Mock Tests & Practice", shortHelp: "Number of mocks, sectional, analytics", layout: "prose",
-    fields: [{ key: "body", label: "Mock tests", kind: "textarea", rows: 4 }] },
+    fields: [{ key: "body", label: "Mock tests", kind: "richtext", rows: 4 }] },
 
   { id: "results", label: "Results & Success Rate", shortHelp: "Past results, top ranks, selection stats", layout: "prose",
-    fields: [{ key: "body", label: "Results", kind: "textarea", rows: 4 }] },
+    fields: [{ key: "body", label: "Results", kind: "richtext", rows: 4 }] },
 
   { id: "topper_testimonials", label: "Topper Testimonials", shortHelp: "6–10 short success stories", layout: "testimonials",
     fields: [{ key: "items", label: "Testimonials", kind: "list-testimonial" }] },
@@ -101,43 +101,43 @@ export const INSTITUTE_SECTIONS: SectionDef[] = [
     fields: [{ key: "items", label: "Reviews", kind: "list-review" }] },
 
   { id: "admission_process", label: "Admission Process", shortHelp: "Steps to enroll, online/offline", layout: "prose",
-    fields: [{ key: "body", label: "Admission steps", kind: "textarea", rows: 4 }] },
+    fields: [{ key: "body", label: "Admission steps", kind: "richtext", rows: 4 }] },
 
   { id: "eligibility", label: "Eligibility Criteria", shortHelp: "Who can join", layout: "prose",
-    fields: [{ key: "body", label: "Eligibility", kind: "textarea", rows: 3 }] },
+    fields: [{ key: "body", label: "Eligibility", kind: "richtext", rows: 3 }] },
 
   { id: "fees", label: "Fee Structure", shortHelp: "Price range, installments, refund", layout: "prose",
-    fields: [{ key: "body", label: "Fees", kind: "textarea", rows: 4 }] },
+    fields: [{ key: "body", label: "Fees", kind: "richtext", rows: 4 }] },
 
   { id: "scholarships", label: "Scholarships & Discounts", shortHelp: "Merit, early bird, financial aid", layout: "prose",
-    fields: [{ key: "body", label: "Scholarships", kind: "textarea", rows: 3 }] },
+    fields: [{ key: "body", label: "Scholarships", kind: "richtext", rows: 3 }] },
 
   { id: "demo_classes", label: "Demo Classes", shortHelp: "Free/paid demo info", layout: "prose",
-    fields: [{ key: "body", label: "Demo info", kind: "textarea", rows: 3 }] },
+    fields: [{ key: "body", label: "Demo info", kind: "richtext", rows: 3 }] },
 
   { id: "online_vs_offline", label: "Online vs Offline", shortHelp: "Mode comparison", layout: "prose",
-    fields: [{ key: "body", label: "Mode comparison", kind: "textarea", rows: 3 }] },
+    fields: [{ key: "body", label: "Mode comparison", kind: "richtext", rows: 3 }] },
 
   { id: "doubt_solving", label: "Doubt Solving Support", shortHelp: "WhatsApp, live sessions, faculty access", layout: "prose",
-    fields: [{ key: "body", label: "Doubt support", kind: "textarea", rows: 3 }] },
+    fields: [{ key: "body", label: "Doubt support", kind: "richtext", rows: 3 }] },
 
   { id: "mentorship", label: "Mentorship Programs", shortHelp: "1:1 mentoring, strategy", layout: "prose",
-    fields: [{ key: "body", label: "Mentorship", kind: "textarea", rows: 3 }] },
+    fields: [{ key: "body", label: "Mentorship", kind: "richtext", rows: 3 }] },
 
   { id: "infrastructure", label: "Infrastructure & Facilities", shortHelp: "Classrooms, library, labs", layout: "prose",
-    fields: [{ key: "body", label: "Infrastructure", kind: "textarea", rows: 3 }] },
+    fields: [{ key: "body", label: "Infrastructure", kind: "richtext", rows: 3 }] },
 
   { id: "tech_platform", label: "Technology & Learning Platform", shortHelp: "LMS, dashboards, analytics", layout: "prose",
-    fields: [{ key: "body", label: "Tech platform", kind: "textarea", rows: 3 }] },
+    fields: [{ key: "body", label: "Tech platform", kind: "richtext", rows: 3 }] },
 
   { id: "mobile_app", label: "Mobile App Access", shortHelp: "App features and access", layout: "prose",
-    fields: [{ key: "body", label: "Mobile app", kind: "textarea", rows: 2 }] },
+    fields: [{ key: "body", label: "Mobile app", kind: "richtext", rows: 2 }] },
 
   { id: "internship_placement", label: "Internship & Placement Support", shortHelp: "If applicable", layout: "prose",
-    fields: [{ key: "body", label: "Placement", kind: "textarea", rows: 3 }] },
+    fields: [{ key: "body", label: "Placement", kind: "richtext", rows: 3 }] },
 
   { id: "tieups", label: "College Tie-Ups & Partnerships", shortHelp: "Associated colleges/brands", layout: "prose",
-    fields: [{ key: "body", label: "Tie-ups", kind: "textarea", rows: 3 }] },
+    fields: [{ key: "body", label: "Tie-ups", kind: "richtext", rows: 3 }] },
 
   { id: "locations", label: "Locations & Centers", shortHelp: "5–8 centers (city, area, map link)", layout: "locations",
     fields: [{ key: "items", label: "Centers", kind: "list-location" }] },

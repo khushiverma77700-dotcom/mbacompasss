@@ -44,15 +44,11 @@ const InstitutePage = () => {
     [institute]
   );
 
-  // Only render these clean, focused sections on the public page.
-  const FRONTEND_SECTION_IDS = ["overview", "key_highlights", "courses_offered", "results", "faqs"] as const;
+  // Render every enabled section that has data, in the canonical order.
   const activeSections = useMemo(() => {
     if (!institute) return [];
     const sections = institute.sections || {};
-    const ordered = FRONTEND_SECTION_IDS
-      .map((id) => INSTITUTE_SECTIONS.find((d) => d.id === id))
-      .filter(Boolean) as typeof INSTITUTE_SECTIONS;
-    return ordered.filter((def) => {
+    return INSTITUTE_SECTIONS.filter((def) => {
       const s = getSection(sections, def.id);
       return s.enabled && !isSectionEmpty(def, s.data);
     });
