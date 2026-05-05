@@ -370,12 +370,10 @@ const InstitutePage = () => {
             {/* Dynamic sections */}
             {activeSections.map((def, idx) => {
               const { data } = getSection(institute.sections, def.id);
-              const eyebrow = sectionEyebrow(def.id, idx);
               return (
                 <SectionShell
                   key={def.id}
                   id={`sec-${def.id}`}
-                  eyebrow={eyebrow}
                   title={def.label}
                 >
                   <InstituteSectionRenderer def={def} data={data} />
@@ -387,7 +385,6 @@ const InstitutePage = () => {
             {linkedCourses.length > 0 && (
               <SectionShell
                 id="courses"
-                eyebrow="Programs"
                 title={`Courses Offered (${linkedCourses.length})`}
                 subtitle={`Explore every program currently offered by ${institute.name}. Click a card for full details, fees, batch dates, curriculum and mentors.`}
               >
@@ -609,41 +606,17 @@ const InstitutePage = () => {
 };
 
 const SectionShell = ({
-  id, eyebrow, title, subtitle, children,
-}: { id: string; eyebrow?: string; title: string; subtitle?: string; children: React.ReactNode }) => (
+  id, title, subtitle, children,
+}: { id: string; title: string; subtitle?: string; children: React.ReactNode }) => (
   <section id={id} className="scroll-mt-24">
     <div className="mb-5">
-      {eyebrow && (
-        <div className="text-xs font-semibold uppercase tracking-wider text-sky-700">{eyebrow}</div>
-      )}
-      <h2 className="text-2xl md:text-[26px] font-bold mt-1 text-slate-900">{title}</h2>
+      <h2 className="text-2xl md:text-[26px] font-bold text-slate-900">{title}</h2>
       {subtitle && <p className="text-sm text-muted-foreground mt-1 max-w-2xl">{subtitle}</p>}
       <div className="mt-3 h-1 w-12 rounded-full bg-gradient-to-r from-sky-500 to-blue-600" />
     </div>
     <div className="rounded-2xl border bg-white p-5 md:p-6 shadow-sm overflow-x-auto">{children}</div>
   </section>
 );
-
-const sectionEyebrow = (id: string, idx: number) => {
-  const map: Record<string, string> = {
-    overview: "About",
-    key_highlights: "Highlights",
-    courses_offered: "Programs",
-    course_formats: "Formats",
-    faculty: "Mentors",
-    results: "Outcomes",
-    topper_testimonials: "Toppers Speak",
-    student_reviews: "Reviews",
-    fees: "Pricing",
-    locations: "Centers",
-    faqs: "FAQs",
-    contact: "Contact",
-    why_choose: "Why Us",
-    pros_cons: "Pros & Cons",
-    comparison: "Compare",
-  };
-  return map[id] || `Section ${String(idx + 1).padStart(2, "0")}`;
-};
 
 const EnquiryForm = ({ instituteId, instituteName }: { instituteId: string; instituteName: string }) => {
   const { toast } = useToast();
