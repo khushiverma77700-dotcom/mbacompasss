@@ -354,6 +354,15 @@ const AdminCoachingSEOReports = () => {
                       Generate {pages.length} Reports
                     </Button>
                     {doneCount > 0 && (
+                      <Button
+                        size="sm"
+                        className="bg-emerald-600 hover:bg-emerald-700 gap-1.5"
+                        onClick={(e) => { e.stopPropagation(); applyAllForInstitute(inst); }}
+                      >
+                        <Wand2 className="w-3.5 h-3.5" /> Apply All Fixes ({doneCount})
+                      </Button>
+                    )}
+                    {doneCount > 0 && (
                       <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); downloadJson(inst); }} className="gap-1.5">
                         <Download className="w-3.5 h-3.5" /> Export
                       </Button>
@@ -379,6 +388,7 @@ const AdminCoachingSEOReports = () => {
                         page={p}
                         report={r}
                         onRun={() => runOne(inst.id, p)}
+                        onApply={() => applyFix(inst.id, p)}
                         disabled={isBusy}
                       />
                     );
@@ -403,8 +413,8 @@ const scoreColor = (n?: number) => {
 };
 
 const PageReportCard = ({
-  page, report, onRun, disabled,
-}: { page: PageItem; report?: Report; onRun: () => void; disabled?: boolean }) => {
+  page, report, onRun, onApply, disabled,
+}: { page: PageItem; report?: Report; onRun: () => void; onApply: () => void; disabled?: boolean }) => {
   const [open, setOpen] = useState(false);
   const s = report?.data;
   const a = report?.assembled;
