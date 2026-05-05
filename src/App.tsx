@@ -1,4 +1,4 @@
-import React, { Suspense, useState, lazy, useEffect } from "react";
+import React, { Suspense, useState, lazy, useEffect, useDeferredValue } from "react";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
