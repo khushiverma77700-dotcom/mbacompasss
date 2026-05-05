@@ -19,7 +19,7 @@ interface Props {
   defaultOpen?: boolean;
 }
 
-const InstituteSectionEditor = ({ def, enabled, data, onChange, defaultOpen = false }: Props) => {
+const InstituteSectionEditor = ({ def, enabled, data, onChange, defaultOpen = true }: Props) => {
   const [open, setOpen] = useState(defaultOpen);
   const safeData = Object.keys(data || {}).length ? data : emptySectionData(def);
   const empty = isSectionEmpty(def, safeData);
