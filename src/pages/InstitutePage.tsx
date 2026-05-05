@@ -49,8 +49,8 @@ const InstitutePage = () => {
         .from("institutes")
         .select(`
           *,
-          institute_courses(course:courses(id, name, fees, duration, mode, description, course_category_id)),
-          direct_courses:courses!courses_institute_id_fkey(id, name, fees, duration, mode, description, course_category_id)
+          institute_courses(course:courses(id, name, fees, duration, mode, description, course_category_id, curriculum, highlights, eligibility, batch_info, start_date, brochure_url, discount_text, total_seats, rating)),
+          direct_courses:courses!courses_institute_id_fkey(id, name, fees, duration, mode, description, course_category_id, curriculum, highlights, eligibility, batch_info, start_date, brochure_url, discount_text, total_seats, rating)
         `)
         .eq("slug", slug!)
         .maybeSingle();
