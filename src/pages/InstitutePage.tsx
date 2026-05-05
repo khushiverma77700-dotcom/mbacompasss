@@ -277,10 +277,10 @@ const InstitutePage = () => {
 
       <div className="container mx-auto px-4 py-10 max-w-6xl">
         <div className="grid lg:grid-cols-[230px_1fr] gap-8">
-          {/* ToC */}
-          {activeSections.length > 1 && (
+          {/* ToC — always visible on desktop when there's any content */}
+          {(activeSections.length > 0 || linkedCourses.length > 0) && (
             <aside className="hidden lg:block">
-              <div className="sticky top-20 space-y-1 bg-white border rounded-xl p-3 shadow-sm">
+              <div className="sticky top-20 max-h-[calc(100vh-6rem)] overflow-y-auto space-y-1 bg-white border rounded-xl p-3 shadow-sm">
                 <div className="text-xs font-semibold uppercase text-muted-foreground mb-2 px-2">On this page</div>
                 {linkedCourses.length > 0 && (
                   <a href="#courses" className={`block text-sm px-3 py-2 rounded-lg transition hover:bg-sky-50 ${activeId === "courses" ? "bg-sky-50 text-sky-700 font-semibold border-l-2 border-sky-600" : "text-slate-600"}`}>
@@ -293,8 +293,8 @@ const InstitutePage = () => {
                     {s.label}
                   </a>
                 ))}
-                <a href="#enquiry" className="block text-sm px-3 py-2 rounded-lg text-slate-600 hover:bg-sky-50">
-                  Enquire Now
+                <a href="#enquiry" className="block text-sm px-3 py-2 rounded-lg text-sky-700 font-semibold hover:bg-sky-50 mt-2 border-t pt-3">
+                  Enquire Now →
                 </a>
               </div>
             </aside>
@@ -303,7 +303,7 @@ const InstitutePage = () => {
           {/* Body */}
           <div className="space-y-10 min-w-0">
             {/* Mobile ToC */}
-            {activeSections.length > 1 && (
+            {(activeSections.length > 0 || linkedCourses.length > 0) && (
               <div className="lg:hidden -mx-4 px-4 overflow-x-auto sticky top-14 z-30 bg-white/90 backdrop-blur border-b py-2">
                 <div className="flex gap-2 whitespace-nowrap">
                   {linkedCourses.length > 0 && <a href="#courses" className="text-sm border rounded-full px-3 py-1.5 bg-white">Courses</a>}
