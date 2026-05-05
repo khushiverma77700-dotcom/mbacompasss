@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 import { useToast } from "@/hooks/use-toast";
 import SEOHead, { generateInstituteSchema } from "@/components/SEOHead";
 import {
@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import InstituteSectionRenderer from "@/components/institute/InstituteSectionRenderer";
 import { INSTITUTE_SECTIONS, getSection, isSectionEmpty } from "@/lib/instituteSections";
+import { slugify } from "@/lib/slugify";
 
 function stripHtml(html: string, max = 160): string {
   if (!html) return "";
@@ -40,7 +41,7 @@ function stripHtml(html: string, max = 160): string {
 const InstitutePage = () => {
   const { slug } = useParams<{ slug: string }>();
   const [activeId, setActiveId] = useState<string>("");
-  const [openCourse, setOpenCourse] = useState<any | null>(null);
+  
   const [courseMode, setCourseMode] = useState<string>("All");
   const [courseSort, setCourseSort] = useState<string>("default");
   const [courseSearch, setCourseSearch] = useState<string>("");
@@ -453,11 +454,10 @@ const InstitutePage = () => {
                     const preview = stripHtml(c.description || "", 180);
                     const highlights: string[] = Array.isArray(c.highlights) ? c.highlights : [];
                     return (
-                      <button
+                      <Link
                         key={c.id}
-                        type="button"
-                        onClick={() => setOpenCourse(c)}
-                        className="group relative rounded-2xl border border-sky-100 bg-white p-5 text-left shadow-sm hover:shadow-xl hover:border-sky-300 hover:-translate-y-0.5 transition-all overflow-hidden"
+                        to={`/institute/${institute.slug}/course/${slugify(c.name || "")}`}
+                        className="group relative rounded-2xl border border-sky-100 bg-white p-5 text-left shadow-sm hover:shadow-xl hover:border-sky-300 hover:-translate-y-0.5 transition-all overflow-hidden block"
                       >
                         <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${accent}`} />
                         <div className="flex items-start gap-3">
@@ -518,7 +518,7 @@ const InstitutePage = () => {
                             Open <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                           </span>
                         </div>
-                      </button>
+                      </Link>
                     );
                   })}
                 </div>
@@ -604,91 +604,6 @@ const InstitutePage = () => {
         )}
       </div>
 
-      {/* Course detail dialog */}
-      <Dialog open={!!openCourse} onOpenChange={(v) => !v && setOpenCourse(null)}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          {openCourse && (
-            <>
-              <DialogHeader>
-                <div className="flex items-center gap-3">
-                  <div className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 text-white grid place-items-center shadow-md">
-                    <GraduationCap className="w-6 h-6" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-[11px] uppercase tracking-wider text-sky-700 font-bold">{institute.name}</div>
-                    <DialogTitle className="text-xl text-left leading-tight">{openCourse.name}</DialogTitle>
-                  </div>
-                </div>
-              </DialogHeader>
-
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {openCourse.mode && <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-sky-50 text-sky-700 border border-sky-100"><BookOpen className="w-3 h-3" /> {openCourse.mode}</span>}
-                {openCourse.duration && <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100"><Clock className="w-3 h-3" /> {openCourse.duration}</span>}
-                {openCourse.fees && <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-100">₹{typeof openCourse.fees === "number" ? openCourse.fees.toLocaleString("en-IN") : openCourse.fees}</span>}
-                {openCourse.start_date && <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-violet-50 text-violet-700 border border-violet-100"><Calendar className="w-3 h-3" /> {openCourse.start_date}</span>}
-                {openCourse.eligibility && <span className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-1 rounded-full bg-slate-50 text-slate-700 border border-slate-200">Eligibility: {openCourse.eligibility}</span>}
-              </div>
-
-              {Array.isArray(openCourse.highlights) && openCourse.highlights.length > 0 && (
-                <div className="mt-5">
-                  <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Key Highlights</h4>
-                  <ul className="mt-2 grid sm:grid-cols-2 gap-1.5">
-                    {openCourse.highlights.map((h: string, i: number) => (
-                      <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                        <span>{h}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {openCourse.description && (
-                <div className="mt-5">
-                  <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider mb-2">About this Program</h4>
-                  <div
-                    className="prose prose-sm max-w-none prose-headings:text-slate-900 prose-a:text-sky-700 prose-table:text-sm"
-                    dangerouslySetInnerHTML={{ __html: openCourse.description }}
-                  />
-                </div>
-              )}
-
-              {Array.isArray(openCourse.curriculum) && openCourse.curriculum.length > 0 && (
-                <div className="mt-5">
-                  <h4 className="text-sm font-bold text-slate-900 uppercase tracking-wider">Curriculum</h4>
-                  <ol className="mt-2 grid sm:grid-cols-2 gap-1.5 list-decimal list-inside text-sm text-slate-700">
-                    {openCourse.curriculum.map((m: string, i: number) => (
-                      <li key={i}>{m}</li>
-                    ))}
-                  </ol>
-                </div>
-              )}
-
-              {openCourse.batch_info && (
-                <div className="mt-5 rounded-xl border border-sky-100 bg-sky-50/50 p-3 text-sm text-slate-700">
-                  <span className="font-semibold text-sky-800">Batch info: </span>{openCourse.batch_info}
-                </div>
-              )}
-
-              <div className="mt-6 flex flex-wrap gap-2">
-                <a href="#enquiry" onClick={() => setOpenCourse(null)} className="flex-1">
-                  <Button className="w-full bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700">Enquire about this course</Button>
-                </a>
-                {openCourse.brochure_url && (
-                  <a href={openCourse.brochure_url} target="_blank" rel="noreferrer">
-                    <Button variant="outline">Download brochure</Button>
-                  </a>
-                )}
-                {institute.phone && (
-                  <a href={`tel:${institute.phone}`}>
-                    <Button variant="outline" className="gap-1.5"><Phone className="w-4 h-4" /> Call</Button>
-                  </a>
-                )}
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
     </>
   );
 };
