@@ -455,9 +455,23 @@ const AdminCollegeSections = () => {
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       toast({ title: "Section updated" });
     } else {
-      const { error } = await supabase.from("college_sections").insert(payload);
-      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
-      toast({ title: "Section created" });
+      // Check if a section with same (college, type, version='original') already exists — if so, update it
+      const { data: existing } = await supabase
+        .from("college_sections")
+        .select("id")
+        .eq("college_id", form.college_id)
+        .eq("section_type", form.section_type)
+        .eq("version", "original")
+        .maybeSingle();
+      if (existing?.id) {
+        const { error } = await supabase.from("college_sections").update(payload).eq("id", existing.id);
+        if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+        toast({ title: "Existing section updated", description: "A section of this type already existed for this college — updated it instead of creating a duplicate." });
+      } else {
+        const { error } = await supabase.from("college_sections").insert(payload);
+        if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
+        toast({ title: "Section created" });
+      }
     }
     setShowForm(false); setForm(emptyForm); setEditId(null); fetchSections();
   };
