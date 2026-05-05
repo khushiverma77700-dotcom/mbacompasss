@@ -15,7 +15,7 @@ import StateCitySelect from "@/components/admin/StateCitySelect";
 import FileUpload from "@/components/admin/FileUpload";
 import InstituteSectionEditor from "@/components/admin/InstituteSectionEditor";
 import AICoachingInstituteDialog from "@/components/admin/AICoachingInstituteDialog";
-import AISeoInstitutePanel from "@/components/admin/AISeoInstitutePanel";
+import { AISEOButton } from "@/components/admin/AISEOSuggestions";
 import { INSTITUTE_SECTIONS, getSection } from "@/lib/instituteSections";
 import { slugify } from "@/lib/slugify";
 
@@ -137,9 +137,12 @@ const AdminCoachingInstituteDetail = () => {
           <Button variant="outline" size="sm" onClick={() => setShowAI(true)}>
             <Sparkles className="w-4 h-4 mr-1" /> Generate via AI
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setShowSeo(true)}>
-            <Sparkles className="w-4 h-4 mr-1" /> Run AI SEO
-          </Button>
+          <AISEOButton
+            contentType="institute"
+            data={inst}
+            recordId={inst.id}
+            onApply={(applied) => setInst((p: any) => ({ ...p, ...applied }))}
+          />
           <Button onClick={saveAll} disabled={saving}>
             {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
             Save changes
@@ -349,16 +352,6 @@ const AdminCoachingInstituteDetail = () => {
         }}
       />
 
-      <AISeoInstitutePanel
-        open={showSeo}
-        onOpenChange={setShowSeo}
-        institute={inst}
-        sections={sections}
-        onApply={async ({ sections: nextSections }) => {
-          setSections(nextSections);
-          await supabase.from("institutes").update({ sections: nextSections }).eq("id", id!);
-        }}
-      />
     </div>
   );
 };
