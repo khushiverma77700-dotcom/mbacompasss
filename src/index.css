@@ -571,3 +571,9 @@
   margin: 0 !important;
   min-width: 100%;
 }
+
+/* Top progress bar shown during route chunk loading (see App.tsx TopProgressBar) */
+@keyframes lov-route-progress {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
