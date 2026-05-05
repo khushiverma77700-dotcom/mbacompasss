@@ -357,7 +357,6 @@ const InstitutePage = () => {
                   id={`sec-${def.id}`}
                   eyebrow={eyebrow}
                   title={def.label}
-                  subtitle={def.shortHelp}
                 >
                   <InstituteSectionRenderer def={def} data={data} />
                 </SectionShell>
