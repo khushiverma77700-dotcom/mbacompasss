@@ -105,8 +105,9 @@ Deno.serve(async (req) => {
 - Secondary keywords: ${secKws.length ? secKws.join(", ") : "(none)"}
 - Today: ${todayIso}; cycle ${year}-${year + 1}.`;
 
-    const richBody = (label: string) => ({ type: "object", properties: { body: { type: "string", description: `${label}. Semantic HTML only, 80-180 words, primary keyword used naturally.` } }, required: ["body"] });
-    const bullets = (label: string) => ({ type: "object", properties: { items: { type: "array", items: { type: "string" }, minItems: 4, description: `${label}. 5-8 short, concrete bullets.` } }, required: ["items"] });
+    const richBody = (label: string, min = 220, max = 380) => ({ type: "object", properties: { body: { type: "string", description: `${label}. Semantic HTML only, ${min}-${max} words, multi-paragraph (3-5 paragraphs), include 1-2 <h3> sub-headings, at least one <ul> with 4+ <li>, primary keyword used 2-3 times naturally, end with a concrete takeaway. NO filler. NO generic phrases. NO "varies"/"depends".` } }, required: ["body"] });
+    const longBody = (label: string) => richBody(label, 320, 500);
+    const bullets = (label: string, min = 6) => ({ type: "object", properties: { items: { type: "array", items: { type: "string", description: "Each bullet 12-22 words, concrete and specific (numbers, names, examples)." }, minItems: min, description: `${label}. ${min}-${min + 3} concrete bullets.` } }, required: ["items"] });
 
     const tool = {
       type: "function",
