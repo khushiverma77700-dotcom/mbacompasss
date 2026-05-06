@@ -196,22 +196,77 @@ const ListFaculty = ({ value, onChange }: any) => (
 
 const ListTestimonial = ({ value, onChange }: any) => (
   <div className="space-y-3">
-    {value.map((row: any, i: number) => (
-      <Card key={i} className="p-3">
-        <RowWrap onRemove={() => onChange(value.filter((_: any, x: number) => x !== i))}>
-          <div className="grid md:grid-cols-2 gap-2">
-            <Input placeholder="Student name" value={row.name || ""} onChange={(e) => onChange(value.map((r: any, j: number) => j === i ? { ...r, name: e.target.value } : r))} />
-            <Input placeholder="Exam (e.g. CAT 2024)" value={row.exam || ""} onChange={(e) => onChange(value.map((r: any, j: number) => j === i ? { ...r, exam: e.target.value } : r))} />
-            <Textarea className="md:col-span-2" rows={2} placeholder="Story (20–30 words)" value={row.text || ""} onChange={(e) => onChange(value.map((r: any, j: number) => j === i ? { ...r, text: e.target.value } : r))} />
-            <div className="md:col-span-2">
-              <Label className="text-xs">Photo (optional)</Label>
-              <FileUpload bucket="uploads" value={row.photo_url || ""} onChange={(url) => onChange(value.map((r: any, j: number) => j === i ? { ...r, photo_url: url } : r))} />
+    {value.map((row: any, i: number) => {
+      const set = (patch: any) => onChange(value.map((r: any, j: number) => j === i ? { ...r, ...patch } : r));
+      return (
+        <Card key={i} className="p-3">
+          <RowWrap onRemove={() => onChange(value.filter((_: any, x: number) => x !== i))}>
+            <div className="grid md:grid-cols-3 gap-2">
+              <Input placeholder="Student name" value={row.name || ""} onChange={(e) => set({ name: e.target.value })} />
+              <Input placeholder="Exam (e.g. CAT 2024)" value={row.exam || ""} onChange={(e) => set({ exam: e.target.value })} />
+              <Input placeholder="Year (e.g. 2024)" value={row.year || ""} onChange={(e) => set({ year: e.target.value })} />
+              <Input placeholder="Score / %ile (e.g. 99.8%ile)" value={row.score || ""} onChange={(e) => set({ score: e.target.value })} />
+              <Input placeholder="Now studying at (e.g. IIM A)" value={row.college || ""} onChange={(e) => set({ college: e.target.value })} />
+              <Input type="number" min={1} max={5} placeholder="Rating 1-5" value={row.rating || ""} onChange={(e) => set({ rating: Number(e.target.value) })} />
+              <Textarea className="md:col-span-3" rows={3} placeholder="Story (40–80 words)" value={row.text || ""} onChange={(e) => set({ text: e.target.value })} />
+              <Input className="md:col-span-3" placeholder="Video URL (YouTube/embed — optional)" value={row.video_url || ""} onChange={(e) => set({ video_url: e.target.value })} />
+              <div className="md:col-span-3">
+                <Label className="text-xs">Photo (optional)</Label>
+                <FileUpload bucket="uploads" value={row.photo_url || ""} onChange={(url) => set({ photo_url: url })} />
+              </div>
             </div>
-          </div>
-        </RowWrap>
-      </Card>
-    ))}
-    <AddBtn label="Add testimonial" onClick={() => onChange([...value, { name: "", exam: "", text: "", photo_url: "" }])} />
+          </RowWrap>
+        </Card>
+      );
+    })}
+    <AddBtn label="Add testimonial" onClick={() => onChange([...value, { name: "", exam: "", year: "", score: "", college: "", rating: 5, text: "", photo_url: "", video_url: "" }])} />
+  </div>
+);
+
+const ListTopper = ({ value, onChange }: any) => (
+  <div className="space-y-3">
+    {value.map((row: any, i: number) => {
+      const set = (patch: any) => onChange(value.map((r: any, j: number) => j === i ? { ...r, ...patch } : r));
+      return (
+        <Card key={i} className="p-3">
+          <RowWrap onRemove={() => onChange(value.filter((_: any, x: number) => x !== i))}>
+            <div className="grid md:grid-cols-3 gap-2">
+              <Input placeholder="Student name" value={row.name || ""} onChange={(e) => set({ name: e.target.value })} />
+              <Input placeholder="Rank / Selection (e.g. AIR 12)" value={row.rank || ""} onChange={(e) => set({ rank: e.target.value })} />
+              <Input placeholder="Exam (e.g. CAT)" value={row.exam || ""} onChange={(e) => set({ exam: e.target.value })} />
+              <Input placeholder="Year (e.g. 2024)" value={row.year || ""} onChange={(e) => set({ year: e.target.value })} />
+              <Input placeholder="Score / %ile" value={row.score || ""} onChange={(e) => set({ score: e.target.value })} />
+              <Input placeholder="Selected to (e.g. IIM A)" value={row.college || ""} onChange={(e) => set({ college: e.target.value })} />
+              <div className="md:col-span-3">
+                <Label className="text-xs">Photo (optional)</Label>
+                <FileUpload bucket="uploads" value={row.photo_url || ""} onChange={(url) => set({ photo_url: url })} />
+              </div>
+            </div>
+          </RowWrap>
+        </Card>
+      );
+    })}
+    <AddBtn label="Add topper" onClick={() => onChange([...value, { name: "", rank: "", exam: "", year: "", score: "", college: "", photo_url: "" }])} />
+  </div>
+);
+
+const ListResultStat = ({ value, onChange }: any) => (
+  <div className="space-y-3">
+    {value.map((row: any, i: number) => {
+      const set = (patch: any) => onChange(value.map((r: any, j: number) => j === i ? { ...r, ...patch } : r));
+      return (
+        <Card key={i} className="p-3">
+          <RowWrap onRemove={() => onChange(value.filter((_: any, x: number) => x !== i))}>
+            <div className="grid md:grid-cols-3 gap-2">
+              <Input placeholder="Big value (e.g. 120+)" value={row.value || ""} onChange={(e) => set({ value: e.target.value })} />
+              <Input placeholder="Label (e.g. IIM Calls)" value={row.label || ""} onChange={(e) => set({ label: e.target.value })} />
+              <Input placeholder="Sub-label (e.g. CAT 2024)" value={row.sub || ""} onChange={(e) => set({ sub: e.target.value })} />
+            </div>
+          </RowWrap>
+        </Card>
+      );
+    })}
+    <AddBtn label="Add stat" onClick={() => onChange([...value, { value: "", label: "", sub: "" }])} />
   </div>
 );
 
