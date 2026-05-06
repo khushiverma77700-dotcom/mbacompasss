@@ -207,6 +207,14 @@ const AdminSEODashboard = () => {
   const [bulkCancelled, setBulkCancelled] = useState(false);
   const [bulkFinished, setBulkFinished] = useState(false);
   const [bulkStartedAt, setBulkStartedAt] = useState<number | null>(null);
+  const [bulkLogs, setBulkLogs] = useState<import("@/components/admin/BulkOptimizeProgressDialog").LogEntry[]>([]);
+  const pushLog = useCallback((level: "info" | "ok" | "warn" | "error", msg: string) => {
+    setBulkLogs(prev => {
+      const next = [...prev, { ts: Date.now(), level, msg }];
+      // cap at 500 to keep DOM lightweight
+      return next.length > 500 ? next.slice(next.length - 500) : next;
+    });
+  }, []);
   const [selectedType, setSelectedType] = useState<TypeFilter>("all");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [schemaFilter, setSchemaFilter] = useState<BooleanFilter>("all");
