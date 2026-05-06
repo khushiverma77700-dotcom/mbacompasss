@@ -940,29 +940,99 @@ const AdminSEODashboard = () => {
     fetchDashboardData();
   };
 
+  const bulkPausedRef = useRef(false);
+  const bulkCancelledRef = useRef(false);
+  useEffect(() => { bulkPausedRef.current = bulkPaused; }, [bulkPaused]);
+  useEffect(() => { bulkCancelledRef.current = bulkCancelled; }, [bulkCancelled]);
+
   const handleBulkOptimize = async () => {
     if (!selectedRows.length) { toast({ title: "No pages selected" }); return; }
+    const targets = selectedRows.filter(r => !isStaticPage(r));
+    if (!targets.length) {
+      toast({ title: "No optimizable pages", description: "Static pages aren't supported in bulk yet." });
+      return;
+    }
+
+    setBulkItems(targets.map(r => ({
+      key: r.key, name: r.name, contentType: r.contentType,
+      status: "pending", oldScore: r.audit.score,
+    })));
+    setBulkPaused(false); bulkPausedRef.current = false;
+    setBulkCancelled(false); bulkCancelledRef.current = false;
+    setBulkFinished(false);
+    setBulkStartedAt(Date.now());
+    setBulkOpen(true);
     setBulkLoading(true);
+
     let success = 0, fail = 0;
-    for (const row of selectedRows.filter(r => !isStaticPage(r))) {
+    for (let i = 0; i < targets.length; i++) {
+      if (bulkCancelledRef.current) break;
+      while (bulkPausedRef.current && !bulkCancelledRef.current) {
+        await new Promise(r => setTimeout(r, 300));
+      }
+      if (bulkCancelledRef.current) break;
+
+      const row = targets[i];
+      const startedAt = Date.now();
+      setBulkItems(prev => prev.map(it => it.key === row.key
+        ? { ...it, status: "running", startedAt, step: "Calling AI…" } : it));
+
       try {
-        const { data, error } = await supabase.functions.invoke("ai-seo-enhance", { body: { contentType: row.contentType, data: row.item } });
+        const { data, error } = await supabase.functions.invoke("ai-seo-enhance", {
+          body: { contentType: row.contentType, data: row.item },
+        });
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
         const sug = data?.suggestions;
         if (!sug) throw new Error("Missing suggestions");
+
+        setBulkItems(prev => prev.map(it => it.key === row.key
+          ? { ...it, step: "Saving snapshot…" } : it));
+
         await saveSeoSnapshot(buildStoredSeoSnapshot(row.contentType, row.item, sug));
         if (contentTypeConfig[row.contentType].supportsSeoColumns) {
-          const update: Record<string, any> = { meta_title: sug.meta_title, meta_description: sug.meta_description, keywords: mergeKeywordBuckets(sug.keywords) };
+          const update: Record<string, any> = {
+            meta_title: sug.meta_title,
+            meta_description: sug.meta_description,
+            keywords: mergeKeywordBuckets(sug.keywords),
+          };
           if (contentTypeConfig[row.contentType].supportsH1Column && sug.h1_tag) update.h1_tag = sug.h1_tag;
           const { error: ue } = await supabase.from(contentTypeConfig[row.contentType].table as any).update(update).eq("id", row.id);
           if (ue) throw ue;
         }
+
+        const finishedAt = Date.now();
+        const meta = data?.meta || {};
+        const projected = sug?.seoScore?.projectedScore ?? sug?.seoScore?.overall;
+        setBulkItems(prev => prev.map(it => it.key === row.key ? {
+          ...it,
+          status: "ok",
+          finishedAt,
+          durationMs: finishedAt - startedAt,
+          promptTokens: meta.promptTokens,
+          completionTokens: meta.completionTokens,
+          totalTokens: meta.totalTokens,
+          cost: meta.estimatedCost,
+          newScore: typeof projected === "number" ? Math.round(projected) : undefined,
+          step: undefined,
+        } : it));
         success++;
-        await new Promise(r => setTimeout(r, 350));
-      } catch { fail++; }
+        await new Promise(r => setTimeout(r, 250));
+      } catch (e: any) {
+        const finishedAt = Date.now();
+        setBulkItems(prev => prev.map(it => it.key === row.key ? {
+          ...it,
+          status: "fail",
+          finishedAt,
+          durationMs: finishedAt - startedAt,
+          error: e?.message || "Unknown error",
+        } : it));
+        fail++;
+      }
     }
+
     setBulkLoading(false);
+    setBulkFinished(true);
     setSelectedKeys([]);
     fetchDashboardData();
     toast({ title: "Bulk optimize complete", description: `${success} optimized, ${fail} failed.` });
