@@ -90,7 +90,13 @@ const AdminCoachingInstitutes = () => {
           <h1 className="text-2xl font-bold">Coaching Institutes</h1>
           <p className="text-sm text-muted-foreground">Manage city-wise and hybrid (online + offline) institutes.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link to="/admin/coaching-refresh-hub">
+            <Button variant="outline"><RefreshCw className="w-4 h-4 mr-1" /> Content Refresh Hub</Button>
+          </Link>
+          <Link to="/admin/coaching-seo-reports">
+            <Button variant="outline"><FileText className="w-4 h-4 mr-1" /> SEO Reports</Button>
+          </Link>
           <Button variant="outline" onClick={() => setShowAI(true)}>
             <Sparkles className="w-4 h-4 mr-1" /> Generate via AI
           </Button>
