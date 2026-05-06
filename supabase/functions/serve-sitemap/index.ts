@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
       mbaCompass,
     ] = await Promise.all([
       fetchAll("institutes", "slug, updated_at"),
-      fetchAll("colleges", "slug, updated_at"),
+      fetchAll("colleges", "id, slug, updated_at"),
       fetchAll("exams", "slug, created_at"),
       fetchAll("categories", "slug, updated_at"),
       fetchAll("articles", "slug, updated_at", (q) => q.eq("published", true)),
