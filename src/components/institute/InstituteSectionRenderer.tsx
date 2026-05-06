@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Quote, MapPin, Star, ExternalLink, CheckCircle2, XCircle, Sparkles, Calendar, Globe, Youtube, Instagram, Linkedin, Facebook, Twitter, Phone, Mail } from "lucide-react";
+import { Quote, MapPin, Star, ExternalLink, CheckCircle2, XCircle, Sparkles, Calendar, Globe, Youtube, Instagram, Linkedin, Facebook, Twitter, Phone, Mail, Trophy, Award, GraduationCap, Play, TrendingUp, Medal } from "lucide-react";
 import type { SectionDef } from "@/lib/instituteSections";
 
 interface Props {
