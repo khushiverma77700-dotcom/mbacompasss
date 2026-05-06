@@ -1197,6 +1197,7 @@ const CollegeDetailPage = () => {
 
       {/* Mobile-first: Floating TOC + Sticky action bar */}
       <FloatingTOC
+        className="lg:hidden"
         items={tabItems.map(t => ({ id: t.value, label: t.label }))}
         onSelect={scrollToSection}
         bottomOffset={88}
