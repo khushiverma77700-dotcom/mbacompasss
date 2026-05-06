@@ -6,7 +6,7 @@ import { Loader2, Sparkles, CheckCircle2, AlertTriangle, Wand2 } from "lucide-re
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-type Action = "fix_all" | "rewrite_legacy_domains" | "fix_missing_meta" | "flush_indexing" | "rebuild_sitemap";
+type Action = "fix_all" | "rewrite_legacy_domains" | "fix_missing_meta" | "expand_thin_content" | "flush_indexing" | "rebuild_sitemap";
 
 interface AutoFixPanelProps {
   /** Restrict the panel to a single action; default shows everything. */
@@ -30,6 +30,10 @@ const ACTION_META: Record<Action, { label: string; hint: string }> = {
   fix_missing_meta: {
     label: "AI-fix missing meta",
     hint: "Finds rows without meta_title/description and writes AI-generated SEO to the database.",
+  },
+  expand_thin_content: {
+    label: "AI-expand thin content",
+    hint: "Finds pages under 800 words and rewrites the body into long, formatted, SEO-friendly HTML (H2/H3, lists, FAQs).",
   },
   flush_indexing: {
     label: "Flush indexing queue",
