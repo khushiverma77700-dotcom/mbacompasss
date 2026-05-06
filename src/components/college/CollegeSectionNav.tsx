@@ -12,6 +12,7 @@ interface CollegeSectionNavProps {
   items: NavItem[];
   /** Pixel offset from top to account for sticky header. */
   topOffset?: number;
+  className?: string;
 }
 
 /**
@@ -21,7 +22,7 @@ interface CollegeSectionNavProps {
  * - Highlights the section currently in view using IntersectionObserver.
  * - Smooth-scrolls to the section on click.
  */
-const CollegeSectionNav = ({ items, topOffset = 96 }: CollegeSectionNavProps) => {
+const CollegeSectionNav = ({ items, topOffset = 96, className }: CollegeSectionNavProps) => {
   const [active, setActive] = useState<string>(items[0]?.id ?? "");
 
   useEffect(() => {
@@ -65,9 +66,9 @@ const CollegeSectionNav = ({ items, topOffset = 96 }: CollegeSectionNavProps) =>
   return (
     <nav
       aria-label="College sections"
-      className="hidden lg:block sticky top-32 self-start max-h-[calc(100vh-9rem)] overflow-y-auto pr-2 z-20"
+      className={cn("w-full min-w-0", className)}
     >
-      <div className="rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm p-3">
+      <div className="w-full min-w-0 rounded-xl border border-border/60 bg-card shadow-sm p-3">
         <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-2 pb-2 mb-2 border-b border-border/40">
           On this page
         </div>
@@ -80,7 +81,7 @@ const CollegeSectionNav = ({ items, topOffset = 96 }: CollegeSectionNavProps) =>
                   type="button"
                   onClick={() => scrollTo(item.id)}
                   className={cn(
-                    "group w-full text-left flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm transition-all",
+                    "group w-full min-w-0 text-left flex items-center gap-2 px-2.5 py-2 rounded-lg text-sm transition-all",
                     "border-l-2",
                     isActive
                       ? "bg-primary/10 text-primary font-semibold border-primary"
