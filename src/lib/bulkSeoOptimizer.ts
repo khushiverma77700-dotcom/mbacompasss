@@ -12,6 +12,7 @@ import {
   buildStoredSeoSnapshot,
   contentTypeConfig,
   mergeKeywordBuckets,
+  notifySeoSnapshotUpdated,
   saveSeoSnapshot,
   type SEOContentType,
 } from "@/lib/seoAutomation";
@@ -37,6 +38,12 @@ export interface BulkItem {
   newScore?: number;
   error?: string;
   step?: string;
+  saveStatus?: "pending" | "saving" | "snapshot_saved" | "db_applied" | "verified" | "failed";
+  savedAt?: number;
+  snapshotId?: string;
+  dbUpdated?: boolean;
+  verified?: boolean;
+  changedFields?: string[];
 }
 
 export interface LogEntry {
@@ -97,12 +104,7 @@ function loadPersisted(): RunnerState | null {
 
 function persist() {
   try {
-    // Keep payload light: drop large `item` blobs from persisted copy.
-    const slim = {
-      ...state,
-      items: state.items.map((i) => ({ ...i, item: undefined as any })),
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(slim));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch {
     /* quota or serialization — ignore */
   }
@@ -254,15 +256,21 @@ async function runWorker() {
           `   ↳ AI responded in ${fmtMs(meta.aiLatencyMs)} · ${Number(meta.totalTokens).toLocaleString()} tokens · $${(meta.estimatedCost || 0).toFixed(4)}`
         );
       }
-      patchItem(current.key, { step: "Saving snapshot & DB…" });
+      patchItem(current.key, { step: "Saving snapshot & DB…", saveStatus: "saving" });
 
       // ── Auto-save (snapshot + DB) ──
-      await saveSeoSnapshot(buildStoredSeoSnapshot(current.contentType, current.item, sug));
+      const keywordList = mergeKeywordBuckets(sug.keywords);
+      const snapshot = buildStoredSeoSnapshot(current.contentType, { ...current.item, id: current.id }, sug);
+      const snapshotId = await saveSeoSnapshot(snapshot);
+      patchItem(current.key, { saveStatus: "snapshot_saved", snapshotId, changedFields: ["SEO snapshot", "schema", "canonical", "social meta"] });
+
+      let dbUpdated = false;
       if (contentTypeConfig[current.contentType].supportsSeoColumns) {
         const update: Record<string, any> = {
           meta_title: sug.meta_title,
           meta_description: sug.meta_description,
-          keywords: mergeKeywordBuckets(sug.keywords),
+          keywords: keywordList,
+          last_seo_refresh: new Date().toISOString(),
         };
         if (contentTypeConfig[current.contentType].supportsH1Column && sug.h1_tag) {
           update.h1_tag = sug.h1_tag;
@@ -272,7 +280,24 @@ async function runWorker() {
           .update(update)
           .eq("id", current.id);
         if (ue) throw ue;
+        dbUpdated = true;
+        patchItem(current.key, {
+          saveStatus: "db_applied",
+          dbUpdated: true,
+          changedFields: Object.keys(update),
+        });
       }
+
+      const { data: savedRows, error: verifySnapshotError } = await supabase
+        .from("site_settings")
+        .select("id, value, updated_at")
+        .eq("key", `seo_page__${current.contentType}__${current.id}`)
+        .limit(1);
+      if (verifySnapshotError) throw verifySnapshotError;
+      const savedValue = savedRows?.[0]?.value as any;
+      const verified = Boolean(savedValue?.meta_title === snapshot.meta_title && savedValue?.meta_description === snapshot.meta_description);
+      if (!verified) throw new Error("Save verification failed: generated SEO snapshot was not found after write.");
+      notifySeoSnapshotUpdated(current.contentType, current.id);
 
       const finishedAt = Date.now();
       const projected = sug?.seoScore?.projectedScore ?? sug?.seoScore?.overall;
@@ -286,10 +311,15 @@ async function runWorker() {
         totalTokens: meta.totalTokens,
         cost: meta.estimatedCost,
         newScore,
+        saveStatus: "verified",
+        savedAt: finishedAt,
+        snapshotId,
+        dbUpdated,
+        verified: true,
         step: undefined,
       });
       setState({ lastSavedAt: finishedAt });
-      pushLog("ok", `✓ Auto-saved ${current.name} — score ${current.oldScore ?? "?"} → ${newScore ?? "?"} (${fmtMs(finishedAt - startedAt)})`);
+      pushLog("ok", `✓ Verified save for ${current.name} — score ${current.oldScore ?? "?"} → ${newScore ?? "?"}; snapshot${dbUpdated ? " + page fields" : ""} applied (${fmtMs(finishedAt - startedAt)})`);
       success++;
       await new Promise((r) => setTimeout(r, 200));
     } catch (e: any) {
@@ -300,6 +330,7 @@ async function runWorker() {
         finishedAt,
         durationMs: finishedAt - startedAt,
         error: msg,
+        saveStatus: "failed",
         step: undefined,
       });
       pushLog("error", `✕ ${current.name} — ${msg}`);
@@ -307,7 +338,7 @@ async function runWorker() {
     }
   }
 
-  setState({ running: false, finished: true });
+  setState({ running: false, finished: true, open: true });
   pushLog(fail === 0 ? "ok" : "warn", `Bulk run finished — ${success} optimized, ${fail} failed`);
   for (const cb of onCompletedCallbacks) {
     try { cb(); } catch { /* ignore */ }

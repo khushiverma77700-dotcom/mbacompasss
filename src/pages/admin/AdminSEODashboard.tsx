@@ -26,7 +26,7 @@ import { PageSpeedMonitor } from "@/components/admin/PageSpeedMonitor";
 import { useToast } from "@/hooks/use-toast";
 import {
   buildStoredSeoSnapshot, contentTypeConfig, fetchAllSeoSnapshots, mergeKeywordBuckets,
-  saveSeoSnapshot, type SEOContentType, type StoredSEOSnapshot,
+  saveSeoSnapshot, SEO_SNAPSHOT_UPDATED_EVENT, type SEOContentType, type StoredSEOSnapshot,
 } from "@/lib/seoAutomation";
 import STATIC_PAGES_CONFIG from "@/data/staticPages";
 import SEOFullAudit from "@/components/admin/SEOFullAudit";
@@ -542,6 +542,19 @@ const AdminSEODashboard = () => {
     }, 90_000);
     return () => clearInterval(interval);
   }, [fetchDashboardData, loading, bulkLoading]);
+
+  useEffect(() => {
+    let timer: number | undefined;
+    const refreshLiveScores = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => fetchDashboardData(), 500);
+    };
+    window.addEventListener(SEO_SNAPSHOT_UPDATED_EVENT, refreshLiveScores);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener(SEO_SNAPSHOT_UPDATED_EVENT, refreshLiveScores);
+    };
+  }, [fetchDashboardData]);
 
   // ── New Feature Functions ──
   const loadDailyReport = useCallback(async () => {
