@@ -151,10 +151,7 @@ Return UP TO ${max} distinct MBA-entrance courses this institute is known to off
     tool_choice: { type: "function", function: { name: "list_courses" } },
   });
 
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`AI gateway ${res.status}: ${t}`);
-  }
+  if (!res.ok) throw new Error(await safeAIError(res));
   const data = await res.json();
   const call = data?.choices?.[0]?.message?.tool_calls?.[0];
   const args = call?.function?.arguments ? JSON.parse(call.function.arguments) : { courses: [] };
@@ -302,10 +299,7 @@ For EACH course return:
     tool_choice: { type: "function", function: { name: "write_courses" } },
   });
 
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`AI gateway ${res.status}: ${t}`);
-  }
+  if (!res.ok) throw new Error(await safeAIError(res));
   const data = await res.json();
   const call = data?.choices?.[0]?.message?.tool_calls?.[0];
   const args = call?.function?.arguments ? JSON.parse(call.function.arguments) : { courses: [] };
