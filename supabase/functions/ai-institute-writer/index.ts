@@ -77,11 +77,10 @@ ACCURACY IS MANDATORY. For well-known Indian MBA-prep brands (TIME, IMS, Career 
 - exam coverage (CAT/XAT/GMAT etc.)
 - known flagship products (e.g. TIME's "AIMCAT", IMS's "SimCATs", CL's "Mock CAT", 2IIM's "CAT Online")
 
-FRESHNESS & CITATION RULES (MACHINE-READABLE):
+FRESHNESS RULES:
 - Today is ${todayIso}. Active batch cycle: ${admissionCycle}. Freshness window: ${freshness}.
-- For EVERY key stat (success rate, fees, students taught, IIM/MBA selections, mock-test count) append a machine-readable inline citation marker in this EXACT shape: [src:<Source> <Year>]. Examples: [src:Brochure ${currentYear}], [src:Result Release ${currentYear - 1}], [src:Faculty Page ${currentYear}]. Our frontend converts these markers into clickable "view source" pills, so the syntax must be exact (square brackets, "src:" prefix, no quotes, no URLs).
-- Use at least one [src:Brochure …] and one [src:Result Release …] across the description.
-- The long-form description MUST end with a small italic line: <p><em>Last updated: ${todayIso}</em></p>.
+- DO NOT include ANY citation, source, footnote or attribution markers anywhere in the output. Forbidden patterns include: "[src:Brochure 2026]", "[src:...]", "(source: ...)", "(Source/...)", "(as per ...)", "[1]", "Ref:", "*Source:*", "Sources —", or any bracketed/parenthesised attribution. State facts plainly with the year woven into the sentence.
+- Do NOT append a "Last updated:" line.
 
 Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. Never include <html>, <head>, <body>, <h1>, or markdown fences. ABSOLUTELY NO inline style="" attributes, NO <font> tags, NO class="" / id="" attributes — plain semantic HTML only.`;
 
