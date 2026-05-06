@@ -715,8 +715,6 @@ const App = () => (
             <Route path="/list-your-business/poc" element={<PublicLayout><LazyPage><ListingPocPage /></LazyPage></PublicLayout>} />
             <Route path="/list-your-business/:type/:id" element={<PublicLayout><LazyPage><ListingFormPage /></LazyPage></PublicLayout>} />
             <Route path="/my-listings" element={<PublicLayout><LazyPage><MyListingsPage /></LazyPage></PublicLayout>} />
-            <Route path="/college/:slug/programme/:programmeSlug" element={<PublicLayout><LazyPage><ProgrammeDetailPage /></LazyPage></PublicLayout>} />
-            <Route path="/mba-programme-compare" element={<PublicLayout><LazyPage><MBAProgrammeComparePage /></LazyPage></PublicLayout>} />
             <Route path="/mocks" element={<PublicLayout><LazyPage><MocksListPage /></LazyPage></PublicLayout>} />
             <Route path="/courses" element={<PublicLayout><LazyPage><MockBundlesListPage /></LazyPage></PublicLayout>} />
             <Route path="/courses/:slug" element={<PublicLayout><LazyPage><MockBundleDetailPage /></LazyPage></PublicLayout>} />
