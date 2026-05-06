@@ -73,7 +73,7 @@ const SCOPE_LOCK = `# SCOPE LOCK — MBA / MASTERS-IN-MANAGEMENT ENTRANCE COACHI
 
 // ---------------- DISCOVER ----------------
 
-async function discover(body: Extract<Body, { mode: "discover" }>, apiKey: string) {
+async function discover(body: Extract<Body, { mode: "discover" }>) {
   const f = freshness();
   const max = Math.max(1, Math.min(50, body.max ?? 25));
   const exams = (body.institute.examFocus || []).filter(Boolean);
@@ -153,7 +153,7 @@ Return UP TO ${max} distinct MBA-entrance courses this institute is known to off
 
 // ---------------- GENERATE ----------------
 
-async function generate(body: Extract<Body, { mode: "generate" }>, apiKey: string) {
+async function generate(body: Extract<Body, { mode: "generate" }>) {
   const f = freshness();
   const dateCtx =
     body.contentDateContext?.trim() ||
@@ -313,7 +313,7 @@ Deno.serve(async (req) => {
     if (!body.institute?.name) throw new Error("institute.name is required");
 
     if (body.mode === "discover") {
-      const out = await discover(body, apiKey);
+      const out = await discover(body);
       return new Response(JSON.stringify(out), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -322,7 +322,7 @@ Deno.serve(async (req) => {
       if (!Array.isArray(body.courses) || body.courses.length === 0) {
         throw new Error("courses[] is required for generate mode");
       }
-      const out = await generate(body, apiKey);
+      const out = await generate(body);
       return new Response(JSON.stringify(out), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
