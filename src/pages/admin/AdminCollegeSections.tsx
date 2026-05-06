@@ -496,8 +496,8 @@ const AdminCollegeSections = () => {
     const existingTypes = sections.filter(s => s.college_id === selectedCollege).map(s => s.section_type);
     const missing = SECTION_TYPES.filter(t => !existingTypes.includes(t.value));
     if (missing.length === 0) { toast({ title: "All sections already exist" }); return; }
-    const inserts = missing.map((t, i) => ({ college_id: selectedCollege, section_type: t.value, title: t.label, sort_order: (existingTypes.length + i) * 10, data: {} }));
-    const { error } = await supabase.from("college_sections").insert(inserts);
+    const inserts = missing.map((t, i) => ({ college_id: selectedCollege, section_type: t.value, title: t.label, sort_order: (existingTypes.length + i) * 10, data: {}, version: "original" }));
+    const { error } = await supabase.from("college_sections").upsert(inserts, { onConflict: "college_id,section_type,version" });
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: `Added ${missing.length} sections` }); fetchSections();
   };
