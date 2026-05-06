@@ -91,26 +91,49 @@ Deno.serve(async (req) => {
       { loc: "/list-your-business", changefreq: "monthly", priority: 0.5, lastmod: today },
       { loc: "/mocks", changefreq: "weekly", priority: 0.8, lastmod: today },
       { loc: "/courses", changefreq: "weekly", priority: 0.8, lastmod: today },
+      { loc: "/iim-waitlist-movement", changefreq: "daily", priority: 0.8, lastmod: today },
+      { loc: "/mba-programme-compare", changefreq: "monthly", priority: 0.6, lastmod: today },
+      { loc: "/mba-compass", changefreq: "weekly", priority: 0.7, lastmod: today },
+      { loc: "/mba-compass/compare", changefreq: "monthly", priority: 0.5, lastmod: today },
     ];
 
+    // Helper: fetch ALL rows (Supabase default limit = 1000)
+    const fetchAll = async (table: string, columns: string, filters?: (q: any) => any) => {
+      const all: any[] = [];
+      const pageSize = 1000;
+      for (let from = 0; ; from += pageSize) {
+        let q: any = supabase.from(table).select(columns).range(from, from + pageSize - 1);
+        if (filters) q = filters(q);
+        const { data, error } = await q;
+        if (error || !data || data.length === 0) break;
+        all.push(...data);
+        if (data.length < pageSize) break;
+      }
+      return all;
+    };
+
     const [
-      { data: institutes },
-      { data: colleges },
-      { data: exams },
-      { data: categories },
-      { data: articles },
-      { data: cityPages },
-      { data: mockBundles },
-      { data: mockTests },
+      institutes,
+      colleges,
+      exams,
+      categories,
+      articles,
+      cityPages,
+      mockBundles,
+      mockTests,
+      programmes,
+      mbaCompass,
     ] = await Promise.all([
-      supabase.from("institutes").select("slug, updated_at"),
-      supabase.from("colleges").select("slug, updated_at"),
-      supabase.from("exams").select("slug, created_at"),
-      supabase.from("categories").select("slug, updated_at"),
-      supabase.from("articles").select("slug, updated_at").eq("published", true),
-      supabase.from("city_pages").select("slug, updated_at").eq("active", true),
-      supabase.from("mock_bundles").select("slug, updated_at").eq("is_published", true),
-      supabase.from("mock_tests").select("slug, updated_at").eq("is_published", true),
+      fetchAll("institutes", "slug, updated_at"),
+      fetchAll("colleges", "id, slug, updated_at"),
+      fetchAll("exams", "slug, created_at"),
+      fetchAll("categories", "slug, updated_at"),
+      fetchAll("articles", "slug, updated_at", (q) => q.eq("published", true)),
+      fetchAll("city_pages", "slug, updated_at", (q) => q.eq("active", true)),
+      fetchAll("mock_bundles", "slug, updated_at", (q) => q.eq("is_published", true)),
+      fetchAll("mock_tests", "slug, updated_at", (q) => q.eq("is_published", true)),
+      fetchAll("programme_courses", "slug, updated_at, college_id", (q) => q.eq("active", true)),
+      fetchAll("mba_compass_courses", "slug, updated_at", (q) => q.eq("is_active", true)),
     ]);
 
     const blogs: Entry[] = (articles ?? []).flatMap((a: any) => a.slug
@@ -129,6 +152,18 @@ Deno.serve(async (req) => {
       ? [{ loc: `/courses/${b.slug}`, lastmod: fmtDate(b.updated_at), changefreq: "weekly" as const, priority: 0.8 }] : []);
     const mockEntries: Entry[] = (mockTests ?? []).flatMap((m: any) => m.slug
       ? [{ loc: `/mocks/${m.slug}`, lastmod: fmtDate(m.updated_at), changefreq: "weekly" as const, priority: 0.7 }] : []);
+    const collegeSlugById = new Map<string, string>();
+    for (const c of (colleges ?? []) as any[]) {
+      if (c.id && c.slug) collegeSlugById.set(c.id, c.slug);
+    }
+    const programmeEntries: Entry[] = (programmes ?? []).flatMap((p: any) => {
+      const cslug = p.college_id ? collegeSlugById.get(p.college_id) : null;
+      return (p.slug && cslug)
+        ? [{ loc: `/college/${cslug}/programme/${p.slug}`, lastmod: fmtDate(p.updated_at), changefreq: "monthly" as const, priority: 0.6 }]
+        : [];
+    });
+    const compassEntries: Entry[] = (mbaCompass ?? []).flatMap((c: any) => c.slug
+      ? [{ loc: `/mba-compass/${c.slug}`, lastmod: fmtDate(c.updated_at), changefreq: "weekly" as const, priority: 0.7 }] : []);
 
     const segments: Record<string, Entry[]> = {
       pages: [...STATIC_PAGES, ...cityEntries],
@@ -137,8 +172,9 @@ Deno.serve(async (req) => {
       colleges: collegeEntries,
       institutes: instEntries,
       exams: examEntries,
-      courses: courseEntries,
+      courses: [...courseEntries, ...compassEntries],
       mocks: mockEntries,
+      programmes: programmeEntries,
     };
 
     const headers = {
