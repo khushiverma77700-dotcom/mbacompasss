@@ -133,6 +133,12 @@ const CoachingPage = () => {
     }
     if (selectedFee !== "all") list = list.filter((i: any) => matchesFeeBucket(getEffectiveFeesLakhs(i), selectedFee));
     if (selectedSpec !== "all") list = list.filter((i: any) => specMatches(i.specializations, selectedSpec));
+    if (minRating !== "all") {
+      const min = parseFloat(minRating);
+      if (!Number.isNaN(min)) list = list.filter((i: any) => (i.rating || 0) >= min);
+    }
+    if (quick === "verified" || quick === "featured") list = list.filter((i: any) => i.featured);
+    if (quick === "offer") list = list.filter((i: any) => i.offer || i.discount);
     if (sortBy === "rating") list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     if (sortBy === "reviews") list.sort((a, b) => (b.total_reviews || 0) - (a.total_reviews || 0));
     if (sortBy === "success") list.sort((a, b) => (b.success_rate || 0) - (a.success_rate || 0));
