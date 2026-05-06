@@ -32,6 +32,7 @@ import STATIC_PAGES_CONFIG from "@/data/staticPages";
 import SEOFullAudit from "@/components/admin/SEOFullAudit";
 import { AutoFixPanel } from "@/components/admin/AutoFixPanel";
 import BulkOptimizeProgressDialog from "@/components/admin/BulkOptimizeProgressDialog";
+import { bulkSeoRunner, useBulkSeoRunner } from "@/lib/bulkSeoOptimizer";
 
 // ── Types ──
 type ScoreStatus = "good" | "warning" | "poor";
@@ -200,21 +201,16 @@ const AdminSEODashboard = () => {
   const navigate = useNavigate();
   const [rows, setRows] = useState<DashboardRow[]>([]);
   const [loading, setLoading] = useState(false);
-  const [bulkLoading, setBulkLoading] = useState(false);
-  const [bulkOpen, setBulkOpen] = useState(false);
-  const [bulkItems, setBulkItems] = useState<import("@/components/admin/BulkOptimizeProgressDialog").BulkItem[]>([]);
-  const [bulkPaused, setBulkPaused] = useState(false);
-  const [bulkCancelled, setBulkCancelled] = useState(false);
-  const [bulkFinished, setBulkFinished] = useState(false);
-  const [bulkStartedAt, setBulkStartedAt] = useState<number | null>(null);
-  const [bulkLogs, setBulkLogs] = useState<import("@/components/admin/BulkOptimizeProgressDialog").LogEntry[]>([]);
-  const pushLog = useCallback((level: "info" | "ok" | "warn" | "error", msg: string) => {
-    setBulkLogs(prev => {
-      const next = [...prev, { ts: Date.now(), level, msg }];
-      // cap at 500 to keep DOM lightweight
-      return next.length > 500 ? next.slice(next.length - 500) : next;
-    });
-  }, []);
+  // Bulk optimize state lives in the singleton runner so it keeps
+  // running in the background even when the dialog is closed.
+  const bulkRun = useBulkSeoRunner();
+  const bulkOpen = bulkRun.open;
+  const bulkItems = bulkRun.items;
+  const bulkPaused = bulkRun.paused;
+  const bulkFinished = bulkRun.finished;
+  const bulkStartedAt = bulkRun.startedAt;
+  const bulkLogs = bulkRun.logs;
+  const bulkLoading = bulkRun.running;
   const [selectedType, setSelectedType] = useState<TypeFilter>("all");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [schemaFilter, setSchemaFilter] = useState<BooleanFilter>("all");
@@ -948,11 +944,6 @@ const AdminSEODashboard = () => {
     fetchDashboardData();
   };
 
-  const bulkPausedRef = useRef(false);
-  const bulkCancelledRef = useRef(false);
-  useEffect(() => { bulkPausedRef.current = bulkPaused; }, [bulkPaused]);
-  useEffect(() => { bulkCancelledRef.current = bulkCancelled; }, [bulkCancelled]);
-
   const handleBulkOptimize = async () => {
     if (!selectedRows.length) { toast({ title: "No pages selected" }); return; }
     const targets = selectedRows.filter(r => !isStaticPage(r));
@@ -960,99 +951,30 @@ const AdminSEODashboard = () => {
       toast({ title: "No optimizable pages", description: "Static pages aren't supported in bulk yet." });
       return;
     }
-
-    setBulkItems(targets.map(r => ({
-      key: r.key, name: r.name, contentType: r.contentType,
-      status: "pending", oldScore: r.audit.score,
-    })));
-    setBulkLogs([]);
-    setBulkPaused(false); bulkPausedRef.current = false;
-    setBulkCancelled(false); bulkCancelledRef.current = false;
-    setBulkFinished(false);
-    setBulkStartedAt(Date.now());
-    setBulkOpen(true);
-    setBulkLoading(true);
-    pushLog("info", `Bulk optimization started — ${targets.length} pages queued (model: openai/gpt-5-mini)`);
-
-    let success = 0, fail = 0;
-    for (let i = 0; i < targets.length; i++) {
-      if (bulkCancelledRef.current) { pushLog("warn", "Cancelled by user — stopping queue"); break; }
-      while (bulkPausedRef.current && !bulkCancelledRef.current) {
-        await new Promise(r => setTimeout(r, 300));
-      }
-      if (bulkCancelledRef.current) { pushLog("warn", "Cancelled by user — stopping queue"); break; }
-
-      const row = targets[i];
-      const startedAt = Date.now();
-      pushLog("info", `[${i + 1}/${targets.length}] → ${row.name} (${row.contentType}) — invoking ai-seo-enhance`);
-      setBulkItems(prev => prev.map(it => it.key === row.key
-        ? { ...it, status: "running", startedAt, step: "Calling AI…" } : it));
-
-      try {
-        const { data, error } = await supabase.functions.invoke("ai-seo-enhance", {
-          body: { contentType: row.contentType, data: row.item },
-        });
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
-        const sug = data?.suggestions;
-        if (!sug) throw new Error("Missing suggestions");
-
-        const meta = data?.meta || {};
-        if (meta.totalTokens) {
-          pushLog("info", `   ↳ AI responded in ${fmtMsLog(meta.aiLatencyMs)} · ${meta.totalTokens.toLocaleString()} tokens · $${(meta.estimatedCost || 0).toFixed(4)}`);
-        }
-        setBulkItems(prev => prev.map(it => it.key === row.key
-          ? { ...it, step: "Saving snapshot & DB…" } : it));
-
-        await saveSeoSnapshot(buildStoredSeoSnapshot(row.contentType, row.item, sug));
-        if (contentTypeConfig[row.contentType].supportsSeoColumns) {
-          const update: Record<string, any> = {
-            meta_title: sug.meta_title,
-            meta_description: sug.meta_description,
-            keywords: mergeKeywordBuckets(sug.keywords),
-          };
-          if (contentTypeConfig[row.contentType].supportsH1Column && sug.h1_tag) update.h1_tag = sug.h1_tag;
-          const { error: ue } = await supabase.from(contentTypeConfig[row.contentType].table as any).update(update).eq("id", row.id);
-          if (ue) throw ue;
-        }
-
-        const finishedAt = Date.now();
-        const projected = sug?.seoScore?.projectedScore ?? sug?.seoScore?.overall;
-        const oldScore = row.audit.score;
-        const newScore = typeof projected === "number" ? Math.round(projected) : undefined;
-        setBulkItems(prev => prev.map(it => it.key === row.key ? {
-          ...it,
-          status: "ok",
-          finishedAt,
-          durationMs: finishedAt - startedAt,
-          promptTokens: meta.promptTokens,
-          completionTokens: meta.completionTokens,
-          totalTokens: meta.totalTokens,
-          cost: meta.estimatedCost,
-          newScore,
-          step: undefined,
-        } : it));
-        pushLog("ok", `✓ ${row.name} — score ${oldScore} → ${newScore ?? "?"} (${fmtMsLog(finishedAt - startedAt)})`);
-        success++;
-        await new Promise(r => setTimeout(r, 250));
-      } catch (e: any) {
-        const finishedAt = Date.now();
-        const msg = e?.message || "Unknown error";
-        setBulkItems(prev => prev.map(it => it.key === row.key ? {
-          ...it, status: "fail", finishedAt, durationMs: finishedAt - startedAt, error: msg,
-        } : it));
-        pushLog("error", `✕ ${row.name} — ${msg}`);
-        fail++;
-      }
+    if (bulkSeoRunner.getState().running) {
+      bulkSeoRunner.setOpen(true);
+      toast({ title: "A bulk run is already in progress", description: "Opened the live monitor." });
+      return;
     }
-
-    setBulkLoading(false);
-    setBulkFinished(true);
-    setSelectedKeys([]);
-    pushLog(fail === 0 ? "ok" : "warn", `Bulk run finished — ${success} optimized, ${fail} failed`);
-    fetchDashboardData();
-    toast({ title: "Bulk optimize complete", description: `${success} optimized, ${fail} failed.` });
+    bulkSeoRunner.start(targets.map(r => ({
+      key: r.key,
+      name: r.name,
+      contentType: r.contentType,
+      id: r.id,
+      item: r.item,
+      oldScore: r.audit.score,
+    })));
+    toast({ title: "Bulk optimization started", description: `${targets.length} pages — runs in background, auto-saves each result.` });
   };
+
+  // Refresh dashboard whenever the background runner completes a run.
+  useEffect(() => {
+    const off = bulkSeoRunner.onCompleted(() => {
+      setSelectedKeys([]);
+      fetchDashboardData();
+    });
+    return off;
+  }, [fetchDashboardData]);
 
   // tiny formatter for log lines
   const fmtMsLog = (ms?: number) => ms == null ? "?" : ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
@@ -2761,31 +2683,31 @@ const AdminSEODashboard = () => {
         {activeTab === "image-audit" && <ImageAuditPanel />}
       </div>
 
+      {bulkLoading && !bulkOpen && (
+        <button
+          type="button"
+          onClick={() => bulkSeoRunner.setOpen(true)}
+          className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground shadow-lg hover:opacity-90 text-sm font-medium"
+        >
+          <Loader2 className="w-4 h-4 animate-spin" />
+          Bulk SEO running — {bulkItems.filter(i => i.status === "ok" || i.status === "fail").length}/{bulkItems.length}
+          {bulkRun.lastSavedAt && <span className="text-[10px] opacity-80 ml-1">auto-saved</span>}
+        </button>
+      )}
+
       <BulkOptimizeProgressDialog
         open={bulkOpen}
-        onOpenChange={(o) => {
-          if (!o && !bulkFinished && bulkLoading) {
-            // Don't allow closing while running; require Cancel
-            return;
-          }
-          setBulkOpen(o);
-        }}
+        onOpenChange={(o) => bulkSeoRunner.setOpen(o)}
         items={bulkItems}
         logs={bulkLogs}
         paused={bulkPaused}
-        onPauseToggle={() => setBulkPaused(p => !p)}
-        onCancel={() => {
-          if (bulkFinished) {
-            setBulkOpen(false);
-          } else {
-            setBulkCancelled(true);
-            bulkCancelledRef.current = true;
-          }
-        }}
+        onPauseToggle={() => (bulkPaused ? bulkSeoRunner.resume() : bulkSeoRunner.pause())}
+        onCancel={() => bulkSeoRunner.cancel()}
         finished={bulkFinished}
         startedAt={bulkStartedAt}
         model="openai/gpt-5-mini"
       />
+
     </div>
   );
 };
