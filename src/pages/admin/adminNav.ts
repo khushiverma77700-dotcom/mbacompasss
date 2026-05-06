@@ -45,6 +45,7 @@ export const adminNavGroups: AdminNavGroup[] = [
     label: "Colleges & Exams",
     items: [
       { label: "Colleges", path: "/admin/colleges", icon: GraduationCap },
+      { label: "College Programmes", path: "/admin/programmes", icon: BookOpen },
       { label: "College Sections", path: "/admin/college-sections", icon: Star },
       { label: "Shortlister Colleges", path: "/admin/shortlister-colleges", icon: Target },
       { label: "Exams", path: "/admin/exams", icon: FileText },
