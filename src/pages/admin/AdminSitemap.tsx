@@ -20,6 +20,7 @@ const AdminSitemap = () => {
   const generateSitemap = async () => {
     setLoading(true);
     try {
+      // 1. Pull the freshest sitemap straight from the live engine (DB-backed)
       const res = await fetch(`${LIVE_SITEMAP_URL}?cb=${Date.now()}`, { cache: "no-store" });
       if (!res.ok) throw new Error(`Sitemap engine returned ${res.status}`);
       const xml = await res.text();
@@ -28,12 +29,27 @@ const AdminSitemap = () => {
       setSitemapXml(xml);
       setUrlCount(totalUrls);
 
+      // 2. Snapshot it into site_settings for download/audit
       await supabase.from("site_settings").upsert({
         key: "sitemap_xml",
         value: JSON.stringify({ xml, generated_at: new Date().toISOString(), url_count: totalUrls }),
       }, { onConflict: "key" });
 
-      toast({ title: "Sitemap Checked", description: `${totalUrls} URLs found in the live sitemap engine. Publish the app after sitemap code changes so Google sees the updated domain file.` });
+      // 3. Auto-discover: queue every new URL into the indexing pipeline
+      //    (Google Indexing API + IndexNow + sitemap ping). Non-blocking.
+      const [discover, ping] = await Promise.allSettled([
+        supabase.functions.invoke("google-indexing", { body: { action: "discover" } }),
+        supabase.functions.invoke("google-indexing", { body: { action: "ping_sitemap" } }),
+      ]);
+
+      const discovered = discover.status === "fulfilled"
+        ? (discover.value as any)?.data?.discovered ?? (discover.value as any)?.data?.added ?? 0
+        : 0;
+
+      toast({
+        title: "Sitemap Refreshed",
+        description: `${totalUrls} URLs in sitemap. ${discovered ? `${discovered} new URL(s) queued for Google.` : "Google + IndexNow notified."}${ping.status === "rejected" ? " (sitemap ping failed)" : ""}`,
+      });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
