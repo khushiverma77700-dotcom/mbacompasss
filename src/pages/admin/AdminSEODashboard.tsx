@@ -31,6 +31,7 @@ import {
 import STATIC_PAGES_CONFIG from "@/data/staticPages";
 import SEOFullAudit from "@/components/admin/SEOFullAudit";
 import { AutoFixPanel } from "@/components/admin/AutoFixPanel";
+import BulkOptimizeProgressDialog from "@/components/admin/BulkOptimizeProgressDialog";
 
 // ── Types ──
 type ScoreStatus = "good" | "warning" | "poor";
