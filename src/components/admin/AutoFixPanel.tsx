@@ -31,6 +31,10 @@ const ACTION_META: Record<Action, { label: string; hint: string }> = {
     label: "AI-fix missing meta",
     hint: "Finds rows without meta_title/description and writes AI-generated SEO to the database.",
   },
+  expand_thin_content: {
+    label: "AI-expand thin content",
+    hint: "Finds pages under 800 words and rewrites the body into long, formatted, SEO-friendly HTML (H2/H3, lists, FAQs).",
+  },
   flush_indexing: {
     label: "Flush indexing queue",
     hint: "Resets failed indexing rows and force-submits pending URLs to Google + IndexNow.",
