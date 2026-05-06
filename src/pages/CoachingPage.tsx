@@ -1,7 +1,7 @@
 import { useMemo, useCallback } from "react";
 import { INDIAN_STATES, getCitiesForState } from "@/data/indianLocations";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { MapPin, Search, Users, TrendingUp, GraduationCap, Award, ChevronRight, ArrowRight, Building2, Filter, Star, Monitor, Building, Wifi, X, ArrowLeft, Share2 } from "lucide-react";
+import { MapPin, Search, Users, TrendingUp, GraduationCap, Award, ChevronRight, ArrowRight, Building2, Filter, Star, Monitor, Building, Wifi, X, ArrowLeft, Share2, LayoutGrid, List, Map as MapIcon, Sparkles, Tag } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,9 @@ import SEOHead from "@/components/SEOHead";
 import PageKeywords from "@/components/PageKeywords";
 import { getLocationImage } from "@/data/cityImages";
 import { FEE_BUCKETS, FEE_BUCKET_LABELS, matchesFeeBucket, getEffectiveFeesLakhs, specMatches, locationMatches } from "@/lib/filterHelpers";
+import { CoachingCompareProvider } from "@/contexts/CoachingCompareContext";
+import CompareDrawer from "@/components/coaching/CompareDrawer";
+import CoachingMapView from "@/components/coaching/CoachingMapView";
 
 const modes = ["Online", "Offline", "Hybrid"];
 const toSlug = (value: string) => value.toLowerCase().trim().replace(/\s+/g, "-");
