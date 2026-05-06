@@ -1003,7 +1003,7 @@ const AdminSEODashboard = () => {
       {/* ── Main Content Area ── */}
       <div className="flex-1 min-w-0 space-y-6">
         <AutoFixPanel
-          actions={["fix_all", "fix_missing_meta", "rewrite_legacy_domains", "flush_indexing"]}
+          actions={["fix_all", "fix_missing_meta", "expand_thin_content", "rewrite_legacy_domains", "flush_indexing", "rebuild_sitemap"]}
           title="Site-wide auto-fix"
           subtitle="Hybrid: AI-generates missing meta on a batch of pages, rewrites legacy domains, flushes the indexing queue, and pings the sitemap."
         />
