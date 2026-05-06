@@ -94,8 +94,12 @@ export const INSTITUTE_SECTIONS: SectionDef[] = [
   { id: "mock_tests", label: "Mock Tests & Practice", shortHelp: "Number of mocks, sectional, analytics", layout: "prose",
     fields: [{ key: "body", label: "Mock tests", kind: "richtext", rows: 4 }] },
 
-  { id: "results", label: "Results & Success Rate", shortHelp: "Past results, top ranks, selection stats", layout: "prose",
-    fields: [{ key: "body", label: "Results", kind: "richtext", rows: 4 }] },
+  { id: "results", label: "Results & Success Rate", shortHelp: "Stats, top ranks, selection counts + commentary", layout: "results-detailed",
+    fields: [
+      { key: "stats", label: "Headline stats (e.g. '99%ile' / '120+ Calls')", kind: "list-result-stat" },
+      { key: "toppers", label: "Top scorers / selections", kind: "list-topper" },
+      { key: "body", label: "Result commentary", kind: "richtext", rows: 4 },
+    ] },
 
   { id: "topper_testimonials", label: "Topper Testimonials", shortHelp: "6–10 short success stories", layout: "testimonials",
     fields: [{ key: "items", label: "Testimonials", kind: "list-testimonial" }] },
