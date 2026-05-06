@@ -122,8 +122,9 @@ Deno.serve(async (req) => {
       mockBundles,
       mockTests,
       mbaCompass,
+      coachingCourses,
     ] = await Promise.all([
-      fetchAll("institutes", "slug, updated_at"),
+      fetchAll("institutes", "id, slug, updated_at"),
       fetchAll("colleges", "id, slug, updated_at"),
       fetchAll("exams", "slug, created_at"),
       fetchAll("categories", "slug, updated_at"),
@@ -132,7 +133,32 @@ Deno.serve(async (req) => {
       fetchAll("mock_bundles", "slug, updated_at", (q) => q.eq("is_published", true)),
       fetchAll("mock_tests", "slug, updated_at", (q) => q.eq("is_published", true)),
       fetchAll("mba_compass_courses", "slug, updated_at", (q) => q.eq("is_active", true)),
+      fetchAll("courses", "id, name, institute_id, updated_at"),
     ]);
+
+    // Build slug helper inline (matches src/lib/slugify.ts behaviour)
+    const toSlug = (s: string) => (s || "")
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+
+    const instituteSlugById = new Map<string, string>();
+    (institutes ?? []).forEach((i: any) => { if (i.id && i.slug) instituteSlugById.set(i.id, i.slug); });
+
+    const coachingCourseEntries: Entry[] = (coachingCourses ?? []).flatMap((c: any) => {
+      const instSlug = c.institute_id ? instituteSlugById.get(c.institute_id) : null;
+      const courseSlug = toSlug(c.name || "");
+      if (!instSlug || !courseSlug) return [];
+      return [{
+        loc: `/institute/${instSlug}/course/${courseSlug}`,
+        lastmod: fmtDate(c.updated_at),
+        changefreq: "monthly" as const,
+        priority: 0.6,
+      }];
+    });
 
     const blogs: Entry[] = (articles ?? []).flatMap((a: any) => a.slug
       ? [{ loc: `/article/${a.slug}`, lastmod: fmtDate(a.updated_at), changefreq: "weekly" as const, priority: 0.6 }] : []);
@@ -158,7 +184,7 @@ Deno.serve(async (req) => {
       blogs,
       categories: cats,
       colleges: collegeEntries,
-      institutes: instEntries,
+      institutes: [...instEntries, ...coachingCourseEntries],
       exams: examEntries,
       courses: [...courseEntries, ...compassEntries],
       mocks: mockEntries,
