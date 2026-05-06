@@ -26,11 +26,21 @@ const MODEL = "google/gemini-2.5-flash";
 
 async function callCourseAI(body: Parameters<typeof callAIGateway>[0]) {
   const primary = await callAIGateway(body, { feature: "ai-course-writer", provider: "gemini", purpose: "long" });
-  if (primary.ok || ![401, 403].includes(primary.status)) return primary;
+  if (primary.ok || ![401, 402, 403, 429, 500, 502, 503, 504].includes(primary.status)) return primary;
 
   const primaryText = await primary.clone().text().catch(() => "");
-  console.warn("ai-course-writer Gemini provider unavailable, falling back to OpenAI:", primary.status, primaryText.slice(0, 300));
-  return callAIGateway(body, { feature: "ai-course-writer", provider: "openai-mini", purpose: "long" });
+  console.warn("ai-course-writer Gemini provider unavailable/quota-limited, falling back to OpenAI:", primary.status, primaryText.slice(0, 300));
+  const fallback = await callAIGateway(body, { feature: "ai-course-writer", provider: "openai-mini", purpose: "long" });
+  if (fallback.ok || ![401, 402, 403, 429, 500, 502, 503, 504].includes(fallback.status)) return fallback;
+
+  const fallbackText = await fallback.clone().text().catch(() => "");
+  console.warn("ai-course-writer fallback provider also failed:", fallback.status, fallbackText.slice(0, 300));
+  return new Response(
+    JSON.stringify({
+      error: "AI service is temporarily busy or quota-limited. Please reduce the number of courses and try again in a few minutes.",
+    }),
+    { status: fallback.status, headers: { "Content-Type": "application/json" } },
+  );
 }
 
 interface InstituteCtx {
@@ -70,6 +80,24 @@ const SCOPE_LOCK = `# SCOPE LOCK — MBA / MASTERS-IN-MANAGEMENT ENTRANCE COACHI
 - Cover ONLY coaching for management-entrance exams: CAT, XAT, GMAT, GRE-for-MiM, NMAT, SNAP, CMAT, MAT, MAH-CET, IIFT, TISSNET, MICAT, KMAT, and downstream GD-PI-WAT / IIM interview prep, profile-building & SOP for MiM.
 - DO NOT include JEE, NEET, GATE, UPSC, SSC, banking, CA/CS, coding bootcamps, or school-level tuition. If the institute also runs non-MBA verticals, IGNORE them entirely.
 - Every course you return must be MBA-entrance / Masters-in-Management coaching.`;
+
+async function safeAIError(res: Response) {
+  let payload = "";
+  try {
+    const json = await res.clone().json();
+    payload = String(json?.error || json?.message || "");
+  } catch {
+    payload = await res.clone().text().catch(() => "");
+  }
+  const lower = payload.toLowerCase();
+  if (res.status === 429 || lower.includes("quota") || lower.includes("rate")) {
+    return "AI service is temporarily quota-limited. Please reduce Max courses to discover and try again in a few minutes.";
+  }
+  if (res.status === 402 || lower.includes("payment")) {
+    return "AI credits are exhausted. Please add AI balance, then try again.";
+  }
+  return "AI service could not complete this request. Please try again with fewer courses.";
+}
 
 // ---------------- DISCOVER ----------------
 
@@ -141,10 +169,7 @@ Return UP TO ${max} distinct MBA-entrance courses this institute is known to off
     tool_choice: { type: "function", function: { name: "list_courses" } },
   });
 
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`AI gateway ${res.status}: ${t}`);
-  }
+  if (!res.ok) throw new Error(await safeAIError(res));
   const data = await res.json();
   const call = data?.choices?.[0]?.message?.tool_calls?.[0];
   const args = call?.function?.arguments ? JSON.parse(call.function.arguments) : { courses: [] };
@@ -292,10 +317,7 @@ For EACH course return:
     tool_choice: { type: "function", function: { name: "write_courses" } },
   });
 
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`AI gateway ${res.status}: ${t}`);
-  }
+  if (!res.ok) throw new Error(await safeAIError(res));
   const data = await res.json();
   const call = data?.choices?.[0]?.message?.tool_calls?.[0];
   const args = call?.function?.arguments ? JSON.parse(call.function.arguments) : { courses: [] };
@@ -331,7 +353,8 @@ Deno.serve(async (req) => {
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unknown error";
     console.error("ai-course-writer error:", msg);
-    const status = msg.includes("429") ? 429 : msg.includes("402") ? 402 : 500;
+    const lower = msg.toLowerCase();
+    const status = lower.includes("quota") || lower.includes("rate") || msg.includes("429") ? 429 : lower.includes("credit") || msg.includes("402") ? 402 : 500;
     return new Response(JSON.stringify({ error: msg }), {
       status,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

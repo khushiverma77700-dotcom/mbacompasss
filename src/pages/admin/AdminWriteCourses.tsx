@@ -71,21 +71,32 @@ const buildLatestDateContext = () => {
 
 const readFunctionError = async (error: any, fallback: string) => {
   const response = error?.context;
+  const cleanMessage = (value?: string) => {
+    const text = (value || "").trim();
+    const lower = text.toLowerCase();
+    if (lower.includes("429") || lower.includes("quota") || lower.includes("rate")) {
+      return "AI service is temporarily quota-limited. Please reduce Max courses to discover and try again in a few minutes.";
+    }
+    if (lower.includes("402") || lower.includes("payment") || lower.includes("credit")) {
+      return "AI credits are exhausted. Please add AI balance, then try again.";
+    }
+    return text || fallback;
+  };
   if (response?.clone) {
     try {
       const payload = await response.clone().json();
-      if (payload?.error) return String(payload.error);
-      if (payload?.message) return String(payload.message);
+      if (payload?.error) return cleanMessage(String(payload.error));
+      if (payload?.message) return cleanMessage(String(payload.message));
     } catch {
       try {
         const text = await response.clone().text();
-        if (text?.trim()) return text.trim();
+        if (text?.trim()) return cleanMessage(text);
       } catch {
         // keep fallback below
       }
     }
   }
-  return error?.message || fallback;
+  return cleanMessage(error?.message || fallback);
 };
 
 const AdminWriteCourses = () => {
