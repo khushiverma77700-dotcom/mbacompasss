@@ -161,7 +161,35 @@ Deno.serve(async (req) => {
       summary.steps.push({ name: "fix_missing_meta", fixed });
     }
 
-    // ── 3. Flush indexing queue (retry failed + force pending) ──────
+    // ── 2b. Expand thin content site-wide via ai-expand-content ─────
+    if (action === "expand_thin_content" || action === "fix_all") {
+      const limit = Math.max(1, Math.min(50, body.limit || 25));
+      const expanded: Record<string, number> = {};
+      for (const { contentType, table, column } of CONTENT_TABLES) {
+        const { data: rows } = await (sb as any)
+          .from(table)
+          .select(`id, ${column}`)
+          .limit(limit * 2);
+        const thin = (rows || []).filter((r: any) => wordCount(r?.[column]) < MIN_CONTENT_WORDS).slice(0, limit);
+        let ok = 0;
+        for (const r of thin) {
+          const expandRes = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/ai-expand-content`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: req.headers.get("Authorization")!,
+              apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
+            },
+            body: JSON.stringify({ contentType, recordId: r.id }),
+          });
+          const j = await expandRes.json().catch(() => ({}));
+          if (j?.success) ok++;
+        }
+        expanded[contentType] = ok;
+      }
+      summary.steps.push({ name: "expand_thin_content", expanded });
+    }
+
     if (action === "flush_indexing" || action === "fix_all") {
       // Reset failed rows so they get picked up
       const { count: resetCount } = await sb
