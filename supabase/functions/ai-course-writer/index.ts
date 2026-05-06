@@ -306,8 +306,7 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const apiKey = (await getCredential("GEMINI_API_KEY"));
-    if (!apiKey) throw new Error("GEMINI_API_KEY is not configured");
+    await getCredential("OPENAI_API_KEY");
 
     const body = (await req.json()) as Body;
     if (!body || !body.mode) throw new Error("mode is required");
