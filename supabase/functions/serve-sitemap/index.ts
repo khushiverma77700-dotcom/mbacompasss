@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
       blogs,
       categories: cats,
       colleges: collegeEntries,
-      institutes: instEntries,
+      institutes: [...instEntries, ...coachingCourseEntries],
       exams: examEntries,
       courses: [...courseEntries, ...compassEntries],
       mocks: mockEntries,
