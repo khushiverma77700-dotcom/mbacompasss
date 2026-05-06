@@ -196,7 +196,7 @@ const InstitutePage = () => {
         title={institute.meta_title || `${institute.name} — Coaching Institute${institute.city ? ` in ${institute.city}` : ""} | MBA Compass`}
         description={institute.meta_description || institute.description || `${institute.name} offers MBA coaching with comprehensive programs.`}
         canonical={`${window.location.origin}/institute/${institute.slug}`}
-        jsonLd={seoSchema}
+        jsonLd={combinedJsonLd}
         ogImage={institute.banner_url || institute.logo_url || undefined}
       />
 
