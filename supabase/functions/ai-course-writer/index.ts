@@ -281,7 +281,7 @@ For EACH course return:
     ],
     tools: [tool],
     tool_choice: { type: "function", function: { name: "write_courses" } },
-  }, { feature: "ai-course-writer" });
+  }, { feature: "ai-course-writer", provider: "gemini", purpose: "long" });
 
   if (!res.ok) {
     const t = await res.text();
