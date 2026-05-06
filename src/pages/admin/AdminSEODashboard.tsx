@@ -916,11 +916,17 @@ const AdminSEODashboard = () => {
       toast({ title: "Static page", description: "Use Static Page SEO settings to update this page.", variant: "default" });
       return;
     }
+    if (!contentTypeConfig[row.contentType].supportsSeoColumns) {
+      toast({ title: "SEO updated", description: `${row.name} was updated.` });
+      fetchDashboardData();
+      return;
+    }
     const update: Record<string, any> = {};
     if (suggestions.meta_title) update.meta_title = suggestions.meta_title;
     if (suggestions.meta_description) update.meta_description = suggestions.meta_description;
     if (suggestions.keywords?.length) update.keywords = suggestions.keywords;
     if (contentTypeConfig[row.contentType].supportsH1Column && suggestions.h1_tag) update.h1_tag = suggestions.h1_tag;
+    if (!Object.keys(update).length) { fetchDashboardData(); return; }
     const { error } = await supabase.from(contentTypeConfig[row.contentType].table as any).update(update).eq("id", row.id);
     if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
     toast({ title: "SEO updated", description: `${row.name} was updated.` });
@@ -938,11 +944,13 @@ const AdminSEODashboard = () => {
         if (data?.error) throw new Error(data.error);
         const sug = data?.suggestions;
         if (!sug) throw new Error("Missing suggestions");
-        const update: Record<string, any> = { meta_title: sug.meta_title, meta_description: sug.meta_description, keywords: mergeKeywordBuckets(sug.keywords) };
-        if (contentTypeConfig[row.contentType].supportsH1Column && sug.h1_tag) update.h1_tag = sug.h1_tag;
-        const { error: ue } = await supabase.from(contentTypeConfig[row.contentType].table as any).update(update).eq("id", row.id);
-        if (ue) throw ue;
         await saveSeoSnapshot(buildStoredSeoSnapshot(row.contentType, row.item, sug));
+        if (contentTypeConfig[row.contentType].supportsSeoColumns) {
+          const update: Record<string, any> = { meta_title: sug.meta_title, meta_description: sug.meta_description, keywords: mergeKeywordBuckets(sug.keywords) };
+          if (contentTypeConfig[row.contentType].supportsH1Column && sug.h1_tag) update.h1_tag = sug.h1_tag;
+          const { error: ue } = await supabase.from(contentTypeConfig[row.contentType].table as any).update(update).eq("id", row.id);
+          if (ue) throw ue;
+        }
         success++;
         await new Promise(r => setTimeout(r, 350));
       } catch { fail++; }
