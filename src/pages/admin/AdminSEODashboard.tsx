@@ -32,6 +32,7 @@ import STATIC_PAGES_CONFIG from "@/data/staticPages";
 import SEOFullAudit from "@/components/admin/SEOFullAudit";
 import { AutoFixPanel } from "@/components/admin/AutoFixPanel";
 import BulkOptimizeProgressDialog from "@/components/admin/BulkOptimizeProgressDialog";
+import { bulkSeoRunner, useBulkSeoRunner } from "@/lib/bulkSeoOptimizer";
 
 // ── Types ──
 type ScoreStatus = "good" | "warning" | "poor";
