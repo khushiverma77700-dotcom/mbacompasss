@@ -120,6 +120,10 @@ const FieldRenderer = ({ def, value, onChange }: { def: FieldDef; value: any; on
       return <ProsConsEditor value={value || { pros: [], cons: [] }} onChange={onChange} />;
     case "list-cta":
       return <ListCTA value={value || []} onChange={onChange} />;
+    case "list-topper":
+      return <ListTopper value={value || []} onChange={onChange} />;
+    case "list-result-stat":
+      return <ListResultStat value={value || []} onChange={onChange} />;
     case "social-links":
       return <SocialLinks value={value || {}} onChange={onChange} />;
   }
