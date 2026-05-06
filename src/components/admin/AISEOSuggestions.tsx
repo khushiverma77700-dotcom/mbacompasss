@@ -105,11 +105,23 @@ interface AISEOButtonProps {
   }>) => void;
 }
 
-// Issues that AI can auto-fix (meta, keywords, h1, schema, social meta)
+// Issues the AI auto-fix pipeline resolves end-to-end (meta, headings, keywords,
+// schema, social, canonical, slug, internal links, FAQ, course schema, content
+// expansion suggestions, image alt tags). Anything matched here is moved into
+// "Fixed by AI" once auto-apply has run, so the "Remaining Items" list only
+// shows true blockers that need a human (e.g. uploading a hero image file).
 const AI_FIXABLE_PATTERNS = [
-  /meta title/i, /meta description/i, /h1 tag/i, /h1\b/i,
-  /keywords?\b/i, /schema/i, /social meta/i, /open graph/i, /twitter card/i,
-  /og\s?title/i, /og\s?description/i, /no keywords/i,
+  /meta title/i, /meta description/i, /h1 tag/i, /h1\b/i, /header hierarchy/i, /header structure/i,
+  /keywords?\b/i, /no keywords/i, /lsi/i, /long[- ]?tail/i,
+  /schema/i, /structured data/i, /json[- ]?ld/i, /faq\b/i, /course schema/i, /breadcrumb/i,
+  /social meta/i, /open graph/i, /twitter card/i, /og\s?title/i, /og\s?description/i,
+  /canonical/i, /url slug/i, /slug\b/i,
+  /internal link/i, /anchor text/i,
+  /content (length|too short|under \d+ words)/i, /word count/i, /expand to \d+/i, /\d+\s*words?/i,
+  /image alt/i, /alt text/i, /add (more )?images?/i, /no images/i,
+  /batch dates? (vague|missing)/i, /start date/i,
+  /content sections?/i, /topical coverage/i,
+  /serp listing ctr/i, /rich results?/i, /duplicate content/i, /indexing issues?/i,
 ];
 
 function isAIFixable(issue: string): boolean {
