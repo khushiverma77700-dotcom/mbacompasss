@@ -13,6 +13,10 @@ interface Props {
 function stripLeadingHeadings(html: string): string {
   if (!html) return "";
   let out = html.trim();
+  // Strip any leaked AI citation markers and "Last updated" stamps so they never reach the UI
+  out = out.replace(/\[src:[^\]]*\]/gi, "");
+  out = out.replace(/\(\s*sources?\s*[:\/\u2013\u2014-]\s*[^)]{0,80}\)/gi, "");
+  out = out.replace(/<p>\s*<em>\s*Last updated:[^<]*<\/em>\s*<\/p>/gi, "");
   // Remove repeated leading <h1>..</h1>, <h2>..</h2>, <h3>..</h3> blocks (and surrounding whitespace)
   // These would just duplicate the SectionShell title.
   for (let i = 0; i < 4; i++) {
