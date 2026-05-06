@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Progress } from "@/components/ui/progress";
-import SEOHead from "@/components/SEOHead";
+import SEOHead, { generateFAQSchema, generateBreadcrumbSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import {
   ChevronRight, ArrowLeft, GraduationCap, BookOpen, Clock, Calendar,
@@ -154,13 +154,22 @@ const InstituteCoursePage = () => {
     { q: `What study material and mocks are included?`, a: `You get printed/digital study material, topic-wise practice sets, sectional mocks and full-length mocks with detailed analytics.` },
   ];
 
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "/" },
+    { name: "Coaching", url: "/coaching" },
+    { name: inst.name, url: `/institute/${inst.slug}` },
+    { name: c.name, url: `/institute/${inst.slug}/course/${courseSlug}` },
+  ]);
+  const faqSchema = generateFAQSchema(faqs);
+  const combinedJsonLd = [courseSchema, faqSchema, breadcrumbSchema, ...(Array.isArray(seo.jsonLd) ? seo.jsonLd : seo.jsonLd ? [seo.jsonLd] : [])].filter(Boolean);
+
   return (
     <>
       <SEOHead
         title={seo.title}
         description={seo.description}
         canonical={seo.canonical}
-        jsonLd={seo.jsonLd}
+        jsonLd={combinedJsonLd}
         ogImage={seo.ogImage}
         keywords={seo.keywords}
       />
