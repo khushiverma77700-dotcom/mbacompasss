@@ -152,8 +152,16 @@ Deno.serve(async (req) => {
       ? [{ loc: `/courses/${b.slug}`, lastmod: fmtDate(b.updated_at), changefreq: "weekly" as const, priority: 0.8 }] : []);
     const mockEntries: Entry[] = (mockTests ?? []).flatMap((m: any) => m.slug
       ? [{ loc: `/mocks/${m.slug}`, lastmod: fmtDate(m.updated_at), changefreq: "weekly" as const, priority: 0.7 }] : []);
-    const programmeEntries: Entry[] = (programmes ?? []).flatMap((p: any) => (p.slug && p.college?.slug)
-      ? [{ loc: `/college/${p.college.slug}/programme/${p.slug}`, lastmod: fmtDate(p.updated_at), changefreq: "monthly" as const, priority: 0.6 }] : []);
+    const collegeSlugById = new Map<string, string>();
+    for (const c of (colleges ?? []) as any[]) {
+      if (c.id && c.slug) collegeSlugById.set(c.id, c.slug);
+    }
+    const programmeEntries: Entry[] = (programmes ?? []).flatMap((p: any) => {
+      const cslug = p.college_id ? collegeSlugById.get(p.college_id) : null;
+      return (p.slug && cslug)
+        ? [{ loc: `/college/${cslug}/programme/${p.slug}`, lastmod: fmtDate(p.updated_at), changefreq: "monthly" as const, priority: 0.6 }]
+        : [];
+    });
     const compassEntries: Entry[] = (mbaCompass ?? []).flatMap((c: any) => c.slug
       ? [{ loc: `/mba-compass/${c.slug}`, lastmod: fmtDate(c.updated_at), changefreq: "weekly" as const, priority: 0.7 }] : []);
 
