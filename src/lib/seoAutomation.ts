@@ -1,9 +1,11 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 const DEFAULT_SITE_URL = "https://mbacompass.in";
 export const SITE_URL = typeof window !== "undefined" ? window.location.origin : DEFAULT_SITE_URL;
 export const SEO_SNAPSHOT_KEY_PREFIX = "seo_page__";
+export const SEO_SNAPSHOT_UPDATED_EVENT = "seo-snapshot-updated";
 
 export type SEOContentType = "article" | "institute" | "college" | "exam" | "cityPage" | "category" | "course";
 
@@ -148,6 +150,17 @@ export const mergeKeywordBuckets = (keywords?: Partial<SEOKeywordBuckets>) =>
 export const getSeoSnapshotKey = (contentType: SEOContentType, recordId: string) =>
   `${SEO_SNAPSHOT_KEY_PREFIX}${contentType}__${recordId}`;
 
+export const notifySeoSnapshotUpdated = (contentType: SEOContentType, recordId: string) => {
+  if (typeof window === "undefined" || !contentType || !recordId) return;
+  const payload = { key: getSeoSnapshotKey(contentType, recordId), contentType, recordId, ts: Date.now() };
+  try {
+    window.dispatchEvent(new CustomEvent(SEO_SNAPSHOT_UPDATED_EVENT, { detail: payload }));
+    window.localStorage.setItem(SEO_SNAPSHOT_UPDATED_EVENT, JSON.stringify(payload));
+  } catch {
+    window.dispatchEvent(new CustomEvent(SEO_SNAPSHOT_UPDATED_EVENT, { detail: payload }));
+  }
+};
+
 export const getAbsoluteUrl = (pathOrUrl?: string, fallbackPath = "/") => {
   const candidate = (pathOrUrl || fallbackPath).trim();
   if (!candidate) return `${SITE_URL}${fallbackPath}`;
@@ -204,40 +217,46 @@ export const buildStoredSeoSnapshot = (
 
 export const saveSeoSnapshot = async (snapshot: StoredSEOSnapshot) => {
   const key = getSeoSnapshotKey(snapshot.contentType, snapshot.recordId);
-
-  const { data: existingRows, error: readError } = await supabase
-    .from("site_settings")
-    .select("id")
-    .eq("key", key)
-    .limit(1);
-
-  if (readError) throw readError;
-
-  const existingId = existingRows?.[0]?.id;
-
-  if (existingId) {
-    const { error } = await supabase
-      .from("site_settings")
-      .update({ value: snapshot as unknown as Record<string, any> })
-      .eq("id", existingId);
-
-    if (error) throw error;
-    return existingId;
-  }
+  const value = { ...snapshot, updatedAt: new Date().toISOString() };
 
   const { data, error } = await supabase
     .from("site_settings")
-    .insert({ key, value: snapshot as unknown as Record<string, any> })
+    .upsert({ key, value: value as unknown as Record<string, any>, updated_at: value.updatedAt }, { onConflict: "key" })
     .select("id")
     .single();
 
   if (error) throw error;
+  notifySeoSnapshotUpdated(snapshot.contentType, snapshot.recordId);
   return data.id;
 };
 
-export const useSeoSnapshot = (contentType?: SEOContentType, recordId?: string) =>
-  useQuery({
-    queryKey: ["seo-snapshot", contentType, recordId],
+export const useSeoSnapshot = (contentType?: SEOContentType, recordId?: string) => {
+  const queryClient = useQueryClient();
+  const queryKey = ["seo-snapshot", contentType, recordId] as const;
+  const snapshotKey = contentType && recordId ? getSeoSnapshotKey(contentType, recordId) : null;
+
+  useEffect(() => {
+    if (!snapshotKey) return;
+    const invalidate = (incomingKey?: string) => {
+      if (!incomingKey || incomingKey === snapshotKey) {
+        queryClient.invalidateQueries({ queryKey });
+      }
+    };
+    const onCustom = (event: Event) => invalidate((event as CustomEvent<{ key?: string }>).detail?.key);
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== SEO_SNAPSHOT_UPDATED_EVENT || !event.newValue) return;
+      try { invalidate(JSON.parse(event.newValue)?.key); } catch { invalidate(); }
+    };
+    window.addEventListener(SEO_SNAPSHOT_UPDATED_EVENT, onCustom as EventListener);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener(SEO_SNAPSHOT_UPDATED_EVENT, onCustom as EventListener);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, [queryClient, queryKey, snapshotKey]);
+
+  return useQuery({
+    queryKey,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("site_settings")
@@ -256,8 +275,11 @@ export const useSeoSnapshot = (contentType?: SEOContentType, recordId?: string) 
       } as StoredSEOSnapshot;
     },
     enabled: Boolean(contentType && recordId),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
+};
 
 export const fetchAllSeoSnapshots = async () => {
   const { data, error } = await supabase
