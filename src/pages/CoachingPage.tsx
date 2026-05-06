@@ -332,6 +332,15 @@ const CoachingPage = () => {
                 </SelectContent>
               </Select>
             )}
+            <Select value={minRating} onValueChange={(v) => setFilter("rating", v)}>
+              <SelectTrigger className="w-full sm:w-36 rounded-xl"><SelectValue placeholder="Rating" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Any Rating</SelectItem>
+                <SelectItem value="4.5">4.5+ ★</SelectItem>
+                <SelectItem value="4">4.0+ ★</SelectItem>
+                <SelectItem value="3.5">3.5+ ★</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={sortBy} onValueChange={(v) => setFilter("sort", v)}>
               <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="Sort" /></SelectTrigger>
               <SelectContent>
