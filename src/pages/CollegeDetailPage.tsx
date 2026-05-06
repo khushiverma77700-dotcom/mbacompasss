@@ -621,9 +621,6 @@ const CollegeDetailPage = () => {
                         </tbody>
                       </table>
                     </div>
-                    <div className="mt-4 flex justify-end">
-                      <Link to="/mba-programme-compare" className="text-xs text-primary hover:underline">Compare MBA programmes across colleges →</Link>
-                    </div>
                   </CardContent>
                 </Card>
               ) : (

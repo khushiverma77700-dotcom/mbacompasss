@@ -55,8 +55,6 @@ const CollegeFinderPage = lazyWithPreload(() => import("./pages/CollegeFinderPag
 const CollegeShortlisterPage = lazyWithPreload(() => import("./pages/CollegeShortlisterPage"));
 const BusinessInquiryPage = lazyWithPreload(() => import("./pages/BusinessInquiryPage"));
 const NotFound = lazyWithPreload(() => import("./pages/NotFound"));
-const ProgrammeDetailPage = lazyWithPreload(() => import("./pages/ProgrammeDetailPage"));
-const MBAProgrammeComparePage = lazyWithPreload(() => import("./pages/MBAProgrammeComparePage"));
 const IIMWaitlistPage = lazyWithPreload(() => import("./pages/IIMWaitlistPage"));
 
 // Lazy-loaded admin pages
@@ -72,6 +70,7 @@ const AdminBanners = lazyWithPreload(() => import("./pages/admin/AdminBanners"))
 const AdminInquiries = lazyWithPreload(() => import("./pages/admin/AdminInquiries"));
 const AdminCourses = lazyWithPreload(() => import("./pages/admin/AdminCourses"));
 const AdminColleges = lazyWithPreload(() => import("./pages/admin/AdminColleges"));
+const AdminProgrammes = lazyWithPreload(() => import("./pages/admin/AdminProgrammes"));
 const AdminSubscribers = lazyWithPreload(() => import("./pages/admin/AdminSubscribers"));
 const AdminExams = lazyWithPreload(() => import("./pages/admin/AdminExams"));
 const AdminCategories = lazyWithPreload(() => import("./pages/admin/AdminCategories"));
@@ -618,6 +617,7 @@ const App = () => (
               <Route path="inquiries" element={<LazyPage><AdminInquiries /></LazyPage>} />
               <Route path="courses" element={<LazyPage><AdminCourses /></LazyPage>} />
               <Route path="colleges" element={<LazyPage><AdminColleges /></LazyPage>} />
+              <Route path="programmes" element={<LazyPage><AdminProgrammes /></LazyPage>} />
               <Route path="subscribers" element={<LazyPage><AdminSubscribers /></LazyPage>} />
               <Route path="exams" element={<LazyPage><AdminExams /></LazyPage>} />
               <Route path="categories" element={<LazyPage><AdminCategories /></LazyPage>} />
@@ -717,8 +717,6 @@ const App = () => (
             <Route path="/list-your-business/poc" element={<PublicLayout><LazyPage><ListingPocPage /></LazyPage></PublicLayout>} />
             <Route path="/list-your-business/:type/:id" element={<PublicLayout><LazyPage><ListingFormPage /></LazyPage></PublicLayout>} />
             <Route path="/my-listings" element={<PublicLayout><LazyPage><MyListingsPage /></LazyPage></PublicLayout>} />
-            <Route path="/college/:slug/programme/:programmeSlug" element={<PublicLayout><LazyPage><ProgrammeDetailPage /></LazyPage></PublicLayout>} />
-            <Route path="/mba-programme-compare" element={<PublicLayout><LazyPage><MBAProgrammeComparePage /></LazyPage></PublicLayout>} />
             <Route path="/mocks" element={<PublicLayout><LazyPage><MocksListPage /></LazyPage></PublicLayout>} />
             <Route path="/courses" element={<PublicLayout><LazyPage><MockBundlesListPage /></LazyPage></PublicLayout>} />
             <Route path="/courses/:slug" element={<PublicLayout><LazyPage><MockBundleDetailPage /></LazyPage></PublicLayout>} />
