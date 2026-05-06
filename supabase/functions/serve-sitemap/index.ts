@@ -132,7 +132,7 @@ Deno.serve(async (req) => {
       fetchAll("city_pages", "slug, updated_at", (q) => q.eq("active", true)),
       fetchAll("mock_bundles", "slug, updated_at", (q) => q.eq("is_published", true)),
       fetchAll("mock_tests", "slug, updated_at", (q) => q.eq("is_published", true)),
-      fetchAll("programme_courses", "slug, updated_at, college:colleges(slug)", (q) => q.eq("active", true)),
+      fetchAll("programme_courses", "slug, updated_at, college_id", (q) => q.eq("active", true)),
       fetchAll("mba_compass_courses", "slug, updated_at", (q) => q.eq("is_active", true)),
     ]);
 
