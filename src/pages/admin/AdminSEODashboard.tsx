@@ -201,21 +201,16 @@ const AdminSEODashboard = () => {
   const navigate = useNavigate();
   const [rows, setRows] = useState<DashboardRow[]>([]);
   const [loading, setLoading] = useState(false);
-  const [bulkLoading, setBulkLoading] = useState(false);
-  const [bulkOpen, setBulkOpen] = useState(false);
-  const [bulkItems, setBulkItems] = useState<import("@/components/admin/BulkOptimizeProgressDialog").BulkItem[]>([]);
-  const [bulkPaused, setBulkPaused] = useState(false);
-  const [bulkCancelled, setBulkCancelled] = useState(false);
-  const [bulkFinished, setBulkFinished] = useState(false);
-  const [bulkStartedAt, setBulkStartedAt] = useState<number | null>(null);
-  const [bulkLogs, setBulkLogs] = useState<import("@/components/admin/BulkOptimizeProgressDialog").LogEntry[]>([]);
-  const pushLog = useCallback((level: "info" | "ok" | "warn" | "error", msg: string) => {
-    setBulkLogs(prev => {
-      const next = [...prev, { ts: Date.now(), level, msg }];
-      // cap at 500 to keep DOM lightweight
-      return next.length > 500 ? next.slice(next.length - 500) : next;
-    });
-  }, []);
+  // Bulk optimize state lives in the singleton runner so it keeps
+  // running in the background even when the dialog is closed.
+  const bulkRun = useBulkSeoRunner();
+  const bulkOpen = bulkRun.open;
+  const bulkItems = bulkRun.items;
+  const bulkPaused = bulkRun.paused;
+  const bulkFinished = bulkRun.finished;
+  const bulkStartedAt = bulkRun.startedAt;
+  const bulkLogs = bulkRun.logs;
+  const bulkLoading = bulkRun.running;
   const [selectedType, setSelectedType] = useState<TypeFilter>("all");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [schemaFilter, setSchemaFilter] = useState<BooleanFilter>("all");
