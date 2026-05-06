@@ -142,10 +142,7 @@ export const INSTITUTE_SECTIONS: SectionDef[] = [
   { id: "locations", label: "Locations & Centers", shortHelp: "5–8 centers (city, area, map link)", layout: "locations",
     fields: [{ key: "items", label: "Centers", kind: "list-location" }] },
 
-  { id: "contact", label: "Contact Information", shortHelp: "Phone, email, address", layout: "keyvalue",
-    fields: [{ key: "items", label: "Contact rows", kind: "list-keyvalue" }] },
-
-  { id: "social", label: "Website & Social Media", shortHelp: "3–5 links", layout: "social",
+  { id: "social", label: "Social Media Links", shortHelp: "YouTube, Instagram, LinkedIn, etc. (Phone, email, website are set in Basic Information above.)", layout: "social",
     fields: [{ key: "links", label: "Social links", kind: "social-links" }] },
 
   { id: "why_choose", label: "Why Choose This Institute", shortHelp: "5–6 differentiators", layout: "bullets",
