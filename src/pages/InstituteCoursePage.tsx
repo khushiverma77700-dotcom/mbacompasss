@@ -31,7 +31,7 @@ const InstituteCoursePage = () => {
       const { data, error } = await supabase
         .from("institutes")
         .select(`
-          id, name, slug, logo_url, banner_url, city, state, phone, whatsapp, email, website, established_year, total_students, rating,
+          id, name, slug, logo_url, banner_url, city, state, phone, whatsapp, email, website,
           institute_courses(course:courses(id, name, fees, duration, mode, description, curriculum, highlights, eligibility, batch_info, start_date, brochure_url, discount_text, total_seats, rating)),
           direct_courses:courses!courses_institute_id_fkey(id, name, fees, duration, mode, description, curriculum, highlights, eligibility, batch_info, start_date, brochure_url, discount_text, total_seats, rating)
         `)
