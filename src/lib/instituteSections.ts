@@ -16,7 +16,7 @@ export type FieldKind =
   | "list-bullet"          // string[] — rendered as bullets
   | "list-keyvalue"        // {label, value}[]
   | "list-faculty"         // {name, experience, expertise, achievements, photo_url}[]
-  | "list-testimonial"     // {name, exam, text, photo_url}[]
+  | "list-testimonial"     // {name, exam, year, college, score, rating, text, photo_url, video_url}[]
   | "list-review"          // {name, rating, text}[]
   | "list-faq"             // {q, a}[]
   | "list-update"          // {date, title, body}[]
@@ -26,6 +26,8 @@ export type FieldKind =
   | "list-comparison"      // {point, us, others}[]
   | "list-pros-cons"       // {pros: string[], cons: string[]}
   | "list-cta"             // {label, url, style}[]
+  | "list-topper"          // {name, rank, exam, year, score, college, photo_url}[]
+  | "list-result-stat"     // {label, value, sub}[]
   | "social-links";        // {website,youtube,instagram,linkedin,facebook,twitter}
 
 export interface FieldDef {
@@ -60,7 +62,8 @@ export interface SectionDef {
     | "pros-cons"
     | "ctas"
     | "social"
-    | "keyvalue";
+    | "keyvalue"
+    | "results-detailed";
 }
 
 export const INSTITUTE_SECTIONS: SectionDef[] = [
@@ -91,8 +94,12 @@ export const INSTITUTE_SECTIONS: SectionDef[] = [
   { id: "mock_tests", label: "Mock Tests & Practice", shortHelp: "Number of mocks, sectional, analytics", layout: "prose",
     fields: [{ key: "body", label: "Mock tests", kind: "richtext", rows: 4 }] },
 
-  { id: "results", label: "Results & Success Rate", shortHelp: "Past results, top ranks, selection stats", layout: "prose",
-    fields: [{ key: "body", label: "Results", kind: "richtext", rows: 4 }] },
+  { id: "results", label: "Results & Success Rate", shortHelp: "Stats, top ranks, selection counts + commentary", layout: "results-detailed",
+    fields: [
+      { key: "stats", label: "Headline stats (e.g. '99%ile' / '120+ Calls')", kind: "list-result-stat" },
+      { key: "toppers", label: "Top scorers / selections", kind: "list-topper" },
+      { key: "body", label: "Result commentary", kind: "richtext", rows: 4 },
+    ] },
 
   { id: "topper_testimonials", label: "Topper Testimonials", shortHelp: "6–10 short success stories", layout: "testimonials",
     fields: [{ key: "items", label: "Testimonials", kind: "list-testimonial" }] },
