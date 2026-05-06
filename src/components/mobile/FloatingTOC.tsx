@@ -13,13 +13,14 @@ interface FloatingTOCProps {
   onSelect: (id: string) => void;
   /** Bottom offset in px to sit above a mobile action bar */
   bottomOffset?: number;
+  className?: string;
 }
 
 /**
  * Floating Table-of-Contents button (bottom-right). Opens a sheet with quick links.
  * Mobile-first; on desktop it stays small and unobtrusive.
  */
-const FloatingTOC = ({ items, onSelect, bottomOffset = 80 }: FloatingTOCProps) => {
+const FloatingTOC = ({ items, onSelect, bottomOffset = 80, className }: FloatingTOCProps) => {
   const [open, setOpen] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
 
@@ -54,7 +55,7 @@ const FloatingTOC = ({ items, onSelect, bottomOffset = 80 }: FloatingTOCProps) =
         onClick={() => setOpen(true)}
         aria-label="Open table of contents"
         style={{ bottom: `calc(${bottomOffset}px + env(safe-area-inset-bottom, 0px))` }}
-        className="fixed right-4 z-40 w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform md:bottom-6"
+        className={cn("fixed right-4 z-40 w-12 h-12 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 flex items-center justify-center hover:scale-105 active:scale-95 transition-transform md:bottom-6", className)}
       >
         <List className="w-5 h-5" />
       </button>
