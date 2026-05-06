@@ -320,6 +320,8 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
       if (suggestions) {
         setSuggestions({ ...suggestions, [field]: editValues[field] });
       }
+      // Notify the dashboard so the score recomputes immediately
+      onApply({ [field]: editValues[field] } as any);
     } catch (e: any) {
       toast({ title: "Save Error", description: e.message, variant: "destructive" });
     }

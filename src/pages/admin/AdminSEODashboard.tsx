@@ -389,25 +389,51 @@ const AdminSEODashboard = () => {
       // Add static pages as a special content type, using their declared SEO metadata
       const staticRows: DashboardRow[] = STATIC_PAGES_CONFIG.map(sp => {
         const seo = sp.seo || {};
-        const metaTitle = seo.metaTitle || sp.label;
-        const metaDesc = seo.metaDescription || "";
-        const keywords = seo.keywords || [];
+        // AISEOButton saves static-page snapshots under contentType="article" with recordId=`page-${sp.key}`.
+        // fetchAllSeoSnapshots maps them to `article:page-${sp.key}`. Look there first and fall back to the
+        // legacy `static:` key for backwards compatibility.
+        const snapshot =
+          snapshots[`article:page-${sp.key}`] ||
+          snapshots[`static:page-${sp.key}`] ||
+          null;
+
+        // Snapshot wins over hardcoded config so "Save Changes" instantly moves the score.
+        const metaTitle = (snapshot?.meta_title || seo.metaTitle || sp.label) as string;
+        const metaDesc = (snapshot?.meta_description || seo.metaDescription || "") as string;
+        const keywords: string[] =
+          (snapshot?.keywords && snapshot.keywords.length ? snapshot.keywords : seo.keywords) || [];
+        const h1 = snapshot?.h1_tag || seo.h1 || sp.label;
         const wordCount = seo.approxWordCount ?? 0;
-        const longTail = keywords.filter(k => k.split(/\s+/).length >= 3).length;
-        const shortTail = keywords.length - longTail;
+        const longTail = (snapshot?.keywordBuckets?.longTail?.length)
+          || keywords.filter(k => k.split(/\s+/).length >= 3).length;
+        const shortTail = (snapshot?.keywordBuckets?.shortTail?.length)
+          || (keywords.length - longTail);
+
+        const hasSchema = Boolean(snapshot?.schemaMarkup) || !!seo.hasSchema;
+        const hasCanonical = Boolean(snapshot?.canonicalUrl || snapshot?.technicalSEO?.canonicalUrl) || !!seo.hasCanonical;
+        const hasSocial = Boolean(snapshot?.socialMeta?.ogTitle || snapshot?.socialMeta?.twitterTitle) || !!seo.hasSocial;
+        const hasTechnical = Boolean(
+          snapshot?.technicalSEO && [
+            snapshot.technicalSEO.pagespeedTips?.length,
+            snapshot.technicalSEO.mobileTips?.length,
+            snapshot.technicalSEO.securityChecks?.length,
+            snapshot.technicalSEO.crawlabilityTips?.length,
+            snapshot.technicalSEO.keywordPlacementTips?.length,
+          ].some(Boolean),
+        ) || (!!seo.hasCanonical && !!seo.hasSocial);
 
         const checks = {
           hasMetaTitle: metaTitle.length >= 30 && metaTitle.length <= 70,
           hasMetaDesc: metaDesc.length >= 120 && metaDesc.length <= 170,
           hasKeywords: keywords.length >= 5,
-          hasH1: !!seo.h1,
+          hasH1: !!h1,
           hasContent: wordCount >= 500,
-          hasSchema: !!seo.hasSchema,
+          hasSchema,
           hasSlug: true,
-          hasCanonical: !!seo.hasCanonical,
-          hasSocial: !!seo.hasSocial,
-          hasTechnical: !!seo.hasCanonical && !!seo.hasSocial,
-          aiOptimized: !!seo.hasSchema && wordCount >= 1000,
+          hasCanonical,
+          hasSocial,
+          hasTechnical,
+          aiOptimized: !!snapshot,
         };
         const passed = Object.values(checks).filter(Boolean).length;
         const score = Math.round((passed / Object.keys(checks).length) * 100);
@@ -421,6 +447,8 @@ const AdminSEODashboard = () => {
         if (!checks.hasSchema) issues.push("No JSON-LD schema");
         if (!checks.hasSocial) issues.push("Missing OG/Twitter tags");
         if (!checks.hasCanonical) issues.push("Missing canonical");
+        if (!checks.hasTechnical) issues.push("Technical SEO not generated");
+        if (!checks.aiOptimized) issues.push("AI snapshot missing");
 
         return {
           key: `static:page-${sp.key}`,
@@ -434,9 +462,9 @@ const AdminSEODashboard = () => {
           state: null,
           item: {
             id: `page-${sp.key}`, title: sp.label, slug: sp.path,
-            meta_title: metaTitle, meta_description: metaDesc, keywords,
+            meta_title: metaTitle, meta_description: metaDesc, keywords, h1_tag: h1,
           },
-          snapshot: snapshots[`static:page-${sp.key}`] || null,
+          snapshot,
           audit: {
             score, status, issues: issues.length ? issues : ["All key SEO elements present"],
             ...checks,
