@@ -2741,6 +2741,31 @@ const AdminSEODashboard = () => {
         {/* ═══ IMAGE AUDIT ═══ */}
         {activeTab === "image-audit" && <ImageAuditPanel />}
       </div>
+
+      <BulkOptimizeProgressDialog
+        open={bulkOpen}
+        onOpenChange={(o) => {
+          if (!o && !bulkFinished && bulkLoading) {
+            // Don't allow closing while running; require Cancel
+            return;
+          }
+          setBulkOpen(o);
+        }}
+        items={bulkItems}
+        paused={bulkPaused}
+        onPauseToggle={() => setBulkPaused(p => !p)}
+        onCancel={() => {
+          if (bulkFinished) {
+            setBulkOpen(false);
+          } else {
+            setBulkCancelled(true);
+            bulkCancelledRef.current = true;
+          }
+        }}
+        finished={bulkFinished}
+        startedAt={bulkStartedAt}
+        model="openai/gpt-5-mini"
+      />
     </div>
   );
 };
