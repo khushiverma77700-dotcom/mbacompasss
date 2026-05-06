@@ -207,6 +207,14 @@ const AdminSEODashboard = () => {
   const [bulkCancelled, setBulkCancelled] = useState(false);
   const [bulkFinished, setBulkFinished] = useState(false);
   const [bulkStartedAt, setBulkStartedAt] = useState<number | null>(null);
+  const [bulkLogs, setBulkLogs] = useState<import("@/components/admin/BulkOptimizeProgressDialog").LogEntry[]>([]);
+  const pushLog = useCallback((level: "info" | "ok" | "warn" | "error", msg: string) => {
+    setBulkLogs(prev => {
+      const next = [...prev, { ts: Date.now(), level, msg }];
+      // cap at 500 to keep DOM lightweight
+      return next.length > 500 ? next.slice(next.length - 500) : next;
+    });
+  }, []);
   const [selectedType, setSelectedType] = useState<TypeFilter>("all");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [schemaFilter, setSchemaFilter] = useState<BooleanFilter>("all");
@@ -957,23 +965,26 @@ const AdminSEODashboard = () => {
       key: r.key, name: r.name, contentType: r.contentType,
       status: "pending", oldScore: r.audit.score,
     })));
+    setBulkLogs([]);
     setBulkPaused(false); bulkPausedRef.current = false;
     setBulkCancelled(false); bulkCancelledRef.current = false;
     setBulkFinished(false);
     setBulkStartedAt(Date.now());
     setBulkOpen(true);
     setBulkLoading(true);
+    pushLog("info", `Bulk optimization started — ${targets.length} pages queued (model: openai/gpt-5-mini)`);
 
     let success = 0, fail = 0;
     for (let i = 0; i < targets.length; i++) {
-      if (bulkCancelledRef.current) break;
+      if (bulkCancelledRef.current) { pushLog("warn", "Cancelled by user — stopping queue"); break; }
       while (bulkPausedRef.current && !bulkCancelledRef.current) {
         await new Promise(r => setTimeout(r, 300));
       }
-      if (bulkCancelledRef.current) break;
+      if (bulkCancelledRef.current) { pushLog("warn", "Cancelled by user — stopping queue"); break; }
 
       const row = targets[i];
       const startedAt = Date.now();
+      pushLog("info", `[${i + 1}/${targets.length}] → ${row.name} (${row.contentType}) — invoking ai-seo-enhance`);
       setBulkItems(prev => prev.map(it => it.key === row.key
         ? { ...it, status: "running", startedAt, step: "Calling AI…" } : it));
 
@@ -986,8 +997,12 @@ const AdminSEODashboard = () => {
         const sug = data?.suggestions;
         if (!sug) throw new Error("Missing suggestions");
 
+        const meta = data?.meta || {};
+        if (meta.totalTokens) {
+          pushLog("info", `   ↳ AI responded in ${fmtMsLog(meta.aiLatencyMs)} · ${meta.totalTokens.toLocaleString()} tokens · $${(meta.estimatedCost || 0).toFixed(4)}`);
+        }
         setBulkItems(prev => prev.map(it => it.key === row.key
-          ? { ...it, step: "Saving snapshot…" } : it));
+          ? { ...it, step: "Saving snapshot & DB…" } : it));
 
         await saveSeoSnapshot(buildStoredSeoSnapshot(row.contentType, row.item, sug));
         if (contentTypeConfig[row.contentType].supportsSeoColumns) {
@@ -1002,8 +1017,9 @@ const AdminSEODashboard = () => {
         }
 
         const finishedAt = Date.now();
-        const meta = data?.meta || {};
         const projected = sug?.seoScore?.projectedScore ?? sug?.seoScore?.overall;
+        const oldScore = row.audit.score;
+        const newScore = typeof projected === "number" ? Math.round(projected) : undefined;
         setBulkItems(prev => prev.map(it => it.key === row.key ? {
           ...it,
           status: "ok",
@@ -1013,20 +1029,19 @@ const AdminSEODashboard = () => {
           completionTokens: meta.completionTokens,
           totalTokens: meta.totalTokens,
           cost: meta.estimatedCost,
-          newScore: typeof projected === "number" ? Math.round(projected) : undefined,
+          newScore,
           step: undefined,
         } : it));
+        pushLog("ok", `✓ ${row.name} — score ${oldScore} → ${newScore ?? "?"} (${fmtMsLog(finishedAt - startedAt)})`);
         success++;
         await new Promise(r => setTimeout(r, 250));
       } catch (e: any) {
         const finishedAt = Date.now();
+        const msg = e?.message || "Unknown error";
         setBulkItems(prev => prev.map(it => it.key === row.key ? {
-          ...it,
-          status: "fail",
-          finishedAt,
-          durationMs: finishedAt - startedAt,
-          error: e?.message || "Unknown error",
+          ...it, status: "fail", finishedAt, durationMs: finishedAt - startedAt, error: msg,
         } : it));
+        pushLog("error", `✕ ${row.name} — ${msg}`);
         fail++;
       }
     }
@@ -1034,9 +1049,13 @@ const AdminSEODashboard = () => {
     setBulkLoading(false);
     setBulkFinished(true);
     setSelectedKeys([]);
+    pushLog(fail === 0 ? "ok" : "warn", `Bulk run finished — ${success} optimized, ${fail} failed`);
     fetchDashboardData();
     toast({ title: "Bulk optimize complete", description: `${success} optimized, ${fail} failed.` });
   };
+
+  // tiny formatter for log lines
+  const fmtMsLog = (ms?: number) => ms == null ? "?" : ms < 1000 ? `${ms}ms` : `${(ms / 1000).toFixed(1)}s`;
 
   const commonIssues = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -2752,6 +2771,7 @@ const AdminSEODashboard = () => {
           setBulkOpen(o);
         }}
         items={bulkItems}
+        logs={bulkLogs}
         paused={bulkPaused}
         onPauseToggle={() => setBulkPaused(p => !p)}
         onCancel={() => {
