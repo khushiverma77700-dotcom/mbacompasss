@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Progress } from "@/components/ui/progress";
-import SEOHead from "@/components/SEOHead";
+import SEOHead, { generateFAQSchema, generateBreadcrumbSchema } from "@/components/SEOHead";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import {
   ChevronRight, ArrowLeft, GraduationCap, BookOpen, Clock, Calendar,
