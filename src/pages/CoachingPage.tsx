@@ -412,7 +412,9 @@ const CoachingPage = () => {
 
         <PageKeywords contentType="static" recordId="coaching" fallbackKeywords={["MBA coaching India", "CAT coaching institutes", "best MBA coaching"]} />
       </div>
+      <CompareDrawer />
     </div>
+    </CoachingCompareProvider>
   );
 };
 
