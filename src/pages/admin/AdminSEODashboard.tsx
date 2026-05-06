@@ -200,6 +200,12 @@ const AdminSEODashboard = () => {
   const [rows, setRows] = useState<DashboardRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkItems, setBulkItems] = useState<import("@/components/admin/BulkOptimizeProgressDialog").BulkItem[]>([]);
+  const [bulkPaused, setBulkPaused] = useState(false);
+  const [bulkCancelled, setBulkCancelled] = useState(false);
+  const [bulkFinished, setBulkFinished] = useState(false);
+  const [bulkStartedAt, setBulkStartedAt] = useState<number | null>(null);
   const [selectedType, setSelectedType] = useState<TypeFilter>("all");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [schemaFilter, setSchemaFilter] = useState<BooleanFilter>("all");
