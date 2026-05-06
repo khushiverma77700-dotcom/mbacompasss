@@ -353,7 +353,8 @@ Deno.serve(async (req) => {
   } catch (e) {
     const msg = e instanceof Error ? e.message : "Unknown error";
     console.error("ai-course-writer error:", msg);
-    const status = msg.includes("429") ? 429 : msg.includes("402") ? 402 : 500;
+    const lower = msg.toLowerCase();
+    const status = lower.includes("quota") || lower.includes("rate") || msg.includes("429") ? 429 : lower.includes("credit") || msg.includes("402") ? 402 : 500;
     return new Response(JSON.stringify({ error: msg }), {
       status,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
