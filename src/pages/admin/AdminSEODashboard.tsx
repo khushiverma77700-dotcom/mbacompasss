@@ -134,6 +134,7 @@ const generateSlug = (text: string) =>
 
 const getSEOAudit = (contentType: SEOContentType, item: Record<string, any>, snapshot: StoredSEOSnapshot | null): SEOAudit => {
   const issues: string[] = [];
+  const savedScore = snapshot?.seoScore?.projectedScore ?? snapshot?.seoScore?.overall;
   const resolvedTitle = snapshot?.meta_title || item.meta_title || "";
   const resolvedDesc = snapshot?.meta_description || item.meta_description || "";
   const resolvedKw = snapshot?.keywords?.length ? snapshot.keywords : item.keywords || [];
@@ -182,7 +183,7 @@ const getSEOAudit = (contentType: SEOContentType, item: Record<string, any>, sna
   const aiOptimized = Boolean(snapshot);
   if (aiOptimized) score += 8; else issues.push("AI snapshot missing");
 
-  score = Math.min(100, score);
+  score = Math.min(100, typeof savedScore === "number" ? Math.max(score, Math.round(savedScore)) : score);
   return {
     score, status: score >= 80 ? "good" : score >= 55 ? "warning" : "poor",
     hasMetaTitle, hasMetaDesc, hasKeywords, hasH1, hasContent, hasSchema, hasSlug,
@@ -373,7 +374,11 @@ const AdminSEODashboard = () => {
       const [snapshots, ...results] = await Promise.all([
         fetchAllSeoSnapshots(),
         ...contentTypes.map((ct) =>
-          supabase.from(contentTypeConfig[ct].table as any).select("*").order("created_at", { ascending: false }).limit(1000)
+          supabase
+            .from(contentTypeConfig[ct].table as any)
+            .select(ct === "course" ? "*, institutes(slug)" : "*")
+            .order("created_at", { ascending: false })
+            .limit(1000)
         ),
       ]);
 
@@ -381,8 +386,11 @@ const AdminSEODashboard = () => {
       const nextRows: DashboardRow[] = results.flatMap((result, index) => {
         const ct = contentTypes[index];
         return ((result.data as Record<string, any>[] | null) || []).map((item) => {
+          const normalizedItem = ct === "course"
+            ? { ...item, _institute_slug: item.institutes?.slug, slug: item.slug || generateSlug(item.name || "") }
+            : item;
           const snapshot = snapshots[`${ct}:${item.id}`] || null;
-          return { key: `${ct}:${item.id}`, id: item.id, contentType: ct, name: getName(item), slug: item.slug, city: item.city || null, state: item.state || null, item, snapshot, audit: getSEOAudit(ct, item, snapshot) };
+          return { key: `${ct}:${item.id}`, id: item.id, contentType: ct, name: getName(normalizedItem), slug: normalizedItem.slug, city: normalizedItem.city || null, state: normalizedItem.state || null, item: normalizedItem, snapshot, audit: getSEOAudit(ct, normalizedItem, snapshot) };
         });
       });
 
