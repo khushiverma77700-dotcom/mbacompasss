@@ -121,7 +121,6 @@ Deno.serve(async (req) => {
       cityPages,
       mockBundles,
       mockTests,
-      programmes,
       mbaCompass,
     ] = await Promise.all([
       fetchAll("institutes", "slug, updated_at"),
@@ -132,7 +131,6 @@ Deno.serve(async (req) => {
       fetchAll("city_pages", "slug, updated_at", (q) => q.eq("active", true)),
       fetchAll("mock_bundles", "slug, updated_at", (q) => q.eq("is_published", true)),
       fetchAll("mock_tests", "slug, updated_at", (q) => q.eq("is_published", true)),
-      fetchAll("programme_courses", "slug, updated_at, college_id", (q) => q.eq("active", true)),
       fetchAll("mba_compass_courses", "slug, updated_at", (q) => q.eq("is_active", true)),
     ]);
 
@@ -152,16 +150,6 @@ Deno.serve(async (req) => {
       ? [{ loc: `/courses/${b.slug}`, lastmod: fmtDate(b.updated_at), changefreq: "weekly" as const, priority: 0.8 }] : []);
     const mockEntries: Entry[] = (mockTests ?? []).flatMap((m: any) => m.slug
       ? [{ loc: `/mocks/${m.slug}`, lastmod: fmtDate(m.updated_at), changefreq: "weekly" as const, priority: 0.7 }] : []);
-    const collegeSlugById = new Map<string, string>();
-    for (const c of (colleges ?? []) as any[]) {
-      if (c.id && c.slug) collegeSlugById.set(c.id, c.slug);
-    }
-    const programmeEntries: Entry[] = (programmes ?? []).flatMap((p: any) => {
-      const cslug = p.college_id ? collegeSlugById.get(p.college_id) : null;
-      return (p.slug && cslug)
-        ? [{ loc: `/college/${cslug}/programme/${p.slug}`, lastmod: fmtDate(p.updated_at), changefreq: "monthly" as const, priority: 0.6 }]
-        : [];
-    });
     const compassEntries: Entry[] = (mbaCompass ?? []).flatMap((c: any) => c.slug
       ? [{ loc: `/mba-compass/${c.slug}`, lastmod: fmtDate(c.updated_at), changefreq: "weekly" as const, priority: 0.7 }] : []);
 
@@ -174,7 +162,6 @@ Deno.serve(async (req) => {
       exams: examEntries,
       courses: [...courseEntries, ...compassEntries],
       mocks: mockEntries,
-      programmes: programmeEntries,
     };
 
     const headers = {
