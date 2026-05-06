@@ -9,14 +9,18 @@ const corsHeaders = {
 const NEW_DOMAIN = "https://mbacompass.in";
 const OLD_DOMAINS = ["bschoolbuzz.com", "bschoolbus.com", "bestmbacoaching.com"];
 
-const CONTENT_TABLES: { contentType: string; table: string }[] = [
-  { contentType: "article", table: "articles" },
-  { contentType: "institute", table: "institutes" },
-  { contentType: "college", table: "colleges" },
-  { contentType: "exam", table: "exams" },
-  { contentType: "cityPage", table: "city_pages" },
-  { contentType: "category", table: "categories" },
+const CONTENT_TABLES: { contentType: string; table: string; column: string }[] = [
+  { contentType: "article", table: "articles", column: "content" },
+  { contentType: "institute", table: "institutes", column: "description" },
+  { contentType: "college", table: "colleges", column: "description" },
+  { contentType: "exam", table: "exams", column: "description" },
+  { contentType: "cityPage", table: "city_pages", column: "detailed_content" },
+  { contentType: "category", table: "categories", column: "description" },
+  { contentType: "course", table: "courses", column: "description" },
 ];
+
+const MIN_CONTENT_WORDS = 800;
+const wordCount = (s: any) => (typeof s === "string" ? s.replace(/<[^>]*>/g, " ").trim().split(/\s+/).filter(Boolean).length : 0);
 
 const REWRITE_TARGETS: { table: string; columns: string[] }[] = [
   { table: "articles", columns: ["title", "content", "meta_title", "meta_description", "excerpt", "intro"] },
