@@ -202,7 +202,8 @@ const CoachingPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <CoachingCompareProvider>
+    <div className="min-h-screen bg-background pb-24">
       <SEOHead
         title={dynamicTitle}
         description={dynamicDescription}
