@@ -354,7 +354,7 @@ const ListCTA = ({ value, onChange }: any) => (
 );
 
 const SocialLinks = ({ value, onChange }: any) => {
-  const fields = ["website", "youtube", "instagram", "linkedin", "facebook", "twitter"];
+  const fields = ["youtube", "instagram", "linkedin", "facebook", "twitter"];
   return (
     <div className="grid md:grid-cols-2 gap-2">
       {fields.map((f) => (
