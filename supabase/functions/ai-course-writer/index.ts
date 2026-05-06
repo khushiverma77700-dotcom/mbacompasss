@@ -81,6 +81,24 @@ const SCOPE_LOCK = `# SCOPE LOCK — MBA / MASTERS-IN-MANAGEMENT ENTRANCE COACHI
 - DO NOT include JEE, NEET, GATE, UPSC, SSC, banking, CA/CS, coding bootcamps, or school-level tuition. If the institute also runs non-MBA verticals, IGNORE them entirely.
 - Every course you return must be MBA-entrance / Masters-in-Management coaching.`;
 
+async function safeAIError(res: Response) {
+  let payload = "";
+  try {
+    const json = await res.clone().json();
+    payload = String(json?.error || json?.message || "");
+  } catch {
+    payload = await res.clone().text().catch(() => "");
+  }
+  const lower = payload.toLowerCase();
+  if (res.status === 429 || lower.includes("quota") || lower.includes("rate")) {
+    return "AI service is temporarily quota-limited. Please reduce Max courses to discover and try again in a few minutes.";
+  }
+  if (res.status === 402 || lower.includes("payment")) {
+    return "AI credits are exhausted. Please add AI balance, then try again.";
+  }
+  return "AI service could not complete this request. Please try again with fewer courses.";
+}
+
 // ---------------- DISCOVER ----------------
 
 async function discover(body: Extract<Body, { mode: "discover" }>) {
