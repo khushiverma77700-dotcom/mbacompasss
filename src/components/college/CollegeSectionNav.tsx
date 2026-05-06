@@ -65,7 +65,7 @@ const CollegeSectionNav = ({ items, topOffset = 96 }: CollegeSectionNavProps) =>
   return (
     <nav
       aria-label="College sections"
-      className="hidden lg:block sticky top-24 self-start max-h-[calc(100vh-7rem)] overflow-y-auto pr-2"
+      className="hidden lg:block sticky top-32 self-start max-h-[calc(100vh-9rem)] overflow-y-auto pr-2 z-20"
     >
       <div className="rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm p-3">
         <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-2 pb-2 mb-2 border-b border-border/40">
