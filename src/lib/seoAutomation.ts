@@ -151,7 +151,16 @@ export const getSeoSnapshotKey = (contentType: SEOContentType, recordId: string)
 export const getAbsoluteUrl = (pathOrUrl?: string, fallbackPath = "/") => {
   const candidate = (pathOrUrl || fallbackPath).trim();
   if (!candidate) return `${SITE_URL}${fallbackPath}`;
-  if (candidate.startsWith("http://") || candidate.startsWith("https://")) return candidate;
+  if (candidate.startsWith("http://") || candidate.startsWith("https://")) {
+    try {
+      const parsed = new URL(candidate);
+      const siteHost = new URL(SITE_URL).hostname.replace(/^www\./, "");
+      const parsedHost = parsed.hostname.replace(/^www\./, "");
+      return parsedHost === siteHost ? candidate : `${SITE_URL}${fallbackPath}`;
+    } catch {
+      return `${SITE_URL}${fallbackPath}`;
+    }
+  }
   return `${SITE_URL}${candidate.startsWith("/") ? candidate : `/${candidate}`}`;
 };
 
