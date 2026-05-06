@@ -227,32 +227,36 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
       const snapshot = buildStoredSeoSnapshot(contentType, { ...data, id: recordId }, sug);
       await saveSeoSnapshot(snapshot);
 
-      // Update the DB record
-      const table = contentTypeConfig[contentType].table as "articles" | "institutes" | "colleges" | "exams" | "city_pages";
-      const updatePayload: Record<string, any> = {
-        meta_title: sug.meta_title,
-        meta_description: sug.meta_description,
-        keywords: mergeKeywordBuckets(sug.keywords),
-      };
-      if (contentTypeConfig[contentType].supportsH1Column) {
-        updatePayload.h1_tag = sug.h1_tag;
+      // Update the DB record only for tables that actually have SEO columns.
+      // Courses/categories render SEO from the saved snapshot, so writing fake
+      // meta_title columns there caused a failed save and stale dashboard score.
+      if (contentTypeConfig[contentType].supportsSeoColumns) {
+        const table = contentTypeConfig[contentType].table as "articles" | "institutes" | "colleges" | "exams" | "city_pages";
+        const updatePayload: Record<string, any> = {
+          meta_title: sug.meta_title,
+          meta_description: sug.meta_description,
+          keywords: mergeKeywordBuckets(sug.keywords),
+        };
+        if (contentTypeConfig[contentType].supportsH1Column) {
+          updatePayload.h1_tag = sug.h1_tag;
+        }
+
+        const { error: updateError } = await supabase
+          .from(table)
+          .update(updatePayload)
+          .eq("id", recordId!);
+
+        if (updateError) {
+          console.error("Failed to update record:", updateError);
+          toast({ title: "Partial Save", description: "Snapshot saved but DB update failed: " + updateError.message, variant: "destructive" });
+        }
       }
 
-      const { error: updateError } = await supabase
-        .from(table)
-        .update(updatePayload)
-        .eq("id", recordId!);
-
-      if (updateError) {
-        console.error("Failed to update record:", updateError);
-        toast({ title: "Partial Save", description: "Snapshot saved but DB update failed: " + updateError.message, variant: "destructive" });
-      } else {
-        setAutoApplied(true);
-        toast({
-          title: "AI SEO Auto-Applied",
-          description: "Meta title, description, H1, keywords & schema saved to database.",
-        });
-      }
+      setAutoApplied(true);
+      toast({
+        title: "AI SEO Auto-Applied",
+        description: "Meta title, description, H1, keywords & schema saved.",
+      });
 
       // ── Auto-expand short content ────────────────────────────────────────
       // If the audit reports the body is under the SEO minimum (default 800
@@ -302,10 +306,12 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
   const handleManualSave = async (field: string) => {
     if (!recordId || !editValues[field]) return;
     try {
-      const table = contentTypeConfig[contentType].table as "articles" | "institutes" | "colleges" | "exams" | "city_pages";
-      const update: Record<string, any> = { [field]: editValues[field] };
-      const { error } = await supabase.from(table).update(update).eq("id", recordId);
-      if (error) throw error;
+      if (contentTypeConfig[contentType].supportsSeoColumns) {
+        const table = contentTypeConfig[contentType].table as "articles" | "institutes" | "colleges" | "exams" | "city_pages";
+        const update: Record<string, any> = { [field]: editValues[field] };
+        const { error } = await supabase.from(table).update(update).eq("id", recordId);
+        if (error) throw error;
+      }
 
       const snapshotKey = `seo_page__${contentType}__${recordId}`;
       const { data: existingSnap } = await supabase.from("site_settings").select("id, value").eq("key", snapshotKey).limit(1);
@@ -347,17 +353,16 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
         });
         await saveSeoSnapshot(snapshot);
 
-        const table = contentTypeConfig[contentType].table as "articles" | "institutes" | "colleges" | "exams" | "city_pages";
-        const updatePayload: Record<string, any> = {
-          meta_title: applied.meta_title,
-          meta_description: applied.meta_description,
-          keywords: applied.keywords,
-        };
-        if (contentTypeConfig[contentType].supportsH1Column) {
-          updatePayload.h1_tag = applied.h1_tag;
-        }
-
-        if (Object.keys(updatePayload).length > 0) {
+        if (contentTypeConfig[contentType].supportsSeoColumns) {
+          const table = contentTypeConfig[contentType].table as "articles" | "institutes" | "colleges" | "exams" | "city_pages";
+          const updatePayload: Record<string, any> = {
+            meta_title: applied.meta_title,
+            meta_description: applied.meta_description,
+            keywords: applied.keywords,
+          };
+          if (contentTypeConfig[contentType].supportsH1Column) {
+            updatePayload.h1_tag = applied.h1_tag;
+          }
           const { error: updateError } = await supabase
             .from(table)
             .update(updatePayload)

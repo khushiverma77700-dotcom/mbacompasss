@@ -134,6 +134,7 @@ const generateSlug = (text: string) =>
 
 const getSEOAudit = (contentType: SEOContentType, item: Record<string, any>, snapshot: StoredSEOSnapshot | null): SEOAudit => {
   const issues: string[] = [];
+  const savedScore = snapshot?.seoScore?.projectedScore ?? snapshot?.seoScore?.overall;
   const resolvedTitle = snapshot?.meta_title || item.meta_title || "";
   const resolvedDesc = snapshot?.meta_description || item.meta_description || "";
   const resolvedKw = snapshot?.keywords?.length ? snapshot.keywords : item.keywords || [];
@@ -182,7 +183,7 @@ const getSEOAudit = (contentType: SEOContentType, item: Record<string, any>, sna
   const aiOptimized = Boolean(snapshot);
   if (aiOptimized) score += 8; else issues.push("AI snapshot missing");
 
-  score = Math.min(100, score);
+  score = Math.min(100, typeof savedScore === "number" ? Math.max(score, Math.round(savedScore)) : score);
   return {
     score, status: score >= 80 ? "good" : score >= 55 ? "warning" : "poor",
     hasMetaTitle, hasMetaDesc, hasKeywords, hasH1, hasContent, hasSchema, hasSlug,
@@ -373,7 +374,11 @@ const AdminSEODashboard = () => {
       const [snapshots, ...results] = await Promise.all([
         fetchAllSeoSnapshots(),
         ...contentTypes.map((ct) =>
-          supabase.from(contentTypeConfig[ct].table as any).select("*").order("created_at", { ascending: false }).limit(1000)
+          supabase
+            .from(contentTypeConfig[ct].table as any)
+            .select(ct === "course" ? "*, institutes(slug)" : "*")
+            .order("created_at", { ascending: false })
+            .limit(1000)
         ),
       ]);
 
@@ -381,8 +386,11 @@ const AdminSEODashboard = () => {
       const nextRows: DashboardRow[] = results.flatMap((result, index) => {
         const ct = contentTypes[index];
         return ((result.data as Record<string, any>[] | null) || []).map((item) => {
+          const normalizedItem = ct === "course"
+            ? { ...item, _institute_slug: item.institutes?.slug, slug: item.slug || generateSlug(item.name || "") }
+            : item;
           const snapshot = snapshots[`${ct}:${item.id}`] || null;
-          return { key: `${ct}:${item.id}`, id: item.id, contentType: ct, name: getName(item), slug: item.slug, city: item.city || null, state: item.state || null, item, snapshot, audit: getSEOAudit(ct, item, snapshot) };
+          return { key: `${ct}:${item.id}`, id: item.id, contentType: ct, name: getName(normalizedItem), slug: normalizedItem.slug, city: normalizedItem.city || null, state: normalizedItem.state || null, item: normalizedItem, snapshot, audit: getSEOAudit(ct, normalizedItem, snapshot) };
         });
       });
 
@@ -908,11 +916,17 @@ const AdminSEODashboard = () => {
       toast({ title: "Static page", description: "Use Static Page SEO settings to update this page.", variant: "default" });
       return;
     }
+    if (!contentTypeConfig[row.contentType].supportsSeoColumns) {
+      toast({ title: "SEO updated", description: `${row.name} was updated.` });
+      fetchDashboardData();
+      return;
+    }
     const update: Record<string, any> = {};
     if (suggestions.meta_title) update.meta_title = suggestions.meta_title;
     if (suggestions.meta_description) update.meta_description = suggestions.meta_description;
     if (suggestions.keywords?.length) update.keywords = suggestions.keywords;
     if (contentTypeConfig[row.contentType].supportsH1Column && suggestions.h1_tag) update.h1_tag = suggestions.h1_tag;
+    if (!Object.keys(update).length) { fetchDashboardData(); return; }
     const { error } = await supabase.from(contentTypeConfig[row.contentType].table as any).update(update).eq("id", row.id);
     if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
     toast({ title: "SEO updated", description: `${row.name} was updated.` });
@@ -930,11 +944,13 @@ const AdminSEODashboard = () => {
         if (data?.error) throw new Error(data.error);
         const sug = data?.suggestions;
         if (!sug) throw new Error("Missing suggestions");
-        const update: Record<string, any> = { meta_title: sug.meta_title, meta_description: sug.meta_description, keywords: mergeKeywordBuckets(sug.keywords) };
-        if (contentTypeConfig[row.contentType].supportsH1Column && sug.h1_tag) update.h1_tag = sug.h1_tag;
-        const { error: ue } = await supabase.from(contentTypeConfig[row.contentType].table as any).update(update).eq("id", row.id);
-        if (ue) throw ue;
         await saveSeoSnapshot(buildStoredSeoSnapshot(row.contentType, row.item, sug));
+        if (contentTypeConfig[row.contentType].supportsSeoColumns) {
+          const update: Record<string, any> = { meta_title: sug.meta_title, meta_description: sug.meta_description, keywords: mergeKeywordBuckets(sug.keywords) };
+          if (contentTypeConfig[row.contentType].supportsH1Column && sug.h1_tag) update.h1_tag = sug.h1_tag;
+          const { error: ue } = await supabase.from(contentTypeConfig[row.contentType].table as any).update(update).eq("id", row.id);
+          if (ue) throw ue;
+        }
         success++;
         await new Promise(r => setTimeout(r, 350));
       } catch { fail++; }
