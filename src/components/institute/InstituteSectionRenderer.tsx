@@ -72,33 +72,153 @@ const InstituteSectionRenderer = ({ def, data }: Props) => {
     }
 
     case "testimonials": {
-      const items = data.items || [];
+      const items: any[] = data.items || [];
+      if (items.length === 0) return null;
+      const accents = ["from-sky-500 to-blue-600", "from-amber-500 to-orange-500", "from-emerald-500 to-teal-600", "from-violet-500 to-fuchsia-600"];
       return (
         <div className="grid md:grid-cols-2 gap-4">
-          {items.map((t: any, i: number) => (
-            <Card key={i} className="bg-gradient-to-br from-sky-50 to-white border-sky-100">
-              <CardContent className="p-4 flex gap-3">
-                {t.photo_url ? (
-                  <img src={t.photo_url} alt={t.name} className="w-12 h-12 rounded-full object-cover shrink-0" />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-primary/10 text-primary grid place-items-center font-semibold shrink-0">
-                    {(t.name || "?").charAt(0)}
+          {items.map((t: any, i: number) => {
+            const initial = (t.name || "?").charAt(0).toUpperCase();
+            const accent = accents[i % accents.length];
+            const rating = Math.max(0, Math.min(5, Number(t.rating) || 5));
+            return (
+              <Card key={i} className="relative overflow-hidden border-sky-100 bg-gradient-to-br from-white via-sky-50/40 to-white hover:shadow-lg transition-all">
+                <div className={`absolute top-0 inset-x-0 h-1 bg-gradient-to-r ${accent}`} />
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-3">
+                    <div className="relative shrink-0">
+                      {t.photo_url ? (
+                        <img src={t.photo_url} alt={t.name} className="w-14 h-14 rounded-full object-cover ring-2 ring-white shadow" />
+                      ) : (
+                        <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${accent} text-white grid place-items-center font-extrabold text-lg shadow`}>
+                          {initial}
+                        </div>
+                      )}
+                      {t.score && (
+                        <span className="absolute -bottom-1 -right-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-amber-500 text-white shadow-sm whitespace-nowrap">
+                          {t.score}
+                        </span>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-slate-900 text-[15px] leading-tight">{t.name}</span>
+                        {rating > 0 && (
+                          <span className="inline-flex items-center text-amber-500">
+                            {Array.from({ length: rating }).map((_, k) => <Star key={k} className="w-3 h-3 fill-current" />)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                        {t.exam && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-sky-700 bg-sky-50 border border-sky-100 rounded-full px-2 py-0.5">
+                            <GraduationCap className="w-2.5 h-2.5" /> {t.exam}{t.year ? ` · ${t.year}` : ""}
+                          </span>
+                        )}
+                        {t.college && (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-2 py-0.5">
+                            <Trophy className="w-2.5 h-2.5" /> {t.college}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <Quote className="w-6 h-6 text-sky-200 shrink-0" />
                   </div>
-                )}
-                <div className="min-w-0">
-                  <Quote className="w-4 h-4 text-sky-400 mb-1" />
-                  <p className="text-sm text-slate-700 leading-relaxed">{t.text}</p>
-                  <div className="text-xs text-muted-foreground mt-2">
-                    <span className="font-semibold text-slate-900">{t.name}</span>
-                    {t.exam && <> · {t.exam}</>}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                  {t.text && <p className="text-[14px] text-slate-700 leading-[1.7] mt-3">"{t.text}"</p>}
+                  {t.video_url && (
+                    <a href={t.video_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-semibold text-sky-700 hover:text-sky-900">
+                      <Play className="w-3.5 h-3.5 fill-current" /> Watch video story
+                    </a>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       );
     }
+
+    case "results-detailed": {
+      const stats: any[] = data.stats || [];
+      const toppers: any[] = data.toppers || [];
+      const body: string = data.body || "";
+      if (stats.length === 0 && toppers.length === 0 && !body) return null;
+      return (
+        <div className="space-y-7">
+          {stats.length > 0 && (
+            <div className="rounded-2xl bg-gradient-to-br from-sky-600 via-blue-600 to-indigo-700 text-white p-5 md:p-7 shadow-xl relative overflow-hidden">
+              <div className="pointer-events-none absolute -top-20 -right-20 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
+              <div className="pointer-events-none absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
+              <div className="relative">
+                <div className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-wider font-bold bg-white/15 rounded-full px-2.5 py-1 backdrop-blur">
+                  <TrendingUp className="w-3 h-3" /> Headline Results
+                </div>
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {stats.map((s: any, i: number) => (
+                    <div key={i} className="rounded-xl bg-white/10 border border-white/20 p-4 backdrop-blur">
+                      <div className="text-2xl md:text-3xl font-extrabold leading-none">{s.value}</div>
+                      <div className="text-[12px] font-semibold mt-1.5 opacity-95">{s.label}</div>
+                      {s.sub && <div className="text-[10px] uppercase tracking-wider opacity-75 mt-0.5">{s.sub}</div>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          {toppers.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <Medal className="w-4 h-4 text-amber-600" />
+                <h3 className="font-bold text-slate-900 text-[15px]">Star Performers</h3>
+                <span className="ml-auto text-[12px] text-slate-500 font-medium">{toppers.length} selections</span>
+              </div>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {toppers.map((t: any, i: number) => (
+                  <div key={i} className="group relative rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50/60 via-white to-white p-4 shadow-sm hover:shadow-lg hover:border-amber-200 hover:-translate-y-0.5 transition-all overflow-hidden">
+                    <div className="pointer-events-none absolute -top-10 -right-10 w-32 h-32 rounded-full bg-amber-100/40 blur-2xl" />
+                    <div className="relative flex items-start gap-3">
+                      {t.photo_url ? (
+                        <img src={t.photo_url} alt={t.name} className="w-14 h-14 rounded-full object-cover ring-2 ring-amber-200" />
+                      ) : (
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 text-white grid place-items-center font-extrabold text-lg ring-2 ring-amber-100">
+                          {(t.name || "?").charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="font-bold text-slate-900 text-[14px] leading-tight truncate">{t.name}</div>
+                        {t.rank && (
+                          <div className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider text-amber-800 bg-amber-100 border border-amber-200 rounded-full px-2 py-0.5 mt-1">
+                            <Trophy className="w-2.5 h-2.5" /> {t.rank}
+                          </div>
+                        )}
+                        <div className="mt-2 space-y-0.5 text-[11px] text-slate-600">
+                          {(t.exam || t.year) && (
+                            <div className="flex items-center gap-1"><GraduationCap className="w-3 h-3 text-sky-600" /> {[t.exam, t.year].filter(Boolean).join(" · ")}</div>
+                          )}
+                          {t.score && (
+                            <div className="flex items-center gap-1"><Star className="w-3 h-3 text-amber-500 fill-current" /> <span className="font-bold text-slate-800">{t.score}</span></div>
+                          )}
+                          {t.college && (
+                            <div className="flex items-center gap-1"><Award className="w-3 h-3 text-emerald-600" /> <span className="font-semibold text-slate-800 truncate">{t.college}</span></div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {body && (
+            <div
+              className="prose prose-slate max-w-none prose-headings:font-bold prose-h3:text-base prose-h3:mt-5 prose-h3:text-sky-800 prose-p:leading-[1.75] prose-p:text-slate-700 prose-p:text-[15px] prose-li:text-[15px] prose-li:text-slate-700 prose-strong:text-slate-900 prose-a:text-sky-700 hover:prose-a:underline prose-table:text-sm prose-th:bg-sky-50 bg-white border border-sky-100 rounded-2xl p-5"
+              dangerouslySetInnerHTML={{ __html: stripLeadingHeadings(body) }}
+            />
+          )}
+        </div>
+      );
+    }
+
 
     case "reviews": {
       const items = data.items || [];
