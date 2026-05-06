@@ -420,7 +420,7 @@ export const BulkOptimizeProgressDialog = ({
         </div>
 
         {/* Tabs */}
-        <Tabs defaultValue="charts" className="flex-1 flex flex-col min-h-0 mt-3">
+        <Tabs defaultValue="summary" className="flex-1 flex flex-col min-h-0 mt-3">
           <TabsList className="mx-6 self-start">
             <TabsTrigger value="summary"><CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />Save Report</TabsTrigger>
             <TabsTrigger value="charts"><BarChart3 className="w-3.5 h-3.5 mr-1.5" />Live Charts</TabsTrigger>
@@ -428,6 +428,38 @@ export const BulkOptimizeProgressDialog = ({
             <TabsTrigger value="pages"><FileText className="w-3.5 h-3.5 mr-1.5" />Pages ({items.length})</TabsTrigger>
             <TabsTrigger value="logs"><Activity className="w-3.5 h-3.5 mr-1.5" />Live Logs ({logs.length})</TabsTrigger>
           </TabsList>
+
+          {/* SAVE REPORT TAB */}
+          <TabsContent value="summary" className="flex-1 min-h-0 mt-3 px-6 pb-5 overflow-y-auto">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
+              <SignalCard label="Final status" value={finished ? (stats.failed ? "Completed with errors" : "Completed") : "Running"} hint={`${stats.verifiedSaves}/${stats.total} page saves verified`} tone={stats.failed ? "warn" : "ok"} />
+              <SignalCard label="Database applied" value={`${stats.dbApplied}`} hint="Rows updated with SEO columns" tone="ok" />
+              <SignalCard label="Snapshots saved" value={`${stats.verifiedSaves}`} hint="Verified in site settings" tone={stats.verifiedSaves < stats.done ? "warn" : "ok"} />
+              <SignalCard label="Tokens / cost" value={`${stats.totalTokens.toLocaleString()}`} hint={fmtCost(stats.totalCost)} tone="ok" />
+            </div>
+            <ScrollArea className="border rounded-md h-[420px]">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/50 text-xs sticky top-0 z-10 backdrop-blur">
+                  <tr className="text-left">
+                    <th className="px-3 py-2">Page</th><th className="px-3 py-2">Status</th><th className="px-3 py-2">Saved</th><th className="px-3 py-2">Score</th><th className="px-3 py-2">Tokens</th><th className="px-3 py-2">Cost</th><th className="px-3 py-2">Changes / Error</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((it) => (
+                    <tr key={it.key} className="border-t">
+                      <td className="px-3 py-2 font-medium max-w-[260px] truncate" title={it.name}>{it.name}</td>
+                      <td className="px-3 py-2"><StatusBadge s={it.status} /></td>
+                      <td className="px-3 py-2 text-xs">{it.verified ? <span className="text-emerald-700 font-medium">Verified</span> : it.saveStatus || "—"}</td>
+                      <td className="px-3 py-2 font-mono text-xs">{it.oldScore ?? "?"} → {it.newScore ?? "—"}</td>
+                      <td className="px-3 py-2 tabular-nums text-xs">{it.totalTokens?.toLocaleString() ?? "—"}</td>
+                      <td className="px-3 py-2 tabular-nums text-xs">{it.cost != null ? fmtCost(it.cost) : "—"}</td>
+                      <td className="px-3 py-2 text-xs max-w-[360px] truncate" title={it.error || it.changedFields?.join(", ")}>{it.error || it.changedFields?.join(", ") || "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </ScrollArea>
+          </TabsContent>
 
           {/* CHARTS TAB */}
           <TabsContent value="charts" className="flex-1 min-h-0 mt-3 px-6 pb-5 overflow-y-auto">
