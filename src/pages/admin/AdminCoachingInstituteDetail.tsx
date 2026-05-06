@@ -11,7 +11,7 @@ import RichTextEditor from "@/components/admin/RichTextEditor";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Save, ExternalLink, Loader2, Building2, Globe, Plus, X, Sparkles } from "lucide-react";
+import { ArrowLeft, Save, ExternalLink, Loader2, Building2, Globe, Plus, X, Sparkles, RefreshCw, FileText } from "lucide-react";
 import StateCitySelect from "@/components/admin/StateCitySelect";
 import FileUpload from "@/components/admin/FileUpload";
 import InstituteSectionEditor from "@/components/admin/InstituteSectionEditor";
@@ -144,6 +144,23 @@ const AdminCoachingInstituteDetail = () => {
             recordId={inst.id}
             onApply={(applied) => setInst((p: any) => ({ ...p, ...applied }))}
           />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              const { data: { user } } = await supabase.auth.getUser();
+              const { error } = await supabase.functions.invoke("refresh-content", {
+                body: { entity_type: "institute", entity_id: id, mode: "full", requested_by: user?.id },
+              });
+              if (error) toast({ title: "Refresh failed", description: error.message, variant: "destructive" });
+              else toast({ title: "Refresh queued", description: "Review proposal in Approval Queue." });
+            }}
+          >
+            <RefreshCw className="w-4 h-4 mr-1" /> Refresh Content
+          </Button>
+          <Link to="/admin/coaching-refresh-hub">
+            <Button variant="ghost" size="sm"><FileText className="w-4 h-4 mr-1" /> Refresh Hub</Button>
+          </Link>
           <Button onClick={saveAll} disabled={saving}>
             {saving ? <Loader2 className="w-4 h-4 mr-1 animate-spin" /> : <Save className="w-4 h-4 mr-1" />}
             Save changes
