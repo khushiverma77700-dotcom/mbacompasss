@@ -363,7 +363,7 @@ export const BulkOptimizeProgressDialog = ({
                 ? <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                 : <Loader2 className="w-4 h-4 text-primary animate-spin shrink-0" />}
               <span className="font-semibold truncate">
-                {finished ? "Optimization complete" : paused ? "Paused — click Resume to continue" : currentItem ? `Optimizing: ${currentItem.name}` : "Starting…"}
+                {finished ? `Optimization complete — ${stats.verifiedSaves}/${stats.total} saves verified` : paused ? "Paused — click Resume to continue" : currentItem ? `Optimizing: ${currentItem.name}` : "Starting…"}
               </span>
               <Badge variant="outline" className="ml-1 font-mono text-[10px] shrink-0">{model.split("/").pop()}</Badge>
             </div>
@@ -385,6 +385,7 @@ export const BulkOptimizeProgressDialog = ({
           <div className="flex items-center gap-3 text-xs">
             <span className="text-muted-foreground tabular-nums">{stats.completed} / {stats.total}</span>
             <span className="text-emerald-600 font-medium">✓ {stats.done}</span>
+            <span className="text-primary font-medium">Saved {stats.verifiedSaves}</span>
             {stats.failed > 0 && <span className="text-destructive font-medium">✕ {stats.failed}</span>}
             {stats.running > 0 && <span className="text-blue-600 font-medium">▶ {stats.running}</span>}
             <span className="text-muted-foreground">⏳ {stats.pending}</span>
@@ -403,7 +404,7 @@ export const BulkOptimizeProgressDialog = ({
           <MetricTile icon={Coins} label="AI cost" value={fmtCost(stats.totalCost)} accent />
           <MetricTile icon={CheckCircle2} label="Success rate" value={`${stats.successRate}%`}
             tone={stats.successRate < 80 ? "warn" : undefined} />
-          <MetricTile icon={Server} label="API" value="LOVABLE_AI" mono />
+          <MetricTile icon={Server} label="Verified saves" value={`${stats.verifiedSaves}/${stats.total}`} accent={finished && stats.verifiedSaves === stats.total} tone={finished && stats.verifiedSaves < stats.done ? "warn" : undefined} />
         </div>
 
         {/* Secondary tiles */}
@@ -421,6 +422,7 @@ export const BulkOptimizeProgressDialog = ({
         {/* Tabs */}
         <Tabs defaultValue="charts" className="flex-1 flex flex-col min-h-0 mt-3">
           <TabsList className="mx-6 self-start">
+            <TabsTrigger value="summary"><CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />Save Report</TabsTrigger>
             <TabsTrigger value="charts"><BarChart3 className="w-3.5 h-3.5 mr-1.5" />Live Charts</TabsTrigger>
             <TabsTrigger value="heatmap"><Flame className="w-3.5 h-3.5 mr-1.5" />Server Heatmap</TabsTrigger>
             <TabsTrigger value="pages"><FileText className="w-3.5 h-3.5 mr-1.5" />Pages ({items.length})</TabsTrigger>
