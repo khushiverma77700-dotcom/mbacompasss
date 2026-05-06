@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Quote, MapPin, Star, ExternalLink, CheckCircle2, XCircle, Sparkles, Calendar, Globe, Youtube, Instagram, Linkedin, Facebook, Twitter, Phone, Mail, Trophy, Award, GraduationCap, Play, TrendingUp, Medal } from "lucide-react";
 import type { SectionDef } from "@/lib/instituteSections";
+import { enhanceAIContent } from "@/lib/aiContentEnhancer";
 
 interface Props {
   def: SectionDef;
@@ -12,11 +13,11 @@ interface Props {
 
 function stripLeadingHeadings(html: string): string {
   if (!html) return "";
-  let out = html.trim();
-  // Strip any leaked AI citation markers and "Last updated" stamps so they never reach the UI
-  out = out.replace(/\[src:[^\]]*\]/gi, "");
-  out = out.replace(/\(\s*sources?\s*[:\/\u2013\u2014-]\s*[^)]{0,80}\)/gi, "");
-  out = out.replace(/<p>\s*<em>\s*Last updated:[^<]*<\/em>\s*<\/p>/gi, "");
+  // Run through the AI content enhancer first — converts leftover markdown
+  // (### headings, **bold**, - bullets) into proper HTML, strips citation
+  // markers, "Last updated" stamps, "(source: …)" parentheticals, and
+  // collapses the literal "*" / "#" noise we sometimes see leak through.
+  let out = enhanceAIContent(html).trim();
   // Remove repeated leading <h1>..</h1>, <h2>..</h2>, <h3>..</h3> blocks (and surrounding whitespace)
   // These would just duplicate the SectionShell title.
   for (let i = 0; i < 4; i++) {
