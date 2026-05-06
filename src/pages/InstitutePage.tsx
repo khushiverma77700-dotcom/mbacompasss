@@ -151,6 +151,20 @@ const InstitutePage = () => {
   const inst = institute as any;
   const isHybrid = institute.institute_type === "hybrid";
   const seoSchema = generateInstituteSchema(institute);
+  const instituteFaqs = [
+    { q: `What courses does ${institute.name} offer?`, a: `${institute.name} offers structured MBA entrance prep programs covering CAT, XAT, SNAP, NMAT and other major exams with classroom and online options.` },
+    { q: `Where is ${institute.name} located?`, a: `${institute.name} is based in ${institute.city || "India"}${institute.state ? ", " + institute.state : ""}. Visit the institute page for full address and contact details.` },
+    { q: `Is ${institute.name} good for CAT preparation?`, a: `${institute.name} has a strong track record for CAT preparation${institute.success_rate ? ` with a ${institute.success_rate}% success rate` : ""}. Compare it with other coaching on MBA Compass before deciding.` },
+    { q: `What is the fee structure at ${institute.name}?`, a: `Fees vary by program, mode and duration. View the Courses tab on this page or request a callback for the exact fee structure and EMI options.` },
+    { q: `Does ${institute.name} provide online classes?`, a: `Yes, ${institute.name} offers a mix of online live classes, recorded lectures and in-centre batches. Choose the mode that fits your schedule.` },
+  ];
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "/" },
+    { name: "Coaching", url: "/coaching" },
+    { name: institute.name, url: `/institute/${institute.slug}` },
+  ]);
+  const faqSchema = generateFAQSchema(instituteFaqs);
+  const combinedJsonLd = [seoSchema, faqSchema, breadcrumbSchema];
 
   // Quick stat cards based on available data
   const heroStats = [
