@@ -403,12 +403,68 @@ const CoachingPage = () => {
           )}
         </div>
 
-        {/* Institute Cards */}
-        <div className="space-y-5">
-          {filtered.map((inst: any, i: number) => (
-            <InstituteListingCard key={inst.id} inst={inst} index={i} rank={i + 1} />
-          ))}
+        {/* Quick filters + View toggle */}
+        <div className="flex flex-wrap items-center gap-2 mb-5">
+          <span className="text-[11px] uppercase tracking-wider font-bold text-slate-500 mr-1 inline-flex items-center gap-1">
+            <Sparkles className="w-3 h-3" /> Quick
+          </span>
+          {[
+            { k: "verified", label: "Verified", icon: Award },
+            { k: "offer", label: "Offer Live", icon: Tag },
+          ].map(q => {
+            const active = quick === q.k;
+            return (
+              <button
+                key={q.k}
+                onClick={() => setFilter("quick", active ? "" : q.k)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-all ${
+                  active ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-white text-slate-700 border-slate-200 hover:border-primary/40"
+                }`}
+              >
+                <q.icon className="w-3 h-3" /> {q.label}
+              </button>
+            );
+          })}
+
+          <div className="ml-auto inline-flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+            {[
+              { v: "list", icon: List, label: "List" },
+              { v: "grid", icon: LayoutGrid, label: "Grid" },
+              { v: "map", icon: MapIcon, label: "Map" },
+            ].map(t => {
+              const active = view === t.v;
+              return (
+                <button
+                  key={t.v}
+                  onClick={() => setFilter("view", t.v)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${
+                    active ? "bg-primary text-primary-foreground shadow-sm" : "text-slate-600 hover:text-slate-900"
+                  }`}
+                  aria-label={t.label}
+                >
+                  <t.icon className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
+
+        {/* Institute Cards */}
+        {view === "map" ? (
+          <CoachingMapView institutes={filtered} onCityClick={(c) => { setFilter("city", c); setFilter("view", "list"); }} />
+        ) : view === "grid" ? (
+          <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-5">
+            {filtered.map((inst: any, i: number) => (
+              <InstituteListingCard key={inst.id} inst={inst} index={i} rank={i + 1} />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-5">
+            {filtered.map((inst: any, i: number) => (
+              <InstituteListingCard key={inst.id} inst={inst} index={i} rank={i + 1} />
+            ))}
+          </div>
+        )}
 
         {filtered.length === 0 && (
           <div className="text-center py-24 bg-card rounded-2xl border border-border">
