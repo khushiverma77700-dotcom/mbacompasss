@@ -1036,27 +1036,100 @@ const CollegeDetailPage = () => {
             </div>
           </div>
 
-          {/* ===== Premium Sidebar ===== */}
-          <div className="space-y-4 lg:self-start">
-            {/* Sticky on-page navigation — helps users (and Google) discover all 14+ sections */}
-            <CollegeSectionNav
-              topOffset={140}
-              items={[
-                { id: "overview", label: "Overview", icon: <BookOpen className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("why_join") },
-                { id: "courses", label: "Courses & Fees", icon: <GraduationCap className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("courses_fees") },
-                { id: "admission", label: "Admissions", icon: <CheckCircle className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("admission") },
-                { id: "placements", label: "Placements", icon: <TrendingUp className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("placements") },
-                { id: "cutoff", label: "Cut-offs", icon: <Award className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("cutoff") },
-                { id: "rankings", label: "Rankings", icon: <Medal className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("rankings") },
-                { id: "reviews", label: "Reviews", icon: <MessageSquare className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("reviews") },
-                { id: "gallery", label: "Gallery", icon: <Image className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("gallery") },
-                { id: "scholarships", label: "Scholarships", icon: <Banknote className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("scholarships") },
-                { id: "faculty", label: "Faculty", icon: <Users className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("faculty") },
-                { id: "hostel", label: "Hostel & Campus", icon: <Home className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("hostel") },
-                { id: "qa", label: "FAQs", icon: <HelpCircle className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("qa") },
-                { id: "news", label: "News", icon: <Star className="w-3.5 h-3.5" />, hasAI: false },
-              ]}
-            />
+          {/* ===== Premium Sidebar =====
+              Order: Fees → You May Also Like → Compare → Quick Info → On This Page (sticky, last). */}
+          <div className="space-y-4 flex flex-col">
+            {/* Premium Fees + Brochure Card */}
+            <Card className="overflow-hidden border-0 shadow-2xl shadow-primary/15 bg-gradient-to-br from-primary via-primary/95 to-primary/85 text-primary-foreground relative">
+              <div className="absolute -top-12 -right-12 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
+              <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-white/5 rounded-full blur-2xl" />
+              <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: 'radial-gradient(hsl(0 0% 100%) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
+              <CardContent className="pt-6 relative z-10">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider bg-amber-400 text-amber-950 px-2 py-0.5 rounded-md shadow-md">
+                    ★ Featured
+                  </span>
+                  <span className="text-[10px] uppercase tracking-wider text-primary-foreground/70 font-semibold">Total Program Fees</span>
+                </div>
+                <p className="font-heading text-4xl font-extrabold leading-none mb-1 [text-shadow:_0_2px_8px_rgb(0_0_0_/_0.15)]">
+                  {college.fees_lakhs ? `₹${college.fees_lakhs}L` : (college.fees || "Contact College")}
+                </p>
+                <p className="text-xs text-primary-foreground/75 mb-5">For complete 2-year program · GST inclusive</p>
+
+                <Button onClick={handleDownloadBrochure} size="lg" className="w-full bg-white text-primary hover:bg-white/95 font-bold gap-2 shadow-xl mb-2">
+                  <Download className="w-4 h-4" /> Download Brochure
+                </Button>
+                <Button onClick={() => sectionRefs.current["admission"]?.scrollIntoView({ behavior: "smooth" })} variant="outline" className="w-full bg-white/10 backdrop-blur-sm border-white/30 text-primary-foreground hover:bg-white/20 hover:text-primary-foreground hover:border-white/50 font-semibold gap-2">
+                  <GraduationCap className="w-4 h-4" /> Apply Now
+                </Button>
+
+                <div className="mt-5 pt-4 border-t border-white/20 grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <div className="text-base font-extrabold">100%</div>
+                    <div className="text-[9px] text-primary-foreground/70 uppercase tracking-wider">Verified</div>
+                  </div>
+                  <div className="border-x border-white/20">
+                    <div className="text-base font-extrabold">Free</div>
+                    <div className="text-[9px] text-primary-foreground/70 uppercase tracking-wider">Brochure</div>
+                  </div>
+                  <div>
+                    <div className="text-base font-extrabold">24h</div>
+                    <div className="text-[9px] text-primary-foreground/70 uppercase tracking-wider">Response</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* You May Also Like */}
+            {suggestedColleges.length > 0 && (
+              <Card className="overflow-hidden border-border/60">
+                <CardContent className="pt-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                      <Star className="w-4 h-4 text-amber-500" />
+                    </div>
+                    <h4 className="font-heading font-bold text-foreground">You May Also Like</h4>
+                  </div>
+                  <div className="space-y-2">
+                    {suggestedColleges.slice(0, 5).map((sc) => (
+                      <Link key={sc.slug} to={`/college/${sc.slug}`} className="block p-3 rounded-xl hover:bg-primary/5 border border-border hover:border-primary/30 transition-all group/sc">
+                        <div className="flex items-start gap-2">
+                          {sc.ranking && (
+                            <span className="text-[10px] font-extrabold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded flex-shrink-0">#{sc.ranking}</span>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <div className="font-bold text-foreground text-sm group-hover/sc:text-primary transition-colors line-clamp-1">{sc.name}</div>
+                            <div className="text-[11px] text-muted-foreground line-clamp-1">{sc.city} · {sc.fees}</div>
+                          </div>
+                          <ChevronUp className="w-3.5 h-3.5 text-muted-foreground rotate-90 group-hover/sc:text-primary group-hover/sc:translate-x-0.5 transition-all flex-shrink-0" />
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Compare Card */}
+            <Card className="overflow-hidden border-border/60 hover:border-primary/30 transition-colors group">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                    <TrendingUp className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h4 className="font-heading font-bold text-foreground text-sm">Compare Colleges</h4>
+                    <p className="text-xs text-muted-foreground">Side-by-side analysis of fees, placements & more.</p>
+                  </div>
+                </div>
+                <Link to="/compare">
+                  <Button variant="outline" className="w-full font-semibold border-primary/30 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all">
+                    Open Compare Tool
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
             {/* Quick Info Card */}
             <Card className="overflow-hidden border-border/60 shadow-lg shadow-primary/5">
               <div className="h-1.5 bg-gradient-to-r from-primary via-primary/80 to-primary/40" />
@@ -1097,97 +1170,25 @@ const CollegeDetailPage = () => {
               </CardContent>
             </Card>
 
-            {/* Premium Fees + Brochure Card */}
-            <Card className="overflow-hidden border-0 shadow-2xl shadow-primary/15 bg-gradient-to-br from-primary via-primary/95 to-primary/85 text-primary-foreground relative">
-              <div className="absolute -top-12 -right-12 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
-              <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-white/5 rounded-full blur-2xl" />
-              <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: 'radial-gradient(hsl(0 0% 100%) 1px, transparent 1px)', backgroundSize: '18px 18px' }} />
-              <CardContent className="pt-6 relative z-10">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase tracking-wider bg-amber-400 text-amber-950 px-2 py-0.5 rounded-md shadow-md">
-                    ★ Featured
-                  </span>
-                  <span className="text-[10px] uppercase tracking-wider text-primary-foreground/70 font-semibold">Total Program Fees</span>
-                </div>
-                <p className="font-heading text-4xl font-extrabold leading-none mb-1 [text-shadow:_0_2px_8px_rgb(0_0_0_/_0.15)]">
-                  {college.fees_lakhs ? `₹${college.fees_lakhs}L` : (college.fees || "Contact College")}
-                </p>
-                <p className="text-xs text-primary-foreground/75 mb-5">For complete 2-year program · GST inclusive</p>
-
-                <Button onClick={handleDownloadBrochure} size="lg" className="w-full bg-white text-primary hover:bg-white/95 font-bold gap-2 shadow-xl mb-2">
-                  <Download className="w-4 h-4" /> Download Brochure
-                </Button>
-                <Button onClick={() => sectionRefs.current["admission"]?.scrollIntoView({ behavior: "smooth" })} variant="outline" className="w-full bg-white/10 backdrop-blur-sm border-white/30 text-primary-foreground hover:bg-white/20 hover:text-primary-foreground hover:border-white/50 font-semibold gap-2">
-                  <GraduationCap className="w-4 h-4" /> Apply Now
-                </Button>
-
-                {/* Trust strip */}
-                <div className="mt-5 pt-4 border-t border-white/20 grid grid-cols-3 gap-2 text-center">
-                  <div>
-                    <div className="text-base font-extrabold">100%</div>
-                    <div className="text-[9px] text-primary-foreground/70 uppercase tracking-wider">Verified</div>
-                  </div>
-                  <div className="border-x border-white/20">
-                    <div className="text-base font-extrabold">Free</div>
-                    <div className="text-[9px] text-primary-foreground/70 uppercase tracking-wider">Brochure</div>
-                  </div>
-                  <div>
-                    <div className="text-base font-extrabold">24h</div>
-                    <div className="text-[9px] text-primary-foreground/70 uppercase tracking-wider">Response</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Compare Card */}
-            <Card className="overflow-hidden border-border/60 hover:border-primary/30 transition-colors group">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
-                    <TrendingUp className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h4 className="font-heading font-bold text-foreground text-sm">Compare Colleges</h4>
-                    <p className="text-xs text-muted-foreground">Side-by-side analysis of fees, placements & more.</p>
-                  </div>
-                </div>
-                <Link to="/compare">
-                  <Button variant="outline" className="w-full font-semibold border-primary/30 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-all">
-                    Open Compare Tool
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            {/* Suggested Colleges */}
-            {suggestedColleges.length > 0 && (
-              <Card className="overflow-hidden border-border/60">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                      <Star className="w-4 h-4 text-amber-500" />
-                    </div>
-                    <h4 className="font-heading font-bold text-foreground">You May Also Like</h4>
-                  </div>
-                  <div className="space-y-2">
-                    {suggestedColleges.slice(0, 5).map((sc) => (
-                      <Link key={sc.slug} to={`/college/${sc.slug}`} className="block p-3 rounded-xl hover:bg-primary/5 border border-border hover:border-primary/30 transition-all group/sc">
-                        <div className="flex items-start gap-2">
-                          {sc.ranking && (
-                            <span className="text-[10px] font-extrabold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded flex-shrink-0">#{sc.ranking}</span>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <div className="font-bold text-foreground text-sm group-hover/sc:text-primary transition-colors line-clamp-1">{sc.name}</div>
-                            <div className="text-[11px] text-muted-foreground line-clamp-1">{sc.city} · {sc.fees}</div>
-                          </div>
-                          <ChevronUp className="w-3.5 h-3.5 text-muted-foreground rotate-90 group-hover/sc:text-primary group-hover/sc:translate-x-0.5 transition-all flex-shrink-0" />
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            {/* On This Page — placed last so it sticks while scrolling past the cards above. */}
+            <CollegeSectionNav
+              topOffset={140}
+              items={[
+                { id: "overview", label: "Overview", icon: <BookOpen className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("why_join") },
+                { id: "courses", label: "Courses & Fees", icon: <GraduationCap className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("courses_fees") },
+                { id: "admission", label: "Admissions", icon: <CheckCircle className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("admission") },
+                { id: "placements", label: "Placements", icon: <TrendingUp className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("placements") },
+                { id: "cutoff", label: "Cut-offs", icon: <Award className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("cutoff") },
+                { id: "rankings", label: "Rankings", icon: <Medal className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("rankings") },
+                { id: "reviews", label: "Reviews", icon: <MessageSquare className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("reviews") },
+                { id: "gallery", label: "Gallery", icon: <Image className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("gallery") },
+                { id: "scholarships", label: "Scholarships", icon: <Banknote className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("scholarships") },
+                { id: "faculty", label: "Faculty", icon: <Users className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("faculty") },
+                { id: "hostel", label: "Hostel & Campus", icon: <Home className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("hostel") },
+                { id: "qa", label: "FAQs", icon: <HelpCircle className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("qa") },
+                { id: "news", label: "News", icon: <Star className="w-3.5 h-3.5" />, hasAI: false },
+              ]}
+            />
           </div>
         </div>
       </div>
