@@ -254,6 +254,43 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
         });
       }
 
+      // ── Auto-expand short content ────────────────────────────────────────
+      // If the audit reports the body is under the SEO minimum (default 800
+      // words), call the ai-expand-content function which rewrites the main
+      // content column into a long, well-formatted, SEO-friendly HTML body
+      // following the same structural pattern (H2 → H3 → lists → FAQs).
+      const wc = sug.technicalSEO?.contentLengthAnalysis?.currentWordCount ?? 0;
+      const minWords = sug.technicalSEO?.contentLengthAnalysis?.recommendedMinimum ?? 800;
+      if (wc > 0 && wc < Math.min(minWords, 800)) {
+        try {
+          toast({
+            title: "Expanding content with AI",
+            description: `Current: ${wc} words. Generating SEO-friendly long-form content…`,
+          });
+          const { data: expand, error: expandErr } = await supabase.functions.invoke("ai-expand-content", {
+            body: { contentType, recordId, data },
+          });
+          if (expandErr) throw expandErr;
+          if (expand?.success) {
+            applied.content = expand.content;
+            applied.description = expand.content;
+            toast({
+              title: "Content expanded",
+              description: `${expand.previousWordCount} → ${expand.newWordCount} words. Saved to database.`,
+            });
+          } else if (expand?.error) {
+            console.warn("[ai-expand-content] skipped:", expand.error);
+          }
+        } catch (expandErr: any) {
+          console.error("[ai-expand-content] failed:", expandErr);
+          toast({
+            title: "Content expansion skipped",
+            description: expandErr.message || "Could not expand content automatically.",
+            variant: "destructive",
+          });
+        }
+      }
+
       onApply(applied);
     } catch (e: any) {
       toast({ title: "Auto-apply Error", description: e.message || "Failed", variant: "destructive" });
