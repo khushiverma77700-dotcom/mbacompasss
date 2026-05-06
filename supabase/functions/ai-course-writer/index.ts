@@ -24,6 +24,15 @@ const corsHeaders = {
 // reasoning tasks only (e.g. premium profile reports).
 const MODEL = "google/gemini-2.5-flash";
 
+async function callCourseAI(body: Parameters<typeof callAIGateway>[0]) {
+  const primary = await callAIGateway(body, { feature: "ai-course-writer", provider: "gemini", purpose: "long" });
+  if (primary.ok || ![401, 403].includes(primary.status)) return primary;
+
+  const primaryText = await primary.clone().text().catch(() => "");
+  console.warn("ai-course-writer Gemini provider unavailable, falling back to OpenAI:", primary.status, primaryText.slice(0, 300));
+  return callAIGateway(body, { feature: "ai-course-writer", provider: "openai-mini", purpose: "long" });
+}
+
 interface InstituteCtx {
   name: string;
   city?: string;
@@ -122,7 +131,7 @@ Return UP TO ${max} distinct MBA-entrance courses this institute is known to off
     },
   };
 
-  const res = await callAIGateway({
+  const res = await callCourseAI({
     model: MODEL,
     messages: [
       { role: "system", content: system },
@@ -130,7 +139,7 @@ Return UP TO ${max} distinct MBA-entrance courses this institute is known to off
     ],
     tools: [tool],
     tool_choice: { type: "function", function: { name: "list_courses" } },
-  }, { feature: "ai-course-writer", provider: "gemini", purpose: "long" });
+  });
 
   if (!res.ok) {
     const t = await res.text();
@@ -273,7 +282,7 @@ For EACH course return:
     },
   };
 
-  const res = await callAIGateway({
+  const res = await callCourseAI({
     model: MODEL,
     messages: [
       { role: "system", content: system },
@@ -281,7 +290,7 @@ For EACH course return:
     ],
     tools: [tool],
     tool_choice: { type: "function", function: { name: "write_courses" } },
-  }, { feature: "ai-course-writer", provider: "gemini", purpose: "long" });
+  });
 
   if (!res.ok) {
     const t = await res.text();
