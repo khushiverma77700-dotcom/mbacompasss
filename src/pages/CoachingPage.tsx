@@ -453,9 +453,9 @@ const CoachingPage = () => {
         {view === "map" ? (
           <CoachingMapView institutes={filtered} onCityClick={(c) => { setFilter("city", c); setFilter("view", "list"); }} />
         ) : view === "grid" ? (
-          <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 items-stretch">
             {filtered.map((inst: any, i: number) => (
-              <InstituteListingCard key={inst.id} inst={inst} index={i} rank={i + 1} />
+              <InstituteGridCard key={inst.id} inst={inst} index={i} rank={i + 1} />
             ))}
           </div>
         ) : (
