@@ -1040,6 +1040,7 @@ const CollegeDetailPage = () => {
           <div className="space-y-4 lg:self-start">
             {/* Sticky on-page navigation — helps users (and Google) discover all 14+ sections */}
             <CollegeSectionNav
+              topOffset={140}
               items={[
                 { id: "overview", label: "Overview", icon: <BookOpen className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("why_join") },
                 { id: "courses", label: "Courses & Fees", icon: <GraduationCap className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("courses_fees") },
