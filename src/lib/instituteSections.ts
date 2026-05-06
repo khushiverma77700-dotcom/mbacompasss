@@ -62,7 +62,8 @@ export interface SectionDef {
     | "pros-cons"
     | "ctas"
     | "social"
-    | "keyvalue";
+    | "keyvalue"
+    | "results-detailed";
 }
 
 export const INSTITUTE_SECTIONS: SectionDef[] = [
