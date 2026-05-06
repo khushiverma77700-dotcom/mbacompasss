@@ -33,6 +33,12 @@ export interface BulkItem {
   newScore?: number;
   error?: string;
   step?: string;
+  saveStatus?: "pending" | "saving" | "snapshot_saved" | "db_applied" | "verified" | "failed";
+  savedAt?: number;
+  snapshotId?: string;
+  dbUpdated?: boolean;
+  verified?: boolean;
+  changedFields?: string[];
 }
 
 export interface LogEntry {
@@ -130,6 +136,8 @@ export const BulkOptimizeProgressDialog = ({
     const pending = items.filter(i => i.status === "pending").length;
     const skipped = items.filter(i => i.status === "skipped").length;
     const completed = done + failed;
+    const verifiedSaves = items.filter(i => i.saveStatus === "verified" || i.verified).length;
+    const dbApplied = items.filter(i => i.dbUpdated).length;
     const totalTokens = items.reduce((s, i) => s + (i.totalTokens || 0), 0);
     const promptTokens = items.reduce((s, i) => s + (i.promptTokens || 0), 0);
     const completionTokens = items.reduce((s, i) => s + (i.completionTokens || 0), 0);
@@ -148,6 +156,7 @@ export const BulkOptimizeProgressDialog = ({
     const projectedTotalCost = total > 0 && finishedItems.length > 0 ? avgCost * total : totalCost;
     return {
       total, done, failed, running, pending, skipped, completed,
+      verifiedSaves, dbApplied,
       totalTokens, promptTokens, completionTokens, totalCost,
       avgMs, elapsed, eta, speed, successRate, minDur, maxDur,
       avgTokens, avgCost, projectedTotalCost,
