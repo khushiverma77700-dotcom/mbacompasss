@@ -103,7 +103,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
 3. **LATEST DATA (${currentYear})**: All fees, batch durations, mock-test series counts, success-story numbers (e.g. "120+ IIM converts in ${currentYear - 1}") must reflect the most recent published cycle. State the data year context naturally inside the prose (e.g. "as per the ${currentYear - 1} CAT result").
 4. **HUMANIZED LANGUAGE**: Roughly 8th-grade reading level. Contractions, second person ("you"), concrete numbers. NO phrases like "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving".
 4. **NEVER START WITH A QUESTION**. Headings and opening sentences must be DECLARATIVE statements that give a clear fact.
-5. **DESCRIPTION (long-form HTML)**: 600-900 words covering history (with the CORRECT founding era), USP, flagship products, faculty pedigree, success record, who this coaching is best for. MUST start with a <p><strong>Quick Summary:</strong> ...</p> block (55-65 words) giving the core overview upfront — including the founding era and mode. Then 4-6 <h2> sections (e.g. "About ${brief.name}", "Flagship Programs", "Faculty & Pedagogy", "Why Choose ${brief.name}", "Results & Track Record"). Use lists where helpful. End with <p><em>Last updated: ${todayIso}</em></p>.
+5. **DESCRIPTION (long-form HTML)**: 600-900 words covering history (with the CORRECT founding era), USP, flagship products, faculty pedigree, success record, who this coaching is best for. MUST start with a <p><strong>Quick Summary:</strong> ...</p> block (55-65 words) giving the core overview upfront — including the founding era and mode. Then 4-6 <h2> sections (e.g. "About ${brief.name}", "Flagship Programs", "Faculty & Pedagogy", "Why Choose ${brief.name}", "Results & Track Record"). Use lists where helpful. Do NOT add a "Last updated" line.
 6. **ON-PAGE SEO MUST-HAVES** (build naturally into description):
    - Primary keyword in the first 100 words AND in at least 2 <h2> headings
    - Secondary keywords sprinkled naturally where they fit
@@ -111,7 +111,7 @@ Output uses HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <
    - Use <strong> on 6-10 high-value phrases (real product names, key facts, numbers)
    - Include at least one HTML <table> (e.g. course / fees / batch grid)
    - Include a final <h2>Frequently Asked Questions</h2> section with 4-6 Q&A pairs (each Q in <h3>, A in <p>) for AI / voice-search and FAQ schema readiness
-   - Include short citation hints "(source: ${currentYear} brochure)" / "(source: ${currentYear - 1} result release)" near key stats
+   - DO NOT add citation hints, "(source: ...)", "[src:...]", or bracketed attributions anywhere
 7. **STRUCTURED FIELDS**: Fill every required field in the tool schema with REAL, accurate values for known brands. For arrays (programs, faculty_highlights, exams_covered, features, specializations, keywords) return real, realistic values — never placeholder lists.
 8. **SEO META**: meta_title <=60 chars (declarative, includes primary keyword, no "?"). meta_description 140-160 chars (declarative, includes primary keyword + the year ${currentYear}). h1_tag declarative, no "?".
 9. **SLUG**: lowercase-hyphenated, <=80 chars, derived from the institute name.
