@@ -185,17 +185,64 @@ Deno.serve(async (req) => {
                 },
                 study_material: longBody("Study material — books, modules, PDFs, sectional workbooks, vocabulary tools, daily practice"),
                 mock_tests: longBody("Mock tests & practice — number of full mocks, sectional tests, AIMCAT/SimCAT-style analytics, percentile prediction"),
-                results: longBody("Results & success rate — 2-3 yr trends, top ranks, IIM-A/B/C/L/I/K calls, conversions across tiers (use realistic ranges, never invent exact unverifiable numbers)"),
+                results: {
+                  type: "object",
+                  description: "Results & success rate — detailed layout: headline stats, top scorers, plus commentary.",
+                  properties: {
+                    stats: {
+                      type: "array", minItems: 4,
+                      description: "4-6 headline result stats. Each: short label + value + optional sub-text. e.g. value '120+', label 'IIM Calls', sub 'CAT 2024 cycle'.",
+                      items: {
+                        type: "object",
+                        properties: {
+                          label: { type: "string" },
+                          value: { type: "string" },
+                          sub: { type: "string" },
+                        },
+                        required: ["label", "value"],
+                      },
+                    },
+                    toppers: {
+                      type: "array", minItems: 4,
+                      description: "4-8 top scorers / selections. Use realistic names; do not fabricate exact unverifiable percentiles for unknown brands — use realistic ranges.",
+                      items: {
+                        type: "object",
+                        properties: {
+                          name: { type: "string" },
+                          rank: { type: "string", description: "e.g. 'AIR 12' or '99.87%ile'" },
+                          exam: { type: "string", description: "e.g. 'CAT 2024'" },
+                          year: { type: "string" },
+                          score: { type: "string", description: "e.g. '99.87%ile' or '760/800'" },
+                          college: { type: "string", description: "Final B-school converted, e.g. 'IIM Bangalore'" },
+                          photo_url: { type: "string", description: "Leave empty string if unknown." },
+                        },
+                        required: ["name", "exam", "score", "college"],
+                      },
+                    },
+                    body: { type: "string", description: "Result commentary — semantic HTML, 220-360 words, 2-3 yr trend, IIM A/B/C/L/I/K call breakdown, conversion narrative." },
+                  },
+                  required: ["stats", "toppers", "body"],
+                },
                 topper_testimonials: {
                   type: "object",
                   properties: {
                     items: {
                       type: "array", minItems: 6,
-                      description: "6-8 topper testimonials, each 30-50 words, exam + percentile + final B-school.",
+                      description: "6-8 topper testimonials, each 30-50 words, with score + final B-school + rating.",
                       items: {
                         type: "object",
-                        properties: { name: { type: "string" }, exam: { type: "string", description: "e.g. 'CAT 2024 · 99.6%ile · IIM Lucknow'" }, text: { type: "string" } },
-                        required: ["name", "exam", "text"],
+                        properties: {
+                          name: { type: "string" },
+                          exam: { type: "string", description: "e.g. 'CAT 2024'" },
+                          year: { type: "string", description: "e.g. '2024'" },
+                          score: { type: "string", description: "e.g. '99.6%ile'" },
+                          college: { type: "string", description: "Final B-school, e.g. 'IIM Lucknow'" },
+                          rating: { type: "number", description: "1-5, usually 4.5-5.0" },
+                          text: { type: "string", description: "30-50 word quote in first person." },
+                          photo_url: { type: "string", description: "Empty string if unknown." },
+                          video_url: { type: "string", description: "YouTube/video URL if known, else empty string." },
+                        },
+                        required: ["name", "exam", "score", "college", "rating", "text"],
                       },
                     },
                   },
