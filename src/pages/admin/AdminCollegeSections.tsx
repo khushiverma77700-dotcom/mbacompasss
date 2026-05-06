@@ -449,13 +449,15 @@ const AdminCollegeSections = () => {
 
   const handleSave = async () => {
     if (!form.college_id) { toast({ title: "Select a college", variant: "destructive" }); return; }
-    const payload = { college_id: form.college_id, section_type: form.section_type, title: form.title || null, content: form.content || null, data: form.data || {}, sort_order: form.sort_order };
+    const basePayload = { college_id: form.college_id, section_type: form.section_type, title: form.title || null, content: form.content || null, data: form.data || {}, sort_order: form.sort_order };
     if (editId) {
-      const { error } = await supabase.from("college_sections").update(payload).eq("id", editId);
+      // Editing an existing row — update by primary key only (version stays the same).
+      const { error } = await supabase.from("college_sections").update(basePayload).eq("id", editId);
       if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
       toast({ title: "Section updated" });
     } else {
-      // Check if a section with same (college, type, version='original') already exists — if so, update it
+      // Creating: if any row already exists for this (college, section_type, version='original'),
+      // update it. Otherwise upsert on the unique key so a race/duplicate can never throw.
       const { data: existing } = await supabase
         .from("college_sections")
         .select("id")
@@ -464,11 +466,13 @@ const AdminCollegeSections = () => {
         .eq("version", "original")
         .maybeSingle();
       if (existing?.id) {
-        const { error } = await supabase.from("college_sections").update(payload).eq("id", existing.id);
+        const { error } = await supabase.from("college_sections").update(basePayload).eq("id", existing.id);
         if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
         toast({ title: "Existing section updated", description: "A section of this type already existed for this college — updated it instead of creating a duplicate." });
       } else {
-        const { error } = await supabase.from("college_sections").insert(payload);
+        const { error } = await supabase
+          .from("college_sections")
+          .upsert({ ...basePayload, version: "original" }, { onConflict: "college_id,section_type,version" });
         if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
         toast({ title: "Section created" });
       }
@@ -492,8 +496,8 @@ const AdminCollegeSections = () => {
     const existingTypes = sections.filter(s => s.college_id === selectedCollege).map(s => s.section_type);
     const missing = SECTION_TYPES.filter(t => !existingTypes.includes(t.value));
     if (missing.length === 0) { toast({ title: "All sections already exist" }); return; }
-    const inserts = missing.map((t, i) => ({ college_id: selectedCollege, section_type: t.value, title: t.label, sort_order: (existingTypes.length + i) * 10, data: {} }));
-    const { error } = await supabase.from("college_sections").insert(inserts);
+    const inserts = missing.map((t, i) => ({ college_id: selectedCollege, section_type: t.value, title: t.label, sort_order: (existingTypes.length + i) * 10, data: {}, version: "original" }));
+    const { error } = await supabase.from("college_sections").upsert(inserts, { onConflict: "college_id,section_type,version" });
     if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); return; }
     toast({ title: `Added ${missing.length} sections` }); fetchSections();
   };
