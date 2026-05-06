@@ -96,10 +96,10 @@ Deno.serve(async (req) => {
 - Secondary keywords (${secKws.join(", ") || "infer naturally"}) sprinkled naturally — also derive 6-10 long-tail variants like "[institute] CAT fees ${year}", "[institute] vs TIME/IMS", "[institute] reviews ${year}", "[city] CAT coaching near me".
 - Generate keyword-rich H2/H3 headings; use exact-match + synonym variants; natural keyword density 1.0-1.8%.
 - Cover search-intent quartet: Informational (what/how), Commercial (best/top/vs), Transactional (fees/enrol/demo), Navigational (login/centres/contact).
-- Each rich-text body uses semantic HTML only: <h2>, <h3>, <p>, <ul>, <li>, <ol>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. Never <html>, <head>, <body>, <h1>, <font>, no class/id/style attributes.
-- 180-280 words per rich body, 2-4 sentence paragraphs, lists for 3+ items, comparison/fee tables where relevant.
+- OUTPUT FORMAT (CRITICAL): Every rich-text body MUST be valid SEMANTIC HTML ONLY. ABSOLUTELY NO MARKDOWN — never output "###", "##", "**bold**", "__bold__", "- item", "* item", "1." for lists, or stray "*"/"#" characters. Use <h2>/<h3> for headings, <strong>/<em> for emphasis, <ul><li> for bullets, <ol><li> for numbered steps, <table>/<thead>/<tbody>/<tr>/<th>/<td> for comparisons. Allowed tags: <h2>, <h3>, <p>, <ul>, <ol>, <li>, <strong>, <em>, <a>, <table>, <thead>, <tbody>, <tr>, <th>, <td>. FORBIDDEN: <html>, <head>, <body>, <h1>, <font>, class/id/style attributes.
+- 220-360 words per rich body, 2-4 sentence paragraphs, MUST include at least one <h3> sub-heading and one <ul> or <ol> with 4+ <li> items. For step-by-step processes (admission, enrolment) ALWAYS use <ol><li><strong>Step name</strong>: details</li></ol>.
 - Internal anchors: <a href="/coaching">top CAT coaching</a>, <a href="/exam/cat">CAT exam</a>, <a href="/colleges">top MBA colleges</a>, <a href="/profile-analyzer">AI Profile Analyzer</a>.
-- End the longest body with <p><em>Last updated: ${todayIso}</em></p>.
+- NEVER include "Last updated:" stamps, "(source: …)" parentheticals, or "[src:…]" markers in the output.
 - NEVER start any paragraph or heading with a question. Headings are declarative.
 - NEVER use phrases: "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving".`;
 
