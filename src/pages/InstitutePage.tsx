@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 import { useToast } from "@/hooks/use-toast";
-import SEOHead, { generateInstituteSchema } from "@/components/SEOHead";
+import SEOHead, { generateInstituteSchema, generateBreadcrumbSchema, generateFAQSchema } from "@/components/SEOHead";
 import {
   ArrowLeft, MapPin, Star, Building2, Globe, Phone, Mail, MessageCircle,
   ChevronRight, Users, Award, Sparkles, CheckCircle2, ShieldCheck, TrendingUp,
