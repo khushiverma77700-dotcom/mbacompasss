@@ -16,7 +16,7 @@ export type FieldKind =
   | "list-bullet"          // string[] — rendered as bullets
   | "list-keyvalue"        // {label, value}[]
   | "list-faculty"         // {name, experience, expertise, achievements, photo_url}[]
-  | "list-testimonial"     // {name, exam, text, photo_url}[]
+  | "list-testimonial"     // {name, exam, year, college, score, rating, text, photo_url, video_url}[]
   | "list-review"          // {name, rating, text}[]
   | "list-faq"             // {q, a}[]
   | "list-update"          // {date, title, body}[]
@@ -26,6 +26,8 @@ export type FieldKind =
   | "list-comparison"      // {point, us, others}[]
   | "list-pros-cons"       // {pros: string[], cons: string[]}
   | "list-cta"             // {label, url, style}[]
+  | "list-topper"          // {name, rank, exam, year, score, college, photo_url}[]
+  | "list-result-stat"     // {label, value, sub}[]
   | "social-links";        // {website,youtube,instagram,linkedin,facebook,twitter}
 
 export interface FieldDef {
