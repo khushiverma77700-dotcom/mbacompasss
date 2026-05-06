@@ -2760,6 +2760,7 @@ const AdminSEODashboard = () => {
           setBulkOpen(o);
         }}
         items={bulkItems}
+        logs={bulkLogs}
         paused={bulkPaused}
         onPauseToggle={() => setBulkPaused(p => !p)}
         onCancel={() => {
