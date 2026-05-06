@@ -1037,8 +1037,28 @@ const CollegeDetailPage = () => {
           </div>
 
           {/* ===== Premium Sidebar =====
-              Order: Fees → You May Also Like → Compare → Quick Info → On This Page (sticky, last). */}
+              Order: On This Page (sticky, top) → Fees → You May Also Like → Compare → Quick Info. */}
           <div className="space-y-4 flex flex-col">
+            {/* On This Page — sticky at top so it remains visible throughout scroll. */}
+            <CollegeSectionNav
+              topOffset={140}
+              items={[
+                { id: "overview", label: "Overview", icon: <BookOpen className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("why_join") },
+                { id: "courses", label: "Courses & Fees", icon: <GraduationCap className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("courses_fees") },
+                { id: "admission", label: "Admissions", icon: <CheckCircle className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("admission") },
+                { id: "placements", label: "Placements", icon: <TrendingUp className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("placements") },
+                { id: "cutoff", label: "Cut-offs", icon: <Award className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("cutoff") },
+                { id: "rankings", label: "Rankings", icon: <Medal className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("rankings") },
+                { id: "reviews", label: "Reviews", icon: <MessageSquare className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("reviews") },
+                { id: "gallery", label: "Gallery", icon: <Image className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("gallery") },
+                { id: "scholarships", label: "Scholarships", icon: <Banknote className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("scholarships") },
+                { id: "faculty", label: "Faculty", icon: <Users className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("faculty") },
+                { id: "hostel", label: "Hostel & Campus", icon: <Home className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("hostel") },
+                { id: "qa", label: "FAQs", icon: <HelpCircle className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("qa") },
+                { id: "news", label: "News", icon: <Star className="w-3.5 h-3.5" />, hasAI: false },
+              ]}
+            />
+
             {/* Premium Fees + Brochure Card */}
             <Card className="overflow-hidden border-0 shadow-2xl shadow-primary/15 bg-gradient-to-br from-primary via-primary/95 to-primary/85 text-primary-foreground relative">
               <div className="absolute -top-12 -right-12 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
@@ -1170,25 +1190,6 @@ const CollegeDetailPage = () => {
               </CardContent>
             </Card>
 
-            {/* On This Page — placed last so it sticks while scrolling past the cards above. */}
-            <CollegeSectionNav
-              topOffset={140}
-              items={[
-                { id: "overview", label: "Overview", icon: <BookOpen className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("why_join") },
-                { id: "courses", label: "Courses & Fees", icon: <GraduationCap className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("courses_fees") },
-                { id: "admission", label: "Admissions", icon: <CheckCircle className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("admission") },
-                { id: "placements", label: "Placements", icon: <TrendingUp className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("placements") },
-                { id: "cutoff", label: "Cut-offs", icon: <Award className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("cutoff") },
-                { id: "rankings", label: "Rankings", icon: <Medal className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("rankings") },
-                { id: "reviews", label: "Reviews", icon: <MessageSquare className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("reviews") },
-                { id: "gallery", label: "Gallery", icon: <Image className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("gallery") },
-                { id: "scholarships", label: "Scholarships", icon: <Banknote className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("scholarships") },
-                { id: "faculty", label: "Faculty", icon: <Users className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("faculty") },
-                { id: "hostel", label: "Hostel & Campus", icon: <Home className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("hostel") },
-                { id: "qa", label: "FAQs", icon: <HelpCircle className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("qa") },
-                { id: "news", label: "News", icon: <Star className="w-3.5 h-3.5" />, hasAI: false },
-              ]}
-            />
           </div>
         </div>
       </div>
