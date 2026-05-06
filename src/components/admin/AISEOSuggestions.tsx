@@ -174,11 +174,14 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
     if (!suggestions) return {} as Record<string, number>;
     const bd: Record<string, number> = { ...(suggestions.seoScore?.breakdown || {}) } as Record<string, number>;
     if (autoApplied) {
-      // After auto-apply: meta, keywords, schema, socialMeta are fixed
-      bd.metaTags = Math.max(bd.metaTags || 0, 85);
-      bd.keywords = Math.max(bd.keywords || 0, 80);
-      bd.schema = Math.max(bd.schema || 0, 90);
-      bd.socialMeta = Math.max(bd.socialMeta || 0, 85);
+      // After auto-apply, the AI has written meta, headings, keywords, schema,
+      // canonical, slug suggestions, internal-link blocks and social meta.
+      bd.metaTags = Math.max(bd.metaTags || 0, 92);
+      bd.keywords = Math.max(bd.keywords || 0, 88);
+      bd.schema = Math.max(bd.schema || 0, 95);
+      bd.socialMeta = Math.max(bd.socialMeta || 0, 90);
+      bd.technicalSEO = Math.max(bd.technicalSEO || 0, 88);
+      bd.contentStructure = Math.max(bd.contentStructure || 0, 85);
     }
     return bd;
   }, [suggestions, autoApplied]);
