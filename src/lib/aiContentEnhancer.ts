@@ -173,11 +173,29 @@ export function enhanceAIContent(html: string, ctx?: CitationContext): string {
 
   let out = html;
 
-  // 0. If a model returns plain text/bullets without tags, convert it into
+  // 0a. Normalise leaked markdown embedded INSIDE existing HTML — e.g. a single
+  // <p> containing "### Step-by-Step Process 1. **Enquiry**: …". Break it onto
+  // separate lines so the markdown→HTML pass below renders headings + lists.
+  out = out.replace(/\s*#{2,4}\s+/g, "\n### ");
+  out = out.replace(/(^|[\s>.;:!?])(\d{1,2})\.\s+(?=\*\*|[A-Z])/g, "$1\n- ");
+  out = out.replace(/\s+[•▪]\s+/g, "\n- ");
+  // Drop stray runs of 3+ asterisks/hashes that aren't valid markdown.
+  out = out.replace(/\*{3,}/g, "");
+  out = out.replace(/(^|\s)#{1,6}(\s|$)/g, "$1$2");
+
+  // 0b. If a model returns plain text/bullets without tags, convert it into
   // lightweight HTML so formatting is still visible in review and live pages.
   const hasHtml = /<\/?[a-z][\s\S]*>/i.test(out);
   if (!hasHtml) out = plainOrMarkdownToHtml(out);
-  else out = applyInlineMarkdown(out);
+  else {
+    // Unwrap any <p> whose text contains markdown heading/list markers and
+    // re-render that fragment so lists/headings show up properly.
+    out = out.replace(/<p>([\s\S]*?)<\/p>/gi, (_m, inner) => {
+      if (/(^|\n)\s*(###\s|-\s)/.test(inner)) return plainOrMarkdownToHtml(inner);
+      return `<p>${applyInlineMarkdown(inner)}</p>`;
+    });
+    out = applyInlineMarkdown(out);
+  }
 
   // 1a. Machine-readable [src:NIRF 2025] or [src:Placement Report 2024-25]
   out = out.replace(
