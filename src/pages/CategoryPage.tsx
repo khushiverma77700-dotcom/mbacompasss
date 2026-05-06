@@ -152,8 +152,8 @@ const CategoryPage = () => {
   const keywords: string[] = cityPage?.keywords || [];
   const jsonLd = generateListingSchema(metaTitle, filtered, "institute");
   const { seo: resolvedSeo } = useResolvedSeo(
-    cityPage ? "cityPage" : undefined,
-    cityPage?.id,
+    cityPage ? "cityPage" : category ? "category" : undefined,
+    cityPage?.id || category?.id,
     {
       title: metaTitle,
       description: metaDesc,
