@@ -353,17 +353,16 @@ export const AISEOButton = ({ contentType, data, recordId, onApply }: AISEOButto
         });
         await saveSeoSnapshot(snapshot);
 
-        const table = contentTypeConfig[contentType].table as "articles" | "institutes" | "colleges" | "exams" | "city_pages";
-        const updatePayload: Record<string, any> = {
-          meta_title: applied.meta_title,
-          meta_description: applied.meta_description,
-          keywords: applied.keywords,
-        };
-        if (contentTypeConfig[contentType].supportsH1Column) {
-          updatePayload.h1_tag = applied.h1_tag;
-        }
-
-        if (Object.keys(updatePayload).length > 0) {
+        if (contentTypeConfig[contentType].supportsSeoColumns) {
+          const table = contentTypeConfig[contentType].table as "articles" | "institutes" | "colleges" | "exams" | "city_pages";
+          const updatePayload: Record<string, any> = {
+            meta_title: applied.meta_title,
+            meta_description: applied.meta_description,
+            keywords: applied.keywords,
+          };
+          if (contentTypeConfig[contentType].supportsH1Column) {
+            updatePayload.h1_tag = applied.h1_tag;
+          }
           const { error: updateError } = await supabase
             .from(table)
             .update(updatePayload)
