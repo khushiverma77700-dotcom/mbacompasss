@@ -2683,31 +2683,31 @@ const AdminSEODashboard = () => {
         {activeTab === "image-audit" && <ImageAuditPanel />}
       </div>
 
+      {bulkLoading && !bulkOpen && (
+        <button
+          type="button"
+          onClick={() => bulkSeoRunner.setOpen(true)}
+          className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground shadow-lg hover:opacity-90 text-sm font-medium"
+        >
+          <Loader2 className="w-4 h-4 animate-spin" />
+          Bulk SEO running — {bulkItems.filter(i => i.status === "ok" || i.status === "fail").length}/{bulkItems.length}
+          {bulkRun.lastSavedAt && <span className="text-[10px] opacity-80 ml-1">auto-saved</span>}
+        </button>
+      )}
+
       <BulkOptimizeProgressDialog
         open={bulkOpen}
-        onOpenChange={(o) => {
-          if (!o && !bulkFinished && bulkLoading) {
-            // Don't allow closing while running; require Cancel
-            return;
-          }
-          setBulkOpen(o);
-        }}
+        onOpenChange={(o) => bulkSeoRunner.setOpen(o)}
         items={bulkItems}
         logs={bulkLogs}
         paused={bulkPaused}
-        onPauseToggle={() => setBulkPaused(p => !p)}
-        onCancel={() => {
-          if (bulkFinished) {
-            setBulkOpen(false);
-          } else {
-            setBulkCancelled(true);
-            bulkCancelledRef.current = true;
-          }
-        }}
+        onPauseToggle={() => (bulkPaused ? bulkSeoRunner.resume() : bulkSeoRunner.pause())}
+        onCancel={() => bulkSeoRunner.cancel()}
         finished={bulkFinished}
         startedAt={bulkStartedAt}
         model="openai/gpt-5-mini"
       />
+
     </div>
   );
 };
