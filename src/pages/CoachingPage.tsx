@@ -39,6 +39,9 @@ const CoachingPage = () => {
   const selectedFee = searchParams.get("fee") || "all";
   const selectedSpec = searchParams.get("specialization") || "all";
   const sortBy = searchParams.get("sort") || "rating";
+  const minRating = searchParams.get("rating") || "all"; // 4.5, 4, 3.5
+  const view = searchParams.get("view") || "list"; // list | grid | map
+  const quick = searchParams.get("quick") || ""; // verified | offer | featured
 
   const setFilter = useCallback((key: string, value: string) => {
     setSearchParams(prev => {
