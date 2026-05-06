@@ -70,6 +70,7 @@ const AdminBanners = lazyWithPreload(() => import("./pages/admin/AdminBanners"))
 const AdminInquiries = lazyWithPreload(() => import("./pages/admin/AdminInquiries"));
 const AdminCourses = lazyWithPreload(() => import("./pages/admin/AdminCourses"));
 const AdminColleges = lazyWithPreload(() => import("./pages/admin/AdminColleges"));
+const AdminProgrammes = lazyWithPreload(() => import("./pages/admin/AdminProgrammes"));
 const AdminSubscribers = lazyWithPreload(() => import("./pages/admin/AdminSubscribers"));
 const AdminExams = lazyWithPreload(() => import("./pages/admin/AdminExams"));
 const AdminCategories = lazyWithPreload(() => import("./pages/admin/AdminCategories"));
