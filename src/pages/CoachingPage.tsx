@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useInstitutes, useCategories } from "@/hooks/useInstitutes";
 import InstituteListingCard from "@/components/InstituteListingCard";
+import InstituteGridCard from "@/components/coaching/InstituteGridCard";
 import { useCityPages } from "@/hooks/useCityPages";
 import { useSpecializations } from "@/hooks/useSpecializations";
 import { Skeleton } from "@/components/ui/skeleton";
