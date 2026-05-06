@@ -26,11 +26,21 @@ const MODEL = "google/gemini-2.5-flash";
 
 async function callCourseAI(body: Parameters<typeof callAIGateway>[0]) {
   const primary = await callAIGateway(body, { feature: "ai-course-writer", provider: "gemini", purpose: "long" });
-  if (primary.ok || ![401, 403].includes(primary.status)) return primary;
+  if (primary.ok || ![401, 402, 403, 429, 500, 502, 503, 504].includes(primary.status)) return primary;
 
   const primaryText = await primary.clone().text().catch(() => "");
-  console.warn("ai-course-writer Gemini provider unavailable, falling back to OpenAI:", primary.status, primaryText.slice(0, 300));
-  return callAIGateway(body, { feature: "ai-course-writer", provider: "openai-mini", purpose: "long" });
+  console.warn("ai-course-writer Gemini provider unavailable/quota-limited, falling back to OpenAI:", primary.status, primaryText.slice(0, 300));
+  const fallback = await callAIGateway(body, { feature: "ai-course-writer", provider: "openai-mini", purpose: "long" });
+  if (fallback.ok || ![401, 402, 403, 429, 500, 502, 503, 504].includes(fallback.status)) return fallback;
+
+  const fallbackText = await fallback.clone().text().catch(() => "");
+  console.warn("ai-course-writer fallback provider also failed:", fallback.status, fallbackText.slice(0, 300));
+  return new Response(
+    JSON.stringify({
+      error: "AI service is temporarily busy or quota-limited. Please reduce the number of courses and try again in a few minutes.",
+    }),
+    { status: fallback.status, headers: { "Content-Type": "application/json" } },
+  );
 }
 
 interface InstituteCtx {
