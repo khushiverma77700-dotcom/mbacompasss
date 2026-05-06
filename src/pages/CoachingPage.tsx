@@ -1,7 +1,7 @@
 import { useMemo, useCallback } from "react";
 import { INDIAN_STATES, getCitiesForState } from "@/data/indianLocations";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { MapPin, Search, Users, TrendingUp, GraduationCap, Award, ChevronRight, ArrowRight, Building2, Filter, Star, Monitor, Building, Wifi, X, ArrowLeft, Share2 } from "lucide-react";
+import { MapPin, Search, Users, TrendingUp, GraduationCap, Award, ChevronRight, ArrowRight, Building2, Filter, Star, Monitor, Building, Wifi, X, ArrowLeft, Share2, LayoutGrid, List, Map as MapIcon, Sparkles, Tag } from "lucide-react";
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,9 @@ import SEOHead from "@/components/SEOHead";
 import PageKeywords from "@/components/PageKeywords";
 import { getLocationImage } from "@/data/cityImages";
 import { FEE_BUCKETS, FEE_BUCKET_LABELS, matchesFeeBucket, getEffectiveFeesLakhs, specMatches, locationMatches } from "@/lib/filterHelpers";
+import { CoachingCompareProvider } from "@/contexts/CoachingCompareContext";
+import CompareDrawer from "@/components/coaching/CompareDrawer";
+import CoachingMapView from "@/components/coaching/CoachingMapView";
 
 const modes = ["Online", "Offline", "Hybrid"];
 const toSlug = (value: string) => value.toLowerCase().trim().replace(/\s+/g, "-");
@@ -36,6 +39,9 @@ const CoachingPage = () => {
   const selectedFee = searchParams.get("fee") || "all";
   const selectedSpec = searchParams.get("specialization") || "all";
   const sortBy = searchParams.get("sort") || "rating";
+  const minRating = searchParams.get("rating") || "all"; // 4.5, 4, 3.5
+  const view = searchParams.get("view") || "list"; // list | grid | map
+  const quick = searchParams.get("quick") || ""; // verified | offer | featured
 
   const setFilter = useCallback((key: string, value: string) => {
     setSearchParams(prev => {
@@ -127,6 +133,12 @@ const CoachingPage = () => {
     }
     if (selectedFee !== "all") list = list.filter((i: any) => matchesFeeBucket(getEffectiveFeesLakhs(i), selectedFee));
     if (selectedSpec !== "all") list = list.filter((i: any) => specMatches(i.specializations, selectedSpec));
+    if (minRating !== "all") {
+      const min = parseFloat(minRating);
+      if (!Number.isNaN(min)) list = list.filter((i: any) => (i.rating || 0) >= min);
+    }
+    if (quick === "verified" || quick === "featured") list = list.filter((i: any) => i.featured);
+    if (quick === "offer") list = list.filter((i: any) => i.offer || i.discount);
     if (sortBy === "rating") list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     if (sortBy === "reviews") list.sort((a, b) => (b.total_reviews || 0) - (a.total_reviews || 0));
     if (sortBy === "success") list.sort((a, b) => (b.success_rate || 0) - (a.success_rate || 0));
@@ -134,7 +146,7 @@ const CoachingPage = () => {
       list.sort((a, b) => (getEffectiveFeesLakhs(a) ?? Infinity) - (getEffectiveFeesLakhs(b) ?? Infinity));
     }
     return list;
-  }, [allInstitutes, search, selectedCity, selectedState, selectedMode, selectedCategory, selectedFee, selectedSpec, sortBy, categories, currentCityPage]);
+  }, [allInstitutes, search, selectedCity, selectedState, selectedMode, selectedCategory, selectedFee, selectedSpec, sortBy, categories, currentCityPage, minRating, quick]);
 
   // Active filters chips
   const activeFilters = useMemo(() => {
@@ -190,7 +202,8 @@ const CoachingPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <CoachingCompareProvider>
+    <div className="min-h-screen bg-background pb-24">
       <SEOHead
         title={dynamicTitle}
         description={dynamicDescription}
@@ -319,6 +332,15 @@ const CoachingPage = () => {
                 </SelectContent>
               </Select>
             )}
+            <Select value={minRating} onValueChange={(v) => setFilter("rating", v)}>
+              <SelectTrigger className="w-full sm:w-36 rounded-xl"><SelectValue placeholder="Rating" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Any Rating</SelectItem>
+                <SelectItem value="4.5">4.5+ ★</SelectItem>
+                <SelectItem value="4">4.0+ ★</SelectItem>
+                <SelectItem value="3.5">3.5+ ★</SelectItem>
+              </SelectContent>
+            </Select>
             <Select value={sortBy} onValueChange={(v) => setFilter("sort", v)}>
               <SelectTrigger className="w-full sm:w-40 rounded-xl"><SelectValue placeholder="Sort" /></SelectTrigger>
               <SelectContent>
@@ -381,12 +403,68 @@ const CoachingPage = () => {
           )}
         </div>
 
-        {/* Institute Cards */}
-        <div className="space-y-5">
-          {filtered.map((inst: any, i: number) => (
-            <InstituteListingCard key={inst.id} inst={inst} index={i} rank={i + 1} />
-          ))}
+        {/* Quick filters + View toggle */}
+        <div className="flex flex-wrap items-center gap-2 mb-5">
+          <span className="text-[11px] uppercase tracking-wider font-bold text-slate-500 mr-1 inline-flex items-center gap-1">
+            <Sparkles className="w-3 h-3" /> Quick
+          </span>
+          {[
+            { k: "verified", label: "Verified", icon: Award },
+            { k: "offer", label: "Offer Live", icon: Tag },
+          ].map(q => {
+            const active = quick === q.k;
+            return (
+              <button
+                key={q.k}
+                onClick={() => setFilter("quick", active ? "" : q.k)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-all ${
+                  active ? "bg-primary text-primary-foreground border-primary shadow-sm" : "bg-white text-slate-700 border-slate-200 hover:border-primary/40"
+                }`}
+              >
+                <q.icon className="w-3 h-3" /> {q.label}
+              </button>
+            );
+          })}
+
+          <div className="ml-auto inline-flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+            {[
+              { v: "list", icon: List, label: "List" },
+              { v: "grid", icon: LayoutGrid, label: "Grid" },
+              { v: "map", icon: MapIcon, label: "Map" },
+            ].map(t => {
+              const active = view === t.v;
+              return (
+                <button
+                  key={t.v}
+                  onClick={() => setFilter("view", t.v)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold transition-all ${
+                    active ? "bg-primary text-primary-foreground shadow-sm" : "text-slate-600 hover:text-slate-900"
+                  }`}
+                  aria-label={t.label}
+                >
+                  <t.icon className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
+
+        {/* Institute Cards */}
+        {view === "map" ? (
+          <CoachingMapView institutes={filtered} onCityClick={(c) => { setFilter("city", c); setFilter("view", "list"); }} />
+        ) : view === "grid" ? (
+          <div className="grid sm:grid-cols-1 lg:grid-cols-2 gap-5">
+            {filtered.map((inst: any, i: number) => (
+              <InstituteListingCard key={inst.id} inst={inst} index={i} rank={i + 1} />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-5">
+            {filtered.map((inst: any, i: number) => (
+              <InstituteListingCard key={inst.id} inst={inst} index={i} rank={i + 1} />
+            ))}
+          </div>
+        )}
 
         {filtered.length === 0 && (
           <div className="text-center py-24 bg-card rounded-2xl border border-border">
@@ -399,7 +477,9 @@ const CoachingPage = () => {
 
         <PageKeywords contentType="static" recordId="coaching" fallbackKeywords={["MBA coaching India", "CAT coaching institutes", "best MBA coaching"]} />
       </div>
+      <CompareDrawer />
     </div>
+    </CoachingCompareProvider>
   );
 };
 
