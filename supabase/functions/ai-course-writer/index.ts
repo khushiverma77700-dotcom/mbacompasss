@@ -24,6 +24,15 @@ const corsHeaders = {
 // reasoning tasks only (e.g. premium profile reports).
 const MODEL = "google/gemini-2.5-flash";
 
+async function callCourseAI(body: Parameters<typeof callAIGateway>[0]) {
+  const primary = await callAIGateway(body, { feature: "ai-course-writer", provider: "gemini", purpose: "long" });
+  if (primary.ok || ![401, 403].includes(primary.status)) return primary;
+
+  const primaryText = await primary.clone().text().catch(() => "");
+  console.warn("ai-course-writer Gemini provider unavailable, falling back to OpenAI:", primary.status, primaryText.slice(0, 300));
+  return callAIGateway(body, { feature: "ai-course-writer", provider: "openai-mini", purpose: "long" });
+}
+
 interface InstituteCtx {
   name: string;
   city?: string;
@@ -64,7 +73,7 @@ const SCOPE_LOCK = `# SCOPE LOCK — MBA / MASTERS-IN-MANAGEMENT ENTRANCE COACHI
 
 // ---------------- DISCOVER ----------------
 
-async function discover(body: Extract<Body, { mode: "discover" }>, apiKey: string) {
+async function discover(body: Extract<Body, { mode: "discover" }>) {
   const f = freshness();
   const max = Math.max(1, Math.min(50, body.max ?? 25));
   const exams = (body.institute.examFocus || []).filter(Boolean);
@@ -122,7 +131,7 @@ Return UP TO ${max} distinct MBA-entrance courses this institute is known to off
     },
   };
 
-  const res = await callAIGateway({
+  const res = await callCourseAI({
     model: MODEL,
     messages: [
       { role: "system", content: system },
@@ -130,7 +139,7 @@ Return UP TO ${max} distinct MBA-entrance courses this institute is known to off
     ],
     tools: [tool],
     tool_choice: { type: "function", function: { name: "list_courses" } },
-  }, { feature: "ai-course-writer", provider: "gemini", purpose: "long" });
+  });
 
   if (!res.ok) {
     const t = await res.text();
@@ -144,7 +153,7 @@ Return UP TO ${max} distinct MBA-entrance courses this institute is known to off
 
 // ---------------- GENERATE ----------------
 
-async function generate(body: Extract<Body, { mode: "generate" }>, apiKey: string) {
+async function generate(body: Extract<Body, { mode: "generate" }>) {
   const f = freshness();
   const dateCtx =
     body.contentDateContext?.trim() ||
@@ -273,7 +282,7 @@ For EACH course return:
     },
   };
 
-  const res = await callAIGateway({
+  const res = await callCourseAI({
     model: MODEL,
     messages: [
       { role: "system", content: system },
@@ -281,7 +290,7 @@ For EACH course return:
     ],
     tools: [tool],
     tool_choice: { type: "function", function: { name: "write_courses" } },
-  }, { feature: "ai-course-writer", provider: "gemini", purpose: "long" });
+  });
 
   if (!res.ok) {
     const t = await res.text();
@@ -297,15 +306,14 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const apiKey = (await getCredential("GEMINI_API_KEY"));
-    if (!apiKey) throw new Error("GEMINI_API_KEY is not configured");
+    await getCredential("OPENAI_API_KEY");
 
     const body = (await req.json()) as Body;
     if (!body || !body.mode) throw new Error("mode is required");
     if (!body.institute?.name) throw new Error("institute.name is required");
 
     if (body.mode === "discover") {
-      const out = await discover(body, apiKey);
+      const out = await discover(body);
       return new Response(JSON.stringify(out), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -314,7 +322,7 @@ Deno.serve(async (req) => {
       if (!Array.isArray(body.courses) || body.courses.length === 0) {
         throw new Error("courses[] is required for generate mode");
       }
-      const out = await generate(body, apiKey);
+      const out = await generate(body);
       return new Response(JSON.stringify(out), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

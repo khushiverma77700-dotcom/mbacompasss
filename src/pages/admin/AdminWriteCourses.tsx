@@ -69,6 +69,25 @@ const buildLatestDateContext = () => {
   return `Use ONLY the most recent verified data: ${y} CAT batch cycle and ${y - 1} CAT result selections. All fees, batch start dates, mock-series counts must reflect the latest published year. Do NOT use outdated 2020-2023 figures.`;
 };
 
+const readFunctionError = async (error: any, fallback: string) => {
+  const response = error?.context;
+  if (response?.clone) {
+    try {
+      const payload = await response.clone().json();
+      if (payload?.error) return String(payload.error);
+      if (payload?.message) return String(payload.message);
+    } catch {
+      try {
+        const text = await response.clone().text();
+        if (text?.trim()) return text.trim();
+      } catch {
+        // keep fallback below
+      }
+    }
+  }
+  return error?.message || fallback;
+};
+
 const AdminWriteCourses = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -150,7 +169,7 @@ const AdminWriteCourses = () => {
           },
         },
       });
-      if (error) throw error;
+      if (error) throw new Error(await readFunctionError(error, "Discovery failed"));
       const courses = (data?.courses || []) as Omit<DiscoveredCourse, "_selected">[];
       setDiscovered(courses.map((c) => ({ ...c, _selected: true })));
       if (courses.length === 0) {
@@ -220,7 +239,7 @@ const AdminWriteCourses = () => {
             courses: chunk,
           },
         });
-        if (error) throw error;
+        if (error) throw new Error(await readFunctionError(error, "Generation failed"));
         const gen = (data?.courses || []) as Omit<GeneratedCourse, "_save">[];
         all.push(...gen);
         setGenerated((prev) => [...all].map((g) => ({ ...g, _save: true })));
