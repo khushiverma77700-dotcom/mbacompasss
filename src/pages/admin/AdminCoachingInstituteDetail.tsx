@@ -11,7 +11,7 @@ import RichTextEditor from "@/components/admin/RichTextEditor";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Save, ExternalLink, Loader2, Building2, Globe, Plus, X, Sparkles } from "lucide-react";
+import { ArrowLeft, Save, ExternalLink, Loader2, Building2, Globe, Plus, X, Sparkles, RefreshCw, FileText } from "lucide-react";
 import StateCitySelect from "@/components/admin/StateCitySelect";
 import FileUpload from "@/components/admin/FileUpload";
 import InstituteSectionEditor from "@/components/admin/InstituteSectionEditor";
