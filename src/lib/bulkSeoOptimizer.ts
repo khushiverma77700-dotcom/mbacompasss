@@ -12,6 +12,7 @@ import {
   buildStoredSeoSnapshot,
   contentTypeConfig,
   mergeKeywordBuckets,
+  notifySeoSnapshotUpdated,
   saveSeoSnapshot,
   type SEOContentType,
 } from "@/lib/seoAutomation";
@@ -37,6 +38,12 @@ export interface BulkItem {
   newScore?: number;
   error?: string;
   step?: string;
+  saveStatus?: "pending" | "saving" | "snapshot_saved" | "db_applied" | "verified" | "failed";
+  savedAt?: number;
+  snapshotId?: string;
+  dbUpdated?: boolean;
+  verified?: boolean;
+  changedFields?: string[];
 }
 
 export interface LogEntry {
