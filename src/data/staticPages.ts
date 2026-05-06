@@ -56,7 +56,7 @@ const STATIC_PAGES: StaticPageDef[] = [
   },
   { key: "cat-score-calculator", label: "CAT Score Calculator", path: "/cat-score-calculator" },
   { key: "mba-roi-calculator", label: "MBA ROI Calculator", path: "/mba-roi-calculator" },
-  { key: "mba-programme-compare", label: "MBA Programme Compare", path: "/mba-programme-compare" },
+  
   { key: "list-your-business", label: "List Your Business", path: "/list-your-business" },
   { key: "business-inquiry", label: "Business Inquiry", path: "/business-inquiry" },
   { key: "mocks", label: "Mock Tests", path: "/mocks" },
