@@ -1208,7 +1208,6 @@ const CollegeDetailPage = () => {
                 { id: "qa", label: "FAQs", icon: <HelpCircle className="w-3.5 h-3.5" />, hasAI: !!getAIExtension("qa") },
                 { id: "news", label: "News", icon: <Star className="w-3.5 h-3.5" />, hasAI: false },
               ]}
-            />
           </div>
         </div>
       </div>
