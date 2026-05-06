@@ -167,9 +167,9 @@ ${SCOPE_LOCK}
 - Start with a clean opening paragraph (40-55 words) that summarises fees + duration + ideal aspirant — but WITHOUT any prefix label like "Quick Summary:" or "Overview:". Just write the paragraph.
 - Short paragraphs (2-4 sentences), semantic <ul>/<ol> for 3+ items, at least TWO <table>s (e.g. "Fee breakup" + "What's included" or "Batch comparison").
 - You MAY include a FAQ block at the end as 4-6 Q&A pairs using <p><strong>Q: ...</strong></p><p>A: ...</p> — but DO NOT add a "Frequently Asked Questions" heading above it.
-- For EVERY key stat (fee, mock-test count, faculty student-ratio, success metric) append a machine-readable inline citation marker in EXACT shape [src:<Source> <Year>], e.g. [src:Brochure ${f.currentYear}], [src:Result Release ${f.currentYear - 1}]. Our frontend converts these markers into clickable "view source" pills.
+- DO NOT include ANY citation, source, footnote or attribution markers anywhere. Forbidden patterns: "[src:...]", "(source: ...)", "(Source/...)", "(as per ...)", "[1]", "Ref:", "*Source:*". State facts plainly with the year woven into the sentence.
 - Bold key facts with <strong>.
-- End the description with: <p><em>Last updated: ${f.todayIso}</em></p>
+- Do NOT add a "Last updated" line.
 
 ACCURACY RULES — for famous Indian MBA-prep brands (TIME, IMS, Career Launcher, 2IIM, iQuanta, Bulls Eye, Endeavor, Cracku, Hitbullseye, BYJU'S Exam Prep) the brand-specific flagship product names, mock-series names (AIMCAT / SimCAT / Mock CAT), founding era, and HQ city must be correct.
 
