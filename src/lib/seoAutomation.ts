@@ -7,6 +7,17 @@ export const SEO_SNAPSHOT_KEY_PREFIX = "seo_page__";
 
 export type SEOContentType = "article" | "institute" | "college" | "exam" | "cityPage" | "category" | "course";
 
+const snapshotSlugify = (input?: string | null): string =>
+  (input || "")
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 80);
+
 export interface SEOKeywordBuckets {
   primary: string[];
   shortTail: string[];
@@ -60,6 +71,7 @@ export const contentTypeConfig: Record<
     label: string;
     table: string;
     supportsH1Column: boolean;
+    supportsSeoColumns: boolean;
     getPath: (item: Record<string, any>) => string;
   }
 > = {
@@ -67,43 +79,50 @@ export const contentTypeConfig: Record<
     label: "Articles",
     table: "articles",
     supportsH1Column: true,
+    supportsSeoColumns: true,
     getPath: (item) => `/article/${item.slug}`,
   },
   institute: {
     label: "Institutes",
     table: "institutes",
     supportsH1Column: true,
+    supportsSeoColumns: true,
     getPath: (item) => `/institute/${item.slug}`,
   },
   college: {
     label: "Colleges",
     table: "colleges",
     supportsH1Column: true,
+    supportsSeoColumns: true,
     getPath: (item) => `/college/${item.slug}`,
   },
   exam: {
     label: "Exams",
     table: "exams",
     supportsH1Column: true,
+    supportsSeoColumns: true,
     getPath: (item) => `/exam/${item.slug}`,
   },
   cityPage: {
     label: "City/State Pages",
     table: "city_pages",
     supportsH1Column: true,
+    supportsSeoColumns: true,
     getPath: (item) => `/colleges/${item.slug}`,
   },
   category: {
     label: "Categories",
     table: "categories",
     supportsH1Column: false,
+    supportsSeoColumns: false,
     getPath: (item) => `/category/${item.slug}`,
   },
   course: {
     label: "Courses",
     table: "courses",
     supportsH1Column: false,
-    getPath: (item) => `/institute/${item.institute_slug || item._institute_slug || "institute"}/course/${item.slug}`,
+    supportsSeoColumns: false,
+    getPath: (item) => `/institute/${item.institute_slug || item._institute_slug || item.institutes?.slug || "institute"}/course/${item.slug || item.course_slug || snapshotSlugify(item.name)}`,
   },
 };
 
