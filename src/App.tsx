@@ -617,6 +617,7 @@ const App = () => (
               <Route path="inquiries" element={<LazyPage><AdminInquiries /></LazyPage>} />
               <Route path="courses" element={<LazyPage><AdminCourses /></LazyPage>} />
               <Route path="colleges" element={<LazyPage><AdminColleges /></LazyPage>} />
+              <Route path="programmes" element={<LazyPage><AdminProgrammes /></LazyPage>} />
               <Route path="subscribers" element={<LazyPage><AdminSubscribers /></LazyPage>} />
               <Route path="exams" element={<LazyPage><AdminExams /></LazyPage>} />
               <Route path="categories" element={<LazyPage><AdminCategories /></LazyPage>} />
