@@ -916,6 +916,49 @@ const AdminSEODashboard = () => {
         }
       }
 
+      // Score range
+      if (scoreRangeFilter !== "all") {
+        const s = row.audit.score;
+        if (scoreRangeFilter === "0-25" && !(s < 25)) return false;
+        if (scoreRangeFilter === "25-50" && !(s >= 25 && s < 50)) return false;
+        if (scoreRangeFilter === "50-75" && !(s >= 50 && s < 75)) return false;
+        if (scoreRangeFilter === "75-100" && !(s >= 75)) return false;
+      }
+
+      // Word count
+      if (wordCountFilter !== "all") {
+        const w = row.audit.wordCount || 0;
+        if (wordCountFilter === "lt250" && !(w < 250)) return false;
+        if (wordCountFilter === "250-500" && !(w >= 250 && w < 500)) return false;
+        if (wordCountFilter === "500-1000" && !(w >= 500 && w < 1000)) return false;
+        if (wordCountFilter === "gt1000" && !(w >= 1000)) return false;
+      }
+
+      // Missing-element / "needs work" filter
+      if (missingFilter !== "all") {
+        const a = row.audit;
+        const missingAny =
+          !a.aiOptimized || !a.hasMetaTitle || !a.hasMetaDesc || !a.hasKeywords ||
+          !a.hasH1 || !a.hasSchema || !a.hasCanonical || !a.hasSocial || !a.hasTechnical;
+        const matches: Record<MissingFilter, boolean> = {
+          all: true,
+          not_optimized: !a.aiOptimized,
+          no_meta_title: !a.hasMetaTitle,
+          no_meta_desc: !a.hasMetaDesc,
+          no_keywords: !a.hasKeywords,
+          no_h1: !a.hasH1,
+          no_schema: !a.hasSchema,
+          no_canonical: !a.hasCanonical,
+          no_social: !a.hasSocial,
+          no_technical: !a.hasTechnical,
+          no_short_tail: !(a.shortTailCount > 0),
+          no_long_tail: !(a.longTailCount > 0),
+          thin_content: (a.wordCount || 0) < 250,
+          missing_any: missingAny,
+        };
+        if (!matches[missingFilter]) return false;
+      }
+
       if (search) {
         const raw = search.toLowerCase().trim();
         const q = raw
@@ -929,7 +972,7 @@ const AdminSEODashboard = () => {
       }
       return true;
     });
-  }, [rows, selectedType, filterStatus, schemaFilter, aiFilter, cityFilter, stateFilter, createdFilter, seoUpdatedFilter, search]);
+  }, [rows, selectedType, filterStatus, schemaFilter, aiFilter, cityFilter, stateFilter, createdFilter, seoUpdatedFilter, missingFilter, scoreRangeFilter, wordCountFilter, search]);
 
   const stats = useMemo(() => {
     const total = rows.length;
