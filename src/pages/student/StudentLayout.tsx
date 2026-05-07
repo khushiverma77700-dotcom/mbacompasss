@@ -83,6 +83,12 @@ export default function StudentLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const displayName = (user?.user_metadata?.display_name as string | undefined) || user?.email?.split("@")[0] || "Student";
 
+  // On dashboard.mbacompass.in, the LMS lives at "/" instead of "/student".
+  const onDashboardHost =
+    typeof window !== "undefined" &&
+    window.location.hostname === "dashboard.mbacompass.in";
+  const homePath = onDashboardHost ? "/" : "/student";
+
   // Mark "student mode" so mock pages know the user lives inside the dashboard
   // and route their back / post-submit navigation back into /student/*.
   useEffect(() => {
