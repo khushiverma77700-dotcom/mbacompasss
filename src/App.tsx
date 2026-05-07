@@ -669,6 +669,7 @@ const App = () => (
               <Route path="profile-analyzer" element={<LazyPage><AdminProfileAnalyzer /></LazyPage>} />
               <Route path="manage-admins" element={<LazyPage><AdminManageAdmins /></LazyPage>} />
               <Route path="cta-manager" element={<LazyPage><AdminCTAManager /></LazyPage>} />
+              <Route path="cta-analytics" element={<LazyPage><AdminCTAAnalytics /></LazyPage>} />
               <Route path="static-seo" element={<LazyPage><AdminStaticPageSEO /></LazyPage>} />
               <Route path="all-leads-unified" element={<LazyPage><AdminAllLeads /></LazyPage>} />
               <Route path="business-inquiries" element={<LazyPage><AdminBusinessInquiries /></LazyPage>} />
