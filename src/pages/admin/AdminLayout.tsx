@@ -230,7 +230,7 @@ const AdminLayout = () => {
   );
 
   return (
-    <div className="min-h-screen flex bg-muted/30">
+    <div className="admin-scope min-h-screen flex bg-muted/30">
       {/* Mobile top bar */}
       <header className="lg:hidden fixed top-0 inset-x-0 z-40 h-14 flex items-center justify-between gap-2 px-3 bg-card/95 backdrop-blur border-b border-border">
         <button
