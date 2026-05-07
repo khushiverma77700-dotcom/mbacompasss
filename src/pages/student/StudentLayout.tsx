@@ -119,8 +119,11 @@ export default function StudentLayout() {
     const keepInsideDashboard = () => {
       window.setTimeout(() => {
         const path = window.location.pathname;
-        const shouldReturn = path === "/student/login" || !path.startsWith("/student");
-        if (shouldReturn) navigate("/student", { replace: true });
+        const isInside = onDashboardHost
+          ? (path === "/" || path.startsWith("/student"))
+          : path.startsWith("/student");
+        const shouldReturn = path === "/student/login" || !isInside;
+        if (shouldReturn) navigate(homePath, { replace: true });
       }, 0);
     };
 
