@@ -1256,7 +1256,7 @@ const AdminSEODashboard = () => {
           <div className="space-y-4">
             <Card>
               <CardContent className="pt-6 space-y-4">
-                <div className="grid gap-3 xl:grid-cols-6 md:grid-cols-3">
+                <div className="grid gap-3 xl:grid-cols-4 md:grid-cols-2">
                   <div className="relative xl:col-span-2">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, slug, or full link…" className="pl-9" />
@@ -1276,6 +1276,26 @@ const AdminSEODashboard = () => {
                   <Select value={aiFilter} onValueChange={(v) => setAiFilter(v as BooleanFilter)}>
                     <SelectTrigger><SelectValue placeholder="AI" /></SelectTrigger>
                     <SelectContent><SelectItem value="all">AI: all</SelectItem><SelectItem value="yes">AI done</SelectItem><SelectItem value="no">AI pending</SelectItem></SelectContent>
+                  </Select>
+                  <Select value={createdFilter} onValueChange={(v) => setCreatedFilter(v as typeof createdFilter)}>
+                    <SelectTrigger><SelectValue placeholder="Created" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Created: any time</SelectItem>
+                      <SelectItem value="7d">Last 7 days</SelectItem>
+                      <SelectItem value="30d">Last 30 days</SelectItem>
+                      <SelectItem value="90d">Last 90 days</SelectItem>
+                      <SelectItem value="older">Older than 90 days</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={seoUpdatedFilter} onValueChange={(v) => setSeoUpdatedFilter(v as typeof seoUpdatedFilter)}>
+                    <SelectTrigger><SelectValue placeholder="SEO updated" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">SEO updated: any</SelectItem>
+                      <SelectItem value="never">Never optimized</SelectItem>
+                      <SelectItem value="7d">Updated last 7 days</SelectItem>
+                      <SelectItem value="30d">Updated last 30 days</SelectItem>
+                      <SelectItem value="older">Updated &gt; 30 days ago</SelectItem>
+                    </SelectContent>
                   </Select>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
