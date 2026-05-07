@@ -217,6 +217,8 @@ const AdminSEODashboard = () => {
   const [aiFilter, setAiFilter] = useState<BooleanFilter>("all");
   const [cityFilter, setCityFilter] = useState("all");
   const [stateFilter, setStateFilter] = useState("all");
+  const [createdFilter, setCreatedFilter] = useState<"all" | "7d" | "30d" | "90d" | "older">("all");
+  const [seoUpdatedFilter, setSeoUpdatedFilter] = useState<"all" | "never" | "7d" | "30d" | "older">("all");
   const [search, setSearch] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("overview");
@@ -869,32 +871,47 @@ const AdminSEODashboard = () => {
       if (aiFilter === "no" && row.audit.aiOptimized) return false;
       if (cityFilter !== "all" && (row.city || "") !== cityFilter) return false;
       if (stateFilter !== "all" && (row.state || "") !== stateFilter) return false;
+
+      // Created date filter
+      if (createdFilter !== "all") {
+        const created = row.item?.created_at ? new Date(row.item.created_at).getTime() : 0;
+        if (!created) return false;
+        const ageDays = (Date.now() - created) / (1000 * 60 * 60 * 24);
+        if (createdFilter === "7d" && ageDays > 7) return false;
+        if (createdFilter === "30d" && ageDays > 30) return false;
+        if (createdFilter === "90d" && ageDays > 90) return false;
+        if (createdFilter === "older" && ageDays <= 90) return false;
+      }
+
+      // SEO last-updated filter
+      if (seoUpdatedFilter !== "all") {
+        const seoTs = row.snapshot?.updatedAt || row.snapshot?.generatedAt;
+        const seoMs = seoTs ? new Date(seoTs).getTime() : 0;
+        if (seoUpdatedFilter === "never") {
+          if (seoMs) return false;
+        } else {
+          if (!seoMs) return false;
+          const ageDays = (Date.now() - seoMs) / (1000 * 60 * 60 * 24);
+          if (seoUpdatedFilter === "7d" && ageDays > 7) return false;
+          if (seoUpdatedFilter === "30d" && ageDays > 30) return false;
+          if (seoUpdatedFilter === "older" && ageDays <= 30) return false;
+        }
+      }
+
       if (search) {
         const raw = search.toLowerCase().trim();
-        // Normalize: strip protocol/host, leading/trailing slashes, query/hash
         const q = raw
           .replace(/^https?:\/\/[^/]+/, "")
           .replace(/[?#].*$/, "")
           .replace(/^\/+|\/+$/g, "");
         const typeLabel = row.isStatic ? "static page" : contentTypeConfig[row.contentType].label;
         const fullLink = row.path || (row.slug ? `/${String(row.slug).replace(/^\/+/, "")}` : "");
-        const haystacks = [
-          row.name,
-          row.slug,
-          row.path,
-          fullLink,
-          (row.slug || "").replace(/^\/+/, ""),
-          row.city,
-          row.state,
-          typeLabel,
-        ];
-        return haystacks
-          .filter(Boolean)
-          .some((v) => String(v).toLowerCase().includes(q || raw));
+        const haystacks = [row.name, row.slug, row.path, fullLink, (row.slug || "").replace(/^\/+/, ""), row.city, row.state, typeLabel];
+        return haystacks.filter(Boolean).some((v) => String(v).toLowerCase().includes(q || raw));
       }
       return true;
     });
-  }, [rows, selectedType, filterStatus, schemaFilter, aiFilter, cityFilter, stateFilter, search]);
+  }, [rows, selectedType, filterStatus, schemaFilter, aiFilter, cityFilter, stateFilter, createdFilter, seoUpdatedFilter, search]);
 
   const stats = useMemo(() => {
     const total = rows.length;
@@ -1239,7 +1256,7 @@ const AdminSEODashboard = () => {
           <div className="space-y-4">
             <Card>
               <CardContent className="pt-6 space-y-4">
-                <div className="grid gap-3 xl:grid-cols-6 md:grid-cols-3">
+                <div className="grid gap-3 xl:grid-cols-4 md:grid-cols-2">
                   <div className="relative xl:col-span-2">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, slug, or full link…" className="pl-9" />
@@ -1259,6 +1276,26 @@ const AdminSEODashboard = () => {
                   <Select value={aiFilter} onValueChange={(v) => setAiFilter(v as BooleanFilter)}>
                     <SelectTrigger><SelectValue placeholder="AI" /></SelectTrigger>
                     <SelectContent><SelectItem value="all">AI: all</SelectItem><SelectItem value="yes">AI done</SelectItem><SelectItem value="no">AI pending</SelectItem></SelectContent>
+                  </Select>
+                  <Select value={createdFilter} onValueChange={(v) => setCreatedFilter(v as typeof createdFilter)}>
+                    <SelectTrigger><SelectValue placeholder="Created" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Created: any time</SelectItem>
+                      <SelectItem value="7d">Last 7 days</SelectItem>
+                      <SelectItem value="30d">Last 30 days</SelectItem>
+                      <SelectItem value="90d">Last 90 days</SelectItem>
+                      <SelectItem value="older">Older than 90 days</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={seoUpdatedFilter} onValueChange={(v) => setSeoUpdatedFilter(v as typeof seoUpdatedFilter)}>
+                    <SelectTrigger><SelectValue placeholder="SEO updated" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">SEO updated: any</SelectItem>
+                      <SelectItem value="never">Never optimized</SelectItem>
+                      <SelectItem value="7d">Updated last 7 days</SelectItem>
+                      <SelectItem value="30d">Updated last 30 days</SelectItem>
+                      <SelectItem value="older">Updated &gt; 30 days ago</SelectItem>
+                    </SelectContent>
                   </Select>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -1284,6 +1321,7 @@ const AdminSEODashboard = () => {
                         <TableHead>Issues</TableHead>
                         <TableHead>Score</TableHead>
                         <TableHead>Created</TableHead>
+                        <TableHead>SEO Updated</TableHead>
                         <TableHead className="text-right">Action</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -1322,6 +1360,13 @@ const AdminSEODashboard = () => {
                             </div>
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{row.item?.created_at ? new Date(row.item.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</TableCell>
+                          <TableCell className="text-xs whitespace-nowrap">
+                            {(() => {
+                              const ts = row.snapshot?.updatedAt || row.snapshot?.generatedAt;
+                              if (!ts) return <span className="text-amber-600">Never</span>;
+                              return <span className="text-muted-foreground">{new Date(ts).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>;
+                            })()}
+                          </TableCell>
                           <TableCell className="text-right">
                             <AISEOButton contentType={row.contentType} recordId={row.id} data={row.item} onApply={(s) => applySEOFields(row, s)} />
                           </TableCell>
