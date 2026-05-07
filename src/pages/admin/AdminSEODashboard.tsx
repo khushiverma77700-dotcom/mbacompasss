@@ -871,32 +871,47 @@ const AdminSEODashboard = () => {
       if (aiFilter === "no" && row.audit.aiOptimized) return false;
       if (cityFilter !== "all" && (row.city || "") !== cityFilter) return false;
       if (stateFilter !== "all" && (row.state || "") !== stateFilter) return false;
+
+      // Created date filter
+      if (createdFilter !== "all") {
+        const created = row.item?.created_at ? new Date(row.item.created_at).getTime() : 0;
+        if (!created) return false;
+        const ageDays = (Date.now() - created) / (1000 * 60 * 60 * 24);
+        if (createdFilter === "7d" && ageDays > 7) return false;
+        if (createdFilter === "30d" && ageDays > 30) return false;
+        if (createdFilter === "90d" && ageDays > 90) return false;
+        if (createdFilter === "older" && ageDays <= 90) return false;
+      }
+
+      // SEO last-updated filter
+      if (seoUpdatedFilter !== "all") {
+        const seoTs = row.snapshot?.updatedAt || row.snapshot?.generatedAt;
+        const seoMs = seoTs ? new Date(seoTs).getTime() : 0;
+        if (seoUpdatedFilter === "never") {
+          if (seoMs) return false;
+        } else {
+          if (!seoMs) return false;
+          const ageDays = (Date.now() - seoMs) / (1000 * 60 * 60 * 24);
+          if (seoUpdatedFilter === "7d" && ageDays > 7) return false;
+          if (seoUpdatedFilter === "30d" && ageDays > 30) return false;
+          if (seoUpdatedFilter === "older" && ageDays <= 30) return false;
+        }
+      }
+
       if (search) {
         const raw = search.toLowerCase().trim();
-        // Normalize: strip protocol/host, leading/trailing slashes, query/hash
         const q = raw
           .replace(/^https?:\/\/[^/]+/, "")
           .replace(/[?#].*$/, "")
           .replace(/^\/+|\/+$/g, "");
         const typeLabel = row.isStatic ? "static page" : contentTypeConfig[row.contentType].label;
         const fullLink = row.path || (row.slug ? `/${String(row.slug).replace(/^\/+/, "")}` : "");
-        const haystacks = [
-          row.name,
-          row.slug,
-          row.path,
-          fullLink,
-          (row.slug || "").replace(/^\/+/, ""),
-          row.city,
-          row.state,
-          typeLabel,
-        ];
-        return haystacks
-          .filter(Boolean)
-          .some((v) => String(v).toLowerCase().includes(q || raw));
+        const haystacks = [row.name, row.slug, row.path, fullLink, (row.slug || "").replace(/^\/+/, ""), row.city, row.state, typeLabel];
+        return haystacks.filter(Boolean).some((v) => String(v).toLowerCase().includes(q || raw));
       }
       return true;
     });
-  }, [rows, selectedType, filterStatus, schemaFilter, aiFilter, cityFilter, stateFilter, search]);
+  }, [rows, selectedType, filterStatus, schemaFilter, aiFilter, cityFilter, stateFilter, createdFilter, seoUpdatedFilter, search]);
 
   const stats = useMemo(() => {
     const total = rows.length;
