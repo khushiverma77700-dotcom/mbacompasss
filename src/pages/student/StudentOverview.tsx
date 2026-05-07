@@ -1033,6 +1033,65 @@ function ToolCard({ title, desc, href }: any) {
   );
 }
 
+function GamificationStrip({ rewards, rank }: { rewards: any; rank: number | null }) {
+  const xp = Number(rewards?.xp ?? 0);
+  const level = Number(rewards?.level ?? 1);
+  const coins = Number(rewards?.coins ?? 0);
+  const streak = Number(rewards?.streak_days ?? 0);
+  const longest = Number(rewards?.longest_streak ?? 0);
+  const xpInLevel = xp % 500;
+  const xpToNext = 500 - xpInLevel;
+  const pct = Math.round((xpInLevel / 500) * 100);
+  return (
+    <Card className="p-4 sm:p-5 border-sky-100 bg-gradient-to-br from-white via-sky-50/40 to-blue-50/30 dark:from-background dark:via-sky-500/5 dark:to-background">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white shadow-md shrink-0">
+            <Star className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Level</div>
+            <div className="text-xl font-bold leading-tight">Lv. {level}</div>
+            <div className="text-[10px] text-muted-foreground">{xpToNext} XP to next</div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 grid place-items-center text-white shadow-md shrink-0">
+            <Zap className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">XP</div>
+            <div className="text-xl font-bold tabular-nums leading-tight">{xp.toLocaleString("en-IN")}</div>
+            <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden mt-1">
+              <div className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500" style={{ width: `${pct}%` }} />
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 grid place-items-center text-white shadow-md shrink-0">
+            <Flame className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Streak</div>
+            <div className="text-xl font-bold leading-tight">{streak}d</div>
+            <div className="text-[10px] text-muted-foreground">Best: {longest}d</div>
+          </div>
+        </div>
+        <Link to="/student/leaderboard" className="flex items-center gap-3 group">
+          <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 grid place-items-center text-white shadow-md shrink-0 group-hover:scale-105 transition-transform">
+            <Trophy className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Rank · {coins} coins</div>
+            <div className="text-xl font-bold leading-tight">{rank ? `#${rank}` : "—"}</div>
+            <div className="text-[10px] text-sky-700 group-hover:underline">View leaderboard →</div>
+          </div>
+        </Link>
+      </div>
+    </Card>
+  );
+}
+
 function ExamCountdownStrip({ exams }: { exams: any[] }) {
   if (!exams || exams.length === 0) {
     return (
