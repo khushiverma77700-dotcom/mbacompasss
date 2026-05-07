@@ -364,9 +364,15 @@ const StudentBackGuard = () => {
     backPressedRef.current = false;
     if (!isStudentMode()) return;
 
+    const onDashHost =
+      typeof window !== "undefined" &&
+      window.location.hostname === "dashboard.mbacompass.in";
     const path = location.pathname;
-    if (path === "/student/login" || !path.startsWith("/student")) {
-      navigate("/student", { replace: true });
+    const insideLms = onDashHost
+      ? (path === "/" || path.startsWith("/student"))
+      : path.startsWith("/student");
+    if (path === "/student/login" || !insideLms) {
+      navigate(onDashHost ? "/" : "/student", { replace: true });
     }
   }, [location.pathname, navigate]);
 
