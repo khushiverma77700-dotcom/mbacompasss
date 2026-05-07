@@ -470,12 +470,12 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => (
  *   - dashboard.mbacompass.in → render the student LMS at "/" (no /student suffix).
  *   - everything else → render the public marketing Index page.
  */
-const DashboardHostRoot = () => {
-  const isDashboardHost =
-    typeof window !== "undefined" &&
-    window.location.hostname === "dashboard.mbacompass.in";
+const isDashboardHostFn = () =>
+  typeof window !== "undefined" &&
+  window.location.hostname === "dashboard.mbacompass.in";
 
-  if (isDashboardHost) {
+const DashboardHostRoot = () => {
+  if (isDashboardHostFn()) {
     return (
       <LazyPage>
         <StudentLayout />
