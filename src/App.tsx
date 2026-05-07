@@ -364,9 +364,15 @@ const StudentBackGuard = () => {
     backPressedRef.current = false;
     if (!isStudentMode()) return;
 
+    const onDashHost =
+      typeof window !== "undefined" &&
+      window.location.hostname === "dashboard.mbacompass.in";
     const path = location.pathname;
-    if (path === "/student/login" || !path.startsWith("/student")) {
-      navigate("/student", { replace: true });
+    const insideLms = onDashHost
+      ? (path === "/" || path.startsWith("/student"))
+      : path.startsWith("/student");
+    if (path === "/student/login" || !insideLms) {
+      navigate(onDashHost ? "/" : "/student", { replace: true });
     }
   }, [location.pathname, navigate]);
 
@@ -464,6 +470,30 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => (
     <DeferredChrome />
   </>
 );
+
+/**
+ * Root route ("/") behavior depends on the host:
+ *   - dashboard.mbacompass.in → render the student LMS at "/" (no /student suffix).
+ *   - everything else → render the public marketing Index page.
+ */
+const isDashboardHostFn = () =>
+  typeof window !== "undefined" &&
+  window.location.hostname === "dashboard.mbacompass.in";
+
+const DashboardHostRoot = () => {
+  if (isDashboardHostFn()) {
+    return (
+      <LazyPage>
+        <StudentLayout />
+      </LazyPage>
+    );
+  }
+  return (
+    <PublicLayout>
+      <LazyPage><Index /></LazyPage>
+    </PublicLayout>
+  );
+};
 
 // Top progress bar shown while a lazy route chunk is loading. Avoids the
 // "white screen" between clicks — the previous page stays visible (thanks to
@@ -687,7 +717,13 @@ const App = () => (
             </Route>
 
             {/* Routes */}
-            <Route path="/" element={<PublicLayout><LazyPage><Index /></LazyPage></PublicLayout>} />
+            {isDashboardHostFn() ? (
+              <Route path="/" element={<LazyPage><StudentLayout /></LazyPage>}>
+                <Route index element={<InnerLazyPage><StudentOverview /></InnerLazyPage>} />
+              </Route>
+            ) : (
+              <Route path="/" element={<PublicLayout><LazyPage><Index /></LazyPage></PublicLayout>} />
+            )}
             <Route path="/category/:slug" element={<PublicLayout><LazyPage><CategoryPage /></LazyPage></PublicLayout>} />
             <Route path="/blog" element={<PublicLayout><LazyPage><BlogPage /></LazyPage></PublicLayout>} />
             <Route path="/colleges" element={<PublicLayout><LazyPage><CollegesPage /></LazyPage></PublicLayout>} />

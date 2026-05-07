@@ -83,6 +83,12 @@ export default function StudentLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const displayName = (user?.user_metadata?.display_name as string | undefined) || user?.email?.split("@")[0] || "Student";
 
+  // On dashboard.mbacompass.in, the LMS lives at "/" instead of "/student".
+  const onDashboardHost =
+    typeof window !== "undefined" &&
+    window.location.hostname === "dashboard.mbacompass.in";
+  const homePath = onDashboardHost ? "/" : "/student";
+
   // Mark "student mode" so mock pages know the user lives inside the dashboard
   // and route their back / post-submit navigation back into /student/*.
   useEffect(() => {
@@ -113,8 +119,11 @@ export default function StudentLayout() {
     const keepInsideDashboard = () => {
       window.setTimeout(() => {
         const path = window.location.pathname;
-        const shouldReturn = path === "/student/login" || !path.startsWith("/student");
-        if (shouldReturn) navigate("/student", { replace: true });
+        const isInside = onDashboardHost
+          ? (path === "/" || path.startsWith("/student"))
+          : path.startsWith("/student");
+        const shouldReturn = path === "/student/login" || !isInside;
+        if (shouldReturn) navigate(homePath, { replace: true });
       }, 0);
     };
 
@@ -171,7 +180,7 @@ export default function StudentLayout() {
               >
                 {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
-              <Link to="/student" className="flex items-center gap-2 min-w-0">
+              <Link to={homePath} className="flex items-center gap-2 min-w-0">
                 <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white shrink-0">
                   <GraduationCap className="h-4 w-4" />
                 </div>
