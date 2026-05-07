@@ -128,87 +128,71 @@ const AdminCTAManager = () => {
         </Badge>
       </div>
 
-      <Tabs defaultValue="settings" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="settings"><ShieldCheck className="w-4 h-4 mr-1.5" /> Settings</TabsTrigger>
-          <TabsTrigger value="analytics"><BarChart3 className="w-4 h-4 mr-1.5" /> Click Analytics</TabsTrigger>
-        </TabsList>
+      <div className="relative max-w-md">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search CTA, category, location…"
+          className="pl-8"
+        />
+      </div>
 
-        <TabsContent value="settings" className="space-y-6">
-          <div className="relative max-w-md">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search CTA, category, location…"
-              className="pl-8"
-            />
-          </div>
-
-          {loading ? (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="w-4 h-4 animate-spin" /> Loading CTA settings…
-            </div>
-          ) : grouped.length === 0 ? (
-            <Card><CardContent className="py-8 text-center text-muted-foreground">No CTAs match your search.</CardContent></Card>
-          ) : (
-            grouped.map(([cat, items]) => (
-              <Card key={cat}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">{cat}</CardTitle>
-                  <CardDescription>
-                    {items.filter((i) => i.requires_login).length} of {items.length} require login
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="divide-y">
-                  {items.map((row) => (
-                    <div key={row.id} className="flex items-start justify-between gap-4 py-3">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-medium">{row.label}</span>
-                          {row.requires_login ? (
-                            <Badge variant="default" className="text-[10px] gap-1">
-                              <Lock className="w-3 h-3" /> Login required
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline" className="text-[10px] gap-1">
-                              <Unlock className="w-3 h-3" /> Public
-                            </Badge>
-                          )}
-                        </div>
-                        {row.description && (
-                          <p className="text-sm text-muted-foreground mt-0.5">{row.description}</p>
-                        )}
-                        {row.location_hint && (
-                          <p className="text-xs text-muted-foreground/80 mt-0.5">
-                            <span className="font-medium">Where:</span> {row.location_hint}
-                          </p>
-                        )}
-                        <code className="text-[10px] text-muted-foreground/70">{row.cta_key}</code>
-                      </div>
-                      <div className="flex items-center gap-2 pt-1">
-                        {savingKey === row.cta_key && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
-                        <Switch
-                          checked={row.requires_login}
-                          onCheckedChange={(v) => toggle(row, v)}
-                          aria-label={`Toggle login required for ${row.label}`}
-                        />
-                      </div>
+      {loading ? (
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Loader2 className="w-4 h-4 animate-spin" /> Loading CTA settings…
+        </div>
+      ) : grouped.length === 0 ? (
+        <Card><CardContent className="py-8 text-center text-muted-foreground">No CTAs match your search.</CardContent></Card>
+      ) : (
+        grouped.map(([cat, items]) => (
+          <Card key={cat}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">{cat}</CardTitle>
+              <CardDescription>
+                {items.filter((i) => i.requires_login).length} of {items.length} require login
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="divide-y">
+              {items.map((row) => (
+                <div key={row.id} className="flex items-start justify-between gap-4 py-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium">{row.label}</span>
+                      {row.requires_login ? (
+                        <Badge variant="default" className="text-[10px] gap-1">
+                          <Lock className="w-3 h-3" /> Login required
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[10px] gap-1">
+                          <Unlock className="w-3 h-3" /> Public
+                        </Badge>
+                      )}
                     </div>
-                  ))}
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </TabsContent>
-
-        <TabsContent value="analytics">
-          <CtaAnalyticsPanel rows={rows} />
-        </TabsContent>
-      </Tabs>
-    </div>
-  );
-};
+                    {row.description && (
+                      <p className="text-sm text-muted-foreground mt-0.5">{row.description}</p>
+                    )}
+                    {row.location_hint && (
+                      <p className="text-xs text-muted-foreground/80 mt-0.5">
+                        <span className="font-medium">Where:</span> {row.location_hint}
+                      </p>
+                    )}
+                    <code className="text-[10px] text-muted-foreground/70">{row.cta_key}</code>
+                  </div>
+                  <div className="flex items-center gap-2 pt-1">
+                    {savingKey === row.cta_key && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
+                    <Switch
+                      checked={row.requires_login}
+                      onCheckedChange={(v) => toggle(row, v)}
+                      aria-label={`Toggle login required for ${row.label}`}
+                    />
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        ))
+      )}
 
 // ---------- Analytics ----------
 
