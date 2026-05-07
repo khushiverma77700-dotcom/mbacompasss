@@ -577,3 +577,10 @@
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* Admin mobile safety: prevent wide tables/cards from breaking layout */
+@media (max-width: 1023px) {
+  .admin-scope table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+  .admin-scope .overflow-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .admin-scope img { max-width: 100%; height: auto; }
+}
