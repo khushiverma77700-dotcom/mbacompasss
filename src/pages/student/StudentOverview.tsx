@@ -30,6 +30,8 @@ export default function StudentOverview() {
   const [displayName, setDisplayName] = useState<string>("");
   const [examCountdowns, setExamCountdowns] = useState<any[]>([]);
   const [sectionNameMap, setSectionNameMap] = useState<Record<string, string>>({});
+  const [rewards, setRewards] = useState<any>(null);
+  const [leaderboardRank, setLeaderboardRank] = useState<number | null>(null);
   const [, setNowTick] = useState(0);
 
   // Greeting changes by time of day — small touch that makes the dashboard feel alive
