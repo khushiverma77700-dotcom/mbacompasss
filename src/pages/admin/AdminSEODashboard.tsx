@@ -219,6 +219,24 @@ const AdminSEODashboard = () => {
   const [stateFilter, setStateFilter] = useState("all");
   const [createdFilter, setCreatedFilter] = useState<"all" | "7d" | "30d" | "90d" | "older">("all");
   const [seoUpdatedFilter, setSeoUpdatedFilter] = useState<"all" | "never" | "7d" | "30d" | "older">("all");
+  type MissingFilter =
+    | "all"
+    | "not_optimized"
+    | "no_meta_title"
+    | "no_meta_desc"
+    | "no_keywords"
+    | "no_h1"
+    | "no_schema"
+    | "no_canonical"
+    | "no_social"
+    | "no_technical"
+    | "no_short_tail"
+    | "no_long_tail"
+    | "thin_content"
+    | "missing_any";
+  const [missingFilter, setMissingFilter] = useState<MissingFilter>("all");
+  const [scoreRangeFilter, setScoreRangeFilter] = useState<"all" | "0-25" | "25-50" | "50-75" | "75-100">("all");
+  const [wordCountFilter, setWordCountFilter] = useState<"all" | "lt250" | "250-500" | "500-1000" | "gt1000">("all");
   const [search, setSearch] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("overview");
