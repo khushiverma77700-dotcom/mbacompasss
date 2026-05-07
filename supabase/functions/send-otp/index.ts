@@ -59,19 +59,27 @@ Deno.serve(async (req) => {
       throw new Error("Failed to store OTP");
     }
 
-    // Send via Fast2SMS Quick SMS route (no DLT/website verification required)
+    // Fire-and-forget SMS so the client gets an instant response.
+    // OTP is already persisted; SMS delivery happens in background.
     const message = encodeURIComponent(`Your MBA Compass verification code is ${otp}. Valid for 5 minutes. Do not share this OTP with anyone.`);
     const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${fast2smsKey}&message=${message}&language=english&route=q&numbers=${phone}`;
 
-    const smsResponse = await fetch(url, { method: "GET" });
-    const smsResult = await smsResponse.json();
+    const smsTask = fetch(url, { method: "GET" })
+      .then(async (r) => {
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok || j.return === false) {
+          console.error("Fast2SMS error:", JSON.stringify(j));
+        } else {
+          console.log("OTP sent via Fast2SMS to", phone, JSON.stringify(j));
+        }
+      })
+      .catch((e) => console.error("Fast2SMS fetch failed:", e));
 
-    if (!smsResponse.ok || smsResult.return === false) {
-      console.error("Fast2SMS error:", JSON.stringify(smsResult));
-      throw new Error(`SMS send failed: ${smsResult.message || JSON.stringify(smsResult)}`);
+    // @ts-ignore EdgeRuntime is provided by Supabase Edge Functions
+    if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
+      // @ts-ignore
+      EdgeRuntime.waitUntil(smsTask);
     }
-
-    console.log("OTP sent successfully via Fast2SMS to", phone, "response:", JSON.stringify(smsResult));
 
     return new Response(
       JSON.stringify({ success: true, message: "OTP sent successfully" }),
