@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
  * Returns true once the referenced element scrolls within `rootMargin` of the viewport.
  * Used to defer mounting heavy below-the-fold sections until they're about to be visible.
  */
-export const useInView = <T extends HTMLElement = HTMLDivElement>(rootMargin = "400px") => {
+export const useInView = <T extends HTMLElement = HTMLDivElement>(rootMargin = "180px") => {
   const ref = useRef<T | null>(null);
   const [inView, setInView] = useState(false);
 
@@ -42,11 +42,11 @@ interface LazyMountProps {
   fallback?: ReactNode;
 }
 
-export const LazyMount = ({ children, rootMargin = "400px", minHeight = 200, fallback = null }: LazyMountProps) => {
+export const LazyMount = ({ children, rootMargin = "180px", minHeight = 200, fallback = null }: LazyMountProps) => {
   const { ref, inView } = useInView<HTMLDivElement>(rootMargin);
   return createElement(
     "div",
-    { ref, style: inView ? undefined : { minHeight } },
+    { ref, style: { minHeight } },
     inView ? createElement(Suspense, { fallback }, children) : null
   );
 };
