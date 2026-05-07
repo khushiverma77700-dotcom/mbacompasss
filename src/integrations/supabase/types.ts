@@ -1731,24 +1731,30 @@ export type Database = {
       }
       cta_events: {
         Row: {
+          context: Json | null
           created_at: string
           cta_key: string
           id: string
           outcome: string
+          page_path: string | null
           user_id: string | null
         }
         Insert: {
+          context?: Json | null
           created_at?: string
           cta_key: string
           id?: string
           outcome: string
+          page_path?: string | null
           user_id?: string | null
         }
         Update: {
+          context?: Json | null
           created_at?: string
           cta_key?: string
           id?: string
           outcome?: string
+          page_path?: string | null
           user_id?: string | null
         }
         Relationships: []

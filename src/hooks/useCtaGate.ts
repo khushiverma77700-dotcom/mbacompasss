@@ -78,15 +78,18 @@ export const useCtaGate = (key: string) => {
   }, []);
 
   const gate = useCallback(
-    <T extends (...args: any[]) => any>(action: T, message?: string) => {
+    <T extends (...args: any[]) => any>(action: T, message?: string, context?: Record<string, any>) => {
       return ((...args: any[]) => {
         const prompted = requiresLogin && !user;
+        const path = typeof window !== "undefined" ? window.location.pathname : null;
         // Fire-and-forget analytics
         void supabase.from("cta_events").insert({
           cta_key: keyRef.current,
           outcome: prompted ? "login_prompted" : "executed",
           user_id: user?.id ?? null,
-        });
+          page_path: path,
+          context: context ?? null,
+        } as any);
         if (prompted) {
           openLoginDialog(message);
           return;
