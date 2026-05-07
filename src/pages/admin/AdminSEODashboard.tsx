@@ -1321,6 +1321,7 @@ const AdminSEODashboard = () => {
                         <TableHead>Issues</TableHead>
                         <TableHead>Score</TableHead>
                         <TableHead>Created</TableHead>
+                        <TableHead>SEO Updated</TableHead>
                         <TableHead className="text-right">Action</TableHead>
                       </TableRow>
                     </TableHeader>
