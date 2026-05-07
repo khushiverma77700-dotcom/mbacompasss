@@ -1360,6 +1360,13 @@ const AdminSEODashboard = () => {
                             </div>
                           </TableCell>
                           <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{row.item?.created_at ? new Date(row.item.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</TableCell>
+                          <TableCell className="text-xs whitespace-nowrap">
+                            {(() => {
+                              const ts = row.snapshot?.updatedAt || row.snapshot?.generatedAt;
+                              if (!ts) return <span className="text-amber-600">Never</span>;
+                              return <span className="text-muted-foreground">{new Date(ts).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span>;
+                            })()}
+                          </TableCell>
                           <TableCell className="text-right">
                             <AISEOButton contentType={row.contentType} recordId={row.id} data={row.item} onApply={(s) => applySEOFields(row, s)} />
                           </TableCell>
