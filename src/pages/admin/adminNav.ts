@@ -124,6 +124,7 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Mega Menu", path: "/admin/mega-menu", icon: Menu },
       { label: "Manage Admins", path: "/admin/manage-admins", icon: ShieldCheck },
       { label: "CTA Login Manager", path: "/admin/cta-manager", icon: ShieldCheck },
+      { label: "CTA Click Analytics", path: "/admin/cta-analytics", icon: BarChart3 },
       { label: "Database Backup", path: "/admin/database-backup", icon: Database },
       { label: "AI & Cloud Usage", path: "/admin/ai-usage", icon: Activity },
       { label: "API Keys & Secrets", path: "/admin/api-keys", icon: KeyRound },
