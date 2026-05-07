@@ -54,7 +54,9 @@ const AdminLayout = () => {
       });
     };
 
-    checkNewLeads();
+    const w = window as any;
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 2500));
+    const handle = schedule(checkNewLeads, { timeout: 6000 });
 
     // Realtime listener for new entries
     const channel = supabase
@@ -65,7 +67,11 @@ const AdminLayout = () => {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "business_inquiries" }, () => checkNewLeads())
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      const cancel = w.cancelIdleCallback ?? window.clearTimeout;
+      try { cancel(handle); } catch {}
+      supabase.removeChannel(channel);
+    };
   }, [user, isAdmin]);
 
   useEffect(() => {
@@ -87,11 +93,15 @@ const AdminLayout = () => {
       }
     };
 
-    checkNightlyIndexing();
+    const w = window as any;
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 3000));
+    const handle = schedule(checkNightlyIndexing, { timeout: 8000 });
     const interval = window.setInterval(checkNightlyIndexing, 30000);
 
     return () => {
       cancelled = true;
+      const cancel = w.cancelIdleCallback ?? window.clearTimeout;
+      try { cancel(handle); } catch {}
       window.clearInterval(interval);
     };
   }, [user, isAdmin]);
