@@ -16,6 +16,7 @@ import {
   HIGHLIGHT_DEFINITIONS, HighlightKey, HighlightMap, isHighlightOn, getHighlightValue,
 } from "@/lib/courseHighlights";
 import { useMetaPixel, pixelTrack } from "@/lib/metaPixel";
+import { useCtaGate, openLoginDialog } from "@/hooks/useCtaGate";
 
 const HIGHLIGHT_ICONS: Record<HighlightKey, any> = {
   daily_tests: Calendar,
@@ -121,11 +122,17 @@ export default function MockBundleDetailPage() {
     })();
   }, [slug]);
 
+  const { requiresLogin: bundleRequiresLogin } = useCtaGate("bundle_buy");
+
   const handlePay = async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) {
-      toast.error("Please sign in to purchase");
-      window.location.href = `/auth?redirect=/courses/${slug}`;
+      if (bundleRequiresLogin) {
+        openLoginDialog("Sign in to purchase this bundle.");
+      } else {
+        toast.error("Please sign in to purchase");
+        window.location.href = `/auth?redirect=/courses/${slug}`;
+      }
       return;
     }
     pixelTrack("InitiateCheckout", {
