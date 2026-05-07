@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, LogIn, LogOut, Shield, LayoutDashboard, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,10 +24,21 @@ const Navbar = () => {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [mobileCollegeOpen, setMobileCollegeOpen] = useState(false);
   const [mobileCoachingOpen, setMobileCoachingOpen] = useState(false);
+  const [hydrateHeader, setHydrateHeader] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAdmin, signOut } = useAuth();
-  const { data: header } = useSiteSettings("header");
+  const { data: header } = useSiteSettings("header", { enabled: hydrateHeader });
+
+  useEffect(() => {
+    const w = window as any;
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 2500));
+    const handle = schedule(() => setHydrateHeader(true), { timeout: 5000 });
+    return () => {
+      const cancel = w.cancelIdleCallback ?? window.clearTimeout;
+      try { cancel(handle); } catch {}
+    };
+  }, []);
 
   const handleSignOut = () => {
     if (isSigningOut) return;
