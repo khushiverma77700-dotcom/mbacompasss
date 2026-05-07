@@ -219,6 +219,24 @@ const AdminSEODashboard = () => {
   const [stateFilter, setStateFilter] = useState("all");
   const [createdFilter, setCreatedFilter] = useState<"all" | "7d" | "30d" | "90d" | "older">("all");
   const [seoUpdatedFilter, setSeoUpdatedFilter] = useState<"all" | "never" | "7d" | "30d" | "older">("all");
+  type MissingFilter =
+    | "all"
+    | "not_optimized"
+    | "no_meta_title"
+    | "no_meta_desc"
+    | "no_keywords"
+    | "no_h1"
+    | "no_schema"
+    | "no_canonical"
+    | "no_social"
+    | "no_technical"
+    | "no_short_tail"
+    | "no_long_tail"
+    | "thin_content"
+    | "missing_any";
+  const [missingFilter, setMissingFilter] = useState<MissingFilter>("all");
+  const [scoreRangeFilter, setScoreRangeFilter] = useState<"all" | "0-25" | "25-50" | "50-75" | "75-100">("all");
+  const [wordCountFilter, setWordCountFilter] = useState<"all" | "lt250" | "250-500" | "500-1000" | "gt1000">("all");
   const [search, setSearch] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("overview");
@@ -898,6 +916,49 @@ const AdminSEODashboard = () => {
         }
       }
 
+      // Score range
+      if (scoreRangeFilter !== "all") {
+        const s = row.audit.score;
+        if (scoreRangeFilter === "0-25" && !(s < 25)) return false;
+        if (scoreRangeFilter === "25-50" && !(s >= 25 && s < 50)) return false;
+        if (scoreRangeFilter === "50-75" && !(s >= 50 && s < 75)) return false;
+        if (scoreRangeFilter === "75-100" && !(s >= 75)) return false;
+      }
+
+      // Word count
+      if (wordCountFilter !== "all") {
+        const w = row.audit.wordCount || 0;
+        if (wordCountFilter === "lt250" && !(w < 250)) return false;
+        if (wordCountFilter === "250-500" && !(w >= 250 && w < 500)) return false;
+        if (wordCountFilter === "500-1000" && !(w >= 500 && w < 1000)) return false;
+        if (wordCountFilter === "gt1000" && !(w >= 1000)) return false;
+      }
+
+      // Missing-element / "needs work" filter
+      if (missingFilter !== "all") {
+        const a = row.audit;
+        const missingAny =
+          !a.aiOptimized || !a.hasMetaTitle || !a.hasMetaDesc || !a.hasKeywords ||
+          !a.hasH1 || !a.hasSchema || !a.hasCanonical || !a.hasSocial || !a.hasTechnical;
+        const matches: Record<MissingFilter, boolean> = {
+          all: true,
+          not_optimized: !a.aiOptimized,
+          no_meta_title: !a.hasMetaTitle,
+          no_meta_desc: !a.hasMetaDesc,
+          no_keywords: !a.hasKeywords,
+          no_h1: !a.hasH1,
+          no_schema: !a.hasSchema,
+          no_canonical: !a.hasCanonical,
+          no_social: !a.hasSocial,
+          no_technical: !a.hasTechnical,
+          no_short_tail: !(a.shortTailCount > 0),
+          no_long_tail: !(a.longTailCount > 0),
+          thin_content: (a.wordCount || 0) < 250,
+          missing_any: missingAny,
+        };
+        if (!matches[missingFilter]) return false;
+      }
+
       if (search) {
         const raw = search.toLowerCase().trim();
         const q = raw
@@ -911,7 +972,7 @@ const AdminSEODashboard = () => {
       }
       return true;
     });
-  }, [rows, selectedType, filterStatus, schemaFilter, aiFilter, cityFilter, stateFilter, createdFilter, seoUpdatedFilter, search]);
+  }, [rows, selectedType, filterStatus, schemaFilter, aiFilter, cityFilter, stateFilter, createdFilter, seoUpdatedFilter, missingFilter, scoreRangeFilter, wordCountFilter, search]);
 
   const stats = useMemo(() => {
     const total = rows.length;
@@ -1297,6 +1358,58 @@ const AdminSEODashboard = () => {
                       <SelectItem value="older">Updated &gt; 30 days ago</SelectItem>
                     </SelectContent>
                   </Select>
+                  <Select value={missingFilter} onValueChange={(v) => setMissingFilter(v as MissingFilter)}>
+                    <SelectTrigger><SelectValue placeholder="Missing element" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Status: all</SelectItem>
+                      <SelectItem value="not_optimized">Not Optimized (no AI snapshot)</SelectItem>
+                      <SelectItem value="missing_any">Missing any SEO element</SelectItem>
+                      <SelectItem value="no_meta_title">Missing Meta Title</SelectItem>
+                      <SelectItem value="no_meta_desc">Missing Meta Description</SelectItem>
+                      <SelectItem value="no_keywords">Missing Keywords</SelectItem>
+                      <SelectItem value="no_h1">Missing H1</SelectItem>
+                      <SelectItem value="no_schema">Missing Schema</SelectItem>
+                      <SelectItem value="no_canonical">Missing Canonical</SelectItem>
+                      <SelectItem value="no_social">Missing Social/OG Tags</SelectItem>
+                      <SelectItem value="no_technical">Missing Technical SEO</SelectItem>
+                      <SelectItem value="no_short_tail">No Short-tail Keywords</SelectItem>
+                      <SelectItem value="no_long_tail">No Long-tail Keywords</SelectItem>
+                      <SelectItem value="thin_content">Thin Content (&lt;250 words)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={scoreRangeFilter} onValueChange={(v) => setScoreRangeFilter(v as typeof scoreRangeFilter)}>
+                    <SelectTrigger><SelectValue placeholder="Score range" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Score: any</SelectItem>
+                      <SelectItem value="0-25">0–25 (critical)</SelectItem>
+                      <SelectItem value="25-50">25–50 (poor)</SelectItem>
+                      <SelectItem value="50-75">50–75 (fair)</SelectItem>
+                      <SelectItem value="75-100">75–100 (good)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={wordCountFilter} onValueChange={(v) => setWordCountFilter(v as typeof wordCountFilter)}>
+                    <SelectTrigger><SelectValue placeholder="Word count" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Words: any</SelectItem>
+                      <SelectItem value="lt250">&lt; 250 words</SelectItem>
+                      <SelectItem value="250-500">250–500 words</SelectItem>
+                      <SelectItem value="500-1000">500–1000 words</SelectItem>
+                      <SelectItem value="gt1000">&gt; 1000 words</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={() => { setMissingFilter("not_optimized"); setSelectedType("all"); setFilterStatus("all"); }}>Not Optimized</Button>
+                  <Button size="sm" variant="outline" onClick={() => setMissingFilter("missing_any")}>Missing any element</Button>
+                  <Button size="sm" variant="outline" onClick={() => setMissingFilter("no_schema")}>No Schema</Button>
+                  <Button size="sm" variant="outline" onClick={() => setMissingFilter("thin_content")}>Thin content</Button>
+                  <Button size="sm" variant="outline" onClick={() => setSeoUpdatedFilter("never")}>Never optimized</Button>
+                  <Button size="sm" variant="ghost" onClick={() => {
+                    setMissingFilter("all"); setScoreRangeFilter("all"); setWordCountFilter("all");
+                    setFilterStatus("all"); setSchemaFilter("all"); setAiFilter("all");
+                    setCreatedFilter("all"); setSeoUpdatedFilter("all"); setSelectedType("all");
+                    setCityFilter("all"); setStateFilter("all"); setSearch("");
+                  }}>Reset filters</Button>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Checkbox checked={allVisibleSelected} onCheckedChange={(c) => toggleSelectAll(Boolean(c))} />
