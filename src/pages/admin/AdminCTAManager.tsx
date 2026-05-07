@@ -193,6 +193,9 @@ const AdminCTAManager = () => {
           </Card>
         ))
       )}
+    </div>
+  );
+};
 
 // ---------- Analytics ----------
 
