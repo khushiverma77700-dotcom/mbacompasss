@@ -35,10 +35,12 @@
           var p = window.location.pathname;
           var s = window.location.search || "";
           var hh = window.location.hash || "";
+          // Root URL "/" stays as the dashboard home. Other allowed prefixes also pass.
+          if (p === "/" || p === "") return;
           var allowed = ["/student", "/auth", "/forgot-password", "/reset-password"];
           var ok = allowed.some(function (x) { return p === x || p.indexOf(x + "/") === 0; });
           if (!ok) {
-            window.location.replace("https://dashboard.mbacompass.in/student" + s + hh);
+            window.location.replace("https://dashboard.mbacompass.in/" + s + hh);
           }
         } catch (e) { /* noop */ }
       })();
