@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import {
   Search, Clock, CheckCircle2, Play, Trophy, FileText, ShoppingBag,
   Lock, Sparkles, Calendar, BookOpen, Layers, Target, Repeat, History,
+  TrendingUp, Award, Flame, BarChart3, Zap, ChevronRight,
 } from "lucide-react";
 import UpgradeDialog from "@/components/student/UpgradeDialog";
 
@@ -17,15 +19,14 @@ const EXAM_FILTERS = ["All", "CAT", "XAT", "NMAT", "SNAP", "IIFT", "CMAT", "MAT"
 
 type TypeKey = "full_length" | "sectional" | "topic_wise" | "practice_set" | "attempted";
 
-const TYPE_TABS: { key: TypeKey; label: string; icon: any }[] = [
-  { key: "full_length",  label: "Full Length",   icon: Layers },
-  { key: "sectional",    label: "Sectional",     icon: Target },
-  { key: "topic_wise",   label: "Topic-wise",    icon: BookOpen },
-  { key: "practice_set", label: "Practice Sets", icon: Repeat },
-  { key: "attempted",    label: "Attempted",     icon: History },
+const TYPE_TABS: { key: TypeKey; label: string; icon: any; gradient: string }[] = [
+  { key: "full_length",  label: "Full Length",   icon: Layers,   gradient: "from-sky-500 to-blue-600" },
+  { key: "sectional",    label: "Sectional",     icon: Target,   gradient: "from-violet-500 to-purple-600" },
+  { key: "topic_wise",   label: "Topic-wise",    icon: BookOpen, gradient: "from-emerald-500 to-teal-600" },
+  { key: "practice_set", label: "Practice Sets", icon: Repeat,   gradient: "from-amber-500 to-orange-600" },
+  { key: "attempted",    label: "Attempted",     icon: History,  gradient: "from-rose-500 to-pink-600" },
 ];
 
-// Map a URL slug → fixed test type. Used by /student/mocks/full-length etc.
 const SLUG_TO_TYPE: Record<string, TypeKey> = {
   "full-length": "full_length",
   "sectional": "sectional",
@@ -70,11 +71,18 @@ interface StudentMocksProps {
   fixedType?: TypeKey;
 }
 
+const difficultyTone = (d: string | null) => {
+  const k = (d ?? "").toLowerCase();
+  if (k.includes("easy")) return "bg-emerald-50 text-emerald-700 border-emerald-200";
+  if (k.includes("hard")) return "bg-rose-50 text-rose-700 border-rose-200";
+  if (k.includes("mod") || k.includes("med")) return "bg-amber-50 text-amber-700 border-amber-200";
+  return "bg-slate-50 text-slate-600 border-slate-200";
+};
+
 export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksProps = {}) {
   const { user } = useAuth();
   const params = useParams();
   const location = useLocation();
-  // Resolve a fixed type either from props or from the URL slug.
   const fixedType: TypeKey | null = useMemo(() => {
     if (fixedTypeProp) return fixedTypeProp;
     const last = location.pathname.split("/").pop() ?? "";
@@ -176,52 +184,109 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
     }));
   };
 
-  if (!user) return <div className="text-muted-foreground">Please sign in.</div>;
-  if (loading) return <div className="text-muted-foreground">Loading mocks…</div>;
+  // Stats for hero strip
+  const stats = useMemo(() => {
+    const submitted = attempts.filter((a) => a.status === "submitted" || a.status === "auto_submitted");
+    const totalUnlocked = enrolledTestIds.size;
+    const totalAttempted = new Set(submitted.map((a) => a.test_id)).size;
+    const avgPercentile = submitted.length
+      ? Math.round(submitted.reduce((s, a) => s + (a.percentile ?? 0), 0) / submitted.length)
+      : 0;
+    const bestPercentile = submitted.length
+      ? Math.max(...submitted.map((a) => a.percentile ?? 0))
+      : 0;
+    return { totalUnlocked, totalAttempted, avgPercentile, bestPercentile, submittedCount: submitted.length };
+  }, [attempts, enrolledTestIds]);
 
-  // Header content varies based on whether we're filtered to one type or showing all.
-  const heading = fixedType ? TYPE_TITLES[fixedType] : { title: "My Mocks", subtitle: "Structured by format and exam — locked mocks are part of bundles you haven't unlocked yet." };
+  if (!user) return <div className="text-muted-foreground">Please sign in.</div>;
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="h-32 rounded-2xl bg-gradient-to-r from-sky-100 to-blue-100 animate-pulse" />
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="h-44 rounded-xl bg-slate-100 animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const heading = fixedType ? TYPE_TITLES[fixedType] : { title: "My Mocks", subtitle: "Track your prep, sharpen weak areas, and conquer exam day." };
+  const completion = stats.totalUnlocked > 0 ? Math.round((stats.totalAttempted / stats.totalUnlocked) * 100) : 0;
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-start justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-2xl font-bold">{heading.title}</h1>
-          <p className="text-sm text-muted-foreground">{heading.subtitle}</p>
+    <div className="space-y-6">
+      {/* Hero header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sky-500 via-sky-600 to-blue-700 text-white p-6 sm:p-8 shadow-lg">
+        <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/10 blur-2xl pointer-events-none" />
+        <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-blue-400/20 blur-3xl pointer-events-none" />
+        <div className="relative flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur text-[11px] font-medium mb-3">
+              <Zap className="h-3 w-3" /> Mock Test Hub
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{heading.title}</h1>
+            <p className="text-sm sm:text-base text-sky-100 mt-1 max-w-xl">{heading.subtitle}</p>
+          </div>
+          <Link to="/courses">
+            <Button className="gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-md">
+              <ShoppingBag className="h-4 w-4" /> Browse Courses
+            </Button>
+          </Link>
         </div>
-        <Link to="/courses">
-          <Button className="gap-2">
-            <ShoppingBag className="h-4 w-4" /> Browse Courses
-          </Button>
-        </Link>
-      </div>
 
-      {/* Search */}
-      <div className="flex gap-2">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search mocks…" className="pl-9" />
+        {/* Stat tiles */}
+        <div className="relative mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+          <StatTile icon={Layers} label="Unlocked" value={stats.totalUnlocked} />
+          <StatTile icon={CheckCircle2} label="Attempted" value={stats.totalAttempted} />
+          <StatTile icon={TrendingUp} label="Avg %ile" value={stats.avgPercentile} />
+          <StatTile icon={Trophy} label="Best %ile" value={stats.bestPercentile} />
         </div>
+
+        {stats.totalUnlocked > 0 && (
+          <div className="relative mt-4">
+            <div className="flex items-center justify-between text-xs text-sky-100 mb-1.5">
+              <span className="inline-flex items-center gap-1"><Flame className="h-3 w-3" /> Course completion</span>
+              <span className="font-semibold text-white">{completion}%</span>
+            </div>
+            <div className="h-2 rounded-full bg-white/20 overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-amber-300 to-emerald-300 transition-all" style={{ width: `${completion}%` }} />
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Exam chip filter */}
-      <div className="flex flex-wrap gap-1.5">
-        {EXAM_FILTERS.map((f) => (
-          <button
-            key={f}
-            onClick={() => setExamFilter(f)}
-            className={`px-3 py-1 rounded-full text-xs border transition-colors ${
-              examFilter === f
-                ? "bg-sky-600 text-white border-sky-600"
-                : "bg-card text-foreground border-border hover:bg-accent"
-            }`}
-          >
-            {f}
-          </button>
-        ))}
-      </div>
+      {/* Filter row */}
+      <Card className="p-4 border-sky-100/60">
+        <div className="flex flex-col gap-3">
+          <div className="relative">
+            <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search mocks by name…"
+              className="pl-9 h-10 bg-white"
+            />
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {EXAM_FILTERS.map((f) => (
+              <button
+                key={f}
+                onClick={() => setExamFilter(f)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                  examFilter === f
+                    ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-transparent shadow-sm scale-105"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-sky-300 hover:text-sky-700"
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Card>
 
-      {/* If a fixed type is set, render just that bucket. Otherwise show tabs. */}
       {fixedType ? (
         fixedType === "attempted" ? (
           <AttemptedGrid items={buildBucket("attempted") as any} />
@@ -234,21 +299,31 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
           />
         )
       ) : (
-        <Tabs defaultValue="full_length">
-          <TabsList className="flex-wrap h-auto">
-            {TYPE_TABS.map((t) => {
-              const Icon = t.icon;
-              const count = buildBucket(t.key).length;
-              return (
-                <TabsTrigger key={t.key} value={t.key} className="gap-1.5">
-                  <Icon className="h-3.5 w-3.5" /> {t.label} ({count})
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
+        <Tabs defaultValue="full_length" className="w-full">
+          <div className="overflow-x-auto -mx-1 px-1 pb-1">
+            <TabsList className="inline-flex h-auto bg-slate-100/70 p-1 gap-1">
+              {TYPE_TABS.map((t) => {
+                const Icon = t.icon;
+                const count = buildBucket(t.key).length;
+                return (
+                  <TabsTrigger
+                    key={t.key}
+                    value={t.key}
+                    className="gap-1.5 px-3 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-sky-700 rounded-md"
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    <span className="font-medium">{t.label}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-200 data-[state=active]:bg-sky-100 text-slate-600">
+                      {count}
+                    </span>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </div>
 
           {TYPE_TABS.map((t) => (
-            <TabsContent key={t.key} value={t.key} className="mt-4">
+            <TabsContent key={t.key} value={t.key} className="mt-5">
               {t.key === "attempted" ? (
                 <AttemptedGrid items={buildBucket("attempted") as any} />
               ) : (
@@ -265,6 +340,17 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
       )}
 
       <UpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} featureLabel="this mock" />
+    </div>
+  );
+}
+
+function StatTile({ icon: Icon, label, value }: { icon: any; label: string; value: number }) {
+  return (
+    <div className="rounded-xl bg-white/15 backdrop-blur border border-white/20 p-3 hover:bg-white/20 transition-colors">
+      <div className="flex items-center gap-1.5 text-[11px] text-sky-100 mb-1">
+        <Icon className="h-3.5 w-3.5" /> {label}
+      </div>
+      <div className="text-xl sm:text-2xl font-bold tracking-tight">{value}</div>
     </div>
   );
 }
@@ -286,72 +372,161 @@ function BucketGrid({
 }) {
   if (!items.length) {
     return (
-      <Card className="p-8 text-center">
-        <Lock className="h-8 w-8 text-sky-500 mx-auto mb-3" />
-        <div className="font-medium">
-          No {typeLabel}{examFilter !== "All" ? ` (${examFilter})` : ""} mocks in your active courses yet.
+      <Card className="p-10 text-center border-dashed border-2 border-sky-100 bg-gradient-to-br from-sky-50/40 to-white">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-sky-100 mb-3">
+          <Lock className="h-7 w-7 text-sky-600" />
         </div>
-        <p className="text-sm text-muted-foreground mt-1 mb-4">Upgrade your course to access this section.</p>
+        <div className="font-semibold text-base">
+          No {typeLabel}{examFilter !== "All" ? ` (${examFilter})` : ""} mocks yet
+        </div>
+        <p className="text-sm text-muted-foreground mt-1 mb-4 max-w-sm mx-auto">
+          Unlock these mocks by upgrading to a course bundle that includes them.
+        </p>
         <Link to="/courses">
-          <Button className="gap-2"><ShoppingBag className="h-4 w-4" /> Browse Courses</Button>
+          <Button className="gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700">
+            <ShoppingBag className="h-4 w-4" /> Browse Courses
+          </Button>
         </Link>
       </Card>
     );
   }
 
   return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {items.map(({ test, owned, inProgress, latestSubmitted }) => {
         const soon = comingSoon(test);
+        const pct = latestSubmitted?.percentile ?? null;
+        const accuracy = latestSubmitted?.total_attempted
+          ? Math.round(((latestSubmitted.total_correct ?? 0) / latestSubmitted.total_attempted) * 100)
+          : null;
+
         return (
-          <Card key={test.id} className={`p-4 flex flex-col relative ${!owned ? "border-sky-100" : ""}`}>
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <div className="font-semibold leading-tight">{test.name}</div>
-              {!owned && <Badge variant="outline" className="shrink-0 text-[10px] gap-0.5"><Lock className="h-3 w-3" /> Locked</Badge>}
-              {owned && soon && <Badge className="shrink-0 text-[10px] bg-amber-500 hover:bg-amber-500"><Sparkles className="h-3 w-3 mr-0.5" /> Coming Soon</Badge>}
-            </div>
-            <div className="text-xs text-muted-foreground space-y-0.5 mb-3">
-              {test.exam_code && <div>{test.exam_code}</div>}
-              <div>{test.total_duration_minutes ?? "—"} min · {test.difficulty ?? "—"}</div>
-              {soon && <div className="flex items-center gap-1"><Calendar className="h-3 w-3" /> Launches {soon}</div>}
-            </div>
+          <Card
+            key={test.id}
+            className={`group relative overflow-hidden p-0 flex flex-col transition-all hover:shadow-lg hover:-translate-y-0.5 ${
+              !owned ? "border-sky-100" : "border-slate-200"
+            }`}
+          >
+            {/* top accent bar */}
+            <div
+              className={`h-1.5 w-full ${
+                !owned
+                  ? "bg-gradient-to-r from-slate-200 to-slate-300"
+                  : soon
+                  ? "bg-gradient-to-r from-amber-400 to-orange-500"
+                  : latestSubmitted
+                  ? "bg-gradient-to-r from-emerald-400 to-teal-500"
+                  : inProgress
+                  ? "bg-gradient-to-r from-sky-400 to-blue-500"
+                  : "bg-gradient-to-r from-violet-400 to-purple-500"
+              }`}
+            />
 
-            {owned && latestSubmitted && latestSubmitted.total_score != null && (
-              <div className="bg-emerald-50 border border-emerald-100 rounded-md p-2 mb-2 text-xs">
-                <div className="flex justify-between"><span>Score</span><span className="font-semibold">{latestSubmitted.total_score}/{latestSubmitted.max_score}</span></div>
-                <div className="flex justify-between"><span>Percentile</span><span className="font-semibold">{latestSubmitted.percentile ?? 0}</span></div>
+            <div className="p-4 flex flex-col flex-1">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                    {test.exam_code && (
+                      <Badge variant="outline" className="text-[10px] border-sky-200 text-sky-700 bg-sky-50">
+                        {test.exam_code}
+                      </Badge>
+                    )}
+                    {test.difficulty && (
+                      <Badge variant="outline" className={`text-[10px] ${difficultyTone(test.difficulty)}`}>
+                        {test.difficulty}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="font-semibold leading-tight text-[15px] line-clamp-2">{test.name}</div>
+                </div>
+                {!owned && (
+                  <div className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-500">
+                    <Lock className="h-3.5 w-3.5" />
+                  </div>
+                )}
+                {owned && soon && (
+                  <Badge className="shrink-0 text-[10px] bg-amber-500 hover:bg-amber-500 gap-0.5">
+                    <Sparkles className="h-3 w-3" /> Soon
+                  </Badge>
+                )}
               </div>
-            )}
 
-            <div className="mt-auto flex flex-wrap gap-2">
-              {!owned ? (
-                <Button size="sm" className="w-full gap-1" onClick={onUpgrade}>
-                  <Sparkles className="h-3 w-3" /> Upgrade to unlock
-                </Button>
-              ) : soon ? (
-                <Button size="sm" disabled className="w-full gap-1">
-                  <Calendar className="h-3 w-3" /> Coming Soon
-                </Button>
-              ) : inProgress ? (
-                <Link to={`/mocks/attempt/${inProgress.id}`} className="flex-1">
-                  <Button size="sm" className="w-full gap-1"><Clock className="h-3 w-3" /> Resume</Button>
-                </Link>
-              ) : latestSubmitted ? (
-                <>
-                  <Link to={`/mocks/result/${latestSubmitted.id}`} className="flex-1">
-                    <Button size="sm" variant="outline" className="w-full gap-1"><FileText className="h-3 w-3" /> Result</Button>
-                  </Link>
-                  <Link to={`/mocks/${test.slug}`} className="flex-1">
-                    <Button size="sm" className="w-full gap-1"><Play className="h-3 w-3" /> Retake</Button>
-                  </Link>
-                </>
-              ) : (
-                test.slug && (
-                  <Link to={`/mocks/${test.slug}`} className="flex-1">
-                    <Button size="sm" className="w-full gap-1"><Play className="h-3 w-3" /> Start</Button>
-                  </Link>
-                )
+              <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+                <span className="inline-flex items-center gap-1">
+                  <Clock className="h-3 w-3" /> {test.total_duration_minutes ?? "—"} min
+                </span>
+                {soon && (
+                  <span className="inline-flex items-center gap-1 text-amber-600">
+                    <Calendar className="h-3 w-3" /> {soon}
+                  </span>
+                )}
+              </div>
+
+              {owned && latestSubmitted && pct != null && (
+                <div className="rounded-lg border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50/50 p-3 mb-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[11px] font-medium text-emerald-700 inline-flex items-center gap-1">
+                      <Award className="h-3 w-3" /> Last Attempt
+                    </span>
+                    <span className="text-lg font-bold text-emerald-700 leading-none">{pct}<span className="text-xs">%ile</span></span>
+                  </div>
+                  <Progress value={pct} className="h-1.5 bg-emerald-100" />
+                  <div className="flex justify-between mt-2 text-[11px] text-emerald-700/80">
+                    <span>Score {latestSubmitted.total_score ?? 0}/{latestSubmitted.max_score ?? 0}</span>
+                    {accuracy != null && <span>Accuracy {accuracy}%</span>}
+                  </div>
+                </div>
               )}
+
+              {owned && inProgress && !latestSubmitted && (
+                <div className="rounded-lg border border-sky-100 bg-sky-50/60 p-2.5 mb-3 text-xs text-sky-700 font-medium inline-flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" /> Attempt in progress — resume now
+                </div>
+              )}
+
+              <div className="mt-auto flex flex-wrap gap-2 pt-1">
+                {!owned ? (
+                  <Button
+                    size="sm"
+                    className="w-full gap-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-sm"
+                    onClick={onUpgrade}
+                  >
+                    <Sparkles className="h-3.5 w-3.5" /> Upgrade to unlock
+                  </Button>
+                ) : soon ? (
+                  <Button size="sm" disabled className="w-full gap-1">
+                    <Calendar className="h-3.5 w-3.5" /> Coming Soon
+                  </Button>
+                ) : inProgress ? (
+                  <Link to={`/mocks/attempt/${inProgress.id}`} className="flex-1">
+                    <Button size="sm" className="w-full gap-1 bg-sky-600 hover:bg-sky-700">
+                      <Clock className="h-3.5 w-3.5" /> Resume Attempt
+                    </Button>
+                  </Link>
+                ) : latestSubmitted ? (
+                  <>
+                    <Link to={`/mocks/result/${latestSubmitted.id}`} className="flex-1">
+                      <Button size="sm" variant="outline" className="w-full gap-1">
+                        <BarChart3 className="h-3.5 w-3.5" /> Result
+                      </Button>
+                    </Link>
+                    <Link to={`/mocks/${test.slug}`} className="flex-1">
+                      <Button size="sm" className="w-full gap-1 bg-emerald-600 hover:bg-emerald-700">
+                        <Play className="h-3.5 w-3.5" /> Retake
+                      </Button>
+                    </Link>
+                  </>
+                ) : (
+                  test.slug && (
+                    <Link to={`/mocks/${test.slug}`} className="flex-1">
+                      <Button size="sm" className="w-full gap-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700">
+                        <Play className="h-3.5 w-3.5" /> Start Mock
+                        <ChevronRight className="h-3.5 w-3.5 ml-auto" />
+                      </Button>
+                    </Link>
+                  )
+                )}
+              </div>
             </div>
           </Card>
         );
@@ -363,41 +538,67 @@ function BucketGrid({
 function AttemptedGrid({ items }: { items: { test: Test; attempt: Attempt }[] }) {
   if (!items.length) {
     return (
-      <Card className="p-8 text-center">
-        <History className="h-8 w-8 text-sky-500 mx-auto mb-3" />
-        <div className="font-medium">No mocks attempted yet.</div>
-        <p className="text-sm text-muted-foreground mt-1">Once you submit a mock it will appear here with your result.</p>
+      <Card className="p-10 text-center border-dashed border-2 border-sky-100 bg-gradient-to-br from-sky-50/40 to-white">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-sky-100 mb-3">
+          <History className="h-7 w-7 text-sky-600" />
+        </div>
+        <div className="font-semibold">No mocks attempted yet</div>
+        <p className="text-sm text-muted-foreground mt-1">Once you submit a mock it will appear here with detailed results.</p>
       </Card>
     );
   }
   return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      {items.map(({ test, attempt }) => (
-        <Card key={attempt.id} className="p-4 flex flex-col">
-          <div className="font-semibold leading-tight mb-1">{test.name}</div>
-          <div className="text-xs text-muted-foreground mb-3">
-            {test.exam_code ?? "—"} · Submitted {attempt.submitted_at ? new Date(attempt.submitted_at).toLocaleDateString() : "—"}
-          </div>
-          <div className="bg-emerald-50 border border-emerald-100 rounded-md p-2 mb-3 text-xs grid grid-cols-2 gap-y-1">
-            <span>Score</span><span className="text-right font-semibold">{attempt.total_score ?? 0}/{attempt.max_score ?? 0}</span>
-            <span>Percentile</span><span className="text-right font-semibold">{attempt.percentile ?? 0}</span>
-            <span>Accuracy</span><span className="text-right font-semibold">{attempt.total_attempted ? Math.round(((attempt.total_correct ?? 0) / attempt.total_attempted) * 100) : 0}%</span>
-          </div>
-          <div className="mt-auto flex gap-2">
-            <Link to={`/mocks/result/${attempt.id}`} className="flex-1">
-              <Button size="sm" variant="outline" className="w-full gap-1"><FileText className="h-3 w-3" /> Result</Button>
-            </Link>
-            <Link to={`/mocks/review/${attempt.id}`} className="flex-1">
-              <Button size="sm" className="w-full gap-1"><CheckCircle2 className="h-3 w-3" /> Review</Button>
-            </Link>
-            {test.slug && (
-              <Link to={`/mocks/leaderboard/${test.slug}`}>
-                <Button size="sm" variant="ghost"><Trophy className="h-4 w-4" /></Button>
-              </Link>
-            )}
-          </div>
-        </Card>
-      ))}
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {items.map(({ test, attempt }) => {
+        const pct = attempt.percentile ?? 0;
+        const accuracy = attempt.total_attempted
+          ? Math.round(((attempt.total_correct ?? 0) / attempt.total_attempted) * 100)
+          : 0;
+        const tone = pct >= 90 ? "from-emerald-500 to-teal-600" : pct >= 70 ? "from-sky-500 to-blue-600" : pct >= 50 ? "from-amber-500 to-orange-600" : "from-rose-500 to-pink-600";
+
+        return (
+          <Card key={attempt.id} className="overflow-hidden p-0 flex flex-col hover:shadow-lg transition-all hover:-translate-y-0.5">
+            <div className={`bg-gradient-to-br ${tone} text-white p-4`}>
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div className="min-w-0">
+                  <div className="text-[11px] opacity-90 mb-0.5">{test.exam_code ?? "Mock"}</div>
+                  <div className="font-semibold leading-tight line-clamp-2">{test.name}</div>
+                </div>
+                <Trophy className="h-5 w-5 opacity-80 shrink-0" />
+              </div>
+              <div className="flex items-end justify-between">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider opacity-90">Percentile</div>
+                  <div className="text-3xl font-bold leading-none">{pct}</div>
+                </div>
+                <div className="text-right text-xs opacity-90">
+                  <div>Score {attempt.total_score ?? 0}/{attempt.max_score ?? 0}</div>
+                  <div>Accuracy {accuracy}%</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 flex flex-col flex-1">
+              <div className="text-[11px] text-muted-foreground mb-3 inline-flex items-center gap-1">
+                <Calendar className="h-3 w-3" /> Submitted {attempt.submitted_at ? new Date(attempt.submitted_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
+              </div>
+              <div className="mt-auto flex gap-2">
+                <Link to={`/mocks/result/${attempt.id}`} className="flex-1">
+                  <Button size="sm" variant="outline" className="w-full gap-1"><FileText className="h-3.5 w-3.5" /> Result</Button>
+                </Link>
+                <Link to={`/mocks/review/${attempt.id}`} className="flex-1">
+                  <Button size="sm" className="w-full gap-1 bg-sky-600 hover:bg-sky-700"><CheckCircle2 className="h-3.5 w-3.5" /> Review</Button>
+                </Link>
+                {test.slug && (
+                  <Link to={`/mocks/leaderboard/${test.slug}`}>
+                    <Button size="sm" variant="ghost" title="Leaderboard"><Trophy className="h-4 w-4" /></Button>
+                  </Link>
+                )}
+              </div>
+            </div>
+          </Card>
+        );
+      })}
     </div>
   );
 }
