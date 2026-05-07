@@ -1729,6 +1729,30 @@ export type Database = {
           },
         ]
       }
+      cta_events: {
+        Row: {
+          created_at: string
+          cta_key: string
+          id: string
+          outcome: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          cta_key: string
+          id?: string
+          outcome: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          cta_key?: string
+          id?: string
+          outcome?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       cta_settings: {
         Row: {
           category: string
