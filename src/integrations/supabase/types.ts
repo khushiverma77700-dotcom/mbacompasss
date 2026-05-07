@@ -1729,6 +1729,42 @@ export type Database = {
           },
         ]
       }
+      cta_settings: {
+        Row: {
+          category: string
+          created_at: string
+          cta_key: string
+          description: string | null
+          id: string
+          label: string
+          location_hint: string | null
+          requires_login: boolean
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          cta_key: string
+          description?: string | null
+          id?: string
+          label: string
+          location_hint?: string | null
+          requires_login?: boolean
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          cta_key?: string
+          description?: string | null
+          id?: string
+          label?: string
+          location_hint?: string | null
+          requires_login?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       daily_test_assignments: {
         Row: {
           assigned_date: string
