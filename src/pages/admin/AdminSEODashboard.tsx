@@ -217,6 +217,8 @@ const AdminSEODashboard = () => {
   const [aiFilter, setAiFilter] = useState<BooleanFilter>("all");
   const [cityFilter, setCityFilter] = useState("all");
   const [stateFilter, setStateFilter] = useState("all");
+  const [createdFilter, setCreatedFilter] = useState<"all" | "7d" | "30d" | "90d" | "older">("all");
+  const [seoUpdatedFilter, setSeoUpdatedFilter] = useState<"all" | "never" | "7d" | "30d" | "older">("all");
   const [search, setSearch] = useState("");
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState("overview");
