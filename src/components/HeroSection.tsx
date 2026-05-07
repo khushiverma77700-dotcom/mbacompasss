@@ -37,15 +37,26 @@ const HeroSection = () => {
   const [suggestions, setSuggestions] = useState<HeroSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState(-1);
+  const [hydrateSettings, setHydrateSettings] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const { data: heroSettings } = useSiteSettings("hero");
-  const { data: statsSettings } = useSiteSettings("stats");
+  const { data: heroSettings } = useSiteSettings("hero", { enabled: hydrateSettings });
+  const { data: statsSettings } = useSiteSettings("stats", { enabled: hydrateSettings });
 
   const heading = heroSettings?.heading || "Find the Best MBA Coaching";
   const subheading = heroSettings?.subheading || "Compare top MBA coaching institutes, read reviews, and make informed decisions";
   const popularSearches = heroSettings?.popular_searches || fallbackSearches;
   const stats = statsSettings?.items || fallbackStats;
+
+  useEffect(() => {
+    const w = window as any;
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 3000));
+    const handle = schedule(() => setHydrateSettings(true), { timeout: 5500 });
+    return () => {
+      const cancel = w.cancelIdleCallback ?? window.clearTimeout;
+      try { cancel(handle); } catch {}
+    };
+  }, []);
 
   useEffect(() => {
     if (query.length < 2) { setSuggestions([]); setShowSuggestions(false); return; }

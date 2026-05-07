@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { Target, Globe, BookOpen, Languages, BarChart3, Users, ArrowRight } from "lucide-react";
-import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,9 +21,16 @@ const CategoryCards = () => {
   const { data: categories, isLoading } = useQuery({
     queryKey: ["categories-homepage"],
     queryFn: async () => {
-      const { data } = await supabase.from("categories").select("*").order("name");
+      const { data } = await supabase
+        .from("categories")
+        .select("id,name,slug,description,icon")
+        .not("name", "is", null)
+        .not("slug", "is", null)
+        .order("name")
+        .limit(6);
       return data || [];
     },
+    staleTime: 15 * 60 * 1000,
   });
 
   if (isLoading) {
@@ -44,7 +50,7 @@ const CategoryCards = () => {
   return (
     <section className="py-16 md:py-20 bg-background">
       <div className="container mx-auto px-4">
-        <motion.div className="text-center mb-12" initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+        <div className="text-center mb-12 animate-fade-in">
           <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold mb-4">
             <Target className="w-3.5 h-3.5" /> Exam Categories
           </span>
@@ -52,19 +58,17 @@ const CategoryCards = () => {
             Explore MBA <span className="text-gradient">Exam Categories</span>
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto">Choose your target MBA entrance exam and find the best coaching institute for your preparation</p>
-        </motion.div>
+        </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 max-w-6xl mx-auto">
           {categories.map((cat: any, i: number) => {
             const Icon = iconMap[cat.icon] || BookOpen;
             const gradient = gradients[i % gradients.length];
             return (
-              <motion.div
+              <div
                 key={cat.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.06 }}
+                className="animate-fade-in"
+                style={{ animationDelay: `${i * 60}ms` }}
               >
                 <Link
                   to={`/category/${cat.slug}`}
@@ -84,7 +88,7 @@ const CategoryCards = () => {
                     </div>
                   </div>
                 </Link>
-              </motion.div>
+              </div>
             );
           })}
         </div>

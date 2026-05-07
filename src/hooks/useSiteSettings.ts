@@ -1,5 +1,4 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useEffect } from "react";
 
 const SETTINGS_STALE = 10 * 60 * 1000;
@@ -15,6 +14,7 @@ export const useAllSiteSettings = () => {
   const query = useQuery({
     queryKey: ["site_settings_all"],
     queryFn: async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data, error } = await supabase
         .from("site_settings")
         .select("key, value")
@@ -45,11 +45,12 @@ export const useAllSiteSettings = () => {
   return query;
 };
 
-export const useSiteSettings = (key: string) => {
+export const useSiteSettings = (key: string, options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: ["site_settings", key],
     queryFn: async () => {
       // This only fires if the batch hasn't seeded this key yet
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data, error } = await supabase
         .from("site_settings")
         .select("value")
@@ -63,5 +64,6 @@ export const useSiteSettings = (key: string) => {
     gcTime: 30 * 60 * 1000,
     // Render immediately with null so components show fallbacks without waiting
     placeholderData: null,
+    enabled: options?.enabled ?? true,
   });
 };
