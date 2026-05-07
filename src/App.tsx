@@ -599,7 +599,7 @@ const App = () => (
     persistOptions={{
       persister: queryPersister!,
       maxAge: 24 * 60 * 60 * 1000,
-      buster: "v2-articles",
+      buster: "v3-performance-cache",
       dehydrateOptions: {
         // Only persist successful, "public" data — skip auth/user-specific queries
         shouldDehydrateQuery: (q) => {
