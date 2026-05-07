@@ -376,57 +376,8 @@ const AdminSEODashboard = () => {
     }
   };
 
-  const fetchDashboardData = useCallback(async () => {
-    setLoading(true);
-    setNewLinksDismissed(false);
-    try {
-      // Load previously known keys from DB (site_settings) for cross-browser persistence
-      let knownKeys = new Set<string>();
-      try {
-        const { data: knownData } = await supabase
-          .from("site_settings")
-          .select("value")
-          .eq("key", "seo_dashboard_known_keys")
-          .maybeSingle();
-        if (knownData?.value && Array.isArray(knownData.value)) {
-          knownKeys = new Set(knownData.value as string[]);
-        }
-      } catch {}
-      setPreviousKeys(knownKeys);
-
-      // Static pages — auto-detected from centralized config
-      const staticPages = STATIC_PAGES_CONFIG.map(sp => ({
-        id: `page-${sp.key}`,
-        name: sp.label,
-        slug: sp.path,
-        path: sp.path,
-      }));
-
-      const [snapshots, ...results] = await Promise.all([
-        fetchAllSeoSnapshots(),
-        ...contentTypes.map((ct) =>
-          supabase
-            .from(contentTypeConfig[ct].table as any)
-            .select(ct === "course" ? "*, institutes(slug)" : "*")
-            .order("created_at", { ascending: false })
-            .limit(1000)
-        ),
-      ]);
-
-      // Build rows from DB content
-      const nextRows: DashboardRow[] = results.flatMap((result, index) => {
-        const ct = contentTypes[index];
-        return ((result.data as Record<string, any>[] | null) || []).map((item) => {
-          const normalizedItem = ct === "course"
-            ? { ...item, _institute_slug: item.institutes?.slug, slug: item.slug || generateSlug(item.name || "") }
-            : item;
-          const snapshot = snapshots[`${ct}:${item.id}`] || null;
-          return { key: `${ct}:${item.id}`, id: item.id, contentType: ct, name: getName(normalizedItem), slug: normalizedItem.slug, city: normalizedItem.city || null, state: normalizedItem.state || null, item: normalizedItem, snapshot, audit: getSEOAudit(ct, normalizedItem, snapshot) };
-        });
-      });
-
-      // Add static pages as a special content type, using their declared SEO metadata
-      const staticRows: DashboardRow[] = STATIC_PAGES_CONFIG.map(sp => {
+  const buildStaticRows = useCallback((snapshots: Record<string, StoredSEOSnapshot>): DashboardRow[] => {
+    return STATIC_PAGES_CONFIG.map(sp => {
         const seo = sp.seo || {};
         // AISEOButton saves static-page snapshots under contentType="article" with recordId=`page-${sp.key}`.
         // fetchAllSeoSnapshots maps them to `article:page-${sp.key}`. Look there first and fall back to the
