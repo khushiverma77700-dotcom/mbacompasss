@@ -465,6 +465,30 @@ const PublicLayout = ({ children }: { children: React.ReactNode }) => (
   </>
 );
 
+/**
+ * Root route ("/") behavior depends on the host:
+ *   - dashboard.mbacompass.in → render the student LMS at "/" (no /student suffix).
+ *   - everything else → render the public marketing Index page.
+ */
+const DashboardHostRoot = () => {
+  const isDashboardHost =
+    typeof window !== "undefined" &&
+    window.location.hostname === "dashboard.mbacompass.in";
+
+  if (isDashboardHost) {
+    return (
+      <LazyPage>
+        <StudentLayout />
+      </LazyPage>
+    );
+  }
+  return (
+    <PublicLayout>
+      <LazyPage><Index /></LazyPage>
+    </PublicLayout>
+  );
+};
+
 // Top progress bar shown while a lazy route chunk is loading. Avoids the
 // "white screen" between clicks — the previous page stays visible (thanks to
 // the deferred Routes location below) and only this thin bar indicates work.
