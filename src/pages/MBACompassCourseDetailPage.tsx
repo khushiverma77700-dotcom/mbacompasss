@@ -11,6 +11,7 @@ import {
   Sparkles, Target, BookOpen, Download, ArrowRight, GitCompare,
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+import { useCtaGate, openLoginDialog } from "@/hooks/useCtaGate";
 import { CompassCompareProvider, useCompassCompare } from "@/contexts/CompassCompareContext";
 import { toast } from "sonner";
 
@@ -59,9 +60,13 @@ function DetailInner() {
     })();
   }, [slug]);
 
+  const { requiresLogin: courseRequiresLogin } = useCtaGate("course_enroll");
   const handlePay = async () => {
     const { data: u } = await supabase.auth.getUser();
-    if (!u.user) { toast.error("Please sign in to enroll"); window.location.href = "/auth"; return; }
+    if (!u.user) {
+      if (courseRequiresLogin) { openLoginDialog("Sign in to enroll in this course."); return; }
+      toast.error("Please sign in to enroll"); window.location.href = "/auth"; return;
+    }
     setPaying(true);
     try {
       const ok = await loadRzp();
