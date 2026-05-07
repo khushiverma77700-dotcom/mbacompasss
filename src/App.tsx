@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useAuth } from "@/contexts/AuthContext";
 import ScrollToTop from "@/components/ScrollToTop";
+import GlobalLoginDialog from "@/components/GlobalLoginDialog";
 import { computeSubdomainRedirect } from "@/lib/subdomainRouter";
 import { consumePostAuthRedirect } from "@/lib/authRedirect";
 import { isStudentMode } from "@/lib/studentModeNav";
@@ -630,6 +631,7 @@ const App = () => (
         <AuthProvider>
           <OAuthRedirectHandler />
           <OnboardingGate />
+          <GlobalLoginDialog />
           <DeferredRoutes>
             <Route path="/admin" element={<LazyPage><AdminLayout /></LazyPage>}>
               <Route index element={<LazyPage><AdminDashboard /></LazyPage>} />
