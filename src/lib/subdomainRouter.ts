@@ -40,13 +40,14 @@ const isMainHost = (hostname: string) => MAIN_HOSTS.includes(hostname);
 export const computeSubdomainRedirect = (loc: Location): string | null => {
   const { hostname, pathname, search, hash, protocol } = loc;
 
-  // ---- Dashboard host: lock to /student/* + auth ----
+  // ---- Dashboard host: lock to /student/* + auth, but keep "/" as the home ----
   if (isDashboardHost(hostname)) {
+    if (pathname === "/" || pathname === "") return null;
     const allowed = DASHBOARD_ALLOWED_PREFIXES.some(
       (p) => pathname === p || pathname.startsWith(p + "/")
     );
     if (allowed) return null;
-    return `${protocol}//${hostname}/student${search}${hash}`;
+    return `${protocol}//${hostname}/${search}${hash}`;
   }
 
   // ---- Main marketing host: no redirects, hosts are independent. ----
