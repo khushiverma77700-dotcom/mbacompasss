@@ -308,20 +308,6 @@ const GlobalNavigationPrefetch = () => {
     document.addEventListener("touchstart", handlePointer, { capture: true, passive: true });
     document.addEventListener("focusin", handlePointer, true);
 
-    // First-visit warmup: a user landing from Google has nothing cached.
-    // After first paint + idle, preload the most-likely next destinations so
-    // the very first link click feels instant. Admin chunks are excluded
-    // upstream by prefetchRoute().
-    const warmup = () => {
-      const w = window as any;
-      const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1500));
-      schedule(() => {
-        ["/colleges", "/coaching", "/blog", "/compare", "/mocks", "/courses", "/about"].forEach(prefetchRoute);
-      }, { timeout: 4000 });
-    };
-    if (document.readyState === "complete") warmup();
-    else window.addEventListener("load", warmup, { once: true });
-
     return () => {
       document.removeEventListener("pointerenter", handlePointer, true);
       document.removeEventListener("pointerdown", handlePointer, true);
@@ -384,9 +370,11 @@ const StudentBackGuard = () => {
 const SettingsPrefetcher = () => {
   const [ready, setReady] = useState(false);
   useEffect(() => {
+    const path = window.location.pathname;
+    if (path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/mocks/attempt")) return;
     const w = window as any;
-    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 800));
-    const handle = schedule(() => setReady(true), { timeout: 2500 });
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 3500));
+    const handle = schedule(() => setReady(true), { timeout: 6000 });
     return () => {
       const cancel = w.cancelIdleCallback ?? window.clearTimeout;
       try { cancel(handle); } catch {}
@@ -546,10 +534,13 @@ const DeferredRoutes = ({ children }: { children: React.ReactNode }) => {
 
 const OnboardingGate = () => {
   const { user, loading } = useAuth();
+  const location = useLocation();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [checked, setChecked] = useState(false);
 
   React.useEffect(() => {
+    const path = location.pathname;
+    if (path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/mocks/attempt") || path === "/profile-analyzer") return;
     if (loading || !user || checked) return;
 
     const checkOnboarding = async () => {
@@ -566,7 +557,7 @@ const OnboardingGate = () => {
     };
 
     checkOnboarding();
-  }, [loading, user, checked]);
+  }, [loading, user, checked, location.pathname]);
 
   if (!showOnboarding || !user) return null;
   if (typeof window !== "undefined" && window.location.pathname.startsWith("/student")) return null;
