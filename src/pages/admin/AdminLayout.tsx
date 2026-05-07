@@ -231,25 +231,46 @@ const AdminLayout = () => {
 
   return (
     <div className="min-h-screen flex bg-muted/30">
-      <button className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-card border border-border rounded-lg shadow-sm" onClick={() => setSidebarOpen(true)}>
-        <Menu className="w-5 h-5" />
-      </button>
+      {/* Mobile top bar */}
+      <header className="lg:hidden fixed top-0 inset-x-0 z-40 h-14 flex items-center justify-between gap-2 px-3 bg-card/95 backdrop-blur border-b border-border">
+        <button
+          className="p-2 -ml-1 rounded-lg hover:bg-muted active:scale-95 transition"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Open menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+        <h1 className="font-heading font-bold text-base truncate">Admin Panel</h1>
+        <AdminThemeToggle />
+      </header>
 
-      {sidebarOpen && <div className="fixed inset-0 bg-foreground/20 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-foreground/40 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-      <aside className={`${sidebarOpen ? "fixed inset-y-0 left-0 z-50" : "hidden"} lg:flex lg:fixed lg:top-0 lg:left-0 lg:h-screen w-64 bg-card border-r border-border p-4 flex-col overflow-y-auto`}>
+      <aside
+        className={`${
+          sidebarOpen ? "fixed inset-y-0 left-0 z-50 flex" : "hidden"
+        } lg:flex lg:fixed lg:top-0 lg:left-0 lg:h-screen w-[82vw] max-w-[20rem] lg:w-64 bg-card border-r border-border p-4 flex-col overflow-y-auto overscroll-contain`}
+      >
         <SidebarContent />
       </aside>
-      <main className="flex-1 p-6 overflow-auto lg:ml-64">
-        {currentRouteAllowed ? (
-          <Outlet />
-        ) : (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-            <Lock className="w-12 h-12 text-muted-foreground mb-4" />
-            <h2 className="text-xl font-bold text-foreground mb-2">Access Restricted</h2>
-            <p className="text-muted-foreground">You don't have permission to access this section. Contact a super admin to request access.</p>
-          </div>
-        )}
+
+      <main className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 pt-[4.25rem] lg:pt-6 lg:ml-64 max-w-full">
+        <div className="max-w-full overflow-x-hidden">
+          {currentRouteAllowed ? (
+            <Outlet />
+          ) : (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
+              <Lock className="w-12 h-12 text-muted-foreground mb-4" />
+              <h2 className="text-xl font-bold text-foreground mb-2">Access Restricted</h2>
+              <p className="text-muted-foreground">You don't have permission to access this section. Contact a super admin to request access.</p>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
