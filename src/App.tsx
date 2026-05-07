@@ -711,7 +711,13 @@ const App = () => (
             </Route>
 
             {/* Routes */}
-            <Route path="/" element={<DashboardHostRoot />} />
+            {isDashboardHostFn() ? (
+              <Route path="/" element={<LazyPage><StudentLayout /></LazyPage>}>
+                <Route index element={<InnerLazyPage><StudentOverview /></InnerLazyPage>} />
+              </Route>
+            ) : (
+              <Route path="/" element={<PublicLayout><LazyPage><Index /></LazyPage></PublicLayout>} />
+            )}
             <Route path="/category/:slug" element={<PublicLayout><LazyPage><CategoryPage /></LazyPage></PublicLayout>} />
             <Route path="/blog" element={<PublicLayout><LazyPage><BlogPage /></LazyPage></PublicLayout>} />
             <Route path="/colleges" element={<PublicLayout><LazyPage><CollegesPage /></LazyPage></PublicLayout>} />
