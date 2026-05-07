@@ -55,7 +55,7 @@ export default function StudentOverview() {
       // so the page is ready as soon as the slowest one returns instead of
       // waiting for them sequentially.
       const [
-        { data: e }, { data: g }, { data: ann }, { data: pf }, { data: tk }, { data: wk }, { data: prof }, { data: exRows },
+        { data: e }, { data: g }, { data: ann }, { data: pf }, { data: tk }, { data: wk }, { data: prof }, { data: exRows }, { data: rw }, { data: lb },
       ] = await Promise.all([
         supabase.from("mock_enrollments")
           .select("id, test_id, source, expires_at, enrolled_at, test:mock_tests(name, slug, exam_code)")
@@ -69,6 +69,8 @@ export default function StudentOverview() {
         supabase.from("student_weak_topics").select("*").eq("user_id", user.id).order("level", { ascending: true }).limit(12),
         supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle(),
         supabase.from("exams").select("name, slug, exam_date").not("exam_date", "is", null).order("exam_date", { ascending: true }).limit(20),
+        supabase.from("student_rewards").select("*").eq("user_id", user.id).maybeSingle(),
+        supabase.rpc("get_global_leaderboard", { _limit: 500 }),
       ]);
       if (cancelled) return;
       setEnrollments(e ?? []);
@@ -78,6 +80,9 @@ export default function StudentOverview() {
       setTasks(tk ?? []);
       setWeak(wk ?? []);
       setDisplayName(prof?.display_name ?? user.email?.split("@")[0] ?? "Student");
+      setRewards(rw);
+      const me = (lb as any[] | null)?.find((r) => r.is_self);
+      setLeaderboardRank(me?.rank ?? null);
 
       const upcoming = (exRows ?? [])
         .filter((x: any) => x.exam_date && new Date(x.exam_date).getTime() >= Date.now() - 86400000)
