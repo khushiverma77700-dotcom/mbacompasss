@@ -604,12 +604,16 @@ const App = () => (
         // Only persist successful, "public" data — skip auth/user-specific queries
         shouldDehydrateQuery: (q) => {
           if (q.state.status !== "success") return false;
-          const key = JSON.stringify(q.queryKey);
-          // Skip user/auth-specific caches
-          if (/profile|user_role|admin_perm|auth/i.test(key)) return false;
-          // Skip frequently-edited content so admin edits show immediately
-          if (/article|home-latest-articles|suggested-articles|blog/i.test(key)) return false;
-          return true;
+          const key = Array.isArray(q.queryKey) ? String(q.queryKey[0]) : JSON.stringify(q.queryKey);
+          // Persist only small, public UI lookups. Large result sets in localStorage
+          // slow every route before React can paint, especially admin/student pages.
+          return [
+            "site_settings_all",
+            "site_settings",
+            "categories-homepage",
+            "exam-deadlines",
+            "popular-exams",
+          ].includes(key);
         },
       },
     }}
