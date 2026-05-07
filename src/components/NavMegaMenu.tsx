@@ -2,7 +2,6 @@ import { useState, useRef, useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 interface MenuItem {
   id: string;
@@ -22,13 +21,14 @@ interface MegaMenuProps {
   onNavigate?: () => void;
 }
 
-const useMegaMenuData = (menuType: string) => {
+const useMegaMenuData = (menuType: string, enabled = true) => {
   return useQuery({
     queryKey: ["mega-menu", menuType],
     queryFn: async () => {
+      const { supabase } = await import("@/integrations/supabase/client");
       const { data, error } = await supabase
         .from("mega_menu_items")
-        .select("*")
+        .select("id,menu_type,tab_label,tab_sort_order,column_title,column_sort_order,link_label,link_url,link_sort_order")
         .eq("menu_type", menuType)
         .eq("active", true)
         .order("tab_sort_order")
@@ -38,6 +38,7 @@ const useMegaMenuData = (menuType: string) => {
       return data as MenuItem[];
     },
     staleTime: 5 * 60 * 1000,
+    enabled,
   });
 };
 
@@ -94,7 +95,7 @@ const NavMegaMenu = ({ label, menuType, onNavigate }: MegaMenuProps) => {
   const timeout = useRef<ReturnType<typeof setTimeout>>();
   const ref = useRef<HTMLDivElement>(null);
 
-  const { data: items } = useMegaMenuData(menuType);
+  const { data: items } = useMegaMenuData(menuType, open);
 
   const tabs = useMemo(() => (items ? buildMenuStructure(items) : []), [items]);
 
