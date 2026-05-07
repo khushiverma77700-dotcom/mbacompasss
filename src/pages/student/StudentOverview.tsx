@@ -420,6 +420,9 @@ export default function StudentOverview() {
         </div>
       </Card>
 
+      {/* ── Gamification strip: Level / XP / Streak / Coins / Rank ───────────── */}
+      <GamificationStrip rewards={rewards} rank={leaderboardRank} />
+
       {/* ── Exam Countdowns — auto-updates every minute ──────────────────────── */}
       <ExamCountdownStrip exams={examCountdowns} />
 
