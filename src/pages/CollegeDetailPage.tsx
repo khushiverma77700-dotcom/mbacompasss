@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { useCollegeBySlug, useCollegesLight as useColleges } from "@/hooks/useInstitutes";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCtaGate } from "@/hooks/useCtaGate";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import SEOHead, { generateCollegeSchema } from "@/components/SEOHead";
@@ -205,8 +206,8 @@ const CollegeDetailPage = () => {
     { q: `What is the average placement?`, a: `Average package: ${college.placement_avg || "competitive"}. Highest: ${college.placement_highest || "among the best"}.` },
   ];
 
-  const handleDownloadBrochure = () => {
-    if (!user) { setShowLoginDialog(true); return; }
+  const { gate: gateBrochure } = useCtaGate("college_download_brochure");
+  const handleDownloadBrochure = gateBrochure(() => {
     const content = [`${college.name} - Brochure`, `Location: ${college.city}, ${college.state}`, `Ranking: #${college.ranking}`, `Fees: ${college.fees}`, `Avg Package: ${college.placement_avg}`].join("\n");
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
@@ -214,7 +215,7 @@ const CollegeDetailPage = () => {
     a.href = url; a.download = `${college.slug}-brochure.txt`; a.click();
     URL.revokeObjectURL(url);
     toast({ title: "Brochure downloaded!" });
-  };
+  }, "Sign in to download the college brochure.");
 
   const tabItems = [
     { value: "overview", label: "Overview" }, { value: "courses", label: "Courses & Fees" },

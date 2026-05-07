@@ -7,6 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { useAuth } from "@/contexts/AuthContext";
 import ScrollToTop from "@/components/ScrollToTop";
+import GlobalLoginDialog from "@/components/GlobalLoginDialog";
 import { computeSubdomainRedirect } from "@/lib/subdomainRouter";
 import { consumePostAuthRedirect } from "@/lib/authRedirect";
 import { isStudentMode } from "@/lib/studentModeNav";
@@ -92,6 +93,7 @@ const AdminSEODashboard = lazyWithPreload(() => import("./pages/admin/AdminSEODa
 const AdminPageEditor = lazyWithPreload(() => import("./pages/admin/AdminPageEditor"));
 const AdminProfileAnalyzer = lazyWithPreload(() => import("./pages/admin/AdminProfileAnalyzer"));
 const AdminManageAdmins = lazyWithPreload(() => import("./pages/admin/AdminManageAdmins"));
+const AdminCTAManager = lazyWithPreload(() => import("./pages/admin/AdminCTAManager"));
 const AdminStaticPageSEO = lazyWithPreload(() => import("./pages/admin/AdminStaticPageSEO"));
 const AdminAllLeads = lazyWithPreload(() => import("./pages/admin/AdminAllLeads"));
 const AdminBusinessInquiries = lazyWithPreload(() => import("./pages/admin/AdminBusinessInquiries"));
@@ -629,6 +631,7 @@ const App = () => (
         <AuthProvider>
           <OAuthRedirectHandler />
           <OnboardingGate />
+          <GlobalLoginDialog />
           <DeferredRoutes>
             <Route path="/admin" element={<LazyPage><AdminLayout /></LazyPage>}>
               <Route index element={<LazyPage><AdminDashboard /></LazyPage>} />
@@ -664,6 +667,7 @@ const App = () => (
               <Route path="page-editor" element={<LazyPage><AdminPageEditor /></LazyPage>} />
               <Route path="profile-analyzer" element={<LazyPage><AdminProfileAnalyzer /></LazyPage>} />
               <Route path="manage-admins" element={<LazyPage><AdminManageAdmins /></LazyPage>} />
+              <Route path="cta-manager" element={<LazyPage><AdminCTAManager /></LazyPage>} />
               <Route path="static-seo" element={<LazyPage><AdminStaticPageSEO /></LazyPage>} />
               <Route path="all-leads-unified" element={<LazyPage><AdminAllLeads /></LazyPage>} />
               <Route path="business-inquiries" element={<LazyPage><AdminBusinessInquiries /></LazyPage>} />
