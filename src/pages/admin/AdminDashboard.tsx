@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, BookOpen, Newspaper, MessageSquare, Users, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import MetaPassRateWidget from "@/components/admin/MetaPassRateWidget";
+import { LazyMount } from "@/hooks/useInView";
+
+const MetaPassRateWidget = lazy(() => import("@/components/admin/MetaPassRateWidget"));
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -62,7 +64,11 @@ const AdminDashboard = () => {
         ))}
       </div>
       <div className="mt-6">
-        <MetaPassRateWidget />
+        <LazyMount rootMargin="100px" minHeight={260}>
+          <Suspense fallback={<div className="h-64 rounded-lg border border-dashed border-border" aria-hidden="true" />}>
+            <MetaPassRateWidget />
+          </Suspense>
+        </LazyMount>
       </div>
     </div>
   );
