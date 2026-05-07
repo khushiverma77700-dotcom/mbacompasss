@@ -376,11 +376,95 @@ const AdminSEODashboard = () => {
     }
   };
 
+  const buildStaticRows = useCallback((snapshots: Record<string, StoredSEOSnapshot>): DashboardRow[] => {
+    return STATIC_PAGES_CONFIG.map(sp => {
+      const seo = sp.seo || {};
+      const snapshot =
+        snapshots[`article:page-${sp.key}`] ||
+        snapshots[`static:page-${sp.key}`] ||
+        null;
+
+      const metaTitle = (snapshot?.meta_title || seo.metaTitle || sp.label) as string;
+      const metaDesc = (snapshot?.meta_description || seo.metaDescription || "") as string;
+      const keywords: string[] =
+        (snapshot?.keywords && snapshot.keywords.length ? snapshot.keywords : seo.keywords) || [];
+      const h1 = snapshot?.h1_tag || seo.h1 || sp.label;
+      const wordCount = seo.approxWordCount ?? 0;
+      const longTail = (snapshot?.keywordBuckets?.longTail?.length)
+        || keywords.filter(k => k.split(/\s+/).length >= 3).length;
+      const shortTail = (snapshot?.keywordBuckets?.shortTail?.length)
+        || (keywords.length - longTail);
+
+      const hasSchema = Boolean(snapshot?.schemaMarkup) || !!seo.hasSchema;
+      const hasCanonical = Boolean(snapshot?.canonicalUrl || snapshot?.technicalSEO?.canonicalUrl) || !!seo.hasCanonical;
+      const hasSocial = Boolean(snapshot?.socialMeta?.ogTitle || snapshot?.socialMeta?.twitterTitle) || !!seo.hasSocial;
+      const hasTechnical = Boolean(
+        snapshot?.technicalSEO && [
+          snapshot.technicalSEO.pagespeedTips?.length,
+          snapshot.technicalSEO.mobileTips?.length,
+          snapshot.technicalSEO.securityChecks?.length,
+          snapshot.technicalSEO.crawlabilityTips?.length,
+          snapshot.technicalSEO.keywordPlacementTips?.length,
+        ].some(Boolean),
+      ) || (!!seo.hasCanonical && !!seo.hasSocial);
+
+      const checks = {
+        hasMetaTitle: metaTitle.length >= 30 && metaTitle.length <= 70,
+        hasMetaDesc: metaDesc.length >= 120 && metaDesc.length <= 170,
+        hasKeywords: keywords.length >= 5,
+        hasH1: !!h1,
+        hasContent: wordCount >= 500,
+        hasSchema,
+        hasSlug: true,
+        hasCanonical,
+        hasSocial,
+        hasTechnical,
+        aiOptimized: !!snapshot,
+      };
+      const passed = Object.values(checks).filter(Boolean).length;
+      const score = Math.round((passed / Object.keys(checks).length) * 100);
+      const status: ScoreStatus = score >= 80 ? "good" : score >= 50 ? "warning" : "poor";
+      const issues: string[] = [];
+      if (!checks.hasMetaTitle) issues.push("Meta title length");
+      if (!checks.hasMetaDesc) issues.push("Meta description missing/short");
+      if (!checks.hasKeywords) issues.push("Add more target keywords");
+      if (!checks.hasH1) issues.push("H1 missing");
+      if (!checks.hasContent) issues.push("Thin content");
+      if (!checks.hasSchema) issues.push("No JSON-LD schema");
+      if (!checks.hasSocial) issues.push("Missing OG/Twitter tags");
+      if (!checks.hasCanonical) issues.push("Missing canonical");
+      if (!checks.hasTechnical) issues.push("Technical SEO not generated");
+      if (!checks.aiOptimized) issues.push("AI snapshot missing");
+
+      return {
+        key: `static:page-${sp.key}`,
+        id: `page-${sp.key}`,
+        contentType: "article" as SEOContentType,
+        name: sp.label,
+        slug: sp.path,
+        path: sp.path,
+        isStatic: true,
+        city: null,
+        state: null,
+        item: {
+          id: `page-${sp.key}`, title: sp.label, slug: sp.path,
+          meta_title: metaTitle, meta_description: metaDesc, keywords, h1_tag: h1,
+        },
+        snapshot,
+        audit: {
+          score, status, issues: issues.length ? issues : ["All key SEO elements present"],
+          ...checks,
+          metaTitleLen: metaTitle.length, metaDescLen: metaDesc.length, keywordCount: keywords.length,
+          shortTailCount: shortTail, longTailCount: longTail, wordCount,
+        },
+      };
+    });
+  }, []);
+
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     setNewLinksDismissed(false);
     try {
-      // Load previously known keys from DB (site_settings) for cross-browser persistence
       let knownKeys = new Set<string>();
       try {
         const { data: knownData } = await supabase
@@ -394,145 +478,77 @@ const AdminSEODashboard = () => {
       } catch {}
       setPreviousKeys(knownKeys);
 
-      // Static pages — auto-detected from centralized config
-      const staticPages = STATIC_PAGES_CONFIG.map(sp => ({
-        id: `page-${sp.key}`,
-        name: sp.label,
-        slug: sp.path,
-        path: sp.path,
-      }));
-
-      const [snapshots, ...results] = await Promise.all([
-        fetchAllSeoSnapshots(),
-        ...contentTypes.map((ct) =>
+      // STEP 1 — fetch content tables in parallel (no snapshots yet).
+      // Renders the table immediately so it never sits at "0 pages".
+      const results = await Promise.all(
+        contentTypes.map((ct) =>
           supabase
             .from(contentTypeConfig[ct].table as any)
             .select(ct === "course" ? "*, institutes(slug)" : "*")
             .order("created_at", { ascending: false })
             .limit(1000)
-        ),
-      ]);
+        )
+      );
 
-      // Build rows from DB content
-      const nextRows: DashboardRow[] = results.flatMap((result, index) => {
+      const initialRows: DashboardRow[] = results.flatMap((result, index) => {
         const ct = contentTypes[index];
         return ((result.data as Record<string, any>[] | null) || []).map((item) => {
           const normalizedItem = ct === "course"
             ? { ...item, _institute_slug: item.institutes?.slug, slug: item.slug || generateSlug(item.name || "") }
             : item;
-          const snapshot = snapshots[`${ct}:${item.id}`] || null;
-          return { key: `${ct}:${item.id}`, id: item.id, contentType: ct, name: getName(normalizedItem), slug: normalizedItem.slug, city: normalizedItem.city || null, state: normalizedItem.state || null, item: normalizedItem, snapshot, audit: getSEOAudit(ct, normalizedItem, snapshot) };
+          return {
+            key: `${ct}:${item.id}`,
+            id: item.id,
+            contentType: ct,
+            name: getName(normalizedItem),
+            slug: normalizedItem.slug,
+            city: normalizedItem.city || null,
+            state: normalizedItem.state || null,
+            item: normalizedItem,
+            snapshot: null,
+            audit: getSEOAudit(ct, normalizedItem, null),
+          };
         });
       });
 
-      // Add static pages as a special content type, using their declared SEO metadata
-      const staticRows: DashboardRow[] = STATIC_PAGES_CONFIG.map(sp => {
-        const seo = sp.seo || {};
-        // AISEOButton saves static-page snapshots under contentType="article" with recordId=`page-${sp.key}`.
-        // fetchAllSeoSnapshots maps them to `article:page-${sp.key}`. Look there first and fall back to the
-        // legacy `static:` key for backwards compatibility.
-        const snapshot =
-          snapshots[`article:page-${sp.key}`] ||
-          snapshots[`static:page-${sp.key}`] ||
-          null;
+      initialRows.push(...buildStaticRows({}));
+      setRows(initialRows);
+      setLoading(false);
 
-        // Snapshot wins over hardcoded config so "Save Changes" instantly moves the score.
-        const metaTitle = (snapshot?.meta_title || seo.metaTitle || sp.label) as string;
-        const metaDesc = (snapshot?.meta_description || seo.metaDescription || "") as string;
-        const keywords: string[] =
-          (snapshot?.keywords && snapshot.keywords.length ? snapshot.keywords : seo.keywords) || [];
-        const h1 = snapshot?.h1_tag || seo.h1 || sp.label;
-        const wordCount = seo.approxWordCount ?? 0;
-        const longTail = (snapshot?.keywordBuckets?.longTail?.length)
-          || keywords.filter(k => k.split(/\s+/).length >= 3).length;
-        const shortTail = (snapshot?.keywordBuckets?.shortTail?.length)
-          || (keywords.length - longTail);
-
-        const hasSchema = Boolean(snapshot?.schemaMarkup) || !!seo.hasSchema;
-        const hasCanonical = Boolean(snapshot?.canonicalUrl || snapshot?.technicalSEO?.canonicalUrl) || !!seo.hasCanonical;
-        const hasSocial = Boolean(snapshot?.socialMeta?.ogTitle || snapshot?.socialMeta?.twitterTitle) || !!seo.hasSocial;
-        const hasTechnical = Boolean(
-          snapshot?.technicalSEO && [
-            snapshot.technicalSEO.pagespeedTips?.length,
-            snapshot.technicalSEO.mobileTips?.length,
-            snapshot.technicalSEO.securityChecks?.length,
-            snapshot.technicalSEO.crawlabilityTips?.length,
-            snapshot.technicalSEO.keywordPlacementTips?.length,
-          ].some(Boolean),
-        ) || (!!seo.hasCanonical && !!seo.hasSocial);
-
-        const checks = {
-          hasMetaTitle: metaTitle.length >= 30 && metaTitle.length <= 70,
-          hasMetaDesc: metaDesc.length >= 120 && metaDesc.length <= 170,
-          hasKeywords: keywords.length >= 5,
-          hasH1: !!h1,
-          hasContent: wordCount >= 500,
-          hasSchema,
-          hasSlug: true,
-          hasCanonical,
-          hasSocial,
-          hasTechnical,
-          aiOptimized: !!snapshot,
-        };
-        const passed = Object.values(checks).filter(Boolean).length;
-        const score = Math.round((passed / Object.keys(checks).length) * 100);
-        const status: ScoreStatus = score >= 80 ? "good" : score >= 50 ? "warning" : "poor";
-        const issues: string[] = [];
-        if (!checks.hasMetaTitle) issues.push("Meta title length");
-        if (!checks.hasMetaDesc) issues.push("Meta description missing/short");
-        if (!checks.hasKeywords) issues.push("Add more target keywords");
-        if (!checks.hasH1) issues.push("H1 missing");
-        if (!checks.hasContent) issues.push("Thin content");
-        if (!checks.hasSchema) issues.push("No JSON-LD schema");
-        if (!checks.hasSocial) issues.push("Missing OG/Twitter tags");
-        if (!checks.hasCanonical) issues.push("Missing canonical");
-        if (!checks.hasTechnical) issues.push("Technical SEO not generated");
-        if (!checks.aiOptimized) issues.push("AI snapshot missing");
-
-        return {
-          key: `static:page-${sp.key}`,
-          id: `page-${sp.key}`,
-          contentType: "article" as SEOContentType,
-          name: sp.label,
-          slug: sp.path,
-          path: sp.path,
-          isStatic: true,
-          city: null,
-          state: null,
-          item: {
-            id: `page-${sp.key}`, title: sp.label, slug: sp.path,
-            meta_title: metaTitle, meta_description: metaDesc, keywords, h1_tag: h1,
-          },
-          snapshot,
-          audit: {
-            score, status, issues: issues.length ? issues : ["All key SEO elements present"],
-            ...checks,
-            metaTitleLen: metaTitle.length, metaDescLen: metaDesc.length, keywordCount: keywords.length,
-            shortTailCount: shortTail, longTailCount: longTail, wordCount,
-          },
-        };
-      });
-
-      nextRows.push(...staticRows);
-      setRows(nextRows);
-
-      // Detect new pages (only if we have previously saved keys)
       if (knownKeys.size > 0) {
-        const detected = nextRows.filter(r => !knownKeys.has(r.key));
+        const detected = initialRows.filter(r => !knownKeys.has(r.key));
         setNewRows(detected);
         if (detected.length > 0) {
           toast({ title: `${detected.length} New Page${detected.length > 1 ? "s" : ""} Detected!`, description: "New content found since last refresh." });
         }
       } else {
-        // First visit — save all current keys as baseline (no "new" banner)
         setNewRows([]);
-        const currentKeys = nextRows.map(r => r.key);
-        await saveKnownKeys(currentKeys);
+        await saveKnownKeys(initialRows.map(r => r.key));
+      }
+
+      // STEP 2 — fetch heavy SEO snapshots in background and merge scores.
+      try {
+        const snapshots = await fetchAllSeoSnapshots();
+        setRows((prev) => {
+          const merged = prev
+            .filter(r => !r.isStatic)
+            .map((r) => {
+              const snap = snapshots[`${r.contentType}:${r.id}`] || null;
+              if (!snap) return r;
+              return { ...r, snapshot: snap, audit: getSEOAudit(r.contentType, r.item, snap) };
+            });
+          merged.push(...buildStaticRows(snapshots));
+          return merged;
+        });
+      } catch (e) {
+        console.warn("SEO snapshot enrichment failed", e);
       }
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
-    } finally { setLoading(false); }
-  }, [toast]);
+    } finally {
+      setLoading(false);
+    }
+  }, [toast, buildStaticRows]);
 
   const saveKnownKeys = async (keys: string[]) => {
     const { data: existing } = await supabase
