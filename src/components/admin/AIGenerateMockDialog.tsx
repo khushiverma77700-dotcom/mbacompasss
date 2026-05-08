@@ -927,6 +927,71 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
           </div>
         )}
 
+        {step === 4 && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm font-semibold flex items-center gap-1.5">
+                  <Play className="w-4 h-4 text-primary" /> Batch live report
+                </Label>
+                <p className="text-[11px] text-muted-foreground">
+                  {batchItems.filter((i) => i.status === "completed").length} completed ·
+                  {" "}{batchItems.filter((i) => i.status === "processing").length} processing ·
+                  {" "}{batchItems.filter((i) => i.status === "pending").length} pending ·
+                  {" "}{batchItems.filter((i) => i.status === "failed").length} failed ·
+                  {" "}{batchItems.filter((i) => i.status === "needs_review").length} needs review
+                </p>
+              </div>
+              <Badge variant={batchDone ? "outline" : "default"}>
+                {batchDone ? "Done" : "Running"}
+              </Badge>
+            </div>
+            <Progress value={batchProgressPct} className="h-2" />
+            <div className="space-y-2 max-h-[55vh] overflow-y-auto">
+              {batchItems.map((it, i) => {
+                const generated = it.total_generated ?? 0;
+                const requested = it.total_requested ?? (it.questions_per_set * it.sets);
+                const pct = requested > 0 ? Math.min(100, Math.round((generated / requested) * 100)) : 0;
+                const statusColor =
+                  it.status === "completed" ? "text-emerald-700 border-emerald-300 bg-emerald-50" :
+                  it.status === "failed" ? "text-destructive border-destructive/30 bg-destructive/5" :
+                  it.status === "needs_review" ? "text-amber-700 border-amber-300 bg-amber-50" :
+                  it.status === "processing" ? "text-primary border-primary/30 bg-primary/5" :
+                  "text-muted-foreground border-border bg-muted/30";
+                return (
+                  <Card key={it.id} className="p-3 space-y-1.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium truncate">
+                          #{i + 1}. {it.exam_code} · {it.category.replace("_", " ")}
+                          {it.section_code ? ` · ${it.section_code}` : ""}
+                          {it.topic ? ` · "${it.topic}"` : ""}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                          Level: {it.level} · {it.questions_per_set}Q × {it.sets} set{it.sets > 1 ? "s" : ""} · Generated {generated}/{requested}
+                        </div>
+                      </div>
+                      <Badge variant="outline" className={`shrink-0 text-[10px] ${statusColor}`}>
+                        {it.status}
+                      </Badge>
+                    </div>
+                    <Progress value={pct} className="h-1.5" />
+                    {it.error_message && (
+                      <p className="text-[11px] text-destructive">{it.error_message}</p>
+                    )}
+                  </Card>
+                );
+              })}
+              {batchItems.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-6">Loading queued items…</p>
+              )}
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Generation runs in the background. You can close this dialog — the batch keeps running and finished mocks appear in the Mock Tests list.
+            </p>
+          </div>
+        )}
+
         <DialogFooter>
           {step === 1 && (
             <>
@@ -944,6 +1009,14 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
           )}
           {step === 3 && (
             <Button variant="outline" onClick={close}>Run in background</Button>
+          )}
+          {step === 4 && (
+            <>
+              <Button variant="outline" onClick={() => { setStep(1); setBatchRequestId(null); setBatchItems([]); }}>
+                Add more
+              </Button>
+              <Button onClick={close}>{batchDone ? "Done" : "Run in background"}</Button>
+            </>
           )}
         </DialogFooter>
       </DialogContent>
