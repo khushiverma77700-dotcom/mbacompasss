@@ -420,20 +420,27 @@ Deno.serve(async (req) => {
   try {
     const url = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const internalWorkerSecret = Deno.env.get("LOVABLE_API_KEY") || serviceKey;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
     const authHeader = req.headers.get("Authorization") || "";
-    if (!authHeader.startsWith("Bearer ")) return jsonResp(401, { error: "Missing auth" });
-    const bearerToken = authHeader.slice("Bearer ".length).trim();
+    const apiKeyHeader = (req.headers.get("apikey") || "").trim();
+    const body = await req.json().catch(() => ({}));
+    const bearerToken = authHeader.startsWith("Bearer ")
+      ? authHeader.slice("Bearer ".length).trim()
+      : "";
 
     const admin = createClient(url, serviceKey);
 
     // Two valid auth modes:
-    //  1) Service-role token (background self-recursion / kickoff from generate-mock-questions)
+    //  1) Internal worker kickoff / self-recursion signed with the service key
     //  2) End-user JWT (admin clicked "Retry section")
     let userId: string | null = null;
-    const isServiceCall = bearerToken === serviceKey;
+    const isServiceCall = body?.service === true && !!internalWorkerSecret && (
+      bearerToken === internalWorkerSecret || apiKeyHeader === internalWorkerSecret || body?.internal_secret === internalWorkerSecret
+    );
     if (!isServiceCall) {
+      if (!authHeader.startsWith("Bearer ")) return jsonResp(401, { error: "Missing auth" });
       const userClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });
       const { data: userRes } = await userClient.auth.getUser();
       const user = userRes?.user;
@@ -443,7 +450,7 @@ Deno.serve(async (req) => {
       userId = user.id;
     }
 
-    const { job_id, auto = false, continuation = false } = await req.json();
+    const { job_id, auto = false, continuation = false } = body;
     if (!job_id) return jsonResp(400, { error: "job_id required" });
 
     const { data: job, error: jobErr } = await admin.from("mock_section_jobs").select("*").eq("id", job_id).single();
@@ -857,14 +864,15 @@ Deno.serve(async (req) => {
         function scheduleNext(_resetAttempts: boolean) {
           if (!auto) return;
           const workerUrl = `${url}/functions/v1/retry-mock-section`;
+          const internalWorkerSecret = Deno.env.get("LOVABLE_API_KEY") || serviceKey;
           const next = fetch(workerUrl, {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${serviceKey}`,
-              apikey: serviceKey,
+              Authorization: `Bearer ${internalWorkerSecret}`,
+              apikey: internalWorkerSecret,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ job_id, auto: true, service: true, continuation: true }),
+            body: JSON.stringify({ job_id, auto: true, service: true, continuation: true, internal_secret: internalWorkerSecret }),
           }).catch((e) => console.error("[retry-mock-section] next worker failed", e));
           // @ts-ignore
           if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
@@ -914,14 +922,15 @@ Deno.serve(async (req) => {
               updated_at: new Date().toISOString(),
             }).eq("id", nextJobId);
             const workerUrl = `${url}/functions/v1/retry-mock-section`;
+            const internalWorkerSecret = Deno.env.get("LOVABLE_API_KEY") || serviceKey;
             const next = fetch(workerUrl, {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${serviceKey}`,
-                apikey: serviceKey,
+                Authorization: `Bearer ${internalWorkerSecret}`,
+                apikey: internalWorkerSecret,
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ job_id: nextJobId, auto: true, service: true }),
+                body: JSON.stringify({ job_id: nextJobId, auto: true, service: true, internal_secret: internalWorkerSecret }),
             }).catch((e) => console.error("[retry-mock-section] sibling kickoff failed", e));
             // @ts-ignore
             if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
