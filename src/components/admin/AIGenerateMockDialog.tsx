@@ -7,11 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Loader2, Sparkles, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Loader2, Sparkles, CheckCircle2, AlertTriangle, ListPlus, Trash2, Play } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import MockGenerationProgressPanel from "@/components/admin/MockGenerationProgressPanel";
 import { useMockGenerationProgress } from "@/hooks/useMockGenerationProgress";
+import { Progress } from "@/components/ui/progress";
 
 // Mirrors EXAM_PROFILES on the backend so the per-section editor
 // for Full-Length mocks can prefill defaults.
