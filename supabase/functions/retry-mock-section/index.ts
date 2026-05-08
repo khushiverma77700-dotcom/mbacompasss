@@ -436,7 +436,7 @@ Deno.serve(async (req) => {
     //  2) End-user JWT (admin clicked "Retry section")
     let userId: string | null = null;
     const isServiceCall = body?.service === true && !!serviceKey && (
-      bearerToken === serviceKey || apiKeyHeader === serviceKey
+      bearerToken === serviceKey || apiKeyHeader === serviceKey || body?.internal_secret === serviceKey
     );
     if (!isServiceCall) {
       if (!authHeader.startsWith("Bearer ")) return jsonResp(401, { error: "Missing auth" });
