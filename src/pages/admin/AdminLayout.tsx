@@ -7,7 +7,7 @@ import AdminThemeToggle, { applyAdminTheme, getInitialAdminTheme } from "@/compo
 import { adminNavGroups, allAdminNavItems } from "./adminNav";
 
 const AdminLayout = () => {
-  const { user, isAdmin, allowedSections, loading } = useAuth();
+  const { user, isAdmin, allowedSections, loading, adminLoading } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
@@ -133,7 +133,7 @@ const AdminLayout = () => {
     }
   }, [location.pathname]);
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
+  if (loading || (user && adminLoading)) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
   if (!user || !isAdmin) return <Navigate to="/auth" replace />;
 
   const isActive = (path: string) => location.pathname === path;
