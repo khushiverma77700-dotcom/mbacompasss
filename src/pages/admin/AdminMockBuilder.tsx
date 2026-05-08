@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Pencil, Trash2, Upload, Loader2, BookOpen, Layers } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Upload, Loader2, BookOpen } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import MathContent from "@/components/mock/MathContent";
 import { stripQuestionPrefix, stripOptionPrefix } from "@/lib/cleanQuestionHtml";
@@ -339,11 +339,6 @@ const AdminMockBuilder = () => {
           <h1 className="font-heading text-2xl font-bold">{test.name}</h1>
           <p className="text-sm text-muted-foreground">{test.total_duration_minutes} min · {test.test_type.replace("_", " ")} · {test.pricing_type === "free" ? "Free" : `₹${test.price_inr}`}</p>
         </div>
-        <Button asChild variant="outline" size="sm">
-          <Link to="/admin/bulk-mock-generation">
-            <Layers className="w-4 h-4 mr-1.5" /> Bulk AI Mock Generator
-          </Link>
-        </Button>
       </div>
 
       {/* Section tabs */}

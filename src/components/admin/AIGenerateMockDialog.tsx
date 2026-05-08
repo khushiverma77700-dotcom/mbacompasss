@@ -7,11 +7,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Loader2, Sparkles, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Loader2, Sparkles, CheckCircle2, AlertTriangle, ListPlus, Trash2, Play } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import MockGenerationProgressPanel from "@/components/admin/MockGenerationProgressPanel";
 import { useMockGenerationProgress } from "@/hooks/useMockGenerationProgress";
+import { Progress } from "@/components/ui/progress";
 
 // Mirrors EXAM_PROFILES on the backend so the per-section editor
 // for Full-Length mocks can prefill defaults.
@@ -172,13 +173,50 @@ const DEFAULT_SETS: Record<string, Record<string, number>> = {
   MAT: { LC: 0, ICR: 0, DA: 0, MS: 0, IGE: 0 },
 };
 
+type BatchDraft = {
+  uid: string;
+  label: string; // human summary
+  exam_code: string;
+  category: string;
+  level: string;
+  section_code: string | null;
+  topic: string | null;
+  questions_per_set: number;
+  sets: number;
+  test_name_prefix: string | null;
+};
+
+type BatchItemRow = {
+  id: string;
+  exam_code: string;
+  category: string;
+  level: string;
+  section_code: string | null;
+  topic: string | null;
+  questions_per_set: number;
+  sets: number;
+  status: string;
+  total_requested: number | null;
+  total_generated: number | null;
+  error_message: string | null;
+  generation_id: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+};
+
 export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: Props) {
   const { toast } = useToast();
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [generationId, setGenerationId] = useState<string | null>(null);
   const progress = useMockGenerationProgress(step === 3 ? generationId : null);
+
+  // ---------------- Batch (queue multiple generations) ----------------
+  const [batch, setBatch] = useState<BatchDraft[]>([]);
+  const [batchSubmitting, setBatchSubmitting] = useState(false);
+  const [batchRequestId, setBatchRequestId] = useState<string | null>(null);
+  const [batchItems, setBatchItems] = useState<BatchItemRow[]>([]);
 
   // When live generation completes, finalize result + advance step
   useEffect(() => {
@@ -412,9 +450,117 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
     }
   };
 
+  // ---------------- Batch helpers ----------------
+  const validateCurrentForm = (): string | null => {
+    if (category === "full_length") {
+      // bulk-mock-worker uses default exam pattern; custom section_plan is not preserved.
+      // Allow it but inform.
+    } else if (mcq + tita !== perSet) {
+      return "MCQ + TITA must equal Questions per set";
+    }
+    if (category === "sectional" && !sectionCode) return "Please select a section";
+    if (category === "topic" && !topic.trim()) return "Topic is required for Topic-wise Tests";
+    return null;
+  };
+
+  const summariseDraft = (d: Omit<BatchDraft, "uid" | "label">): string => {
+    const parts: string[] = [d.exam_code, d.category.replace("_", " ")];
+    if (d.section_code) parts.push(d.section_code);
+    if (d.topic) parts.push(`"${d.topic}"`);
+    parts.push(d.level);
+    parts.push(`${d.questions_per_set}Q × ${d.sets} set${d.sets > 1 ? "s" : ""}`);
+    return parts.join(" · ");
+  };
+
+  const addToBatch = () => {
+    const err = validateCurrentForm();
+    if (err) { toast({ title: err, variant: "destructive" }); return; }
+    const draft: Omit<BatchDraft, "uid" | "label"> = {
+      exam_code: exam,
+      category,
+      level,
+      section_code: (category === "sectional" || category === "topic" || category === "practice") ? sectionCode : null,
+      topic: topic || null,
+      questions_per_set: category === "full_length" ? sectionPlanTotal : perSet,
+      sets,
+      test_name_prefix: namePrefix || null,
+    };
+    const item: BatchDraft = { ...draft, uid: crypto.randomUUID(), label: summariseDraft(draft) };
+    setBatch((b) => [...b, item]);
+    toast({ title: "Added to batch", description: item.label });
+  };
+
+  const removeFromBatch = (uid: string) => setBatch((b) => b.filter((x) => x.uid !== uid));
+
+  const runBatch = async () => {
+    if (!batch.length) return;
+    setBatchSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("bulk-mock-worker", {
+        body: {
+          label: `${batch.length} mock${batch.length > 1 ? "s" : ""} from AI dialog`,
+          items: batch.map((b) => ({
+            exam_code: b.exam_code,
+            category: b.category,
+            level: b.level,
+            section_code: b.section_code,
+            topic: b.topic,
+            questions_per_set: b.questions_per_set,
+            sets: b.sets,
+            test_name_prefix: b.test_name_prefix,
+          })),
+        },
+      });
+      if (error) throw error;
+      const reqId = (data as any)?.request_id;
+      if (!reqId) throw new Error("No request id returned");
+      setBatchRequestId(reqId);
+      setStep(4);
+      toast({
+        title: "Batch started",
+        description: `${batch.length} requests queued. Generating in the background — live report below.`,
+      });
+    } catch (e: any) {
+      toast({ title: "Batch start failed", description: e?.message || "Try again", variant: "destructive" });
+    } finally {
+      setBatchSubmitting(false);
+    }
+  };
+
+  // Poll batch items + trigger reconcile while step 4 is open
+  useEffect(() => {
+    if (step !== 4 || !batchRequestId) return;
+    let alive = true;
+    const fetchItems = async () => {
+      const { data } = await supabase
+        .from("bulk_mock_request_items")
+        .select("id, exam_code, category, level, section_code, topic, questions_per_set, sets, status, total_requested, total_generated, error_message, generation_id, started_at, finished_at")
+        .eq("request_id", batchRequestId)
+        .order("created_at", { ascending: true });
+      if (!alive) return;
+      setBatchItems((data ?? []) as BatchItemRow[]);
+    };
+    fetchItems();
+    const t1 = setInterval(fetchItems, 3500);
+    const t2 = setInterval(() => {
+      // best-effort reconcile (ignored if not admin from edge runtime)
+      supabase.functions.invoke("bulk-mock-worker", { body: { reconcile: true } }).catch(() => {});
+    }, 6000);
+    return () => { alive = false; clearInterval(t1); clearInterval(t2); };
+  }, [step, batchRequestId]);
+
+  const batchDone = batchItems.length > 0 && batchItems.every(
+    (i) => i.status === "completed" || i.status === "failed" || i.status === "needs_review"
+  );
+  const batchProgressPct = batchItems.length === 0 ? 0
+    : Math.round((batchItems.filter((i) => i.status !== "pending" && i.status !== "processing").length / batchItems.length) * 100);
+
   const close = () => {
     onOpenChange(false);
-    setTimeout(() => { setStep(1); setResult(null); setGenerationId(null); }, 200);
+    setTimeout(() => {
+      setStep(1); setResult(null); setGenerationId(null);
+      setBatch([]); setBatchRequestId(null); setBatchItems([]);
+    }, 200);
   };
 
   return (
@@ -689,6 +835,58 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                 <li>Tagged with topic and subtopic for analytics</li>
               </ul>
             </div>
+
+            {/* ---------------- Batch queue (multi-request) ---------------- */}
+            <Card className="p-3 border-primary/30 bg-primary/5 space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm font-semibold flex items-center gap-1.5">
+                    <ListPlus className="w-4 h-4 text-primary" /> Batch queue
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    Configure each request above, then "Add to batch". Click "Run batch" to generate all in the background with a live report.
+                  </p>
+                </div>
+                <Badge variant={batch.length ? "default" : "outline"}>{batch.length} queued</Badge>
+              </div>
+
+              {batch.length > 0 && (
+                <div className="space-y-1.5 max-h-44 overflow-y-auto">
+                  {batch.map((b, i) => (
+                    <div key={b.uid} className="flex items-center justify-between gap-2 text-xs bg-background border rounded px-2 py-1.5">
+                      <span className="text-muted-foreground w-5 text-right">{i + 1}.</span>
+                      <span className="flex-1 truncate font-medium">{b.label}</span>
+                      <Button type="button" size="sm" variant="ghost" className="h-7 w-7 p-0"
+                        onClick={() => removeFromBatch(b.uid)} title="Remove">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-2 pt-1">
+                <Button type="button" size="sm" variant="outline" onClick={addToBatch}>
+                  <ListPlus className="w-3.5 h-3.5 mr-1.5" /> Add to batch
+                </Button>
+                <Button type="button" size="sm" onClick={runBatch}
+                  disabled={!batch.length || batchSubmitting}>
+                  {batchSubmitting
+                    ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Starting…</>
+                    : <><Play className="w-3.5 h-3.5 mr-1.5" /> Run batch ({batch.length})</>}
+                </Button>
+                {batch.length > 0 && (
+                  <Button type="button" size="sm" variant="ghost" onClick={() => setBatch([])}>
+                    Clear
+                  </Button>
+                )}
+              </div>
+              {category === "full_length" && (
+                <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                  Note: batch runs use the standard exam pattern for Full-Length mocks. For a custom section plan, use Generate (single).
+                </p>
+              )}
+            </Card>
           </div>
         )}
 
@@ -729,6 +927,71 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
           </div>
         )}
 
+        {step === 4 && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm font-semibold flex items-center gap-1.5">
+                  <Play className="w-4 h-4 text-primary" /> Batch live report
+                </Label>
+                <p className="text-[11px] text-muted-foreground">
+                  {batchItems.filter((i) => i.status === "completed").length} completed ·
+                  {" "}{batchItems.filter((i) => i.status === "processing").length} processing ·
+                  {" "}{batchItems.filter((i) => i.status === "pending").length} pending ·
+                  {" "}{batchItems.filter((i) => i.status === "failed").length} failed ·
+                  {" "}{batchItems.filter((i) => i.status === "needs_review").length} needs review
+                </p>
+              </div>
+              <Badge variant={batchDone ? "outline" : "default"}>
+                {batchDone ? "Done" : "Running"}
+              </Badge>
+            </div>
+            <Progress value={batchProgressPct} className="h-2" />
+            <div className="space-y-2 max-h-[55vh] overflow-y-auto">
+              {batchItems.map((it, i) => {
+                const generated = it.total_generated ?? 0;
+                const requested = it.total_requested ?? (it.questions_per_set * it.sets);
+                const pct = requested > 0 ? Math.min(100, Math.round((generated / requested) * 100)) : 0;
+                const statusColor =
+                  it.status === "completed" ? "text-emerald-700 border-emerald-300 bg-emerald-50" :
+                  it.status === "failed" ? "text-destructive border-destructive/30 bg-destructive/5" :
+                  it.status === "needs_review" ? "text-amber-700 border-amber-300 bg-amber-50" :
+                  it.status === "processing" ? "text-primary border-primary/30 bg-primary/5" :
+                  "text-muted-foreground border-border bg-muted/30";
+                return (
+                  <Card key={it.id} className="p-3 space-y-1.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium truncate">
+                          #{i + 1}. {it.exam_code} · {it.category.replace("_", " ")}
+                          {it.section_code ? ` · ${it.section_code}` : ""}
+                          {it.topic ? ` · "${it.topic}"` : ""}
+                        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                          Level: {it.level} · {it.questions_per_set}Q × {it.sets} set{it.sets > 1 ? "s" : ""} · Generated {generated}/{requested}
+                        </div>
+                      </div>
+                      <Badge variant="outline" className={`shrink-0 text-[10px] ${statusColor}`}>
+                        {it.status}
+                      </Badge>
+                    </div>
+                    <Progress value={pct} className="h-1.5" />
+                    {it.error_message && (
+                      <p className="text-[11px] text-destructive">{it.error_message}</p>
+                    )}
+                  </Card>
+                );
+              })}
+              {batchItems.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-6">Loading queued items…</p>
+              )}
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Generation runs in the background. You can close this dialog — the batch keeps running and finished mocks appear in the Mock Tests list.
+            </p>
+          </div>
+        )}
+
         <DialogFooter>
           {step === 1 && (
             <>
@@ -746,6 +1009,14 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
           )}
           {step === 3 && (
             <Button variant="outline" onClick={close}>Run in background</Button>
+          )}
+          {step === 4 && (
+            <>
+              <Button variant="outline" onClick={() => { setStep(1); setBatchRequestId(null); setBatchItems([]); }}>
+                Add more
+              </Button>
+              <Button onClick={close}>{batchDone ? "Done" : "Run in background"}</Button>
+            </>
           )}
         </DialogFooter>
       </DialogContent>
