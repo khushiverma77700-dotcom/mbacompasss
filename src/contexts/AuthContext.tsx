@@ -73,6 +73,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   isAdmin: boolean;
+  adminLoading: boolean;
   allowedSections: string[] | null; // null = full access (super admin)
   signUp: (email: string, password: string, displayName: string, phone?: string, designation?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
@@ -87,6 +88,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(initialSession.current);
   const [loading, setLoading] = useState(!initialSession.current);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminLoading, setAdminLoading] = useState(!!initialSession.current);
   const [allowedSections, setAllowedSections] = useState<string[] | null>(null);
   const resolvedAdminUserIdRef = useRef<string | null>(null);
 
