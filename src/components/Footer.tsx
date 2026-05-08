@@ -14,13 +14,21 @@ const Footer = () => {
   const address = footer?.contact_address || "New Delhi, India";
   const copyright = footer?.copyright || "2026 MBA Compass. All rights reserved.";
 
+  // Reserve space for async-loaded link lists to prevent layout shift (CLS).
+  // Renders invisible placeholder rows that match final content height.
+  const renderLinkPlaceholders = (count: number) => (
+    Array.from({ length: count }).map((_, i) => (
+      <li key={`ph-${i}`} aria-hidden="true" className="invisible">&nbsp;</li>
+    ))
+  );
+
   return (
     <footer className="bg-foreground text-primary-foreground/80 py-12">
       <div className="container mx-auto px-4">
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
           <div>
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <img src={mbahubLogo} alt="MBA Compass Logo" className="w-8 h-8 rounded-lg object-contain" />
+              <img src={mbahubLogo} alt="MBA Compass Logo" width="32" height="32" className="w-8 h-8 rounded-lg object-contain" />
               <div className="flex flex-col leading-tight">
                 <span className="font-heading font-bold text-lg text-primary-foreground">MBA Compass</span>
                 <span className="text-[8px] font-medium text-primary-foreground/50 -mt-0.5 tracking-wide">by B School Buzz</span>
@@ -31,19 +39,23 @@ const Footer = () => {
 
           <div>
             <h4 className="font-heading font-semibold text-primary-foreground mb-3 text-sm">MBA Exams</h4>
-            <ul className="space-y-2 text-sm">
-              {examLinks.map((link: any, i: number) => (
-                <li key={i}><Link to={link.path} className="hover:text-primary-foreground transition-colors">{link.label}</Link></li>
-              ))}
+            <ul className="space-y-2 text-sm min-h-[180px]">
+              {examLinks.length > 0
+                ? examLinks.map((link: any, i: number) => (
+                    <li key={i}><Link to={link.path} className="hover:text-primary-foreground transition-colors">{link.label}</Link></li>
+                  ))
+                : renderLinkPlaceholders(6)}
             </ul>
           </div>
 
           <div>
             <h4 className="font-heading font-semibold text-primary-foreground mb-3 text-sm">Quick Links</h4>
-            <ul className="space-y-2 text-sm">
-              {quickLinks.map((link: any, i: number) => (
-                <li key={i}><Link to={link.path} className="hover:text-primary-foreground transition-colors">{link.label}</Link></li>
-              ))}
+            <ul className="space-y-2 text-sm min-h-[300px]">
+              {quickLinks.length > 0
+                ? quickLinks.map((link: any, i: number) => (
+                    <li key={i}><Link to={link.path} className="hover:text-primary-foreground transition-colors">{link.label}</Link></li>
+                  ))
+                : null}
               <li><Link to="/profile-analyzer" className="hover:text-primary-foreground transition-colors">AI Profile Analyser</Link></li>
               <li><Link to="/cat-score-calculator" className="hover:text-primary-foreground transition-colors">CAT Score Calculator</Link></li>
               <li><Link to="/roi-calculator" className="hover:text-primary-foreground transition-colors">MBA ROI Calculator</Link></li>
