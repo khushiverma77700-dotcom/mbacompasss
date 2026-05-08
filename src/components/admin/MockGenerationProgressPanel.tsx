@@ -181,6 +181,41 @@ export default function MockGenerationProgressPanel({ generationId, compact = fa
         </div>
       </div>
 
+      {/* Control bar — Cancel / Pause / Resume / Edit */}
+      <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 bg-white border-b border-sky-100">
+        <Badge variant="outline" className="text-[10px]">
+          Status: {isCancelled ? "Cancelled" : isPaused ? "Paused" : p.isComplete ? "Done" : "Running"}
+        </Badge>
+        <div className="flex-1" />
+        {onEdit && (
+          <Button size="sm" variant="outline" className="h-8" onClick={onEdit} disabled={!!acting}>
+            Edit settings
+          </Button>
+        )}
+        {canControl && !isPaused && (
+          <Button size="sm" variant="outline" className="h-8" disabled={acting === "pause"}
+            onClick={() => updateGenStatus("paused")}>
+            {acting === "pause" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Pause"}
+          </Button>
+        )}
+        {canControl && isPaused && (
+          <Button size="sm" variant="outline" className="h-8" disabled={acting === "resume"}
+            onClick={() => updateGenStatus("running")}>
+            {acting === "resume" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Resume"}
+          </Button>
+        )}
+        {canControl && (
+          <Button size="sm" variant="destructive" className="h-8" disabled={acting === "cancel"}
+            onClick={() => {
+              if (confirm("Cancel this generation? Already-saved questions are kept.")) {
+                updateGenStatus("cancelled");
+              }
+            }}>
+            {acting === "cancel" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Cancel / Stop"}
+          </Button>
+        )}
+      </div>
+
       <CardContent className="p-4 space-y-3 bg-gradient-to-b from-sky-50/40 to-white">
         {/* Stats grid — generation */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
