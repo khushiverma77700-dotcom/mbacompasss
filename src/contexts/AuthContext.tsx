@@ -31,11 +31,11 @@ const getAdminCacheKey = (userId: string) => `mbc-admin-status:${userId}`;
 const readAdminCache = (userId: string): AdminCacheEntry | null => {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.sessionStorage.getItem(getAdminCacheKey(userId));
+    const raw = window.localStorage.getItem(getAdminCacheKey(userId));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as AdminCacheEntry;
-    if (!parsed || parsed.expiresAt < Date.now()) return null;
-    return parsed;
+    if (!parsed) return null;
+    return parsed; // return even if expired — caller decides whether to revalidate
   } catch {
     return null;
   }
