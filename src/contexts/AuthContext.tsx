@@ -233,6 +233,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     clearStudentMode();
+    clearAdminCache();
     setUser(null);
     setSession(null);
     setIsAdmin(false);
