@@ -896,16 +896,24 @@ Deno.serve(async (req) => {
       ? customSectionPlan.reduce((s, r) => s + r.tita, 0)
       : 0;
 
+    const finiteOr = (v: any, fallback: number) => {
+      const n = Number(v);
+      return Number.isFinite(n) && n > 0 ? n : fallback;
+    };
+    const finiteOrZero = (v: any, fallback: number) => {
+      const n = Number(v);
+      return Number.isFinite(n) && n >= 0 ? n : fallback;
+    };
     const perSet = customSectionPlan
       ? planTotalQuestions
-      : (Number(questions_per_set) || Number(total_questions) || profile.default_total);
+      : finiteOr(questions_per_set, finiteOr(total_questions, profile.default_total));
     const mcqCount = customSectionPlan
       ? planTotalMcq
-      : (Number(total_mcq) ?? Math.round(perSet * 0.85));
+      : finiteOrZero(total_mcq, Math.round(perSet * 0.85));
     const titaCount = customSectionPlan
       ? planTotalTita
-      : (Number(total_tita) ?? Math.max(0, perSet - mcqCount));
-    const safePerSet = mcqCount + titaCount;
+      : finiteOrZero(total_tita, Math.max(0, perSet - mcqCount));
+    const safePerSet = Math.max(1, mcqCount + titaCount);
 
     const createdTests: Array<{ id: string; name: string; slug: string }> = [];
     const stats = {
