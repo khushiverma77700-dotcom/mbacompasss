@@ -545,7 +545,7 @@ Deno.serve(async (req) => {
         let produced = existingCount || 0;
         const target = job.total_questions || 0;
 
-        const seen = await loadExistingQuestionHashes(admin);
+        const seen = await loadExistingQuestionHashes(admin, job.exam_code, job.section_code);
         const corpus = await loadSectionCorpus(admin, job.section_id);
 
         // Persisted dedup counters — preserve any value already on the row.
