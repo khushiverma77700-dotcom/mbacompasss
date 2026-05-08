@@ -168,40 +168,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        const { data } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .eq("role", "admin")
-          .maybeSingle();
+        const [rolesRes, permRes] = await Promise.all([
+          supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", user.id)
+            .eq("role", "admin")
+            .maybeSingle(),
+          supabase
+            .from("admin_permissions")
+            .select("allowed_sections")
+            .eq("email", user.email?.toLowerCase() || "")
+            .maybeSingle(),
+        ]);
 
         if (cancelled) return;
 
-        const adminStatus = !!data;
+        const adminStatus = !!rolesRes.data;
+        const nextAllowedSections = adminStatus
+          ? ((permRes.data?.allowed_sections as string[] | null) ?? null)
+          : null;
+
         setIsAdmin(adminStatus);
-
-        if (!adminStatus) {
-          writeAdminCache(user.id, { isAdmin: false, allowedSections: null });
-          setAllowedSections(null);
-          setAdminLoading(false);
-          return;
-        }
-
-        const { data: permData } = await supabase
-          .from("admin_permissions")
-          .select("allowed_sections")
-          .eq("email", user.email?.toLowerCase() || "")
-          .maybeSingle();
-
-        if (!cancelled) {
-          const nextAllowedSections = (permData?.allowed_sections as string[] | null) ?? null;
-          setAllowedSections(nextAllowedSections);
-          writeAdminCache(user.id, { isAdmin: true, allowedSections: nextAllowedSections });
-          setAdminLoading(false);
-        }
+        setAllowedSections(nextAllowedSections);
+        writeAdminCache(user.id, { isAdmin: adminStatus, allowedSections: nextAllowedSections });
+        setAdminLoading(false);
       } catch {
         resolvedAdminUserIdRef.current = null;
-        if (!cancelled) {
+        if (!cancelled && !cached) {
           setIsAdmin(false);
           setAllowedSections(null);
           setAdminLoading(false);
