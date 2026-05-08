@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Pencil, Trash2, Upload, Loader2, BookOpen, Layers } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Upload, Loader2, BookOpen } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import MathContent from "@/components/mock/MathContent";
 import { stripQuestionPrefix, stripOptionPrefix } from "@/lib/cleanQuestionHtml";
