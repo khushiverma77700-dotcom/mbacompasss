@@ -3,7 +3,7 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { clearStudentMode } from "@/lib/studentModeNav";
 
-const ADMIN_CACHE_TTL_MS = 30 * 1000;
+const ADMIN_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h — render instantly, revalidate in background
 
 const clearAdminCache = (userId?: string) => {
   if (typeof window === "undefined") return;
