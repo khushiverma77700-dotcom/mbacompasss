@@ -217,8 +217,11 @@ function jaccard(a: Set<string>, b: Set<string>): number {
   return inter / (a.size + b.size - inter);
 }
 
-const SIM_THRESHOLD = 0.72;        // token Jaccard
-const PARAPHRASE_THRESHOLD = 0.35; // 5-word shingle Jaccard
+// Relaxed thresholds — the previous values rejected legitimate fresh questions
+// once the section bank had ~100+ items, since common math/verbal phrasing
+// shares a lot of 5-word shingles with unrelated old questions.
+const SIM_THRESHOLD = 0.85;        // token Jaccard (was 0.72)
+const PARAPHRASE_THRESHOLD = 0.60; // 5-word shingle Jaccard (was 0.35)
 
 const EXAM_BASELINE: Record<string, string> = {
   CAT: "HIGH baseline (CAT 85-95 percentile difficulty). Elegant single-insight questions, RC-heavy VARC, dense DILR caselets, arithmetic-heavy QA. No GK.",
