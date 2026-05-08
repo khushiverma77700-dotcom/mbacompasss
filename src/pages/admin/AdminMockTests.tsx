@@ -67,6 +67,8 @@ const AdminMockTests = () => {
   const [saving, setSaving] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [examFilter, setExamFilter] = useState<string>("all");
+  const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
 
   const fetchTests = async () => {
     setLoading(true);
