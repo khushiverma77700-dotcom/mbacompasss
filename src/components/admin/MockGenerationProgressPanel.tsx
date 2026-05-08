@@ -127,7 +127,7 @@ export default function MockGenerationProgressPanel({ generationId, compact = fa
       </div>
 
       <CardContent className="p-4 space-y-3 bg-gradient-to-b from-sky-50/40 to-white">
-        {/* Stats grid */}
+        {/* Stats grid — generation */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           <Stat label="Sections done" value={`${p.doneSections} / ${p.totalSections}`} tone="ok" />
           <Stat label="Processing" value={p.processingSections} tone="info" />
@@ -135,9 +135,20 @@ export default function MockGenerationProgressPanel({ generationId, compact = fa
           <Stat label="Rejected dups" value={p.totalDuplicates} tone={p.totalDuplicates > 0 ? "info" : undefined} />
         </div>
 
+        {/* Stats grid — AI telemetry (cost + latency + calls) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <Stat label="AI calls" value={tel.totalCalls} tone="info" />
+          <Stat label="Tokens used" value={tel.totalTokens.toLocaleString()} />
+          <Stat label="Cost (USD / INR)" value={`$${tel.totalCostUsd.toFixed(4)} · ₹${tel.totalCostInr.toFixed(2)}`} tone="ok" />
+          <Stat label="Latency p50 / p95" value={`${tel.p50LatencyMs}ms / ${tel.p95LatencyMs}ms`} tone={tel.p95LatencyMs > 30000 ? "danger" : "info"} />
+        </div>
+
         {!compact && (
-          <Tabs defaultValue="health" className="pt-1">
-            <TabsList className="grid w-full grid-cols-3 h-9 bg-sky-100/50">
+          <Tabs defaultValue="telemetry" className="pt-1">
+            <TabsList className="grid w-full grid-cols-4 h-9 bg-sky-100/50">
+              <TabsTrigger value="telemetry" className="text-xs gap-1.5">
+                <Cpu className="w-3.5 h-3.5" /> Telemetry
+              </TabsTrigger>
               <TabsTrigger value="health" className="text-xs gap-1.5">
                 <Stethoscope className="w-3.5 h-3.5" /> Health
               </TabsTrigger>
@@ -148,6 +159,11 @@ export default function MockGenerationProgressPanel({ generationId, compact = fa
                 <Layers className="w-3.5 h-3.5" /> Queue
               </TabsTrigger>
             </TabsList>
+
+            {/* ---------- TELEMETRY ---------- */}
+            <TabsContent value="telemetry" className="mt-3">
+              <TelemetryPanel tel={tel} elapsedSec={p.elapsedSec} qps={p.qps} />
+            </TabsContent>
 
             {/* ---------- HEALTH ---------- */}
             <TabsContent value="health" className="mt-3">
