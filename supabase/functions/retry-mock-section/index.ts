@@ -420,6 +420,7 @@ Deno.serve(async (req) => {
   try {
     const url = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const internalWorkerSecret = Deno.env.get("LOVABLE_API_KEY") || serviceKey;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
     const authHeader = req.headers.get("Authorization") || "";
@@ -435,15 +436,16 @@ Deno.serve(async (req) => {
     //  1) Internal worker kickoff / self-recursion signed with the service key
     //  2) End-user JWT (admin clicked "Retry section")
     let userId: string | null = null;
-    const isServiceCall = body?.service === true && !!serviceKey && (
-      bearerToken === serviceKey || apiKeyHeader === serviceKey || body?.internal_secret === serviceKey
+    const isServiceCall = body?.service === true && !!internalWorkerSecret && (
+      bearerToken === internalWorkerSecret || apiKeyHeader === internalWorkerSecret || body?.internal_secret === internalWorkerSecret
     );
     console.log("[retry-mock-section auth]", JSON.stringify({
       hasServiceKey: !!serviceKey,
+      hasInternalWorkerSecret: !!internalWorkerSecret,
       serviceFlag: body?.service === true,
-      bearerMatches: !!serviceKey && bearerToken === serviceKey,
-      apiKeyMatches: !!serviceKey && apiKeyHeader === serviceKey,
-      internalSecretMatches: !!serviceKey && body?.internal_secret === serviceKey,
+      bearerMatches: !!internalWorkerSecret && bearerToken === internalWorkerSecret,
+      apiKeyMatches: !!internalWorkerSecret && apiKeyHeader === internalWorkerSecret,
+      internalSecretMatches: !!internalWorkerSecret && body?.internal_secret === internalWorkerSecret,
       authHeaderPrefix: authHeader.slice(0, 16),
       apiKeyHeaderPrefix: apiKeyHeader.slice(0, 16),
     }));
