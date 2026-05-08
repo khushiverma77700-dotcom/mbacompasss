@@ -450,9 +450,117 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
     }
   };
 
+  // ---------------- Batch helpers ----------------
+  const validateCurrentForm = (): string | null => {
+    if (category === "full_length") {
+      // bulk-mock-worker uses default exam pattern; custom section_plan is not preserved.
+      // Allow it but inform.
+    } else if (mcq + tita !== perSet) {
+      return "MCQ + TITA must equal Questions per set";
+    }
+    if (category === "sectional" && !sectionCode) return "Please select a section";
+    if (category === "topic" && !topic.trim()) return "Topic is required for Topic-wise Tests";
+    return null;
+  };
+
+  const summariseDraft = (d: Omit<BatchDraft, "uid" | "label">): string => {
+    const parts: string[] = [d.exam_code, d.category.replace("_", " ")];
+    if (d.section_code) parts.push(d.section_code);
+    if (d.topic) parts.push(`"${d.topic}"`);
+    parts.push(d.level);
+    parts.push(`${d.questions_per_set}Q × ${d.sets} set${d.sets > 1 ? "s" : ""}`);
+    return parts.join(" · ");
+  };
+
+  const addToBatch = () => {
+    const err = validateCurrentForm();
+    if (err) { toast({ title: err, variant: "destructive" }); return; }
+    const draft: Omit<BatchDraft, "uid" | "label"> = {
+      exam_code: exam,
+      category,
+      level,
+      section_code: (category === "sectional" || category === "topic" || category === "practice") ? sectionCode : null,
+      topic: topic || null,
+      questions_per_set: category === "full_length" ? sectionPlanTotal : perSet,
+      sets,
+      test_name_prefix: namePrefix || null,
+    };
+    const item: BatchDraft = { ...draft, uid: crypto.randomUUID(), label: summariseDraft(draft) };
+    setBatch((b) => [...b, item]);
+    toast({ title: "Added to batch", description: item.label });
+  };
+
+  const removeFromBatch = (uid: string) => setBatch((b) => b.filter((x) => x.uid !== uid));
+
+  const runBatch = async () => {
+    if (!batch.length) return;
+    setBatchSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("bulk-mock-worker", {
+        body: {
+          label: `${batch.length} mock${batch.length > 1 ? "s" : ""} from AI dialog`,
+          items: batch.map((b) => ({
+            exam_code: b.exam_code,
+            category: b.category,
+            level: b.level,
+            section_code: b.section_code,
+            topic: b.topic,
+            questions_per_set: b.questions_per_set,
+            sets: b.sets,
+            test_name_prefix: b.test_name_prefix,
+          })),
+        },
+      });
+      if (error) throw error;
+      const reqId = (data as any)?.request_id;
+      if (!reqId) throw new Error("No request id returned");
+      setBatchRequestId(reqId);
+      setStep(4);
+      toast({
+        title: "Batch started",
+        description: `${batch.length} requests queued. Generating in the background — live report below.`,
+      });
+    } catch (e: any) {
+      toast({ title: "Batch start failed", description: e?.message || "Try again", variant: "destructive" });
+    } finally {
+      setBatchSubmitting(false);
+    }
+  };
+
+  // Poll batch items + trigger reconcile while step 4 is open
+  useEffect(() => {
+    if (step !== 4 || !batchRequestId) return;
+    let alive = true;
+    const fetchItems = async () => {
+      const { data } = await supabase
+        .from("bulk_mock_request_items")
+        .select("id, exam_code, category, level, section_code, topic, questions_per_set, sets, status, total_requested, total_generated, error_message, generation_id, started_at, finished_at")
+        .eq("request_id", batchRequestId)
+        .order("created_at", { ascending: true });
+      if (!alive) return;
+      setBatchItems((data ?? []) as BatchItemRow[]);
+    };
+    fetchItems();
+    const t1 = setInterval(fetchItems, 3500);
+    const t2 = setInterval(() => {
+      // best-effort reconcile (ignored if not admin from edge runtime)
+      supabase.functions.invoke("bulk-mock-worker", { body: { reconcile: true } }).catch(() => {});
+    }, 6000);
+    return () => { alive = false; clearInterval(t1); clearInterval(t2); };
+  }, [step, batchRequestId]);
+
+  const batchDone = batchItems.length > 0 && batchItems.every(
+    (i) => i.status === "completed" || i.status === "failed" || i.status === "needs_review"
+  );
+  const batchProgressPct = batchItems.length === 0 ? 0
+    : Math.round((batchItems.filter((i) => i.status !== "pending" && i.status !== "processing").length / batchItems.length) * 100);
+
   const close = () => {
     onOpenChange(false);
-    setTimeout(() => { setStep(1); setResult(null); setGenerationId(null); }, 200);
+    setTimeout(() => {
+      setStep(1); setResult(null); setGenerationId(null);
+      setBatch([]); setBatchRequestId(null); setBatchItems([]);
+    }, 200);
   };
 
   return (
