@@ -602,20 +602,28 @@ const App = () => (
     persistOptions={{
       persister: queryPersister!,
       maxAge: 24 * 60 * 60 * 1000,
-      buster: "v3-performance-cache",
+      buster: "v4-performance-cache",
       dehydrateOptions: {
-        // Only persist successful, "public" data — skip auth/user-specific queries
+        // Persist successful public lookups so repeat visits paint instantly
+        // from cache while we revalidate in the background.
         shouldDehydrateQuery: (q) => {
           if (q.state.status !== "success") return false;
           const key = Array.isArray(q.queryKey) ? String(q.queryKey[0]) : JSON.stringify(q.queryKey);
-          // Persist only small, public UI lookups. Large result sets in localStorage
-          // slow every route before React can paint, especially admin/student pages.
           return [
             "site_settings_all",
             "site_settings",
+            "categories",
             "categories-homepage",
             "exam-deadlines",
             "popular-exams",
+            // Big public listings — caching these eliminates the 1-2s RPC on
+            // /colleges, /coaching, homepage spotlight, related-college sidebars
+            "colleges",
+            "colleges_light",
+            "institutes",
+            "featured-institutes",
+            "city-pages",
+            "specializations",
           ].includes(key);
         },
       },
