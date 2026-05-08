@@ -68,20 +68,18 @@ export default function StudentPerformX() {
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const [{ data: r }, { data: a }, { data: b }, { data: lb }] = await Promise.all([
+      const [{ data: r }, { data: a }, { data: b }] = await Promise.all([
         supabase.from("student_rewards").select("*").eq("user_id", user.id).maybeSingle(),
         supabase.from("mock_attempts").select(
           "id,test_id,total_score,max_score,percentile,accuracy,total_attempted,total_correct,submitted_at,created_at,sectional_scores,all_india_rank"
         ).eq("user_id", user.id).in("status", ["submitted", "auto_submitted"])
           .order("submitted_at", { ascending: true }).limit(60),
         supabase.from("student_badges").select("badge_key").eq("user_id", user.id),
-        supabase.rpc("get_global_leaderboard", { _limit: 50 }),
       ]);
       setRewards(r as any);
       const attemptList = ((a ?? []) as any) as Attempt[];
       setAttempts(attemptList);
       setBadges((b ?? []) as any);
-      setGlobal((lb ?? []) as any);
 
       // Resolve section UUID keys → human names so charts never show raw IDs
       const sectionIds = Array.from(new Set(
@@ -99,6 +97,21 @@ export default function StudentPerformX() {
       }
       setLoading(false);
     })();
+  }, [user]);
+
+  // Leaderboard is deferred — fetch after first paint so the page renders fast.
+  useEffect(() => {
+    if (!user) return;
+    const w = window as any;
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 600));
+    const handle = schedule(async () => {
+      const { data: lb } = await supabase.rpc("get_global_leaderboard", { _limit: 50 });
+      setGlobal((lb ?? []) as any);
+    });
+    return () => {
+      const cancel = w.cancelIdleCallback ?? window.clearTimeout;
+      try { cancel(handle); } catch {}
+    };
   }, [user]);
 
   // ============ Derived metrics ============

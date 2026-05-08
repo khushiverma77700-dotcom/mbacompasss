@@ -6375,6 +6375,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_my_leaderboard_rank: { Args: never; Returns: number }
       get_today_daily_test: {
         Args: never
         Returns: {
