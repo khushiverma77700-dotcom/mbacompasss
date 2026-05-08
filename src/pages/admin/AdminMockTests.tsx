@@ -341,6 +341,8 @@ const AdminMockTests = () => {
               )}
               {tests
                 .filter((t) => categoryFilter === "all" || (t.category || t.test_type) === categoryFilter)
+                .filter((t) => examFilter === "all" || t.exam_code === examFilter)
+                .filter((t) => difficultyFilter === "all" || t.difficulty === difficultyFilter)
                 .map((t) => (
                 <TableRow key={t.id}>
                   <TableCell>
