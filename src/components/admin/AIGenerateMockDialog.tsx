@@ -982,7 +982,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                     {/* Rich live telemetry — only for the currently processing item to keep it focused */}
                     {it.status === "processing" && it.generation_id && (
                       <div className="mt-2">
-                        <MockGenerationProgressPanel generationId={it.generation_id} compact />
+                        <MockGenerationProgressPanel generationId={it.generation_id} />
                       </div>
                     )}
                   </Card>
