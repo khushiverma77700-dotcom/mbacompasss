@@ -9,11 +9,14 @@ const clearAdminCache = (userId?: string) => {
   if (typeof window === "undefined") return;
   try {
     if (userId) {
+      window.localStorage.removeItem(`mbc-admin-status:${userId}`);
       window.sessionStorage.removeItem(`mbc-admin-status:${userId}`);
       return;
     }
-    for (const key of Object.keys(window.sessionStorage)) {
-      if (key.startsWith("mbc-admin-status:")) window.sessionStorage.removeItem(key);
+    for (const store of [window.localStorage, window.sessionStorage]) {
+      for (const key of Object.keys(store)) {
+        if (key.startsWith("mbc-admin-status:")) store.removeItem(key);
+      }
     }
   } catch {
     // ignore
