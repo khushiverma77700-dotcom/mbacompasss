@@ -423,17 +423,23 @@ Deno.serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
     const authHeader = req.headers.get("Authorization") || "";
-    if (!authHeader.startsWith("Bearer ")) return jsonResp(401, { error: "Missing auth" });
-    const bearerToken = authHeader.slice("Bearer ".length).trim();
+    const apiKeyHeader = (req.headers.get("apikey") || "").trim();
+    const body = await req.json().catch(() => ({}));
+    const bearerToken = authHeader.startsWith("Bearer ")
+      ? authHeader.slice("Bearer ".length).trim()
+      : "";
 
     const admin = createClient(url, serviceKey);
 
     // Two valid auth modes:
-    //  1) Service-role token (background self-recursion / kickoff from generate-mock-questions)
+    //  1) Internal worker kickoff / self-recursion signed with the service key
     //  2) End-user JWT (admin clicked "Retry section")
     let userId: string | null = null;
-    const isServiceCall = bearerToken === serviceKey;
+    const isServiceCall = body?.service === true && !!serviceKey && (
+      bearerToken === serviceKey || apiKeyHeader === serviceKey
+    );
     if (!isServiceCall) {
+      if (!authHeader.startsWith("Bearer ")) return jsonResp(401, { error: "Missing auth" });
       const userClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });
       const { data: userRes } = await userClient.auth.getUser();
       const user = userRes?.user;
@@ -443,7 +449,7 @@ Deno.serve(async (req) => {
       userId = user.id;
     }
 
-    const { job_id, auto = false, continuation = false } = await req.json();
+    const { job_id, auto = false, continuation = false } = body;
     if (!job_id) return jsonResp(400, { error: "job_id required" });
 
     const { data: job, error: jobErr } = await admin.from("mock_section_jobs").select("*").eq("id", job_id).single();
