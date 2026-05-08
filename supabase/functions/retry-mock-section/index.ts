@@ -129,14 +129,43 @@ async function sha256(text: string): Promise<string> {
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-async function loadExistingQuestionHashes(admin: any): Promise<Set<string>> {
+// Scope dedup hashes to ONLY questions belonging to the same (exam_code, section_code).
+// Loading the entire mock_questions bank caused massive false-positive duplicate
+// rejection (200+ per mock) once the bank grew. A new CAT QA question should only
+// be checked against other CAT QA questions, not against XAT VALR or NMAT LR items.
+async function loadExistingQuestionHashes(
+  admin: any,
+  examCode?: string | null,
+  sectionCode?: string | null,
+): Promise<Set<string>> {
   const seen = new Set<string>();
+
+  // Resolve the section_ids that belong to this (exam, section) scope.
+  let sectionIds: string[] | null = null;
+  if (examCode && sectionCode) {
+    const { data: testRows } = await admin
+      .from("mock_tests")
+      .select("id")
+      .eq("exam_code", examCode);
+    const testIds = (testRows || []).map((r: any) => r.id);
+    if (testIds.length === 0) return seen;
+    const { data: secRows } = await admin
+      .from("mock_sections")
+      .select("id")
+      .eq("code", sectionCode)
+      .in("test_id", testIds);
+    sectionIds = (secRows || []).map((r: any) => r.id);
+    if (sectionIds.length === 0) return seen;
+  }
+
   const pageSize = 1000;
   for (let from = 0; ; from += pageSize) {
-    const { data, error } = await admin
+    let q = admin
       .from("mock_questions")
       .select("content_hash, question_html")
       .range(from, from + pageSize - 1);
+    if (sectionIds) q = q.in("section_id", sectionIds);
+    const { data, error } = await q;
     if (error) throw new Error(`Could not load existing question hashes: ${error.message}`);
     for (const row of data || []) {
       if ((row as any).content_hash) seen.add((row as any).content_hash);
