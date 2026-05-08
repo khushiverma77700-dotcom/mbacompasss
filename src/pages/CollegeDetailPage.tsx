@@ -131,7 +131,8 @@ const CollegeDetailPage = () => {
     return () => clearInterval(galleryRef.current);
   }, [galleryImages.length]);
 
-  // Must call useResolvedSeo before any early returns to obey hooks rules
+  // Must call all hooks before any early returns to obey hooks rules
+  const { gate: gateBrochure } = useCtaGate("college_download_brochure");
   const collegeJsonLd = college ? generateCollegeSchema(college) : undefined;
   const { seo: resolvedSeo } = useResolvedSeo(
     college ? "college" : undefined,
