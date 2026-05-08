@@ -136,6 +136,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         resolvedAdminUserIdRef.current = null;
         setIsAdmin(false);
         setAllowedSections(null);
+        setAdminLoading(false);
         return;
       }
 
@@ -143,17 +144,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         resolvedAdminUserIdRef.current = null;
         setIsAdmin(false);
         setAllowedSections(null);
+        setAdminLoading(false);
         return;
       }
 
-      if (resolvedAdminUserIdRef.current === user.id) return;
+      if (resolvedAdminUserIdRef.current === user.id) {
+        setAdminLoading(false);
+        return;
+      }
       resolvedAdminUserIdRef.current = user.id;
 
       const cached = readAdminCache(user.id);
       if (cached) {
         setIsAdmin(cached.isAdmin);
         setAllowedSections(cached.allowedSections);
+        setAdminLoading(false);
         // continue to background-refresh so newly granted admin access shows up immediately
+      } else {
+        setAdminLoading(true);
       }
 
       try {
@@ -172,6 +180,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (!adminStatus) {
           writeAdminCache(user.id, { isAdmin: false, allowedSections: null });
           setAllowedSections(null);
+          setAdminLoading(false);
           return;
         }
 
@@ -185,12 +194,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const nextAllowedSections = (permData?.allowed_sections as string[] | null) ?? null;
           setAllowedSections(nextAllowedSections);
           writeAdminCache(user.id, { isAdmin: true, allowedSections: nextAllowedSections });
+          setAdminLoading(false);
         }
       } catch {
         resolvedAdminUserIdRef.current = null;
         if (!cancelled) {
           setIsAdmin(false);
           setAllowedSections(null);
+          setAdminLoading(false);
         }
       }
     };
