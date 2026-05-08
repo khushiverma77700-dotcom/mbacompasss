@@ -602,13 +602,17 @@ const App = () => (
     persistOptions={{
       persister: queryPersister!,
       maxAge: 24 * 60 * 60 * 1000,
-      buster: "v4-performance-cache",
+      buster: "v5-no-heavy-lists",
       dehydrateOptions: {
         // Persist successful public lookups so repeat visits paint instantly
         // from cache while we revalidate in the background.
         shouldDehydrateQuery: (q) => {
           if (q.state.status !== "success") return false;
           const key = Array.isArray(q.queryKey) ? String(q.queryKey[0]) : JSON.stringify(q.queryKey);
+          // Only persist SMALL lookup tables. Persisting big lists like
+          // "colleges" / "institutes" (600+ rows with HTML) locks up the
+          // main thread on every cache update and can blow the 5MB
+          // localStorage quota — causing 15-30s navigation hangs.
           return [
             "site_settings_all",
             "site_settings",
@@ -616,14 +620,8 @@ const App = () => (
             "categories-homepage",
             "exam-deadlines",
             "popular-exams",
-            // Big public listings — caching these eliminates the 1-2s RPC on
-            // /colleges, /coaching, homepage spotlight, related-college sidebars
-            "colleges",
-            "colleges_light",
-            "institutes",
-            "featured-institutes",
-            "city-pages",
             "specializations",
+            "city-pages",
           ].includes(key);
         },
       },

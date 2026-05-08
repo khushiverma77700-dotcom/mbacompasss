@@ -3,17 +3,20 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { clearStudentMode } from "@/lib/studentModeNav";
 
-const ADMIN_CACHE_TTL_MS = 30 * 1000;
+const ADMIN_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24h — render instantly, revalidate in background
 
 const clearAdminCache = (userId?: string) => {
   if (typeof window === "undefined") return;
   try {
     if (userId) {
+      window.localStorage.removeItem(`mbc-admin-status:${userId}`);
       window.sessionStorage.removeItem(`mbc-admin-status:${userId}`);
       return;
     }
-    for (const key of Object.keys(window.sessionStorage)) {
-      if (key.startsWith("mbc-admin-status:")) window.sessionStorage.removeItem(key);
+    for (const store of [window.localStorage, window.sessionStorage]) {
+      for (const key of Object.keys(store)) {
+        if (key.startsWith("mbc-admin-status:")) store.removeItem(key);
+      }
     }
   } catch {
     // ignore
@@ -31,11 +34,11 @@ const getAdminCacheKey = (userId: string) => `mbc-admin-status:${userId}`;
 const readAdminCache = (userId: string): AdminCacheEntry | null => {
   if (typeof window === "undefined") return null;
   try {
-    const raw = window.sessionStorage.getItem(getAdminCacheKey(userId));
+    const raw = window.localStorage.getItem(getAdminCacheKey(userId));
     if (!raw) return null;
     const parsed = JSON.parse(raw) as AdminCacheEntry;
-    if (!parsed || parsed.expiresAt < Date.now()) return null;
-    return parsed;
+    if (!parsed) return null;
+    return parsed; // return even if expired — caller decides whether to revalidate
   } catch {
     return null;
   }
@@ -44,7 +47,7 @@ const readAdminCache = (userId: string): AdminCacheEntry | null => {
 const writeAdminCache = (userId: string, value: Omit<AdminCacheEntry, "expiresAt">) => {
   if (typeof window === "undefined") return;
   try {
-    window.sessionStorage.setItem(
+    window.localStorage.setItem(
       getAdminCacheKey(userId),
       JSON.stringify({ ...value, expiresAt: Date.now() + ADMIN_CACHE_TTL_MS })
     );
@@ -165,40 +168,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        const { data } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .eq("role", "admin")
-          .maybeSingle();
+        const [rolesRes, permRes] = await Promise.all([
+          supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", user.id)
+            .eq("role", "admin")
+            .maybeSingle(),
+          supabase
+            .from("admin_permissions")
+            .select("allowed_sections")
+            .eq("email", user.email?.toLowerCase() || "")
+            .maybeSingle(),
+        ]);
 
         if (cancelled) return;
 
-        const adminStatus = !!data;
+        const adminStatus = !!rolesRes.data;
+        const nextAllowedSections = adminStatus
+          ? ((permRes.data?.allowed_sections as string[] | null) ?? null)
+          : null;
+
         setIsAdmin(adminStatus);
-
-        if (!adminStatus) {
-          writeAdminCache(user.id, { isAdmin: false, allowedSections: null });
-          setAllowedSections(null);
-          setAdminLoading(false);
-          return;
-        }
-
-        const { data: permData } = await supabase
-          .from("admin_permissions")
-          .select("allowed_sections")
-          .eq("email", user.email?.toLowerCase() || "")
-          .maybeSingle();
-
-        if (!cancelled) {
-          const nextAllowedSections = (permData?.allowed_sections as string[] | null) ?? null;
-          setAllowedSections(nextAllowedSections);
-          writeAdminCache(user.id, { isAdmin: true, allowedSections: nextAllowedSections });
-          setAdminLoading(false);
-        }
+        setAllowedSections(nextAllowedSections);
+        writeAdminCache(user.id, { isAdmin: adminStatus, allowedSections: nextAllowedSections });
+        setAdminLoading(false);
       } catch {
         resolvedAdminUserIdRef.current = null;
-        if (!cancelled) {
+        if (!cancelled && !cached) {
           setIsAdmin(false);
           setAllowedSections(null);
           setAdminLoading(false);
