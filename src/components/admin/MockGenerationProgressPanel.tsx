@@ -547,7 +547,6 @@ function RetryAllFailedButton({ jobs }: { jobs: { id: string; name: string }[] }
 }
 
 // ============== TELEMETRY PANEL ==============
-import type { MockGenerationTelemetry } from "@/hooks/useMockGenerationTelemetry";
 
 function TelemetryPanel({
   tel, elapsedSec, qps,
