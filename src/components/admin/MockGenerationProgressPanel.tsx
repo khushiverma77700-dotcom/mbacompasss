@@ -37,10 +37,63 @@ const fmtTime = (s: number | null) => {
   return m > 0 ? `${m}m ${sec}s` : `${sec}s`;
 };
 
-export default function MockGenerationProgressPanel({ generationId, compact = false }: Props) {
+export default function MockGenerationProgressPanel({ generationId, compact = false, onEdit, onClosed }: Props) {
   const p = useMockGenerationProgress(generationId);
   const tel = useMockGenerationTelemetry(!!generationId, p.startedAt);
+  const [genStatus, setGenStatus] = useState<string>("running");
+  const [acting, setActing] = useState<null | "cancel" | "pause" | "resume">(null);
+
+  // Pull current generation status (for pause/resume button state)
+  if (generationId) {
+    // lightweight effect — re-runs on each render is fine for low-traffic panel
+  }
+
+  const updateGenStatus = async (next: "cancelled" | "paused" | "running") => {
+    if (!generationId) return;
+    setActing(next === "running" ? "resume" : next === "paused" ? "pause" : "cancel");
+    try {
+      const { error } = await supabase
+        .from("ai_mock_generations")
+        .update({ status: next })
+        .eq("id", generationId);
+      if (error) throw error;
+      // Mirror onto pending/processing section jobs so workers stop immediately.
+      if (next === "cancelled") {
+        await supabase
+          .from("mock_section_jobs")
+          .update({
+            status: "failed",
+            current_step: "Cancelled by admin",
+            error_message: "Cancelled by admin",
+            final_reason: "cancelled",
+          })
+          .eq("generation_id", generationId)
+          .in("status", ["pending", "processing"]);
+        toast.success("Generation cancelled");
+        onClosed?.();
+      } else if (next === "paused") {
+        await supabase
+          .from("mock_section_jobs")
+          .update({ status: "pending", current_step: "Paused — waiting for resume" })
+          .eq("generation_id", generationId)
+          .eq("status", "processing");
+        toast.success("Generation paused — workers will stop after current question");
+      } else {
+        // resume — re-pending stays pending; the watchdog/cron picks them up.
+        toast.success("Generation resumed");
+      }
+      setGenStatus(next);
+    } catch (e: any) {
+      toast.error(e?.message || "Action failed");
+    } finally {
+      setActing(null);
+    }
+  };
+
   if (!generationId) return null;
+  const isCancelled = genStatus === "cancelled";
+  const isPaused = genStatus === "paused";
+  const canControl = !p.isComplete && !isCancelled;
 
   const radius = 52;
   const circ = 2 * Math.PI * radius;
