@@ -60,6 +60,7 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Courses", path: "/admin/mba-compass-courses", icon: BookOpen },
       { label: "Bundles", path: "/admin/mock-bundles", icon: Package },
       { label: "Mocks", path: "/admin/mock-tests", icon: ClipboardList },
+      { label: "Bulk AI Mock Generation", path: "/admin/bulk-mock-generation", icon: Sparkles },
       { label: "Students", path: "/admin/student-mocks", icon: Users },
       // Secondary tools
       { label: "Mocks Landing Page", path: "/admin/mocks-landing", icon: ClipboardList },
