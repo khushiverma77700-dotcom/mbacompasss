@@ -922,9 +922,9 @@ Deno.serve(async (req) => {
       rejected_dup_internet: 0,
     };
 
-    // Pre-load every existing question hash. The default API limit is 1000 rows,
-    // so page through the full bank to prevent duplicates from older questions.
-    const seenHashes = await loadExistingQuestionHashes(admin);
+    // Dedup is now performed per-section inside retry-mock-section, scoped to
+    // the same (exam, section). Skipping the global hash preload here saves a
+    // multi-second round-trip on every generation kickoff.
 
     // Insert generation log row
     const { data: gen } = await admin.from("ai_mock_generations").insert({
