@@ -602,7 +602,7 @@ const App = () => (
     persistOptions={{
       persister: queryPersister!,
       maxAge: 24 * 60 * 60 * 1000,
-      buster: "v4-performance-cache",
+      buster: "v5-no-heavy-lists",
       dehydrateOptions: {
         // Persist successful public lookups so repeat visits paint instantly
         // from cache while we revalidate in the background.
