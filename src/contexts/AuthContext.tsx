@@ -3,7 +3,22 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { clearStudentMode } from "@/lib/studentModeNav";
 
-const ADMIN_CACHE_TTL_MS = 5 * 60 * 1000;
+const ADMIN_CACHE_TTL_MS = 30 * 1000;
+
+const clearAdminCache = (userId?: string) => {
+  if (typeof window === "undefined") return;
+  try {
+    if (userId) {
+      window.sessionStorage.removeItem(`mbc-admin-status:${userId}`);
+      return;
+    }
+    for (const key of Object.keys(window.sessionStorage)) {
+      if (key.startsWith("mbc-admin-status:")) window.sessionStorage.removeItem(key);
+    }
+  } catch {
+    // ignore
+  }
+};
 
 type AdminCacheEntry = {
   isAdmin: boolean;
@@ -136,7 +151,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (cached) {
         setIsAdmin(cached.isAdmin);
         setAllowedSections(cached.allowedSections);
-        return;
+        // continue to background-refresh so newly granted admin access shows up immediately
       }
 
       try {
@@ -218,6 +233,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     clearStudentMode();
+    clearAdminCache();
     setUser(null);
     setSession(null);
     setIsAdmin(false);
