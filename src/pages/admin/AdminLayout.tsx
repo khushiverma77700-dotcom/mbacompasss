@@ -140,7 +140,13 @@ const AdminLayout = () => {
   const isSuperAdmin = allowedSections === null;
   const hasAccess = (path: string) => isSuperAdmin || (allowedSections?.includes(path) ?? false);
 
-  const currentRouteAllowed = hasAccess(location.pathname) || location.pathname === "/admin";
+  const isRouteAllowed = (path: string) => {
+    if (isSuperAdmin) return true;
+    if (!allowedSections) return false;
+    return allowedSections.some(section => path === section || path.startsWith(section + "/"));
+  };
+
+  const currentRouteAllowed = isRouteAllowed(location.pathname) || location.pathname === "/admin";
 
   const SidebarContent = () => (
     <>
