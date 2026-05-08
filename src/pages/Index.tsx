@@ -101,18 +101,18 @@ const Index = () => {
 
       {/* Everything else: mount only when scrolled near. Each section gets its own
           IntersectionObserver so initial JS execution stays tiny. */}
-      <LazyMount minHeight={500}><MocksBannerSection /></LazyMount>
-      <LazyMount minHeight={300}><AIToolsSection /></LazyMount>
-      <LazyMount minHeight={600}><AIStudyPlannerSection /></LazyMount>
-      <LazyMount minHeight={400}><CoachingOfWeekSection /></LazyMount>
-      <LazyMount minHeight={300}><OfferBanners /></LazyMount>
-      <LazyMount minHeight={400}><FeaturedInstitutes /></LazyMount>
-      <LazyMount minHeight={500}><TopRankedCollegesSection /></LazyMount>
-      <LazyMount minHeight={400}><BrowseByCitySection /></LazyMount>
-      <LazyMount minHeight={120}><ExamDeadlinesTicker /></LazyMount>
-      <LazyMount minHeight={400}><PopularExamsSection /></LazyMount>
-      <LazyMount minHeight={400}><HowItWorksSection /></LazyMount>
-      <LazyMount minHeight={400}><LearningResourcesSection /></LazyMount>
+      <LazyMount minHeight={900}><MocksBannerSection /></LazyMount>
+      <LazyMount minHeight={500}><AIToolsSection /></LazyMount>
+      <LazyMount minHeight={700}><AIStudyPlannerSection /></LazyMount>
+      <LazyMount minHeight={500}><CoachingOfWeekSection /></LazyMount>
+      <LazyMount minHeight={400}><OfferBanners /></LazyMount>
+      <LazyMount minHeight={500}><FeaturedInstitutes /></LazyMount>
+      <LazyMount minHeight={600}><TopRankedCollegesSection /></LazyMount>
+      <LazyMount minHeight={500}><BrowseByCitySection /></LazyMount>
+      <LazyMount minHeight={160}><ExamDeadlinesTicker /></LazyMount>
+      <LazyMount minHeight={500}><PopularExamsSection /></LazyMount>
+      <LazyMount minHeight={500}><HowItWorksSection /></LazyMount>
+      <LazyMount minHeight={500}><LearningResourcesSection /></LazyMount>
       <LazyMount minHeight={300}><ProfileAnalyzerCTA /></LazyMount>
       <LazyMount minHeight={400}><LatestArticlesSection /></LazyMount>
       <LazyMount minHeight={400}><SuccessStoriesSection /></LazyMount>
