@@ -44,7 +44,7 @@ const readAdminCache = (userId: string): AdminCacheEntry | null => {
 const writeAdminCache = (userId: string, value: Omit<AdminCacheEntry, "expiresAt">) => {
   if (typeof window === "undefined") return;
   try {
-    window.sessionStorage.setItem(
+    window.localStorage.setItem(
       getAdminCacheKey(userId),
       JSON.stringify({ ...value, expiresAt: Date.now() + ADMIN_CACHE_TTL_MS })
     );
