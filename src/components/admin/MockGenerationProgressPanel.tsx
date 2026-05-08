@@ -37,6 +37,7 @@ const fmtTime = (s: number | null) => {
 
 export default function MockGenerationProgressPanel({ generationId, compact = false }: Props) {
   const p = useMockGenerationProgress(generationId);
+  const tel = useMockGenerationTelemetry(!!generationId, p.startedAt);
   if (!generationId) return null;
 
   const radius = 52;
