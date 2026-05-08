@@ -10,7 +10,7 @@ import {
   Cpu, Server, IndianRupee, DollarSign, Flame, Network, Coins,
 } from "lucide-react";
 import { useMockGenerationProgress, type SectionJob } from "@/hooks/useMockGenerationProgress";
-import { useMockGenerationTelemetry } from "@/hooks/useMockGenerationTelemetry";
+import { useMockGenerationTelemetry, type MockGenerationTelemetry } from "@/hooks/useMockGenerationTelemetry";
 import { modelLabel } from "@/lib/aiPricing";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
