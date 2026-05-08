@@ -874,14 +874,15 @@ Deno.serve(async (req) => {
         function scheduleNext(_resetAttempts: boolean) {
           if (!auto) return;
           const workerUrl = `${url}/functions/v1/retry-mock-section`;
+          const internalWorkerSecret = Deno.env.get("LOVABLE_API_KEY") || serviceKey;
           const next = fetch(workerUrl, {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${serviceKey}`,
-              apikey: serviceKey,
+              Authorization: `Bearer ${internalWorkerSecret}`,
+              apikey: internalWorkerSecret,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ job_id, auto: true, service: true, continuation: true, internal_secret: serviceKey }),
+            body: JSON.stringify({ job_id, auto: true, service: true, continuation: true, internal_secret: internalWorkerSecret }),
           }).catch((e) => console.error("[retry-mock-section] next worker failed", e));
           // @ts-ignore
           if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
@@ -931,14 +932,15 @@ Deno.serve(async (req) => {
               updated_at: new Date().toISOString(),
             }).eq("id", nextJobId);
             const workerUrl = `${url}/functions/v1/retry-mock-section`;
+            const internalWorkerSecret = Deno.env.get("LOVABLE_API_KEY") || serviceKey;
             const next = fetch(workerUrl, {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${serviceKey}`,
-                apikey: serviceKey,
+                Authorization: `Bearer ${internalWorkerSecret}`,
+                apikey: internalWorkerSecret,
                 "Content-Type": "application/json",
               },
-                body: JSON.stringify({ job_id: nextJobId, auto: true, service: true, internal_secret: serviceKey }),
+                body: JSON.stringify({ job_id: nextJobId, auto: true, service: true, internal_secret: internalWorkerSecret }),
             }).catch((e) => console.error("[retry-mock-section] sibling kickoff failed", e));
             // @ts-ignore
             if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
