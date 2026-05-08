@@ -1,59 +1,66 @@
-## Goal
-Add proper "Generate via AI" flow + "AI SEO (audit + auto-rewrite)" to the new Coaching Institute admin so the entire 35-section profile + SEO can be produced automatically and Google-rankable.
+## Bulk AI Mock Generation Module
 
-## 1. Generate via AI dialog (new)
-Add a **Generate via AI** button to:
-- `/admin/coaching-institutes` list (top-right next to "Add Institute")
-- `/admin/coaching-institutes/:id` detail page header
+A new admin workflow that lets the content team queue many AI-mock generation requests in one go and let them process automatically in the background.
 
-Clicking it opens a dialog (`AICoachingInstituteDialog`) asking:
-- Institute name *
-- Website
-- City + State (StateCitySelect)
-- Mode (Online / Offline / Hybrid)
-- Primary target keyword *
-- Secondary keywords (chips)
-- Exams covered (chips, defaults: CAT, XAT, NMAT, SNAP, CMAT)
-- Flagship programs (chips, optional)
+### What we'll build
 
-On submit → calls new edge function `ai-coaching-institute-generate` → on success either:
-- (from list) creates institute row → redirects to its detail page
-- (from detail) overwrites/merges into the current row
+**1. New admin page** at `/admin/bulk-mock-generation` (link added to admin sidebar under "Mock Tests").
 
-## 2. New edge function `ai-coaching-institute-generate`
-Tool-calling JSON output that returns BOTH:
-- `basic`: { name, slug, institute_type, city, state, description, website, phone, email, mode, success_rate, students_count, rating, meta_title, meta_description, keywords, primary_keyword }
-- `sections`: object keyed by every `INSTITUTE_SECTIONS` id, each `{ enabled: true, data: <shape matching the field schema> }` — overview, key_highlights, courses_offered, faculty (3-5), pros_cons, why_choose, faqs (5-7), results, fees, locations, social, ctas, etc.
+The page has two tabs:
 
-System prompt re-uses the strict rules from `ai-institute-writer` (MBA-only, no blanks, real ${currentYear} data, semantic HTML, primary keyword in first 100 words, 2 H2s, internal links, last-updated stamp).
+**Tab A — Builder (Queue Composer)**
+- "Add request" form with dropdowns:
+  - Exam Type (CAT, NMAT, XAT, SNAP, IIFT, CMAT, MAT)
+  - Mock Type / Category (Full-Length, Sectional, Topic-wise, Daily Quiz, Practice Set)
+  - Section (auto-populated from chosen exam, only for Sectional / Topic / Practice / Daily)
+  - Topic (free text + suggestions from existing question topics — only for Topic-wise / Practice / Daily)
+  - Difficulty (Easy, Moderate, Hard, Mixed)
+  - Number of Questions
+  - Number of Sets (1–10)
+  - Optional Test Name Prefix
+- "Add to Queue" appends a row to the local draft list.
+- Draft rows can be **edited, duplicated, or deleted** before submission.
+- "Submit All" creates one `bulk_mock_request` parent + N `bulk_mock_request_items` (status `pending`) and immediately returns. A separate worker picks them up.
 
-Model: `google/gemini-2.5-flash` (cost-balanced, matches existing institute writer).
+**Tab B — Queue Dashboard**
+- Live table of all bulk requests + items grouped by parent batch.
+- Each row shows: Exam · Type · Section · Topic · Difficulty · Q-count · Sets · **Status** (Pending / In Progress / Completed / Failed / Needs Review) · progress bar (questions generated / requested) · created mock test link · error.
+- Per-row actions: **Pause, Resume, Retry, Duplicate, Delete** (only allowed when not actively processing).
+- Auto-refreshes every 3s.
 
-## 3. AI SEO button (audit + auto-rewrite)
-New **"Run AI SEO"** button in the editor header (next to Save). Opens `AISeoInstitutePanel`:
+**2. New backend pieces**
 
-Step A — Audit (calls existing `auto-seo-engine` with `mode: "full_audit"`, `contentType: "institute"`, `pageId`).
-Shows scorecard: title, meta, URL, keyword placement, content score, E-E-A-T, image audit (re-uses `seoValidators.ts` chips like `SeoEnhanceFields`).
+- Tables (migration):
+  - `bulk_mock_requests` — batch metadata, created_by, totals, status
+  - `bulk_mock_request_items` — one row per queued mock with all params, `status`, `progress`, `generation_id` (FK to existing `ai_mock_generations`), `error_message`, `paused`, `retry_count`
+  - RLS: admin-only.
 
-Step B — Auto-rewrite weak sections.
-Iterates over enabled prose sections (overview, why_choose, methodology, results, fees, etc.). For any section whose body text scores below 70 in `scoreContent` OR fails keyword placement, calls a new edge function `ai-coaching-institute-rewrite-section` which rewrites just that section's HTML with primary keyword + freshness + semantic structure. Updates `sections[id].data` in place and saves. Also runs `mode: "faq_generate"` to refresh FAQ schema.
+- Edge function `bulk-mock-worker` (invoked by cron every 1 min + immediately after submit):
+  - Claims up to N pending, non-paused items.
+  - Calls existing `generate-mock-questions` function in background per item, stores returned `generation_id`.
+  - Subsequent ticks update item status by reading `ai_mock_generations` and `mock_section_jobs` for that `generation_id`.
+  - Marks `Needs Review` when generation completes with `failed` sections > 0 but some succeeded.
 
-Live progress list shows each section with status (Skipped / Rewriting / Improved score).
+- Cron schedule (pg_cron): `bulk-mock-worker` every minute.
 
-## 4. Files
+**3. Reuse, not rewrite**
 
-**New**
-- `supabase/functions/ai-coaching-institute-generate/index.ts` — full profile generator
-- `supabase/functions/ai-coaching-institute-rewrite-section/index.ts` — single-section rewriter
-- `src/components/admin/AICoachingInstituteDialog.tsx` — pre-generation brief dialog
-- `src/components/admin/AISeoInstitutePanel.tsx` — audit + auto-rewrite panel
+- Generation engine (`generate-mock-questions`), exam profiles, section plans, dedupe, watchdog, and the Mock Builder UI all stay untouched.
+- We only orchestrate calls in bulk and surface a queue UI.
 
-**Modified**
-- `src/pages/admin/AdminCoachingInstitutes.tsx` — add "Generate via AI" button
-- `src/pages/admin/AdminCoachingInstituteDetail.tsx` — add "Generate via AI" + "Run AI SEO" buttons in header
-- `src/lib/instituteSections.ts` — export helper `mergeGeneratedSections(existing, generated)` used by both flows
+### Files to add / modify
 
-## Notes
-- No DB migration needed — `institutes.sections` JSONB and `institute_courses` already exist.
-- Re-uses `auto-seo-engine` so SEO rules stay identical to the college SEO engine.
-- All AI calls go through `callAIGateway` and log via `logAIUsage`.
+```text
+supabase/migrations/<ts>_bulk_mock_generation.sql        (new tables + RLS + cron)
+supabase/functions/bulk-mock-worker/index.ts             (new worker)
+src/pages/admin/AdminBulkMockGeneration.tsx              (new page — Builder + Queue tabs)
+src/pages/admin/adminNav.ts                              (add nav entry)
+src/App.tsx                                              (add route)
+```
+
+### Out of scope (for this round)
+
+- Editing the *generated* questions in bulk (already covered by existing Mock Builder).
+- Changing the per-question AI prompt logic.
+
+Confirm and I'll start with the migration.
