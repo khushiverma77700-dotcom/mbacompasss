@@ -870,7 +870,7 @@ Deno.serve(async (req) => {
               apikey: serviceKey,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ job_id, auto: true, service: true, continuation: true }),
+            body: JSON.stringify({ job_id, auto: true, service: true, continuation: true, internal_secret: serviceKey }),
           }).catch((e) => console.error("[retry-mock-section] next worker failed", e));
           // @ts-ignore
           if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
@@ -927,7 +927,7 @@ Deno.serve(async (req) => {
                 apikey: serviceKey,
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify({ job_id: nextJobId, auto: true, service: true }),
+                body: JSON.stringify({ job_id: nextJobId, auto: true, service: true, internal_secret: serviceKey }),
             }).catch((e) => console.error("[retry-mock-section] sibling kickoff failed", e));
             // @ts-ignore
             if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(next);
