@@ -285,6 +285,38 @@ const AdminMockTests = () => {
         ))}
       </div>
 
+      <div className="flex flex-wrap items-center gap-3 mb-4">
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground">Exam</Label>
+          <Select value={examFilter} onValueChange={setExamFilter}>
+            <SelectTrigger className="w-[160px] h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Exams</SelectItem>
+              {Array.from(new Set(tests.map((t) => t.exam_code).filter(Boolean))).sort().map((ex) => (
+                <SelectItem key={ex as string} value={ex as string}>{ex as string}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground">Difficulty</Label>
+          <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
+            <SelectTrigger className="w-[140px] h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="easy">Easy</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="hard">Hard</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {(examFilter !== "all" || difficultyFilter !== "all") && (
+          <Button size="sm" variant="ghost" onClick={() => { setExamFilter("all"); setDifficultyFilter("all"); }}>
+            Clear filters
+          </Button>
+        )}
+      </div>
+
       <Card>
         <CardContent className="p-0">
           <Table>
