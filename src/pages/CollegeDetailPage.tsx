@@ -207,7 +207,6 @@ const CollegeDetailPage = () => {
     { q: `What is the average placement?`, a: `Average package: ${college.placement_avg || "competitive"}. Highest: ${college.placement_highest || "among the best"}.` },
   ];
 
-  const { gate: gateBrochure } = useCtaGate("college_download_brochure");
   const handleDownloadBrochure = gateBrochure(() => {
     const content = [`${college.name} - Brochure`, `Location: ${college.city}, ${college.state}`, `Ranking: #${college.ranking}`, `Fees: ${college.fees}`, `Avg Package: ${college.placement_avg}`].join("\n");
     const blob = new Blob([content], { type: "text/plain" });
