@@ -1029,7 +1029,7 @@ Deno.serve(async (req) => {
             apikey: serviceKey,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ job_id: firstJobId, auto: true, service: true }),
+          body: JSON.stringify({ job_id: firstJobId, auto: true, service: true, internal_secret: serviceKey }),
         }).catch((e) => console.error("[generate] worker kickoff failed", e));
         // @ts-ignore
         if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(kick);
