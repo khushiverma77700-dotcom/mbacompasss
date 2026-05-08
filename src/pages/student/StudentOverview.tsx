@@ -55,7 +55,7 @@ export default function StudentOverview() {
       // so the page is ready as soon as the slowest one returns instead of
       // waiting for them sequentially.
       const [
-        { data: e }, { data: g }, { data: ann }, { data: pf }, { data: tk }, { data: wk }, { data: prof }, { data: exRows }, { data: rw }, { data: lb },
+        { data: e }, { data: g }, { data: ann }, { data: pf }, { data: tk }, { data: wk }, { data: prof }, { data: exRows }, { data: rw },
       ] = await Promise.all([
         supabase.from("mock_enrollments")
           .select("id, test_id, source, expires_at, enrolled_at, test:mock_tests(name, slug, exam_code)")
@@ -70,7 +70,6 @@ export default function StudentOverview() {
         supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle(),
         supabase.from("exams").select("name, slug, exam_date").not("exam_date", "is", null).order("exam_date", { ascending: true }).limit(20),
         supabase.from("student_rewards").select("*").eq("user_id", user.id).maybeSingle(),
-        supabase.rpc("get_global_leaderboard", { _limit: 500 }),
       ]);
       if (cancelled) return;
       setEnrollments(e ?? []);
@@ -81,8 +80,6 @@ export default function StudentOverview() {
       setWeak(wk ?? []);
       setDisplayName(prof?.display_name ?? user.email?.split("@")[0] ?? "Student");
       setRewards(rw);
-      const me = (lb as any[] | null)?.find((r) => r.is_self);
-      setLeaderboardRank(me?.rank ?? null);
 
       const upcoming = (exRows ?? [])
         .filter((x: any) => x.exam_date && new Date(x.exam_date).getTime() >= Date.now() - 86400000)
@@ -91,6 +88,24 @@ export default function StudentOverview() {
 
     })();
     return () => { cancelled = true; };
+  }, [user]);
+
+  // Fetch just the user's rank (single integer) — deferred out of the critical
+  // path so the dashboard paints before this lightweight call resolves.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    const w = window as any;
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 800));
+    const handle = schedule(async () => {
+      const { data } = await supabase.rpc("get_my_leaderboard_rank" as any);
+      if (!cancelled) setLeaderboardRank(typeof data === "number" ? data : null);
+    });
+    return () => {
+      cancelled = true;
+      const cancel = w.cancelIdleCallback ?? window.clearTimeout;
+      try { cancel(handle); } catch {}
+    };
   }, [user]);
 
   // Re-render every minute so countdowns stay live without manual refresh.
