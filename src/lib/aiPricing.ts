@@ -28,6 +28,12 @@ export const MODEL_PRICING: Record<string, ModelPrice> = {
   "openai/gpt-5-mini": { promptPerM: 0.25, completionPerM: 2.0 },
   "openai/gpt-5-nano": { promptPerM: 0.05, completionPerM: 0.40 },
   "openai/gpt-5.2":    { promptPerM: 1.50, completionPerM: 12.0 },
+
+  // OpenAI GPT-4o family (used by mock question generator)
+  "openai/gpt-4o":      { promptPerM: 2.50, completionPerM: 10.0 },
+  "openai/gpt-4o-mini": { promptPerM: 0.15, completionPerM: 0.60 },
+  "gpt-4o":             { promptPerM: 2.50, completionPerM: 10.0 },
+  "gpt-4o-mini":        { promptPerM: 0.15, completionPerM: 0.60 },
 };
 
 const FALLBACK: ModelPrice = MODEL_PRICING["google/gemini-2.5-flash"];

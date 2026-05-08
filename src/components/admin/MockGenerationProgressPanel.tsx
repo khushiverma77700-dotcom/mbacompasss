@@ -7,8 +7,11 @@ import {
   Loader2, CheckCircle2, XCircle, Clock, Sparkles, Activity,
   Gauge, Timer, ListChecks, AlertTriangle, Zap, Brain, RotateCcw,
   ShieldCheck, Stethoscope, BarChart3, Copy, FileSearch, Layers,
+  Cpu, Server, IndianRupee, DollarSign, Flame, Network, Coins,
 } from "lucide-react";
 import { useMockGenerationProgress, type SectionJob } from "@/hooks/useMockGenerationProgress";
+import { useMockGenerationTelemetry, type MockGenerationTelemetry } from "@/hooks/useMockGenerationTelemetry";
+import { modelLabel } from "@/lib/aiPricing";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -34,6 +37,7 @@ const fmtTime = (s: number | null) => {
 
 export default function MockGenerationProgressPanel({ generationId, compact = false }: Props) {
   const p = useMockGenerationProgress(generationId);
+  const tel = useMockGenerationTelemetry(!!generationId, p.startedAt);
   if (!generationId) return null;
 
   const radius = 52;
@@ -123,7 +127,7 @@ export default function MockGenerationProgressPanel({ generationId, compact = fa
       </div>
 
       <CardContent className="p-4 space-y-3 bg-gradient-to-b from-sky-50/40 to-white">
-        {/* Stats grid */}
+        {/* Stats grid — generation */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           <Stat label="Sections done" value={`${p.doneSections} / ${p.totalSections}`} tone="ok" />
           <Stat label="Processing" value={p.processingSections} tone="info" />
@@ -131,9 +135,20 @@ export default function MockGenerationProgressPanel({ generationId, compact = fa
           <Stat label="Rejected dups" value={p.totalDuplicates} tone={p.totalDuplicates > 0 ? "info" : undefined} />
         </div>
 
+        {/* Stats grid — AI telemetry (cost + latency + calls) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <Stat label="AI calls" value={tel.totalCalls} tone="info" />
+          <Stat label="Tokens used" value={tel.totalTokens.toLocaleString()} />
+          <Stat label="Cost (USD / INR)" value={`$${tel.totalCostUsd.toFixed(4)} · ₹${tel.totalCostInr.toFixed(2)}`} tone="ok" />
+          <Stat label="Latency p50 / p95" value={`${tel.p50LatencyMs}ms / ${tel.p95LatencyMs}ms`} tone={tel.p95LatencyMs > 30000 ? "danger" : "info"} />
+        </div>
+
         {!compact && (
-          <Tabs defaultValue="health" className="pt-1">
-            <TabsList className="grid w-full grid-cols-3 h-9 bg-sky-100/50">
+          <Tabs defaultValue="telemetry" className="pt-1">
+            <TabsList className="grid w-full grid-cols-4 h-9 bg-sky-100/50">
+              <TabsTrigger value="telemetry" className="text-xs gap-1.5">
+                <Cpu className="w-3.5 h-3.5" /> Telemetry
+              </TabsTrigger>
               <TabsTrigger value="health" className="text-xs gap-1.5">
                 <Stethoscope className="w-3.5 h-3.5" /> Health
               </TabsTrigger>
@@ -144,6 +159,11 @@ export default function MockGenerationProgressPanel({ generationId, compact = fa
                 <Layers className="w-3.5 h-3.5" /> Queue
               </TabsTrigger>
             </TabsList>
+
+            {/* ---------- TELEMETRY ---------- */}
+            <TabsContent value="telemetry" className="mt-3">
+              <TelemetryPanel tel={tel} elapsedSec={p.elapsedSec} qps={p.qps} />
+            </TabsContent>
 
             {/* ---------- HEALTH ---------- */}
             <TabsContent value="health" className="mt-3">
@@ -523,5 +543,179 @@ function RetryAllFailedButton({ jobs }: { jobs: { id: string; name: string }[] }
       {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
       Retry all {jobs.length} failed section{jobs.length === 1 ? "" : "s"}
     </Button>
+  );
+}
+
+// ============== TELEMETRY PANEL ==============
+
+function TelemetryPanel({
+  tel, elapsedSec, qps,
+}: {
+  tel: MockGenerationTelemetry;
+  elapsedSec: number;
+  qps: number;
+}) {
+  return (
+    <div className="space-y-3">
+      {/* Hero metrics */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <BigMetric icon={<DollarSign className="w-3.5 h-3.5" />} label="Total cost" value={`$${tel.totalCostUsd.toFixed(4)}`} sub={`₹${tel.totalCostInr.toFixed(2)}`} tone="ok" />
+        <BigMetric icon={<Coins className="w-3.5 h-3.5" />} label="Tokens" value={tel.totalTokens.toLocaleString()} sub={`in ${tel.promptTokens.toLocaleString()} · out ${tel.completionTokens.toLocaleString()}`} tone="info" />
+        <BigMetric icon={<Network className="w-3.5 h-3.5" />} label="API calls" value={tel.totalCalls} sub={`${tel.errorCalls} errors · ${tel.callsPerMinute.toFixed(1)}/min`} tone={tel.errorCalls > 0 ? "warn" : "info"} />
+        <BigMetric icon={<Timer className="w-3.5 h-3.5" />} label="Elapsed" value={fmtTime(elapsedSec)} sub={`${qps.toFixed(2)} q/s`} tone="info" />
+      </div>
+
+      {/* Latency block */}
+      <div className="rounded-lg border border-slate-200 bg-white p-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+            <Activity className="w-3.5 h-3.5" /> AI request latency
+          </div>
+          <div className="text-[10px] text-slate-500">
+            avg {tel.avgLatencyMs}ms · p50 {tel.p50LatencyMs}ms · p95 {tel.p95LatencyMs}ms
+          </div>
+        </div>
+        <Sparkline data={tel.latencySparkline} color="hsl(213 94% 50%)" height={42} />
+        <div className="text-[10px] text-slate-500 mt-1">
+          Last {tel.latencySparkline.length} OpenAI batch calls (ms each).
+        </div>
+      </div>
+
+      {/* Heatmap block */}
+      <div className="rounded-lg border border-slate-200 bg-white p-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+            <Server className="w-3.5 h-3.5" /> Server activity heatmap (last 60 seconds)
+          </div>
+          <div className="text-[10px] text-slate-500 flex items-center gap-1">
+            <Flame className="w-3 h-3" /> brighter = more concurrent AI calls finishing
+          </div>
+        </div>
+        <Heatmap data={tel.heatmapPerSec} />
+        <div className="mt-3">
+          <div className="text-[11px] font-semibold text-slate-600 mb-1 flex items-center gap-1.5">
+            <BarChart3 className="w-3 h-3" /> Calls per 5-second bucket (last 5 minutes)
+          </div>
+          <Sparkline data={tel.callsSparkline} color="hsl(160 84% 39%)" height={36} />
+        </div>
+      </div>
+
+      {/* Model breakdown */}
+      <div className="rounded-lg border border-slate-200 bg-white">
+        <div className="px-3 py-2 border-b border-slate-100 flex items-center justify-between">
+          <div className="text-xs font-semibold text-slate-700 flex items-center gap-1.5">
+            <Brain className="w-3.5 h-3.5" /> Model usage
+          </div>
+          <Badge variant="outline" className="h-5 text-[10px]">{tel.modelBreakdown.length} model{tel.modelBreakdown.length === 1 ? "" : "s"}</Badge>
+        </div>
+        <div className="p-2 space-y-1.5">
+          {tel.modelBreakdown.length === 0 ? (
+            <EmptyHint text="No AI calls completed yet — telemetry will populate within seconds." />
+          ) : tel.modelBreakdown.map((m) => {
+            const pct = tel.totalCalls ? Math.round((m.calls / tel.totalCalls) * 100) : 0;
+            return (
+              <div key={m.model} className="px-2 py-1.5">
+                <div className="flex items-baseline justify-between gap-2">
+                  <div className="text-[12px] font-medium text-slate-800 flex items-center gap-1.5">
+                    <Cpu className="w-3 h-3 text-sky-600" />
+                    {modelLabel(m.model)}
+                  </div>
+                  <div className="text-[11px] tabular-nums text-slate-500">
+                    {m.calls} calls · {m.tokens.toLocaleString()} tok · ${m.costUsd.toFixed(4)}
+                  </div>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-slate-100 overflow-hidden mt-1">
+                  <div className="h-full rounded-full bg-gradient-to-r from-sky-500 to-blue-500" style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Recent errors */}
+      {tel.errorCalls > 0 && (
+        <div className="rounded-lg border border-rose-200 bg-rose-50/70 p-3">
+          <div className="text-xs font-semibold text-rose-800 flex items-center gap-1.5 mb-1.5">
+            <AlertTriangle className="w-3.5 h-3.5" /> Recent AI errors ({tel.errorCalls})
+          </div>
+          <ul className="space-y-1 max-h-32 overflow-y-auto">
+            {tel.logs.filter((l) => l.status === "error").slice(0, 8).map((l) => (
+              <li key={l.id} className="text-[11px] text-rose-700 flex items-start gap-1.5">
+                <XCircle className="w-3 h-3 mt-0.5 shrink-0" />
+                <span className="font-mono truncate" title={l.error_message || ""}>
+                  {new Date(l.created_at).toLocaleTimeString()} · {l.error_message || "error"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BigMetric({
+  icon, label, value, sub, tone = "info",
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  sub?: string;
+  tone?: "ok" | "info" | "warn" | "danger";
+}) {
+  const map: Record<string, string> = {
+    ok: "from-emerald-500/10 to-white border-emerald-200 text-emerald-800",
+    info: "from-sky-500/10 to-white border-sky-200 text-sky-800",
+    warn: "from-amber-500/10 to-white border-amber-200 text-amber-800",
+    danger: "from-rose-500/10 to-white border-rose-200 text-rose-800",
+  };
+  return (
+    <div className={`rounded-lg border bg-gradient-to-br p-2.5 ${map[tone]}`}>
+      <div className="flex items-center gap-1 text-[10px] uppercase tracking-wide font-semibold opacity-80">
+        {icon}{label}
+      </div>
+      <div className="text-base font-bold tabular-nums leading-tight mt-0.5">{value}</div>
+      {sub && <div className="text-[10px] opacity-70 mt-0.5 truncate" title={sub}>{sub}</div>}
+    </div>
+  );
+}
+
+function Sparkline({ data, color = "hsl(var(--primary))", height = 36 }: { data: number[]; color?: string; height?: number }) {
+  if (!data.length) {
+    return <div className="text-[10px] text-slate-400 italic text-center py-2">awaiting data…</div>;
+  }
+  const max = Math.max(1, ...data);
+  const w = 100;
+  const points = data.map((v, i) => `${(i / Math.max(1, data.length - 1)) * w},${height - (v / max) * (height - 2) - 1}`).join(" ");
+  return (
+    <svg viewBox={`0 0 ${w} ${height}`} className="w-full" preserveAspectRatio="none" style={{ height }}>
+      <polyline fill="none" stroke={color} strokeWidth="1.5" points={points} />
+      <polyline fill={color} fillOpacity="0.15" stroke="none" points={`0,${height} ${points} ${w},${height}`} />
+    </svg>
+  );
+}
+
+function Heatmap({ data }: { data: number[] }) {
+  const peak = Math.max(1, ...data);
+  const colorFor = (v: number) => {
+    const t = v / peak;
+    if (t === 0) return "hsl(214 32% 91%)";
+    if (t < 0.25) return "hsl(160 84% 39% / 0.45)";
+    if (t < 0.5) return "hsl(160 84% 39% / 0.8)";
+    if (t < 0.75) return "hsl(38 92% 50% / 0.9)";
+    return "hsl(0 84% 60%)";
+  };
+  return (
+    <div className="grid grid-cols-[repeat(60,minmax(0,1fr))] gap-[2px]">
+      {data.map((v, i) => (
+        <div
+          key={i}
+          className="aspect-square rounded-[2px] transition-colors"
+          style={{ backgroundColor: colorFor(v) }}
+          title={`t-${60 - i}s · ${v} calls`}
+        />
+      ))}
+    </div>
   );
 }

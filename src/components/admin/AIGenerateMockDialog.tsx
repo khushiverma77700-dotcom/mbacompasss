@@ -565,7 +565,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
@@ -978,6 +978,12 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                     <Progress value={pct} className="h-1.5" />
                     {it.error_message && (
                       <p className="text-[11px] text-destructive">{it.error_message}</p>
+                    )}
+                    {/* Rich live telemetry — only for the currently processing item to keep it focused */}
+                    {it.status === "processing" && it.generation_id && (
+                      <div className="mt-2">
+                        <MockGenerationProgressPanel generationId={it.generation_id} />
+                      </div>
                     )}
                   </Card>
                 );

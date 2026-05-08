@@ -9,6 +9,48 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 import { getCredential } from "../_shared/getCredential.ts";
 
+// Service-role admin client used for fire-and-forget telemetry writes.
+const _telemetryAdmin = createClient(
+  Deno.env.get("SUPABASE_URL")!,
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+);
+
+interface AIUsageRecord {
+  feature: string;
+  model?: string | null;
+  provider?: string | null;
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  total_tokens?: number;
+  estimated_cost?: number;
+  latency_ms?: number;
+  status?: "success" | "error";
+  error_message?: string | null;
+  user_id?: string | null;
+}
+
+function logAIUsage(rec: AIUsageRecord) {
+  try {
+    _telemetryAdmin.from("ai_usage_logs").insert({
+      feature: rec.feature,
+      model: rec.model ?? null,
+      provider: rec.provider ?? null,
+      prompt_tokens: rec.prompt_tokens ?? 0,
+      completion_tokens: rec.completion_tokens ?? 0,
+      total_tokens: rec.total_tokens ?? 0,
+      estimated_cost: rec.estimated_cost ?? 0,
+      latency_ms: rec.latency_ms ?? null,
+      status: rec.status ?? "success",
+      error_message: rec.error_message ?? null,
+      user_id: rec.user_id ?? null,
+    }).then(({ error }) => {
+      if (error) console.warn("[logAIUsage] insert failed", error.message);
+    });
+  } catch (e) {
+    console.warn("[logAIUsage] threw", (e as Error)?.message);
+  }
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -630,7 +672,10 @@ async function callOpenAIBatch(args: {
   const MAX_INLINE_RETRIES = 4;
   let resp: Response | null = null;
   let lastErr: string | null = null;
+  const callStart = Date.now();
+  let attemptsUsed = 0;
   for (let attempt = 1; attempt <= MAX_INLINE_RETRIES; attempt++) {
+    attemptsUsed = attempt;
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), OPENAI_TIMEOUT_MS);
     try {
@@ -654,6 +699,17 @@ async function callOpenAIBatch(args: {
       }
       // non-retryable
       const txt = await resp.text();
+      // log failure
+      logAIUsage({
+        feature: "mock_question_generator",
+        model: `openai/${modelId}`,
+        provider: "openai",
+        prompt_tokens: 0, completion_tokens: 0, total_tokens: 0,
+        latency_ms: Date.now() - callStart,
+        status: "error",
+        error_message: `HTTP ${resp.status}: ${txt.slice(0, 200)}`,
+        user_id: args.userId,
+      });
       throw new Error(`AI call failed (${resp.status}): ${txt.slice(0, 300)}`);
     } catch (e) {
       clearTimeout(timer);
@@ -668,6 +724,16 @@ async function callOpenAIBatch(args: {
         resp = null;
         continue;
       }
+      logAIUsage({
+        feature: "mock_question_generator",
+        model: `openai/${modelId}`,
+        provider: "openai",
+        prompt_tokens: 0, completion_tokens: 0, total_tokens: 0,
+        latency_ms: Date.now() - callStart,
+        status: "error",
+        error_message: msg,
+        user_id: args.userId,
+      });
       throw new Error(msg);
     }
   }
@@ -675,6 +741,24 @@ async function callOpenAIBatch(args: {
     throw new Error(lastErr || "AI call failed after retries");
   }
   const data = await resp.json();
+  const usage = data?.usage || {};
+  const promptTok = Number(usage.prompt_tokens) || 0;
+  const completionTok = Number(usage.completion_tokens) || 0;
+  const totalTok = Number(usage.total_tokens) || (promptTok + completionTok);
+  // Per-1M pricing for gpt-4o-mini: $0.15 in / $0.60 out
+  const cost = (promptTok * 0.15 + completionTok * 0.60) / 1_000_000;
+  logAIUsage({
+    feature: "mock_question_generator",
+    model: `openai/${modelId}`,
+    provider: "openai",
+    prompt_tokens: promptTok,
+    completion_tokens: completionTok,
+    total_tokens: totalTok,
+    estimated_cost: cost,
+    latency_ms: Date.now() - callStart,
+    status: "success",
+    user_id: args.userId,
+  });
   const content = data?.choices?.[0]?.message?.content;
   if (!content) throw new Error("AI returned empty content");
   // Tolerant JSON parse: strip markdown fences and locate the outer JSON object.
