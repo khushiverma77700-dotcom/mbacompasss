@@ -630,7 +630,10 @@ async function callOpenAIBatch(args: {
   const MAX_INLINE_RETRIES = 4;
   let resp: Response | null = null;
   let lastErr: string | null = null;
+  const callStart = Date.now();
+  let attemptsUsed = 0;
   for (let attempt = 1; attempt <= MAX_INLINE_RETRIES; attempt++) {
+    attemptsUsed = attempt;
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), OPENAI_TIMEOUT_MS);
     try {
@@ -654,6 +657,17 @@ async function callOpenAIBatch(args: {
       }
       // non-retryable
       const txt = await resp.text();
+      // log failure
+      logAIUsage({
+        feature: "mock_question_generator",
+        model: `openai/${modelId}`,
+        provider: "openai",
+        prompt_tokens: 0, completion_tokens: 0, total_tokens: 0,
+        latency_ms: Date.now() - callStart,
+        status: "error",
+        error_message: `HTTP ${resp.status}: ${txt.slice(0, 200)}`,
+        user_id: args.userId,
+      });
       throw new Error(`AI call failed (${resp.status}): ${txt.slice(0, 300)}`);
     } catch (e) {
       clearTimeout(timer);
@@ -668,6 +682,16 @@ async function callOpenAIBatch(args: {
         resp = null;
         continue;
       }
+      logAIUsage({
+        feature: "mock_question_generator",
+        model: `openai/${modelId}`,
+        provider: "openai",
+        prompt_tokens: 0, completion_tokens: 0, total_tokens: 0,
+        latency_ms: Date.now() - callStart,
+        status: "error",
+        error_message: msg,
+        user_id: args.userId,
+      });
       throw new Error(msg);
     }
   }
@@ -675,6 +699,24 @@ async function callOpenAIBatch(args: {
     throw new Error(lastErr || "AI call failed after retries");
   }
   const data = await resp.json();
+  const usage = data?.usage || {};
+  const promptTok = Number(usage.prompt_tokens) || 0;
+  const completionTok = Number(usage.completion_tokens) || 0;
+  const totalTok = Number(usage.total_tokens) || (promptTok + completionTok);
+  // Per-1M pricing for gpt-4o-mini: $0.15 in / $0.60 out
+  const cost = (promptTok * 0.15 + completionTok * 0.60) / 1_000_000;
+  logAIUsage({
+    feature: "mock_question_generator",
+    model: `openai/${modelId}`,
+    provider: "openai",
+    prompt_tokens: promptTok,
+    completion_tokens: completionTok,
+    total_tokens: totalTok,
+    estimated_cost: cost,
+    latency_ms: Date.now() - callStart,
+    status: "success",
+    user_id: args.userId,
+  });
   const content = data?.choices?.[0]?.message?.content;
   if (!content) throw new Error("AI returned empty content");
   // Tolerant JSON parse: strip markdown fences and locate the outer JSON object.
