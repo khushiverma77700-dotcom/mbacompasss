@@ -896,16 +896,24 @@ Deno.serve(async (req) => {
       ? customSectionPlan.reduce((s, r) => s + r.tita, 0)
       : 0;
 
+    const finiteOr = (v: any, fallback: number) => {
+      const n = Number(v);
+      return Number.isFinite(n) && n > 0 ? n : fallback;
+    };
+    const finiteOrZero = (v: any, fallback: number) => {
+      const n = Number(v);
+      return Number.isFinite(n) && n >= 0 ? n : fallback;
+    };
     const perSet = customSectionPlan
       ? planTotalQuestions
-      : (Number(questions_per_set) || Number(total_questions) || profile.default_total);
+      : finiteOr(questions_per_set, finiteOr(total_questions, profile.default_total));
     const mcqCount = customSectionPlan
       ? planTotalMcq
-      : (Number(total_mcq) ?? Math.round(perSet * 0.85));
+      : finiteOrZero(total_mcq, Math.round(perSet * 0.85));
     const titaCount = customSectionPlan
       ? planTotalTita
-      : (Number(total_tita) ?? Math.max(0, perSet - mcqCount));
-    const safePerSet = mcqCount + titaCount;
+      : finiteOrZero(total_tita, Math.max(0, perSet - mcqCount));
+    const safePerSet = Math.max(1, mcqCount + titaCount);
 
     const createdTests: Array<{ id: string; name: string; slug: string }> = [];
     const stats = {
@@ -984,12 +992,21 @@ Deno.serve(async (req) => {
       }> = [];
       let questionNumberOffset = 0;
       for (const sec of sectionPlan) {
+        // Hard guard — never insert NaN/undefined into NOT NULL columns.
+        const safeSecQ = Number.isFinite(Number(sec.questions)) && Number(sec.questions) > 0
+          ? Math.floor(Number(sec.questions))
+          : 1;
+        const safeSecDur = Number.isFinite(Number(sec.duration)) && Number(sec.duration) > 0
+          ? Math.floor(Number(sec.duration))
+          : 30;
+        sec.questions = safeSecQ;
+        sec.duration = safeSecDur;
         const { data: secRow, error: secErr } = await admin.from("mock_sections").insert({
           test_id: testRow.id,
           code: sec.code,
           name: sec.name,
-          duration_minutes: sec.duration,
-          total_questions: sec.questions,
+          duration_minutes: safeSecDur,
+          total_questions: safeSecQ,
           sort_order: sec.sort,
         }).select("id").single();
         if (secErr || !secRow) throw new Error(secErr?.message || "Failed to create section");

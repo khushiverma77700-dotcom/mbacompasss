@@ -920,9 +920,15 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
 
         {step === 3 && (
           <div className="space-y-3">
-            <MockGenerationProgressPanel generationId={generationId} />
+            <MockGenerationProgressPanel
+              key={generationId || "none"}
+              generationId={generationId}
+              onEdit={() => { setStep(1); }}
+              onClosed={() => { setStep(1); setGenerationId(null); }}
+            />
             <p className="text-[11px] text-muted-foreground">
               You can safely close this dialog — generation continues in the background and will appear in the Mock Tests list as it finishes.
+              Use <strong>Pause</strong> to temporarily stop new questions, <strong>Cancel</strong> to stop entirely (already-saved questions are kept), or <strong>Edit settings</strong> to tweak the form and start a new run.
             </p>
           </div>
         )}
@@ -982,7 +988,11 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                     {/* Rich live telemetry — only for the currently processing item to keep it focused */}
                     {it.status === "processing" && it.generation_id && (
                       <div className="mt-2">
-                        <MockGenerationProgressPanel generationId={it.generation_id} />
+                        <MockGenerationProgressPanel
+                          key={it.generation_id}
+                          generationId={it.generation_id}
+                          compact
+                        />
                       </div>
                     )}
                   </Card>

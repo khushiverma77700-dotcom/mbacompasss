@@ -478,6 +478,33 @@ Deno.serve(async (req) => {
 
     const runRetry = async () => {
       try {
+        // Honor admin-issued cancel/pause from the live popup.
+        if (job.generation_id) {
+          const { data: genRow } = await admin
+            .from("ai_mock_generations")
+            .select("status")
+            .eq("id", job.generation_id)
+            .maybeSingle();
+          const gs = String(genRow?.status || "").toLowerCase();
+          if (gs === "cancelled" || gs === "canceled") {
+            await admin.from("mock_section_jobs").update({
+              status: "failed",
+              current_step: "Cancelled by admin",
+              error_message: "Cancelled by admin",
+              final_reason: "cancelled",
+              updated_at: new Date().toISOString(),
+            }).eq("id", job_id);
+            return;
+          }
+          if (gs === "paused") {
+            await admin.from("mock_section_jobs").update({
+              status: "pending",
+              current_step: "Paused — waiting for resume",
+              updated_at: new Date().toISOString(),
+            }).eq("id", job_id);
+            return;
+          }
+        }
         // How many do we still need?
         const { count: existingCount } = await admin
           .from("mock_questions")
