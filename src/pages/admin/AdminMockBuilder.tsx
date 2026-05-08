@@ -339,11 +339,6 @@ const AdminMockBuilder = () => {
           <h1 className="font-heading text-2xl font-bold">{test.name}</h1>
           <p className="text-sm text-muted-foreground">{test.total_duration_minutes} min · {test.test_type.replace("_", " ")} · {test.pricing_type === "free" ? "Free" : `₹${test.price_inr}`}</p>
         </div>
-        <Button asChild variant="outline" size="sm">
-          <Link to="/admin/bulk-mock-generation">
-            <Layers className="w-4 h-4 mr-1.5" /> Bulk AI Mock Generator
-          </Link>
-        </Button>
       </div>
 
       {/* Section tabs */}
