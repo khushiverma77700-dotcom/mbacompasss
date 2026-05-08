@@ -1013,6 +1013,7 @@ Deno.serve(async (req) => {
       // row here: retry-mock-section owns the lock. Pre-locking made the worker
       // think another worker was active and exit without generating anything.
       const workerUrl = `${url}/functions/v1/retry-mock-section`;
+      const internalWorkerSecret = Deno.env.get("LOVABLE_API_KEY") || serviceKey;
       const allJobIds = sectionRecords.map((r) => r.jobId).filter(Boolean) as string[];
       const initialJobIds = allJobIds.slice(0, 3);
       for (const firstJobId of initialJobIds) {
@@ -1025,11 +1026,11 @@ Deno.serve(async (req) => {
         const kick = fetch(workerUrl, {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${serviceKey}`,
-            apikey: serviceKey,
+            Authorization: `Bearer ${internalWorkerSecret}`,
+            apikey: internalWorkerSecret,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ job_id: firstJobId, auto: true, service: true, internal_secret: serviceKey }),
+          body: JSON.stringify({ job_id: firstJobId, auto: true, service: true, internal_secret: internalWorkerSecret }),
         }).catch((e) => console.error("[generate] worker kickoff failed", e));
         // @ts-ignore
         if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(kick);
