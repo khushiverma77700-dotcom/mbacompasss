@@ -138,6 +138,7 @@ const AdminWebsiteOptimizer = lazyWithPreload(() => import("./pages/admin/AdminW
 const AdminMockTests = lazyWithPreload(() => import("./pages/admin/AdminMockTests"));
 const AdminMockBundles = lazyWithPreload(() => import("./pages/admin/AdminMockBundles"));
 const AdminMockBuilder = lazyWithPreload(() => import("./pages/admin/AdminMockBuilder"));
+const AdminBulkMockGeneration = lazyWithPreload(() => import("./pages/admin/AdminBulkMockGeneration"));
 const AdminMocksLanding = lazyWithPreload(() => import("./pages/admin/AdminMocksLanding"));
 const AdminStudentMocks = lazyWithPreload(() => import("./pages/admin/AdminStudentMocks"));
 const AdminSupportTickets = lazyWithPreload(() => import("./pages/admin/AdminSupportTickets"));
