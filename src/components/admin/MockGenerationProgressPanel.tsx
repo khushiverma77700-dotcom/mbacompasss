@@ -7,8 +7,11 @@ import {
   Loader2, CheckCircle2, XCircle, Clock, Sparkles, Activity,
   Gauge, Timer, ListChecks, AlertTriangle, Zap, Brain, RotateCcw,
   ShieldCheck, Stethoscope, BarChart3, Copy, FileSearch, Layers,
+  Cpu, Server, IndianRupee, DollarSign, Flame, Network, Coins,
 } from "lucide-react";
 import { useMockGenerationProgress, type SectionJob } from "@/hooks/useMockGenerationProgress";
+import { useMockGenerationTelemetry } from "@/hooks/useMockGenerationTelemetry";
+import { modelLabel } from "@/lib/aiPricing";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
