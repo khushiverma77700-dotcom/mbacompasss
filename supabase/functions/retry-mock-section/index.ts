@@ -438,6 +438,15 @@ Deno.serve(async (req) => {
     const isServiceCall = body?.service === true && !!serviceKey && (
       bearerToken === serviceKey || apiKeyHeader === serviceKey || body?.internal_secret === serviceKey
     );
+    console.log("[retry-mock-section auth]", JSON.stringify({
+      hasServiceKey: !!serviceKey,
+      serviceFlag: body?.service === true,
+      bearerMatches: !!serviceKey && bearerToken === serviceKey,
+      apiKeyMatches: !!serviceKey && apiKeyHeader === serviceKey,
+      internalSecretMatches: !!serviceKey && body?.internal_secret === serviceKey,
+      authHeaderPrefix: authHeader.slice(0, 16),
+      apiKeyHeaderPrefix: apiKeyHeader.slice(0, 16),
+    }));
     if (!isServiceCall) {
       if (!authHeader.startsWith("Bearer ")) return jsonResp(401, { error: "Missing auth" });
       const userClient = createClient(url, anonKey, { global: { headers: { Authorization: authHeader } } });
