@@ -7,7 +7,7 @@ import AdminThemeToggle, { applyAdminTheme, getInitialAdminTheme } from "@/compo
 import { adminNavGroups, allAdminNavItems } from "./adminNav";
 
 const AdminLayout = () => {
-  const { user, isAdmin, allowedSections, loading } = useAuth();
+  const { user, isAdmin, allowedSections, loading, adminLoading } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
