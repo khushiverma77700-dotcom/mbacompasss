@@ -173,13 +173,50 @@ const DEFAULT_SETS: Record<string, Record<string, number>> = {
   MAT: { LC: 0, ICR: 0, DA: 0, MS: 0, IGE: 0 },
 };
 
+type BatchDraft = {
+  uid: string;
+  label: string; // human summary
+  exam_code: string;
+  category: string;
+  level: string;
+  section_code: string | null;
+  topic: string | null;
+  questions_per_set: number;
+  sets: number;
+  test_name_prefix: string | null;
+};
+
+type BatchItemRow = {
+  id: string;
+  exam_code: string;
+  category: string;
+  level: string;
+  section_code: string | null;
+  topic: string | null;
+  questions_per_set: number;
+  sets: number;
+  status: string;
+  total_requested: number | null;
+  total_generated: number | null;
+  error_message: string | null;
+  generation_id: string | null;
+  started_at: string | null;
+  finished_at: string | null;
+};
+
 export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: Props) {
   const { toast } = useToast();
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [generationId, setGenerationId] = useState<string | null>(null);
   const progress = useMockGenerationProgress(step === 3 ? generationId : null);
+
+  // ---------------- Batch (queue multiple generations) ----------------
+  const [batch, setBatch] = useState<BatchDraft[]>([]);
+  const [batchSubmitting, setBatchSubmitting] = useState(false);
+  const [batchRequestId, setBatchRequestId] = useState<string | null>(null);
+  const [batchItems, setBatchItems] = useState<BatchItemRow[]>([]);
 
   // When live generation completes, finalize result + advance step
   useEffect(() => {
