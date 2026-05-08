@@ -608,6 +608,119 @@ export type Database = {
         }
         Relationships: []
       }
+      bulk_mock_request_items: {
+        Row: {
+          category: string
+          created_at: string
+          error_message: string | null
+          exam_code: string
+          finished_at: string | null
+          generation_id: string | null
+          id: string
+          level: string
+          paused: boolean
+          questions_per_set: number
+          request_id: string
+          retry_count: number
+          section_code: string | null
+          sets: number
+          started_at: string | null
+          status: string
+          test_name_prefix: string | null
+          topic: string | null
+          total_generated: number
+          total_requested: number
+          updated_at: string
+          worker_lock_until: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          error_message?: string | null
+          exam_code: string
+          finished_at?: string | null
+          generation_id?: string | null
+          id?: string
+          level?: string
+          paused?: boolean
+          questions_per_set?: number
+          request_id: string
+          retry_count?: number
+          section_code?: string | null
+          sets?: number
+          started_at?: string | null
+          status?: string
+          test_name_prefix?: string | null
+          topic?: string | null
+          total_generated?: number
+          total_requested?: number
+          updated_at?: string
+          worker_lock_until?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          error_message?: string | null
+          exam_code?: string
+          finished_at?: string | null
+          generation_id?: string | null
+          id?: string
+          level?: string
+          paused?: boolean
+          questions_per_set?: number
+          request_id?: string
+          retry_count?: number
+          section_code?: string | null
+          sets?: number
+          started_at?: string | null
+          status?: string
+          test_name_prefix?: string | null
+          topic?: string | null
+          total_generated?: number
+          total_requested?: number
+          updated_at?: string
+          worker_lock_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bulk_mock_request_items_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "bulk_mock_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bulk_mock_requests: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          label: string | null
+          status: string
+          total_items: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          label?: string | null
+          status?: string
+          total_items?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          label?: string | null
+          status?: string
+          total_items?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bulk_section_jobs: {
         Row: {
           ai_provider: string
