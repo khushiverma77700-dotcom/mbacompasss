@@ -835,6 +835,58 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                 <li>Tagged with topic and subtopic for analytics</li>
               </ul>
             </div>
+
+            {/* ---------------- Batch queue (multi-request) ---------------- */}
+            <Card className="p-3 border-primary/30 bg-primary/5 space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm font-semibold flex items-center gap-1.5">
+                    <ListPlus className="w-4 h-4 text-primary" /> Batch queue
+                  </Label>
+                  <p className="text-[11px] text-muted-foreground">
+                    Configure each request above, then "Add to batch". Click "Run batch" to generate all in the background with a live report.
+                  </p>
+                </div>
+                <Badge variant={batch.length ? "default" : "outline"}>{batch.length} queued</Badge>
+              </div>
+
+              {batch.length > 0 && (
+                <div className="space-y-1.5 max-h-44 overflow-y-auto">
+                  {batch.map((b, i) => (
+                    <div key={b.uid} className="flex items-center justify-between gap-2 text-xs bg-background border rounded px-2 py-1.5">
+                      <span className="text-muted-foreground w-5 text-right">{i + 1}.</span>
+                      <span className="flex-1 truncate font-medium">{b.label}</span>
+                      <Button type="button" size="sm" variant="ghost" className="h-7 w-7 p-0"
+                        onClick={() => removeFromBatch(b.uid)} title="Remove">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex flex-wrap gap-2 pt-1">
+                <Button type="button" size="sm" variant="outline" onClick={addToBatch}>
+                  <ListPlus className="w-3.5 h-3.5 mr-1.5" /> Add to batch
+                </Button>
+                <Button type="button" size="sm" onClick={runBatch}
+                  disabled={!batch.length || batchSubmitting}>
+                  {batchSubmitting
+                    ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Starting…</>
+                    : <><Play className="w-3.5 h-3.5 mr-1.5" /> Run batch ({batch.length})</>}
+                </Button>
+                {batch.length > 0 && (
+                  <Button type="button" size="sm" variant="ghost" onClick={() => setBatch([])}>
+                    Clear
+                  </Button>
+                )}
+              </div>
+              {category === "full_length" && (
+                <p className="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1">
+                  Note: batch runs use the standard exam pattern for Full-Length mocks. For a custom section plan, use Generate (single).
+                </p>
+              )}
+            </Card>
           </div>
         )}
 
