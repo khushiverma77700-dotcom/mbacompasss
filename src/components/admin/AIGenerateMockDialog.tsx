@@ -979,6 +979,12 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                     {it.error_message && (
                       <p className="text-[11px] text-destructive">{it.error_message}</p>
                     )}
+                    {/* Rich live telemetry — only for the currently processing item to keep it focused */}
+                    {it.status === "processing" && it.generation_id && (
+                      <div className="mt-2">
+                        <MockGenerationProgressPanel generationId={it.generation_id} compact />
+                      </div>
+                    )}
                   </Card>
                 );
               })}
