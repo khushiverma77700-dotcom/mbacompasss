@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.generate-mock-questions]
 verify_jwt = false
+
+[functions.bulk-mock-worker]
+verify_jwt = false
