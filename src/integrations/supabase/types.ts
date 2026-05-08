@@ -6314,6 +6314,33 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      colleges_listing: {
+        Args: never
+        Returns: {
+          accreditations: string[]
+          campus_size: string
+          city: string
+          description: string
+          established: number
+          exams_accepted: string[]
+          fees: string
+          fees_lakhs: number
+          id: string
+          logo_url: string
+          name: string
+          placement_avg: string
+          placement_highest: string
+          placement_median: string
+          ranking: number
+          slug: string
+          specializations: string[]
+          state: string
+          tier: string
+          top_recruiters: string[]
+          total_students: number
+          type: string
+        }[]
+      }
       dedupe_faq_jsonb: { Args: { _faqs: Json }; Returns: Json }
       dedupe_site_settings_faqs: { Args: { _value: Json }; Returns: Json }
       generate_ticket_code: { Args: never; Returns: string }
