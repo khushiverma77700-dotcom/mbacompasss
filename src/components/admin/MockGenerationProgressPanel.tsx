@@ -18,6 +18,8 @@ import { toast } from "sonner";
 interface Props {
   generationId: string | null;
   compact?: boolean;
+  onEdit?: () => void;
+  onClosed?: () => void;
 }
 
 const StatusIcon = ({ status }: { status: string }) => {
