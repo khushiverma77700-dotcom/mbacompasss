@@ -151,7 +151,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (cached) {
         setIsAdmin(cached.isAdmin);
         setAllowedSections(cached.allowedSections);
-        return;
+        // continue to background-refresh so newly granted admin access shows up immediately
       }
 
       try {
