@@ -588,7 +588,8 @@ Deno.serve(async (req) => {
         const target = job.total_questions || 0;
 
         const seen = await loadExistingQuestionHashes(admin, job.exam_code, job.section_code);
-        const corpus = await loadSectionCorpus(admin, job.section_id);
+        const corpus = await loadSectionCorpus(admin, job.exam_code, job.section_code, job.section_id);
+        const runSeed = `${job.exam_code}-${job.section_code}-${job.generation_id || "solo"}-${job.test_id || "test"}`;
 
         // Persisted dedup counters — preserve any value already on the row.
         let dupHash = job.dup_hash || 0;
@@ -657,6 +658,8 @@ Deno.serve(async (req) => {
               positive: job.positive_marks || 1, negative: job.negative_marks || 0,
               userId,
               topic: job.strict_topic || job.topic || null,
+              uniquenessSeed: `${runSeed}-set-${setIdx}-${Date.now().toString(36)}`,
+              avoidSnippets: corpus.snippets.slice(0, 8),
               set_mode: true, set_kind: setKind, set_label: `Set ${setIdx} of ${setsTotal}`,
             }) as any;
           } catch (e) {
@@ -833,6 +836,8 @@ Deno.serve(async (req) => {
               positive: job.positive_marks || 1, negative: job.negative_marks || 0,
               userId,
               topic: job.strict_topic || job.topic || null,
+              uniquenessSeed: `${runSeed}-batch-${attempts}-${produced}-${crypto.randomUUID()}`,
+              avoidSnippets: corpus.snippets.slice(0, 10),
             }) as any[];
           } catch (e) {
             const msg = String((e as Error)?.message || e);
