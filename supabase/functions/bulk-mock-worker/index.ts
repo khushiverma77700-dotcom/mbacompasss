@@ -22,6 +22,7 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const DISPATCH_LOCK_MS = 2 * 60_000;
 const DISPATCH_TIMEOUT_MS = 45_000;
+const MAX_ACTIVE_PER_BATCH = 1;
 
 async function reconcile(admin: any) {
   // Recover rows where the worker died after marking "processing" but before
@@ -47,13 +48,21 @@ async function reconcile(admin: any) {
       .eq("id", item.generation_id)
       .maybeSingle();
     if (!gen) continue;
-    const generated = gen.total_generated ?? 0;
+    const { data: jobs } = await admin
+      .from("mock_section_jobs")
+      .select("status, questions_done, total_questions")
+      .eq("generation_id", item.generation_id);
+    const generatedFromJobs = (jobs || []).reduce((s: number, j: any) => s + (Number(j.questions_done) || 0), 0);
+    const requestedFromJobs = (jobs || []).reduce((s: number, j: any) => s + (Number(j.total_questions) || 0), 0);
+    const jobsOpen = (jobs || []).some((j: any) => ["pending", "processing"].includes(String(j.status)));
+    const jobsFailed = (jobs || []).some((j: any) => String(j.status) === "failed");
+    const generated = generatedFromJobs || (gen.total_generated ?? 0);
     let nextStatus: string | null = null;
     let errorMessage: string | null = null;
-    if (gen.status === "completed") {
+    if (gen.status === "completed" || ((jobs || []).length > 0 && !jobsOpen && !jobsFailed && requestedFromJobs > 0 && generated >= requestedFromJobs)) {
       nextStatus = generated > 0 ? "completed" : "failed";
       if (generated === 0) errorMessage = "Generation finished without producing any questions";
-    } else if (gen.status === "failed") {
+    } else if (gen.status === "failed" || ((jobs || []).length > 0 && !jobsOpen && jobsFailed)) {
       nextStatus = generated > 0 ? "needs_review" : "failed";
       errorMessage = generated > 0 ? "Some sections failed — review generated mock" : "Generation failed";
     }
@@ -188,6 +197,15 @@ async function dispatchItem(admin: any, item: any, userToken: string) {
 
 async function pumpPending(admin: any, userToken: string, limit = 3) {
   const nowIso = new Date().toISOString();
+  const { data: activeByRequest } = await admin
+    .from("bulk_mock_request_items")
+    .select("request_id")
+    .eq("paused", false)
+    .eq("status", "processing");
+  const activeCounts = new Map<string, number>();
+  for (const row of activeByRequest || []) {
+    activeCounts.set(row.request_id, (activeCounts.get(row.request_id) || 0) + 1);
+  }
   const { data: pending } = await admin
     .from("bulk_mock_request_items")
     .select("*")
@@ -200,7 +218,9 @@ async function pumpPending(admin: any, userToken: string, limit = 3) {
 
   let dispatched = 0;
   for (const itm of pending ?? []) {
+    if ((activeCounts.get(itm.request_id) || 0) >= MAX_ACTIVE_PER_BATCH) continue;
     if (await dispatchItem(admin, itm, userToken)) dispatched++;
+    activeCounts.set(itm.request_id, (activeCounts.get(itm.request_id) || 0) + 1);
   }
   return dispatched;
 }

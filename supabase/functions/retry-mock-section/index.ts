@@ -177,23 +177,47 @@ async function loadExistingQuestionHashes(
   return seen;
 }
 
-// Section-scoped corpus used for similarity / paraphrase rejection.
-// Keeping it section-local (instead of the entire bank) keeps the math cheap
-// while still catching the most common AI repetition patterns.
-async function loadSectionCorpus(admin: any, sectionId: string): Promise<{ tokens: Set<string>[]; shingles: Set<string>[] }> {
+// Exam+section scoped corpus used for similarity / paraphrase rejection.
+// Exact hashes stop verbatim repeats; this catches the more common failure mode
+// where multiple mocks reuse the same scenario with only numbers/names changed.
+async function loadSectionCorpus(
+  admin: any,
+  examCode: string,
+  sectionCode: string,
+  currentSectionId: string,
+): Promise<{ tokens: Set<string>[]; shingles: Set<string>[]; snippets: string[] }> {
   const tokens: Set<string>[] = [];
   const shingles: Set<string>[] = [];
+  const snippets: string[] = [];
+
+  const { data: testRows } = await admin
+    .from("mock_tests")
+    .select("id")
+    .eq("exam_code", examCode);
+  const testIds = (testRows || []).map((r: any) => r.id);
+  let sectionIds = [currentSectionId];
+  if (testIds.length > 0) {
+    const { data: secRows } = await admin
+      .from("mock_sections")
+      .select("id")
+      .eq("code", sectionCode)
+      .in("test_id", testIds);
+    sectionIds = Array.from(new Set([currentSectionId, ...(secRows || []).map((r: any) => r.id)]));
+  }
+
   const { data } = await admin
     .from("mock_questions")
     .select("question_html")
-    .eq("section_id", sectionId)
-    .limit(2000);
+    .in("section_id", sectionIds)
+    .order("created_at", { ascending: false })
+    .limit(2500);
   for (const row of data || []) {
     const norm = normalizeForHash((row as any).question_html || "");
+    if (snippets.length < 12 && norm.length > 40) snippets.push(norm.slice(0, 260));
     tokens.push(tokenize(norm));
     shingles.push(buildShingles(norm, 5));
   }
-  return { tokens, shingles };
+  return { tokens, shingles, snippets };
 }
 
 function tokenize(text: string): Set<string> {
@@ -334,6 +358,8 @@ async function callOpenAIBatch(opts: {
   count: number; mcq: number; tita: number; level: string;
   positive: number; negative: number; topic?: string | null;
   userId?: string | null;
+  uniquenessSeed?: string | null;
+  avoidSnippets?: string[];
   // ----- set mode -----
   set_mode?: boolean;            // true ⇒ produce ONE passage + `count` tied questions
   set_kind?: "rc" | "caselet" | "shared"; // verbal RC vs DI/LR caselet vs generic
@@ -361,16 +387,23 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
   // Build a hard section-scope lock so the model NEVER drifts into another section.
   const sectionScopeLock = buildSectionScopeLock(opts.exam_code, opts.section_code, opts.section_name);
 
+  const avoidBlock = opts.avoidSnippets?.length
+    ? `\n\nDO NOT REUSE THESE RECENT QUESTION PATTERNS / SCENARIOS from this same exam section. Create a totally different context, numbers, entities, reasoning path, and answer structure:\n${opts.avoidSnippets.map((s, i) => `${i + 1}. ${s}`).join("\n")}`
+    : "";
+  const seedBlock = opts.uniquenessSeed
+    ? `\n\nUNIQUENESS SEED FOR THIS CALL: ${opts.uniquenessSeed}. Treat this as a hard creative direction; the scenario, passage/caselet theme, data table, answer logic, and distractor traps must differ from every other mock.`
+    : "";
+
   if (opts.set_mode) {
     const ctxLabel = opts.set_kind === "rc"
       ? "an original Reading Comprehension passage of 500-700 words on an abstract / philosophical / social-science / business / economics theme"
       : opts.set_kind === "caselet"
         ? "an original DI/LR caselet with FULLY DETAILED DATA — include a properly formatted HTML <table> (rows × columns with concrete numbers/names) AND/OR an inline ASCII bar/line chart inside <pre> tags. Caselets must contain rich data such as sales figures, rankings, percentage shares, time series, tournament results, seating arrangements, family trees, blood relations, etc."
         : "an original shared-context block";
-    sys = `You are an elite ${opts.exam_code} question setter writing a SET of ${opts.count} questions for the ${opts.section_name} (${opts.section_code}) section ONLY, all tied to ONE shared ${opts.set_kind === "rc" ? "passage" : "caselet"}. ${sectionScopeLock}${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} ${mathRules} ${formatRules} Output ONLY valid JSON.`;
-    user = `SECTION = ${opts.section_name} (${opts.section_code}) of ${opts.exam_code}. Every question MUST belong to this section's syllabus only. Write ${ctxLabel}, then ${opts.count} questions ALL tied to that shared context AND ALL strictly within the ${opts.section_code} section's syllabus. Use FRESH original content; do NOT reuse any famous passage / caselet. Each MCQ has 4 options A-D with one correct; include a clear 120-180 word explanation per question. JSON shape: {"passage_html":"<div>...full passage or caselet HTML here, with tables/charts if applicable...</div>","questions":[{"question_type":"mcq","question_html":"<question stem only — DO NOT include the passage>","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"explanation_html":"..."}]}`;
+    sys = `You are an elite ${opts.exam_code} question setter writing a SET of ${opts.count} questions for the ${opts.section_name} (${opts.section_code}) section ONLY, all tied to ONE shared ${opts.set_kind === "rc" ? "passage" : "caselet"}. ${sectionScopeLock}${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} ${mathRules} ${formatRules}${seedBlock}${avoidBlock} Output ONLY valid JSON.`;
+    user = `SECTION = ${opts.section_name} (${opts.section_code}) of ${opts.exam_code}. Every question MUST belong to this section's syllabus only. Write ${ctxLabel}, then ${opts.count} questions ALL tied to that shared context AND ALL strictly within the ${opts.section_code} section's syllabus. Use FRESH original content; do NOT reuse any famous passage / caselet and do NOT repeat a scenario already used in another mock. Each MCQ has 4 options A-D with one correct; include a clear 120-180 word explanation per question. JSON shape: {"passage_html":"<div>...full passage or caselet HTML here, with tables/charts if applicable...</div>","questions":[{"question_type":"mcq","question_html":"<question stem only — DO NOT include the passage>","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"explanation_html":"..."}]}`;
   } else {
-    sys = `You are an elite ${opts.exam_code} question setter writing 100% original questions for the ${opts.section_name} (${opts.section_code}) section ONLY. ${sectionScopeLock}${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} Use fresh numbers, fresh names, fresh contexts. Each MCQ has 4 options A-D with one correct; each TITA has numeric answer(s). Include clear 120-180 word explanations. ${mathRules} ${formatRules} Output ONLY valid JSON.`;
+    sys = `You are an elite ${opts.exam_code} question setter writing 100% original questions for the ${opts.section_name} (${opts.section_code}) section ONLY. ${sectionScopeLock}${buildExamCalibration(opts.exam_code, opts.level)} ${levelGuidanceText(opts.level)} ${opts.topic ? `Topic lock: ${opts.topic}.` : ""} Use fresh numbers, fresh names, fresh contexts; never repeat a template from another mock. Each MCQ has 4 options A-D with one correct; each TITA has numeric answer(s). Include clear 120-180 word explanations. ${mathRules} ${formatRules}${seedBlock}${avoidBlock} Output ONLY valid JSON.`;
     user = `SECTION = ${opts.section_name} (${opts.section_code}) of ${opts.exam_code}. EVERY question MUST be strictly from this section's syllabus — DO NOT include any topic that belongs to another section of ${opts.exam_code}. Generate exactly ${opts.count} questions: ${opts.mcq} MCQ + ${opts.tita} TITA. Marking +${opts.positive}/-${opts.negative}. JSON shape: {"questions":[{"question_type":"mcq"|"tita","question_html":"...","topic":"...","subtopic":"...","difficulty":"easy|medium|hard","options":[{"label":"A","text":"...","is_correct":true|false},...],"tita_answers":["..."],"tita_tolerance":0.01,"explanation_html":"..."}]}`;
   }
 
@@ -555,7 +588,8 @@ Deno.serve(async (req) => {
         const target = job.total_questions || 0;
 
         const seen = await loadExistingQuestionHashes(admin, job.exam_code, job.section_code);
-        const corpus = await loadSectionCorpus(admin, job.section_id);
+        const corpus = await loadSectionCorpus(admin, job.exam_code, job.section_code, job.section_id);
+        const runSeed = `${job.exam_code}-${job.section_code}-${job.generation_id || "solo"}-${job.test_id || "test"}`;
 
         // Persisted dedup counters — preserve any value already on the row.
         let dupHash = job.dup_hash || 0;
@@ -624,6 +658,8 @@ Deno.serve(async (req) => {
               positive: job.positive_marks || 1, negative: job.negative_marks || 0,
               userId,
               topic: job.strict_topic || job.topic || null,
+              uniquenessSeed: `${runSeed}-set-${setIdx}-${Date.now().toString(36)}`,
+              avoidSnippets: corpus.snippets.slice(0, 8),
               set_mode: true, set_kind: setKind, set_label: `Set ${setIdx} of ${setsTotal}`,
             }) as any;
           } catch (e) {
@@ -676,6 +712,8 @@ Deno.serve(async (req) => {
 
           const hubRows: any[] = [];
           let inserted = 0;
+          const preSetTokenLen = corpus.tokens.length;
+          const preSetShingleLen = corpus.shingles.length;
           for (const q of setQs.slice(0, qPerSet)) {
             if (!q?.question_html) { rejectedInvalid++; continue; }
             if (!isQuestionInSection(job.exam_code, job.section_code, q.question_html, q.topic)) {
@@ -684,10 +722,28 @@ Deno.serve(async (req) => {
             }
             const norm = normalizeForHash(q.question_html);
             const hash = await sha256(norm);
-            // For set-bound questions we ONLY check exact-hash duplicates.
-            // Section-corpus similarity / paraphrase checks are SKIPPED — siblings
-            // necessarily share the same passage and would be flagged otherwise.
             if (seen.has(hash)) { dupHash++; continue; }
+            // Compare set-bound questions against the already-saved same exam/section
+            // corpus, but do not compare siblings inside this new set against each
+            // other; RC/caselet siblings naturally share the same context.
+            const candTokens = tokenize(norm);
+            let maxSim = 0;
+            for (let i = 0; i < preSetTokenLen; i++) {
+              const t = corpus.tokens[i];
+              const s = jaccard(candTokens, t);
+              if (s > maxSim) maxSim = s;
+              if (maxSim >= SIM_THRESHOLD) break;
+            }
+            if (maxSim >= SIM_THRESHOLD) { dupSimilarity++; continue; }
+            const candShingles = buildShingles(norm, 5);
+            let maxShingle = 0;
+            for (let i = 0; i < preSetShingleLen; i++) {
+              const sh = corpus.shingles[i];
+              const s = jaccard(candShingles, sh);
+              if (s > maxShingle) maxShingle = s;
+              if (maxShingle >= PARAPHRASE_THRESHOLD) break;
+            }
+            if (maxShingle >= PARAPHRASE_THRESHOLD) { dupParaphrase++; continue; }
             seen.add(hash);
             const cleanedQ = cleanQuestionHtml(q.question_html);
             const { data: qRow, error: insErr } = await admin.from("mock_questions").insert({
@@ -731,6 +787,8 @@ Deno.serve(async (req) => {
                   });
                 }
                 inserted++;
+                corpus.tokens.push(candTokens);
+                corpus.shingles.push(candShingles);
               } else {
                 await admin.from("mock_questions").delete().eq("id", qRow.id);
                 rejectedInvalid++;
@@ -800,6 +858,8 @@ Deno.serve(async (req) => {
               positive: job.positive_marks || 1, negative: job.negative_marks || 0,
               userId,
               topic: job.strict_topic || job.topic || null,
+              uniquenessSeed: `${runSeed}-batch-${attempts}-${produced}-${crypto.randomUUID()}`,
+              avoidSnippets: corpus.snippets.slice(0, 10),
             }) as any[];
           } catch (e) {
             const msg = String((e as Error)?.message || e);
