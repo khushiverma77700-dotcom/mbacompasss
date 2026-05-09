@@ -356,10 +356,9 @@ Deno.serve(async (req) => {
     .select("*");
   if (iErr) return json(500, { error: iErr.message });
 
-  // Start the first few immediately. The queue popup calls reconcile every few
-  // seconds, which pumps the remaining pending rows without relying on one long
-  // waitUntil chain that can be killed by the edge runtime.
-  const runAll = async () => { await pumpPending(admin, userToken, Math.min(3, inserted?.length ?? 0)); };
+  // Start every inserted row. Each dispatch only needs generate-mock-questions
+  // to return its 202 + generation_id; the heavy AI work remains in section workers.
+  const runAll = async () => { await pumpPending(admin, userToken, inserted?.length ?? 0); };
   // @ts-ignore
   EdgeRuntime.waitUntil(runAll());
 
