@@ -10,7 +10,22 @@ const AdminLayout = () => {
   const { user, isAdmin, allowedSections, loading, adminLoading } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
+  const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>(() => {
+    // All groups closed by default; the group containing the current route auto-opens below.
+    return Object.fromEntries(adminNavGroups.map((g) => [g.label, true]));
+  });
+
+  // Auto-expand the group containing the active route (so users always see where they are)
+  useEffect(() => {
+    const activeGroup = adminNavGroups.find((g) =>
+      g.items.some((it) => location.pathname === it.path)
+    );
+    if (activeGroup) {
+      setCollapsedGroups((prev) =>
+        prev[activeGroup.label] ? { ...prev, [activeGroup.label]: false } : prev
+      );
+    }
+  }, [location.pathname]);
 
   // Notification dots state
   const [dots, setDots] = useState<Record<string, boolean>>({});
