@@ -686,6 +686,7 @@ const App = () => (
               <Route path="database-backup" element={<LazyPage><AdminDatabaseBackup /></LazyPage>} />
               <Route path="ai-usage" element={<LazyPage><AdminAIUsage /></LazyPage>} />
               <Route path="api-keys" element={<LazyPage><AdminApiKeys /></LazyPage>} />
+              <Route path="welcome-email" element={<LazyPage><AdminWelcomeEmail /></LazyPage>} />
               <Route path="citations-audit" element={<LazyPage><AdminCitationsAudit /></LazyPage>} />
               <Route path="content-refreshes" element={<LazyPage><AdminContentRefreshes /></LazyPage>} />
               <Route path="bulk-refresh" element={<LazyPage><AdminBulkRefresh /></LazyPage>} />
