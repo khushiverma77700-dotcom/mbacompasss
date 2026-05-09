@@ -103,6 +103,7 @@ const AdminCallbacks = lazyWithPreload(() => import("./pages/admin/AdminCallback
 const AdminDatabaseBackup = lazyWithPreload(() => import("./pages/admin/AdminDatabaseBackup"));
 const AdminAIUsage = lazyWithPreload(() => import("./pages/admin/AdminAIUsage"));
 const AdminApiKeys = lazyWithPreload(() => import("./pages/admin/AdminApiKeys"));
+const AdminWelcomeEmail = lazyWithPreload(() => import("./pages/admin/AdminWelcomeEmail"));
 const AdminCitationsAudit = lazyWithPreload(() => import("./pages/admin/AdminCitationsAudit"));
 const AdminContentRefreshes = lazyWithPreload(() => import("./pages/admin/AdminContentRefreshes"));
 const AdminBulkRefresh = lazyWithPreload(() => import("./pages/admin/AdminBulkRefresh"));
@@ -685,6 +686,7 @@ const App = () => (
               <Route path="database-backup" element={<LazyPage><AdminDatabaseBackup /></LazyPage>} />
               <Route path="ai-usage" element={<LazyPage><AdminAIUsage /></LazyPage>} />
               <Route path="api-keys" element={<LazyPage><AdminApiKeys /></LazyPage>} />
+              <Route path="welcome-email" element={<LazyPage><AdminWelcomeEmail /></LazyPage>} />
               <Route path="citations-audit" element={<LazyPage><AdminCitationsAudit /></LazyPage>} />
               <Route path="content-refreshes" element={<LazyPage><AdminContentRefreshes /></LazyPage>} />
               <Route path="bulk-refresh" element={<LazyPage><AdminBulkRefresh /></LazyPage>} />
