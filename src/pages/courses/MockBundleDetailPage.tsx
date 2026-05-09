@@ -17,6 +17,7 @@ import {
 } from "@/lib/courseHighlights";
 import { useMetaPixel, pixelTrack } from "@/lib/metaPixel";
 import { useCtaGate, openLoginDialog } from "@/hooks/useCtaGate";
+import PurchaseSuccessDialog from "@/components/courses/PurchaseSuccessDialog";
 
 const HIGHLIGHT_ICONS: Record<HighlightKey, any> = {
   daily_tests: Calendar,
@@ -66,6 +67,8 @@ export default function MockBundleDetailPage() {
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
   const [enrolled, setEnrolled] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [buyerEmail, setBuyerEmail] = useState("");
 
   useEffect(() => {
     if (!slug) return;
@@ -174,6 +177,8 @@ export default function MockBundleDetailPage() {
           });
           toast.success("Bundle unlocked! All mocks are now in your dashboard.");
           setEnrolled(true);
+          setBuyerEmail(u.user.email || "");
+          setSuccessOpen(true);
         },
         modal: { ondismiss: () => setPaying(false) },
       });
