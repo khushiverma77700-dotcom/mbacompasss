@@ -712,6 +712,8 @@ Deno.serve(async (req) => {
 
           const hubRows: any[] = [];
           let inserted = 0;
+          const preSetTokenLen = corpus.tokens.length;
+          const preSetShingleLen = corpus.shingles.length;
           for (const q of setQs.slice(0, qPerSet)) {
             if (!q?.question_html) { rejectedInvalid++; continue; }
             if (!isQuestionInSection(job.exam_code, job.section_code, q.question_html, q.topic)) {
@@ -726,7 +728,8 @@ Deno.serve(async (req) => {
             // other; RC/caselet siblings naturally share the same context.
             const candTokens = tokenize(norm);
             let maxSim = 0;
-            for (const t of corpus.tokens) {
+            for (let i = 0; i < preSetTokenLen; i++) {
+              const t = corpus.tokens[i];
               const s = jaccard(candTokens, t);
               if (s > maxSim) maxSim = s;
               if (maxSim >= SIM_THRESHOLD) break;
@@ -734,7 +737,8 @@ Deno.serve(async (req) => {
             if (maxSim >= SIM_THRESHOLD) { dupSimilarity++; continue; }
             const candShingles = buildShingles(norm, 5);
             let maxShingle = 0;
-            for (const sh of corpus.shingles) {
+            for (let i = 0; i < preSetShingleLen; i++) {
+              const sh = corpus.shingles[i];
               const s = jaccard(candShingles, sh);
               if (s > maxShingle) maxShingle = s;
               if (maxShingle >= PARAPHRASE_THRESHOLD) break;
