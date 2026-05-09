@@ -427,13 +427,17 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
       clearTimeout(timer);
       const msg = (e as Error)?.name === "AbortError" ? `OpenAI request aborted after ${AI_TIMEOUT_MS}ms` : `OpenAI fetch failed: ${(e as Error)?.message || e}`;
       lastErr = msg;
-      if (isAIQuotaBlockedError(msg)) throw new Error(msg);
+      if (isAIQuotaBlockedError(msg)) {
+        await logAIUsage({ feature: "mock_question_generator", model: `openai/${modelId}`, status: "credit_exhausted", errorMsg: msg.slice(0, 220), latencyMs: Date.now() - callStartedAt, userId: opts.userId ?? null });
+        throw new Error(msg);
+      }
       if (attempt < MAX_INLINE_RETRIES) {
         const backoff = Math.min(8000, 1000 * Math.pow(2, attempt - 1)) + Math.random() * 500;
         await new Promise((r) => setTimeout(r, backoff));
         resp = null;
         continue;
       }
+      await logAIUsage({ feature: "mock_question_generator", model: `openai/${modelId}`, status: "error", errorMsg: msg.slice(0, 220), latencyMs: Date.now() - callStartedAt, userId: opts.userId ?? null });
       throw new Error(msg);
     }
   }
@@ -618,6 +622,7 @@ Deno.serve(async (req) => {
               exam_code: job.exam_code, section_code: job.section_code, section_name: job.section_name,
               count: qPerSet, mcq: qPerSet, tita: 0, level: job.level || "mixed",
               positive: job.positive_marks || 1, negative: job.negative_marks || 0,
+              userId,
               topic: job.strict_topic || job.topic || null,
               set_mode: true, set_kind: setKind, set_label: `Set ${setIdx} of ${setsTotal}`,
             }) as any;
@@ -793,6 +798,7 @@ Deno.serve(async (req) => {
               exam_code: job.exam_code, section_code: job.section_code, section_name: job.section_name,
               count: batch, mcq: batchMcq, tita: batchTita, level: job.level || "mixed",
               positive: job.positive_marks || 1, negative: job.negative_marks || 0,
+              userId,
               topic: job.strict_topic || job.topic || null,
             }) as any[];
           } catch (e) {
