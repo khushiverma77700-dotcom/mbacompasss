@@ -279,7 +279,8 @@ Deno.serve(async (req) => {
 
   // Reconcile-only mode.
   if (body?.reconcile && !body?.items && !body?.resume_id) {
-    return json(200, { ok: true, mode: "reconcile", reconciled });
+    if (!userToken) return json(200, { ok: true, mode: "reconcile", reconciled, dispatched: 0 });
+    // Continue below to validate the admin and pump stalled/pending rows.
   }
 
   // Need user auth for any dispatch.
@@ -299,6 +300,11 @@ Deno.serve(async (req) => {
     .eq("role", "admin")
     .maybeSingle();
   if (!roleRow) return json(403, { error: "admin only" });
+
+  if (body?.reconcile && !body?.items && !body?.resume_id) {
+    const dispatched = await pumpPending(admin, userToken, 3);
+    return json(200, { ok: true, mode: "reconcile", reconciled, dispatched });
+  }
 
   // Resume single item.
   if (body?.resume_id) {
@@ -350,14 +356,10 @@ Deno.serve(async (req) => {
     .select("*");
   if (iErr) return json(500, { error: iErr.message });
 
-  // Dispatch sequentially in background with a short stagger to avoid overloading AI gateway.
-  const runAll = async () => {
-    for (const itm of inserted ?? []) {
-      await dispatchItem(admin, itm, userToken);
-      // small stagger
-      await new Promise((r) => setTimeout(r, 1500));
-    }
-  };
+  // Start the first few immediately. The queue popup calls reconcile every few
+  // seconds, which pumps the remaining pending rows without relying on one long
+  // waitUntil chain that can be killed by the edge runtime.
+  const runAll = async () => { await pumpPending(admin, userToken, Math.min(3, inserted?.length ?? 0)); };
   // @ts-ignore
   EdgeRuntime.waitUntil(runAll());
 
