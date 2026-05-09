@@ -3,13 +3,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Mail, Send, RefreshCw } from "lucide-react";
+import RichTextEditor from "@/components/admin/RichTextEditor";
+
+const VARIABLES: { key: string; label: string }[] = [
+  { key: "{{name}}", label: "Student Name" },
+  { key: "{{email}}", label: "Login Email" },
+  { key: "{{password}}", label: "Temp Password" },
+  { key: "{{course}}", label: "Course Name" },
+  { key: "{{amount}}", label: "Amount Paid" },
+  { key: "{{dashboard_link}}", label: "Dashboard Link" },
+  { key: "{{support_email}}", label: "Support Email" },
+  { key: "{{support_phone}}", label: "Support Phone" },
+];
 
 interface Template {
   id: number;
