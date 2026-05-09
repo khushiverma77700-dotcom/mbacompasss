@@ -135,20 +135,27 @@ const CategoryPage = () => {
     return queryState !== "all" && !states.includes(queryState) ? [queryState, ...states] : states;
   }, [institutes, queryState]);
 
+  // Strip a trailing "Coaching" so names like "CAT Coaching" don't produce "CAT Coaching Coaching Institutes"
+  const categoryBase = category?.name?.replace(/\s+coaching\s*$/i, "").trim() || "";
+  const categoryLabel = categoryBase || category?.name || "";
+
   const heroTitle = hasLocationFilter
-    ? `${category ? `Best ${category.name} Coaching` : "Best MBA Coaching"} in ${displayName}`
+    ? `${category ? `Best ${categoryLabel} Coaching` : "Best MBA Coaching"} in ${displayName}`
     : category
-      ? `Best ${category.name} Coaching Institutes`
+      ? `Best ${categoryLabel} Coaching Institutes`
       : "All MBA Coaching Institutes in India";
+
+  // Plain-text version of category.description (strip HTML) for meta/fallback
+  const categoryDescPlain = (category?.description || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
 
   const metaTitle = cityPage?.meta_title ||
     (hasLocationFilter
-      ? `Best ${category?.name || "MBA"} Coaching in ${displayName} 2026 — Fees, Reviews | MBA Compass`
-      : `${category?.name || "All MBA"} Coaching Institutes in India | MBA Compass`);
+      ? `Best ${categoryLabel || "MBA"} Coaching in ${displayName} 2026 — Fees, Reviews | MBA Compass`
+      : `${categoryLabel || "All MBA"} Coaching Institutes in India | MBA Compass`);
   const metaDesc = cityPage?.meta_description ||
     (hasLocationFilter
-      ? `Explore top ${category?.name || "MBA"} coaching institutes in ${displayName} with fees, ratings, success rates, and student reviews.`
-      : category?.description || "Find the best MBA coaching institutes across India");
+      ? `Explore top ${categoryLabel || "MBA"} coaching institutes in ${displayName} with fees, ratings, success rates, and student reviews.`
+      : categoryDescPlain || "Find the best MBA coaching institutes across India");
   const keywords: string[] = cityPage?.keywords || [];
   const jsonLd = generateListingSchema(metaTitle, filtered, "institute");
   const { seo: resolvedSeo } = useResolvedSeo(
@@ -223,6 +230,8 @@ const CategoryPage = () => {
               </h1>
               {cityPage?.intro_content ? (
                 <div className="text-primary-foreground/75 max-w-3xl mx-auto prose-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: cityPage.intro_content }} />
+              ) : category?.description ? (
+                <div className="text-primary-foreground/85 mb-6 max-w-3xl mx-auto text-base md:text-lg leading-relaxed prose prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: category.description }} />
               ) : (
                 <p className="text-primary-foreground/75 mb-6 max-w-2xl mx-auto text-base md:text-lg">{metaDesc}</p>
               )}
