@@ -62,6 +62,7 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Mocks", path: "/admin/mock-tests", icon: ClipboardList },
       { label: "Bulk AI Mock Generation", path: "/admin/bulk-mock-generation", icon: Sparkles },
       { label: "Students", path: "/admin/student-mocks", icon: Users },
+      { label: "Orders", path: "/admin/mock-orders", icon: ShoppingCart },
       // Secondary tools
       { label: "Mocks Landing Page", path: "/admin/mocks-landing", icon: ClipboardList },
       { label: "Personalized Hub", path: "/admin/personalized-hub", icon: Sparkles },

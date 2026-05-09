@@ -550,6 +550,13 @@ export default function MockBundleDetailPage() {
           </div>
         </section>
       )}
+      <PurchaseSuccessDialog
+        open={successOpen}
+        onOpenChange={setSuccessOpen}
+        email={buyerEmail}
+        courseName={bundle?.name || "Your course"}
+        amount={Number(bundle?.price_inr) || undefined}
+      />
     </div>
   );
 }
