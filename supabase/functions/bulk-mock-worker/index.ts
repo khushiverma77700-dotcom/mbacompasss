@@ -56,7 +56,7 @@ async function reconcile(admin: any) {
     const requestedFromJobs = (jobs || []).reduce((s: number, j: any) => s + (Number(j.total_questions) || 0), 0);
     const jobsOpen = (jobs || []).some((j: any) => ["pending", "processing"].includes(String(j.status)));
     const jobsFailed = (jobs || []).some((j: any) => String(j.status) === "failed");
-    const generated = generatedFromJobs || gen.total_generated ?? 0;
+    const generated = generatedFromJobs || (gen.total_generated ?? 0);
     let nextStatus: string | null = null;
     let errorMessage: string | null = null;
     if (gen.status === "completed" || ((jobs || []).length > 0 && !jobsOpen && !jobsFailed && requestedFromJobs > 0 && generated >= requestedFromJobs)) {
@@ -197,6 +197,15 @@ async function dispatchItem(admin: any, item: any, userToken: string) {
 
 async function pumpPending(admin: any, userToken: string, limit = 3) {
   const nowIso = new Date().toISOString();
+  const { data: activeByRequest } = await admin
+    .from("bulk_mock_request_items")
+    .select("request_id")
+    .eq("paused", false)
+    .eq("status", "processing");
+  const activeCounts = new Map<string, number>();
+  for (const row of activeByRequest || []) {
+    activeCounts.set(row.request_id, (activeCounts.get(row.request_id) || 0) + 1);
+  }
   const { data: pending } = await admin
     .from("bulk_mock_request_items")
     .select("*")
@@ -209,7 +218,9 @@ async function pumpPending(admin: any, userToken: string, limit = 3) {
 
   let dispatched = 0;
   for (const itm of pending ?? []) {
+    if ((activeCounts.get(itm.request_id) || 0) >= MAX_ACTIVE_PER_BATCH) continue;
     if (await dispatchItem(admin, itm, userToken)) dispatched++;
+    activeCounts.set(itm.request_id, (activeCounts.get(itm.request_id) || 0) + 1);
   }
   return dispatched;
 }
