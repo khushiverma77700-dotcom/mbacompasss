@@ -5,6 +5,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4?target=denonext";
 import { getCredential } from "../_shared/getCredential.ts";
+import { logAIUsage } from "../_shared/aiUsageLog.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -332,6 +333,7 @@ async function callOpenAIBatch(opts: {
   exam_code: string; section_name: string; section_code: string;
   count: number; mcq: number; tita: number; level: string;
   positive: number; negative: number; topic?: string | null;
+  userId?: string | null;
   // ----- set mode -----
   set_mode?: boolean;            // true ⇒ produce ONE passage + `count` tied questions
   set_kind?: "rc" | "caselet" | "shared"; // verbal RC vs DI/LR caselet vs generic
@@ -378,6 +380,7 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
   const lvlLower = String(opts.level || "").toLowerCase();
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
   const modelId = "gpt-4o-mini";
+  const callStartedAt = Date.now();
   const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.4;
   // Keep output concise enough to finish quickly; editors can polish further in the builder.
   const perQ = 700;
@@ -409,6 +412,7 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
       if (resp.ok) break;
       const txt = await resp.text();
       const quotaBlocked = resp.status === 401 || resp.status === 402 || resp.status === 403 || /invalid_api_key|payment required|permission_denied|denied access|insufficient_quota|quota|billing/i.test(txt);
+      await logAIUsage({ feature: "mock_question_generator", model: `openai/${modelId}`, status: quotaBlocked ? "credit_exhausted" : "error", errorMsg: `HTTP ${resp.status}: ${txt.slice(0, 220)}`, latencyMs: Date.now() - callStartedAt, userId: opts.userId ?? null });
       if (quotaBlocked) throw new Error(`OpenAI API blocked: ${txt.slice(0, 240)}`);
       if ([408, 425, 429, 500, 502, 503, 504].includes(resp.status) && attempt < MAX_INLINE_RETRIES) {
         lastErr = `OpenAI ${resp.status}: ${txt.slice(0, 200)}`;
@@ -435,6 +439,7 @@ Plain integer counts and percentages used in prose (e.g. "3 students", "20%") do
   }
   if (!resp || !resp.ok) throw new Error(lastErr || "AI call failed after retries");
   const data = await resp.json();
+  await logAIUsage({ feature: "mock_question_generator", model: `openai/${modelId}`, aiData: data, status: "success", latencyMs: Date.now() - callStartedAt, userId: opts.userId ?? null });
   const content = data?.choices?.[0]?.message?.content;
   const parsed = parseJsonContent(content);
   if (opts.set_mode) {
