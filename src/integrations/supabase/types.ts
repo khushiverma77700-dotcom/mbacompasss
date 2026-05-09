@@ -6314,6 +6314,81 @@ export type Database = {
         }
         Relationships: []
       }
+      welcome_email_logs: {
+        Row: {
+          amount: number | null
+          brevo_message_id: string | null
+          course_name: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          recipient_email: string
+          recipient_name: string | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          brevo_message_id?: string | null
+          course_name?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient_email: string
+          recipient_name?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          brevo_message_id?: string | null
+          course_name?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient_email?: string
+          recipient_name?: string | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      welcome_email_template: {
+        Row: {
+          body_html: string
+          dashboard_link: string
+          enabled: boolean
+          id: number
+          subject: string
+          support_email: string
+          support_phone: string
+          updated_at: string
+        }
+        Insert: {
+          body_html?: string
+          dashboard_link?: string
+          enabled?: boolean
+          id?: number
+          subject?: string
+          support_email?: string
+          support_phone?: string
+          updated_at?: string
+        }
+        Update: {
+          body_html?: string
+          dashboard_link?: string
+          enabled?: boolean
+          id?: number
+          subject?: string
+          support_email?: string
+          support_phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       mock_leaderboard: {
