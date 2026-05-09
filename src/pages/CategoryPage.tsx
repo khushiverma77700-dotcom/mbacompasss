@@ -230,6 +230,8 @@ const CategoryPage = () => {
               </h1>
               {cityPage?.intro_content ? (
                 <div className="text-primary-foreground/75 max-w-3xl mx-auto prose-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: cityPage.intro_content }} />
+              ) : category?.description ? (
+                <div className="text-primary-foreground/85 mb-6 max-w-3xl mx-auto text-base md:text-lg leading-relaxed prose prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: category.description }} />
               ) : (
                 <p className="text-primary-foreground/75 mb-6 max-w-2xl mx-auto text-base md:text-lg">{metaDesc}</p>
               )}
