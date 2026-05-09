@@ -177,23 +177,47 @@ async function loadExistingQuestionHashes(
   return seen;
 }
 
-// Section-scoped corpus used for similarity / paraphrase rejection.
-// Keeping it section-local (instead of the entire bank) keeps the math cheap
-// while still catching the most common AI repetition patterns.
-async function loadSectionCorpus(admin: any, sectionId: string): Promise<{ tokens: Set<string>[]; shingles: Set<string>[] }> {
+// Exam+section scoped corpus used for similarity / paraphrase rejection.
+// Exact hashes stop verbatim repeats; this catches the more common failure mode
+// where multiple mocks reuse the same scenario with only numbers/names changed.
+async function loadSectionCorpus(
+  admin: any,
+  examCode: string,
+  sectionCode: string,
+  currentSectionId: string,
+): Promise<{ tokens: Set<string>[]; shingles: Set<string>[]; snippets: string[] }> {
   const tokens: Set<string>[] = [];
   const shingles: Set<string>[] = [];
+  const snippets: string[] = [];
+
+  const { data: testRows } = await admin
+    .from("mock_tests")
+    .select("id")
+    .eq("exam_code", examCode);
+  const testIds = (testRows || []).map((r: any) => r.id);
+  let sectionIds = [currentSectionId];
+  if (testIds.length > 0) {
+    const { data: secRows } = await admin
+      .from("mock_sections")
+      .select("id")
+      .eq("code", sectionCode)
+      .in("test_id", testIds);
+    sectionIds = Array.from(new Set([currentSectionId, ...(secRows || []).map((r: any) => r.id)]));
+  }
+
   const { data } = await admin
     .from("mock_questions")
     .select("question_html")
-    .eq("section_id", sectionId)
-    .limit(2000);
+    .in("section_id", sectionIds)
+    .order("created_at", { ascending: false })
+    .limit(2500);
   for (const row of data || []) {
     const norm = normalizeForHash((row as any).question_html || "");
+    if (snippets.length < 12 && norm.length > 40) snippets.push(norm.slice(0, 260));
     tokens.push(tokenize(norm));
     shingles.push(buildShingles(norm, 5));
   }
-  return { tokens, shingles };
+  return { tokens, shingles, snippets };
 }
 
 function tokenize(text: string): Set<string> {
