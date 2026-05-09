@@ -3,13 +3,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Mail, Send, RefreshCw } from "lucide-react";
+import RichTextEditor from "@/components/admin/RichTextEditor";
+
+const VARIABLES: { key: string; label: string }[] = [
+  { key: "{{name}}", label: "Student Name" },
+  { key: "{{email}}", label: "Login Email" },
+  { key: "{{password}}", label: "Temp Password" },
+  { key: "{{course}}", label: "Course Name" },
+  { key: "{{amount}}", label: "Amount Paid" },
+  { key: "{{dashboard_link}}", label: "Dashboard Link" },
+  { key: "{{support_email}}", label: "Support Email" },
+  { key: "{{support_phone}}", label: "Support Phone" },
+];
 
 interface Template {
   id: number;
@@ -122,12 +133,29 @@ export default function AdminWelcomeEmail() {
                 <Input value={tpl.subject} onChange={(e) => setTpl({ ...tpl, subject: e.target.value })} />
               </div>
               <div>
-                <Label>Body (HTML)</Label>
-                <Textarea rows={14} value={tpl.body_html}
-                  onChange={(e) => setTpl({ ...tpl, body_html: e.target.value })}
-                  className="font-mono text-xs" />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Available fields: <code>{"{{name}}"}</code>, <code>{"{{email}}"}</code>, <code>{"{{password}}"}</code>, <code>{"{{course}}"}</code>, <code>{"{{amount}}"}</code>, <code>{"{{dashboard_link}}"}</code>, <code>{"{{support_email}}"}</code>, <code>{"{{support_phone}}"}</code>
+                <Label>Body</Label>
+                <div className="flex flex-wrap gap-1.5 my-2">
+                  {VARIABLES.map((v) => (
+                    <Button
+                      key={v.key}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => setTpl({ ...tpl, body_html: tpl.body_html + ` ${v.key} ` })}
+                      title={`Insert ${v.key}`}
+                    >
+                      + {v.label}
+                    </Button>
+                  ))}
+                </div>
+                <RichTextEditor
+                  content={tpl.body_html}
+                  onChange={(html) => setTpl({ ...tpl, body_html: html })}
+                  placeholder="Compose the welcome email…"
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Variables in <code>{"{{ }}"}</code> are auto-replaced when the email is sent. Edit the surrounding text freely; do not change the variable names.
                 </p>
               </div>
               <div className="grid md:grid-cols-3 gap-4">
