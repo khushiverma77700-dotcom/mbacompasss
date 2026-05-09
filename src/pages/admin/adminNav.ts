@@ -129,6 +129,7 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Database Backup", path: "/admin/database-backup", icon: Database },
       { label: "AI & Cloud Usage", path: "/admin/ai-usage", icon: Activity },
       { label: "API Keys & Secrets", path: "/admin/api-keys", icon: KeyRound },
+      { label: "Welcome Email", path: "/admin/welcome-email", icon: Mail },
       { label: "Safe Browsing Guide", path: "/admin/safe-browsing-guide", icon: ShieldCheck },
       { label: "Clear Caches", path: "/admin/clear-cache", icon: Trash2 },
     ],
