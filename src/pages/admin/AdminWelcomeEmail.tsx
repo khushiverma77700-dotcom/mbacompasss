@@ -133,12 +133,29 @@ export default function AdminWelcomeEmail() {
                 <Input value={tpl.subject} onChange={(e) => setTpl({ ...tpl, subject: e.target.value })} />
               </div>
               <div>
-                <Label>Body (HTML)</Label>
-                <Textarea rows={14} value={tpl.body_html}
-                  onChange={(e) => setTpl({ ...tpl, body_html: e.target.value })}
-                  className="font-mono text-xs" />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Available fields: <code>{"{{name}}"}</code>, <code>{"{{email}}"}</code>, <code>{"{{password}}"}</code>, <code>{"{{course}}"}</code>, <code>{"{{amount}}"}</code>, <code>{"{{dashboard_link}}"}</code>, <code>{"{{support_email}}"}</code>, <code>{"{{support_phone}}"}</code>
+                <Label>Body</Label>
+                <div className="flex flex-wrap gap-1.5 my-2">
+                  {VARIABLES.map((v) => (
+                    <Button
+                      key={v.key}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => setTpl({ ...tpl, body_html: tpl.body_html + ` ${v.key} ` })}
+                      title={`Insert ${v.key}`}
+                    >
+                      + {v.label}
+                    </Button>
+                  ))}
+                </div>
+                <RichTextEditor
+                  content={tpl.body_html}
+                  onChange={(html) => setTpl({ ...tpl, body_html: html })}
+                  placeholder="Compose the welcome email…"
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  Variables in <code>{"{{ }}"}</code> are auto-replaced when the email is sent. Edit the surrounding text freely; do not change the variable names.
                 </p>
               </div>
               <div className="grid md:grid-cols-3 gap-4">
