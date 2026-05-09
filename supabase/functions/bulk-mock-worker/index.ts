@@ -20,8 +20,20 @@ const json = (status: number, body: unknown) =>
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+const DISPATCH_LOCK_MS = 2 * 60_000;
+const DISPATCH_TIMEOUT_MS = 45_000;
 
 async function reconcile(admin: any) {
+  // Recover rows where the worker died after marking "processing" but before
+  // generate-mock-questions returned a generation_id. These are the rows that
+  // made bulk batches look permanently stuck after only one real mock started.
+  await admin
+    .from("bulk_mock_request_items")
+    .update({ status: "pending", worker_lock_until: null, error_message: "Recovered stale dispatch — queued again" })
+    .eq("status", "processing")
+    .is("generation_id", null)
+    .or(`worker_lock_until.is.null,worker_lock_until.lt.${new Date().toISOString()}`);
+
   const { data: processing } = await admin
     .from("bulk_mock_request_items")
     .select("id, generation_id")
@@ -88,8 +100,112 @@ async function reconcile(admin: any) {
   return updated;
 }
 
+function fetchWithTimeout(url: string, init: RequestInit, ms: number) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  return fetch(url, { ...init, signal: ctrl.signal }).finally(() => clearTimeout(timer));
+}
+
 async function dispatchItem(admin: any, item: any, userToken: string) {
-  // Mark processing (optimistic).
+  const nowIso = new Date().toISOString();
+  const lockIso = new Date(Date.now() + DISPATCH_LOCK_MS).toISOString();
+  const { data: claimed } = await admin
+    .from("bulk_mock_request_items")
+    .update({
+      status: "processing",
+      started_at: item.started_at ?? nowIso,
+      retry_count: (item.retry_count ?? 0) + 1,
+      worker_lock_until: lockIso,
+      error_message: null,
+    })
+    .eq("id", item.id)
+    .eq("paused", false)
+    .is("generation_id", null)
+    .in("status", ["pending", "processing"])
+    .or(`worker_lock_until.is.null,worker_lock_until.lt.${nowIso}`)
+    .select("*")
+    .maybeSingle();
+  if (!claimed) return false;
+
+  try {
+    const resp = await fetchWithTimeout(`${SUPABASE_URL}/functions/v1/generate-mock-questions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${userToken}`,
+        apikey: ANON_KEY,
+      },
+      body: JSON.stringify({
+        exam_code: claimed.exam_code,
+        category: claimed.category,
+        level: claimed.level,
+        questions_per_set: claimed.questions_per_set,
+        sets: claimed.sets,
+        section_code: claimed.section_code || undefined,
+        topic: claimed.topic || undefined,
+        test_name_prefix: claimed.test_name_prefix || undefined,
+      }),
+    }, DISPATCH_TIMEOUT_MS);
+    const result = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      await admin
+        .from("bulk_mock_request_items")
+        .update({
+          status: (claimed.retry_count ?? 0) >= 5 ? "failed" : "pending",
+          error_message: result?.error || `Dispatch HTTP ${resp.status}`,
+          worker_lock_until: null,
+          finished_at: (claimed.retry_count ?? 0) >= 5 ? new Date().toISOString() : null,
+        })
+        .eq("id", claimed.id);
+      return false;
+    }
+    const generationId = result?.generation_id || result?.gen_id || null;
+    if (!generationId) throw new Error("Generation did not return an id");
+    await admin
+      .from("bulk_mock_request_items")
+      .update({
+        status: "processing",
+        generation_id: generationId,
+        worker_lock_until: null,
+        total_requested: result?.total_requested ?? claimed.questions_per_set * claimed.sets,
+      })
+      .eq("id", claimed.id);
+    return true;
+  } catch (e: any) {
+    const attempts = (claimed.retry_count ?? 0) + 1;
+    await admin
+      .from("bulk_mock_request_items")
+      .update({
+        status: attempts >= 6 ? "failed" : "pending",
+        error_message: attempts >= 6 ? (e?.message ?? "dispatch error") : `Dispatch retry scheduled: ${e?.message ?? "temporary error"}`,
+        worker_lock_until: null,
+        finished_at: attempts >= 6 ? new Date().toISOString() : null,
+      })
+      .eq("id", claimed.id);
+    return false;
+  }
+}
+
+async function pumpPending(admin: any, userToken: string, limit = 3) {
+  const nowIso = new Date().toISOString();
+  const { data: pending } = await admin
+    .from("bulk_mock_request_items")
+    .select("*")
+    .eq("paused", false)
+    .is("generation_id", null)
+    .in("status", ["pending", "processing"])
+    .or(`worker_lock_until.is.null,worker_lock_until.lt.${nowIso}`)
+    .order("created_at", { ascending: true })
+    .limit(limit);
+
+  let dispatched = 0;
+  for (const itm of pending ?? []) {
+    if (await dispatchItem(admin, itm, userToken)) dispatched++;
+  }
+  return dispatched;
+}
+
+async function legacyDispatchItem(admin: any, item: any, userToken: string) {
   await admin
     .from("bulk_mock_request_items")
     .update({
