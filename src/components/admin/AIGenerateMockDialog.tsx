@@ -554,6 +554,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
   );
   const batchProgressPct = batchItems.length === 0 ? 0
     : Math.round((batchItems.filter((i) => i.status !== "pending" && i.status !== "processing").length / batchItems.length) * 100);
+  const activeBatchItem = batchItems.find((i) => i.generation_id && ["processing", "completed", "needs_review", "failed"].includes(i.status));
 
   const close = () => {
     onOpenChange(false);
@@ -953,6 +954,19 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
               </Badge>
             </div>
             <Progress value={batchProgressPct} className="h-2" />
+            {activeBatchItem?.generation_id ? (
+              <MockGenerationProgressPanel
+                key={activeBatchItem.generation_id}
+                generationId={activeBatchItem.generation_id}
+              />
+            ) : (
+              <Card className="p-4 border-dashed bg-muted/30">
+                <div className="text-sm font-medium">Waiting for the dispatcher to attach a generation id…</div>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  The queue watchdog is now re-pumping pending rows automatically. Telemetry appears here as soon as the first AI worker starts.
+                </p>
+              </Card>
+            )}
             <div className="space-y-2 max-h-[55vh] overflow-y-auto">
               {batchItems.map((it, i) => {
                 const generated = it.total_generated ?? 0;
@@ -985,15 +999,8 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                     {it.error_message && (
                       <p className="text-[11px] text-destructive">{it.error_message}</p>
                     )}
-                    {/* Rich live telemetry — only for the currently processing item to keep it focused */}
-                    {it.status === "processing" && it.generation_id && (
-                      <div className="mt-2">
-                        <MockGenerationProgressPanel
-                          key={it.generation_id}
-                          generationId={it.generation_id}
-                          compact
-                        />
-                      </div>
+                    {it.status === "processing" && !it.generation_id && (
+                      <p className="text-[11px] text-amber-700">Dispatcher is recovering this row and will retry automatically.</p>
                     )}
                   </Card>
                 );

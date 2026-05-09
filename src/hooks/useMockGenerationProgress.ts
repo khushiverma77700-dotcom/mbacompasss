@@ -20,6 +20,7 @@ export type SectionJob = {
   rejected_invalid: number;
   final_reason: string | null;
   level?: string | null;
+  created_at?: string | null;
   /** Kept for UI compatibility; long AI calls are no longer marked stuck client-side. */
   isStalled?: boolean;
 };
@@ -81,7 +82,7 @@ export function useMockGenerationProgress(generationId: string | null, intervalM
     setLoading(true);
     setStartedAt(Date.now());
 
-    const SELECT = "id, section_code, section_name, total_questions, questions_done, status, attempts, current_step, error_message, updated_at, duplicates_rejected, dup_hash, dup_similarity, dup_paraphrase, dup_db_conflict, rejected_invalid, final_reason, level";
+    const SELECT = "id, section_code, section_name, total_questions, questions_done, status, attempts, current_step, error_message, updated_at, created_at, duplicates_rejected, dup_hash, dup_similarity, dup_paraphrase, dup_db_conflict, rejected_invalid, final_reason, level";
 
     const fetchJobs = async () => {
       const [{ data: gen }, { data: all }] = await Promise.all([
@@ -99,6 +100,11 @@ export function useMockGenerationProgress(generationId: string | null, intervalM
 
       if (!alive) return;
       setJobs((gen ?? []) as SectionJob[]);
+      const firstCreatedAt = (gen ?? [])
+        .map((j: any) => new Date(j.created_at || j.updated_at || 0).getTime())
+        .filter((t) => Number.isFinite(t) && t > 0)
+        .sort((a, b) => a - b)[0];
+      if (firstCreatedAt) setStartedAt(firstCreatedAt);
       const snap: QueueSnapshot = { pending: 0, processing: 0, completed: 0, failed: 0, retried: 0 };
       for (const r of all ?? []) {
         const s = (r as any).status as string;
