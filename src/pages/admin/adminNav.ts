@@ -6,7 +6,7 @@ import {
   GraduationCap, Mail, FileText, Tag, Menu, Settings, MessageCircle, Trophy,
   Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare,
   TrendingUp, Sparkles, ShieldCheck, Briefcase, Target, PhoneCall, Database,
-  Activity, Calculator, Bell, RefreshCw, PenLine, ClipboardList, Package, KeyRound,
+  Activity, Calculator, Bell, RefreshCw, PenLine, ClipboardList, Package, KeyRound, ShoppingCart,
 } from "lucide-react";
 
 export type AdminNavItem = {
