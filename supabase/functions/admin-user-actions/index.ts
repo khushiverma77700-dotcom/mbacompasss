@@ -9,7 +9,7 @@ const corsHeaders = {
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-type Action = "reset_password" | "block" | "unblock" | "delete";
+type Action = "reset_password" | "block" | "unblock" | "delete" | "get_emails";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -38,10 +38,29 @@ Deno.serve(async (req) => {
     .maybeSingle();
   if (!roleRow) return json(403, { error: "Admin only" });
 
-  let body: { action?: Action; user_id?: string; new_password?: string };
+  let body: { action?: Action; user_id?: string; new_password?: string; user_ids?: string[] };
   try { body = await req.json(); } catch { return json(400, { error: "Invalid JSON" }); }
   const { action, user_id } = body;
-  if (!action || !user_id) return json(400, { error: "action and user_id required" });
+  if (!action) return json(400, { error: "action required" });
+
+  // Bulk email lookup — no per-user_id required
+  if (action === "get_emails") {
+    const ids = (body.user_ids ?? []).filter(Boolean);
+    if (ids.length === 0) return json(200, { emails: {} });
+    const emails: Record<string, string> = {};
+    // Page through users; admin.listUsers returns paginated results.
+    let page = 1;
+    while (page <= 20) {
+      const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
+      if (error) break;
+      data.users.forEach((u) => { if (ids.includes(u.id) && u.email) emails[u.id] = u.email; });
+      if (!data.users.length || data.users.length < 1000) break;
+      page += 1;
+    }
+    return json(200, { emails });
+  }
+
+  if (!user_id) return json(400, { error: "user_id required" });
   if (user_id === callerId) return json(400, { error: "You cannot perform this action on your own account." });
 
   try {
