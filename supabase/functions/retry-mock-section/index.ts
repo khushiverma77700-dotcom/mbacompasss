@@ -720,10 +720,26 @@ Deno.serve(async (req) => {
             }
             const norm = normalizeForHash(q.question_html);
             const hash = await sha256(norm);
-            // For set-bound questions we ONLY check exact-hash duplicates.
-            // Section-corpus similarity / paraphrase checks are SKIPPED — siblings
-            // necessarily share the same passage and would be flagged otherwise.
             if (seen.has(hash)) { dupHash++; continue; }
+            // Compare set-bound questions against the already-saved same exam/section
+            // corpus, but do not compare siblings inside this new set against each
+            // other; RC/caselet siblings naturally share the same context.
+            const candTokens = tokenize(norm);
+            let maxSim = 0;
+            for (const t of corpus.tokens) {
+              const s = jaccard(candTokens, t);
+              if (s > maxSim) maxSim = s;
+              if (maxSim >= SIM_THRESHOLD) break;
+            }
+            if (maxSim >= SIM_THRESHOLD) { dupSimilarity++; continue; }
+            const candShingles = buildShingles(norm, 5);
+            let maxShingle = 0;
+            for (const sh of corpus.shingles) {
+              const s = jaccard(candShingles, sh);
+              if (s > maxShingle) maxShingle = s;
+              if (maxShingle >= PARAPHRASE_THRESHOLD) break;
+            }
+            if (maxShingle >= PARAPHRASE_THRESHOLD) { dupParaphrase++; continue; }
             seen.add(hash);
             const cleanedQ = cleanQuestionHtml(q.question_html);
             const { data: qRow, error: insErr } = await admin.from("mock_questions").insert({
@@ -767,6 +783,8 @@ Deno.serve(async (req) => {
                   });
                 }
                 inserted++;
+                corpus.tokens.push(candTokens);
+                corpus.shingles.push(candShingles);
               } else {
                 await admin.from("mock_questions").delete().eq("id", qRow.id);
                 rejectedInvalid++;
