@@ -59,6 +59,23 @@ Deno.serve(async (req) => {
       order_id: order.id, expires_at: expires.toISOString(),
     }, { onConflict: "user_id,course_id" });
 
+    // Fire-and-forget welcome email
+    try {
+      const { data: course } = await admin.from("mba_compass_courses")
+        .select("title, price").eq("id", order.course_id).maybeSingle();
+      const { data: profile } = await admin.from("profiles")
+        .select("full_name, email").eq("id", user.id).maybeSingle();
+      admin.functions.invoke("send-welcome-email", {
+        body: {
+          user_id: user.id,
+          recipient_email: profile?.email || user.email,
+          recipient_name: profile?.full_name || "",
+          course_name: (course as any)?.title || "Course",
+          amount: (course as any)?.price ?? "",
+        },
+      }).catch((e) => console.error("welcome email invoke failed", e));
+    } catch (e) { console.error("welcome email setup failed", e); }
+
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
