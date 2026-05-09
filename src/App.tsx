@@ -196,7 +196,6 @@ const MockThankYouPage = lazyWithPreload(() => import("./pages/mocks/MockThankYo
 
 // Lazy load heavy popups
 const OnboardingDialog = lazyWithPreload(() => import("@/components/OnboardingDialog"));
-const ProfileAnalyzerPopup = lazyWithPreload(() => import("@/components/ProfileAnalyzerPopup"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
