@@ -2834,10 +2834,12 @@ export type Database = {
           features: Json | null
           full_mocks_count: number | null
           gallery_images: Json | null
+          has_ai_insights: boolean | null
           has_ai_study_planner: boolean | null
           has_ai_tools: boolean | null
           has_cat_planner: boolean | null
           has_certificate: boolean | null
+          has_daily_mocks: boolean | null
           has_daily_test: boolean | null
           has_doubt_resolution: boolean | null
           has_gd_pi_prep: boolean | null
@@ -2848,6 +2850,8 @@ export type Database = {
           has_mock_analysis: boolean | null
           has_percentile_predictor: boolean | null
           has_performance_analytics: boolean | null
+          has_personalized_hub: boolean | null
+          has_previous_year_papers: boolean | null
           has_recorded_lectures: boolean | null
           has_sectional_tests: boolean | null
           has_study_material: boolean | null
@@ -2895,10 +2899,12 @@ export type Database = {
           features?: Json | null
           full_mocks_count?: number | null
           gallery_images?: Json | null
+          has_ai_insights?: boolean | null
           has_ai_study_planner?: boolean | null
           has_ai_tools?: boolean | null
           has_cat_planner?: boolean | null
           has_certificate?: boolean | null
+          has_daily_mocks?: boolean | null
           has_daily_test?: boolean | null
           has_doubt_resolution?: boolean | null
           has_gd_pi_prep?: boolean | null
@@ -2909,6 +2915,8 @@ export type Database = {
           has_mock_analysis?: boolean | null
           has_percentile_predictor?: boolean | null
           has_performance_analytics?: boolean | null
+          has_personalized_hub?: boolean | null
+          has_previous_year_papers?: boolean | null
           has_recorded_lectures?: boolean | null
           has_sectional_tests?: boolean | null
           has_study_material?: boolean | null
@@ -2956,10 +2964,12 @@ export type Database = {
           features?: Json | null
           full_mocks_count?: number | null
           gallery_images?: Json | null
+          has_ai_insights?: boolean | null
           has_ai_study_planner?: boolean | null
           has_ai_tools?: boolean | null
           has_cat_planner?: boolean | null
           has_certificate?: boolean | null
+          has_daily_mocks?: boolean | null
           has_daily_test?: boolean | null
           has_doubt_resolution?: boolean | null
           has_gd_pi_prep?: boolean | null
@@ -2970,6 +2980,8 @@ export type Database = {
           has_mock_analysis?: boolean | null
           has_percentile_predictor?: boolean | null
           has_performance_analytics?: boolean | null
+          has_personalized_hub?: boolean | null
+          has_previous_year_papers?: boolean | null
           has_recorded_lectures?: boolean | null
           has_sectional_tests?: boolean | null
           has_study_material?: boolean | null
