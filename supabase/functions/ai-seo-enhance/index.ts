@@ -33,6 +33,24 @@ function extractJsonFromResponse(response: string): unknown {
   }
 }
 
+// Strip fields Google flags as invalid when nested. Specifically:
+// "A nested object can't contain the 'itemReviewed' field" — itemReviewed must
+// only appear on a top-level Review, never inside an AggregateRating embedded
+// in a parent (Organization/Product/etc).
+export function sanitizeSchema(node: any, depth = 0): any {
+  if (Array.isArray(node)) return node.map((n) => sanitizeSchema(n, depth));
+  if (!node || typeof node !== "object") return node;
+  const t = node["@type"];
+  const types = Array.isArray(t) ? t : [t];
+  // Drop itemReviewed from any AggregateRating, and from any Review/Rating
+  // when it is nested inside another schema (depth > 0 means it has a parent).
+  if (types.includes("AggregateRating") || ((types.includes("Review") || types.includes("Rating")) && depth > 0)) {
+    if ("itemReviewed" in node) delete node.itemReviewed;
+  }
+  for (const k of Object.keys(node)) node[k] = sanitizeSchema(node[k], depth + 1);
+  return node;
+}
+
 function detectTruncation(response: string): boolean {
   const text = response.trim();
   const ob = (text.match(/{/g) || []).length;
