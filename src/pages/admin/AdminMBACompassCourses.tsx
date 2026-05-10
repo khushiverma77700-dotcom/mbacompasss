@@ -296,9 +296,8 @@ export default function AdminMBACompassCourses() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <div><Label>Language</Label><Input value={edit.language ?? ""} onChange={(e) => setEdit({ ...edit, language: e.target.value })} /></div>
-                    <div><Label>Duration (weeks)</Label><Input type="number" value={edit.duration_weeks ?? 0} onChange={(e) => setEdit({ ...edit, duration_weeks: parseInt(e.target.value) || 0 })} /></div>
                     <div><Label>Validity (months)</Label><Input type="number" value={edit.validity_months ?? 0} onChange={(e) => setEdit({ ...edit, validity_months: parseInt(e.target.value) || 0 })} /></div>
                   </div>
 
