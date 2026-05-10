@@ -93,10 +93,6 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
       return;
     }
 
-    if (password.length < 6) {
-      toast({ title: "Create a password", description: "Use at least 6 characters.", variant: "destructive" });
-      return;
-    }
 
     setOtpSending(true);
     try {
