@@ -117,13 +117,29 @@ export default function AdminMockBundles() {
     return ["all", ...Array.from(set).sort()];
   }, [allMocks]);
 
+  const testTypes = useMemo(() => {
+    const set = new Set<string>();
+    allMocks.forEach((m) => m.test_type && set.add(m.test_type));
+    return ["all", ...Array.from(set).sort()];
+  }, [allMocks]);
+
   const filteredMocks = useMemo(() => {
     return allMocks.filter((m) => {
       if (examFilter !== "all" && m.exam_code !== examFilter) return false;
+      if (typeFilter !== "all" && m.test_type !== typeFilter) return false;
+      if (statusFilter === "live" && !m.is_published) return false;
+      if (statusFilter === "draft" && m.is_published) return false;
+      const sel = editingItems.includes(m.id);
+      if (selectionFilter === "selected" && !sel) return false;
+      if (selectionFilter === "unselected" && sel) return false;
       if (mockSearch && !m.name.toLowerCase().includes(mockSearch.toLowerCase())) return false;
       return true;
     });
-  }, [allMocks, examFilter, mockSearch]);
+  }, [allMocks, examFilter, typeFilter, statusFilter, selectionFilter, mockSearch, editingItems]);
+
+  const clearFilters = () => {
+    setMockSearch(""); setExamFilter("all"); setTypeFilter("all"); setStatusFilter("all"); setSelectionFilter("all");
+  };
 
   const toggleMock = (id: string) => {
     setEditingItems((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
