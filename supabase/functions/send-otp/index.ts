@@ -23,9 +23,11 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const fast2smsKey = (await getCredential("FAST2SMS_API_KEY"));
+    const msg91AuthKey = (await getCredential("MSG91_AUTH_KEY")) || Deno.env.get("MSG91_AUTH_KEY");
+    const msg91TemplateId = (await getCredential("MSG91_TEMPLATE_ID")) || Deno.env.get("MSG91_TEMPLATE_ID");
 
-    if (!fast2smsKey) throw new Error("FAST2SMS_API_KEY is not configured");
+    if (!msg91AuthKey) throw new Error("MSG91_AUTH_KEY is not configured");
+    if (!msg91TemplateId) throw new Error("MSG91_TEMPLATE_ID is not configured");
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -59,21 +61,40 @@ Deno.serve(async (req) => {
       throw new Error("Failed to store OTP");
     }
 
-    // Fire-and-forget SMS so the client gets an instant response.
-    // OTP is already persisted; SMS delivery happens in background.
-    const message = encodeURIComponent(`Your MBA Compass verification code is ${otp}. Valid for 5 minutes. Do not share this OTP with anyone.`);
-    const url = `https://www.fast2sms.com/dev/bulkV2?authorization=${fast2smsKey}&message=${message}&language=english&route=q&numbers=${phone}`;
+    // Fire-and-forget SMS via MSG91 Flow API; OTP is already persisted.
+    const msg91Url = "https://control.msg91.com/api/v5/flow/";
+    const msg91Body = {
+      template_id: msg91TemplateId,
+      short_url: "0",
+      recipients: [
+        {
+          mobiles: `91${phone}`,
+          otp,
+          OTP: otp,
+          var: otp,
+          var1: otp,
+        },
+      ],
+    };
 
-    const smsTask = fetch(url, { method: "GET" })
+    const smsTask = fetch(msg91Url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        accept: "application/json",
+        authkey: msg91AuthKey,
+      },
+      body: JSON.stringify(msg91Body),
+    })
       .then(async (r) => {
         const j = await r.json().catch(() => ({}));
-        if (!r.ok || j.return === false) {
-          console.error("Fast2SMS error:", JSON.stringify(j));
+        if (!r.ok || j?.type === "error") {
+          console.error("MSG91 error:", JSON.stringify(j));
         } else {
-          console.log("OTP sent via Fast2SMS to", phone, JSON.stringify(j));
+          console.log("OTP sent via MSG91 to", phone, JSON.stringify(j));
         }
       })
-      .catch((e) => console.error("Fast2SMS fetch failed:", e));
+      .catch((e) => console.error("MSG91 fetch failed:", e));
 
     // @ts-ignore EdgeRuntime is provided by Supabase Edge Functions
     if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
