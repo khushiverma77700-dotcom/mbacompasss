@@ -292,22 +292,61 @@ export default function AdminMockBundles() {
                   <span className="text-xs text-muted-foreground"><strong>{editingItems.length}</strong> selected</span>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <div className="relative flex-1">
+                <div className="space-y-2">
+                  <div className="relative">
                     <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input value={mockSearch} onChange={(e) => setMockSearch(e.target.value)} placeholder="Search mocks..." className="pl-8 h-9" />
+                    <Input value={mockSearch} onChange={(e) => setMockSearch(e.target.value)} placeholder="Search mocks by name..." className="pl-8 h-9" />
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    {examCodes.map((c) => (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => setExamFilter(c)}
-                        className={`px-2.5 py-1 rounded-full text-xs font-medium border transition ${examFilter === c ? "bg-sky-500 text-white border-sky-500" : "bg-background border-border hover:bg-muted"}`}
-                      >
-                        {c === "all" ? "All" : c}
-                      </button>
-                    ))}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Exam</div>
+                      <div className="flex flex-wrap gap-1">
+                        {examCodes.map((c) => (
+                          <button key={c} type="button" onClick={() => setExamFilter(c)}
+                            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition ${examFilter === c ? "bg-sky-500 text-white border-sky-500" : "bg-background border-border hover:bg-muted"}`}>
+                            {c === "all" ? "All" : c}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Type</div>
+                      <div className="flex flex-wrap gap-1">
+                        {testTypes.map((t) => (
+                          <button key={t} type="button" onClick={() => setTypeFilter(t)}
+                            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition capitalize ${typeFilter === t ? "bg-sky-500 text-white border-sky-500" : "bg-background border-border hover:bg-muted"}`}>
+                            {t === "all" ? "All" : t.replace(/_/g, " ")}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Status</div>
+                      <div className="flex flex-wrap gap-1">
+                        {(["all","live","draft"] as const).map((s) => (
+                          <button key={s} type="button" onClick={() => setStatusFilter(s)}
+                            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition capitalize ${statusFilter === s ? "bg-sky-500 text-white border-sky-500" : "bg-background border-border hover:bg-muted"}`}>
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                    <div className="flex gap-1">
+                      {(["all","selected","unselected"] as const).map((s) => (
+                        <button key={s} type="button" onClick={() => setSelectionFilter(s)}
+                          className={`px-2 py-1 rounded-full text-[11px] font-medium border transition capitalize ${selectionFilter === s ? "bg-emerald-500 text-white border-emerald-500" : "bg-background border-border hover:bg-muted"}`}>
+                          {s === "all" ? "All mocks" : s}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                      <span>Showing <strong>{filteredMocks.length}</strong> · <strong>{editingItems.length}</strong> selected</span>
+                      <button type="button" onClick={clearFilters} className="text-sky-600 hover:underline">Clear filters</button>
+                    </div>
                   </div>
                 </div>
 
