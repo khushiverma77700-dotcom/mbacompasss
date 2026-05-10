@@ -92,6 +92,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [tests, setTests] = useState<Record<string, Test>>({});
+  const [bundleOrder, setBundleOrder] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [examFilter, setExamFilter] = useState<string>("All");
@@ -101,7 +102,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
     if (!user) return;
     (async () => {
       setLoading(true);
-      const [{ data: e }, { data: a }, { data: c }] = await Promise.all([
+      const [{ data: e }, { data: a }, { data: c }, { data: bi }] = await Promise.all([
         supabase
           .from("mock_enrollments")
           .select("id, test_id, source, expires_at, admin_notes, test:mock_tests(id, name, slug, total_duration_minutes, difficulty, exam_code, category, test_type, is_live, scheduled_start_at, launch_date, banner_url, is_published)")
@@ -117,6 +118,10 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
           .select("id, name, slug, total_duration_minutes, difficulty, exam_code, category, test_type, is_live, scheduled_start_at, launch_date, banner_url, is_published")
           .eq("is_published", true)
           .order("name"),
+        supabase
+          .from("mock_bundle_items")
+          .select("test_id, sort_order")
+          .order("sort_order"),
       ]);
 
       const enr: Enrollment[] = [];
@@ -127,9 +132,18 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
       });
       (c ?? []).forEach((t: any) => { if (!tMap[t.id]) tMap[t.id] = t; });
 
+      // Build min sort_order per test across all bundles
+      const orderMap: Record<string, number> = {};
+      (bi ?? []).forEach((row: any) => {
+        const cur = orderMap[row.test_id];
+        const so = row.sort_order ?? 9999;
+        if (cur === undefined || so < cur) orderMap[row.test_id] = so;
+      });
+
       setEnrollments(enr);
       setAttempts((a ?? []) as Attempt[]);
       setTests(tMap);
+      setBundleOrder(orderMap);
       setLoading(false);
     })();
   }, [user]);
