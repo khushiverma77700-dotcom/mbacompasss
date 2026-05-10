@@ -78,41 +78,31 @@ interface Course {
 
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
+// Only keep features that actually exist on the student dashboard.
+// Mocks themselves are NOT toggled here — they come automatically from attached bundles.
 const FEATURE_TOGGLES: { key: keyof Course; label: string; group: string }[] = [
-  { key: "has_ai_study_planner", label: "AI Study Planner", group: "AI & Smart Tools" },
-  { key: "has_ai_tools", label: "AI Tools (analyzer, predictor, etc.)", group: "AI & Smart Tools" },
-  { key: "has_cat_planner", label: "CAT Planner", group: "AI & Smart Tools" },
-  { key: "has_percentile_predictor", label: "Percentile Predictor", group: "AI & Smart Tools" },
-  { key: "has_performance_analytics", label: "Performance Analytics", group: "AI & Smart Tools" },
+  { key: "has_daily_test",            label: "Daily Test",                  group: "Tests & Practice" },
+  { key: "has_mock_analysis",         label: "Detailed Mock Analysis",      group: "Tests & Practice" },
+  { key: "has_leaderboard_access",    label: "Leaderboard",                 group: "Tests & Practice" },
 
-  { key: "has_daily_test", label: "Daily Test", group: "Tests & Mocks" },
-  { key: "has_sectional_tests", label: "Sectional Tests", group: "Tests & Mocks" },
-  { key: "has_topic_tests", label: "Topic-wise Tests", group: "Tests & Mocks" },
-  { key: "has_mock_analysis", label: "Detailed Mock Analysis", group: "Tests & Mocks" },
-  { key: "has_leaderboard_access", label: "Leaderboard Access", group: "Tests & Mocks" },
+  { key: "has_ai_study_planner",      label: "AI Study Planner",            group: "AI & Insights" },
+  { key: "has_cat_planner",           label: "Day Planner",                 group: "AI & Insights" },
+  { key: "has_performance_analytics", label: "Performance Analytics",       group: "AI & Insights" },
+  { key: "has_percentile_predictor",  label: "Percentile Predictor",        group: "AI & Insights" },
+  { key: "has_ai_tools",              label: "AI Tools (analyzer, finder)", group: "AI & Insights" },
 
-  { key: "has_live_classes", label: "Live Classes", group: "Learning" },
-  { key: "has_recorded_lectures", label: "Recorded Lectures", group: "Learning" },
-  { key: "has_study_material", label: "Study Material (PDFs)", group: "Learning" },
-  { key: "has_doubt_resolution", label: "Doubt Resolution", group: "Learning" },
-  { key: "has_mentorship_1on1", label: "1:1 Mentorship", group: "Learning" },
-
-  { key: "has_gd_pi_prep", label: "GD-PI Preparation", group: "Extras" },
-  { key: "has_certificate", label: "Completion Certificate", group: "Extras" },
-  { key: "has_lifetime_access", label: "Lifetime Access", group: "Extras" },
+  { key: "has_doubt_resolution",      label: "Support Center",              group: "Support" },
 ];
 
 const empty: Partial<Course> = {
   title: "", slug: "", subtitle: "", description: "",
   exam_focus: ["CAT"], mode: "online", level: "beginner", language: "English",
-  duration_weeks: 12, validity_months: 12,
+  validity_months: 12,
   price: 0, original_price: 0, discount_percent: 0,
   features: [], highlights: [], curriculum: [],
   what_youll_learn: [], faqs: [], instructors: [], gallery_images: [],
   is_featured: false, is_active: true, sort_order: 0,
   total_students_enrolled: 0, rating: 0, reviews_count: 0,
-  full_mocks_count: 0, sectional_mocks_count: 0, topic_tests_count: 0,
-  total_video_hours: 0, total_practice_questions: 0, live_classes_count: 0,
 };
 
 type BundleOpt = { id: string; name: string; exam_code: string | null; is_published: boolean };
@@ -157,6 +147,29 @@ export default function AdminMBACompassCourses() {
   const save = async () => {
     if (!edit?.title) return toast.error("Title required");
     const slug = edit.slug?.trim() || slugify(edit.title);
+
+    // Auto-derive mock counts from attached bundles
+    let fullMocks = 0, sectionalMocks = 0, topicTests = 0, totalMocks = 0;
+    if (editBundleIds.length > 0) {
+      const { data: items } = await supabase
+        .from("mock_bundle_items")
+        .select("test:mock_tests(test_type, category)")
+        .in("bundle_id", editBundleIds);
+      const seen = new Set<string>();
+      (items ?? []).forEach((row: any) => {
+        const t = row.test;
+        if (!t) return;
+        const kind = (t.test_type || t.category || "full_length") as string;
+        const key = `${kind}-${totalMocks}-${Math.random()}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        totalMocks++;
+        if (kind === "full_length") fullMocks++;
+        else if (kind === "sectional") sectionalMocks++;
+        else if (kind === "topic_wise" || kind === "topic") topicTests++;
+      });
+    }
+
     const payload = {
       ...edit,
       slug,
@@ -168,6 +181,23 @@ export default function AdminMBACompassCourses() {
       faqs: edit.faqs ?? [],
       instructors: edit.instructors ?? [],
       gallery_images: edit.gallery_images ?? [],
+      // Auto-derived from bundles
+      full_mocks_count: fullMocks,
+      sectional_mocks_count: sectionalMocks,
+      topic_tests_count: topicTests,
+      // Always zero — these don't exist on the platform
+      live_classes_count: 0,
+      total_video_hours: 0,
+      total_practice_questions: 0,
+      has_live_classes: false,
+      has_recorded_lectures: false,
+      has_study_material: false,
+      has_mentorship_1on1: false,
+      has_gd_pi_prep: false,
+      has_certificate: false,
+      has_lifetime_access: false,
+      has_sectional_tests: sectionalMocks > 0,
+      has_topic_tests: topicTests > 0,
     };
     let courseId = edit.id;
     let error;
@@ -228,12 +258,9 @@ export default function AdminMBACompassCourses() {
                 <TabsList className="flex-wrap h-auto">
                   <TabsTrigger value="basic">Basics</TabsTrigger>
                   <TabsTrigger value="media">Images</TabsTrigger>
-                  <TabsTrigger value="features">Features Included</TabsTrigger>
-                  <TabsTrigger value="content">Content & Counts</TabsTrigger>
-                  <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
-                  <TabsTrigger value="instructors">Instructors</TabsTrigger>
-                  <TabsTrigger value="faqs">FAQs</TabsTrigger>
                   <TabsTrigger value="bundles">Bundles ({editBundleIds.length})</TabsTrigger>
+                  <TabsTrigger value="features">Features Included</TabsTrigger>
+                  <TabsTrigger value="faqs">FAQs</TabsTrigger>
                   <TabsTrigger value="seo">SEO</TabsTrigger>
                 </TabsList>
 
@@ -269,9 +296,8 @@ export default function AdminMBACompassCourses() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 gap-3">
                     <div><Label>Language</Label><Input value={edit.language ?? ""} onChange={(e) => setEdit({ ...edit, language: e.target.value })} /></div>
-                    <div><Label>Duration (weeks)</Label><Input type="number" value={edit.duration_weeks ?? 0} onChange={(e) => setEdit({ ...edit, duration_weeks: parseInt(e.target.value) || 0 })} /></div>
                     <div><Label>Validity (months)</Label><Input type="number" value={edit.validity_months ?? 0} onChange={(e) => setEdit({ ...edit, validity_months: parseInt(e.target.value) || 0 })} /></div>
                   </div>
 
@@ -386,119 +412,8 @@ export default function AdminMBACompassCourses() {
                   ))}
                 </TabsContent>
 
-                {/* CONTENT & COUNTS */}
-                <TabsContent value="content" className="space-y-4 mt-4">
-                  <div className="grid sm:grid-cols-3 gap-3">
-                    <div><Label>Full mocks count</Label><Input type="number" value={edit.full_mocks_count ?? 0} onChange={(e) => setEdit({ ...edit, full_mocks_count: parseInt(e.target.value) || 0 })} /></div>
-                    <div><Label>Sectional mocks count</Label><Input type="number" value={edit.sectional_mocks_count ?? 0} onChange={(e) => setEdit({ ...edit, sectional_mocks_count: parseInt(e.target.value) || 0 })} /></div>
-                    <div><Label>Topic tests count</Label><Input type="number" value={edit.topic_tests_count ?? 0} onChange={(e) => setEdit({ ...edit, topic_tests_count: parseInt(e.target.value) || 0 })} /></div>
-                    <div><Label>Live classes count</Label><Input type="number" value={edit.live_classes_count ?? 0} onChange={(e) => setEdit({ ...edit, live_classes_count: parseInt(e.target.value) || 0 })} /></div>
-                    <div><Label>Total video hours</Label><Input type="number" value={edit.total_video_hours ?? 0} onChange={(e) => setEdit({ ...edit, total_video_hours: parseInt(e.target.value) || 0 })} /></div>
-                    <div><Label>Practice questions</Label><Input type="number" value={edit.total_practice_questions ?? 0} onChange={(e) => setEdit({ ...edit, total_practice_questions: parseInt(e.target.value) || 0 })} /></div>
-                  </div>
+                {/* (Counts, Curriculum, Instructors removed — auto-derived from bundles or unused on the platform) */}
 
-                  <div>
-                    <Label>Top features (one per line)</Label>
-                    <p className="text-[11px] text-muted-foreground mb-1">Shown on the course card.</p>
-                    <Textarea rows={4} value={arrField(edit.features)} onChange={(e) => setArr("features", e.target.value)} />
-                  </div>
-
-                  <div>
-                    <Label>Highlight chips (one per line, max 3)</Label>
-                    <p className="text-[11px] text-muted-foreground mb-1">e.g. "200+ mocks", "1:1 mentor", "12 months access"</p>
-                    <Textarea rows={3} value={arrField(edit.highlights)} onChange={(e) => setArr("highlights", e.target.value)} />
-                  </div>
-
-                  <div>
-                    <Label>What you'll learn (one outcome per line)</Label>
-                    <Textarea rows={5} value={arrField(edit.what_youll_learn)} onChange={(e) => setArr("what_youll_learn", e.target.value)} />
-                  </div>
-                </TabsContent>
-
-                {/* CURRICULUM */}
-                <TabsContent value="curriculum" className="space-y-3 mt-4">
-                  <p className="text-xs text-muted-foreground">Add modules in order. Each module: title + lesson count + brief.</p>
-                  {(edit.curriculum ?? []).map((m: any, i: number) => (
-                    <div key={i} className="border rounded-md p-3 space-y-2 bg-sky-50/20">
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs font-semibold text-sky-700">Module {i + 1}</div>
-                        <Button size="icon" variant="ghost" onClick={() => setEdit({ ...edit, curriculum: edit.curriculum.filter((_: any, j: number) => j !== i) })}>
-                          <Trash2 className="h-4 w-4 text-rose-500" />
-                        </Button>
-                      </div>
-                      <Input placeholder="Module title" value={m.title ?? ""} onChange={(e) => {
-                        const upd = [...edit.curriculum]; upd[i] = { ...upd[i], title: e.target.value };
-                        setEdit({ ...edit, curriculum: upd });
-                      }} />
-                      <div className="grid grid-cols-3 gap-2">
-                        <Input placeholder="Lessons" type="number" value={m.lessons ?? 0} onChange={(e) => {
-                          const upd = [...edit.curriculum]; upd[i] = { ...upd[i], lessons: parseInt(e.target.value) || 0 };
-                          setEdit({ ...edit, curriculum: upd });
-                        }} />
-                        <Input placeholder="Duration (e.g. 4 hrs)" value={m.duration ?? ""} onChange={(e) => {
-                          const upd = [...edit.curriculum]; upd[i] = { ...upd[i], duration: e.target.value };
-                          setEdit({ ...edit, curriculum: upd });
-                        }} />
-                        <Input placeholder="Topics covered" value={m.topics ?? ""} onChange={(e) => {
-                          const upd = [...edit.curriculum]; upd[i] = { ...upd[i], topics: e.target.value };
-                          setEdit({ ...edit, curriculum: upd });
-                        }} />
-                      </div>
-                      <Textarea rows={2} placeholder="Brief description" value={m.description ?? ""} onChange={(e) => {
-                        const upd = [...edit.curriculum]; upd[i] = { ...upd[i], description: e.target.value };
-                        setEdit({ ...edit, curriculum: upd });
-                      }} />
-                    </div>
-                  ))}
-                  <Button variant="outline" size="sm" onClick={() => setEdit({ ...edit, curriculum: [...(edit.curriculum ?? []), { title: "", lessons: 0, duration: "", topics: "", description: "" }] })}>
-                    <Plus className="h-4 w-4 mr-1" /> Add module
-                  </Button>
-                </TabsContent>
-
-                {/* INSTRUCTORS */}
-                <TabsContent value="instructors" className="space-y-3 mt-4">
-                  {(edit.instructors ?? []).map((p: any, i: number) => (
-                    <div key={i} className="border rounded-md p-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="text-xs font-semibold text-sky-700">Instructor {i + 1}</div>
-                        <Button size="icon" variant="ghost" onClick={() => setEdit({ ...edit, instructors: edit.instructors.filter((_: any, j: number) => j !== i) })}>
-                          <Trash2 className="h-4 w-4 text-rose-500" />
-                        </Button>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Input placeholder="Name" value={p.name ?? ""} onChange={(e) => {
-                          const upd = [...edit.instructors]; upd[i] = { ...upd[i], name: e.target.value };
-                          setEdit({ ...edit, instructors: upd });
-                        }} />
-                        <Input placeholder="Title (e.g. IIM-A, 99.8 %ile)" value={p.title ?? ""} onChange={(e) => {
-                          const upd = [...edit.instructors]; upd[i] = { ...upd[i], title: e.target.value };
-                          setEdit({ ...edit, instructors: upd });
-                        }} />
-                      </div>
-                      <Textarea rows={2} placeholder="Bio" value={p.bio ?? ""} onChange={(e) => {
-                        const upd = [...edit.instructors]; upd[i] = { ...upd[i], bio: e.target.value };
-                        setEdit({ ...edit, instructors: upd });
-                      }} />
-                      <FileUpload
-                        bucket="uploads"
-                        folder="mba-compass/instructors"
-                        accept="image/*"
-                        showUrlInput={false}
-                        label="Photo (square, 400×400)"
-                        value={p.photo_url ?? ""}
-                        onChange={(url) => {
-                          const upd = [...edit.instructors]; upd[i] = { ...upd[i], photo_url: url };
-                          setEdit({ ...edit, instructors: upd });
-                        }}
-                      />
-                    </div>
-                  ))}
-                  <Button variant="outline" size="sm" onClick={() => setEdit({ ...edit, instructors: [...(edit.instructors ?? []), { name: "", title: "", bio: "", photo_url: "" }] })}>
-                    <Plus className="h-4 w-4 mr-1" /> Add instructor
-                  </Button>
-                </TabsContent>
-
-                {/* FAQS */}
                 <TabsContent value="faqs" className="space-y-3 mt-4">
                   {(edit.faqs ?? []).map((f: any, i: number) => (
                     <div key={i} className="border rounded-md p-3 space-y-2">
@@ -597,7 +512,7 @@ export default function AdminMBACompassCourses() {
                   {(bundleCounts[c.id] ?? 0) > 0 && <Badge variant="outline" className="text-[10px] gap-1"><Package className="h-3 w-3" /> {bundleCounts[c.id]} bundle{bundleCounts[c.id] === 1 ? "" : "s"}</Badge>}
                 </div>
                 <div className="mt-2 text-xs text-muted-foreground">
-                  {c.full_mocks_count ?? 0} mocks • {c.total_video_hours ?? 0}h video • {c.live_classes_count ?? 0} live
+                  {(c.full_mocks_count ?? 0) + (c.sectional_mocks_count ?? 0) + (c.topic_tests_count ?? 0)} total mocks · {c.full_mocks_count ?? 0} full · {c.sectional_mocks_count ?? 0} sectional · {c.topic_tests_count ?? 0} topic
                 </div>
                 <div className="mt-2 text-sm text-gray-700 font-semibold">
                   ₹{Math.round(c.price ?? 0).toLocaleString("en-IN")}
