@@ -405,9 +405,9 @@ export default function AdminMBACompassCourses() {
                   ).map(([group, items]) => (
                     <div key={group} className="mb-4">
                       <div className="text-xs font-semibold text-sky-700 mb-2 uppercase tracking-wide">{group}</div>
-                      <div className="grid sm:grid-cols-2 gap-2 border rounded-lg p-3 bg-sky-50/30">
+                      <div className="grid sm:grid-cols-2 gap-2 border rounded-lg p-3 bg-sky-50/30 dark:bg-muted/30">
                         {items.map((t) => (
-                          <label key={t.key as string} className="flex items-center justify-between text-sm py-1.5 px-2 rounded hover:bg-white">
+                          <label key={t.key as string} className="flex items-center justify-between text-sm py-1.5 px-2 rounded hover:bg-white dark:hover:bg-muted text-foreground">
                             <span>{t.label}</span>
                             <Switch
                               checked={!!(edit as any)[t.key]}
@@ -461,7 +461,7 @@ export default function AdminMBACompassCourses() {
                       {bundles.map((b) => {
                         const checked = editBundleIds.includes(b.id);
                         return (
-                          <label key={b.id} className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-muted/40 ${checked ? "bg-sky-50/40" : ""}`}>
+                          <label key={b.id} className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-muted/40 text-foreground ${checked ? "bg-sky-50/40 dark:bg-sky-950/30" : ""}`}>
                             <Checkbox checked={checked} onCheckedChange={() => toggleBundle(b.id)} />
                             <div className="flex-1 min-w-0">
                               <div className="font-medium text-sm truncate">{b.name}</div>
@@ -483,7 +483,7 @@ export default function AdminMBACompassCourses() {
                 </TabsContent>
               </Tabs>
             )}
-            <div className="sticky bottom-0 bg-white pt-3 mt-4 border-t">
+            <div className="sticky bottom-0 bg-background pt-3 mt-4 border-t">
               <Button className="w-full bg-sky-600 hover:bg-sky-700" onClick={save}>Save course</Button>
             </div>
           </DialogContent>
