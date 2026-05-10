@@ -57,9 +57,12 @@ interface Course {
   has_ai_study_planner: boolean;
   has_ai_tools: boolean;
   has_daily_test: boolean;
+  has_daily_mocks: boolean;
   has_cat_planner: boolean;
   has_sectional_tests: boolean;
   has_topic_tests: boolean;
+  has_previous_year_papers: boolean;
+  has_personalized_hub: boolean;
   has_mentorship_1on1: boolean;
   has_doubt_resolution: boolean;
   has_recorded_lectures: boolean;
@@ -70,6 +73,7 @@ interface Course {
   has_study_material: boolean;
   has_gd_pi_prep: boolean;
   has_percentile_predictor: boolean;
+  has_ai_insights: boolean;
   has_certificate: boolean;
   has_lifetime_access: boolean;
   seo_title: string | null;
