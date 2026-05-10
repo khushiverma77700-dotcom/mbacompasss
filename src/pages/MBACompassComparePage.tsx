@@ -17,12 +17,14 @@ interface Course {
   full_mocks_count: number | null; sectional_mocks_count: number | null;
   topic_tests_count: number | null; total_video_hours: number | null;
   total_practice_questions: number | null; live_classes_count: number | null;
-  has_ai_study_planner: boolean; has_ai_tools: boolean; has_daily_test: boolean;
+  has_ai_study_planner: boolean; has_ai_tools: boolean; has_daily_test: boolean; has_daily_mocks: boolean;
   has_cat_planner: boolean; has_sectional_tests: boolean; has_topic_tests: boolean;
+  has_previous_year_papers: boolean; has_personalized_hub: boolean;
   has_mentorship_1on1: boolean; has_doubt_resolution: boolean;
   has_recorded_lectures: boolean; has_live_classes: boolean;
   has_performance_analytics: boolean; has_leaderboard_access: boolean;
   has_mock_analysis: boolean; has_study_material: boolean;
+  has_ai_insights: boolean;
   has_gd_pi_prep: boolean; has_percentile_predictor: boolean;
   has_certificate: boolean; has_lifetime_access: boolean;
 }
@@ -40,29 +42,33 @@ const ROWS: { group: string; rows: { key: keyof Course | string; label: string; 
       { key: "rating", label: "Rating", type: "num" },
     ],
   },
-  {
-    group: "Mocks & Tests",
-    rows: [
-      { key: "full_mocks_count", label: "Full-length mocks", type: "num" },
-      { key: "sectional_mocks_count", label: "Sectional mocks", type: "num" },
-      { key: "topic_tests_count", label: "Topic tests", type: "num" },
-      { key: "has_daily_test", label: "Daily Test", type: "bool" },
-      { key: "has_sectional_tests", label: "Sectional tests", type: "bool" },
-      { key: "has_topic_tests", label: "Topic-wise tests", type: "bool" },
-      { key: "has_mock_analysis", label: "Detailed mock analysis", type: "bool" },
-      { key: "has_leaderboard_access", label: "Leaderboard access", type: "bool" },
-    ],
-  },
-  {
-    group: "AI & Smart Tools",
-    rows: [
-      { key: "has_ai_study_planner", label: "AI Study Planner", type: "bool" },
-      { key: "has_ai_tools", label: "AI Tools", type: "bool" },
-      { key: "has_cat_planner", label: "CAT Planner", type: "bool" },
-      { key: "has_percentile_predictor", label: "Percentile Predictor", type: "bool" },
-      { key: "has_performance_analytics", label: "Performance Analytics", type: "bool" },
-    ],
-  },
+    {
+      group: "Mocks & Tests",
+      rows: [
+        { key: "full_mocks_count", label: "Full-length mocks", type: "num" },
+        { key: "sectional_mocks_count", label: "Sectional mocks", type: "num" },
+        { key: "topic_tests_count", label: "Topic tests", type: "num" },
+        { key: "has_daily_test", label: "Daily Test", type: "bool" },
+        { key: "has_daily_mocks", label: "Daily Mocks", type: "bool" },
+        { key: "has_sectional_tests", label: "Sectional tests", type: "bool" },
+        { key: "has_topic_tests", label: "Topic-wise tests", type: "bool" },
+        { key: "has_previous_year_papers", label: "Previous Year Papers", type: "bool" },
+        { key: "has_personalized_hub", label: "Personalized Mock Hub", type: "bool" },
+        { key: "has_mock_analysis", label: "Detailed mock analysis", type: "bool" },
+        { key: "has_leaderboard_access", label: "Leaderboard access", type: "bool" },
+      ],
+    },
+    {
+      group: "AI & Smart Tools",
+      rows: [
+        { key: "has_ai_study_planner", label: "AI Study Planner", type: "bool" },
+        { key: "has_ai_tools", label: "AI Tools", type: "bool" },
+        { key: "has_cat_planner", label: "CAT Planner", type: "bool" },
+        { key: "has_percentile_predictor", label: "Percentile Predictor", type: "bool" },
+        { key: "has_performance_analytics", label: "Performance Analytics", type: "bool" },
+        { key: "has_ai_insights", label: "AI Insights & Goals", type: "bool" },
+      ],
+    },
   {
     group: "Learning",
     rows: [

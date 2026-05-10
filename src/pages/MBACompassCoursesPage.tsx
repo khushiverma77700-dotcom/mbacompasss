@@ -40,11 +40,15 @@ interface Course {
   has_ai_study_planner: boolean;
   has_ai_tools: boolean;
   has_daily_test: boolean;
+  has_daily_mocks: boolean;
   has_cat_planner: boolean;
   has_sectional_tests: boolean;
+  has_previous_year_papers: boolean;
+  has_personalized_hub: boolean;
   has_mentorship_1on1: boolean;
   has_live_classes: boolean;
   has_lifetime_access: boolean;
+  has_ai_insights: boolean;
 }
 
 const formatINR = (n: number | null) => n == null ? "—" : `₹${Math.round(n).toLocaleString("en-IN")}`;
