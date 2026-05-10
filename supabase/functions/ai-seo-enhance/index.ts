@@ -108,6 +108,7 @@ RULES:
 - Organization name: "MBA Compass by MBA Compass", logo: "${siteUrl}/logo.png"
 - FAQPage schemas must have real, useful Q&As that students would actually search for
 - Include ALL relevant schema types for the page (aim for 4-6 schemas)
+- NEVER include "itemReviewed" inside a nested AggregateRating, Review, or Rating — Google flags this as invalid. AggregateRating embedded under a parent (Organization, Product, CollegeOrUniversity, etc.) must NOT have itemReviewed.
 - Return ONLY the JSON array, no markdown, no explanation`,
           },
           { role: "user", content: prompt },
