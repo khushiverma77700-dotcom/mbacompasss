@@ -125,8 +125,9 @@ RULES:
 
     if (detectTruncation(content)) return getDefaultSchemas(contentType, data, siteUrl);
     const parsed = extractJsonFromResponse(content);
-    if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.["@type"]) return parsed;
-    if (typeof parsed === "object" && (parsed as any)["@type"]) return [parsed];
+    const sanitized = sanitizeSchema(parsed);
+    if (Array.isArray(sanitized) && sanitized.length > 0 && sanitized[0]?.["@type"]) return sanitized;
+    if (typeof sanitized === "object" && (sanitized as any)["@type"]) return [sanitized];
     return getDefaultSchemas(contentType, data, siteUrl);
   } catch (e) {
     console.error("Schema generation error:", e);
