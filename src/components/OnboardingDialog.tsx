@@ -22,7 +22,6 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState("");
   const [phoneTouched, setPhoneTouched] = useState(false);
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
