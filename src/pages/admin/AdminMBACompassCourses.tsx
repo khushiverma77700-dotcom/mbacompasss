@@ -147,6 +147,29 @@ export default function AdminMBACompassCourses() {
   const save = async () => {
     if (!edit?.title) return toast.error("Title required");
     const slug = edit.slug?.trim() || slugify(edit.title);
+
+    // Auto-derive mock counts from attached bundles
+    let fullMocks = 0, sectionalMocks = 0, topicTests = 0, totalMocks = 0;
+    if (editBundleIds.length > 0) {
+      const { data: items } = await supabase
+        .from("mock_bundle_items")
+        .select("test:mock_tests(test_type, category)")
+        .in("bundle_id", editBundleIds);
+      const seen = new Set<string>();
+      (items ?? []).forEach((row: any) => {
+        const t = row.test;
+        if (!t) return;
+        const kind = (t.test_type || t.category || "full_length") as string;
+        const key = `${kind}-${totalMocks}-${Math.random()}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        totalMocks++;
+        if (kind === "full_length") fullMocks++;
+        else if (kind === "sectional") sectionalMocks++;
+        else if (kind === "topic_wise" || kind === "topic") topicTests++;
+      });
+    }
+
     const payload = {
       ...edit,
       slug,
@@ -158,6 +181,23 @@ export default function AdminMBACompassCourses() {
       faqs: edit.faqs ?? [],
       instructors: edit.instructors ?? [],
       gallery_images: edit.gallery_images ?? [],
+      // Auto-derived from bundles
+      full_mocks_count: fullMocks,
+      sectional_mocks_count: sectionalMocks,
+      topic_tests_count: topicTests,
+      // Always zero — these don't exist on the platform
+      live_classes_count: 0,
+      total_video_hours: 0,
+      total_practice_questions: 0,
+      has_live_classes: false,
+      has_recorded_lectures: false,
+      has_study_material: false,
+      has_mentorship_1on1: false,
+      has_gd_pi_prep: false,
+      has_certificate: false,
+      has_lifetime_access: false,
+      has_sectional_tests: sectionalMocks > 0,
+      has_topic_tests: topicTests > 0,
     };
     let courseId = edit.id;
     let error;
