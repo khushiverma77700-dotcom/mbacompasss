@@ -101,7 +101,7 @@ export default function AdminMockBundles() {
       highlights: (b.highlights ?? {}) as HighlightMap,
       included_categories: b.included_categories ?? [],
     });
-    const { data } = await supabase.from("mock_bundle_items").select("test_id").eq("bundle_id", b.id);
+    const { data } = await supabase.from("mock_bundle_items").select("test_id, sort_order").eq("bundle_id", b.id).order("sort_order");
     setEditingItems((data ?? []).map((x: any) => x.test_id));
     setShowAdvanced(false);
     setMockSearch("");
