@@ -58,16 +58,17 @@ const ROWS: { group: string; rows: { key: keyof Course | string; label: string; 
         { key: "has_leaderboard_access", label: "Leaderboard access", type: "bool" },
       ],
     },
-  {
-    group: "AI & Smart Tools",
-    rows: [
-      { key: "has_ai_study_planner", label: "AI Study Planner", type: "bool" },
-      { key: "has_ai_tools", label: "AI Tools", type: "bool" },
-      { key: "has_cat_planner", label: "CAT Planner", type: "bool" },
-      { key: "has_percentile_predictor", label: "Percentile Predictor", type: "bool" },
-      { key: "has_performance_analytics", label: "Performance Analytics", type: "bool" },
-    ],
-  },
+    {
+      group: "AI & Smart Tools",
+      rows: [
+        { key: "has_ai_study_planner", label: "AI Study Planner", type: "bool" },
+        { key: "has_ai_tools", label: "AI Tools", type: "bool" },
+        { key: "has_cat_planner", label: "CAT Planner", type: "bool" },
+        { key: "has_percentile_predictor", label: "Percentile Predictor", type: "bool" },
+        { key: "has_performance_analytics", label: "Performance Analytics", type: "bool" },
+        { key: "has_ai_insights", label: "AI Insights & Goals", type: "bool" },
+      ],
+    },
   {
     group: "Learning",
     rows: [
