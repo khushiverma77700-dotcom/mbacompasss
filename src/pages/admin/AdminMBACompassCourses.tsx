@@ -258,12 +258,9 @@ export default function AdminMBACompassCourses() {
                 <TabsList className="flex-wrap h-auto">
                   <TabsTrigger value="basic">Basics</TabsTrigger>
                   <TabsTrigger value="media">Images</TabsTrigger>
-                  <TabsTrigger value="features">Features Included</TabsTrigger>
-                  <TabsTrigger value="content">Content & Counts</TabsTrigger>
-                  <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
-                  <TabsTrigger value="instructors">Instructors</TabsTrigger>
-                  <TabsTrigger value="faqs">FAQs</TabsTrigger>
                   <TabsTrigger value="bundles">Bundles ({editBundleIds.length})</TabsTrigger>
+                  <TabsTrigger value="features">Features Included</TabsTrigger>
+                  <TabsTrigger value="faqs">FAQs</TabsTrigger>
                   <TabsTrigger value="seo">SEO</TabsTrigger>
                 </TabsList>
 
