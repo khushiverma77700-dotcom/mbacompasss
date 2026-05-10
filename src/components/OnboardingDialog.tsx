@@ -57,13 +57,6 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
 
   const finalize = async () => {
     setLoading(true);
-    // Set the password on the Google-authenticated user so they can also log in
-    // with email/password and mobile/password later.
-    if (password.length >= 6) {
-      try {
-        await supabase.auth.updateUser({ password });
-      } catch { /* non-fatal */ }
-    }
 
     const { error } = await supabase
       .from("profiles")
