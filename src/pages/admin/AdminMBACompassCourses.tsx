@@ -86,16 +86,20 @@ const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-"
 // Mocks themselves are NOT toggled here — they come automatically from attached bundles.
 const FEATURE_TOGGLES: { key: keyof Course; label: string; group: string }[] = [
   { key: "has_daily_test",            label: "Daily Test",                  group: "Tests & Practice" },
-  { key: "has_mock_analysis",         label: "Detailed Mock Analysis",      group: "Tests & Practice" },
-  { key: "has_leaderboard_access",    label: "Leaderboard",                 group: "Tests & Practice" },
+  { key: "has_daily_mocks",         label: "Daily Mocks",               group: "Tests & Practice" },
+  { key: "has_previous_year_papers",  label: "Previous Year Papers",      group: "Tests & Practice" },
+  { key: "has_personalized_hub",    label: "Personalized Mock Hub",     group: "Tests & Practice" },
+  { key: "has_mock_analysis",       label: "Detailed Mock Analysis",    group: "Tests & Practice" },
+  { key: "has_leaderboard_access",  label: "Leaderboard",               group: "Tests & Practice" },
 
-  { key: "has_ai_study_planner",      label: "AI Study Planner",            group: "AI & Insights" },
-  { key: "has_cat_planner",           label: "Day Planner",                 group: "AI & Insights" },
-  { key: "has_performance_analytics", label: "Performance Analytics",       group: "AI & Insights" },
-  { key: "has_percentile_predictor",  label: "Percentile Predictor",        group: "AI & Insights" },
-  { key: "has_ai_tools",              label: "AI Tools (analyzer, finder)", group: "AI & Insights" },
+  { key: "has_ai_study_planner",    label: "AI Study Planner",          group: "AI & Insights" },
+  { key: "has_cat_planner",         label: "Day Planner",               group: "AI & Insights" },
+  { key: "has_performance_analytics", label: "Performance Analytics",   group: "AI & Insights" },
+  { key: "has_percentile_predictor", label: "Percentile Predictor",      group: "AI & Insights" },
+  { key: "has_ai_insights",         label: "AI Insights & Goals",       group: "AI & Insights" },
+  { key: "has_ai_tools",            label: "AI Tools (analyzer, finder)", group: "AI & Insights" },
 
-  { key: "has_doubt_resolution",      label: "Support Center",              group: "Support" },
+  { key: "has_doubt_resolution",    label: "Support Center",            group: "Support" },
 ];
 
 const empty: Partial<Course> = {
