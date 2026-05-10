@@ -512,7 +512,7 @@ export default function AdminMBACompassCourses() {
                   {(bundleCounts[c.id] ?? 0) > 0 && <Badge variant="outline" className="text-[10px] gap-1"><Package className="h-3 w-3" /> {bundleCounts[c.id]} bundle{bundleCounts[c.id] === 1 ? "" : "s"}</Badge>}
                 </div>
                 <div className="mt-2 text-xs text-muted-foreground">
-                  {c.full_mocks_count ?? 0} mocks • {c.total_video_hours ?? 0}h video • {c.live_classes_count ?? 0} live
+                  {(c.full_mocks_count ?? 0) + (c.sectional_mocks_count ?? 0) + (c.topic_tests_count ?? 0)} total mocks · {c.full_mocks_count ?? 0} full · {c.sectional_mocks_count ?? 0} sectional · {c.topic_tests_count ?? 0} topic
                 </div>
                 <div className="mt-2 text-sm text-gray-700 font-semibold">
                   ₹{Math.round(c.price ?? 0).toLocaleString("en-IN")}
