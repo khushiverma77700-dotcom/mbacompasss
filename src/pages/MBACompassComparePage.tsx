@@ -42,19 +42,22 @@ const ROWS: { group: string; rows: { key: keyof Course | string; label: string; 
       { key: "rating", label: "Rating", type: "num" },
     ],
   },
-  {
-    group: "Mocks & Tests",
-    rows: [
-      { key: "full_mocks_count", label: "Full-length mocks", type: "num" },
-      { key: "sectional_mocks_count", label: "Sectional mocks", type: "num" },
-      { key: "topic_tests_count", label: "Topic tests", type: "num" },
-      { key: "has_daily_test", label: "Daily Test", type: "bool" },
-      { key: "has_sectional_tests", label: "Sectional tests", type: "bool" },
-      { key: "has_topic_tests", label: "Topic-wise tests", type: "bool" },
-      { key: "has_mock_analysis", label: "Detailed mock analysis", type: "bool" },
-      { key: "has_leaderboard_access", label: "Leaderboard access", type: "bool" },
-    ],
-  },
+    {
+      group: "Mocks & Tests",
+      rows: [
+        { key: "full_mocks_count", label: "Full-length mocks", type: "num" },
+        { key: "sectional_mocks_count", label: "Sectional mocks", type: "num" },
+        { key: "topic_tests_count", label: "Topic tests", type: "num" },
+        { key: "has_daily_test", label: "Daily Test", type: "bool" },
+        { key: "has_daily_mocks", label: "Daily Mocks", type: "bool" },
+        { key: "has_sectional_tests", label: "Sectional tests", type: "bool" },
+        { key: "has_topic_tests", label: "Topic-wise tests", type: "bool" },
+        { key: "has_previous_year_papers", label: "Previous Year Papers", type: "bool" },
+        { key: "has_personalized_hub", label: "Personalized Mock Hub", type: "bool" },
+        { key: "has_mock_analysis", label: "Detailed mock analysis", type: "bool" },
+        { key: "has_leaderboard_access", label: "Leaderboard access", type: "bool" },
+      ],
+    },
   {
     group: "AI & Smart Tools",
     rows: [
