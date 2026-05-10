@@ -188,7 +188,13 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
       .filter((t) => getKind(t) === typeKey)
       .filter(matchesExam)
       .filter(matchesQuery)
-      .filter((t) => t.is_published !== false);
+      .filter((t) => t.is_published !== false)
+      .sort((a, b) => {
+        const ao = bundleOrder[a.id] ?? 9999;
+        const bo = bundleOrder[b.id] ?? 9999;
+        if (ao !== bo) return ao - bo;
+        return a.name.localeCompare(b.name);
+      });
 
     return list.map((t) => ({
       test: t,
