@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,12 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2, Search, Package, Loader2, ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Package, Loader2, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-import { FEATURE_DEFINITIONS, FeatureKey, FeatureMap } from "@/lib/courseFeatures";
-import { HIGHLIGHT_DEFINITIONS, HighlightKey, HighlightMap, isHighlightOn, getHighlightValue } from "@/lib/courseHighlights";
-import CourseMockPicker from "@/components/admin/CourseMockPicker";
+import { FeatureMap } from "@/lib/courseFeatures";
+import { HighlightMap } from "@/lib/courseHighlights";
 
 type Bundle = {
   id: string;
@@ -32,14 +32,21 @@ type Bundle = {
   included_categories: string[];
 };
 
+type MockOption = {
+  id: string;
+  name: string;
+  slug: string;
+  exam_code: string | null;
+  test_type: string | null;
+  is_published: boolean | null;
+};
+
 const slugify = (s: string) =>
   s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
 
-const ALL_CATEGORIES = ["CAT", "NMAT", "XAT", "SNAP", "IIFT", "CMAT", "MAT", "TISSNET", "Other"];
-
 const EMPTY: Partial<Bundle> = {
-  name: "", slug: "", description: "", exam_code: "CAT", price_inr: 0, original_price_inr: null,
-  validity_days: 365, is_published: false, highlight_on_mocks: false, sort_order: 0,
+  name: "", slug: "", description: "", exam_code: null, price_inr: 0, original_price_inr: null,
+  validity_days: 365, is_published: true, highlight_on_mocks: false, sort_order: 0,
   features: {}, highlights: {}, included_categories: [],
 };
 
@@ -50,7 +57,13 @@ export default function AdminMockBundles() {
   const [editing, setEditing] = useState<Partial<Bundle> | null>(null);
   const [editingItems, setEditingItems] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Mock picker state
+  const [allMocks, setAllMocks] = useState<MockOption[]>([]);
+  const [mocksLoading, setMocksLoading] = useState(false);
+  const [mockSearch, setMockSearch] = useState("");
+  const [examFilter, setExamFilter] = useState<string>("all");
 
   const load = async () => {
     setLoading(true);
@@ -60,7 +73,24 @@ export default function AdminMockBundles() {
   };
   useEffect(() => { load(); }, []);
 
-  const openNew = () => { setEditing({ ...EMPTY }); setEditingItems([]); setStep(1); };
+  const loadMocks = async () => {
+    setMocksLoading(true);
+    const { data } = await supabase
+      .from("mock_tests")
+      .select("id, name, slug, exam_code, test_type, is_published")
+      .order("name");
+    setAllMocks((data ?? []) as MockOption[]);
+    setMocksLoading(false);
+  };
+
+  const openNew = () => {
+    setEditing({ ...EMPTY });
+    setEditingItems([]);
+    setShowAdvanced(false);
+    setMockSearch("");
+    setExamFilter("all");
+    loadMocks();
+  };
   const openEdit = async (b: Bundle) => {
     setEditing({
       ...b,
@@ -70,42 +100,39 @@ export default function AdminMockBundles() {
     });
     const { data } = await supabase.from("mock_bundle_items").select("test_id").eq("bundle_id", b.id);
     setEditingItems((data ?? []).map((x: any) => x.test_id));
-    setStep(1);
+    setShowAdvanced(false);
+    setMockSearch("");
+    setExamFilter("all");
+    loadMocks();
   };
 
-  const closeDialog = () => { setEditing(null); setStep(1); };
+  const closeDialog = () => { setEditing(null); setShowAdvanced(false); };
 
-  const toggleFeature = (key: FeatureKey, on: boolean) => {
-    if (!editing) return;
-    const next = { ...(editing.features ?? {}) };
-    if (on) next[key] = true; else delete next[key];
-    setEditing({ ...editing, features: next });
+  const examCodes = useMemo(() => {
+    const set = new Set<string>();
+    allMocks.forEach((m) => m.exam_code && set.add(m.exam_code));
+    return ["all", ...Array.from(set).sort()];
+  }, [allMocks]);
+
+  const filteredMocks = useMemo(() => {
+    return allMocks.filter((m) => {
+      if (examFilter !== "all" && m.exam_code !== examFilter) return false;
+      if (mockSearch && !m.name.toLowerCase().includes(mockSearch.toLowerCase())) return false;
+      return true;
+    });
+  }, [allMocks, examFilter, mockSearch]);
+
+  const toggleMock = (id: string) => {
+    setEditingItems((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
   };
 
-  const toggleHighlight = (key: HighlightKey, on: boolean) => {
-    if (!editing) return;
-    const next: HighlightMap = { ...(editing.highlights ?? {}) };
-    const def = HIGHLIGHT_DEFINITIONS.find((d) => d.key === key);
-    if (on) {
-      next[key] = def?.hasValue ? { value: def.defaultValue ?? "" } : true;
+  const allFilteredSelected = filteredMocks.length > 0 && filteredMocks.every((m) => editingItems.includes(m.id));
+  const toggleAllFiltered = () => {
+    if (allFilteredSelected) {
+      setEditingItems((prev) => prev.filter((id) => !filteredMocks.some((m) => m.id === id)));
     } else {
-      delete next[key];
+      setEditingItems((prev) => Array.from(new Set([...prev, ...filteredMocks.map((m) => m.id)])));
     }
-    setEditing({ ...editing, highlights: next });
-  };
-
-  const setHighlightValue = (key: HighlightKey, value: string) => {
-    if (!editing) return;
-    const next: HighlightMap = { ...(editing.highlights ?? {}) };
-    next[key] = { value };
-    setEditing({ ...editing, highlights: next });
-  };
-
-  const toggleCategory = (cat: string, on: boolean) => {
-    if (!editing) return;
-    const cur = new Set(editing.included_categories ?? []);
-    if (on) cur.add(cat); else cur.delete(cat);
-    setEditing({ ...editing, included_categories: [...cur] });
   };
 
   const save = async () => {
@@ -113,11 +140,20 @@ export default function AdminMockBundles() {
     setSaving(true);
     try {
       const slug = editing.slug?.trim() || slugify(editing.name);
+      // Auto-derive included categories from selected mocks so /courses filtering keeps working
+      const derivedCats = Array.from(
+        new Set(
+          allMocks
+            .filter((m) => editingItems.includes(m.id))
+            .map((m) => m.exam_code)
+            .filter(Boolean) as string[]
+        )
+      );
       const payload = {
         name: editing.name.trim(),
         slug,
         description: editing.description ?? null,
-        exam_code: editing.exam_code ?? null,
+        exam_code: editing.exam_code ?? (derivedCats[0] ?? null),
         cover_image_url: editing.cover_image_url ?? null,
         price_inr: Number(editing.price_inr) || 0,
         original_price_inr:
@@ -125,12 +161,12 @@ export default function AdminMockBundles() {
             ? null
             : Number(editing.original_price_inr),
         validity_days: Number(editing.validity_days) || 365,
-        is_published: !!editing.is_published,
+        is_published: editing.is_published ?? true,
         highlight_on_mocks: !!editing.highlight_on_mocks,
         sort_order: Number(editing.sort_order) || 0,
         features: (editing.features ?? {}) as any,
         highlights: (editing.highlights ?? {}) as any,
-        included_categories: editing.included_categories ?? [],
+        included_categories: derivedCats.length ? derivedCats : (editing.included_categories ?? []),
       };
       let bundleId = (editing as Bundle).id;
       if (bundleId) {
@@ -152,7 +188,7 @@ export default function AdminMockBundles() {
       if (toAdd.length) {
         await supabase.from("mock_bundle_items").insert(toAdd.map((tid, i) => ({ bundle_id: bundleId, test_id: tid, sort_order: i })));
       }
-      toast.success("Course saved");
+      toast.success("Bundle saved");
       closeDialog();
       load();
     } catch (e: any) {
@@ -163,7 +199,7 @@ export default function AdminMockBundles() {
   };
 
   const removeBundle = async (id: string) => {
-    if (!confirm("Delete this course? Existing student access remains intact.")) return;
+    if (!confirm("Delete this bundle? Existing student access remains intact.")) return;
     const { error } = await supabase.from("mock_bundles").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Deleted");
@@ -171,21 +207,20 @@ export default function AdminMockBundles() {
   };
 
   const filtered = bundles.filter((b) => !q || b.name.toLowerCase().includes(q.toLowerCase()));
-  const featureCount = Object.values(editing?.features ?? {}).filter(Boolean).length;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold flex items-center gap-2"><Package className="h-6 w-6" /> Courses (Mock Bundles)</h1>
-          <p className="text-sm text-muted-foreground">Build a course in 3 steps: Details → Features → Mocks. Students see exactly what you include.</p>
+          <h1 className="text-2xl font-semibold flex items-center gap-2"><Package className="h-6 w-6" /> Mock Bundles</h1>
+          <p className="text-sm text-muted-foreground">Give the bundle a name, pick the mocks. That's it.</p>
         </div>
         <div className="flex gap-2">
           <div className="relative">
             <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search courses..." value={q} onChange={(e) => setQ(e.target.value)} className="pl-8 w-56" />
+            <Input placeholder="Search bundles..." value={q} onChange={(e) => setQ(e.target.value)} className="pl-8 w-56" />
           </div>
-          <Button onClick={openNew}><Plus className="h-4 w-4 mr-1" /> New Course</Button>
+          <Button onClick={openNew}><Plus className="h-4 w-4 mr-1" /> New Bundle</Button>
         </div>
       </div>
 
@@ -193,215 +228,167 @@ export default function AdminMockBundles() {
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin" /></div>
       ) : (
         <div className="grid gap-3">
-          {filtered.length === 0 && <Card className="p-8 text-center text-sm text-muted-foreground">No courses yet. Click "New Course" to create one.</Card>}
-          {filtered.map((b) => {
-            const featCount = Object.values(b.features ?? {}).filter(Boolean).length;
-            return (
-              <Card key={b.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold">{b.name}</span>
-                    <Badge variant={b.is_published ? "default" : "secondary"}>{b.is_published ? "Published" : "Draft"}</Badge>
-                    {b.exam_code && <Badge variant="outline">{b.exam_code}</Badge>}
-                    <Badge variant="outline" className="text-xs">{featCount} features</Badge>
-                    <Badge variant="outline" className="text-xs">{(b.included_categories ?? []).length} categories</Badge>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1">/{b.slug} · ₹{Number(b.price_inr).toLocaleString()} · {b.validity_days}d access</div>
+          {filtered.length === 0 && <Card className="p-8 text-center text-sm text-muted-foreground">No bundles yet. Click "New Bundle" to create one.</Card>}
+          {filtered.map((b) => (
+            <Card key={b.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold">{b.name}</span>
+                  <Badge variant={b.is_published ? "default" : "secondary"}>{b.is_published ? "Published" : "Draft"}</Badge>
+                  {b.exam_code && <Badge variant="outline">{b.exam_code}</Badge>}
                 </div>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => openEdit(b)}><Pencil className="h-4 w-4 mr-1" /> Edit</Button>
-                  <Button size="sm" variant="ghost" onClick={() => removeBundle(b.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
-                </div>
-              </Card>
-            );
-          })}
+                <div className="text-xs text-muted-foreground mt-1">/{b.slug} · ₹{Number(b.price_inr).toLocaleString()} · {b.validity_days}d access</div>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => openEdit(b)}><Pencil className="h-4 w-4 mr-1" /> Edit</Button>
+                <Button size="sm" variant="ghost" onClick={() => removeBundle(b.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              </div>
+            </Card>
+          ))}
         </div>
       )}
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && closeDialog()}>
-        <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{(editing as Bundle)?.id ? "Edit Course" : "New Course"}</DialogTitle>
+            <DialogTitle>{(editing as Bundle)?.id ? "Edit Bundle" : "New Bundle"}</DialogTitle>
           </DialogHeader>
 
-          {/* Stepper */}
-          <div className="flex items-center justify-between mb-2">
-            {[
-              { n: 1, label: "Details" },
-              { n: 2, label: "Features" },
-              { n: 3, label: "Mocks" },
-            ].map((s, i) => (
-              <div key={s.n} className="flex items-center flex-1">
-                <button
-                  type="button"
-                  onClick={() => setStep(s.n as any)}
-                  className={`flex items-center gap-2 text-xs font-medium ${step === s.n ? "text-sky-700" : step > s.n ? "text-emerald-600" : "text-muted-foreground"}`}
-                >
-                  <span className={`h-7 w-7 rounded-full grid place-items-center border ${step === s.n ? "bg-sky-100 border-sky-300" : step > s.n ? "bg-emerald-100 border-emerald-300" : "border-muted-foreground/30"}`}>
-                    {step > s.n ? <Check className="h-3.5 w-3.5" /> : s.n}
-                  </span>
-                  Step {s.n} — {s.label}
-                </button>
-                {i < 2 && <div className={`flex-1 h-px mx-3 ${step > s.n ? "bg-emerald-300" : "bg-muted-foreground/20"}`} />}
-              </div>
-            ))}
-          </div>
-
-          {editing && step === 1 && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <Label>Course Name *</Label>
-                  <Input value={editing.name ?? ""} onChange={(e) => setEditing({ ...editing, name: e.target.value, slug: editing.slug || slugify(e.target.value) })} />
-                </div>
-                <div>
-                  <Label>Slug</Label>
-                  <Input value={editing.slug ?? ""} onChange={(e) => setEditing({ ...editing, slug: slugify(e.target.value) })} />
-                </div>
-                <div>
-                  <Label>Primary Exam</Label>
-                  <Input value={editing.exam_code ?? ""} onChange={(e) => setEditing({ ...editing, exam_code: e.target.value })} placeholder="CAT" />
-                </div>
-                <div>
-                  <Label>Cover image URL</Label>
-                  <Input value={editing.cover_image_url ?? ""} onChange={(e) => setEditing({ ...editing, cover_image_url: e.target.value })} />
-                </div>
-                <div>
-                  <Label>Price (INR)</Label>
-                  <Input type="number" value={editing.price_inr ?? 0} onChange={(e) => setEditing({ ...editing, price_inr: Number(e.target.value) })} />
-                </div>
-                <div>
-                  <Label>Original Price (INR) — optional</Label>
-                  <Input type="number" value={editing.original_price_inr ?? ""} onChange={(e) => setEditing({ ...editing, original_price_inr: e.target.value === "" ? null : Number(e.target.value) })} />
-                </div>
-                <div>
-                  <Label>Validity (days)</Label>
-                  <Input type="number" value={editing.validity_days ?? 365} onChange={(e) => setEditing({ ...editing, validity_days: Number(e.target.value) })} />
-                </div>
-                <div>
-                  <Label>Sort order</Label>
-                  <Input type="number" value={editing.sort_order ?? 0} onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })} />
-                </div>
-                <div className="flex items-center gap-2 pt-6">
-                  <Switch checked={!!editing.is_published} onCheckedChange={(v) => setEditing({ ...editing, is_published: v })} />
-                  <Label>Published</Label>
-                </div>
-                <div className="flex items-center gap-2 pt-6">
-                  <Switch checked={!!editing.highlight_on_mocks} onCheckedChange={(v) => setEditing({ ...editing, highlight_on_mocks: v })} />
-                  <Label>Featured on Courses page</Label>
-                </div>
-              </div>
+          {editing && (
+            <div className="space-y-5">
+              {/* Name */}
               <div>
-                <Label>Description</Label>
-                <Textarea rows={3} value={editing.description ?? ""} onChange={(e) => setEditing({ ...editing, description: e.target.value })} />
-              </div>
-            </div>
-          )}
-
-          {editing && step === 2 && (
-            <div className="space-y-3">
-              <div>
-                <Label className="text-base">Features & Offerings ({featureCount} enabled)</Label>
-                <p className="text-xs text-muted-foreground">Toggle exactly what students who buy this course get inside their dashboard. Anything left off will appear locked with an upgrade prompt.</p>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {FEATURE_DEFINITIONS.map((f) => {
-                  const on = !!editing.features?.[f.key];
-                  return (
-                    <label key={f.key} className={`flex items-start gap-3 px-3 py-2.5 rounded-lg border cursor-pointer transition ${on ? "border-sky-300 bg-sky-50/60" : "border-border hover:bg-muted/30"}`}>
-                      <Switch checked={on} onCheckedChange={(v) => toggleFeature(f.key, v)} />
-                      <div className="flex-1">
-                        <div className="text-sm font-medium">{f.label}</div>
-                        <div className="text-[11px] text-muted-foreground">{f.description}</div>
-                      </div>
-                    </label>
-                  );
-                })}
+                <Label>Bundle Name *</Label>
+                <Input
+                  value={editing.name ?? ""}
+                  onChange={(e) => setEditing({ ...editing, name: e.target.value, slug: editing.slug || slugify(e.target.value) })}
+                  placeholder="e.g. CAT 2026 Full Mock Pack"
+                />
               </div>
 
-              <div className="pt-4 border-t">
-                <Label className="text-base">Course Highlights / Deliverables</Label>
-                <p className="text-xs text-muted-foreground mb-3">
-                  Pick the marketing deliverables that show up on the public course page (e.g. Daily Tests, Personalized Tests, 24×7 Support). These build trust before the buy button.
-                </p>
-                {(["Tests & Practice","AI & Analytics","Planning & Mentorship","Support"] as const).map((cat) => (
-                  <div key={cat} className="mb-4">
-                    <div className="text-xs font-semibold text-sky-700 uppercase tracking-wide mb-2">{cat}</div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {HIGHLIGHT_DEFINITIONS.filter((d) => d.category === cat).map((d) => {
-                        const on = isHighlightOn(editing.highlights, d.key);
-                        const val = getHighlightValue(editing.highlights, d.key) ?? d.defaultValue ?? "";
-                        return (
-                          <label key={d.key} className={`flex items-start gap-3 px-3 py-2.5 rounded-lg border transition ${on ? "border-emerald-300 bg-emerald-50/60" : "border-border hover:bg-muted/30"}`}>
-                            <Switch checked={on} onCheckedChange={(v) => toggleHighlight(d.key, v)} />
-                            <div className="flex-1">
-                              <div className="text-sm font-medium">{d.label}</div>
-                              <div className="text-[11px] text-muted-foreground">{d.description}</div>
-                              {on && d.hasValue && (
-                                <div className="flex items-center gap-1 mt-2">
-                                  <Input
-                                    value={val}
-                                    onChange={(e) => setHighlightValue(d.key, e.target.value)}
-                                    className="h-7 w-24 text-xs"
-                                    placeholder={d.defaultValue}
-                                  />
-                                  {d.unit && <span className="text-[11px] text-muted-foreground">{d.unit}</span>}
-                                </div>
-                              )}
-                            </div>
-                          </label>
-                        );
-                      })}
-                    </div>
+              {/* Mocks picker */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-base">Select Mocks</Label>
+                  <span className="text-xs text-muted-foreground"><strong>{editingItems.length}</strong> selected</span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input value={mockSearch} onChange={(e) => setMockSearch(e.target.value)} placeholder="Search mocks..." className="pl-8 h-9" />
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {editing && step === 3 && (
-            <div className="space-y-4">
-              <div>
-                <Label className="text-base">Mock Categories</Label>
-                <p className="text-xs text-muted-foreground">Pick which exams this course includes mocks for. Then choose specific mocks below.</p>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {ALL_CATEGORIES.map((c) => {
-                    const on = (editing.included_categories ?? []).includes(c);
-                    return (
+                  <div className="flex flex-wrap gap-1">
+                    {examCodes.map((c) => (
                       <button
                         key={c}
                         type="button"
-                        onClick={() => toggleCategory(c, !on)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${on ? "bg-sky-500 text-white border-sky-500" : "bg-background border-border hover:bg-muted"}`}
+                        onClick={() => setExamFilter(c)}
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium border transition ${examFilter === c ? "bg-sky-500 text-white border-sky-500" : "bg-background border-border hover:bg-muted"}`}
                       >
-                        {c}
+                        {c === "all" ? "All" : c}
                       </button>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
+
+                <Card className="overflow-hidden">
+                  {mocksLoading ? (
+                    <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                  ) : (
+                    <div className="max-h-80 overflow-y-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted/40 sticky top-0">
+                          <tr className="text-left text-xs">
+                            <th className="px-3 py-2 w-10">
+                              <Checkbox checked={allFilteredSelected} onCheckedChange={toggleAllFiltered} />
+                            </th>
+                            <th className="px-3 py-2 font-medium">Mock</th>
+                            <th className="px-3 py-2 font-medium w-20">Exam</th>
+                            <th className="px-3 py-2 font-medium w-20">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredMocks.length === 0 && (
+                            <tr><td colSpan={4} className="px-3 py-6 text-center text-muted-foreground text-xs">No mocks match.</td></tr>
+                          )}
+                          {filteredMocks.map((m) => {
+                            const checked = editingItems.includes(m.id);
+                            return (
+                              <tr key={m.id} className={`border-t hover:bg-muted/30 cursor-pointer ${checked ? "bg-sky-50/40" : ""}`} onClick={() => toggleMock(m.id)}>
+                                <td className="px-3 py-2"><Checkbox checked={checked} onCheckedChange={() => toggleMock(m.id)} /></td>
+                                <td className="px-3 py-2">
+                                  <div className="font-medium">{m.name}</div>
+                                  <div className="text-[10px] text-muted-foreground">/{m.slug}</div>
+                                </td>
+                                <td className="px-3 py-2">{m.exam_code && <Badge variant="outline" className="text-[10px]">{m.exam_code}</Badge>}</td>
+                                <td className="px-3 py-2">
+                                  {m.is_published ? <Badge className="text-[10px] bg-emerald-600">Live</Badge> : <Badge variant="secondary" className="text-[10px]">Draft</Badge>}
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </Card>
               </div>
-              <div>
-                <Label className="text-base">Choose Mocks</Label>
-                <CourseMockPicker
-                  selectedCategories={editing.included_categories ?? []}
-                  selectedTestIds={editingItems}
-                  onTestIdsChange={setEditingItems}
-                />
+
+              {/* Advanced (optional) */}
+              <div className="border-t pt-3">
+                <button
+                  type="button"
+                  onClick={() => setShowAdvanced((v) => !v)}
+                  className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground"
+                >
+                  {showAdvanced ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  Advanced (price, validity, publishing)
+                </button>
+
+                {showAdvanced && (
+                  <div className="mt-3 space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <Label>Slug</Label>
+                        <Input value={editing.slug ?? ""} onChange={(e) => setEditing({ ...editing, slug: slugify(e.target.value) })} />
+                      </div>
+                      <div>
+                        <Label>Price (INR)</Label>
+                        <Input type="number" value={editing.price_inr ?? 0} onChange={(e) => setEditing({ ...editing, price_inr: Number(e.target.value) })} />
+                      </div>
+                      <div>
+                        <Label>Original Price (INR) — optional</Label>
+                        <Input type="number" value={editing.original_price_inr ?? ""} onChange={(e) => setEditing({ ...editing, original_price_inr: e.target.value === "" ? null : Number(e.target.value) })} />
+                      </div>
+                      <div>
+                        <Label>Validity (days)</Label>
+                        <Input type="number" value={editing.validity_days ?? 365} onChange={(e) => setEditing({ ...editing, validity_days: Number(e.target.value) })} />
+                      </div>
+                      <div className="flex items-center gap-2 pt-6">
+                        <Switch checked={!!editing.is_published} onCheckedChange={(v) => setEditing({ ...editing, is_published: v })} />
+                        <Label>Published</Label>
+                      </div>
+                      <div className="flex items-center gap-2 pt-6">
+                        <Switch checked={!!editing.highlight_on_mocks} onCheckedChange={(v) => setEditing({ ...editing, highlight_on_mocks: v })} />
+                        <Label>Featured on Courses page</Label>
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Description</Label>
+                      <Textarea rows={3} value={editing.description ?? ""} onChange={(e) => setEditing({ ...editing, description: e.target.value })} />
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
 
           <DialogFooter className="gap-2 sm:justify-between">
             <Button variant="ghost" onClick={closeDialog}>Cancel</Button>
-            <div className="flex gap-2">
-              {step > 1 && <Button variant="outline" onClick={() => setStep((step - 1) as any)}><ArrowLeft className="h-4 w-4 mr-1" /> Back</Button>}
-              {step < 3 && <Button onClick={() => setStep((step + 1) as any)}>Next <ArrowRight className="h-4 w-4 ml-1" /></Button>}
-              {step === 3 && (
-                <Button onClick={save} disabled={saving}>
-                  {saving && <Loader2 className="h-4 w-4 mr-1 animate-spin" />} Save Course
-                </Button>
-              )}
-            </div>
+            <Button onClick={save} disabled={saving}>
+              {saving && <Loader2 className="h-4 w-4 mr-1 animate-spin" />} Save Bundle
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
