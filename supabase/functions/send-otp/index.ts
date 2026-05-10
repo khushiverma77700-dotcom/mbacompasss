@@ -60,8 +60,8 @@ Deno.serve(async (req) => {
     }
 
     // Send SMS via 2Factor.in (no DLT / no template required).
-    // Endpoint: /SMS/{phone}/{otp}  → uses 2Factor's pre-approved OTP template.
-    const twoFactorUrl = `https://2factor.in/API/V1/${encodeURIComponent(twoFactorKey)}/SMS/${phone}/${otp}`;
+    // Endpoint: /SMS/{phone}/{otp}/AUTOGEN  → forces transactional SMS only (no voice call fallback).
+    const twoFactorUrl = `https://2factor.in/API/V1/${encodeURIComponent(twoFactorKey)}/SMS/${phone}/${otp}/AUTOGEN`;
 
     const smsTask = fetch(twoFactorUrl, { method: "GET" })
       .then(async (r) => {

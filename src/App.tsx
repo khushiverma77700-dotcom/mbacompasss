@@ -534,20 +534,36 @@ const OnboardingGate = () => {
     if (path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/mocks/attempt") || path === "/profile-analyzer") return;
     if (loading || !user || checked) return;
 
-    const checkOnboarding = async () => {
+    let cancelled = false;
+    // Preload the dialog chunk so it appears instantly the moment we know we need it.
+    OnboardingDialog.preload?.();
+
+    const checkOnboarding = async (attempt = 0) => {
       const { data } = await supabase
         .from("profiles")
         .select("onboarding_completed")
         .eq("user_id", user.id)
         .maybeSingle();
 
-      if (data && !(data as any).onboarding_completed) {
-        setShowOnboarding(true);
+      if (cancelled) return;
+
+      if (data) {
+        if (!(data as any).onboarding_completed) setShowOnboarding(true);
+        setChecked(true);
+        return;
       }
-      setChecked(true);
+
+      // Profile row may not exist yet right after Google sign-up (trigger still running).
+      // Retry quickly so the mobile-OTP dialog appears immediately instead of after 20–30s.
+      if (attempt < 10) {
+        setTimeout(() => checkOnboarding(attempt + 1), 300);
+      } else {
+        setChecked(true);
+      }
     };
 
     checkOnboarding();
+    return () => { cancelled = true; };
   }, [loading, user, checked, location.pathname]);
 
   if (!showOnboarding || !user) return null;
