@@ -391,6 +391,56 @@ export default function AdminMockBundles() {
                     </div>
                   )}
                 </Card>
+
+                {/* Selected mocks - ordered list (Serial #) */}
+                {editingItems.length > 0 && (
+                  <Card className="p-3 bg-sky-50/40 border-sky-100">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-sm">Display Order ({editingItems.length})</Label>
+                      <span className="text-[10px] text-muted-foreground">Serial # = order shown to students</span>
+                    </div>
+                    <div className="space-y-1 max-h-64 overflow-y-auto">
+                      {editingItems.map((tid, idx) => {
+                        const m = allMocks.find((x) => x.id === tid);
+                        return (
+                          <div key={tid} className="flex items-center gap-2 bg-white border border-sky-100 rounded-md px-2 py-1.5">
+                            <Input
+                              type="number"
+                              value={idx + 1}
+                              onChange={(e) => {
+                                let target = Math.max(1, Math.min(editingItems.length, Number(e.target.value) || 1)) - 1;
+                                if (target === idx) return;
+                                const next = [...editingItems];
+                                const [moved] = next.splice(idx, 1);
+                                next.splice(target, 0, moved);
+                                setEditingItems(next);
+                              }}
+                              className="h-7 w-14 text-xs text-center"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="text-xs font-medium truncate">{m?.name ?? tid}</div>
+                              <div className="text-[10px] text-muted-foreground truncate">
+                                {m?.exam_code} · {(m?.test_type ?? "").replace(/_/g, " ")}
+                              </div>
+                            </div>
+                            <button type="button" disabled={idx === 0} onClick={() => {
+                              const next = [...editingItems];
+                              [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+                              setEditingItems(next);
+                            }} className="p-1 rounded hover:bg-muted disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5" /></button>
+                            <button type="button" disabled={idx === editingItems.length - 1} onClick={() => {
+                              const next = [...editingItems];
+                              [next[idx + 1], next[idx]] = [next[idx], next[idx + 1]];
+                              setEditingItems(next);
+                            }} className="p-1 rounded hover:bg-muted disabled:opacity-30"><ArrowDown className="h-3.5 w-3.5" /></button>
+                            <button type="button" onClick={() => setEditingItems(editingItems.filter((x) => x !== tid))}
+                              className="p-1 rounded hover:bg-rose-50 text-rose-500"><X className="h-3.5 w-3.5" /></button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </Card>
+                )}
               </div>
 
               {/* Advanced (optional) */}
