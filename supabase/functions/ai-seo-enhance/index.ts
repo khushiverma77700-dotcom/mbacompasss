@@ -33,6 +33,24 @@ function extractJsonFromResponse(response: string): unknown {
   }
 }
 
+// Strip fields Google flags as invalid when nested. Specifically:
+// "A nested object can't contain the 'itemReviewed' field" — itemReviewed must
+// only appear on a top-level Review, never inside an AggregateRating embedded
+// in a parent (Organization/Product/etc).
+export function sanitizeSchema(node: any, depth = 0): any {
+  if (Array.isArray(node)) return node.map((n) => sanitizeSchema(n, depth));
+  if (!node || typeof node !== "object") return node;
+  const t = node["@type"];
+  const types = Array.isArray(t) ? t : [t];
+  // Drop itemReviewed from any AggregateRating, and from any Review/Rating
+  // when it is nested inside another schema (depth > 0 means it has a parent).
+  if (types.includes("AggregateRating") || ((types.includes("Review") || types.includes("Rating")) && depth > 0)) {
+    if ("itemReviewed" in node) delete node.itemReviewed;
+  }
+  for (const k of Object.keys(node)) node[k] = sanitizeSchema(node[k], depth + 1);
+  return node;
+}
+
 function detectTruncation(response: string): boolean {
   const text = response.trim();
   const ob = (text.match(/{/g) || []).length;
@@ -90,6 +108,7 @@ RULES:
 - Organization name: "MBA Compass by MBA Compass", logo: "${siteUrl}/logo.png"
 - FAQPage schemas must have real, useful Q&As that students would actually search for
 - Include ALL relevant schema types for the page (aim for 4-6 schemas)
+- NEVER include "itemReviewed" inside a nested AggregateRating, Review, or Rating — Google flags this as invalid. AggregateRating embedded under a parent (Organization, Product, CollegeOrUniversity, etc.) must NOT have itemReviewed.
 - Return ONLY the JSON array, no markdown, no explanation`,
           },
           { role: "user", content: prompt },
@@ -107,8 +126,9 @@ RULES:
 
     if (detectTruncation(content)) return getDefaultSchemas(contentType, data, siteUrl);
     const parsed = extractJsonFromResponse(content);
-    if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.["@type"]) return parsed;
-    if (typeof parsed === "object" && (parsed as any)["@type"]) return [parsed];
+    const sanitized = sanitizeSchema(parsed);
+    if (Array.isArray(sanitized) && sanitized.length > 0 && sanitized[0]?.["@type"]) return sanitized;
+    if (typeof sanitized === "object" && (sanitized as any)["@type"]) return [sanitized];
     return getDefaultSchemas(contentType, data, siteUrl);
   } catch (e) {
     console.error("Schema generation error:", e);
