@@ -59,40 +59,20 @@ Deno.serve(async (req) => {
       throw new Error("Failed to store OTP");
     }
 
-    // Fire-and-forget SMS via MSG91 Flow API; OTP is already persisted.
-    const msg91Url = "https://control.msg91.com/api/v5/flow/";
-    const msg91Body = {
-      template_id: msg91TemplateId,
-      short_url: "0",
-      recipients: [
-        {
-          mobiles: `91${phone}`,
-          otp,
-          OTP: otp,
-          var: otp,
-          var1: otp,
-        },
-      ],
-    };
+    // Send SMS via 2Factor.in (no DLT / no template required).
+    // Endpoint: /SMS/{phone}/{otp}  → uses 2Factor's pre-approved OTP template.
+    const twoFactorUrl = `https://2factor.in/API/V1/${encodeURIComponent(twoFactorKey)}/SMS/${phone}/${otp}/AUTOGEN`;
 
-    const smsTask = fetch(msg91Url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        accept: "application/json",
-        authkey: msg91AuthKey,
-      },
-      body: JSON.stringify(msg91Body),
-    })
+    const smsTask = fetch(twoFactorUrl, { method: "GET" })
       .then(async (r) => {
         const j = await r.json().catch(() => ({}));
-        if (!r.ok || j?.type === "error") {
-          console.error("MSG91 error:", JSON.stringify(j));
+        if (!r.ok || j?.Status !== "Success") {
+          console.error("2Factor error:", JSON.stringify(j));
         } else {
-          console.log("OTP sent via MSG91 to", phone, JSON.stringify(j));
+          console.log("OTP sent via 2Factor to", phone, JSON.stringify(j));
         }
       })
-      .catch((e) => console.error("MSG91 fetch failed:", e));
+      .catch((e) => console.error("2Factor fetch failed:", e));
 
     // @ts-ignore EdgeRuntime is provided by Supabase Edge Functions
     if (typeof EdgeRuntime !== "undefined" && EdgeRuntime.waitUntil) {
