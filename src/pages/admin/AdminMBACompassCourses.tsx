@@ -78,41 +78,31 @@ interface Course {
 
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
+// Only keep features that actually exist on the student dashboard.
+// Mocks themselves are NOT toggled here — they come automatically from attached bundles.
 const FEATURE_TOGGLES: { key: keyof Course; label: string; group: string }[] = [
-  { key: "has_ai_study_planner", label: "AI Study Planner", group: "AI & Smart Tools" },
-  { key: "has_ai_tools", label: "AI Tools (analyzer, predictor, etc.)", group: "AI & Smart Tools" },
-  { key: "has_cat_planner", label: "CAT Planner", group: "AI & Smart Tools" },
-  { key: "has_percentile_predictor", label: "Percentile Predictor", group: "AI & Smart Tools" },
-  { key: "has_performance_analytics", label: "Performance Analytics", group: "AI & Smart Tools" },
+  { key: "has_daily_test",            label: "Daily Test",                  group: "Tests & Practice" },
+  { key: "has_mock_analysis",         label: "Detailed Mock Analysis",      group: "Tests & Practice" },
+  { key: "has_leaderboard_access",    label: "Leaderboard",                 group: "Tests & Practice" },
 
-  { key: "has_daily_test", label: "Daily Test", group: "Tests & Mocks" },
-  { key: "has_sectional_tests", label: "Sectional Tests", group: "Tests & Mocks" },
-  { key: "has_topic_tests", label: "Topic-wise Tests", group: "Tests & Mocks" },
-  { key: "has_mock_analysis", label: "Detailed Mock Analysis", group: "Tests & Mocks" },
-  { key: "has_leaderboard_access", label: "Leaderboard Access", group: "Tests & Mocks" },
+  { key: "has_ai_study_planner",      label: "AI Study Planner",            group: "AI & Insights" },
+  { key: "has_cat_planner",           label: "Day Planner",                 group: "AI & Insights" },
+  { key: "has_performance_analytics", label: "Performance Analytics",       group: "AI & Insights" },
+  { key: "has_percentile_predictor",  label: "Percentile Predictor",        group: "AI & Insights" },
+  { key: "has_ai_tools",              label: "AI Tools (analyzer, finder)", group: "AI & Insights" },
 
-  { key: "has_live_classes", label: "Live Classes", group: "Learning" },
-  { key: "has_recorded_lectures", label: "Recorded Lectures", group: "Learning" },
-  { key: "has_study_material", label: "Study Material (PDFs)", group: "Learning" },
-  { key: "has_doubt_resolution", label: "Doubt Resolution", group: "Learning" },
-  { key: "has_mentorship_1on1", label: "1:1 Mentorship", group: "Learning" },
-
-  { key: "has_gd_pi_prep", label: "GD-PI Preparation", group: "Extras" },
-  { key: "has_certificate", label: "Completion Certificate", group: "Extras" },
-  { key: "has_lifetime_access", label: "Lifetime Access", group: "Extras" },
+  { key: "has_doubt_resolution",      label: "Support Center",              group: "Support" },
 ];
 
 const empty: Partial<Course> = {
   title: "", slug: "", subtitle: "", description: "",
   exam_focus: ["CAT"], mode: "online", level: "beginner", language: "English",
-  duration_weeks: 12, validity_months: 12,
+  validity_months: 12,
   price: 0, original_price: 0, discount_percent: 0,
   features: [], highlights: [], curriculum: [],
   what_youll_learn: [], faqs: [], instructors: [], gallery_images: [],
   is_featured: false, is_active: true, sort_order: 0,
   total_students_enrolled: 0, rating: 0, reviews_count: 0,
-  full_mocks_count: 0, sectional_mocks_count: 0, topic_tests_count: 0,
-  total_video_hours: 0, total_practice_questions: 0, live_classes_count: 0,
 };
 
 type BundleOpt = { id: string; name: string; exam_code: string | null; is_published: boolean };
