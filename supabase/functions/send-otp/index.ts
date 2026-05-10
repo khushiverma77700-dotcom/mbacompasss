@@ -23,11 +23,9 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const msg91AuthKey = (await getCredential("MSG91_AUTH_KEY")) || Deno.env.get("MSG91_AUTH_KEY");
-    const msg91TemplateId = (await getCredential("MSG91_TEMPLATE_ID")) || Deno.env.get("MSG91_TEMPLATE_ID");
+    const twoFactorKey = (await getCredential("TWOFACTOR_API_KEY")) || Deno.env.get("TWOFACTOR_API_KEY");
 
-    if (!msg91AuthKey) throw new Error("MSG91_AUTH_KEY is not configured");
-    if (!msg91TemplateId) throw new Error("MSG91_TEMPLATE_ID is not configured");
+    if (!twoFactorKey) throw new Error("TWOFACTOR_API_KEY is not configured");
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
