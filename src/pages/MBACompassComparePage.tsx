@@ -17,12 +17,14 @@ interface Course {
   full_mocks_count: number | null; sectional_mocks_count: number | null;
   topic_tests_count: number | null; total_video_hours: number | null;
   total_practice_questions: number | null; live_classes_count: number | null;
-  has_ai_study_planner: boolean; has_ai_tools: boolean; has_daily_test: boolean;
+  has_ai_study_planner: boolean; has_ai_tools: boolean; has_daily_test: boolean; has_daily_mocks: boolean;
   has_cat_planner: boolean; has_sectional_tests: boolean; has_topic_tests: boolean;
+  has_previous_year_papers: boolean; has_personalized_hub: boolean;
   has_mentorship_1on1: boolean; has_doubt_resolution: boolean;
   has_recorded_lectures: boolean; has_live_classes: boolean;
   has_performance_analytics: boolean; has_leaderboard_access: boolean;
   has_mock_analysis: boolean; has_study_material: boolean;
+  has_ai_insights: boolean;
   has_gd_pi_prep: boolean; has_percentile_predictor: boolean;
   has_certificate: boolean; has_lifetime_access: boolean;
 }
