@@ -399,6 +399,10 @@ function DetailInner() {
             </TabsContent>
           )}
         </Tabs>
+
+        <div className="container mx-auto px-4">
+          <PageKeywords contentType="course" recordId={c.id} fallbackKeywords={c.keywords || []} />
+        </div>
       </section>
     </>
   );
