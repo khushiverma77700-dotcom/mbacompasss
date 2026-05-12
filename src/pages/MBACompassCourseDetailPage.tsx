@@ -11,6 +11,8 @@ import {
   Sparkles, Target, BookOpen, Download, ArrowRight, GitCompare,
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+import PageKeywords from "@/components/PageKeywords";
+import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import { useCtaGate, openLoginDialog } from "@/hooks/useCtaGate";
 import { CompassCompareProvider, useCompassCompare } from "@/contexts/CompassCompareContext";
 import { toast } from "sonner";
