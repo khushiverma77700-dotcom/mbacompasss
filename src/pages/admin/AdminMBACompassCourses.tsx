@@ -11,8 +11,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Star, GraduationCap, X, Package } from "lucide-react";
+import { Plus, Pencil, Trash2, Star, GraduationCap, X, Package, Sparkles, Loader2, Hash, Search, TrendingUp } from "lucide-react";
 import FileUpload from "@/components/admin/FileUpload";
+import SeoEnhanceFields from "@/components/admin/SeoEnhanceFields";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Course {
   id: string;
@@ -78,6 +80,14 @@ interface Course {
   has_lifetime_access: boolean;
   seo_title: string | null;
   seo_description: string | null;
+  primary_keyword: string | null;
+  funnel_stage: string | null;
+  cluster_id: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
+  h1_tag: string | null;
+  keywords: string[] | null;
+  last_seo_refresh: string | null;
 }
 
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -122,6 +132,43 @@ export default function AdminMBACompassCourses() {
   const [bundles, setBundles] = useState<BundleOpt[]>([]);
   const [editBundleIds, setEditBundleIds] = useState<string[]>([]);
   const [bundleCounts, setBundleCounts] = useState<Record<string, number>>({});
+  const [bulkOptimizing, setBulkOptimizing] = useState(false);
+  const [singleOptimizing, setSingleOptimizing] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  // Pull AI snapshot for the open course (advanced keyword preview)
+  const editSeoKey = edit?.id ? `seo_page__course__${edit.id}` : null;
+  const { data: snapshot, refetch: refetchSnap } = useQuery({
+    queryKey: ["seo-snapshot-course", edit?.id],
+    enabled: !!edit?.id,
+    queryFn: async () => {
+      const { data } = await supabase.from("site_settings").select("value").eq("key", editSeoKey!).maybeSingle();
+      return (data?.value as any) ?? null;
+    },
+  });
+
+  const runAiSeo = async (courseIds: string[]) => {
+    if (!courseIds.length) { toast.error("Save course first"); return; }
+    const isBulk = courseIds.length > 1;
+    if (isBulk) setBulkOptimizing(true); else setSingleOptimizing(courseIds[0]);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-seo-engine", {
+        body: { mode: "bulk_optimize", contentType: "course", pageIds: courseIds, allPages: list },
+      });
+      if (error) throw error;
+      const ok = (data?.results || []).filter((r: any) => r.status === "success").length;
+      const cached = (data?.results || []).filter((r: any) => r.status === "cached_skip").length;
+      toast.success(`AI SEO done — ${ok} optimized${cached ? `, ${cached} cached` : ""}`);
+      await load();
+      await refetchSnap();
+      queryClient.invalidateQueries({ queryKey: ["seo-snapshot-course"] });
+    } catch (e: any) {
+      toast.error(`AI SEO failed: ${e.message}`);
+    } finally {
+      setBulkOptimizing(false); setSingleOptimizing(null);
+    }
+  };
+
 
   const load = async () => {
     setLoading(true);
@@ -251,12 +298,22 @@ export default function AdminMBACompassCourses() {
           </h1>
           <p className="text-sm text-muted-foreground">Manage in-house paid programs displayed at /mba-compass.</p>
         </div>
-        <Dialog open={!!edit} onOpenChange={(o) => !o && setEdit(null)}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setEdit(empty)} className="bg-sky-600 hover:bg-sky-700">
-              <Plus className="h-4 w-4 mr-2" /> New Course
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2 items-center flex-wrap">
+          <Button
+            variant="outline"
+            disabled={bulkOptimizing || !list.length}
+            onClick={() => runAiSeo(list.map((c) => c.id))}
+            className="border-violet-200 text-violet-700 hover:bg-violet-50"
+          >
+            {bulkOptimizing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+            AI SEO — All Courses (OpenAI)
+          </Button>
+          <Dialog open={!!edit} onOpenChange={(o) => !o && setEdit(null)}>
+            <DialogTrigger asChild>
+              <Button onClick={() => setEdit(empty)} className="bg-sky-600 hover:bg-sky-700">
+                <Plus className="h-4 w-4 mr-2" /> New Course
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{edit?.id ? "Edit course" : "Create new course"}</DialogTitle>
@@ -477,9 +534,115 @@ export default function AdminMBACompassCourses() {
                 </TabsContent>
 
                 {/* SEO */}
-                <TabsContent value="seo" className="space-y-3 mt-4">
-                  <div><Label>SEO title (max 60 chars)</Label><Input maxLength={60} value={edit.seo_title ?? ""} onChange={(e) => setEdit({ ...edit, seo_title: e.target.value })} /></div>
-                  <div><Label>SEO description (max 160 chars)</Label><Textarea rows={3} maxLength={160} value={edit.seo_description ?? ""} onChange={(e) => setEdit({ ...edit, seo_description: e.target.value })} /></div>
+                <TabsContent value="seo" className="space-y-4 mt-4">
+                  <div className="rounded-lg border border-violet-200 bg-gradient-to-br from-violet-50 to-sky-50 p-4">
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <div>
+                        <h4 className="text-sm font-semibold flex items-center gap-2">
+                          <Sparkles className="h-4 w-4 text-violet-600" />
+                          AI SEO Studio (OpenAI gpt-5-mini)
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Generates research-driven meta title, description, H1, short-tail and long-tail keywords,
+                          schema, internal links and FAQ data. Stored on this course and rendered live on the course page.
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={!edit.id || singleOptimizing === edit.id}
+                        onClick={() => edit.id && runAiSeo([edit.id])}
+                        className="bg-violet-600 hover:bg-violet-700 text-white"
+                      >
+                        {singleOptimizing === edit.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5" />}
+                        {edit.id ? "Generate / Refresh AI SEO" : "Save course first"}
+                      </Button>
+                    </div>
+                    {edit.last_seo_refresh && (
+                      <p className="text-[11px] text-muted-foreground mt-2">
+                        Last refreshed: {new Date(edit.last_seo_refresh).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+
+                  <SeoEnhanceFields
+                    data={{
+                      primary_keyword: edit.primary_keyword,
+                      funnel_stage: edit.funnel_stage,
+                      cluster_id: edit.cluster_id,
+                      title: edit.title,
+                      slug: edit.slug,
+                      meta_title: edit.meta_title || edit.seo_title || undefined,
+                      meta_description: edit.meta_description || edit.seo_description || undefined,
+                    }}
+                    onChange={(patch) => setEdit({ ...edit, ...patch })}
+                    contentType="course"
+                    recordId={edit.id}
+                  />
+
+                  <div className="grid grid-cols-1 gap-3">
+                    <div>
+                      <Label>Meta title (max 60 chars)</Label>
+                      <Input
+                        maxLength={70}
+                        value={edit.meta_title ?? edit.seo_title ?? ""}
+                        onChange={(e) => setEdit({ ...edit, meta_title: e.target.value, seo_title: e.target.value })}
+                      />
+                      <p className="text-[11px] text-muted-foreground mt-1">{(edit.meta_title || edit.seo_title || "").length}/60</p>
+                    </div>
+                    <div>
+                      <Label>Meta description (max 160 chars)</Label>
+                      <Textarea
+                        rows={3}
+                        maxLength={170}
+                        value={edit.meta_description ?? edit.seo_description ?? ""}
+                        onChange={(e) => setEdit({ ...edit, meta_description: e.target.value, seo_description: e.target.value })}
+                      />
+                      <p className="text-[11px] text-muted-foreground mt-1">{(edit.meta_description || edit.seo_description || "").length}/160</p>
+                    </div>
+                    <div>
+                      <Label>H1 tag (page heading override)</Label>
+                      <Input
+                        value={edit.h1_tag ?? ""}
+                        onChange={(e) => setEdit({ ...edit, h1_tag: e.target.value })}
+                        placeholder="Different wording from meta title"
+                      />
+                    </div>
+                  </div>
+
+                  {snapshot?.keywordBuckets && (
+                    <div className="rounded-lg border bg-card p-4 space-y-3">
+                      <div className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                        <Hash className="h-3.5 w-3.5" /> AI Keyword Research (live preview)
+                      </div>
+                      {snapshot.keywordBuckets.shortTail?.length > 0 && (
+                        <div>
+                          <div className="text-[11px] font-semibold text-violet-700 mb-1 flex items-center gap-1"><TrendingUp className="h-3 w-3"/> Short-tail ({snapshot.keywordBuckets.shortTail.length})</div>
+                          <div className="flex flex-wrap gap-1">
+                            {snapshot.keywordBuckets.shortTail.map((k: string, i: number) => (
+                              <Badge key={i} variant="outline" className="text-[10px] bg-violet-50 border-violet-200 text-violet-700">{k}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {snapshot.keywordBuckets.longTail?.length > 0 && (
+                        <div>
+                          <div className="text-[11px] font-semibold text-sky-700 mb-1 flex items-center gap-1"><Search className="h-3 w-3"/> Long-tail ({snapshot.keywordBuckets.longTail.length})</div>
+                          <div className="flex flex-wrap gap-1">
+                            {snapshot.keywordBuckets.longTail.map((k: string, i: number) => (
+                              <Badge key={i} variant="outline" className="text-[10px] bg-sky-50 border-sky-200 text-sky-700">{k}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {snapshot.internalLinks?.suggested?.length > 0 && (
+                        <div>
+                          <div className="text-[11px] font-semibold text-emerald-700 mb-1">Internal link suggestions</div>
+                          <div className="text-[11px] text-muted-foreground">{snapshot.internalLinks.suggested.slice(0,8).join(" / ")}</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </TabsContent>
               </Tabs>
             )}
@@ -488,6 +651,7 @@ export default function AdminMBACompassCourses() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {loading ? (

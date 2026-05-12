@@ -29,6 +29,7 @@ const CONTENT_TABLES: Record<string, { table: string; getPath: (i: any) => strin
   exam: { table: "exams", getPath: (i) => `/exam/${i.slug}` },
   cityPage: { table: "city_pages", getPath: (i) => `/colleges/${i.slug}` },
   category: { table: "categories", getPath: (i) => `/category/${i.slug}` },
+  course: { table: "mba_compass_courses", getPath: (i) => `/mba-compass/${i.slug}` },
 };
 
 function stripHtml(v: string) {
@@ -36,8 +37,18 @@ function stripHtml(v: string) {
 }
 
 function getTextContent(item: Record<string, any>) {
+  // Combine course-specific fields when present (description + subtitle + features/highlights/curriculum/faqs)
+  const arrToText = (v: any) =>
+    Array.isArray(v)
+      ? v.map((x) => (typeof x === "string" ? x : x?.title || x?.q || x?.label || x?.name || JSON.stringify(x))).join(". ")
+      : "";
   return stripHtml(
-    item.description || item.content || item.intro_content || item.detailed_content || item.faq_content || item.admission_process || item.eligibility || ""
+    [
+      item.description, item.subtitle, item.content, item.intro_content, item.detailed_content,
+      item.faq_content, item.admission_process, item.eligibility,
+      arrToText(item.highlights), arrToText(item.what_youll_learn), arrToText(item.features),
+      arrToText(item.curriculum), arrToText(item.faqs),
+    ].filter(Boolean).join(" ")
   );
 }
 

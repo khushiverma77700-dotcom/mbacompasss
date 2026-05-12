@@ -11,6 +11,8 @@ import {
   Sparkles, Target, BookOpen, Download, ArrowRight, GitCompare,
 } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
+import PageKeywords from "@/components/PageKeywords";
+import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import { useCtaGate, openLoginDialog } from "@/hooks/useCtaGate";
 import { CompassCompareProvider, useCompassCompare } from "@/contexts/CompassCompareContext";
 import { toast } from "sonner";
@@ -152,12 +154,26 @@ function DetailInner() {
     ["Lifetime Access", c.has_lifetime_access],
   ] as [string, boolean][];
 
+  const { seo } = useResolvedSeo("course", c.id, {
+    title: c.meta_title || c.seo_title || `${c.title} — MBA Compass`,
+    description: c.meta_description || c.seo_description || c.subtitle || c.description || `${c.title} program details`,
+    keywords: c.keywords || undefined,
+    canonical: `https://mbacompass.in/mba-compass/${c.slug}`,
+  });
+
   return (
     <>
       <SEOHead
-        title={c.seo_title || `${c.title} — MBA Compass`}
-        description={c.seo_description || c.subtitle || c.description || `${c.title} program details`}
-        canonical={`https://mbacompass.in/mba-compass/${c.slug}`}
+        title={seo.title}
+        description={seo.description}
+        keywords={seo.keywords}
+        canonical={seo.canonical}
+        jsonLd={seo.jsonLd as any}
+        ogTitle={seo.ogTitle}
+        ogDescription={seo.ogDescription}
+        ogImage={c.thumbnail_url || c.banner_url || undefined}
+        twitterTitle={seo.twitterTitle}
+        twitterDescription={seo.twitterDescription}
       />
 
       {/* Hero */}
@@ -383,6 +399,10 @@ function DetailInner() {
             </TabsContent>
           )}
         </Tabs>
+
+        <div className="container mx-auto px-4">
+          <PageKeywords contentType="course" recordId={c.id} fallbackKeywords={c.keywords || []} />
+        </div>
       </section>
     </>
   );
