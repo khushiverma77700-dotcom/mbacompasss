@@ -156,7 +156,7 @@ const AdminGoogleIndexing = () => {
           .from("indexing_urls")
           .select("*")
           .order("created_at", { ascending: false })
-          .limit(500),
+          .range(0, 9999),
         supabase
           .from("indexing_logs")
           .select("id, action, status, created_at, error_message, response, indexing_urls(url)")
@@ -241,10 +241,16 @@ const AdminGoogleIndexing = () => {
     for (const row of urls) {
       const isIndexed = Boolean(row.indexed_at || row.status === "indexed");
 
-      if (isIndexed) summary.indexed += 1;
-      if (!isIndexed && row.status !== "failed") summary.pending += 1;
-      if (row.status === "submitted" && !isIndexed) summary.submitted += 1;
-      if (row.status === "failed") summary.failed += 1;
+      if (isIndexed) {
+        summary.indexed += 1;
+      } else if (row.status === "failed") {
+        summary.failed += 1;
+      } else if (row.status === "submitted") {
+        summary.submitted += 1;
+      } else {
+        // pending / discovered / anything else not yet sent to Google
+        summary.pending += 1;
+      }
     }
 
     return summary;
