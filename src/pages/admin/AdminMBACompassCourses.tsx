@@ -298,12 +298,22 @@ export default function AdminMBACompassCourses() {
           </h1>
           <p className="text-sm text-muted-foreground">Manage in-house paid programs displayed at /mba-compass.</p>
         </div>
-        <Dialog open={!!edit} onOpenChange={(o) => !o && setEdit(null)}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setEdit(empty)} className="bg-sky-600 hover:bg-sky-700">
-              <Plus className="h-4 w-4 mr-2" /> New Course
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2 items-center flex-wrap">
+          <Button
+            variant="outline"
+            disabled={bulkOptimizing || !list.length}
+            onClick={() => runAiSeo(list.map((c) => c.id))}
+            className="border-violet-200 text-violet-700 hover:bg-violet-50"
+          >
+            {bulkOptimizing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+            AI SEO — All Courses (OpenAI)
+          </Button>
+          <Dialog open={!!edit} onOpenChange={(o) => !o && setEdit(null)}>
+            <DialogTrigger asChild>
+              <Button onClick={() => setEdit(empty)} className="bg-sky-600 hover:bg-sky-700">
+                <Plus className="h-4 w-4 mr-2" /> New Course
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{edit?.id ? "Edit course" : "Create new course"}</DialogTitle>
