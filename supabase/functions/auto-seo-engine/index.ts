@@ -29,6 +29,7 @@ const CONTENT_TABLES: Record<string, { table: string; getPath: (i: any) => strin
   exam: { table: "exams", getPath: (i) => `/exam/${i.slug}` },
   cityPage: { table: "city_pages", getPath: (i) => `/colleges/${i.slug}` },
   category: { table: "categories", getPath: (i) => `/category/${i.slug}` },
+  course: { table: "mba_compass_courses", getPath: (i) => `/mba-compass/${i.slug}` },
 };
 
 function stripHtml(v: string) {
