@@ -156,7 +156,7 @@ const AdminGoogleIndexing = () => {
           .from("indexing_urls")
           .select("*")
           .order("created_at", { ascending: false })
-          .limit(500),
+          .range(0, 9999),
         supabase
           .from("indexing_logs")
           .select("id, action, status, created_at, error_message, response, indexing_urls(url)")
