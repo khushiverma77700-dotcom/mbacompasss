@@ -80,6 +80,14 @@ interface Course {
   has_lifetime_access: boolean;
   seo_title: string | null;
   seo_description: string | null;
+  primary_keyword: string | null;
+  funnel_stage: string | null;
+  cluster_id: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
+  h1_tag: string | null;
+  keywords: string[] | null;
+  last_seo_refresh: string | null;
 }
 
 const slugify = (s: string) => s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
