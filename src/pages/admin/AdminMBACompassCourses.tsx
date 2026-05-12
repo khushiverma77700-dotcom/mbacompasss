@@ -132,6 +132,43 @@ export default function AdminMBACompassCourses() {
   const [bundles, setBundles] = useState<BundleOpt[]>([]);
   const [editBundleIds, setEditBundleIds] = useState<string[]>([]);
   const [bundleCounts, setBundleCounts] = useState<Record<string, number>>({});
+  const [bulkOptimizing, setBulkOptimizing] = useState(false);
+  const [singleOptimizing, setSingleOptimizing] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  // Pull AI snapshot for the open course (advanced keyword preview)
+  const editSeoKey = edit?.id ? `seo_page__course__${edit.id}` : null;
+  const { data: snapshot, refetch: refetchSnap } = useQuery({
+    queryKey: ["seo-snapshot-course", edit?.id],
+    enabled: !!edit?.id,
+    queryFn: async () => {
+      const { data } = await supabase.from("site_settings").select("value").eq("key", editSeoKey!).maybeSingle();
+      return (data?.value as any) ?? null;
+    },
+  });
+
+  const runAiSeo = async (courseIds: string[]) => {
+    if (!courseIds.length) { toast.error("Save course first"); return; }
+    const isBulk = courseIds.length > 1;
+    if (isBulk) setBulkOptimizing(true); else setSingleOptimizing(courseIds[0]);
+    try {
+      const { data, error } = await supabase.functions.invoke("auto-seo-engine", {
+        body: { mode: "bulk_optimize", contentType: "course", pageIds: courseIds, allPages: list },
+      });
+      if (error) throw error;
+      const ok = (data?.results || []).filter((r: any) => r.status === "success").length;
+      const cached = (data?.results || []).filter((r: any) => r.status === "cached_skip").length;
+      toast.success(`AI SEO done — ${ok} optimized${cached ? `, ${cached} cached` : ""}`);
+      await load();
+      await refetchSnap();
+      queryClient.invalidateQueries({ queryKey: ["seo-snapshot-course"] });
+    } catch (e: any) {
+      toast.error(`AI SEO failed: ${e.message}`);
+    } finally {
+      setBulkOptimizing(false); setSingleOptimizing(null);
+    }
+  };
+
 
   const load = async () => {
     setLoading(true);
