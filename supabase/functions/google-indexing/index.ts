@@ -1939,22 +1939,32 @@ Deno.serve(async (req) => {
         });
 
         // Find which URLs are truly new vs already in queue.
+        // IMPORTANT: chunk the .in() lookup — passing 700+ long URLs in one
+        // GET request exceeds PostgREST's URL length limit and silently
+        // returns nothing, which then causes the bulk insert to collide on
+        // the url unique constraint and drop the whole chunk.
         const urls = deduped.map((r) => r.url as string);
-        const { data: existing } = await supabase
-          .from("indexing_urls")
-          .select("url")
-          .in("url", urls);
-        const existingSet = new Set((existing || []).map((r: any) => r.url));
+        const existingSet = new Set<string>();
+        const LOOKUP_CHUNK = 100;
+        for (let i = 0; i < urls.length; i += LOOKUP_CHUNK) {
+          const chunk = urls.slice(i, i + LOOKUP_CHUNK);
+          const { data: existing } = await supabase
+            .from("indexing_urls")
+            .select("url")
+            .in("url", chunk);
+          (existing || []).forEach((r: any) => existingSet.add(r.url));
+        }
         const fresh = deduped.filter((r) => !existingSet.has(r.url as string));
 
         if (fresh.length) {
-          // Insert in chunks of 500 to stay well under request limits.
+          // Upsert with ignoreDuplicates — safe even if a concurrent run
+          // inserted a row between our lookup and our write.
           for (let i = 0; i < fresh.length; i += 500) {
             const chunk = fresh.slice(i, i + 500);
-            const { error: insErr } = await supabase
+            const { error: insErr, count } = await supabase
               .from("indexing_urls")
-              .insert(chunk);
-            if (!insErr) newCount += chunk.length;
+              .upsert(chunk, { onConflict: "url", ignoreDuplicates: true, count: "exact" });
+            if (!insErr) newCount += count ?? chunk.length;
           }
         }
       }
