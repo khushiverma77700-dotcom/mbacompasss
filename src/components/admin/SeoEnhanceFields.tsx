@@ -30,7 +30,7 @@ interface Props {
   data: SeoEnhanceData;
   onChange: (patch: Partial<SeoEnhanceData>) => void;
   /** content type for FAQ generation */
-  contentType?: "article" | "college" | "institute" | "exam" | "cityPage";
+  contentType?: "article" | "college" | "institute" | "exam" | "cityPage" | "category" | "course";
   recordId?: string;
 }
 
