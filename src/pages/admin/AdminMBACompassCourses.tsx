@@ -534,9 +534,115 @@ export default function AdminMBACompassCourses() {
                 </TabsContent>
 
                 {/* SEO */}
-                <TabsContent value="seo" className="space-y-3 mt-4">
-                  <div><Label>SEO title (max 60 chars)</Label><Input maxLength={60} value={edit.seo_title ?? ""} onChange={(e) => setEdit({ ...edit, seo_title: e.target.value })} /></div>
-                  <div><Label>SEO description (max 160 chars)</Label><Textarea rows={3} maxLength={160} value={edit.seo_description ?? ""} onChange={(e) => setEdit({ ...edit, seo_description: e.target.value })} /></div>
+                <TabsContent value="seo" className="space-y-4 mt-4">
+                  <div className="rounded-lg border border-violet-200 bg-gradient-to-br from-violet-50 to-sky-50 p-4">
+                    <div className="flex items-center justify-between gap-3 flex-wrap">
+                      <div>
+                        <h4 className="text-sm font-semibold flex items-center gap-2">
+                          <Sparkles className="h-4 w-4 text-violet-600" />
+                          AI SEO Studio (OpenAI gpt-5-mini)
+                        </h4>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Generates research-driven meta title, description, H1, short-tail and long-tail keywords,
+                          schema, internal links and FAQ data. Stored on this course and rendered live on the course page.
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={!edit.id || singleOptimizing === edit.id}
+                        onClick={() => edit.id && runAiSeo([edit.id])}
+                        className="bg-violet-600 hover:bg-violet-700 text-white"
+                      >
+                        {singleOptimizing === edit.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Sparkles className="h-3.5 w-3.5 mr-1.5" />}
+                        {edit.id ? "Generate / Refresh AI SEO" : "Save course first"}
+                      </Button>
+                    </div>
+                    {edit.last_seo_refresh && (
+                      <p className="text-[11px] text-muted-foreground mt-2">
+                        Last refreshed: {new Date(edit.last_seo_refresh).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+
+                  <SeoEnhanceFields
+                    data={{
+                      primary_keyword: edit.primary_keyword,
+                      funnel_stage: edit.funnel_stage,
+                      cluster_id: edit.cluster_id,
+                      title: edit.title,
+                      slug: edit.slug,
+                      meta_title: edit.meta_title || edit.seo_title || undefined,
+                      meta_description: edit.meta_description || edit.seo_description || undefined,
+                    }}
+                    onChange={(patch) => setEdit({ ...edit, ...patch })}
+                    contentType="course"
+                    recordId={edit.id}
+                  />
+
+                  <div className="grid grid-cols-1 gap-3">
+                    <div>
+                      <Label>Meta title (max 60 chars)</Label>
+                      <Input
+                        maxLength={70}
+                        value={edit.meta_title ?? edit.seo_title ?? ""}
+                        onChange={(e) => setEdit({ ...edit, meta_title: e.target.value, seo_title: e.target.value })}
+                      />
+                      <p className="text-[11px] text-muted-foreground mt-1">{(edit.meta_title || edit.seo_title || "").length}/60</p>
+                    </div>
+                    <div>
+                      <Label>Meta description (max 160 chars)</Label>
+                      <Textarea
+                        rows={3}
+                        maxLength={170}
+                        value={edit.meta_description ?? edit.seo_description ?? ""}
+                        onChange={(e) => setEdit({ ...edit, meta_description: e.target.value, seo_description: e.target.value })}
+                      />
+                      <p className="text-[11px] text-muted-foreground mt-1">{(edit.meta_description || edit.seo_description || "").length}/160</p>
+                    </div>
+                    <div>
+                      <Label>H1 tag (page heading override)</Label>
+                      <Input
+                        value={edit.h1_tag ?? ""}
+                        onChange={(e) => setEdit({ ...edit, h1_tag: e.target.value })}
+                        placeholder="Different wording from meta title"
+                      />
+                    </div>
+                  </div>
+
+                  {snapshot?.keywordBuckets && (
+                    <div className="rounded-lg border bg-card p-4 space-y-3">
+                      <div className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                        <Hash className="h-3.5 w-3.5" /> AI Keyword Research (live preview)
+                      </div>
+                      {snapshot.keywordBuckets.shortTail?.length > 0 && (
+                        <div>
+                          <div className="text-[11px] font-semibold text-violet-700 mb-1 flex items-center gap-1"><TrendingUp className="h-3 w-3"/> Short-tail ({snapshot.keywordBuckets.shortTail.length})</div>
+                          <div className="flex flex-wrap gap-1">
+                            {snapshot.keywordBuckets.shortTail.map((k: string, i: number) => (
+                              <Badge key={i} variant="outline" className="text-[10px] bg-violet-50 border-violet-200 text-violet-700">{k}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {snapshot.keywordBuckets.longTail?.length > 0 && (
+                        <div>
+                          <div className="text-[11px] font-semibold text-sky-700 mb-1 flex items-center gap-1"><Search className="h-3 w-3"/> Long-tail ({snapshot.keywordBuckets.longTail.length})</div>
+                          <div className="flex flex-wrap gap-1">
+                            {snapshot.keywordBuckets.longTail.map((k: string, i: number) => (
+                              <Badge key={i} variant="outline" className="text-[10px] bg-sky-50 border-sky-200 text-sky-700">{k}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {snapshot.internalLinks?.suggested?.length > 0 && (
+                        <div>
+                          <div className="text-[11px] font-semibold text-emerald-700 mb-1">Internal link suggestions</div>
+                          <div className="text-[11px] text-muted-foreground">{snapshot.internalLinks.suggested.slice(0,8).join(" / ")}</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </TabsContent>
               </Tabs>
             )}
