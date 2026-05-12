@@ -545,6 +545,7 @@ export default function AdminMBACompassCourses() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {loading ? (
