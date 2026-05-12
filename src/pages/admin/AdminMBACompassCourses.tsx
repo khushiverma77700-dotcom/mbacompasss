@@ -11,8 +11,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, Star, GraduationCap, X, Package } from "lucide-react";
+import { Plus, Pencil, Trash2, Star, GraduationCap, X, Package, Sparkles, Loader2, Hash, Search, TrendingUp } from "lucide-react";
 import FileUpload from "@/components/admin/FileUpload";
+import SeoEnhanceFields from "@/components/admin/SeoEnhanceFields";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Course {
   id: string;
