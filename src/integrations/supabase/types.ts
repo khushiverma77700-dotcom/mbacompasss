@@ -2823,6 +2823,8 @@ export type Database = {
         Row: {
           banner_url: string | null
           brochure_url: string | null
+          cluster_id: string | null
+          content_hash: string | null
           created_at: string
           curriculum: Json | null
           description: string | null
@@ -2833,7 +2835,9 @@ export type Database = {
           faqs: Json | null
           features: Json | null
           full_mocks_count: number | null
+          funnel_stage: string | null
           gallery_images: Json | null
+          h1_tag: string | null
           has_ai_insights: boolean | null
           has_ai_study_planner: boolean | null
           has_ai_tools: boolean | null
@@ -2861,12 +2865,17 @@ export type Database = {
           instructors: Json | null
           is_active: boolean
           is_featured: boolean
+          keywords: string[] | null
           language: string | null
+          last_seo_refresh: string | null
           level: string | null
           live_classes_count: number | null
+          meta_description: string | null
+          meta_title: string | null
           mode: string | null
           original_price: number | null
           price: number | null
+          primary_keyword: string | null
           rating: number | null
           reviews_count: number | null
           sectional_mocks_count: number | null
@@ -2888,6 +2897,8 @@ export type Database = {
         Insert: {
           banner_url?: string | null
           brochure_url?: string | null
+          cluster_id?: string | null
+          content_hash?: string | null
           created_at?: string
           curriculum?: Json | null
           description?: string | null
@@ -2898,7 +2909,9 @@ export type Database = {
           faqs?: Json | null
           features?: Json | null
           full_mocks_count?: number | null
+          funnel_stage?: string | null
           gallery_images?: Json | null
+          h1_tag?: string | null
           has_ai_insights?: boolean | null
           has_ai_study_planner?: boolean | null
           has_ai_tools?: boolean | null
@@ -2926,12 +2939,17 @@ export type Database = {
           instructors?: Json | null
           is_active?: boolean
           is_featured?: boolean
+          keywords?: string[] | null
           language?: string | null
+          last_seo_refresh?: string | null
           level?: string | null
           live_classes_count?: number | null
+          meta_description?: string | null
+          meta_title?: string | null
           mode?: string | null
           original_price?: number | null
           price?: number | null
+          primary_keyword?: string | null
           rating?: number | null
           reviews_count?: number | null
           sectional_mocks_count?: number | null
@@ -2953,6 +2971,8 @@ export type Database = {
         Update: {
           banner_url?: string | null
           brochure_url?: string | null
+          cluster_id?: string | null
+          content_hash?: string | null
           created_at?: string
           curriculum?: Json | null
           description?: string | null
@@ -2963,7 +2983,9 @@ export type Database = {
           faqs?: Json | null
           features?: Json | null
           full_mocks_count?: number | null
+          funnel_stage?: string | null
           gallery_images?: Json | null
+          h1_tag?: string | null
           has_ai_insights?: boolean | null
           has_ai_study_planner?: boolean | null
           has_ai_tools?: boolean | null
@@ -2991,12 +3013,17 @@ export type Database = {
           instructors?: Json | null
           is_active?: boolean
           is_featured?: boolean
+          keywords?: string[] | null
           language?: string | null
+          last_seo_refresh?: string | null
           level?: string | null
           live_classes_count?: number | null
+          meta_description?: string | null
+          meta_title?: string | null
           mode?: string | null
           original_price?: number | null
           price?: number | null
+          primary_keyword?: string | null
           rating?: number | null
           reviews_count?: number | null
           sectional_mocks_count?: number | null
