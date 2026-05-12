@@ -37,8 +37,18 @@ function stripHtml(v: string) {
 }
 
 function getTextContent(item: Record<string, any>) {
+  // Combine course-specific fields when present (description + subtitle + features/highlights/curriculum/faqs)
+  const arrToText = (v: any) =>
+    Array.isArray(v)
+      ? v.map((x) => (typeof x === "string" ? x : x?.title || x?.q || x?.label || x?.name || JSON.stringify(x))).join(". ")
+      : "";
   return stripHtml(
-    item.description || item.content || item.intro_content || item.detailed_content || item.faq_content || item.admission_process || item.eligibility || ""
+    [
+      item.description, item.subtitle, item.content, item.intro_content, item.detailed_content,
+      item.faq_content, item.admission_process, item.eligibility,
+      arrToText(item.highlights), arrToText(item.what_youll_learn), arrToText(item.features),
+      arrToText(item.curriculum), arrToText(item.faqs),
+    ].filter(Boolean).join(" ")
   );
 }
 
