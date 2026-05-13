@@ -39,9 +39,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    const wmin = brief.wordCountMin ?? 2000;
-    const wmax = brief.wordCountMax ?? 2500;
-    const density = brief.keywordDensityPct ?? 10;
+    const wmin = brief.wordCountMin ?? 2200;
+    const wmax = brief.wordCountMax ?? 2800;
+    // 10% literal density is keyword-stuffing and hurts SEO. Cap at 2.5% (Google-safe natural range).
+    const density = Math.min(brief.keywordDensityPct ?? 2, 2.5);
     const targetKw = brief.targetKeyword.trim();
     const secKws = (brief.secondaryKeywords || []).filter(Boolean);
     const _now = new Date();
@@ -85,57 +86,59 @@ Deno.serve(async (req) => {
 # DEEP-RESEARCH MODE (RESEARCH-FIRST)
 - Before writing each section, mentally verify facts against the most authoritative public sources (NIRF, official school placement reports, exam-conducting body notifications, AICTE/NAAC). Every paragraph must add concrete data, named recruiters/colleges, real numbers or specific dates — never shallow filler.`;
 
-    const userPrompt = `Write a complete, ready-to-publish SEO blog article.
+    const userPrompt = `Write a complete, ready-to-publish, advanced SEO blog article that can rank on page 1 of Google for "${targetKw}" in India.
 
 # BRIEF
 - Working title: ${brief.title}
 - Primary target keyword: "${targetKw}"
-- Secondary keywords: ${secKws.length ? secKws.map(k => `"${k}"`).join(", ") : "(none provided)"}
+- Secondary keywords: ${secKws.length ? secKws.map(k => `"${k}"`).join(", ") : "(derive 6-10 high-intent secondary + LSI keywords yourself based on the topic and Indian MBA search intent)"}
 - Category: ${brief.category || "news"}
 - Date context: ${dateCtx}
 
-# HARD RULES
-1. Word count: ${wmin}-${wmax} words. Stay strictly inside this range.
-2. Keyword density: aim for the primary keyword "${targetKw}" to appear ~${targetOccurrences} times (~${density}% density) NATURALLY across H2s, intro, body and conclusion. Use exact match plus close variants. Never keyword-stuff into a single paragraph.
-3. **MANDATORY OPENING — TL;DR SUMMARY**: The very first element of "intro" MUST be a <p> block that starts with <strong>Quick Summary:</strong> followed by a tight 55-65 word overview of the entire article. This summary must give the reader the core answer/takeaway upfront — NOT tease it.
-4. **NEVER START WITH A QUESTION**. The first sentence after the Quick Summary, every <h2>, and every paragraph opener must be a DECLARATIVE statement that gives the student an answer or a clear fact. Bad: "Why should you prepare for CAT without coaching?" Good: "Self-study works for CAT when you have discipline, the right material, and a 6-month runway." Headings can be topic phrases (e.g. "How to Prepare for CAT Without Coaching") but never end with a question mark — except inside the final FAQ section.
-5. **HUMANIZED LANGUAGE**: Write at roughly an 8th-grade reading level. Use contractions, real examples, second person ("you"), and concrete numbers. Vary sentence length. NO phrases like "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving". NO em-dash overuse.
-6. Use short paragraphs (2-4 sentences), bullet/numbered lists, and at least one HTML table where it adds value (comparison, fees, dates, cutoffs, etc.).
-7. **STRUCTURE** (in this exact order inside intro + content):
-   a. Quick Summary paragraph (rule 3)
-   b. 1-2 paragraph hook that states the problem and the answer
-   c. 6-10 <h2> sections with <h3> subsections where helpful
-   d. A "Key Takeaways" <h2> with 4-6 bullet points
-   e. A final <h2>Frequently Asked Questions</h2> with 4-6 Q&A (each Q in <h3>, A in <p>)
-   f. A short CTA paragraph at the very end
-8. **ON-PAGE SEO MUST-HAVES (build these into the HTML naturally)**:
-   - Primary keyword in the first 100 words AND in at least 2 <h2> headings.
-   - Secondary keywords sprinkled in <h2>/<h3>/<p> where they fit naturally.
-   - At least 3-5 internal-link-style anchors using relative URLs to relevant site sections, e.g. <a href="/colleges">top MBA colleges</a>, <a href="/coaching">CAT coaching</a>, <a href="/exams/cat">CAT exam</a>, <a href="/profile-analyzer">AI Profile Analyzer</a>, <a href="/mba-roi-calculator">MBA ROI Calculator</a>, <a href="/college-shortlister">College Shortlister</a>. Choose the ones that genuinely fit the topic.
-   - At least 1-2 outward references to authoritative bodies by name in plain text (e.g. "as per IIM Bangalore's 2025 placement report") — do NOT fabricate URLs.
-   - Use <strong> on 6-12 high-value phrases (keywords + key facts). Use <em> sparingly.
-   - Add descriptive image-alt-friendly phrasing inside paragraphs near where images would go (e.g. "the CAT 2025 sectional cutoff chart below…") even though we don't insert <img> tags.
-   - Use semantic lists (<ul>/<ol>) for any enumeration of 3+ items.
-   - Include a comparison or data <table> at least once.
-9. **FORMATTING POLISH**: Bold the first 2-4 words of important paragraphs when it improves scannability. Keep <h2> titles 4-9 words, benefit-driven, not clickbait. No ALL-CAPS shouting.
-10. Include real, current Indian MBA ecosystem context (CAT, XAT, NMAT, SNAP, IIMs, top private B-schools, fee ranges in lakhs, recent 2025-2026 dates wherever applicable).
-11. Do NOT invent numbers that look implausible. If unsure, use ranges (e.g., "INR 18-25 lakhs").
-12. Do NOT include any <h1> — the title is rendered separately.
+# HARD RULES — WORD COUNT IS NON-NEGOTIABLE
+1. **WORD COUNT: ${wmin}-${wmax} words minimum** in (intro + content) plain text. Articles below ${wmin} words will be REJECTED. Count as you write — if you are approaching the limit and still have FAQ/CTA pending, expand body sections with more depth, examples, mini-tables and lists rather than truncating. Never stop early.
+2. **Keyword density**: primary keyword "${targetKw}" must appear ~${targetOccurrences} times (~${density}% — Google-safe natural range). Use exact match in title, H1, first 100 words, at least 2 H2s, meta title, meta description, URL slug, and conclusion. Use semantic variants (LSI keywords) liberally — Google's NLP rewards topical depth, not repetition.
+3. **MANDATORY OPENING — TL;DR SUMMARY**: First element of "intro" MUST be <p><strong>Quick Summary:</strong> ...</p> giving a 55-75 word direct answer to the search intent. Featured-snippet optimized.
+4. **NEVER START WITH A QUESTION**. Every <h2>, paragraph opener, and the first sentence after Quick Summary MUST be declarative. Headings can be topic phrases ("How to Crack CAT in 6 Months") but never end with "?" — except inside the FAQ section.
+5. **HUMANIZED LANGUAGE — 8th grade reading level**. Use contractions, "you", real Indian examples, concrete numbers. Vary sentence length. BANNED phrases: "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving", "in today's fast-paced world", "it's worth noting", "look no further". NO em-dash overuse.
+6. Short paragraphs (2-4 sentences). Use bullet/numbered lists. **At least 2 HTML <table> blocks** (e.g. fees comparison + cutoff/placement comparison) with real ${currentYear} data and 4+ rows each.
+7. **STRUCTURE — REQUIRED ORDER**:
+   a. Quick Summary <p> (rule 3)
+   b. 2-3 paragraph hook stating the problem + the answer + who this guide is for
+   c. **8-12 <h2> sections** (more H2s = better topical coverage), each with 200-350 words and 1-2 <h3> subsections where useful
+   d. <h2>Key Takeaways</h2> with 5-7 bullets, each starting with <strong>Bold lead phrase:</strong>
+   e. <h2>Frequently Asked Questions</h2> with **6-10 Q&A** (each Q in <h3> ending with "?", A in <p>, 40-80 words each — long enough for FAQ rich-snippet eligibility)
+   f. Final CTA paragraph with one or two internal links
+8. **ADVANCED ON-PAGE SEO (build into HTML naturally)**:
+   - Primary keyword in: first 100 words, ≥3 <h2> headings, last paragraph, meta title, meta description, slug, excerpt.
+   - **Semantic SEO / Topical depth**: cover the topic's full entity graph — related exams, programs, colleges, fee bands, eligibility, timeline, prep strategy, recruiters, ROI, alternatives, common mistakes. Google rewards comprehensive coverage.
+   - **LSI / NLP keywords**: weave in 15-25 semantically related terms (e.g. for "MBA in India": CAT percentile, NIRF ranking, IIM placements, tier-1 B-school, return on investment, GD-PI-WAT, work experience, GMAT, executive MBA, specialization).
+   - **People Also Ask coverage**: the FAQ section MUST answer the actual queries users type into Google for this topic. Think about what a CAT aspirant, MBA candidate, or working professional would search.
+   - **Internal links**: 5-8 contextual <a href="..."> using these real site URLs where relevant: <a href="/colleges">top MBA colleges</a>, <a href="/coaching">CAT coaching institutes</a>, <a href="/exams/cat">CAT exam</a>, <a href="/exams/xat">XAT exam</a>, <a href="/exams/nmat">NMAT</a>, <a href="/exams/snap">SNAP</a>, <a href="/profile-analyzer">free Profile Analyzer</a>, <a href="/mba-roi-calculator">MBA ROI Calculator</a>, <a href="/college-shortlister">College Shortlister</a>, <a href="/mba-compass">MBA Compass courses</a>, <a href="/mocks">free CAT mocks</a>, <a href="/blog">MBA blog</a>. Use descriptive, keyword-rich anchor text — never "click here".
+   - **External authority mentions** (1-3 in plain text only, no fabricated URLs): NIRF, AICTE, IIM Bangalore Placement Report ${currentYear - 1}-${String(currentYear).slice(-2)}, CAT ${currentYear} notification, etc.
+   - **Featured snippet bait**: include at least one direct-answer <p> right under an <h2>, plus one numbered <ol> "step-by-step" list, plus one comparison <table>.
+   - **E-E-A-T signals**: cite specific sources via [src:Source Year] markers, name real recruiters (McKinsey, BCG, Bain, Amazon, Microsoft, Goldman Sachs, ICICI, HUL, Accenture, Deloitte, Flipkart), name real B-schools (IIM-A/B/C/L/I/K, XLRI, FMS, MDI, SPJIMR, ISB, NMIMS, IIFT, JBIMS, IMI, IMT, GLIM, Welingkar).
+   - <strong> on 8-15 high-value phrases (keywords + key facts). <em> sparingly.
+   - Semantic <ul>/<ol> for any enumeration of 3+ items.
+9. **FORMATTING POLISH**: Bold the lead 2-4 words of important paragraphs for scannability. <h2> 4-9 words, benefit-driven. No ALL-CAPS.
+10. Real, current Indian MBA ecosystem data: CAT ${currentYear} dates, NIRF ${currentYear} rankings, ${currentYear - 1}-${String(currentYear).slice(-2)} placement averages (IIM-A ~34 LPA, IIM-B ~35 LPA, IIM-C ~36 LPA, ISB ~35 LPA, XLRI ~32 LPA, FMS ~34 LPA, SPJIMR ~33 LPA, MDI ~26 LPA, NMIMS ~26 LPA), fee bands in lakhs.
+11. NEVER fabricate implausible numbers. Use realistic ${currentYear - 1}-${currentYear} ranges.
+12. NO <h1> — title is rendered separately.
 
-# OUTPUT FORMAT (return JSON via the tool call below)
-- title: refined version of the working title (<= 70 chars). MUST NOT end with "?".
-- slug: URL slug, lowercase-hyphenated (<= 80 chars)
-- metaTitle: <= 60 chars, include primary keyword, no question mark at the end
-- metaDescription: 140-160 chars, include primary keyword, action-oriented, declarative (not a question)
-- excerpt: 1-2 sentences, plain text, ~160-220 chars, declarative
-- intro: opening HTML — MUST begin with the <p><strong>Quick Summary:</strong> ... </p> block, then 1-2 hook paragraphs. No headings inside intro.
-- content: the FULL article body as HTML (everything AFTER the intro, no <h1>), including the Key Takeaways section, FAQ section and final CTA paragraph.
-- h1Tag: the on-page H1 (usually same as title, declarative, no "?")
-- keywords: array of 8-12 keywords (mix of short and long tail). MUST include the primary keyword as the first item.
-- primaryKeyword: the primary target keyword (echo "${targetKw}")
-- wordCount: integer, your accurate count of words in (intro + content) plain text
-- keywordOccurrences: integer, how many times "${targetKw}" appears in (intro + content)
-- author: a sensible byline like "MBA Compass Editorial" or a topic-appropriate author name`;
+# OUTPUT FORMAT (return JSON via the tool call)
+- title: refined title (≤ 65 chars), MUST contain primary keyword + a power word (best, complete, ${currentYear}, guide, ultimate). MUST NOT end with "?".
+- slug: URL slug, lowercase-hyphenated (≤ 70 chars), MUST contain primary keyword.
+- metaTitle: ≤ 60 chars, primary keyword near the front, ends with "| MBA Compass" if it fits, no "?".
+- metaDescription: 145-160 chars, primary keyword in first 120 chars, action verb + benefit + year + CTA, declarative.
+- excerpt: 1-2 sentences, plain text, 160-220 chars, declarative, contains primary keyword.
+- intro: opening HTML — Quick Summary <p> first, then 2-3 hook paragraphs. No headings inside intro.
+- content: FULL article body as HTML (everything AFTER the intro, no <h1>), including 8-12 H2 sections, Key Takeaways, FAQ section, final CTA.
+- h1Tag: on-page H1 (declarative, ≤ 70 chars, contains primary keyword, no "?").
+- keywords: array of **12-18 keywords** — MUST include primary keyword first, then 5-7 short-tail (2-3 words), then 6-10 long-tail (4+ words, question-style or intent-driven).
+- primaryKeyword: echo "${targetKw}".
+- wordCount: integer — your accurate count of (intro + content) plain text words. MUST be ≥ ${wmin}.
+- keywordOccurrences: integer — exact-match count of "${targetKw}" in (intro + content).
+- author: byline like "MBA Compass Editorial".`;
 
     const tool = {
       type: "function",
@@ -170,10 +173,10 @@ Deno.serve(async (req) => {
     };
 
     const aiRes = await callAIGateway({
-        model: "openai/gpt-5-mini",
-        // COST OPT: Cap to 6K tokens — a full blog article (~1500 words) fits in
-        // ~4K tokens; without the cap Gemini sometimes returns 8K+ of filler.
-        max_tokens: 6000,
+        model: "openai/gpt-5",
+        // 2200-2800 word article needs ~4-5K output tokens. With gpt-5 reasoning
+        // overhead, give a generous 16K budget so the article never truncates.
+        max_tokens: 16000,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -258,6 +261,48 @@ Deno.serve(async (req) => {
     const actualOccurrences = (plain.match(re) || []).length;
     const actualDensity = actualWords ? +((actualOccurrences * targetKw.split(/\s+/).length) / actualWords * 100).toFixed(2) : 0;
 
+    // ── EXPANSION PASS: if the article came back short, ask the model to expand it
+    //    by adding 2-3 deeper H2 sections + richer FAQ until we cross wmin words.
+    if (actualWords < wmin && actualWords > 200) {
+      const wordsNeeded = wmin - actualWords + 200;
+      console.log(`Expansion pass: ${actualWords} < ${wmin}, asking for +${wordsNeeded} words`);
+      try {
+        const expandRes = await callAIGateway({
+          model: "openai/gpt-5",
+          max_tokens: 12000,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `The previous draft was only ${actualWords} words but the brief required ${wmin}-${wmax}. Expand the article by adding ${wordsNeeded}+ words of new substance: 2-3 NEW <h2> sections covering angles not yet discussed (e.g. common mistakes, real student stories, year-on-year trends, ROI math, alternatives, expert tips, region-wise breakdown), plus 2-3 additional FAQ Q&A. Return the COMPLETE merged article (intro + content) re-rendered with the new sections inserted in logical places — do not just append. Maintain all hard rules from the original brief: ${targetKw}, ${density}% density, declarative headings, real ${currentYear} data, no banned phrases.\n\nCURRENT INTRO:\n${article.intro}\n\nCURRENT CONTENT:\n${article.content}` },
+          ],
+          tools: [tool],
+          tool_choice: { type: "function", function: { name: "publish_blog_article" } },
+        }, { feature: "ai-blog-writer-expand" });
+        if (expandRes.ok) {
+          const ej = await expandRes.json();
+          const ea = ej?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+          if (ea) {
+            const expanded = JSON.parse(ea);
+            for (const k of ["intro", "content"]) {
+              if (typeof expanded[k] === "string") expanded[k] = stripEscapeArtifacts(expanded[k]);
+            }
+            const expPlain = `${expanded.intro || ""} ${expanded.content || ""}`.replace(/<[^>]*>/g, " ");
+            const expWords = expPlain.split(/\s+/).filter(Boolean).length;
+            if (expWords > actualWords) {
+              article = { ...article, ...expanded };
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Expansion pass failed (non-fatal):", e);
+      }
+    }
+
+    // Recompute final stats after possible expansion
+    const finalPlain = `${article.intro || ""} ${article.content || ""}`.replace(/<[^>]*>/g, " ");
+    const finalWords = finalPlain.split(/\s+/).filter(Boolean).length;
+    const finalOccurrences = (finalPlain.match(re) || []).length;
+    const finalDensity = finalWords ? +((finalOccurrences * targetKw.split(/\s+/).length) / finalWords * 100).toFixed(2) : 0;
+
     // ── Auto-extract FAQs from the FAQ section so the article snapshot can carry FAQ schema ──
     const extractFaqs = (html: string) => {
       if (!html) return [];
@@ -293,11 +338,13 @@ Deno.serve(async (req) => {
         faqs: extractedFaqs,
         stats: {
           targetWordsRange: [wmin, wmax],
-          actualWords,
+          actualWords: finalWords,
           targetDensityPct: density,
-          actualDensityPct: actualDensity,
-          actualOccurrences,
+          actualDensityPct: finalDensity,
+          actualOccurrences: finalOccurrences,
           targetOccurrences,
+          expanded: finalWords > actualWords,
+          firstPassWords: actualWords,
         },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
