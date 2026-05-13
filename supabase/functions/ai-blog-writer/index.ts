@@ -39,9 +39,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    const wmin = brief.wordCountMin ?? 2000;
-    const wmax = brief.wordCountMax ?? 2500;
-    const density = brief.keywordDensityPct ?? 10;
+    const wmin = brief.wordCountMin ?? 2200;
+    const wmax = brief.wordCountMax ?? 2800;
+    // 10% literal density is keyword-stuffing and hurts SEO. Cap at 2.5% (Google-safe natural range).
+    const density = Math.min(brief.keywordDensityPct ?? 2, 2.5);
     const targetKw = brief.targetKeyword.trim();
     const secKws = (brief.secondaryKeywords || []).filter(Boolean);
     const _now = new Date();
