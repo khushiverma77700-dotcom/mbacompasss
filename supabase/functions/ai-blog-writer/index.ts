@@ -173,10 +173,10 @@ Deno.serve(async (req) => {
     };
 
     const aiRes = await callAIGateway({
-        model: "openai/gpt-5-mini",
-        // COST OPT: Cap to 6K tokens — a full blog article (~1500 words) fits in
-        // ~4K tokens; without the cap Gemini sometimes returns 8K+ of filler.
-        max_tokens: 6000,
+        model: "openai/gpt-5",
+        // 2200-2800 word article needs ~4-5K output tokens. With gpt-5 reasoning
+        // overhead, give a generous 16K budget so the article never truncates.
+        max_tokens: 16000,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
