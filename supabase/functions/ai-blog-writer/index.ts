@@ -338,11 +338,13 @@ Deno.serve(async (req) => {
         faqs: extractedFaqs,
         stats: {
           targetWordsRange: [wmin, wmax],
-          actualWords,
+          actualWords: finalWords,
           targetDensityPct: density,
-          actualDensityPct: actualDensity,
-          actualOccurrences,
+          actualDensityPct: finalDensity,
+          actualOccurrences: finalOccurrences,
           targetOccurrences,
+          expanded: finalWords > actualWords,
+          firstPassWords: actualWords,
         },
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
