@@ -261,6 +261,48 @@ Deno.serve(async (req) => {
     const actualOccurrences = (plain.match(re) || []).length;
     const actualDensity = actualWords ? +((actualOccurrences * targetKw.split(/\s+/).length) / actualWords * 100).toFixed(2) : 0;
 
+    // ── EXPANSION PASS: if the article came back short, ask the model to expand it
+    //    by adding 2-3 deeper H2 sections + richer FAQ until we cross wmin words.
+    if (actualWords < wmin && actualWords > 200) {
+      const wordsNeeded = wmin - actualWords + 200;
+      console.log(`Expansion pass: ${actualWords} < ${wmin}, asking for +${wordsNeeded} words`);
+      try {
+        const expandRes = await callAIGateway({
+          model: "openai/gpt-5",
+          max_tokens: 12000,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: `The previous draft was only ${actualWords} words but the brief required ${wmin}-${wmax}. Expand the article by adding ${wordsNeeded}+ words of new substance: 2-3 NEW <h2> sections covering angles not yet discussed (e.g. common mistakes, real student stories, year-on-year trends, ROI math, alternatives, expert tips, region-wise breakdown), plus 2-3 additional FAQ Q&A. Return the COMPLETE merged article (intro + content) re-rendered with the new sections inserted in logical places — do not just append. Maintain all hard rules from the original brief: ${targetKw}, ${density}% density, declarative headings, real ${currentYear} data, no banned phrases.\n\nCURRENT INTRO:\n${article.intro}\n\nCURRENT CONTENT:\n${article.content}` },
+          ],
+          tools: [tool],
+          tool_choice: { type: "function", function: { name: "publish_blog_article" } },
+        }, { feature: "ai-blog-writer-expand" });
+        if (expandRes.ok) {
+          const ej = await expandRes.json();
+          const ea = ej?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+          if (ea) {
+            const expanded = JSON.parse(ea);
+            for (const k of ["intro", "content"]) {
+              if (typeof expanded[k] === "string") expanded[k] = stripEscapeArtifacts(expanded[k]);
+            }
+            const expPlain = `${expanded.intro || ""} ${expanded.content || ""}`.replace(/<[^>]*>/g, " ");
+            const expWords = expPlain.split(/\s+/).filter(Boolean).length;
+            if (expWords > actualWords) {
+              article = { ...article, ...expanded };
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Expansion pass failed (non-fatal):", e);
+      }
+    }
+
+    // Recompute final stats after possible expansion
+    const finalPlain = `${article.intro || ""} ${article.content || ""}`.replace(/<[^>]*>/g, " ");
+    const finalWords = finalPlain.split(/\s+/).filter(Boolean).length;
+    const finalOccurrences = (finalPlain.match(re) || []).length;
+    const finalDensity = finalWords ? +((finalOccurrences * targetKw.split(/\s+/).length) / finalWords * 100).toFixed(2) : 0;
+
     // ── Auto-extract FAQs from the FAQ section so the article snapshot can carry FAQ schema ──
     const extractFaqs = (html: string) => {
       if (!html) return [];
