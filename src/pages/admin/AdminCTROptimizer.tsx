@@ -63,7 +63,43 @@ const CtrDashboardTab = () => {
   const [filters, setFilters] = useState({ days: 28, minImpressions: 100, maxCtr: 2 });
   const [state, setState] = useState<Record<string, RowState>>({});
   const [bulkRunning, setBulkRunning] = useState(false);
+  const [autoFix, setAutoFix] = useState<{ running: boolean; total: number; done: number; current: string; log: { url: string; status: "ok" | "err"; msg: string }[] }>({
+    running: false, total: 0, done: 0, current: "", log: [],
+  });
+  const [autoFixOpts, setAutoFixOpts] = useState({ count: 10, meta: true, faqs: true, fresh: true });
   const { toast } = useToast();
+
+  const runAutoFixAll = async () => {
+    if (rows.length === 0) return;
+    const targets = rows.slice(0, autoFixOpts.count).map((r) => r.keys[0]);
+    setAutoFix({ running: true, total: targets.length, done: 0, current: "", log: [] });
+    for (const url of targets) {
+      setAutoFix((p) => ({ ...p, current: url }));
+      try {
+        const out = await callOptimizer("auto-fix-one", {
+          page_url: url,
+          rewriteMeta: autoFixOpts.meta,
+          generateFaqs: autoFixOpts.faqs,
+          bumpFreshness: autoFixOpts.fresh,
+        });
+        const parts: string[] = [];
+        if (out.applied?.meta) parts.push("meta");
+        if (out.applied?.faqs) parts.push(`${out.applied.faqs} FAQs`);
+        if (out.applied?.freshness) parts.push("freshness");
+        setAutoFix((p) => ({
+          ...p, done: p.done + 1,
+          log: [...p.log, { url, status: "ok", msg: parts.join(" + ") || "no changes" }],
+        }));
+      } catch (e: any) {
+        setAutoFix((p) => ({
+          ...p, done: p.done + 1,
+          log: [...p.log, { url, status: "err", msg: e?.message || String(e) }],
+        }));
+      }
+    }
+    setAutoFix((p) => ({ ...p, running: false, current: "" }));
+    toast({ title: "Auto-Fix complete", description: `Processed ${targets.length} pages.` });
+  };
 
   const updateRow = (url: string, patch: Partial<RowState>) =>
     setState((prev) => ({ ...prev, [url]: { ...emptyRowState(), ...prev[url], ...patch } }));
