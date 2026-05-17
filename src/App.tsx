@@ -124,6 +124,7 @@ const MBARoiCalculatorPage = lazyWithPreload(() => import("./pages/MBARoiCalcula
 const ForgotPasswordPage = lazyWithPreload(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazyWithPreload(() => import("./pages/ResetPasswordPage"));
 const AdminROIAnalyses = lazyWithPreload(() => import("./pages/admin/AdminROIAnalyses"));
+const AdminCTROptimizer = lazyWithPreload(() => import("./pages/admin/AdminCTROptimizer"));
 const ListYourBusinessPage = lazyWithPreload(() => import("./pages/ListYourBusinessPage"));
 const ListingPocPage = lazyWithPreload(() => import("./pages/ListingPocPage"));
 const ListingFormPage = lazyWithPreload(() => import("./pages/ListingFormPage"));
