@@ -194,11 +194,13 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
       },
     };
 
+    // Scale tokens with target word count: ~2 tokens/word for output + generous reasoning overhead.
+    // Cap at 64K so very long articles (10K+ words) don't truncate.
+    const dynamicMaxTokens = Math.min(64000, Math.max(16000, Math.round(wmax * 4) + 4000));
+
     const aiRes = await callAIGateway({
         model: "openai/gpt-5",
-        // 2200-2800 word article needs ~4-5K output tokens. With gpt-5 reasoning
-        // overhead, give a generous 16K budget so the article never truncates.
-        max_tokens: 16000,
+        max_tokens: dynamicMaxTokens,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
