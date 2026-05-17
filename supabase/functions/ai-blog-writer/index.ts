@@ -39,6 +39,7 @@ Deno.serve(async (req) => {
       );
     }
 
+    // NO upper cap on word count — long-form (10K+) is fully supported via expansion loop.
     const wmin = Math.max(300, brief.wordCountMin ?? 2500);
     const wmax = Math.max(wmin, brief.wordCountMax ?? 3500);
     // 10% literal density is keyword-stuffing and hurts SEO. Cap at 3% (Google-safe natural range).
@@ -54,8 +55,8 @@ Deno.serve(async (req) => {
     const targetWords = Math.round((wmin + wmax) / 2);
     const targetOccurrences = Math.round((targetWords * density) / 100);
     // Dynamic structural targets — scale with article length
-    const targetH2 = Math.max(8, Math.min(20, Math.round(targetWords / 280)));
-    const minWordsPerSection = 250;
+    const targetH2 = Math.max(10, Math.min(30, Math.round(targetWords / 260)));
+    const minWordsPerSection = 300;
 
     const today = new Date();
     const todayIso = today.toISOString().slice(0, 10);
