@@ -67,9 +67,9 @@ const AdminWriteBlog = () => {
     return `Use ONLY the most recent verified data: ${y}-${y + 1} admission cycle, ${y - 1}-${y} placement reports. All dates, exam cycles, fees, cutoffs and statistics MUST reflect the latest published year. Do NOT use outdated 2020-2023 figures unless explicitly historical context.`;
   };
   const [contentDateContext, setContentDateContext] = useState<string>(buildLatestDateContext());
-  const [wordMin, setWordMin] = useState(2000);
-  const [wordMax, setWordMax] = useState(2500);
-  const [densityPct, setDensityPct] = useState(10);
+  const [wordMin, setWordMin] = useState(2500);
+  const [wordMax, setWordMax] = useState(3500);
+  const [densityPct, setDensityPct] = useState(2);
 
   const [generating, setGenerating] = useState(false);
   const [stats, setStats] = useState<any>(null);
