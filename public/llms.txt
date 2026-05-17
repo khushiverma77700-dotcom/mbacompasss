@@ -1,0 +1,29 @@
+# MBA Compass
+
+> India's MBA discovery platform — compare top B-schools and coaching institutes, prepare with AI-powered mock tests, and get personalized admissions guidance.
+
+MBA Compass helps MBA aspirants research colleges, find the right coaching, take CAT/NMAT/XAT/SNAP/IIFT/CMAT/MAT mocks, and plan their journey with AI tools and expert content.
+
+## Pages
+
+- [Home](/): Discover MBA colleges, coaching institutes, exams, and tools.
+- [Colleges](/colleges): Browse and compare MBA colleges across India.
+- [Coaching Institutes](/coaching-institutes): Find top CAT/MBA coaching institutes.
+- [Exams](/exams): MBA entrance exams with dates, patterns, and prep guides.
+- [Mocks](/mocks): Full-length mock tests for CAT and other MBA exams.
+- [Courses](/courses): Paid mock bundles and prep courses.
+- [MBA Compass](/mba-compass): Curated paid courses catalog.
+- [Blog](/blog): Articles on MBA admissions, prep strategy, and B-school insights.
+- [Profile Analyzer](/profile-analyzer): AI-driven profile evaluation for MBA aspirants.
+- [College Shortlister](/college-shortlister): Personalized college shortlisting tool.
+- [AI Coaching Finder](/ai-coaching-finder): Match with the best coaching for your needs.
+- [MBA ROI Calculator](/mba-roi-calculator): Estimate return on investment for MBA programs.
+- [Compare](/compare): Side-by-side comparison of colleges or coaching.
+
+## Optional
+
+- [About](/about): About MBA Compass.
+- [Contact](/contact): Get in touch.
+- [Business Inquiry](/business-inquiry): Partnerships and listings.
+- [Privacy Policy](/privacy-policy): Privacy practices.
+- [Terms](/terms): Terms of use.
