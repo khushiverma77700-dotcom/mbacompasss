@@ -729,6 +729,7 @@ const App = () => (
               <Route path="hyperlink-update" element={<LazyPage><AdminHyperlinkUpdate /></LazyPage>} />
               <Route path="bulk-ai-edit" element={<LazyPage><AdminBulkAIEdit /></LazyPage>} />
               <Route path="iim-waitlist" element={<LazyPage><AdminIIMWaitlist /></LazyPage>} />
+              <Route path="ctr-optimizer" element={<LazyPage><AdminCTROptimizer /></LazyPage>} />
             </Route>
 
             {/* Routes */}
