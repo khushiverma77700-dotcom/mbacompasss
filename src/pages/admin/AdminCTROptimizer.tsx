@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Sparkles, RefreshCw, Loader2, Check, Search, Link2,
-  Eye, MessageCircle, TrendingUp, Calendar,
+  Eye, MessageCircle, TrendingUp, Calendar, Zap, ChevronDown, ChevronRight, Wand2,
 } from "lucide-react";
 
 type GscRow = {
