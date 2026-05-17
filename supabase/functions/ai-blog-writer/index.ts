@@ -308,9 +308,9 @@ NEVER reuse the same citation set across different blog topics.
     const actualOccurrences = (plain.match(re) || []).length;
     const actualDensity = actualWords ? +((actualOccurrences * targetKw.split(/\s+/).length) / actualWords * 100).toFixed(2) : 0;
 
-    // ── EXPANSION LOOP: up to 3 passes to reach the word target for long-form articles.
+    // ── EXPANSION LOOP: up to 5 passes to reach the word target for long-form articles (10K+ supported).
     let currentWords = actualWords;
-    for (let pass = 1; pass <= 3 && currentWords < wmin && currentWords > 200; pass++) {
+    for (let pass = 1; pass <= 5 && currentWords < wmin && currentWords > 200; pass++) {
       const wordsNeeded = wmin - currentWords + 300;
       console.log(`Expansion pass ${pass}: ${currentWords} < ${wmin}, asking for +${wordsNeeded} words`);
       try {
