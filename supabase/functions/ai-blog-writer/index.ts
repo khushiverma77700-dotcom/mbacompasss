@@ -39,10 +39,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    const wmin = brief.wordCountMin ?? 2200;
-    const wmax = brief.wordCountMax ?? 2800;
-    // 10% literal density is keyword-stuffing and hurts SEO. Cap at 2.5% (Google-safe natural range).
-    const density = Math.min(brief.keywordDensityPct ?? 2, 2.5);
+    const wmin = Math.max(300, brief.wordCountMin ?? 2500);
+    const wmax = Math.max(wmin, brief.wordCountMax ?? 3500);
+    // 10% literal density is keyword-stuffing and hurts SEO. Cap at 3% (Google-safe natural range).
+    const density = Math.min(brief.keywordDensityPct ?? 2, 3);
     const targetKw = brief.targetKeyword.trim();
     const secKws = (brief.secondaryKeywords || []).filter(Boolean);
     const _now = new Date();
@@ -50,10 +50,12 @@ Deno.serve(async (req) => {
     const dateCtx = brief.contentDateContext?.trim() ||
       `Use only the most recent verified data (${_yr}-${_yr + 1} admission cycle, ${_yr - 1}-${_yr} placement reports). All dates, exam cycles, fees, cutoffs and statistics MUST reflect the latest available year. Do NOT use outdated 2020-2023 figures unless explicitly historical context. Today is ${_now.toISOString().slice(0, 10)}.`;
 
-    // Approx target keyword occurrences. NOTE: 10% literal density is unnatural and Google-flag-worthy.
-    // The prompt asks the model to AIM for the requested density while keeping prose natural.
+    // Approx target keyword occurrences.
     const targetWords = Math.round((wmin + wmax) / 2);
     const targetOccurrences = Math.round((targetWords * density) / 100);
+    // Dynamic structural targets — scale with article length
+    const targetH2 = Math.max(8, Math.min(20, Math.round(targetWords / 280)));
+    const minWordsPerSection = 250;
 
     const today = new Date();
     const todayIso = today.toISOString().slice(0, 10);
