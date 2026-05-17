@@ -294,6 +294,7 @@ export type Database = {
           content_score: number | null
           created_at: string
           excerpt: string | null
+          faqs: Json | null
           featured: boolean | null
           funnel_stage: string | null
           h1_tag: string | null
@@ -325,6 +326,7 @@ export type Database = {
           content_score?: number | null
           created_at?: string
           excerpt?: string | null
+          faqs?: Json | null
           featured?: boolean | null
           funnel_stage?: string | null
           h1_tag?: string | null
@@ -356,6 +358,7 @@ export type Database = {
           content_score?: number | null
           created_at?: string
           excerpt?: string | null
+          faqs?: Json | null
           featured?: boolean | null
           funnel_stage?: string | null
           h1_tag?: string | null
@@ -966,6 +969,7 @@ export type Database = {
           created_at: string
           description: string | null
           exam_type: string | null
+          faqs: Json | null
           icon: string | null
           id: string
           name: string
@@ -976,6 +980,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           exam_type?: string | null
+          faqs?: Json | null
           icon?: string | null
           id?: string
           name: string
@@ -986,6 +991,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           exam_type?: string | null
+          faqs?: Json | null
           icon?: string | null
           id?: string
           name?: string
@@ -1004,6 +1010,7 @@ export type Database = {
           created_at: string
           detailed_content: string | null
           faq_content: string | null
+          faqs: Json | null
           funnel_stage: string | null
           h1_tag: string | null
           hero_image_url: string | null
@@ -1030,6 +1037,7 @@ export type Database = {
           created_at?: string
           detailed_content?: string | null
           faq_content?: string | null
+          faqs?: Json | null
           funnel_stage?: string | null
           h1_tag?: string | null
           hero_image_url?: string | null
@@ -1056,6 +1064,7 @@ export type Database = {
           created_at?: string
           detailed_content?: string | null
           faq_content?: string | null
+          faqs?: Json | null
           funnel_stage?: string | null
           h1_tag?: string | null
           hero_image_url?: string | null
@@ -1275,6 +1284,7 @@ export type Database = {
           description: string | null
           established: number | null
           exams_accepted: string[] | null
+          faqs: Json | null
           fees: string | null
           fees_lakhs: number | null
           funnel_stage: string | null
@@ -1321,6 +1331,7 @@ export type Database = {
           description?: string | null
           established?: number | null
           exams_accepted?: string[] | null
+          faqs?: Json | null
           fees?: string | null
           fees_lakhs?: number | null
           funnel_stage?: string | null
@@ -1367,6 +1378,7 @@ export type Database = {
           description?: string | null
           established?: number | null
           exams_accepted?: string[] | null
+          faqs?: Json | null
           fees?: string | null
           fees_lakhs?: number | null
           funnel_stage?: string | null
@@ -1908,6 +1920,54 @@ export type Database = {
         }
         Relationships: []
       }
+      ctr_optimizations: {
+        Row: {
+          action: string
+          applied_at: string
+          applied_by: string | null
+          id: string
+          new_description: string | null
+          new_title: string | null
+          old_description: string | null
+          old_title: string | null
+          page_type: string | null
+          page_url: string
+          payload: Json | null
+          slug: string | null
+          table_name: string | null
+        }
+        Insert: {
+          action: string
+          applied_at?: string
+          applied_by?: string | null
+          id?: string
+          new_description?: string | null
+          new_title?: string | null
+          old_description?: string | null
+          old_title?: string | null
+          page_type?: string | null
+          page_url: string
+          payload?: Json | null
+          slug?: string | null
+          table_name?: string | null
+        }
+        Update: {
+          action?: string
+          applied_at?: string
+          applied_by?: string | null
+          id?: string
+          new_description?: string | null
+          new_title?: string | null
+          old_description?: string | null
+          old_title?: string | null
+          page_type?: string | null
+          page_url?: string
+          payload?: Json | null
+          slug?: string | null
+          table_name?: string | null
+        }
+        Relationships: []
+      }
       daily_test_assignments: {
         Row: {
           assigned_date: string
@@ -1960,6 +2020,7 @@ export type Database = {
           description: string | null
           eligibility: string | null
           exam_date: string | null
+          faqs: Json | null
           frequency: string | null
           full_name: string | null
           funnel_stage: string | null
@@ -1987,6 +2048,7 @@ export type Database = {
           description?: string | null
           eligibility?: string | null
           exam_date?: string | null
+          faqs?: Json | null
           frequency?: string | null
           full_name?: string | null
           funnel_stage?: string | null
@@ -2014,6 +2076,7 @@ export type Database = {
           description?: string | null
           eligibility?: string | null
           exam_date?: string | null
+          faqs?: Json | null
           frequency?: string | null
           full_name?: string | null
           funnel_stage?: string | null
@@ -2611,6 +2674,7 @@ export type Database = {
           description: string | null
           discount: string | null
           email: string | null
+          faqs: Json | null
           featured: boolean | null
           features: string[] | null
           fees_lakhs: number | null
@@ -2657,6 +2721,7 @@ export type Database = {
           description?: string | null
           discount?: string | null
           email?: string | null
+          faqs?: Json | null
           featured?: boolean | null
           features?: string[] | null
           fees_lakhs?: number | null
@@ -2703,6 +2768,7 @@ export type Database = {
           description?: string | null
           discount?: string | null
           email?: string | null
+          faqs?: Json | null
           featured?: boolean | null
           features?: string[] | null
           fees_lakhs?: number | null
