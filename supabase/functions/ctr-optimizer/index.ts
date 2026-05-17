@@ -309,6 +309,96 @@ Deno.serve(async (req) => {
       return json({ rows });
     }
 
+    if (action === "fetch-page-meta") {
+      const r = resolveTableAndSlug(body.page_url);
+      if (!r) return json({ error: "Cannot map URL to a table" }, 400);
+      const { data, error } = await supabase
+        .from(r.table)
+        .select("meta_title,meta_description,name,title,faqs,updated_at")
+        .eq("slug", r.slug)
+        .maybeSingle();
+      if (error) return json({ error: error.message }, 500);
+      return json({ row: data, table: r.table, slug: r.slug });
+    }
+
+    if (action === "fetch-page-queries") {
+      // top queries landing on a specific page
+      const sa = await getServiceAccount();
+      if (!sa) return json({ error: "GSC service account not configured" }, 500);
+      const token = await getAccessToken(sa);
+      const end = new Date();
+      const start = new Date(end.getTime() - (body.days ?? 28) * 86400000);
+      const fmt = (d: Date) => d.toISOString().slice(0, 10);
+      const site = `sc-domain:mbacompass.in`;
+      const url = `${GSC_BASE}/sites/${encodeURIComponent(site)}/searchAnalytics/query`;
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          startDate: fmt(start), endDate: fmt(end),
+          dimensions: ["query"],
+          rowLimit: 25,
+          dimensionFilterGroups: [{
+            filters: [{ dimension: "page", operator: "equals", expression: body.page_url }],
+          }],
+        }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) return json({ error: JSON.stringify(data) }, 500);
+      return json({ queries: (data.rows || []).map((r: any) => ({
+        query: r.keys[0], clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position,
+      })) });
+    }
+
+    if (action === "bulk-rewrite") {
+      // Auto-process N worst pages: fetch meta+queries, AI rewrite, return suggestions (no apply)
+      const pages: string[] = body.pages || [];
+      const results: any[] = [];
+      for (const page_url of pages.slice(0, body.limit || 10)) {
+        try {
+          const r = resolveTableAndSlug(page_url);
+          if (!r) { results.push({ page_url, error: "URL not mapped" }); continue; }
+          const { data: row } = await supabase.from(r.table).select("meta_title,meta_description").eq("slug", r.slug).maybeSingle();
+          // top queries
+          const sa = await getServiceAccount();
+          let topQueries: string[] = [];
+          if (sa) {
+            const token = await getAccessToken(sa);
+            const end = new Date(); const start = new Date(end.getTime() - 28 * 86400000);
+            const fmt = (d: Date) => d.toISOString().slice(0, 10);
+            const qResp = await fetch(`${GSC_BASE}/sites/${encodeURIComponent("sc-domain:mbacompass.in")}/searchAnalytics/query`, {
+              method: "POST",
+              headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+              body: JSON.stringify({
+                startDate: fmt(start), endDate: fmt(end), dimensions: ["query"], rowLimit: 10,
+                dimensionFilterGroups: [{ filters: [{ dimension: "page", operator: "equals", expression: page_url }] }],
+              }),
+            });
+            const qData = await qResp.json();
+            topQueries = (qData.rows || []).map((x: any) => x.keys[0]);
+          }
+          const suggestion = await rewriteMeta({
+            url: page_url,
+            currentTitle: row?.meta_title || "",
+            currentDescription: row?.meta_description || "",
+            topQueries,
+          });
+          results.push({
+            page_url,
+            old_title: row?.meta_title || "",
+            old_description: row?.meta_description || "",
+            new_title: suggestion.title,
+            new_description: suggestion.description,
+            reasoning: suggestion.reasoning,
+            top_queries: topQueries,
+          });
+        } catch (e: any) {
+          results.push({ page_url, error: e?.message || String(e) });
+        }
+      }
+      return json({ results });
+    }
+
     if (action === "rewrite-meta") {
       const out = await rewriteMeta(body);
       return json(out);
