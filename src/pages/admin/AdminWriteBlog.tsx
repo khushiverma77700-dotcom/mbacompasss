@@ -375,15 +375,51 @@ const AdminWriteBlog = () => {
           <div className="grid md:grid-cols-3 gap-4 pt-2 border-t">
             <div>
               <Label className="text-xs font-semibold mb-1.5 block">Min Words</Label>
-              <Input type="number" min={500} max={5000} value={wordMin} onChange={(e) => setWordMin(parseInt(e.target.value) || 2000)} />
+              <Input
+                type="number"
+                inputMode="numeric"
+                min={300}
+                step={100}
+                value={wordMin}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  setWordMin(Number.isFinite(v) ? v : 0);
+                }}
+                placeholder="e.g. 2500"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">Type any value (2000, 5000, 10000…)</p>
             </div>
             <div>
               <Label className="text-xs font-semibold mb-1.5 block">Max Words</Label>
-              <Input type="number" min={500} max={5000} value={wordMax} onChange={(e) => setWordMax(parseInt(e.target.value) || 2500)} />
+              <Input
+                type="number"
+                inputMode="numeric"
+                min={300}
+                step={100}
+                value={wordMax}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  setWordMax(Number.isFinite(v) ? v : 0);
+                }}
+                placeholder="e.g. 3500"
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">No upper cap — long-form supported</p>
             </div>
             <div>
               <Label className="text-xs font-semibold mb-1.5 block">Keyword Density %</Label>
-              <Input type="number" min={1} max={15} value={densityPct} onChange={(e) => setDensityPct(parseInt(e.target.value) || 10)} />
+              <Input
+                type="number"
+                inputMode="decimal"
+                min={0.5}
+                max={5}
+                step={0.1}
+                value={densityPct}
+                onChange={(e) => {
+                  const v = parseFloat(e.target.value);
+                  setDensityPct(Number.isFinite(v) ? v : 2);
+                }}
+              />
+              <p className="text-[10px] text-muted-foreground mt-1">Google-safe: 1–3% recommended</p>
             </div>
           </div>
         </CardContent>
