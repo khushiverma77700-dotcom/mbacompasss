@@ -285,39 +285,41 @@ Anchor text MUST be descriptive and keyword-rich, varying per link, never "click
     const actualOccurrences = (plain.match(re) || []).length;
     const actualDensity = actualWords ? +((actualOccurrences * targetKw.split(/\s+/).length) / actualWords * 100).toFixed(2) : 0;
 
-    // ── EXPANSION PASS: if the article came back short, ask the model to expand it
-    //    by adding 2-3 deeper H2 sections + richer FAQ until we cross wmin words.
-    if (actualWords < wmin && actualWords > 200) {
-      const wordsNeeded = wmin - actualWords + 200;
-      console.log(`Expansion pass: ${actualWords} < ${wmin}, asking for +${wordsNeeded} words`);
+    // ── EXPANSION LOOP: up to 3 passes to reach the word target for long-form articles.
+    let currentWords = actualWords;
+    for (let pass = 1; pass <= 3 && currentWords < wmin && currentWords > 200; pass++) {
+      const wordsNeeded = wmin - currentWords + 300;
+      console.log(`Expansion pass ${pass}: ${currentWords} < ${wmin}, asking for +${wordsNeeded} words`);
       try {
         const expandRes = await callAIGateway({
           model: "openai/gpt-5",
-          max_tokens: 12000,
+          max_tokens: Math.min(64000, Math.max(12000, Math.round(wmax * 4) + 4000)),
           messages: [
             { role: "system", content: systemPrompt },
-            { role: "user", content: `The previous draft was only ${actualWords} words but the brief required ${wmin}-${wmax}. Expand the article by adding ${wordsNeeded}+ words of new substance: 2-3 NEW <h2> sections covering angles not yet discussed (e.g. common mistakes, real student stories, year-on-year trends, ROI math, alternatives, expert tips, region-wise breakdown), plus 2-3 additional FAQ Q&A. Return the COMPLETE merged article (intro + content) re-rendered with the new sections inserted in logical places — do not just append. Maintain all hard rules from the original brief: ${targetKw}, ${density}% density, declarative headings, real ${currentYear} data, no banned phrases.\n\nCURRENT INTRO:\n${article.intro}\n\nCURRENT CONTENT:\n${article.content}` },
+            { role: "user", content: `The current draft is ${currentWords} words but the brief requires ${wmin}-${wmax}. Expand it by adding ${wordsNeeded}+ words of NEW substance specific to "${targetKw}": 3-5 NEW <h2> sections (each ${minWordsPerSection}-500 words) covering angles not yet discussed (e.g. year-on-year trends specific to this topic, common mistakes specific to this topic, alumni stories, ROI math, regional breakdown, expert tips, alternatives, deep comparison tables) plus 3-4 additional FAQ Q&A. Every new section MUST contain topic-specific data, named entities, examples, and at least one new internal link relevant to "${targetKw}" only. Return the COMPLETE merged article (intro + content) re-rendered with new sections woven into logical places — do not just append at the end. Maintain ALL hard rules: ${density}% density, declarative headings, real ${currentYear} data, no banned phrases, no generic MBA filler unrelated to this topic.\n\nCURRENT INTRO:\n${article.intro}\n\nCURRENT CONTENT:\n${article.content}` },
           ],
           tools: [tool],
           tool_choice: { type: "function", function: { name: "publish_blog_article" } },
         }, { feature: "ai-blog-writer-expand" });
-        if (expandRes.ok) {
-          const ej = await expandRes.json();
-          const ea = ej?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
-          if (ea) {
-            const expanded = JSON.parse(ea);
-            for (const k of ["intro", "content"]) {
-              if (typeof expanded[k] === "string") expanded[k] = stripEscapeArtifacts(expanded[k]);
-            }
-            const expPlain = `${expanded.intro || ""} ${expanded.content || ""}`.replace(/<[^>]*>/g, " ");
-            const expWords = expPlain.split(/\s+/).filter(Boolean).length;
-            if (expWords > actualWords) {
-              article = { ...article, ...expanded };
-            }
-          }
+        if (!expandRes.ok) { console.warn(`Expand pass ${pass} HTTP ${expandRes.status}`); break; }
+        const ej = await expandRes.json();
+        const ea = ej?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+        if (!ea) break;
+        const expanded = JSON.parse(ea);
+        for (const k of ["intro", "content"]) {
+          if (typeof expanded[k] === "string") expanded[k] = stripEscapeArtifacts(expanded[k]);
+        }
+        const expPlain = `${expanded.intro || ""} ${expanded.content || ""}`.replace(/<[^>]*>/g, " ");
+        const expWords = expPlain.split(/\s+/).filter(Boolean).length;
+        if (expWords > currentWords) {
+          article = { ...article, ...expanded };
+          currentWords = expWords;
+        } else {
+          break; // no progress — stop
         }
       } catch (e) {
-        console.error("Expansion pass failed (non-fatal):", e);
+        console.error(`Expansion pass ${pass} failed (non-fatal):`, e);
+        break;
       }
     }
 
