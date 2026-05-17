@@ -98,51 +98,73 @@ Deno.serve(async (req) => {
 - Category: ${brief.category || "news"}
 - Date context: ${dateCtx}
 
-# TOPIC-SPECIFIC SEO LOCK (CRITICAL — NON-NEGOTIABLE)
-This article is about "${brief.title}". EVERY keyword, internal link, anchor text, recruiter name, college mention, exam reference, statistic and example MUST be 100% specific to THIS topic. Do NOT use generic MBA filler that could apply to any other blog.
-- If the topic is "IIM Ahmedabad Placement Report" → keywords, recruiters, packages, internal links, anchor text MUST all reference IIM Ahmedabad specifically (PGP, ABM, FABM, IIM-A campus, IIM-A recruiters, IIM-A median package, IIM-A summer placements). DO NOT mention IIM Bangalore/Calcutta/Lucknow data unless directly comparing.
-- If the topic is "CAT 2026 Syllabus" → keywords and links MUST be CAT-specific (CAT VARC, CAT QA, CAT DILR, CAT exam pattern, CAT mock tests). Do NOT pad with XAT/NMAT/SNAP unless drawing a direct contrast.
-- If the topic is a city/region (e.g. "MBA in Bangalore") → use Bangalore-specific colleges, recruiters, fees, ROI.
-- Two blogs on DIFFERENT topics from this platform must never share the same keyword set, the same internal-link list, or the same recruiter/college roster. Uniqueness per topic is mandatory.
+# TOPIC-SPECIFIC SEO LOCK (CRITICAL — NON-NEGOTIABLE — UNIQUE PER BLOG)
+This article is about "${brief.title}". EVERY keyword, internal link, external reference, anchor text, recruiter name, college mention, exam reference, statistic and example MUST be 100% specific to THIS exact topic. Generic MBA filler that could apply to any other blog is FORBIDDEN — it will be rejected.
 
-# INTERNAL LINKS — DERIVE FROM THE TOPIC (NOT A FIXED LIST)
-Build 6-10 contextual internal links by INFERRING the most relevant URLs on bschoolbuzz.com / mbacompass.in for THIS exact topic. Use these URL patterns:
-- College pages: <a href="/college/<college-slug>"> (e.g. /college/iim-ahmedabad, /college/xlri-jamshedpur)
-- Exam pages: <a href="/exams/<exam-slug>"> (e.g. /exams/cat, /exams/xat, /exams/nmat, /exams/snap, /exams/iift, /exams/cmat, /exams/mat, /exams/micat)
-- City pages: <a href="/colleges-in/<city-slug>"> (e.g. /colleges-in/bangalore, /colleges-in/mumbai)
-- Category pages: <a href="/category/<slug>"> (e.g. /category/placements, /category/exam-tips)
-- Coaching: <a href="/coaching/<institute-slug>"> or <a href="/coaching">
-- Tools: /profile-analyzer, /mba-roi-calculator, /college-shortlister, /mba-compass, /mocks
-- Related blogs: <a href="/blog/<related-topic-slug>"> — invent 2-3 closely related blog slugs derived from this topic
-Anchor text MUST be descriptive and keyword-rich, varying per link, never "click here" or "read more". Each link must be CONTEXTUALLY relevant to the surrounding sentence — never bolt-on.
+Rules of uniqueness (apply ruthlessly):
+- Derive the keyword set, internal-link set and citation set FROM the title "${brief.title}" itself. Do NOT reuse a generic "MBA blog" template.
+- If the topic is "IIM Ahmedabad Placement Report ${currentYear}" → keywords, recruiters, packages, internal links, anchor text, citations MUST all reference IIM Ahmedabad specifically (PGP, ABM, FABM, IIM-A campus, IIM-A recruiters, IIM-A median package, IIM-A summer placements). DO NOT mention IIM Bangalore/Calcutta/Lucknow data unless drawing a direct named comparison.
+- If the topic is "IIM Calcutta Placement Report" → use ONLY IIM-C-specific MBAex/PGP/PGDBA data, IIM-C recruiters, IIM-C Joka campus references. Never copy the IIM-A roster.
+- If the topic is "CAT ${currentYear} Syllabus" → CAT-specific only (CAT VARC, CAT QA, CAT DILR, CAT exam pattern, CAT mock tests). Do NOT pad with XAT/NMAT/SNAP except for one explicit contrast paragraph.
+- If the topic is a city/region (e.g. "MBA in Bangalore") → use Bangalore-specific colleges, recruiters, fees, ROI. No Delhi/Mumbai padding.
+- If the topic is an exam (NMAT/XAT/SNAP/CMAT/IIFT) → use ONLY that exam's pattern, cutoffs, accepting institutes, prep strategy. Never bleed across exams.
+
+# UNIQUENESS CONTRACT — TWO DIFFERENT BLOGS, ZERO OVERLAP
+Two blogs on different topics from this platform must NEVER share:
+- the same keyword set (keywords[] must be derived 100% from this title)
+- the same internal-link list (links must point to entities named in this article)
+- the same recruiter/college roster (only entities relevant to THIS topic)
+- the same external citation sources (cite the authoritative source FOR THIS topic)
+Treat the title as a hard scope-fence. If a fact does not belong to the topic, leave it out.
+
+# INTERNAL LINKS — DERIVE 6-10 FROM THIS TOPIC ONLY (NOT A FIXED LIST)
+Build 6-10 contextual internal links by INFERRING the most relevant URLs on mbacompass.in for THIS exact topic. Every internal link must mention an entity actually discussed in the surrounding paragraph. Use these URL patterns:
+- College pages: <a href="/college/<college-slug>"> (e.g. /college/iim-ahmedabad, /college/xlri-jamshedpur) — only colleges named in THIS article
+- Exam pages: <a href="/exams/<exam-slug>"> (e.g. /exams/cat, /exams/xat, /exams/nmat, /exams/snap, /exams/iift, /exams/cmat, /exams/mat, /exams/micat) — only exams relevant to THIS topic
+- City pages: <a href="/colleges-in/<city-slug>"> (e.g. /colleges-in/bangalore, /colleges-in/mumbai) — only if the topic is geographic
+- Category pages: <a href="/category/<slug>"> (e.g. /category/placements, /category/exam-tips) — choose the category that fits THIS topic
+- Coaching: <a href="/coaching/<institute-slug>"> or <a href="/coaching"> — only if coaching is contextually relevant
+- Tools: /profile-analyzer, /mba-roi-calculator, /college-shortlister, /mba-compass, /mocks — pick only the tool that helps the reader of THIS topic
+- Related blogs: <a href="/blog/<related-topic-slug>"> — invent 2-3 closely related blog slugs derived from THIS title only
+Anchor text MUST be descriptive and keyword-rich, varying per link, never "click here" or "read more". Each link must be CONTEXTUALLY relevant to the surrounding sentence — never bolt-on. Do NOT reuse the same set of links across different articles.
+
+# EXTERNAL REDIRECT / AUTHORITY REFERENCES — TOPIC-SPECIFIC ONLY
+Cite 3-6 plain-text authoritative sources that are SPECIFIC to this topic (no URLs, no fabricated links). Examples:
+- For an IIM-A placement blog → cite IIM Ahmedabad official placement report ${currentYear - 1}-${String(currentYear).slice(-2)}, NIRF ${currentYear} IIM-A profile.
+- For a CAT blog → cite the CAT ${currentYear} official notification by the IIM conducting the exam, IIM Common Admission Test bulletin.
+- For NIRF ranking content → cite NIRF ${currentYear} Management Rankings.
+NEVER reuse the same citation set across different blog topics.
 
 # HARD RULES — WORD COUNT & SECTION DEPTH (NON-NEGOTIABLE)
-1. **WORD COUNT: ${wmin}-${wmax} words minimum** in (intro + content) plain text. Articles below ${wmin} words will be REJECTED. Count as you write; expand body sections rather than truncating. Never stop early.
-2. **Section depth — EVERY <h2> section MUST be ${minWordsPerSection}-500 words** of detailed, substantive content. NO section may be just 2-3 lines or a single short paragraph. Every section must include:
-   - A direct-answer opening paragraph
-   - 2-4 supporting paragraphs OR bullet/numbered lists
+1. **WORD COUNT: ${wmin}-${wmax} words minimum** in (intro + content) plain text. Articles below ${wmin} words will be REJECTED. Count as you write; expand body sections rather than truncating. Never stop early. Long-form 5,000-10,000+ word articles are fully supported — write the full requested length.
+2. **Section depth — EVERY <h2> section MUST be ${minWordsPerSection}-600 words** of detailed, substantive content. NO section may be just 2-3 lines or a single short paragraph — sections that short will be REJECTED. Every <h2> section must include ALL of:
+   - A direct-answer opening paragraph (40-80 words) that names the topic entity
+   - 3-5 supporting paragraphs of detailed explanation
+   - At least one bullet or numbered list (4+ items)
    - At least one concrete example, named entity, or data point specific to "${targetKw}"
-   - Where relevant: a comparison table, a numbered checklist, or a contextual internal link
-3. **Keyword density**: primary keyword "${targetKw}" must appear ~${targetOccurrences} times (~${density}%, Google-safe). Use exact match in title, H1, first 100 words, ≥3 H2s, meta title, meta description, slug, conclusion. Weave 15-30 LSI/semantic variants specific to this topic.
-4. **MANDATORY OPENING — TL;DR SUMMARY**: First element of "intro" MUST be <p><strong>Quick Summary:</strong> ...</p> giving a 60-90 word direct answer.
+   - Either a comparison <table> (where data lends itself) or a numbered checklist
+   - 1-2 contextual internal links anchored to topic-relevant entities
+   - Where useful, an <h3> subsection breaking the topic into a specific angle
+3. **Keyword density**: primary keyword "${targetKw}" must appear ~${targetOccurrences} times (~${density}%, Google-safe). Use exact match in title, H1, first 100 words, ≥3 H2s, meta title, meta description, slug, conclusion. Weave 20-30 LSI/semantic variants derived FROM this specific topic.
+4. **MANDATORY OPENING — TL;DR SUMMARY**: First element of "intro" MUST be <p><strong>Quick Summary:</strong> ...</p> giving a 60-90 word direct answer specific to "${brief.title}".
 5. **NEVER START WITH A QUESTION**. All H2s and paragraph openers must be declarative (FAQ section excepted).
 6. **HUMANIZED LANGUAGE — 8th grade level**. Contractions OK. BANNED: "delve into", "navigate the landscape", "in the realm of", "unlock your potential", "embark on a journey", "ever-evolving", "in today's fast-paced world", "it's worth noting", "look no further".
-7. Short paragraphs (2-5 sentences). Use lists. **At least 3 HTML <table> blocks** (each 4+ rows of REAL ${currentYear} data specific to this topic — fees, packages, cutoffs, year-on-year trends, recruiter-wise hiring, etc.).
+7. Short paragraphs (2-5 sentences). Use lists. **At least 4 HTML <table> blocks** (each 5+ rows of REAL ${currentYear} data specific to this topic — fees, packages, cutoffs, year-on-year trends, recruiter-wise hiring, etc.).
 8. **STRUCTURE — REQUIRED ORDER**:
    a. Quick Summary <p>
-   b. 2-3 paragraph hook stating problem + answer + who this guide is for
-   c. **${targetH2}+ <h2> sections** (each ${minWordsPerSection}-500 words, 1-2 <h3> subsections where useful). Cover the full entity graph of THIS topic — eligibility, process, timelines, fees, ROI, comparisons, recruiters, alumni outcomes, common mistakes, expert tips, year-on-year trends, regional/segment breakdowns, alternatives.
-   d. <h2>Key Takeaways</h2> — 6-8 bullets, each starting with <strong>Bold lead phrase:</strong>
-   e. <h2>Frequently Asked Questions</h2> — **8-12 Q&A** (Q in <h3> ending with "?", A in <p>, 50-100 words each). Questions MUST mirror real People-Also-Ask queries for THIS topic.
-   f. Final CTA paragraph with 2 topic-relevant internal links
+   b. 2-3 paragraph hook stating problem + answer + who this guide is for (all specific to THIS topic)
+   c. **${targetH2}+ <h2> sections** (each ${minWordsPerSection}-600 words, 1-2 <h3> subsections where useful). Cover the full entity graph of THIS topic — eligibility, process, timelines, fees, ROI, comparisons, recruiters, alumni outcomes, common mistakes, expert tips, year-on-year trends, regional/segment breakdowns, alternatives. Every section must be deep — no shallow stubs.
+   d. <h2>Key Takeaways</h2> — 8-10 bullets, each starting with <strong>Bold lead phrase:</strong>
+   e. <h2>Frequently Asked Questions</h2> — **10-15 Q&A** (Q in <h3> ending with "?", A in <p>, 60-120 words each). Questions MUST mirror real People-Also-Ask queries for THIS specific topic.
+   f. Final CTA paragraph with 2-3 topic-relevant internal links
 9. **ADVANCED ON-PAGE SEO**:
    - Primary keyword in: first 100 words, ≥3 <h2> headings, last paragraph, meta title, meta description, slug, excerpt.
    - **Semantic SEO**: cover the topic's full entity graph specific to THIS subject only.
    - **LSI/NLP keywords**: 20-30 semantically related terms derived from THIS topic.
    - **External authority mentions** (plain text, no fabricated URLs): cite the AUTHORITATIVE sources for THIS specific topic (e.g. for IIM-A placement → IIM Ahmedabad official PR ${currentYear - 1}-${String(currentYear).slice(-2)}; for CAT → IIM-conducting-institute CAT ${currentYear} notification; for NIRF data → NIRF ${currentYear}).
-   - **Featured-snippet bait**: ≥1 direct-answer <p> right under an <h2>, ≥1 numbered <ol> step-by-step list, ≥1 comparison <table>.
+   - **Featured-snippet bait**: ≥2 direct-answer <p> right under an <h2>, ≥1 numbered <ol> step-by-step list, ≥2 comparison <table>.
    - **E-E-A-T signals**: cite specific [src:Source Year] markers; name REAL recruiters & B-schools relevant to THIS topic only.
-   - <strong> on 10-20 high-value phrases. <em> sparingly.
+   - <strong> on 12-20 high-value phrases. <em> sparingly.
 10. **FORMATTING POLISH**: Bold lead 2-4 words of important paragraphs. <h2> 4-9 words, benefit-driven. No ALL-CAPS.
 11. Real, current Indian MBA ecosystem data: CAT ${currentYear} dates, NIRF ${currentYear} rankings, ${currentYear - 1}-${String(currentYear).slice(-2)} placement averages. Use only figures relevant to THIS topic.
 12. NEVER fabricate implausible numbers. Realistic ${currentYear - 1}-${currentYear} ranges only.
