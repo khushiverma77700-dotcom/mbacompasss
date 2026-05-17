@@ -7,7 +7,7 @@ import PageKeywords from "@/components/PageKeywords";
 const AboutPage = () => (
   <div className="min-h-screen bg-background">
     <SEOHead
-      title="About MBA Compass — India's Leading MBA Admissions & Coaching Platform"
+      title="About MBA Compass — MBA Admissions & Coaching Platform"
       description="Learn about MBA Compass, India's leading platform connecting MBA aspirants to top B-schools and coaching institutes. Our mission to simplify management education."
       keywords={[
         "about MBA Compass", "MBA portal mission", "MBA education vision", "MBA Compass story",
