@@ -31,12 +31,42 @@ const callOptimizer = async (action: string, payload: any = {}) => {
   return data;
 };
 
-// ---------- Tab 1: CTR Dashboard (worst CTR pages) ----------
+// ---------- Tab 1: One-Click CTR Dashboard ----------
+type RowState = {
+  expanded: boolean;
+  loadingMeta: boolean;
+  loadingAI: boolean;
+  applying: boolean;
+  applyingFaqs: boolean;
+  applyingFresh: boolean;
+  generatingFaqs: boolean;
+  oldTitle: string;
+  oldDescription: string;
+  newTitle: string;
+  newDescription: string;
+  reasoning: string;
+  topQueries: { query: string; clicks: number; impressions: number; ctr: number; position: number }[];
+  faqs: { q: string; a: string }[];
+  status: string;
+};
+
+const emptyRowState = (): RowState => ({
+  expanded: false, loadingMeta: false, loadingAI: false, applying: false,
+  applyingFaqs: false, applyingFresh: false, generatingFaqs: false,
+  oldTitle: "", oldDescription: "", newTitle: "", newDescription: "",
+  reasoning: "", topQueries: [], faqs: [], status: "",
+});
+
 const CtrDashboardTab = () => {
   const [rows, setRows] = useState<GscRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({ days: 28, minImpressions: 100, maxCtr: 2 });
+  const [state, setState] = useState<Record<string, RowState>>({});
+  const [bulkRunning, setBulkRunning] = useState(false);
   const { toast } = useToast();
+
+  const updateRow = (url: string, patch: Partial<RowState>) =>
+    setState((prev) => ({ ...prev, [url]: { ...emptyRowState(), ...prev[url], ...patch } }));
 
   const fetchRows = async () => {
     setLoading(true);
@@ -48,40 +78,161 @@ const CtrDashboardTab = () => {
         minImpressions: filters.minImpressions,
         maxCtr: filters.maxCtr / 100,
       });
-      setRows((r.rows || []).sort((a: GscRow, b: GscRow) => b.impressions - a.impressions));
+      const sorted = (r.rows || []).sort((a: GscRow, b: GscRow) => b.impressions - a.impressions);
+      setRows(sorted);
+      setState({});
     } catch (e: any) {
       toast({ title: "Failed to fetch GSC", description: e.message, variant: "destructive" });
     }
     setLoading(false);
   };
 
+  const expand = async (url: string) => {
+    const s = state[url];
+    if (s?.expanded) { updateRow(url, { expanded: false }); return; }
+    updateRow(url, { expanded: true, loadingMeta: true });
+    try {
+      const [meta, queries] = await Promise.all([
+        callOptimizer("fetch-page-meta", { page_url: url }),
+        callOptimizer("fetch-page-queries", { page_url: url, days: filters.days }),
+      ]);
+      updateRow(url, {
+        loadingMeta: false,
+        oldTitle: meta?.row?.meta_title || "",
+        oldDescription: meta?.row?.meta_description || "",
+        topQueries: queries?.queries || [],
+        status: meta?.row ? "" : "Page not found in DB — URL may not map to a row",
+      });
+    } catch (e: any) {
+      updateRow(url, { loadingMeta: false, status: e.message });
+    }
+  };
+
+  const generateAI = async (url: string) => {
+    const s = state[url];
+    updateRow(url, { loadingAI: true });
+    try {
+      const out = await callOptimizer("rewrite-meta", {
+        url, currentTitle: s.oldTitle, currentDescription: s.oldDescription,
+        topQueries: s.topQueries.map((q) => q.query),
+      });
+      updateRow(url, {
+        loadingAI: false,
+        newTitle: out.title || "", newDescription: out.description || "",
+        reasoning: out.reasoning || "",
+      });
+    } catch (e: any) {
+      updateRow(url, { loadingAI: false, status: e.message });
+    }
+  };
+
+  const applyMeta = async (url: string) => {
+    const s = state[url];
+    updateRow(url, { applying: true });
+    try {
+      await callOptimizer("apply-rewrite", {
+        page_url: url,
+        new_title: s.newTitle, new_description: s.newDescription,
+        old_title: s.oldTitle, old_description: s.oldDescription,
+      });
+      updateRow(url, { applying: false, status: "✓ Meta applied" });
+      toast({ title: "Applied", description: "Meta saved." });
+    } catch (e: any) {
+      updateRow(url, { applying: false, status: e.message });
+      toast({ title: "Apply failed", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const generateFaqs = async (url: string) => {
+    const s = state[url];
+    updateRow(url, { generatingFaqs: true });
+    try {
+      const out = await callOptimizer("generate-faqs", {
+        url, topic: s.oldTitle, topQueries: s.topQueries.map((q) => q.query),
+      });
+      updateRow(url, { generatingFaqs: false, faqs: out.faqs || [] });
+    } catch (e: any) {
+      updateRow(url, { generatingFaqs: false, status: e.message });
+    }
+  };
+
+  const applyFaqs = async (url: string) => {
+    const s = state[url];
+    updateRow(url, { applyingFaqs: true });
+    try {
+      await callOptimizer("apply-faqs", { page_url: url, faqs: s.faqs });
+      updateRow(url, { applyingFaqs: false, status: `✓ ${s.faqs.length} FAQs saved` });
+      toast({ title: "FAQs saved", description: `${s.faqs.length} FAQs applied.` });
+    } catch (e: any) {
+      updateRow(url, { applyingFaqs: false, status: e.message });
+    }
+  };
+
+  const bumpFresh = async (url: string) => {
+    updateRow(url, { applyingFresh: true });
+    try {
+      await callOptimizer("apply-freshness", { page_url: url });
+      updateRow(url, { applyingFresh: false, status: "✓ Freshness bumped" });
+      toast({ title: "Bumped", description: "updated_at refreshed." });
+    } catch (e: any) {
+      updateRow(url, { applyingFresh: false, status: e.message });
+    }
+  };
+
+  const bulkAIRewrite = async () => {
+    if (rows.length === 0) return;
+    setBulkRunning(true);
+    try {
+      const top = rows.slice(0, 10).map((r) => r.keys[0]);
+      const out = await callOptimizer("bulk-rewrite", { pages: top, limit: 10 });
+      for (const r of out.results || []) {
+        if (r.error) continue;
+        updateRow(r.page_url, {
+          expanded: true,
+          oldTitle: r.old_title, oldDescription: r.old_description,
+          newTitle: r.new_title, newDescription: r.new_description,
+          reasoning: r.reasoning,
+          topQueries: (r.top_queries || []).map((q: string) => ({ query: q, clicks: 0, impressions: 0, ctr: 0, position: 0 })),
+        });
+      }
+      toast({ title: "Bulk rewrite ready", description: `Generated AI rewrites for top ${(out.results || []).length} pages. Click Apply on each row.` });
+    } catch (e: any) {
+      toast({ title: "Bulk failed", description: e.message, variant: "destructive" });
+    }
+    setBulkRunning(false);
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-sky-600" /> Worst-CTR Pages</CardTitle>
-        <CardDescription>Pages getting impressions but failing to win the click. Fix these first.</CardDescription>
+        <CardTitle className="flex items-center gap-2"><TrendingUp className="h-5 w-5 text-sky-600" /> One-Click CTR Optimizer</CardTitle>
+        <CardDescription>
+          Fetch worst-CTR pages → expand any row → AI auto-loads current meta + real Google queries → rewrite + apply in one click. No copy-paste.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
           <div>
             <Label className="text-xs">Days lookback</Label>
-            <Input type="number" value={filters.days}
-              onChange={(e) => setFilters({ ...filters, days: +e.target.value })} />
+            <Input type="number" value={filters.days} onChange={(e) => setFilters({ ...filters, days: +e.target.value })} />
           </div>
           <div>
             <Label className="text-xs">Min impressions</Label>
-            <Input type="number" value={filters.minImpressions}
-              onChange={(e) => setFilters({ ...filters, minImpressions: +e.target.value })} />
+            <Input type="number" value={filters.minImpressions} onChange={(e) => setFilters({ ...filters, minImpressions: +e.target.value })} />
           </div>
           <div>
             <Label className="text-xs">Max CTR (%)</Label>
-            <Input type="number" step="0.1" value={filters.maxCtr}
-              onChange={(e) => setFilters({ ...filters, maxCtr: +e.target.value })} />
+            <Input type="number" step="0.1" value={filters.maxCtr} onChange={(e) => setFilters({ ...filters, maxCtr: +e.target.value })} />
           </div>
           <div className="flex items-end">
             <Button onClick={fetchRows} disabled={loading} className="w-full">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1.5" />}
-              Fetch
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-1.5" />} Fetch
+            </Button>
+          </div>
+          <div className="flex items-end">
+            <Button onClick={bulkAIRewrite} disabled={bulkRunning || rows.length === 0} variant="secondary" className="w-full">
+              {bulkRunning ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Zap className="h-4 w-4 mr-1.5" />}
+              AI Rewrite Top 10
             </Button>
           </div>
         </div>
@@ -91,6 +242,7 @@ const CtrDashboardTab = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-8"></TableHead>
                   <TableHead>Page</TableHead>
                   <TableHead className="text-right">Impr</TableHead>
                   <TableHead className="text-right">Clicks</TableHead>
@@ -99,21 +251,125 @@ const CtrDashboardTab = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rows.map((r, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="max-w-md truncate font-mono text-xs">{r.keys[0]}</TableCell>
-                    <TableCell className="text-right">{r.impressions.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">{r.clicks}</TableCell>
-                    <TableCell className="text-right">
-                      <Badge variant={r.ctr < 0.01 ? "destructive" : "secondary"}>
-                        {(r.ctr * 100).toFixed(2)}%
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">{r.position.toFixed(1)}</TableCell>
-                  </TableRow>
-                ))}
+                {rows.map((r) => {
+                  const url = r.keys[0];
+                  const s = state[url] || emptyRowState();
+                  return (
+                    <>
+                      <TableRow key={url} className="cursor-pointer hover:bg-sky-50/40" onClick={() => expand(url)}>
+                        <TableCell>{s.expanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}</TableCell>
+                        <TableCell className="max-w-md truncate font-mono text-xs">{url}</TableCell>
+                        <TableCell className="text-right">{r.impressions.toLocaleString()}</TableCell>
+                        <TableCell className="text-right">{r.clicks}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant={r.ctr < 0.01 ? "destructive" : "secondary"}>{(r.ctr * 100).toFixed(2)}%</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">{r.position.toFixed(1)}</TableCell>
+                      </TableRow>
+                      {s.expanded && (
+                        <TableRow key={url + "-x"}>
+                          <TableCell colSpan={6} className="bg-slate-50/60 p-4">
+                            {s.loadingMeta ? (
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Loader2 className="h-4 w-4 animate-spin" /> Loading current meta & top Google queries…
+                              </div>
+                            ) : (
+                              <div className="space-y-4">
+                                {s.status && <div className="text-xs text-amber-700">{s.status}</div>}
+
+                                {s.topQueries.length > 0 && (
+                                  <div>
+                                    <Label className="text-xs uppercase">Top real Google queries</Label>
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                      {s.topQueries.slice(0, 8).map((q, i) => (
+                                        <Badge key={i} variant="outline" className="text-xs font-normal">
+                                          {q.query} <span className="ml-1 text-muted-foreground">({q.impressions})</span>
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label className="text-xs uppercase text-muted-foreground">Current</Label>
+                                    <Input value={s.oldTitle} onChange={(e) => updateRow(url, { oldTitle: e.target.value })} placeholder="Current title" />
+                                    <Textarea value={s.oldDescription} onChange={(e) => updateRow(url, { oldDescription: e.target.value })} rows={3} placeholder="Current description" />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-xs uppercase text-sky-700">AI Rewrite</Label>
+                                    <Input value={s.newTitle} onChange={(e) => updateRow(url, { newTitle: e.target.value })}
+                                      placeholder="Click 'Generate AI Rewrite'" className="border-sky-200" />
+                                    <Textarea value={s.newDescription} onChange={(e) => updateRow(url, { newDescription: e.target.value })} rows={3} className="border-sky-200" />
+                                    {s.newTitle && (
+                                      <div className="flex gap-2 text-xs">
+                                        <Badge variant={s.newTitle.length > 60 ? "destructive" : "secondary"}>{s.newTitle.length}/60 title</Badge>
+                                        <Badge variant={s.newDescription.length > 160 ? "destructive" : "secondary"}>{s.newDescription.length}/160 desc</Badge>
+                                      </div>
+                                    )}
+                                    {s.reasoning && <p className="text-xs text-muted-foreground italic">{s.reasoning}</p>}
+                                  </div>
+                                </div>
+
+                                <div className="flex flex-wrap gap-2">
+                                  <Button size="sm" onClick={() => generateAI(url)} disabled={s.loadingAI}>
+                                    {s.loadingAI ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Wand2 className="h-4 w-4 mr-1.5" />}
+                                    Generate AI Rewrite
+                                  </Button>
+                                  <Button size="sm" variant="default" onClick={() => applyMeta(url)} disabled={!s.newTitle || s.applying}>
+                                    {s.applying ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Check className="h-4 w-4 mr-1.5" />}
+                                    Apply Meta
+                                  </Button>
+                                  <Button size="sm" variant="outline" onClick={() => generateFaqs(url)} disabled={s.generatingFaqs}>
+                                    {s.generatingFaqs ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <MessageCircle className="h-4 w-4 mr-1.5" />}
+                                    Generate FAQs
+                                  </Button>
+                                  <Button size="sm" variant="outline" onClick={() => bumpFresh(url)} disabled={s.applyingFresh}>
+                                    {s.applyingFresh ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Calendar className="h-4 w-4 mr-1.5" />}
+                                    Bump Freshness
+                                  </Button>
+                                  <Button asChild size="sm" variant="ghost">
+                                    <a href={url} target="_blank" rel="noreferrer">Open page ↗</a>
+                                  </Button>
+                                </div>
+
+                                {s.faqs.length > 0 && (
+                                  <div className="space-y-2 border-t pt-3">
+                                    <Label className="text-xs uppercase">Generated FAQs ({s.faqs.length})</Label>
+                                    {s.faqs.map((f, i) => (
+                                      <div key={i} className="rounded border p-2 bg-white space-y-1">
+                                        <Input value={f.q} onChange={(e) => {
+                                          const next = [...s.faqs]; next[i] = { ...next[i], q: e.target.value };
+                                          updateRow(url, { faqs: next });
+                                        }} className="font-medium text-sm" />
+                                        <Textarea value={f.a} rows={2} onChange={(e) => {
+                                          const next = [...s.faqs]; next[i] = { ...next[i], a: e.target.value };
+                                          updateRow(url, { faqs: next });
+                                        }} className="text-sm" />
+                                      </div>
+                                    ))}
+                                    <Button size="sm" onClick={() => applyFaqs(url)} disabled={s.applyingFaqs}>
+                                      {s.applyingFaqs ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : <Check className="h-4 w-4 mr-1.5" />}
+                                      Save FAQs to page
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </>
+                  );
+                })}
               </TableBody>
             </Table>
+          </div>
+        )}
+
+        {rows.length === 0 && !loading && (
+          <div className="text-center py-12 text-muted-foreground text-sm">
+            Click <strong>Fetch</strong> to pull worst-CTR pages from Google Search Console.
           </div>
         )}
       </CardContent>
