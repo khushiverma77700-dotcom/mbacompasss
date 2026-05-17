@@ -399,6 +399,98 @@ Deno.serve(async (req) => {
       return json({ results });
     }
 
+    if (action === "auto-fix-one") {
+      // Full auto: fetch meta+queries → AI rewrite meta + FAQs → APPLY both + freshness bump
+      const page_url = body.page_url;
+      const opts = {
+        rewriteMeta: body.rewriteMeta !== false,
+        generateFaqs: body.generateFaqs !== false,
+        bumpFreshness: body.bumpFreshness !== false,
+      };
+      const steps: any = { page_url, applied: {} };
+      const r = resolveTableAndSlug(page_url);
+      if (!r) return json({ error: "URL not mapped to a table", page_url }, 400);
+
+      const { data: row } = await supabase.from(r.table)
+        .select("meta_title,meta_description").eq("slug", r.slug).maybeSingle();
+      if (!row) return json({ error: "Row not found for slug " + r.slug, page_url }, 404);
+
+      // Top queries
+      let topQueries: string[] = [];
+      try {
+        const sa = await getServiceAccount();
+        if (sa) {
+          const token = await getAccessToken(sa);
+          const end = new Date(); const start = new Date(end.getTime() - 28 * 86400000);
+          const fmt = (d: Date) => d.toISOString().slice(0, 10);
+          const qResp = await fetch(`${GSC_BASE}/sites/${encodeURIComponent("sc-domain:mbacompass.in")}/searchAnalytics/query`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              startDate: fmt(start), endDate: fmt(end), dimensions: ["query"], rowLimit: 10,
+              dimensionFilterGroups: [{ filters: [{ dimension: "page", operator: "equals", expression: page_url }] }],
+            }),
+          });
+          const qData = await qResp.json();
+          topQueries = (qData.rows || []).map((x: any) => x.keys[0]);
+        }
+      } catch (_) {}
+      steps.top_queries = topQueries;
+
+      // Meta rewrite + apply
+      if (opts.rewriteMeta) {
+        const sug = await rewriteMeta({
+          url: page_url,
+          currentTitle: row.meta_title || "",
+          currentDescription: row.meta_description || "",
+          topQueries,
+        });
+        if (sug?.title) {
+          await supabase.from(r.table).update({
+            meta_title: sug.title,
+            meta_description: sug.description,
+            updated_at: new Date().toISOString(),
+          }).eq("slug", r.slug);
+          await supabase.from("ctr_optimizations").insert({
+            page_url, page_type: r.table, table_name: r.table, slug: r.slug,
+            action: "auto-fix-meta",
+            old_title: row.meta_title, new_title: sug.title,
+            old_description: row.meta_description, new_description: sug.description,
+            applied_by: userId,
+          });
+          steps.applied.meta = { old_title: row.meta_title, new_title: sug.title, new_description: sug.description };
+        }
+      }
+
+      // FAQs + apply
+      if (opts.generateFaqs) {
+        const faqOut = await generateFAQs({ url: page_url, topic: row.meta_title || "", topQueries });
+        const faqs = faqOut?.faqs || [];
+        if (faqs.length > 0) {
+          await supabase.from(r.table).update({
+            faqs, updated_at: new Date().toISOString(),
+          }).eq("slug", r.slug);
+          await supabase.from("ctr_optimizations").insert({
+            page_url, page_type: r.table, table_name: r.table, slug: r.slug,
+            action: "auto-fix-faqs", payload: { count: faqs.length }, applied_by: userId,
+          });
+          steps.applied.faqs = faqs.length;
+        }
+      }
+
+      // Freshness bump (free if meta or faqs already touched the row, but log it)
+      if (opts.bumpFreshness) {
+        await supabase.from(r.table).update({ updated_at: new Date().toISOString() }).eq("slug", r.slug);
+        await supabase.from("ctr_optimizations").insert({
+          page_url, page_type: r.table, table_name: r.table, slug: r.slug,
+          action: "auto-fix-freshness", applied_by: userId,
+        });
+        steps.applied.freshness = true;
+      }
+
+      return json({ ok: true, ...steps });
+    }
+
     if (action === "rewrite-meta") {
       const out = await rewriteMeta(body);
       return json(out);
