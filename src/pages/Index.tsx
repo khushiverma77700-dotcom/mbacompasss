@@ -89,6 +89,7 @@ const Index = () => {
       />
       
       {/* Above-the-fold: only Hero loads eagerly for fastest LCP */}
+      <main id="main-content">
       <HeroSection />
 
       {/* Just below the fold — mount as soon as browser is idle (no scroll needed) */}
@@ -125,6 +126,7 @@ const Index = () => {
           <PageKeywords contentType="static" recordId="homepage" fallbackKeywords={["best MBA coaching", "MBA coaching institutes India", "CAT coaching", "MBA entrance exam", "IIM preparation"]} />
         </LazyMount>
       </div>
+      </main>
     </>
   );
 };
