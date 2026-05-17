@@ -124,6 +124,7 @@ const MBARoiCalculatorPage = lazyWithPreload(() => import("./pages/MBARoiCalcula
 const ForgotPasswordPage = lazyWithPreload(() => import("./pages/ForgotPasswordPage"));
 const ResetPasswordPage = lazyWithPreload(() => import("./pages/ResetPasswordPage"));
 const AdminROIAnalyses = lazyWithPreload(() => import("./pages/admin/AdminROIAnalyses"));
+const AdminCTROptimizer = lazyWithPreload(() => import("./pages/admin/AdminCTROptimizer"));
 const ListYourBusinessPage = lazyWithPreload(() => import("./pages/ListYourBusinessPage"));
 const ListingPocPage = lazyWithPreload(() => import("./pages/ListingPocPage"));
 const ListingFormPage = lazyWithPreload(() => import("./pages/ListingFormPage"));
@@ -728,6 +729,7 @@ const App = () => (
               <Route path="hyperlink-update" element={<LazyPage><AdminHyperlinkUpdate /></LazyPage>} />
               <Route path="bulk-ai-edit" element={<LazyPage><AdminBulkAIEdit /></LazyPage>} />
               <Route path="iim-waitlist" element={<LazyPage><AdminIIMWaitlist /></LazyPage>} />
+              <Route path="ctr-optimizer" element={<LazyPage><AdminCTROptimizer /></LazyPage>} />
             </Route>
 
             {/* Routes */}
