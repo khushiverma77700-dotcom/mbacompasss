@@ -273,6 +273,78 @@ const CtrDashboardTab = () => {
           </div>
         </div>
 
+        {/* AI Auto-Fix All panel */}
+        {rows.length > 0 && (
+          <div className="rounded-lg border-2 border-sky-300 bg-gradient-to-br from-sky-50 to-white p-4 space-y-3">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div>
+                <div className="flex items-center gap-2 font-semibold text-sky-900">
+                  <Zap className="h-5 w-5 text-sky-600" /> AI Auto-Fix All
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  One click → AI rewrites meta + generates FAQs + bumps freshness for top {autoFixOpts.count} worst-CTR pages. Auto-applies everything.
+                </p>
+              </div>
+              <Button onClick={runAutoFixAll} disabled={autoFix.running} size="lg" className="bg-sky-600 hover:bg-sky-700">
+                {autoFix.running ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Wand2 className="h-5 w-5 mr-2" />}
+                {autoFix.running ? `Fixing ${autoFix.done}/${autoFix.total}…` : "AI Auto-Fix All"}
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+              <div>
+                <Label className="text-xs">Pages to fix</Label>
+                <Input type="number" min={1} max={50} value={autoFixOpts.count}
+                  onChange={(e) => setAutoFixOpts({ ...autoFixOpts, count: Math.max(1, +e.target.value) })}
+                  disabled={autoFix.running} />
+              </div>
+              <label className="flex items-center gap-2 text-xs cursor-pointer pt-5">
+                <input type="checkbox" checked={autoFixOpts.meta}
+                  onChange={(e) => setAutoFixOpts({ ...autoFixOpts, meta: e.target.checked })}
+                  disabled={autoFix.running} />
+                Rewrite Meta
+              </label>
+              <label className="flex items-center gap-2 text-xs cursor-pointer pt-5">
+                <input type="checkbox" checked={autoFixOpts.faqs}
+                  onChange={(e) => setAutoFixOpts({ ...autoFixOpts, faqs: e.target.checked })}
+                  disabled={autoFix.running} />
+                Generate FAQs
+              </label>
+              <label className="flex items-center gap-2 text-xs cursor-pointer pt-5">
+                <input type="checkbox" checked={autoFixOpts.fresh}
+                  onChange={(e) => setAutoFixOpts({ ...autoFixOpts, fresh: e.target.checked })}
+                  disabled={autoFix.running} />
+                Bump Freshness
+              </label>
+            </div>
+
+            {(autoFix.running || autoFix.log.length > 0) && (
+              <div className="space-y-2">
+                <div className="h-2 bg-sky-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-sky-600 transition-all"
+                    style={{ width: `${autoFix.total ? (autoFix.done / autoFix.total) * 100 : 0}%` }} />
+                </div>
+                {autoFix.current && (
+                  <div className="text-xs text-sky-700 font-mono truncate">→ {autoFix.current}</div>
+                )}
+                {autoFix.log.length > 0 && (
+                  <div className="max-h-48 overflow-y-auto text-xs space-y-1 bg-white border rounded p-2">
+                    {autoFix.log.map((l, i) => (
+                      <div key={i} className="flex gap-2">
+                        {l.status === "ok"
+                          ? <Check className="h-3 w-3 text-emerald-600 mt-0.5 shrink-0" />
+                          : <span className="text-red-500 shrink-0">✗</span>}
+                        <span className="font-mono truncate flex-1">{l.url}</span>
+                        <span className={l.status === "ok" ? "text-emerald-700" : "text-red-600"}>{l.msg}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {rows.length > 0 && (
           <div className="rounded-lg border overflow-hidden">
             <Table>
