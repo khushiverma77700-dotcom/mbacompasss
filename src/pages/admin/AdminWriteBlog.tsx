@@ -100,8 +100,9 @@ const AdminWriteBlog = () => {
     if (!title.trim()) return "Title is required";
     if (!slug.trim()) return "Slug is required";
     if (!targetKeyword.trim()) return "Target keyword is required";
-    if (wordMin < 500 || wordMax > 5000 || wordMin > wordMax) return "Word count range looks invalid";
-    if (densityPct < 1 || densityPct > 15) return "Keyword density should be between 1% and 15%";
+    if (wordMin < 300) return "Min words must be at least 300";
+    if (wordMax < wordMin) return "Max words must be greater than or equal to min words";
+    if (densityPct < 0.5 || densityPct > 5) return "Keyword density should be between 0.5% and 5% (Google-safe range)";
     return null;
   };
 
