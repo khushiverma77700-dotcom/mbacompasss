@@ -38,7 +38,7 @@ const ContactPage = () => {
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Contact Us — MBA Compass | MBA Counseling, Support & Business Inquiries"
+        title="Contact MBA Compass — MBA Counseling & Support"
         description="Have questions about MBA admissions or coaching? Contact MBA Compass for personalized guidance, advertising inquiries, or institutional partnerships."
         keywords={[
           "contact us", "MBA counseling help", "advertise with us", "student helpline",
@@ -46,12 +46,30 @@ const ContactPage = () => {
           "email support for MBA application forms", "business inquiries for management coaching institutes",
         ]}
         canonical="https://mbacompass.in/contact"
-        jsonLd={{
-          "@context": "https://schema.org",
-          "@type": "ContactPage",
-          name: "Contact MBA Compass",
-          url: "https://mbacompass.in/contact",
-        }}
+        jsonLd={[
+          {
+            "@context": "https://schema.org",
+            "@type": "ContactPage",
+            name: "Contact MBA Compass",
+            url: "https://mbacompass.in/contact",
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "LocalBusiness",
+            name: "MBA Compass",
+            url: "https://mbacompass.in",
+            email,
+            telephone: phone,
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: address,
+              addressLocality: "New Delhi",
+              addressRegion: "Delhi",
+              postalCode: "110001",
+              addressCountry: "IN",
+            },
+          },
+        ]}
       />
 
 

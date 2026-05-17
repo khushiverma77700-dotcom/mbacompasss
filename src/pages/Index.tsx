@@ -67,8 +67,8 @@ const Index = () => {
   return (
     <>
       <SEOHead
-        title="MBA Compass — Top MBA Colleges, Coaching & Entrance Exams India 2026"
-        description="India's #1 platform to find, compare & review best MBA coaching institutes & top B-schools for CAT, GMAT, XAT, SNAP. Compare fees, placements, success rates & 10,000+ student reviews. Updated daily."
+        title="MBA Compass — MBA Colleges, Coaching & Exams India 2026"
+        description="Compare India's top MBA coaching institutes & B-schools for CAT, XAT, GMAT, SNAP. Fees, placements, reviews & rankings — updated daily."
         keywords={[
           "MBA admissions", "top MBA colleges", "MBA entrance exams", "business schools India", "B-school news",
           "best MBA coaching", "MBA coaching institutes India", "CAT coaching", "GMAT preparation",
