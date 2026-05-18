@@ -350,12 +350,55 @@ export default function AdminCTROptimizer() {
         </div>
       )}
 
-      {/* Bug Report Table */}
-      {bugs.length > 0 ? (
+      {/* Cannibalization panel */}
+      {scanMode === "cannibal" && cannibals.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-sky-600" />Bug Report</CardTitle>
-            <CardDescription>Click any row to see the issues and what the AI changed.</CardDescription>
+            <CardTitle className="flex items-center gap-2"><GitMerge className="w-5 h-5 text-amber-600" />Keyword Cannibalization</CardTitle>
+            <CardDescription>Multiple URLs competing for the same query — pick one as the canonical winner and 301/noindex the others.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {cannibals.map((c, i) => (
+              <div key={i} className="border rounded-lg p-3 bg-amber-50/50">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="font-semibold text-sm">{c.query}</p>
+                  <Badge variant="outline" className="bg-amber-100 text-amber-700">
+                    {c.pages.length} URLs · {c.total_impressions.toLocaleString()} impr
+                  </Badge>
+                </div>
+                <div className="space-y-1">
+                  {c.pages.slice(0, 5).map((p, idx) => (
+                    <div key={idx} className="text-xs flex items-center gap-2 font-mono">
+                      <Badge variant="outline" className="w-12 justify-center">#{p.position.toFixed(1)}</Badge>
+                      <a href={p.page} target="_blank" rel="noreferrer" className="text-sky-700 truncate flex-1 hover:underline">
+                        {p.page.replace("https://mbacompass.in", "") || "/"}
+                      </a>
+                      <span className="text-muted-foreground">{p.impressions} impr · {(p.ctr * 100).toFixed(1)}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Bug Report Table */}
+      {scanMode !== "cannibal" && bugs.length > 0 ? (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
+            <div>
+              <CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-sky-600" />Bug Report</CardTitle>
+              <CardDescription>Click any row to see issues and AI changes. Sorted by {sortBy}.</CardDescription>
+            </div>
+            <div className="flex gap-2 items-center text-xs">
+              <Label className="text-xs">Sort:</Label>
+              <select value={sortBy} onChange={e => setSortBy(e.target.value as any)} className="border rounded px-2 py-1 text-xs">
+                <option value="quickWin">Quick-Win score</option>
+                <option value="impressions">Impressions</option>
+                <option value="ctr">Lowest CTR</option>
+              </select>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
@@ -363,6 +406,7 @@ export default function AdminCTROptimizer() {
                 <TableRow>
                   <TableHead className="w-8"></TableHead>
                   <TableHead>Page</TableHead>
+                  <TableHead className="text-right">Quick-Win</TableHead>
                   <TableHead className="text-right">Impr.</TableHead>
                   <TableHead className="text-right">CTR</TableHead>
                   <TableHead className="text-right">Pos.</TableHead>
@@ -372,15 +416,22 @@ export default function AdminCTROptimizer() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {bugs.map((bug) => {
+                {sortedBugs.map((bug) => {
                   const isOpen = !!expanded[bug.page_url];
                   return (
                     <>
                       <TableRow key={bug.page_url} className="cursor-pointer hover:bg-muted/40"
                         onClick={() => setExpanded(e => ({ ...e, [bug.page_url]: !isOpen }))}>
                         <TableCell>{isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}</TableCell>
-                        <TableCell className="max-w-[280px] truncate font-medium text-sky-700">
+                        <TableCell className="max-w-[260px] truncate font-medium text-sky-700">
                           {bug.page_url.replace("https://mbacompass.in", "") || "/"}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant="outline" className={
+                            bug.quickWin >= 60 ? "bg-emerald-100 text-emerald-700 border-emerald-300" :
+                            bug.quickWin >= 30 ? "bg-sky-100 text-sky-700 border-sky-300" :
+                            "bg-muted text-muted-foreground"
+                          }>{bug.quickWin}</Badge>
                         </TableCell>
                         <TableCell className="text-right tabular-nums">{bug.impressions.toLocaleString()}</TableCell>
                         <TableCell className="text-right tabular-nums">{(bug.ctr * 100).toFixed(2)}%</TableCell>
@@ -390,16 +441,24 @@ export default function AdminCTROptimizer() {
                         </TableCell>
                         <TableCell>{statusBadge(bug.status)}</TableCell>
                         <TableCell className="text-right">
-                          <Button size="sm" variant="outline" disabled={bug.status === "fixing" || autoFix.running}
-                            onClick={(e) => { e.stopPropagation(); fixOne(bug); }}>
-                            {bug.status === "fixing" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wrench className="w-3 h-3 mr-1" />}
-                            Fix
-                          </Button>
+                          <div className="flex gap-1 justify-end">
+                            <Button size="sm" variant="outline" disabled={bug.status === "fixing" || autoFix.running}
+                              onClick={(e) => { e.stopPropagation(); fixOne(bug); }}>
+                              {bug.status === "fixing" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wrench className="w-3 h-3 mr-1" />}
+                              Fix
+                            </Button>
+                            {bug.status === "fixed" && (
+                              <Button size="sm" variant="ghost" title="Revert last AI fix"
+                                onClick={(e) => { e.stopPropagation(); undoFix(bug); }}>
+                                <Undo2 className="w-3 h-3" />
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                       {isOpen && (
                         <TableRow>
-                          <TableCell colSpan={8} className="bg-muted/20">
+                          <TableCell colSpan={9} className="bg-muted/20">
                             <div className="p-3 space-y-3">
                               <div>
                                 <p className="text-xs font-semibold mb-1 text-muted-foreground">DETECTED ISSUES</p>
@@ -420,7 +479,8 @@ export default function AdminCTROptimizer() {
                                     </div>
                                   )}
                                   {bug.fixLog.faqs ? <p className="text-sm mt-1">✓ Added {bug.fixLog.faqs} FAQ schema entries</p> : null}
-                                  {bug.fixLog.freshness ? <p className="text-sm">✓ Freshness timestamp bumped (sitemap will re-crawl)</p> : null}
+                                  {bug.fixLog.freshness ? <p className="text-sm">✓ Freshness timestamp bumped</p> : null}
+                                  {bug.fixLog.resubmitted ? <p className="text-sm flex items-center gap-1"><Send className="w-3 h-3" />Resubmitted to Google Indexing API</p> : null}
                                 </div>
                               )}
                               {bug.error && (
