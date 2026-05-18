@@ -69,8 +69,11 @@ export default function AdminCTROptimizer() {
     days: 28, minImpr: 100, maxCtr: 0.02,
   });
   const [autoFix, setAutoFix] = useState({ running: false, done: 0, total: 0, current: "" });
-  const [opts, setOpts] = useState({ meta: true, faqs: true, fresh: true, limit: 25 });
+  const [opts, setOpts] = useState({ meta: true, faqs: true, fresh: true, resubmit: true, limit: 25 });
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [scanMode, setScanMode] = useState<"low-ctr" | "striking" | "cannibal">("low-ctr");
+  const [cannibals, setCannibals] = useState<Cannibal[]>([]);
+  const [sortBy, setSortBy] = useState<"impressions" | "quickWin" | "ctr">("quickWin");
 
   const stats = useMemo(() => ({
     total: bugs.length,
