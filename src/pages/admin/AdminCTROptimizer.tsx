@@ -183,7 +183,26 @@ export default function AdminCTROptimizer() {
     }
   };
 
-  const exportReport = () => {
+  const undoFix = async (bug: Bug) => {
+    try {
+      const out = await callOptimizer("undo-last", { page_url: bug.page_url });
+      setBugs(prev => prev.map(b => b.page_url === bug.page_url
+        ? { ...b, status: "pending", fixLog: undefined } : b));
+      toast({ title: "Reverted", description: `Restored: ${out.reverted_title?.slice(0, 60) || ""}` });
+    } catch (e: any) {
+      toast({ title: "Undo failed", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const sortedBugs = useMemo(() => {
+    const arr = [...bugs];
+    if (sortBy === "impressions") arr.sort((a, b) => b.impressions - a.impressions);
+    else if (sortBy === "ctr") arr.sort((a, b) => a.ctr - b.ctr);
+    else arr.sort((a, b) => b.quickWin - a.quickWin);
+    return arr;
+  }, [bugs, sortBy]);
+
+
     const rows = [
       ["URL", "Severity", "Status", "Impressions", "Clicks", "CTR%", "Position", "Issues", "New Title", "FAQs Added"],
       ...bugs.map(b => [
