@@ -10,9 +10,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Radar, Wrench, CheckCircle2, AlertTriangle, Loader2, Sparkles,
   TrendingDown, Zap, ChevronDown, ChevronRight, RefreshCw, FileText, Activity,
+  Target, GitMerge, Undo2, Send,
 } from "lucide-react";
 
 type GscRow = { keys: string[]; clicks: number; impressions: number; ctr: number; position: number };
