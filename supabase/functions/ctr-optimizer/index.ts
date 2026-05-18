@@ -564,6 +564,16 @@ Deno.serve(async (req) => {
         steps.applied.freshness = true;
       }
 
+      // Auto-resubmit to Google Indexing API
+      if (body.resubmitIndex) {
+        try {
+          await supabase.functions.invoke("google-indexing", {
+            body: { action: "submit-url", url: page_url, type: "URL_UPDATED" },
+          });
+          steps.applied.resubmitted = true;
+        } catch (_) { steps.applied.resubmitted = false; }
+      }
+
       return json({ ok: true, ...steps });
     }
 
