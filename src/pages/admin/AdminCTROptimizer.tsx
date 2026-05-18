@@ -202,7 +202,7 @@ export default function AdminCTROptimizer() {
     return arr;
   }, [bugs, sortBy]);
 
-
+  const exportReport = () => {
     const rows = [
       ["URL", "Severity", "Status", "Impressions", "Clicks", "CTR%", "Position", "Issues", "New Title", "FAQs Added"],
       ...bugs.map(b => [
