@@ -10,9 +10,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Radar, Wrench, CheckCircle2, AlertTriangle, Loader2, Sparkles,
   TrendingDown, Zap, ChevronDown, ChevronRight, RefreshCw, FileText, Activity,
+  Target, GitMerge, Undo2, Send,
 } from "lucide-react";
 
 type GscRow = { keys: string[]; clicks: number; impressions: number; ctr: number; position: number };
@@ -22,11 +24,20 @@ type Bug = {
   clicks: number;
   ctr: number;
   position: number;
-  issues: string[];          // e.g. ["Low CTR", "Weak title", "No FAQs"]
+  quickWin: number;          // 0-100 priority score
+  issues: string[];
   severity: "high" | "medium" | "low";
   status: "pending" | "fixing" | "fixed" | "error";
-  fixLog?: { meta?: { old_title?: string; new_title?: string; new_description?: string }; faqs?: number; freshness?: boolean };
+  fixLog?: { meta?: { old_title?: string; new_title?: string; new_description?: string }; faqs?: number; freshness?: boolean; resubmitted?: boolean };
   error?: string;
+};
+type Cannibal = { query: string; total_impressions: number; pages: { page: string; clicks: number; impressions: number; ctr: number; position: number }[] };
+
+// Quick-win = impressions × CTR uplift potential when moving to ~pos 3
+const quickWinScore = (r: GscRow) => {
+  const targetCtr = 0.10; // expected CTR at top 3
+  const upliftClicks = Math.max(0, r.impressions * (targetCtr - r.ctr));
+  return Math.min(100, Math.round(upliftClicks / 5));
 };
 
 const callOptimizer = async (action: string, payload: any = {}) => {
@@ -58,8 +69,11 @@ export default function AdminCTROptimizer() {
     days: 28, minImpr: 100, maxCtr: 0.02,
   });
   const [autoFix, setAutoFix] = useState({ running: false, done: 0, total: 0, current: "" });
-  const [opts, setOpts] = useState({ meta: true, faqs: true, fresh: true, limit: 25 });
+  const [opts, setOpts] = useState({ meta: true, faqs: true, fresh: true, resubmit: true, limit: 25 });
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [scanMode, setScanMode] = useState<"low-ctr" | "striking" | "cannibal">("low-ctr");
+  const [cannibals, setCannibals] = useState<Cannibal[]>([]);
+  const [sortBy, setSortBy] = useState<"impressions" | "quickWin" | "ctr">("quickWin");
 
   const stats = useMemo(() => ({
     total: bugs.length,
@@ -72,33 +86,40 @@ export default function AdminCTROptimizer() {
   // ---------- Step 1: SCAN ----------
   const runScan = async () => {
     setScanning(true);
-    setBugs([]);
+    setBugs([]); setCannibals([]);
     try {
-      const res = await callOptimizer("fetch-gsc", {
-        dimensions: ["page"],
-        days: scanMeta.days,
-        rowLimit: 500,
-        minImpressions: scanMeta.minImpr,
-        maxCtr: scanMeta.maxCtr,
-      });
-      const rows: GscRow[] = res.rows || [];
-      const found: Bug[] = rows
-        .sort((a, b) => b.impressions - a.impressions)
-        .slice(0, opts.limit)
-        .map((r) => {
-          const { sev, issues } = severityFromRow(r);
-          return {
-            page_url: r.keys[0],
-            impressions: r.impressions,
-            clicks: r.clicks,
-            ctr: r.ctr,
-            position: r.position,
-            issues, severity: sev, status: "pending" as const,
-          };
-        });
-      setBugs(found);
+      if (scanMode === "cannibal") {
+        const res = await callOptimizer("fetch-cannibalization", { days: scanMeta.days, minImpressions: scanMeta.minImpr });
+        setCannibals(res.conflicts || []);
+        toast({ title: "Cannibalization scan complete", description: `${(res.conflicts || []).length} conflicting queries.` });
+      } else {
+        const res = await callOptimizer(
+          scanMode === "striking" ? "fetch-striking-distance" : "fetch-gsc",
+          {
+            dimensions: ["page"],
+            days: scanMeta.days,
+            rowLimit: 500,
+            minImpressions: scanMeta.minImpr,
+            maxCtr: scanMode === "striking" ? 1 : scanMeta.maxCtr,
+          }
+        );
+        const rows: GscRow[] = res.rows || [];
+        const found: Bug[] = rows
+          .map((r) => {
+            const { sev, issues } = severityFromRow(r);
+            return {
+              page_url: r.keys[0],
+              impressions: r.impressions, clicks: r.clicks, ctr: r.ctr, position: r.position,
+              quickWin: quickWinScore(r),
+              issues, severity: sev, status: "pending" as const,
+            };
+          })
+          .sort((a, b) => b.quickWin - a.quickWin)
+          .slice(0, opts.limit);
+        setBugs(found);
+        toast({ title: "Scan complete", description: `Found ${found.length} pages.` });
+      }
       setScanMeta(s => ({ ...s, at: new Date().toLocaleString() }));
-      toast({ title: "Scan complete", description: `Found ${found.length} underperforming pages.` });
     } catch (e: any) {
       toast({ title: "Scan failed", description: e.message, variant: "destructive" });
     } finally {
@@ -124,6 +145,7 @@ export default function AdminCTROptimizer() {
           rewriteMeta: opts.meta,
           generateFaqs: opts.faqs,
           bumpFreshness: opts.fresh,
+          resubmitIndex: opts.resubmit,
         });
         setBugs(prev => prev.map(b => b.page_url === bug.page_url ? {
           ...b, status: "fixed",
@@ -131,6 +153,7 @@ export default function AdminCTROptimizer() {
             meta: out.applied?.meta,
             faqs: out.applied?.faqs,
             freshness: out.applied?.freshness,
+            resubmitted: out.applied?.resubmitted,
           },
         } : b));
       } catch (e: any) {
@@ -147,10 +170,11 @@ export default function AdminCTROptimizer() {
       const out = await callOptimizer("auto-fix-one", {
         page_url: bug.page_url,
         rewriteMeta: opts.meta, generateFaqs: opts.faqs, bumpFreshness: opts.fresh,
+        resubmitIndex: opts.resubmit,
       });
       setBugs(prev => prev.map(b => b.page_url === bug.page_url ? {
         ...b, status: "fixed",
-        fixLog: { meta: out.applied?.meta, faqs: out.applied?.faqs, freshness: out.applied?.freshness },
+        fixLog: { meta: out.applied?.meta, faqs: out.applied?.faqs, freshness: out.applied?.freshness, resubmitted: out.applied?.resubmitted },
       } : b));
       toast({ title: "Fixed", description: bug.page_url });
     } catch (e: any) {
@@ -158,6 +182,25 @@ export default function AdminCTROptimizer() {
       toast({ title: "Fix failed", description: e.message, variant: "destructive" });
     }
   };
+
+  const undoFix = async (bug: Bug) => {
+    try {
+      const out = await callOptimizer("undo-last", { page_url: bug.page_url });
+      setBugs(prev => prev.map(b => b.page_url === bug.page_url
+        ? { ...b, status: "pending", fixLog: undefined } : b));
+      toast({ title: "Reverted", description: `Restored: ${out.reverted_title?.slice(0, 60) || ""}` });
+    } catch (e: any) {
+      toast({ title: "Undo failed", description: e.message, variant: "destructive" });
+    }
+  };
+
+  const sortedBugs = useMemo(() => {
+    const arr = [...bugs];
+    if (sortBy === "impressions") arr.sort((a, b) => b.impressions - a.impressions);
+    else if (sortBy === "ctr") arr.sort((a, b) => a.ctr - b.ctr);
+    else arr.sort((a, b) => b.quickWin - a.quickWin);
+    return arr;
+  }, [bugs, sortBy]);
 
   const exportReport = () => {
     const rows = [
@@ -217,6 +260,18 @@ export default function AdminCTROptimizer() {
         <StepCard n={3} label="Report" icon={<FileText className="w-5 h-5" />} active={false} done={stats.fixed > 0 && !autoFix.running} />
       </div>
 
+      {/* Scan mode tabs */}
+      <Tabs value={scanMode} onValueChange={(v) => setScanMode(v as any)}>
+        <TabsList className="grid grid-cols-3 max-w-xl">
+          <TabsTrigger value="low-ctr"><TrendingDown className="w-4 h-4 mr-1" />Low CTR</TabsTrigger>
+          <TabsTrigger value="striking"><Target className="w-4 h-4 mr-1" />Striking Distance</TabsTrigger>
+          <TabsTrigger value="cannibal"><GitMerge className="w-4 h-4 mr-1" />Cannibalization</TabsTrigger>
+        </TabsList>
+        <TabsContent value="low-ctr" className="text-xs text-muted-foreground pt-2">Pages with high impressions but CTR below your threshold.</TabsContent>
+        <TabsContent value="striking" className="text-xs text-muted-foreground pt-2">Pages stuck at positions 8–20 — easiest wins with on-page tweaks.</TabsContent>
+        <TabsContent value="cannibal" className="text-xs text-muted-foreground pt-2">Queries where multiple URLs from your site compete with each other.</TabsContent>
+      </Tabs>
+
       {/* Control panel */}
       <Card className="border-2 border-sky-200">
         <CardHeader>
@@ -236,8 +291,9 @@ export default function AdminCTROptimizer() {
                 onChange={e => setScanMeta(s => ({ ...s, minImpr: Number(e.target.value) || 100 }))} />
             </div>
             <div>
-              <Label className="text-xs">Max CTR (e.g. 0.02 = 2%)</Label>
+              <Label className="text-xs">Max CTR (low-ctr mode)</Label>
               <Input type="number" step="0.005" min={0} max={1} value={scanMeta.maxCtr}
+                disabled={scanMode !== "low-ctr"}
                 onChange={e => setScanMeta(s => ({ ...s, maxCtr: Number(e.target.value) || 0.02 }))} />
             </div>
             <div>
@@ -251,6 +307,7 @@ export default function AdminCTROptimizer() {
             <ToggleRow label="Rewrite meta title + description" checked={opts.meta} onChange={v => setOpts(o => ({ ...o, meta: v }))} />
             <ToggleRow label="Generate FAQ schema" checked={opts.faqs} onChange={v => setOpts(o => ({ ...o, faqs: v }))} />
             <ToggleRow label="Bump freshness (sitemap re-crawl)" checked={opts.fresh} onChange={v => setOpts(o => ({ ...o, fresh: v }))} />
+            <ToggleRow label="Auto-resubmit to Google Indexing" checked={opts.resubmit} onChange={v => setOpts(o => ({ ...o, resubmit: v }))} />
           </div>
 
           <div className="flex flex-wrap gap-3 pt-2">
@@ -293,12 +350,55 @@ export default function AdminCTROptimizer() {
         </div>
       )}
 
-      {/* Bug Report Table */}
-      {bugs.length > 0 ? (
+      {/* Cannibalization panel */}
+      {scanMode === "cannibal" && cannibals.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-sky-600" />Bug Report</CardTitle>
-            <CardDescription>Click any row to see the issues and what the AI changed.</CardDescription>
+            <CardTitle className="flex items-center gap-2"><GitMerge className="w-5 h-5 text-amber-600" />Keyword Cannibalization</CardTitle>
+            <CardDescription>Multiple URLs competing for the same query — pick one as the canonical winner and 301/noindex the others.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {cannibals.map((c, i) => (
+              <div key={i} className="border rounded-lg p-3 bg-amber-50/50">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="font-semibold text-sm">{c.query}</p>
+                  <Badge variant="outline" className="bg-amber-100 text-amber-700">
+                    {c.pages.length} URLs · {c.total_impressions.toLocaleString()} impr
+                  </Badge>
+                </div>
+                <div className="space-y-1">
+                  {c.pages.slice(0, 5).map((p, idx) => (
+                    <div key={idx} className="text-xs flex items-center gap-2 font-mono">
+                      <Badge variant="outline" className="w-12 justify-center">#{p.position.toFixed(1)}</Badge>
+                      <a href={p.page} target="_blank" rel="noreferrer" className="text-sky-700 truncate flex-1 hover:underline">
+                        {p.page.replace("https://mbacompass.in", "") || "/"}
+                      </a>
+                      <span className="text-muted-foreground">{p.impressions} impr · {(p.ctr * 100).toFixed(1)}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Bug Report Table */}
+      {scanMode !== "cannibal" && bugs.length > 0 ? (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between flex-wrap gap-2">
+            <div>
+              <CardTitle className="flex items-center gap-2"><Sparkles className="w-5 h-5 text-sky-600" />Bug Report</CardTitle>
+              <CardDescription>Click any row to see issues and AI changes. Sorted by {sortBy}.</CardDescription>
+            </div>
+            <div className="flex gap-2 items-center text-xs">
+              <Label className="text-xs">Sort:</Label>
+              <select value={sortBy} onChange={e => setSortBy(e.target.value as any)} className="border rounded px-2 py-1 text-xs">
+                <option value="quickWin">Quick-Win score</option>
+                <option value="impressions">Impressions</option>
+                <option value="ctr">Lowest CTR</option>
+              </select>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             <Table>
@@ -306,6 +406,7 @@ export default function AdminCTROptimizer() {
                 <TableRow>
                   <TableHead className="w-8"></TableHead>
                   <TableHead>Page</TableHead>
+                  <TableHead className="text-right">Quick-Win</TableHead>
                   <TableHead className="text-right">Impr.</TableHead>
                   <TableHead className="text-right">CTR</TableHead>
                   <TableHead className="text-right">Pos.</TableHead>
@@ -315,15 +416,22 @@ export default function AdminCTROptimizer() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {bugs.map((bug) => {
+                {sortedBugs.map((bug) => {
                   const isOpen = !!expanded[bug.page_url];
                   return (
                     <>
                       <TableRow key={bug.page_url} className="cursor-pointer hover:bg-muted/40"
                         onClick={() => setExpanded(e => ({ ...e, [bug.page_url]: !isOpen }))}>
                         <TableCell>{isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}</TableCell>
-                        <TableCell className="max-w-[280px] truncate font-medium text-sky-700">
+                        <TableCell className="max-w-[260px] truncate font-medium text-sky-700">
                           {bug.page_url.replace("https://mbacompass.in", "") || "/"}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant="outline" className={
+                            bug.quickWin >= 60 ? "bg-emerald-100 text-emerald-700 border-emerald-300" :
+                            bug.quickWin >= 30 ? "bg-sky-100 text-sky-700 border-sky-300" :
+                            "bg-muted text-muted-foreground"
+                          }>{bug.quickWin}</Badge>
                         </TableCell>
                         <TableCell className="text-right tabular-nums">{bug.impressions.toLocaleString()}</TableCell>
                         <TableCell className="text-right tabular-nums">{(bug.ctr * 100).toFixed(2)}%</TableCell>
@@ -333,16 +441,24 @@ export default function AdminCTROptimizer() {
                         </TableCell>
                         <TableCell>{statusBadge(bug.status)}</TableCell>
                         <TableCell className="text-right">
-                          <Button size="sm" variant="outline" disabled={bug.status === "fixing" || autoFix.running}
-                            onClick={(e) => { e.stopPropagation(); fixOne(bug); }}>
-                            {bug.status === "fixing" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wrench className="w-3 h-3 mr-1" />}
-                            Fix
-                          </Button>
+                          <div className="flex gap-1 justify-end">
+                            <Button size="sm" variant="outline" disabled={bug.status === "fixing" || autoFix.running}
+                              onClick={(e) => { e.stopPropagation(); fixOne(bug); }}>
+                              {bug.status === "fixing" ? <Loader2 className="w-3 h-3 animate-spin" /> : <Wrench className="w-3 h-3 mr-1" />}
+                              Fix
+                            </Button>
+                            {bug.status === "fixed" && (
+                              <Button size="sm" variant="ghost" title="Revert last AI fix"
+                                onClick={(e) => { e.stopPropagation(); undoFix(bug); }}>
+                                <Undo2 className="w-3 h-3" />
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                       {isOpen && (
                         <TableRow>
-                          <TableCell colSpan={8} className="bg-muted/20">
+                          <TableCell colSpan={9} className="bg-muted/20">
                             <div className="p-3 space-y-3">
                               <div>
                                 <p className="text-xs font-semibold mb-1 text-muted-foreground">DETECTED ISSUES</p>
@@ -363,7 +479,8 @@ export default function AdminCTROptimizer() {
                                     </div>
                                   )}
                                   {bug.fixLog.faqs ? <p className="text-sm mt-1">✓ Added {bug.fixLog.faqs} FAQ schema entries</p> : null}
-                                  {bug.fixLog.freshness ? <p className="text-sm">✓ Freshness timestamp bumped (sitemap will re-crawl)</p> : null}
+                                  {bug.fixLog.freshness ? <p className="text-sm">✓ Freshness timestamp bumped</p> : null}
+                                  {bug.fixLog.resubmitted ? <p className="text-sm flex items-center gap-1"><Send className="w-3 h-3" />Resubmitted to Google Indexing API</p> : null}
                                 </div>
                               )}
                               {bug.error && (
