@@ -296,6 +296,82 @@ Deno.serve(async (req) => {
   const action = body.action;
 
   try {
+    if (action === "fetch-striking-distance") {
+      // Pages stuck at position 8-20 with decent impressions — quickest wins
+      const rows = await fetchGSC({
+        dimensions: ["page"],
+        days: body.days ?? 28,
+        rowLimit: 500,
+        minImpressions: body.minImpressions ?? 50,
+        maxCtr: 1,
+        posMin: body.posMin ?? 8,
+        posMax: body.posMax ?? 20,
+      });
+      return json({ rows });
+    }
+
+    if (action === "fetch-cannibalization") {
+      // Queries where multiple URLs from our site compete
+      const sa = await getServiceAccount();
+      if (!sa) return json({ error: "GSC service account not configured" }, 500);
+      const token = await getAccessToken(sa);
+      const end = new Date();
+      const start = new Date(end.getTime() - (body.days ?? 28) * 86400000);
+      const fmt = (d: Date) => d.toISOString().slice(0, 10);
+      const site = `sc-domain:mbacompass.in`;
+      const url = `${GSC_BASE}/sites/${encodeURIComponent(site)}/searchAnalytics/query`;
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          startDate: fmt(start), endDate: fmt(end),
+          dimensions: ["query", "page"],
+          rowLimit: 5000,
+        }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) return json({ error: JSON.stringify(data) }, 500);
+      const byQuery: Record<string, any[]> = {};
+      for (const r of data.rows || []) {
+        const [q, p] = r.keys;
+        if (r.impressions < (body.minImpressions ?? 30)) continue;
+        (byQuery[q] = byQuery[q] || []).push({ page: p, ...r });
+      }
+      const conflicts = Object.entries(byQuery)
+        .filter(([_, arr]) => arr.length > 1)
+        .map(([query, pages]) => ({
+          query,
+          pages: pages.sort((a: any, b: any) => a.position - b.position),
+          total_impressions: pages.reduce((s: number, p: any) => s + p.impressions, 0),
+        }))
+        .sort((a, b) => b.total_impressions - a.total_impressions)
+        .slice(0, body.limit ?? 50);
+      return json({ conflicts });
+    }
+
+    if (action === "undo-last") {
+      const page_url = body.page_url;
+      const r = resolveTableAndSlug(page_url);
+      if (!r) return json({ error: "URL not mapped" }, 400);
+      const { data: last } = await supabase.from("ctr_optimizations")
+        .select("*").eq("page_url", page_url).eq("action", "auto-fix-meta")
+        .order("created_at", { ascending: false }).limit(1).maybeSingle();
+      if (!last) return json({ error: "No previous fix found" }, 404);
+      await supabase.from(r.table).update({
+        meta_title: last.old_title,
+        meta_description: last.old_description,
+        updated_at: new Date().toISOString(),
+      }).eq("slug", r.slug);
+      await supabase.from("ctr_optimizations").insert({
+        page_url, page_type: r.table, table_name: r.table, slug: r.slug,
+        action: "undo-meta",
+        old_title: last.new_title, new_title: last.old_title,
+        old_description: last.new_description, new_description: last.old_description,
+        applied_by: userId,
+      });
+      return json({ ok: true, reverted_title: last.old_title });
+    }
+
     if (action === "fetch-gsc") {
       const rows = await fetchGSC({
         dimensions: body.dimensions || ["page", "query"],
