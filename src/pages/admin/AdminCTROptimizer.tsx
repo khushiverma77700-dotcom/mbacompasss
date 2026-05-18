@@ -260,6 +260,18 @@ export default function AdminCTROptimizer() {
         <StepCard n={3} label="Report" icon={<FileText className="w-5 h-5" />} active={false} done={stats.fixed > 0 && !autoFix.running} />
       </div>
 
+      {/* Scan mode tabs */}
+      <Tabs value={scanMode} onValueChange={(v) => setScanMode(v as any)}>
+        <TabsList className="grid grid-cols-3 max-w-xl">
+          <TabsTrigger value="low-ctr"><TrendingDown className="w-4 h-4 mr-1" />Low CTR</TabsTrigger>
+          <TabsTrigger value="striking"><Target className="w-4 h-4 mr-1" />Striking Distance</TabsTrigger>
+          <TabsTrigger value="cannibal"><GitMerge className="w-4 h-4 mr-1" />Cannibalization</TabsTrigger>
+        </TabsList>
+        <TabsContent value="low-ctr" className="text-xs text-muted-foreground pt-2">Pages with high impressions but CTR below your threshold.</TabsContent>
+        <TabsContent value="striking" className="text-xs text-muted-foreground pt-2">Pages stuck at positions 8–20 — easiest wins with on-page tweaks.</TabsContent>
+        <TabsContent value="cannibal" className="text-xs text-muted-foreground pt-2">Queries where multiple URLs from your site compete with each other.</TabsContent>
+      </Tabs>
+
       {/* Control panel */}
       <Card className="border-2 border-sky-200">
         <CardHeader>
@@ -279,8 +291,9 @@ export default function AdminCTROptimizer() {
                 onChange={e => setScanMeta(s => ({ ...s, minImpr: Number(e.target.value) || 100 }))} />
             </div>
             <div>
-              <Label className="text-xs">Max CTR (e.g. 0.02 = 2%)</Label>
+              <Label className="text-xs">Max CTR (low-ctr mode)</Label>
               <Input type="number" step="0.005" min={0} max={1} value={scanMeta.maxCtr}
+                disabled={scanMode !== "low-ctr"}
                 onChange={e => setScanMeta(s => ({ ...s, maxCtr: Number(e.target.value) || 0.02 }))} />
             </div>
             <div>
@@ -294,6 +307,7 @@ export default function AdminCTROptimizer() {
             <ToggleRow label="Rewrite meta title + description" checked={opts.meta} onChange={v => setOpts(o => ({ ...o, meta: v }))} />
             <ToggleRow label="Generate FAQ schema" checked={opts.faqs} onChange={v => setOpts(o => ({ ...o, faqs: v }))} />
             <ToggleRow label="Bump freshness (sitemap re-crawl)" checked={opts.fresh} onChange={v => setOpts(o => ({ ...o, fresh: v }))} />
+            <ToggleRow label="Auto-resubmit to Google Indexing" checked={opts.resubmit} onChange={v => setOpts(o => ({ ...o, resubmit: v }))} />
           </div>
 
           <div className="flex flex-wrap gap-3 pt-2">
