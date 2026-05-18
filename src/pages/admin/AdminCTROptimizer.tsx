@@ -86,33 +86,40 @@ export default function AdminCTROptimizer() {
   // ---------- Step 1: SCAN ----------
   const runScan = async () => {
     setScanning(true);
-    setBugs([]);
+    setBugs([]); setCannibals([]);
     try {
-      const res = await callOptimizer("fetch-gsc", {
-        dimensions: ["page"],
-        days: scanMeta.days,
-        rowLimit: 500,
-        minImpressions: scanMeta.minImpr,
-        maxCtr: scanMeta.maxCtr,
-      });
-      const rows: GscRow[] = res.rows || [];
-      const found: Bug[] = rows
-        .sort((a, b) => b.impressions - a.impressions)
-        .slice(0, opts.limit)
-        .map((r) => {
-          const { sev, issues } = severityFromRow(r);
-          return {
-            page_url: r.keys[0],
-            impressions: r.impressions,
-            clicks: r.clicks,
-            ctr: r.ctr,
-            position: r.position,
-            issues, severity: sev, status: "pending" as const,
-          };
-        });
-      setBugs(found);
+      if (scanMode === "cannibal") {
+        const res = await callOptimizer("fetch-cannibalization", { days: scanMeta.days, minImpressions: scanMeta.minImpr });
+        setCannibals(res.conflicts || []);
+        toast({ title: "Cannibalization scan complete", description: `${(res.conflicts || []).length} conflicting queries.` });
+      } else {
+        const res = await callOptimizer(
+          scanMode === "striking" ? "fetch-striking-distance" : "fetch-gsc",
+          {
+            dimensions: ["page"],
+            days: scanMeta.days,
+            rowLimit: 500,
+            minImpressions: scanMeta.minImpr,
+            maxCtr: scanMode === "striking" ? 1 : scanMeta.maxCtr,
+          }
+        );
+        const rows: GscRow[] = res.rows || [];
+        const found: Bug[] = rows
+          .map((r) => {
+            const { sev, issues } = severityFromRow(r);
+            return {
+              page_url: r.keys[0],
+              impressions: r.impressions, clicks: r.clicks, ctr: r.ctr, position: r.position,
+              quickWin: quickWinScore(r),
+              issues, severity: sev, status: "pending" as const,
+            };
+          })
+          .sort((a, b) => b.quickWin - a.quickWin)
+          .slice(0, opts.limit);
+        setBugs(found);
+        toast({ title: "Scan complete", description: `Found ${found.length} pages.` });
+      }
       setScanMeta(s => ({ ...s, at: new Date().toLocaleString() }));
-      toast({ title: "Scan complete", description: `Found ${found.length} underperforming pages.` });
     } catch (e: any) {
       toast({ title: "Scan failed", description: e.message, variant: "destructive" });
     } finally {
