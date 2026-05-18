@@ -24,11 +24,20 @@ type Bug = {
   clicks: number;
   ctr: number;
   position: number;
-  issues: string[];          // e.g. ["Low CTR", "Weak title", "No FAQs"]
+  quickWin: number;          // 0-100 priority score
+  issues: string[];
   severity: "high" | "medium" | "low";
   status: "pending" | "fixing" | "fixed" | "error";
-  fixLog?: { meta?: { old_title?: string; new_title?: string; new_description?: string }; faqs?: number; freshness?: boolean };
+  fixLog?: { meta?: { old_title?: string; new_title?: string; new_description?: string }; faqs?: number; freshness?: boolean; resubmitted?: boolean };
   error?: string;
+};
+type Cannibal = { query: string; total_impressions: number; pages: { page: string; clicks: number; impressions: number; ctr: number; position: number }[] };
+
+// Quick-win = impressions × CTR uplift potential when moving to ~pos 3
+const quickWinScore = (r: GscRow) => {
+  const targetCtr = 0.10; // expected CTR at top 3
+  const upliftClicks = Math.max(0, r.impressions * (targetCtr - r.ctr));
+  return Math.min(100, Math.round(upliftClicks / 5));
 };
 
 const callOptimizer = async (action: string, payload: any = {}) => {
