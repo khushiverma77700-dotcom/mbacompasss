@@ -145,6 +145,7 @@ export default function AdminCTROptimizer() {
           rewriteMeta: opts.meta,
           generateFaqs: opts.faqs,
           bumpFreshness: opts.fresh,
+          resubmitIndex: opts.resubmit,
         });
         setBugs(prev => prev.map(b => b.page_url === bug.page_url ? {
           ...b, status: "fixed",
@@ -152,6 +153,7 @@ export default function AdminCTROptimizer() {
             meta: out.applied?.meta,
             faqs: out.applied?.faqs,
             freshness: out.applied?.freshness,
+            resubmitted: out.applied?.resubmitted,
           },
         } : b));
       } catch (e: any) {
