@@ -70,10 +70,19 @@ const AdminMockTests = () => {
   const [form, setForm] = useState<Form>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [examFilter, setExamFilter] = useState<string>("all");
-  const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
-  const [readinessFilter, setReadinessFilter] = useState<string>("all");
+  const { filters, setFilter } = useAdminFilters({
+    storageKey: "admin.mockTests.filters",
+    defaults: { category: "all", exam: "all", difficulty: "all", readiness: "all" },
+    preserveKeys: ["edit"],
+  });
+  const categoryFilter = filters.category;
+  const examFilter = filters.exam;
+  const difficultyFilter = filters.difficulty;
+  const readinessFilter = filters.readiness;
+  const setCategoryFilter = (v: string) => setFilter("category", v);
+  const setExamFilter = (v: string) => setFilter("exam", v);
+  const setDifficultyFilter = (v: string) => setFilter("difficulty", v);
+  const setReadinessFilter = (v: string) => setFilter("readiness", v);
   const [readinessSaving, setReadinessSaving] = useState<Record<string, boolean>>({});
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkBusy, setBulkBusy] = useState(false);
