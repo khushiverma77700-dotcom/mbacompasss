@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!--
       Subdomain lockdown for dashboard.mbacompass.in.
-      Only /student/*, mock-taking/report routes, and auth pages render on the
-      dashboard host. Other marketing sections live on the main site and are
-      NOT redirected — the two hosts operate independently.
+      Only /student/* and auth pages render on the dashboard host. Marketing
+      sections (/mocks, /courses, /colleges, etc.) live on the main site and
+      are NOT redirected — the two hosts operate independently.
     -->
     <script>
       // ── Canonical host enforcement ──
@@ -37,7 +37,7 @@
           var hh = window.location.hash || "";
           // Root URL "/" stays as the dashboard home. Other allowed prefixes also pass.
           if (p === "/" || p === "") return;
-          var allowed = ["/student", "/mocks", "/auth", "/forgot-password", "/reset-password"];
+          var allowed = ["/student", "/auth", "/forgot-password", "/reset-password"];
           var ok = allowed.some(function (x) { return p === x || p.indexOf(x + "/") === 0; });
           if (!ok) {
             window.location.replace("https://dashboard.mbacompass.in/" + s + hh);
