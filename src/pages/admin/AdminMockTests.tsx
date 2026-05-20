@@ -430,6 +430,10 @@ const AdminMockTests = () => {
             <Button size="sm" variant="default" disabled={bulkBusy} onClick={() => bulkUpdate({ is_published: true, is_live: true }, "made Live")}>Make Live</Button>
             <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => bulkUpdate({ is_published: true }, "Published")}>Publish</Button>
             <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => bulkUpdate({ is_live: false, is_published: false }, "moved to Draft")}>Make Draft</Button>
+            <div className="w-px h-6 bg-border mx-1" />
+            <Button size="sm" variant="outline" disabled={bulkBusy} className="border-emerald-300 text-emerald-700 hover:bg-emerald-50" onClick={() => bulkUpdate({ readiness_status: "ready" }, "marked Ready")}>Mark Ready</Button>
+            <Button size="sm" variant="outline" disabled={bulkBusy} className="border-amber-300 text-amber-700 hover:bg-amber-50" onClick={() => bulkUpdate({ readiness_status: "needs_changes" }, "marked Needs Changes")}>Needs Changes</Button>
+            <Button size="sm" variant="outline" disabled={bulkBusy} className="border-rose-300 text-rose-700 hover:bg-rose-50" onClick={() => bulkUpdate({ readiness_status: "incomplete" }, "marked Incomplete")}>Incomplete</Button>
             <Button size="sm" variant="ghost" onClick={() => setSelectedIds([])}>Clear</Button>
           </div>
         </div>
