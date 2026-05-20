@@ -31,12 +31,22 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const phoneInputRef = useRef<HTMLInputElement | null>(null);
+  const lastVerifiedOtp = useRef<string>("");
 
   useEffect(() => {
     if (resendTimer <= 0) return;
     const interval = setInterval(() => setResendTimer((t) => t - 1), 1000);
     return () => clearInterval(interval);
   }, [resendTimer]);
+
+  // Auto-focus the phone field when the dialog opens so the user can start typing immediately.
+  useEffect(() => {
+    if (open && !otpStep && !phoneVerified) {
+      const t = setTimeout(() => phoneInputRef.current?.focus(), 80);
+      return () => clearTimeout(t);
+    }
+  }, [open, otpStep, phoneVerified]);
 
   const validatePhone = (value: string) => {
     const d = value.replace(/\D/g, "");
