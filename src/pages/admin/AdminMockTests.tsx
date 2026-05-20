@@ -471,13 +471,6 @@ const AdminMockTests = () => {
                     </Badge>
                   </TableCell>
                   <TableCell><Badge variant="secondary">{t.exam_code || "CAT"}</Badge></TableCell>
-                  <TableCell>
-                    {t.pricing_type === "free" ? (
-                      <Badge variant="secondary">Free</Badge>
-                    ) : (
-                      <Badge>₹{Number(t.price_inr).toLocaleString("en-IN")}</Badge>
-                    )}
-                  </TableCell>
                   <TableCell>{t.total_duration_minutes} min</TableCell>
                   <TableCell>
                     {t.is_published ? <Badge className="bg-emerald-600 hover:bg-emerald-700">Published</Badge> : <Badge variant="outline">Draft</Badge>}
