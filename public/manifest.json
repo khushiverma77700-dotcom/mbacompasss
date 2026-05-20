@@ -1,7 +1,7 @@
 {
-  "name": "MBA Compass — Student Dashboard",
+  "name": "MBA Compass - CAT Prep",
   "short_name": "MBA Compass",
-  "description": "Your personal MBA prep dashboard — daily mocks, performance tracking, planner and AI tools.",
+  "description": "MBA Compass — CAT Prep dashboard with daily mocks, performance tracking, planner and AI tools.",
   "start_url": "/student",
   "scope": "/student/",
   "display": "standalone",
