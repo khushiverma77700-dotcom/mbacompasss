@@ -318,6 +318,15 @@ const AdminMockTests = () => {
                 <Label className="text-xs">Banner URL</Label>
                 <Input value={form.banner_url} onChange={(e) => setForm({ ...form, banner_url: e.target.value })} placeholder="https://..." />
               </div>
+              <div>
+                <Label className="text-xs">Sort Order <span className="text-muted-foreground">(lower shows first on student dashboard)</span></Label>
+                <Input
+                  type="number"
+                  value={form.sort_order}
+                  onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })}
+                  placeholder="0"
+                />
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
