@@ -138,24 +138,39 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
     }
   };
 
-  const handleVerifyOtp = async () => {
-    if (otpValue.length !== 6) return;
+  const handleVerifyOtp = async (codeOverride?: string) => {
+    const code = codeOverride ?? otpValue;
+    if (code.length !== 6 || otpVerifying) return;
+    if (lastVerifiedOtp.current === code) return; // prevent double-submit from auto + click
+    lastVerifiedOtp.current = code;
     setOtpVerifying(true);
     try {
-      const { data, error } = await supabase.functions.invoke("verify-otp", { body: { phone, otp: otpValue } });
+      const { data, error } = await supabase.functions.invoke("verify-otp", { body: { phone, otp: code } });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
       if (data?.verified) {
         setPhoneVerified(true);
         setOtpStep(false);
         await finalize();
+      } else {
+        throw new Error("Invalid OTP");
       }
     } catch (err: any) {
-      toast({ title: "Verification failed", description: err.message, variant: "destructive" });
+      toast({ title: "Verification failed", description: err.message || "Invalid OTP. Try again.", variant: "destructive" });
+      setOtpValue("");
+      lastVerifiedOtp.current = "";
     } finally {
       setOtpVerifying(false);
     }
   };
+
+  // Auto-verify the moment the user enters / pastes the 6th digit — no extra click needed.
+  useEffect(() => {
+    if (otpStep && !phoneVerified && otpValue.length === 6 && !otpVerifying) {
+      void handleVerifyOtp(otpValue);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otpValue, otpStep, phoneVerified]);
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
