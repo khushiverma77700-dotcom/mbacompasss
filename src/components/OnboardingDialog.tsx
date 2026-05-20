@@ -231,7 +231,7 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
                   </InputOTPGroup>
                 </InputOTP>
               </div>
-              <Button onClick={handleVerifyOtp} className="w-full h-11"
+              <Button onClick={() => handleVerifyOtp()} className="w-full h-11"
                 disabled={otpVerifying || loading || otpValue.length !== 6}>
                 {otpVerifying || loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Finishing…</> : <>Verify & Continue <ArrowRight className="w-4 h-4 ml-1" /></>}
               </Button>
