@@ -510,12 +510,22 @@ function SidebarContent() {
 
       {restItems.map((item) => renderRow(item))}
 
-      <div className="pt-4 mt-4 border-t border-border">
+      <div className="pt-4 mt-4 border-t border-border space-y-1">
         <Link
           to="/student/mocks/full-length"
           className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground px-3 py-2"
         >
           Browse all mocks →
+        </Link>
+        <Link
+          to="/student/install"
+          className="flex items-center justify-between gap-2 text-xs font-medium text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-500/10 rounded-md px-3 py-2"
+        >
+          <span className="flex items-center gap-2">
+            <span className="h-5 w-5 rounded-md bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white text-[10px]">↓</span>
+            Install app
+          </span>
+          <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-sky-500 text-white font-bold">PWA</span>
         </Link>
       </div>
     </nav>
