@@ -34,7 +34,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/student/ThemeToggle";
-import StudentAvatar from "@/components/student/StudentAvatar";
+
 import StudentBottomNav from "@/components/student/StudentBottomNav";
 import InstallAppPrompt from "@/components/student/InstallAppPrompt";
 import { StudentThemeProvider } from "@/contexts/StudentThemeContext";
@@ -208,20 +208,22 @@ export default function StudentLayout() {
           className="fixed top-0 left-0 right-0 z-30 bg-card/95 backdrop-blur border-b border-border"
           style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
         >
-          <div className="flex items-center justify-between gap-2 px-3 sm:px-6 h-14">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-1.5 sm:gap-2 px-2.5 sm:px-6 h-14">
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
               <button
-                className="lg:hidden p-2 -ml-1 rounded-md hover:bg-accent shrink-0"
+                className="lg:hidden p-1.5 -ml-1 rounded-md hover:bg-accent shrink-0"
                 onClick={() => setMobileOpen((o) => !o)}
                 aria-label="Toggle menu"
               >
                 {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
-              <StudentAvatar />
               <Link to={homePath} className="flex items-center gap-2 min-w-0">
+                <div className="h-8 w-8 rounded-lg overflow-hidden bg-white ring-1 ring-sky-100 grid place-items-center shrink-0">
+                  <img src={BRAND_LOGO_URL} alt="MBA Compass" className="h-full w-full object-contain" />
+                </div>
                 <div className="leading-tight min-w-0">
-                  <div className="text-sm font-semibold flex items-center gap-1.5 min-w-0">
-                    <span className="truncate">Student Dashboard</span>
+                  <div className="text-[13px] sm:text-sm font-semibold flex items-center gap-1.5 min-w-0">
+                    <span className="truncate">MBA Compass</span>
                     {displayName && (
                       <>
                         <span className="hidden md:inline text-muted-foreground/60">·</span>
@@ -231,34 +233,25 @@ export default function StudentLayout() {
                       </>
                     )}
                   </div>
-                  <div className="text-[10px] text-muted-foreground hidden sm:block">MBA Compass LMS</div>
+                  <div className="text-[10px] text-muted-foreground hidden sm:block">CAT Prep LMS</div>
                 </div>
               </Link>
             </div>
-            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            <div className="flex items-center gap-0.5 sm:gap-2 shrink-0">
               <ThemeToggle />
               {!isStandalone && (
-                <>
-                  <Link
-                    to="/student/install"
-                    className="hidden sm:inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-semibold px-2.5 py-1.5 shadow hover:from-sky-600 hover:to-blue-700"
-                    aria-label="Install app"
-                    title="Install MBA Compass - CAT Prep as an app"
-                  >
-                    <Download className="h-3.5 w-3.5" />
-                    <span className="hidden md:inline">Install App</span>
-                  </Link>
-                  <Link
-                    to="/student/install"
-                    className="sm:hidden p-2 rounded-md hover:bg-accent text-sky-600"
-                    aria-label="Install app"
-                  >
-                    <Download className="h-5 w-5" />
-                  </Link>
-                </>
+                <Link
+                  to="/student/install"
+                  className="hidden sm:inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-semibold px-2.5 py-1.5 shadow hover:from-sky-600 hover:to-blue-700"
+                  aria-label="Install app"
+                  title="Install MBA Compass - CAT Prep as an app"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span className="hidden md:inline">Install</span>
+                </Link>
               )}
-              <Link to="/student/notifications" className="relative p-2 rounded-md hover:bg-accent" aria-label="Notifications">
-                <Bell className="h-5 w-5 text-foreground/70" />
+              <Link to="/student/notifications" className="relative p-1.5 sm:p-2 rounded-md hover:bg-accent" aria-label="Notifications">
+                <Bell className="h-[18px] w-[18px] sm:h-5 sm:w-5 text-foreground/70" />
               </Link>
               <div className="hidden md:flex items-center gap-2 pl-2 ml-1 border-l border-border">
                 <div className="h-8 w-8 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white text-xs font-semibold">
@@ -272,7 +265,7 @@ export default function StudentLayout() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="px-2 sm:px-3"
+                className="px-1.5 sm:px-3 h-9"
                 onClick={async () => {
                   clearStudentMode();
                   await supabase.auth.signOut();
@@ -280,7 +273,7 @@ export default function StudentLayout() {
                 }}
                 aria-label="Logout"
               >
-                <LogOut className="h-4 w-4 sm:mr-1" />
+                <LogOut className="h-[18px] w-[18px] sm:h-4 sm:w-4 sm:mr-1" />
                 <span className="hidden sm:inline">Logout</span>
               </Button>
             </div>

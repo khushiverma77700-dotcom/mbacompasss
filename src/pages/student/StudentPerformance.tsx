@@ -97,17 +97,17 @@ export default function StudentPerformance() {
     );
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       <div>
-        <h1 className="text-2xl font-bold">Performance Analytics</h1>
-        <p className="text-sm text-muted-foreground">AI-powered insights across {attempts.length} completed mock{attempts.length > 1 ? "s" : ""}.</p>
+        <h1 className="text-xl sm:text-2xl font-bold">Performance Analytics</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground">AI-powered insights across {attempts.length} completed mock{attempts.length > 1 ? "s" : ""}.</p>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-4">
-        <Card className="p-5">
-          <h2 className="font-semibold mb-3">Percentile trend</h2>
-          <ResponsiveContainer width="100%" height={240}>
-            <AreaChart data={trend}>
+      <div className="grid lg:grid-cols-2 gap-3 sm:gap-4">
+        <Card className="p-3 sm:p-5">
+          <h2 className="font-semibold text-sm sm:text-base mb-2 sm:mb-3">Percentile trend</h2>
+          <ResponsiveContainer width="100%" height={200}>
+            <AreaChart data={trend} margin={{ top: 5, right: 8, left: -16, bottom: 0 }}>
               <defs>
                 <linearGradient id="p1" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#0284c7" stopOpacity={0.4} />
@@ -115,39 +115,39 @@ export default function StudentPerformance() {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
-              <XAxis dataKey="name" fontSize={11} />
-              <YAxis domain={[0, 100]} fontSize={11} />
+              <XAxis dataKey="name" fontSize={10} />
+              <YAxis domain={[0, 100]} fontSize={10} />
               <Tooltip />
               <Area type="monotone" dataKey="percentile" stroke="#0284c7" fill="url(#p1)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         </Card>
 
-        <Card className="p-5">
-          <h2 className="font-semibold mb-3">Score & accuracy</h2>
-          <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={trend}>
+        <Card className="p-3 sm:p-5">
+          <h2 className="font-semibold text-sm sm:text-base mb-2 sm:mb-3">Score & accuracy</h2>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={trend} margin={{ top: 5, right: 8, left: -16, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
-              <XAxis dataKey="name" fontSize={11} />
-              <YAxis fontSize={11} />
+              <XAxis dataKey="name" fontSize={10} />
+              <YAxis fontSize={10} />
               <Tooltip />
-              <Legend />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
               <Line type="monotone" dataKey="score" stroke="#0284c7" strokeWidth={2} />
               <Line type="monotone" dataKey="accuracy" stroke="#10b981" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         </Card>
 
-        <Card className="p-5">
-          <h2 className="font-semibold mb-3">Section-wise average</h2>
+        <Card className="p-3 sm:p-5">
+          <h2 className="font-semibold text-sm sm:text-base mb-2 sm:mb-3">Section-wise average</h2>
           {sectionalAvg.length === 0 ? (
             <div className="text-sm text-muted-foreground">No section data.</div>
           ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={sectionalAvg}>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={sectionalAvg} margin={{ top: 5, right: 8, left: -16, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
-                <XAxis dataKey="section" fontSize={11} />
-                <YAxis fontSize={11} />
+                <XAxis dataKey="section" fontSize={10} />
+                <YAxis fontSize={10} />
                 <Tooltip />
                 <Bar dataKey="score" fill="#0284c7" radius={[6, 6, 0, 0]} />
               </BarChart>
@@ -155,31 +155,31 @@ export default function StudentPerformance() {
           )}
         </Card>
 
-        <Card className="p-5">
-          <h2 className="font-semibold mb-3">You vs Top performers</h2>
+        <Card className="p-3 sm:p-5">
+          <h2 className="font-semibold text-sm sm:text-base mb-2 sm:mb-3">You vs Top performers</h2>
           {radarData.length === 0 ? (
             <div className="text-sm text-muted-foreground">No section data.</div>
           ) : (
-            <ResponsiveContainer width="100%" height={240}>
+            <ResponsiveContainer width="100%" height={220}>
               <RadarChart data={radarData}>
                 <PolarGrid stroke="#e0f2fe" />
-                <PolarAngleAxis dataKey="section" fontSize={11} />
-                <PolarRadiusAxis fontSize={10} domain={[0, 100]} />
+                <PolarAngleAxis dataKey="section" fontSize={10} />
+                <PolarRadiusAxis fontSize={9} domain={[0, 100]} />
                 <Radar name="You" dataKey="you" stroke="#0284c7" fill="#0284c7" fillOpacity={0.4} />
                 <Radar name="Top performers" dataKey="topper" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.2} />
-                <Legend />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
               </RadarChart>
             </ResponsiveContainer>
           )}
         </Card>
 
-        <Card className="p-5 lg:col-span-2">
-          <h2 className="font-semibold mb-3">Correct vs Incorrect vs Skipped</h2>
-          <ResponsiveContainer width="100%" height={220}>
-            <BarChart data={correctVsIncorrect} layout="vertical">
+        <Card className="p-3 sm:p-5 lg:col-span-2">
+          <h2 className="font-semibold text-sm sm:text-base mb-2 sm:mb-3">Correct vs Incorrect vs Skipped</h2>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={correctVsIncorrect} layout="vertical" margin={{ top: 5, right: 8, left: -8, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e0f2fe" />
-              <XAxis type="number" fontSize={11} />
-              <YAxis type="category" dataKey="name" fontSize={11} />
+              <XAxis type="number" fontSize={10} />
+              <YAxis type="category" dataKey="name" fontSize={11} width={70} />
               <Tooltip />
               <Bar dataKey="value" fill="#0284c7" radius={[0, 6, 6, 0]} />
             </BarChart>
@@ -187,9 +187,46 @@ export default function StudentPerformance() {
         </Card>
       </div>
 
-      <Card className="p-5">
-        <h2 className="font-semibold mb-3">Mock-by-mock breakdown</h2>
-        <div className="overflow-x-auto">
+      <Card className="p-3 sm:p-5">
+        <h2 className="font-semibold text-sm sm:text-base mb-2 sm:mb-3">Mock-by-mock breakdown</h2>
+
+        {/* Mobile: card list */}
+        <div className="sm:hidden space-y-2">
+          {attempts.slice().reverse().map((a) => (
+            <Link
+              key={a.id}
+              to={mockResultPath(a.id)}
+              onClick={ensureStudentMode}
+              onPointerDown={ensureStudentMode}
+              className="block rounded-lg border border-border/60 bg-card/50 p-3 active:bg-accent/60"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-sm truncate">{a.test?.name ?? "—"}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">
+                    {a.submitted_at ? new Date(a.submitted_at).toLocaleDateString() : "—"}
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-base font-bold text-sky-700">{a.percentile ?? 0}<span className="text-[10px] font-normal text-muted-foreground"> %ile</span></div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-border/40 text-[11px]">
+                <div>
+                  <div className="text-muted-foreground">Score</div>
+                  <div className="font-semibold">{a.total_score ?? 0}/{a.max_score ?? 0}</div>
+                </div>
+                <div>
+                  <div className="text-muted-foreground">Accuracy</div>
+                  <div className="font-semibold">{a.accuracy ?? 0}%</div>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+
+        {/* Desktop: table */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left text-xs text-muted-foreground border-b">
