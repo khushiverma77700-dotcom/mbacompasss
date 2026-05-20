@@ -72,6 +72,8 @@ const AdminMockTests = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [examFilter, setExamFilter] = useState<string>("all");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
+  const [readinessFilter, setReadinessFilter] = useState<string>("all");
+  const [readinessSaving, setReadinessSaving] = useState<Record<string, boolean>>({});
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bundleMap, setBundleMap] = useState<Record<string, { id: string; name: string; slug: string }[]>>({});
@@ -81,7 +83,28 @@ const AdminMockTests = () => {
   const visibleTests = tests
     .filter((t) => categoryFilter === "all" || (t.category || t.test_type) === categoryFilter)
     .filter((t) => examFilter === "all" || t.exam_code === examFilter)
-    .filter((t) => difficultyFilter === "all" || t.difficulty === difficultyFilter);
+    .filter((t) => difficultyFilter === "all" || t.difficulty === difficultyFilter)
+    .filter((t) => readinessFilter === "all" || (t.readiness_status || "incomplete") === readinessFilter);
+
+  const updateReadiness = async (id: string, value: string) => {
+    setReadinessSaving((p) => ({ ...p, [id]: true }));
+    // optimistic
+    setTests((prev) => prev.map((x) => (x.id === id ? { ...x, readiness_status: value } : x)));
+    const { error } = await supabase.from("mock_tests").update({ readiness_status: value }).eq("id", id);
+    setReadinessSaving((p) => ({ ...p, [id]: false }));
+    if (error) {
+      toast({ title: "Update failed", description: error.message, variant: "destructive" });
+      fetchTests();
+    } else {
+      toast({ title: "Readiness updated" });
+    }
+  };
+
+  const readinessMeta: Record<string, { label: string; className: string }> = {
+    ready: { label: "Ready", className: "bg-emerald-100 text-emerald-700 border-emerald-300" },
+    needs_changes: { label: "Needs Changes", className: "bg-amber-100 text-amber-700 border-amber-300" },
+    incomplete: { label: "Incomplete", className: "bg-rose-100 text-rose-700 border-rose-300" },
+  };
 
   const allVisibleSelected = visibleTests.length > 0 && visibleTests.every((t) => selectedIds.includes(t.id));
   const toggleAllVisible = () => {
