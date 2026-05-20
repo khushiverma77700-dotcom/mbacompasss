@@ -532,6 +532,12 @@ const OnboardingGate = () => {
 
   React.useEffect(() => {
     const path = location.pathname;
+    const onDashboardHost =
+      typeof window !== "undefined" && window.location.hostname === "dashboard.mbacompass.in";
+    // Skip onboarding (phone OTP) dialog inside the student LMS — including the
+    // dashboard subdomain where the LMS lives at "/". Mobile verification is
+    // only required at course-purchase time.
+    if (onDashboardHost) return;
     if (path.startsWith("/admin") || path.startsWith("/student") || path.startsWith("/mocks/attempt") || path === "/profile-analyzer") return;
     if (loading || !user || checked) return;
 
