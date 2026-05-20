@@ -365,11 +365,7 @@ export default function StudentOverview() {
                       </Button>
                     </Link>
                   )}
-                  <Link to="/student/goals">
-                    <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2 bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm">
-                      <Target className="h-4 w-4" /> Score Engine
-                    </Button>
-                  </Link>
+                  {/* CAT Score Engine button hidden */}
                   <Link to="/student/day-planner">
                     <Button size="lg" variant="ghost" className="w-full sm:w-auto gap-2 text-white hover:bg-white/15 hover:text-white border border-white/15 sm:border-0">
                       <CalendarDays className="h-4 w-4" /> Today's Plan
