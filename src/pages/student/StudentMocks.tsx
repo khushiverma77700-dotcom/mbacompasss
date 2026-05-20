@@ -203,6 +203,18 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
         return false;
       })
       .sort((a, b) => {
+        const examRank = (t: Test) => {
+          const code = (t.exam_code || t.category || "").toUpperCase();
+          const order = ["CAT", "XAT", "NMAT", "SNAP", "IIFT", "CMAT", "MAT"];
+          const idx = order.findIndex((x) => code.includes(x));
+          return idx === -1 ? 999 : idx;
+        };
+        const ar = examRank(a);
+        const br = examRank(b);
+        if (ar !== br) return ar - br;
+        const aso = a.sort_order ?? 9999;
+        const bso = b.sort_order ?? 9999;
+        if (aso !== bso) return aso - bso;
         const ao = bundleOrder[a.id] ?? 9999;
         const bo = bundleOrder[b.id] ?? 9999;
         if (ao !== bo) return ao - bo;
