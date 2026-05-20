@@ -606,40 +606,37 @@ function MockCardItem({
             <div className="w-full flex flex-col gap-2">
               <div className="flex gap-2">
                 <Link to={mockResultPath(latestSubmitted.id)} className="flex-1" {...studentMockLinkProps}>
-                        <Button size="sm" variant="outline" className="w-full gap-1">
-                          <BarChart3 className="h-3.5 w-3.5" /> Report
-                        </Button>
-                      </Link>
-                      <Link to={mockReviewPath(latestSubmitted.id)} className="flex-1" {...studentMockLinkProps}>
-                        <Button size="sm" variant="outline" className="w-full gap-1">
-                          <FileText className="h-3.5 w-3.5" /> Review
-                        </Button>
-                      </Link>
-                    </div>
-                    {test.slug && (
-                      <Link to={mockIntroPath(test.slug)} className="w-full" {...studentMockLinkProps}>
-                        <Button size="sm" className="w-full gap-1 bg-emerald-600 hover:bg-emerald-700">
-                          <Play className="h-3.5 w-3.5" /> Retake Mock
-                        </Button>
-                      </Link>
-                    )}
-                  </div>
-                ) : (
-                  test.slug && (
-                    <Link to={mockIntroPath(test.slug)} className="flex-1" {...studentMockLinkProps}>
-                      <Button size="sm" className="w-full gap-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700">
-                        <Play className="h-3.5 w-3.5" /> Start Mock
-                        <ChevronRight className="h-3.5 w-3.5 ml-auto" />
-                      </Button>
-                    </Link>
-                  )
-                )}
+                  <Button size="sm" variant="outline" className="w-full gap-1">
+                    <BarChart3 className="h-3.5 w-3.5" /> Report
+                  </Button>
+                </Link>
+                <Link to={mockReviewPath(latestSubmitted.id)} className="flex-1" {...studentMockLinkProps}>
+                  <Button size="sm" variant="outline" className="w-full gap-1">
+                    <FileText className="h-3.5 w-3.5" /> Review
+                  </Button>
+                </Link>
               </div>
+              {test.slug && (
+                <Link to={mockIntroPath(test.slug)} className="w-full" {...studentMockLinkProps}>
+                  <Button size="sm" className="w-full gap-1 bg-emerald-600 hover:bg-emerald-700">
+                    <Play className="h-3.5 w-3.5" /> Retake Mock
+                  </Button>
+                </Link>
+              )}
             </div>
-          </Card>
-        );
-      })}
-    </div>
+          ) : (
+            test.slug && (
+              <Link to={mockIntroPath(test.slug)} className="flex-1" {...studentMockLinkProps}>
+                <Button size="sm" className="w-full gap-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700">
+                  <Play className="h-3.5 w-3.5" /> Start Mock
+                  <ChevronRight className="h-3.5 w-3.5 ml-auto" />
+                </Button>
+              </Link>
+            )
+          )}
+        </div>
+      </div>
+    </Card>
   );
 }
 
