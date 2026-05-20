@@ -573,6 +573,18 @@ export default function MockBundleDetailPage() {
         courseName={bundle?.name || "Your course"}
         amount={Number(bundle?.price_inr) || undefined}
       />
+      {phoneGateUser && (
+        <OnboardingDialog
+          open={phoneGateOpen}
+          onComplete={() => {
+            setPhoneGateOpen(false);
+            // Mobile verified — automatically resume the purchase flow.
+            setTimeout(() => { void handlePay(); }, 100);
+          }}
+          userId={phoneGateUser.id}
+          userEmail={phoneGateUser.email}
+        />
+      )}
     </div>
   );
 }
