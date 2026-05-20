@@ -208,7 +208,14 @@ const AdminMockTests = () => {
     const slug = slugify(form.name); // always derived from name
     setSaving(true);
     // Mocks are always free at the mock level — monetization happens via bundles → courses.
-    const payload = { ...form, slug, pricing_type: "free" as const, price_inr: 0 };
+    const scheduledISO = form.scheduled_start_at ? new Date(form.scheduled_start_at).toISOString() : null;
+    const payload = {
+      ...form,
+      slug,
+      pricing_type: "free" as const,
+      price_inr: 0,
+      scheduled_start_at: scheduledISO,
+    };
     if (editId) {
       const { error } = await supabase.from("mock_tests").update(payload).eq("id", editId);
       if (error) {
