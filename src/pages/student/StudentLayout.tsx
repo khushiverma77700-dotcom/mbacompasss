@@ -33,6 +33,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/student/ThemeToggle";
+import StudentAvatar from "@/components/student/StudentAvatar";
 import { StudentThemeProvider } from "@/contexts/StudentThemeContext";
 import type { FeatureKey } from "@/lib/courseFeatures";
 import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
