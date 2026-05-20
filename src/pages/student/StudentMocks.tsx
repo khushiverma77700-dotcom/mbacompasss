@@ -321,9 +321,9 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
                 <button
                   key={f}
                   onClick={() => setExamFilter(f)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
+                  className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
                     examFilter === f
-                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-transparent shadow-sm scale-105"
+                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-transparent shadow-sm"
                       : "bg-white text-slate-600 border-slate-200 hover:border-sky-300 hover:text-sky-700"
                   }`}
                 >
