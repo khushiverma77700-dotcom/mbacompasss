@@ -94,7 +94,8 @@ export default function AdminMockBundles() {
     setEditingItems([]);
     setShowAdvanced(false);
     setMockSearch("");
-    setExamFilter("all");
+    setExamFilter("all"); setTypeFilter("full_length");
+
     loadMocks();
   };
   const openEdit = async (b: Bundle) => {
