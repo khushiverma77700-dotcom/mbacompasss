@@ -50,44 +50,64 @@ export default function StudentOverview() {
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    (async () => {
-      const today = new Date().toISOString().slice(0, 10);
-      // Single parallel fan-out — every dashboard query starts at the same time
-      // so the page is ready as soon as the slowest one returns instead of
-      // waiting for them sequentially.
-      const [
-        { data: e }, { data: g }, { data: ann }, { data: pf }, { data: tk }, { data: wk }, { data: prof }, { data: exRows }, { data: rw },
-      ] = await Promise.all([
-        supabase.from("mock_enrollments")
-          .select("id, test_id, source, expires_at, enrolled_at, test:mock_tests(name, slug, exam_code)")
-          .eq("user_id", user.id).order("enrolled_at", { ascending: false }),
-        supabase.from("student_goals").select("*").eq("user_id", user.id).eq("is_completed", false)
-          .order("due_date", { ascending: true }).limit(3),
-        supabase.from("student_announcements").select("*").eq("is_active", true)
-          .order("pinned", { ascending: false }).order("created_at", { ascending: false }).limit(3),
-        supabase.from("student_study_profile").select("*").eq("user_id", user.id).maybeSingle(),
-        supabase.from("student_daily_tasks").select("*").eq("user_id", user.id).eq("task_date", today),
-        supabase.from("student_weak_topics").select("*").eq("user_id", user.id).order("level", { ascending: true }).limit(12),
-        supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle(),
-        supabase.from("exams").select("name, slug, exam_date").not("exam_date", "is", null).order("exam_date", { ascending: true }).limit(20),
-        supabase.from("student_rewards").select("*").eq("user_id", user.id).maybeSingle(),
-      ]);
-      if (cancelled) return;
-      setEnrollments(e ?? []);
-      setGoals(g ?? []);
-      setAnnouncements(ann ?? []);
-      setProfile(pf);
-      setTasks(tk ?? []);
-      setWeak(wk ?? []);
-      setDisplayName(prof?.display_name ?? user.email?.split("@")[0] ?? "Student");
-      setRewards(rw);
+    const today = new Date().toISOString().slice(0, 10);
 
-      const upcoming = (exRows ?? [])
-        .filter((x: any) => x.exam_date && new Date(x.exam_date).getTime() >= Date.now() - 86400000)
-        .slice(0, 8);
-      setExamCountdowns(upcoming);
+    // Fire each query independently so the UI fills in progressively instead
+    // of blocking on the slowest query in a Promise.all. Cheap queries
+    // (display name, daily tasks, goals) hydrate first; heavier joins
+    // (enrollments with mock_tests, exam list) populate as they arrive.
+    const run = <T,>(p: PromiseLike<{ data: T | null }>, apply: (d: T | null) => void) => {
+      Promise.resolve(p).then(({ data }) => { if (!cancelled) apply(data); }).catch(() => {});
+    };
 
-    })();
+    run(
+      supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle(),
+      (prof: any) => setDisplayName(prof?.display_name ?? user.email?.split("@")[0] ?? "Student"),
+    );
+    run(
+      supabase.from("student_daily_tasks").select("*").eq("user_id", user.id).eq("task_date", today),
+      (tk: any) => setTasks(tk ?? []),
+    );
+    run(
+      supabase.from("student_goals").select("*").eq("user_id", user.id).eq("is_completed", false)
+        .order("due_date", { ascending: true }).limit(3),
+      (g: any) => setGoals(g ?? []),
+    );
+    run(
+      supabase.from("student_announcements").select("*").eq("is_active", true)
+        .order("pinned", { ascending: false }).order("created_at", { ascending: false }).limit(3),
+      (ann: any) => setAnnouncements(ann ?? []),
+    );
+    run(
+      supabase.from("student_study_profile").select("*").eq("user_id", user.id).maybeSingle(),
+      (pf: any) => setProfile(pf),
+    );
+    run(
+      supabase.from("student_weak_topics").select("*").eq("user_id", user.id)
+        .order("level", { ascending: true }).limit(12),
+      (wk: any) => setWeak(wk ?? []),
+    );
+    run(
+      supabase.from("student_rewards").select("*").eq("user_id", user.id).maybeSingle(),
+      (rw: any) => setRewards(rw),
+    );
+    run(
+      supabase.from("mock_enrollments")
+        .select("id, test_id, source, expires_at, enrolled_at, test:mock_tests(name, slug, exam_code)")
+        .eq("user_id", user.id).order("enrolled_at", { ascending: false }),
+      (e: any) => setEnrollments(e ?? []),
+    );
+    run(
+      supabase.from("exams").select("name, slug, exam_date").not("exam_date", "is", null)
+        .order("exam_date", { ascending: true }).limit(20),
+      (exRows: any) => {
+        const upcoming = (exRows ?? [])
+          .filter((x: any) => x.exam_date && new Date(x.exam_date).getTime() >= Date.now() - 86400000)
+          .slice(0, 8);
+        setExamCountdowns(upcoming);
+      },
+    );
+
     return () => { cancelled = true; };
   }, [user]);
 
