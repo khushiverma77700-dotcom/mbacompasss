@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Star, GraduationCap, X, Package, Sparkles, Loader2, Hash, Search, TrendingUp } from "lucide-react";
 import FileUpload from "@/components/admin/FileUpload";
+import MultiSelectTags from "@/components/admin/MultiSelectTags";
 import SeoEnhanceFields from "@/components/admin/SeoEnhanceFields";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
@@ -112,7 +113,25 @@ const FEATURE_TOGGLES: { key: keyof Course; label: string; group: string }[] = [
   { key: "has_doubt_resolution",    label: "Support Center",            group: "Support" },
 ];
 
-const empty: Partial<Course> = {
+// Exam options for the multi-select filter. Used both by admin tagging and
+// the public /mba-compass exam tabs filter.
+const EXAM_OPTIONS = [
+  { value: "CAT",  label: "CAT" },
+  { value: "XAT",  label: "XAT" },
+  { value: "GMAT", label: "GMAT" },
+  { value: "SNAP", label: "SNAP" },
+  { value: "NMAT", label: "NMAT" },
+  { value: "IIFT", label: "IIFT" },
+  { value: "CMAT", label: "CMAT" },
+  { value: "MAT",  label: "MAT"  },
+];
+
+// Random initial "students enrolled" seed for new courses (400–3000).
+// A daily cron job (`mba-compass-courses-daily-enroll-bump`) bumps the
+// number by +1..+5 every night so it grows organically.
+const seedEnrollment = () => 400 + Math.floor(Math.random() * 2601);
+
+const buildEmpty = (): Partial<Course> => ({
   title: "", slug: "", subtitle: "", description: "",
   exam_focus: ["CAT"], mode: "online", level: "beginner", language: "English",
   validity_months: 12,
@@ -120,8 +139,8 @@ const empty: Partial<Course> = {
   features: [], highlights: [], curriculum: [],
   what_youll_learn: [], faqs: [], instructors: [], gallery_images: [],
   is_featured: false, is_active: true, sort_order: 0,
-  total_students_enrolled: 0, rating: 0, reviews_count: 0,
-};
+  total_students_enrolled: seedEnrollment(), rating: 0, reviews_count: 0,
+});
 
 type BundleOpt = { id: string; name: string; exam_code: string | null; is_published: boolean };
 
@@ -310,7 +329,7 @@ export default function AdminMBACompassCourses() {
           </Button>
           <Dialog open={!!edit} onOpenChange={(o) => !o && setEdit(null)}>
             <DialogTrigger asChild>
-              <Button onClick={() => setEdit(empty)} className="bg-sky-600 hover:bg-sky-700">
+              <Button onClick={() => setEdit(buildEmpty())} className="bg-sky-600 hover:bg-sky-700">
                 <Plus className="h-4 w-4 mr-2" /> New Course
               </Button>
             </DialogTrigger>
@@ -340,8 +359,13 @@ export default function AdminMBACompassCourses() {
 
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <Label>Exam focus (comma)</Label>
-                      <Input value={(edit.exam_focus ?? []).join(", ")} onChange={(e) => setEdit({ ...edit, exam_focus: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })} placeholder="CAT, XAT" />
+                      <Label>Exam focus (multi-select)</Label>
+                      <MultiSelectTags
+                        options={EXAM_OPTIONS}
+                        selected={edit.exam_focus ?? []}
+                        onChange={(next) => setEdit({ ...edit, exam_focus: next })}
+                        placeholder="Pick one or more exams"
+                      />
                     </div>
                     <div>
                       <Label>Mode</Label>
@@ -372,11 +396,13 @@ export default function AdminMBACompassCourses() {
                     <div><Label>Discount %</Label><Input type="number" value={edit.discount_percent ?? 0} onChange={(e) => setEdit({ ...edit, discount_percent: parseInt(e.target.value) || 0 })} /></div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
-                    <div><Label>Students enrolled</Label><Input type="number" value={edit.total_students_enrolled ?? 0} onChange={(e) => setEdit({ ...edit, total_students_enrolled: parseInt(e.target.value) || 0 })} /></div>
+                  <div className="grid grid-cols-2 gap-3">
                     <div><Label>Rating (0-5)</Label><Input type="number" step="0.1" min={0} max={5} value={edit.rating ?? 0} onChange={(e) => setEdit({ ...edit, rating: parseFloat(e.target.value) || 0 })} /></div>
                     <div><Label>Reviews count</Label><Input type="number" value={edit.reviews_count ?? 0} onChange={(e) => setEdit({ ...edit, reviews_count: parseInt(e.target.value) || 0 })} /></div>
                   </div>
+                  <p className="text-xs text-muted-foreground -mt-1">
+                    Students enrolled is set automatically (random 400–3000 on creation) and grows by a few learners every day via a background job. No manual input needed.
+                  </p>
 
                   <div className="grid grid-cols-2 gap-3 pt-2 border-t">
                     <div><Label>Sort order</Label><Input type="number" value={edit.sort_order ?? 0} onChange={(e) => setEdit({ ...edit, sort_order: parseInt(e.target.value) || 0 })} /></div>
