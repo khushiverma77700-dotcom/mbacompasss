@@ -40,6 +40,7 @@ type Form = {
   is_published: boolean;
   is_live: boolean;
   scheduled_start_at: string; // datetime-local string ("" when unset)
+  sort_order: number;
   meta_title: string;
   meta_description: string;
 };
@@ -58,6 +59,7 @@ const emptyForm: Form = {
   is_published: false,
   is_live: false,
   scheduled_start_at: "",
+  sort_order: 0,
   meta_title: "",
   meta_description: "",
 };
