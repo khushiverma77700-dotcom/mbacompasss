@@ -17,6 +17,11 @@
 
 const KEY = "mbc-student-mode";
 
+export const isDashboardHost = (): boolean => {
+  if (typeof window === "undefined") return false;
+  return window.location.hostname === "dashboard.mbacompass.in";
+};
+
 export const markStudentMode = () => {
   if (typeof window === "undefined") return;
   try {
@@ -49,3 +54,11 @@ export const studentBackToMocksPath = () => "/student/mocks/full-length";
 
 /** Where the dashboard "home" lives. */
 export const studentHomePath = () => "/student";
+
+export const ensureStudentMode = () => markStudentMode();
+
+export const mockIntroPath = (slug: string) => `/mocks/${slug}`;
+export const mockAttemptPath = (attemptId: string) => `/mocks/attempt/${attemptId}`;
+export const mockResultPath = (attemptId: string) => `/mocks/result/${attemptId}`;
+export const mockReviewPath = (attemptId: string) => `/mocks/review/${attemptId}`;
+export const mockLeaderboardPath = (slug: string) => `/mocks/leaderboard/${slug}`;
