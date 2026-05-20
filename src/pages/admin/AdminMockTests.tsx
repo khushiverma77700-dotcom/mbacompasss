@@ -74,6 +74,9 @@ const AdminMockTests = () => {
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [bundleMap, setBundleMap] = useState<Record<string, { id: string; name: string; slug: string }[]>>({});
+  const [courseMap, setCourseMap] = useState<Record<string, { id: string; title: string; slug: string }[]>>({});
+  const [linkDialog, setLinkDialog] = useState<{ kind: "bundle" | "course"; testName: string; items: { id: string; name: string; slug: string }[] } | null>(null);
 
   const visibleTests = tests
     .filter((t) => categoryFilter === "all" || (t.category || t.test_type) === categoryFilter)
