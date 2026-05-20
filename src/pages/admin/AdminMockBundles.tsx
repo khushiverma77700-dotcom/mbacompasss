@@ -120,16 +120,21 @@ export default function AdminMockBundles() {
     return ["all", ...Array.from(set).sort()];
   }, [allMocks]);
 
-  const testTypes = useMemo(() => {
-    const set = new Set<string>();
-    allMocks.forEach((m) => m.test_type && set.add(m.test_type));
-    return ["all", ...Array.from(set).sort()];
-  }, [allMocks]);
+  const TYPE_OPTIONS = [
+    { v: "full_length", l: "Full Length" },
+    { v: "sectional", l: "Sectional" },
+    { v: "topic_wise", l: "Topic-wise" },
+    { v: "practice_set", l: "Practice" },
+    { v: "daily", l: "Daily Test" },
+  ];
+  const testTypes = useMemo(() => ["all", ...TYPE_OPTIONS.map((t) => t.v)], []);
+
+  const kindOf = (m: MockOption) => (m.category || m.test_type || "").toLowerCase();
 
   const filteredMocks = useMemo(() => {
     return allMocks.filter((m) => {
       if (examFilter !== "all" && m.exam_code !== examFilter) return false;
-      if (typeFilter !== "all" && m.test_type !== typeFilter) return false;
+      if (typeFilter !== "all" && kindOf(m) !== typeFilter) return false;
       if (statusFilter === "live" && !m.is_published) return false;
       if (statusFilter === "draft" && m.is_published) return false;
       const sel = editingItems.includes(m.id);
@@ -141,8 +146,9 @@ export default function AdminMockBundles() {
   }, [allMocks, examFilter, typeFilter, statusFilter, selectionFilter, mockSearch, editingItems]);
 
   const clearFilters = () => {
-    setMockSearch(""); setExamFilter("all"); setTypeFilter("all"); setStatusFilter("all"); setSelectionFilter("all");
+    setMockSearch(""); setExamFilter("all"); setTypeFilter("full_length"); setStatusFilter("all"); setSelectionFilter("all");
   };
+
 
   const toggleMock = (id: string) => {
     setEditingItems((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
