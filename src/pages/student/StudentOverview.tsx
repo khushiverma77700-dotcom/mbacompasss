@@ -365,11 +365,7 @@ export default function StudentOverview() {
                       </Button>
                     </Link>
                   )}
-                  <Link to="/student/goals">
-                    <Button size="lg" variant="outline" className="w-full sm:w-auto gap-2 bg-white/10 border-white/30 text-white hover:bg-white/20 hover:text-white backdrop-blur-sm">
-                      <Target className="h-4 w-4" /> Score Engine
-                    </Button>
-                  </Link>
+                  {/* CAT Score Engine button hidden */}
                   <Link to="/student/day-planner">
                     <Button size="lg" variant="ghost" className="w-full sm:w-auto gap-2 text-white hover:bg-white/15 hover:text-white border border-white/15 sm:border-0">
                       <CalendarDays className="h-4 w-4" /> Today's Plan
@@ -452,28 +448,7 @@ export default function StudentOverview() {
 
       <DailyTestCard />
 
-      {/* Setup banner */}
-      {noProfile && (
-        <Card className="p-5 border-sky-200 bg-gradient-to-r from-sky-50 to-blue-50/40 dark:from-sky-500/10 dark:to-blue-500/5 dark:border-sky-500/20">
-          <div className="flex items-start gap-3">
-            <div className="h-11 w-11 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center shadow-md shrink-0">
-              <Sparkles className="h-5 w-5 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-semibold flex items-center gap-2">
-                Set up your CAT Score Engine
-                <Badge variant="secondary" className="text-[10px]">Recommended</Badge>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Tell us your target percentile, weak areas and study hours — we'll generate a personalised AI plan.
-              </p>
-            </div>
-            <Link to="/student/goals" className="shrink-0">
-              <Button>Set up now <ArrowRight className="h-4 w-4 ml-1" /></Button>
-            </Link>
-          </div>
-        </Card>
-      )}
+      {/* CAT Score Engine setup banner hidden */}
 
       {/* ── Headline stat tiles ──────────────────────────────────────────────── */}
       <div>
