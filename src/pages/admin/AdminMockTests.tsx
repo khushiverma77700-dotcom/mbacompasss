@@ -461,9 +461,9 @@ const AdminMockTests = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading && (<TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>)}
+              {loading && (<TableRow><TableCell colSpan={12} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>)}
               {!loading && tests.length === 0 && (
-                <TableRow><TableCell colSpan={11} className="text-center py-12 text-muted-foreground">
+                <TableRow><TableCell colSpan={12} className="text-center py-12 text-muted-foreground">
                   No mock tests yet. Click <strong>Generate Mocks From AI</strong> or <strong>New Mock Test</strong>.
                 </TableCell></TableRow>
               )}
