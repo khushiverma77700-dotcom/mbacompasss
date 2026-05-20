@@ -507,7 +507,8 @@ const AdminMockTests = () => {
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(t.id, t.name)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
@@ -518,6 +519,44 @@ const AdminMockTests = () => {
         onOpenChange={setAiOpen}
         onCreated={fetchTests}
       />
+
+      <Dialog open={!!linkDialog} onOpenChange={(o) => !o && setLinkDialog(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {linkDialog?.kind === "bundle" ? <Package className="w-4 h-4 text-sky-600" /> : <BookOpen className="w-4 h-4 text-violet-600" />}
+              {linkDialog?.kind === "bundle" ? "Bundles" : "Courses"} containing
+              <span className="font-semibold">"{linkDialog?.testName}"</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+            {(linkDialog?.items ?? []).map((item) => {
+              const path = linkDialog?.kind === "bundle"
+                ? `/admin/mock-bundles?edit=${item.id}`
+                : `/admin/mba-compass-courses?edit=${item.id}`;
+              const publicPath = linkDialog?.kind === "bundle"
+                ? `/courses/${item.slug}`
+                : `/mba-compass/${item.slug}`;
+              return (
+                <div key={item.id} className="flex items-center justify-between gap-2 rounded-md border p-3 hover:bg-muted/40">
+                  <div className="min-w-0">
+                    <div className="font-medium text-sm truncate">{item.name}</div>
+                    <div className="text-xs text-muted-foreground truncate">/{item.slug}</div>
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <Button asChild size="sm" variant="outline">
+                      <Link to={path} onClick={() => setLinkDialog(null)}>Manage</Link>
+                    </Button>
+                    <Button asChild size="sm" variant="ghost" title="Open public page">
+                      <Link to={publicPath} target="_blank"><ExternalLink className="w-3.5 h-3.5" /></Link>
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
