@@ -40,6 +40,7 @@ type Form = {
   is_published: boolean;
   is_live: boolean;
   scheduled_start_at: string; // datetime-local string ("" when unset)
+  sort_order: number;
   meta_title: string;
   meta_description: string;
 };
@@ -58,6 +59,7 @@ const emptyForm: Form = {
   is_published: false,
   is_live: false,
   scheduled_start_at: "",
+  sort_order: 0,
   meta_title: "",
   meta_description: "",
 };
@@ -149,7 +151,7 @@ const AdminMockTests = () => {
 
   const fetchTests = async () => {
     setLoading(true);
-    const { data } = await supabase.from("mock_tests").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase.from("mock_tests").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false });
     setTests(data ?? []);
     setLoading(false);
 
@@ -198,6 +200,7 @@ const AdminMockTests = () => {
       pricing_type: t.pricing_type, price_inr: Number(t.price_inr), access_validity_days: t.access_validity_days,
       difficulty: t.difficulty, is_published: !!t.is_published, is_live: !!t.is_live,
       scheduled_start_at: isoToLocalInput(t.scheduled_start_at),
+      sort_order: typeof t.sort_order === "number" ? t.sort_order : 0,
       meta_title: t.meta_title ?? "", meta_description: t.meta_description ?? "",
     });
     setEditId(t.id); setShowForm(true);
@@ -314,6 +317,15 @@ const AdminMockTests = () => {
               <div>
                 <Label className="text-xs">Banner URL</Label>
                 <Input value={form.banner_url} onChange={(e) => setForm({ ...form, banner_url: e.target.value })} placeholder="https://..." />
+              </div>
+              <div>
+                <Label className="text-xs">Sort Order <span className="text-muted-foreground">(lower shows first on student dashboard)</span></Label>
+                <Input
+                  type="number"
+                  value={form.sort_order}
+                  onChange={(e) => setForm({ ...form, sort_order: parseInt(e.target.value) || 0 })}
+                  placeholder="0"
+                />
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

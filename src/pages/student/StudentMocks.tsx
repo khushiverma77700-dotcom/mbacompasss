@@ -63,6 +63,7 @@ type Test = {
   launch_date: string | null;
   banner_url: string | null;
   is_published: boolean | null;
+  sort_order: number | null;
 };
 
 type Enrollment = { id: string; test_id: string; source: string; expires_at: string | null; admin_notes: string | null };
@@ -111,7 +112,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
       const [{ data: e }, { data: a }, { data: c }, { data: bi }] = await Promise.all([
         supabase
           .from("mock_enrollments")
-          .select("id, test_id, source, expires_at, admin_notes, test:mock_tests(id, name, slug, total_duration_minutes, difficulty, exam_code, category, test_type, is_live, scheduled_start_at, launch_date, banner_url, is_published)")
+          .select("id, test_id, source, expires_at, admin_notes, test:mock_tests(id, name, slug, total_duration_minutes, difficulty, exam_code, category, test_type, is_live, scheduled_start_at, launch_date, banner_url, is_published, sort_order)")
           .eq("user_id", user.id)
           .order("enrolled_at", { ascending: false }),
         supabase
@@ -121,8 +122,9 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
           .order("started_at", { ascending: false }),
         supabase
           .from("mock_tests")
-          .select("id, name, slug, total_duration_minutes, difficulty, exam_code, category, test_type, is_live, scheduled_start_at, launch_date, banner_url, is_published")
+          .select("id, name, slug, total_duration_minutes, difficulty, exam_code, category, test_type, is_live, scheduled_start_at, launch_date, banner_url, is_published, sort_order")
           .or("is_published.eq.true,is_live.eq.true")
+          .order("sort_order", { ascending: true })
           .order("name"),
         supabase
           .from("mock_bundle_items")
@@ -201,6 +203,18 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
         return false;
       })
       .sort((a, b) => {
+        const examRank = (t: Test) => {
+          const code = (t.exam_code || t.category || "").toUpperCase();
+          const order = ["CAT", "XAT", "NMAT", "SNAP", "IIFT", "CMAT", "MAT"];
+          const idx = order.findIndex((x) => code.includes(x));
+          return idx === -1 ? 999 : idx;
+        };
+        const ar = examRank(a);
+        const br = examRank(b);
+        if (ar !== br) return ar - br;
+        const aso = a.sort_order ?? 9999;
+        const bso = b.sort_order ?? 9999;
+        if (aso !== bso) return aso - bso;
         const ao = bundleOrder[a.id] ?? 9999;
         const bo = bundleOrder[b.id] ?? 9999;
         if (ao !== bo) return ao - bo;
@@ -307,9 +321,9 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
                 <button
                   key={f}
                   onClick={() => setExamFilter(f)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
+                  className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
                     examFilter === f
-                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-transparent shadow-sm scale-105"
+                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-transparent shadow-sm"
                       : "bg-white text-slate-600 border-slate-200 hover:border-sky-300 hover:text-sky-700"
                   }`}
                 >
@@ -517,11 +531,6 @@ function MockCardItem({
               {test.exam_code && (
                 <Badge variant="outline" className="text-[10px] border-sky-200 text-sky-700 bg-sky-50">
                   {test.exam_code}
-                </Badge>
-              )}
-              {test.difficulty && (
-                <Badge variant="outline" className={`text-[10px] ${difficultyTone(test.difficulty)}`}>
-                  {test.difficulty}
                 </Badge>
               )}
             </div>
