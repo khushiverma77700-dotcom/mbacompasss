@@ -39,12 +39,15 @@ export const clearStudentMode = () => {
 export const isStudentMode = (): boolean => {
   if (typeof window === "undefined") return false;
   if (isDashboardHost()) return true;
+  if (window.location.pathname.startsWith("/student")) return true;
   try {
     return window.sessionStorage.getItem(KEY) === "1";
   } catch {
     return false;
   }
 };
+
+const mockPathBase = () => (isStudentMode() ? "/student/mocks" : "/mocks");
 
 /** Where to send a student after submitting a mock (replaces runner in history). */
 export const studentPostSubmitPath = (attemptId?: string | null) =>
@@ -58,8 +61,9 @@ export const studentHomePath = () => "/student";
 
 export const ensureStudentMode = () => markStudentMode();
 
-export const mockIntroPath = (slug: string) => `/mocks/${slug}`;
-export const mockAttemptPath = (attemptId: string) => `/mocks/attempt/${attemptId}`;
-export const mockResultPath = (attemptId: string) => `/mocks/result/${attemptId}`;
-export const mockReviewPath = (attemptId: string) => `/mocks/review/${attemptId}`;
-export const mockLeaderboardPath = (slug: string) => `/mocks/leaderboard/${slug}`;
+export const mockIntroPath = (slug: string) =>
+  isStudentMode() ? `/student/mocks/test/${slug}` : `/mocks/${slug}`;
+export const mockAttemptPath = (attemptId: string) => `${mockPathBase()}/attempt/${attemptId}`;
+export const mockResultPath = (attemptId: string) => `${mockPathBase()}/result/${attemptId}`;
+export const mockReviewPath = (attemptId: string) => `${mockPathBase()}/review/${attemptId}`;
+export const mockLeaderboardPath = (slug: string) => `${mockPathBase()}/leaderboard/${slug}`;
