@@ -249,11 +249,19 @@ export default function StudentLayout() {
             </div>
           )}
 
-          {/* Main — offset by sidebar width on desktop so layout doesn't overlap */}
-          <main className="flex-1 min-w-0 px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:ml-64">
+          {/* Main — offset by sidebar width on desktop; padded for bottom nav on mobile */}
+          <main
+            className="flex-1 min-w-0 px-3 sm:px-5 lg:px-8 py-4 sm:py-6 lg:ml-64 pb-[calc(env(safe-area-inset-bottom,0px)+88px)] lg:pb-8"
+          >
             <Outlet />
           </main>
         </div>
+
+        {/* Mobile bottom tab bar — hidden on lg+ */}
+        <StudentBottomNav />
+
+        {/* Floating install banner — handles its own visibility */}
+        <InstallAppPrompt />
       </div>
     </StudentThemeProvider>
   );
