@@ -151,7 +151,7 @@ const AdminMockTests = () => {
 
   const fetchTests = async () => {
     setLoading(true);
-    const { data } = await supabase.from("mock_tests").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase.from("mock_tests").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false });
     setTests(data ?? []);
     setLoading(false);
 
