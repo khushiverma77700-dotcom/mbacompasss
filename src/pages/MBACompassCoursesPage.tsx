@@ -64,7 +64,7 @@ export default function MBACompassCoursesPage() {
 function CoursesInner() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("all");
+  const [selectedExams, setSelectedExams] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [mode, setMode] = useState<string>("all");
   const [level, setLevel] = useState<string>("all");
