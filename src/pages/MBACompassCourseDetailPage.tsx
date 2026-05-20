@@ -419,6 +419,18 @@ function DetailInner() {
           <PageKeywords contentType="course" recordId={c.id} fallbackKeywords={c.keywords || []} />
         </div>
       </section>
+      {phoneGateUser && (
+        <OnboardingDialog
+          open={phoneGateOpen}
+          onComplete={() => {
+            setPhoneGateOpen(false);
+            // Mobile verified — automatically resume the purchase flow.
+            setTimeout(() => { void handlePay(); }, 100);
+          }}
+          userId={phoneGateUser.id}
+          userEmail={phoneGateUser.email}
+        />
+      )}
     </>
   );
 }
