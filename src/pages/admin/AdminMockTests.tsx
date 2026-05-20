@@ -108,6 +108,41 @@ const AdminMockTests = () => {
     const { data } = await supabase.from("mock_tests").select("*").order("created_at", { ascending: false });
     setTests(data ?? []);
     setLoading(false);
+
+    // Load bundle memberships per mock
+    const { data: bItems } = await supabase
+      .from("mock_bundle_items")
+      .select("test_id, bundle:mock_bundles(id, name, slug)");
+    const bMap: Record<string, { id: string; name: string; slug: string }[]> = {};
+    const testToBundleIds: Record<string, string[]> = {};
+    (bItems ?? []).forEach((row: any) => {
+      if (!row.bundle) return;
+      (bMap[row.test_id] ||= []).push({ id: row.bundle.id, name: row.bundle.name, slug: row.bundle.slug });
+      (testToBundleIds[row.test_id] ||= []).push(row.bundle.id);
+    });
+    setBundleMap(bMap);
+
+    // Load courses that include those bundles
+    const { data: cLinks } = await supabase
+      .from("course_bundles")
+      .select("bundle_id, course:mba_compass_courses(id, title, slug)");
+    const bundleToCourses: Record<string, { id: string; name: string; slug: string }[]> = {};
+    (cLinks ?? []).forEach((row: any) => {
+      if (!row.course) return;
+      (bundleToCourses[row.bundle_id] ||= []).push({ id: row.course.id, name: row.course.title, slug: row.course.slug });
+    });
+    const cMap: Record<string, { id: string; name: string; slug: string }[]> = {};
+    Object.entries(testToBundleIds).forEach(([testId, bundleIds]) => {
+      const seen = new Set<string>();
+      bundleIds.forEach((bid) => {
+        (bundleToCourses[bid] ?? []).forEach((c) => {
+          if (seen.has(c.id)) return;
+          seen.add(c.id);
+          (cMap[testId] ||= []).push(c);
+        });
+      });
+    });
+    setCourseMap(cMap);
   };
   useEffect(() => { fetchTests(); }, []);
 
