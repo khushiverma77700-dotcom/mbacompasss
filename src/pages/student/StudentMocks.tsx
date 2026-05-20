@@ -14,8 +14,14 @@ import {
   TrendingUp, Award, Flame, BarChart3, Zap, ChevronRight,
 } from "lucide-react";
 import UpgradeDialog from "@/components/student/UpgradeDialog";
+import { ensureStudentMode, mockAttemptPath, mockIntroPath, mockLeaderboardPath, mockResultPath, mockReviewPath } from "@/lib/studentModeNav";
 
 const EXAM_FILTERS = ["All", "CAT", "XAT", "NMAT", "SNAP", "IIFT", "CMAT", "MAT", "TISSNET"];
+
+const studentMockLinkProps = {
+  onClick: ensureStudentMode,
+  onPointerDown: ensureStudentMode,
+};
 
 type TypeKey = "full_length" | "sectional" | "topic_wise" | "practice_set" | "attempted";
 
