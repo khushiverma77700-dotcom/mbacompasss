@@ -424,16 +424,13 @@ const AdminMockTests = () => {
               {loading && (<TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>)}
               {!loading && tests.length === 0 && (
                 <TableRow><TableCell colSpan={11} className="text-center py-12 text-muted-foreground">
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {loading && (<TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>)}
-              {!loading && tests.length === 0 && (
-                <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
                   No mock tests yet. Click <strong>Generate Mocks From AI</strong> or <strong>New Mock Test</strong>.
                 </TableCell></TableRow>
               )}
-              {visibleTests.map((t) => (
+              {visibleTests.map((t) => {
+                const bundles = bundleMap[t.id] ?? [];
+                const courses = courseMap[t.id] ?? [];
+                return (
                 <TableRow key={t.id} className={selectedIds.includes(t.id) ? "bg-sky-50/40" : ""}>
                   <TableCell>
                     <Checkbox checked={selectedIds.includes(t.id)} onCheckedChange={() => toggleRow(t.id)} />
@@ -463,6 +460,36 @@ const AdminMockTests = () => {
                   <TableCell>
                     {t.is_published ? <Badge className="bg-emerald-600 hover:bg-emerald-700">Published</Badge> : <Badge variant="outline">Draft</Badge>}
                     {t.is_live && <Badge className="ml-1 bg-orange-500 hover:bg-orange-600">Live</Badge>}
+                  </TableCell>
+                  <TableCell>
+                    {bundles.length === 0 ? (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setLinkDialog({ kind: "bundle", testName: t.name, items: bundles })}
+                        className="inline-flex items-center gap-1 rounded-full bg-sky-50 hover:bg-sky-100 border border-sky-200 px-2 py-0.5 text-xs font-medium text-sky-700 transition-colors"
+                        title="View bundles containing this mock"
+                      >
+                        <Package className="w-3 h-3" />
+                        {bundles.length}
+                      </button>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {courses.length === 0 ? (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setLinkDialog({ kind: "course", testName: t.name, items: courses })}
+                        className="inline-flex items-center gap-1 rounded-full bg-violet-50 hover:bg-violet-100 border border-violet-200 px-2 py-0.5 text-xs font-medium text-violet-700 transition-colors"
+                        title="View courses including this mock"
+                      >
+                        <BookOpen className="w-3 h-3" />
+                        {courses.length}
+                      </button>
+                    )}
                   </TableCell>
                   <TableCell>{t.total_takers ?? 0}</TableCell>
                   <TableCell className="text-right space-x-1">
