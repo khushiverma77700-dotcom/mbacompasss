@@ -414,8 +414,16 @@ const AdminMockTests = () => {
                 <TableHead>Pricing</TableHead>
                 <TableHead>Duration</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Bundles</TableHead>
+                <TableHead>Courses</TableHead>
                 <TableHead>Takers</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading && (<TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>)}
+              {!loading && tests.length === 0 && (
+                <TableRow><TableCell colSpan={11} className="text-center py-12 text-muted-foreground">
               </TableRow>
             </TableHeader>
             <TableBody>
