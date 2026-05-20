@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import MultiSelectTags from "@/components/admin/MultiSelectTags";
 import {
   GraduationCap, Clock, Sparkles, CheckCircle2, ArrowRight, Star, Users, Target, Flame, BookOpen,
   Search, GitCompare, X, Award, Zap, Filter,
@@ -13,6 +13,17 @@ import {
 import SEOHead from "@/components/SEOHead";
 import { CompassCompareProvider, useCompassCompare } from "@/contexts/CompassCompareContext";
 import { toast } from "sonner";
+
+const EXAM_OPTIONS = [
+  { value: "CAT", label: "CAT" },
+  { value: "XAT", label: "XAT" },
+  { value: "GMAT", label: "GMAT" },
+  { value: "SNAP", label: "SNAP" },
+  { value: "NMAT", label: "NMAT" },
+  { value: "IIFT", label: "IIFT" },
+  { value: "CMAT", label: "CMAT" },
+  { value: "MAT", label: "MAT" },
+];
 
 interface Course {
   id: string;
