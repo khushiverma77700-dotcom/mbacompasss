@@ -23,6 +23,7 @@ export default function InstallAppPrompt() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [show, setShow] = useState(false);
   const [iosHint, setIosHint] = useState(false);
+  const [manualFallback, setManualFallback] = useState(false);
 
   useEffect(() => {
     const standalone =
@@ -40,24 +41,36 @@ export default function InstallAppPrompt() {
       e.preventDefault();
       setDeferred(e as BeforeInstallPromptEvent);
       setShow(true);
+      setManualFallback(false);
+      setIosHint(false);
     };
     window.addEventListener("beforeinstallprompt", onPrompt);
 
     // Soft iOS hint — show after a short delay so it doesn't feel intrusive
+    let iosTimer: number | undefined;
     if (isIos) {
-      const t = setTimeout(() => setIosHint(true), 4000);
-      return () => {
-        clearTimeout(t);
-        window.removeEventListener("beforeinstallprompt", onPrompt);
-      };
+      iosTimer = window.setTimeout(() => setIosHint(true), 4000);
     }
-    return () => window.removeEventListener("beforeinstallprompt", onPrompt);
+
+    // Universal fallback: if no install event arrived after 6s and we're not
+    // already showing iOS hint or the native prompt, surface a manual link to
+    // the /student/install guide so users always have a way in.
+    const fallbackTimer = window.setTimeout(() => {
+      setManualFallback((prev) => prev || (!isIos));
+    }, 6000);
+
+    return () => {
+      if (iosTimer) clearTimeout(iosTimer);
+      clearTimeout(fallbackTimer);
+      window.removeEventListener("beforeinstallprompt", onPrompt);
+    };
   }, []);
 
   const dismiss = () => {
     localStorage.setItem(DISMISS_KEY, String(Date.now()));
     setShow(false);
     setIosHint(false);
+    setManualFallback(false);
   };
 
   const install = async () => {
@@ -70,7 +83,8 @@ export default function InstallAppPrompt() {
     }
   };
 
-  if (!show && !iosHint) return null;
+  if (!show && !iosHint && !manualFallback) return null;
+  const showNative = show && !!deferred;
 
   return (
     <div
@@ -89,21 +103,21 @@ export default function InstallAppPrompt() {
               : "Use the dashboard like a native app"}
           </div>
         </div>
-        {iosHint ? (
-          <Link
-            to="/student/install"
-            onClick={dismiss}
-            className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold px-3 py-2"
-          >
-            How
-          </Link>
-        ) : (
+        {showNative ? (
           <button
             onClick={install}
             className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-semibold px-3 py-2 shadow"
           >
             <Download className="h-3.5 w-3.5" /> Install
           </button>
+        ) : (
+          <Link
+            to="/student/install"
+            onClick={dismiss}
+            className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold px-3 py-2"
+          >
+            <Download className="h-3.5 w-3.5" /> {iosHint ? "How" : "Install"}
+          </Link>
         )}
         <button
           onClick={dismiss}
