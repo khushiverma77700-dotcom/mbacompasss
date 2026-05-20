@@ -103,21 +103,21 @@ export default function InstallAppPrompt() {
               : "Use the dashboard like a native app"}
           </div>
         </div>
-        {iosHint ? (
-          <Link
-            to="/student/install"
-            onClick={dismiss}
-            className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold px-3 py-2"
-          >
-            How
-          </Link>
-        ) : (
+        {showNative ? (
           <button
             onClick={install}
             className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-semibold px-3 py-2 shadow"
           >
             <Download className="h-3.5 w-3.5" /> Install
           </button>
+        ) : (
+          <Link
+            to="/student/install"
+            onClick={dismiss}
+            className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-sky-500 hover:bg-sky-600 text-white text-xs font-semibold px-3 py-2"
+          >
+            <Download className="h-3.5 w-3.5" /> {iosHint ? "How" : "Install"}
+          </Link>
         )}
         <button
           onClick={dismiss}
