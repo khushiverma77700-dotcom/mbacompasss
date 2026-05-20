@@ -502,6 +502,23 @@ const AdminMockTests = () => {
                     {t.is_live && <Badge className="ml-1 bg-orange-500 hover:bg-orange-600">Live</Badge>}
                   </TableCell>
                   <TableCell>
+                    {(() => {
+                      const cur = (t.readiness_status || "incomplete") as keyof typeof readinessMeta;
+                      const meta = readinessMeta[cur] ?? readinessMeta.incomplete;
+                      return (
+                        <Select value={cur} onValueChange={(v) => updateReadiness(t.id, v)} disabled={!!readinessSaving[t.id]}>
+                          <SelectTrigger className={`h-8 w-[150px] text-xs font-medium border ${meta.className}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="ready">Ready</SelectItem>
+                            <SelectItem value="needs_changes">Needs Changes</SelectItem>
+                            <SelectItem value="incomplete">Incomplete</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      );
+                    })()}
+                  <TableCell>
                     {bundles.length === 0 ? (
                       <span className="text-xs text-muted-foreground">—</span>
                     ) : (
