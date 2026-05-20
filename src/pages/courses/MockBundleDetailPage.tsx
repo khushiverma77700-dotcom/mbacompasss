@@ -18,6 +18,7 @@ import {
 import { useMetaPixel, pixelTrack } from "@/lib/metaPixel";
 import { useCtaGate, openLoginDialog } from "@/hooks/useCtaGate";
 import PurchaseSuccessDialog from "@/components/courses/PurchaseSuccessDialog";
+import OnboardingDialog from "@/components/OnboardingDialog";
 
 const HIGHLIGHT_ICONS: Record<HighlightKey, any> = {
   daily_tests: Calendar,
@@ -69,6 +70,9 @@ export default function MockBundleDetailPage() {
   const [enrolled, setEnrolled] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
   const [buyerEmail, setBuyerEmail] = useState("");
+  const [phoneGateOpen, setPhoneGateOpen] = useState(false);
+  const [phoneGateUser, setPhoneGateUser] = useState<{ id: string; email?: string | null } | null>(null);
+
 
   useEffect(() => {
     if (!slug) return;
@@ -131,11 +135,23 @@ export default function MockBundleDetailPage() {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) {
       if (bundleRequiresLogin) {
-        openLoginDialog("Sign in to purchase this bundle.");
+        openLoginDialog("Sign in with mobile OTP to purchase this bundle.");
       } else {
         toast.error("Please sign in to purchase");
         window.location.href = `/auth?redirect=/courses/${slug}`;
       }
+      return;
+    }
+    // Mobile OTP verification gate — required before any bundle purchase.
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("phone, onboarding_completed")
+      .eq("user_id", u.user.id)
+      .maybeSingle();
+    if (!prof?.phone || !prof?.onboarding_completed) {
+      setPhoneGateUser({ id: u.user.id, email: u.user.email });
+      setPhoneGateOpen(true);
+      toast.message("Verify your mobile number to continue with the purchase.");
       return;
     }
     pixelTrack("InitiateCheckout", {
@@ -557,6 +573,18 @@ export default function MockBundleDetailPage() {
         courseName={bundle?.name || "Your course"}
         amount={Number(bundle?.price_inr) || undefined}
       />
+      {phoneGateUser && (
+        <OnboardingDialog
+          open={phoneGateOpen}
+          onComplete={() => {
+            setPhoneGateOpen(false);
+            // Mobile verified — automatically resume the purchase flow.
+            setTimeout(() => { void handlePay(); }, 100);
+          }}
+          userId={phoneGateUser.id}
+          userEmail={phoneGateUser.email}
+        />
+      )}
     </div>
   );
 }

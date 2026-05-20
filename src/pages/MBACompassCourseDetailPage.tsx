@@ -15,6 +15,7 @@ import PageKeywords from "@/components/PageKeywords";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import { useCtaGate, openLoginDialog } from "@/hooks/useCtaGate";
 import { CompassCompareProvider, useCompassCompare } from "@/contexts/CompassCompareContext";
+import OnboardingDialog from "@/components/OnboardingDialog";
 import { toast } from "sonner";
 
 const formatINR = (n: number | null) => n == null ? "—" : `₹${Math.round(n).toLocaleString("en-IN")}`;
@@ -44,6 +45,8 @@ function DetailInner() {
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
   const [enrolled, setEnrolled] = useState(false);
+  const [phoneGateOpen, setPhoneGateOpen] = useState(false);
+  const [phoneGateUser, setPhoneGateUser] = useState<{ id: string; email?: string | null } | null>(null);
   const compare = useCompassCompare();
 
   useEffect(() => {
@@ -66,8 +69,20 @@ function DetailInner() {
   const handlePay = async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) {
-      if (courseRequiresLogin) { openLoginDialog("Sign in to enroll in this course."); return; }
+      if (courseRequiresLogin) { openLoginDialog("Sign in with mobile OTP to enroll in this course."); return; }
       toast.error("Please sign in to enroll"); window.location.href = "/auth"; return;
+    }
+    // Mobile OTP verification gate — required before any course purchase.
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("phone, onboarding_completed")
+      .eq("user_id", u.user.id)
+      .maybeSingle();
+    if (!prof?.phone || !prof?.onboarding_completed) {
+      setPhoneGateUser({ id: u.user.id, email: u.user.email });
+      setPhoneGateOpen(true);
+      toast.message("Verify your mobile number to continue with the purchase.");
+      return;
     }
     setPaying(true);
     try {
@@ -404,6 +419,18 @@ function DetailInner() {
           <PageKeywords contentType="course" recordId={c.id} fallbackKeywords={c.keywords || []} />
         </div>
       </section>
+      {phoneGateUser && (
+        <OnboardingDialog
+          open={phoneGateOpen}
+          onComplete={() => {
+            setPhoneGateOpen(false);
+            // Mobile verified — automatically resume the purchase flow.
+            setTimeout(() => { void handlePay(); }, 100);
+          }}
+          userId={phoneGateUser.id}
+          userEmail={phoneGateUser.email}
+        />
+      )}
     </>
   );
 }
