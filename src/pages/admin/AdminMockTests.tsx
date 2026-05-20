@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { slugify } from "@/lib/slugify";
 import FileUpload from "@/components/admin/FileUpload";
 import AIGenerateMockDialog from "@/components/admin/AIGenerateMockDialog";
+import { useAdminFilters } from "@/hooks/useAdminFilters";
 
 const SECTION_DEFAULTS = [
   { code: "VARC" as const, name: "Verbal Ability & Reading Comprehension", duration_minutes: 40, total_questions: 24, sort_order: 0 },
