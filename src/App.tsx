@@ -791,6 +791,7 @@ const App = () => (
             <Route path="/mocks/thank-you" element={<PublicLayout><LazyPage><MockThankYouPage /></LazyPage></PublicLayout>} />
             <Route path="/dashboard/mocks" element={<PublicLayout><LazyPage><MyMocksPage /></LazyPage></PublicLayout>} />
             <Route path="/student/login" element={<LazyPage><StudentLogin /></LazyPage>} />
+            <Route path="/student/mocks/attempt/:attemptId" element={<LazyPage><MockTestRunnerPage /></LazyPage>} />
             <Route path="/student" element={<LazyPage><StudentLayout /></LazyPage>}>
               <Route index element={<InnerLazyPage><StudentOverview /></InnerLazyPage>} />
               <Route path="mocks" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
@@ -800,7 +801,6 @@ const App = () => (
               <Route path="mocks/practice" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
               <Route path="mocks/attempted" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
               <Route path="mocks/test/:slug" element={<InnerLazyPage><MockTestIntroPage /></InnerLazyPage>} />
-              <Route path="mocks/attempt/:attemptId" element={<InnerLazyPage><MockTestRunnerPage /></InnerLazyPage>} />
               <Route path="mocks/result/:attemptId" element={<InnerLazyPage><MockResultPage /></InnerLazyPage>} />
               <Route path="mocks/review/:attemptId" element={<InnerLazyPage><MockReviewPage /></InnerLazyPage>} />
               <Route path="mocks/leaderboard/:slug" element={<InnerLazyPage><MockLeaderboardPage /></InnerLazyPage>} />
