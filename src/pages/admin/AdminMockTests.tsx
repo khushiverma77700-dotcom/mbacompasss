@@ -281,23 +281,7 @@ const AdminMockTests = () => {
                 <Input type="number" value={form.access_validity_days} onChange={(e) => setForm({ ...form, access_validity_days: parseInt(e.target.value) || 0 })} />
               </div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div>
-                <Label className="text-xs">Pricing</Label>
-                <Select value={form.pricing_type} onValueChange={(v: any) => setForm({ ...form, pricing_type: v, price_inr: v === "free" ? 0 : form.price_inr })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="free">Free</SelectItem>
-                    <SelectItem value="paid">Paid</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {form.pricing_type === "paid" && (
-                <div>
-                  <Label className="text-xs">Price (INR)</Label>
-                  <Input type="number" value={form.price_inr} onChange={(e) => setForm({ ...form, price_inr: parseFloat(e.target.value) || 0 })} />
-                </div>
-              )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label className="text-xs">Banner URL</Label>
                 <Input value={form.banner_url} onChange={(e) => setForm({ ...form, banner_url: e.target.value })} placeholder="https://..." />
