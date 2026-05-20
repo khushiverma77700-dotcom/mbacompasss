@@ -19,7 +19,7 @@ import PeerBenchmark from "@/components/mock/report/PeerBenchmark";
 import StrengthsWeaknesses, { TopicRow } from "@/components/mock/report/StrengthsWeaknesses";
 import ProgressTrend, { TrendPoint } from "@/components/mock/report/ProgressTrend";
 import AIAnalysisPanel from "@/components/mock/report/AIAnalysisPanel";
-import { isStudentMode, studentBackToMocksPath } from "@/lib/studentModeNav";
+import { isStudentMode, mockLeaderboardPath, mockReviewPath, studentBackToMocksPath } from "@/lib/studentModeNav";
 
 export default function MockResultPage() {
   const { attemptId } = useParams();
@@ -325,11 +325,11 @@ export default function MockResultPage() {
               <Download className="h-4 w-4" />
               {downloading ? "Preparing PDF…" : "Download Full Report"}
             </Button>
-            <Button variant="outline" onClick={() => navigate(`/mocks/review/${attempt.id}`)}>
+            <Button variant="outline" onClick={() => navigate(mockReviewPath(attempt.id))}>
               Question Review
             </Button>
             {test?.slug && (
-              <Button variant="outline" onClick={() => navigate(`/mocks/leaderboard/${test.slug}`)}>
+              <Button variant="outline" onClick={() => navigate(mockLeaderboardPath(test.slug))}>
                 Leaderboard
               </Button>
             )}
