@@ -337,7 +337,7 @@ const AdminMockBuilder = () => {
             <Link to="/admin/mock-tests"><ArrowLeft className="w-4 h-4 mr-1" /> All Mock Tests</Link>
           </Button>
           <h1 className="font-heading text-2xl font-bold">{test.name}</h1>
-          <p className="text-sm text-muted-foreground">{test.total_duration_minutes} min · {test.test_type.replace("_", " ")} · {test.pricing_type === "free" ? "Free" : `₹${test.price_inr}`}</p>
+          <p className="text-sm text-muted-foreground">{test.total_duration_minutes} min · {test.test_type.replace("_", " ")}</p>
         </div>
       </div>
 
