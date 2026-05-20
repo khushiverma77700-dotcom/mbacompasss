@@ -464,120 +464,148 @@ function BucketGrid({
 
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {items.map(({ test, owned, inProgress, latestSubmitted }) => {
-        const soon = comingSoon(test);
-        const pct = latestSubmitted?.percentile ?? null;
-        const accuracy = latestSubmitted?.total_attempted
-          ? Math.round(((latestSubmitted.total_correct ?? 0) / latestSubmitted.total_attempted) * 100)
-          : null;
+      {items.map((item) => (
+        <MockCardItem
+          key={item.test.id}
+          item={item}
+          onUpgrade={onUpgrade}
+        />
+      ))}
+    </div>
+  );
+}
 
-        return (
-          <Card
-            key={test.id}
-            className={`group relative overflow-hidden p-0 flex flex-col transition-all hover:shadow-lg hover:-translate-y-0.5 ${
-              !owned ? "border-sky-100" : "border-slate-200"
-            }`}
-          >
-            {/* top accent bar */}
-            <div
-              className={`h-1.5 w-full ${
-                !owned
-                  ? "bg-gradient-to-r from-slate-200 to-slate-300"
-                  : soon
-                  ? "bg-gradient-to-r from-amber-400 to-orange-500"
-                  : latestSubmitted
-                  ? "bg-gradient-to-r from-emerald-400 to-teal-500"
-                  : inProgress
-                  ? "bg-gradient-to-r from-sky-400 to-blue-500"
-                  : "bg-gradient-to-r from-violet-400 to-purple-500"
-              }`}
-            />
+function MockCardItem({
+  item, onUpgrade,
+}: {
+  item: { test: Test; owned: boolean; inProgress: Attempt | null; latestSubmitted: Attempt | null };
+  onUpgrade: () => void;
+}) {
+  const { test, owned, inProgress, latestSubmitted } = item;
+  const lock = getLockInfo(test);
+  const countdown = useCountdown(lock?.kind === "scheduled" ? lock.unlocksAt : null);
+  const pct = latestSubmitted?.percentile ?? null;
+  const accuracy = latestSubmitted?.total_attempted
+    ? Math.round(((latestSubmitted.total_correct ?? 0) / latestSubmitted.total_attempted) * 100)
+    : null;
 
-            <div className="p-4 flex flex-col flex-1">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                    {test.exam_code && (
-                      <Badge variant="outline" className="text-[10px] border-sky-200 text-sky-700 bg-sky-50">
-                        {test.exam_code}
-                      </Badge>
-                    )}
-                    {test.difficulty && (
-                      <Badge variant="outline" className={`text-[10px] ${difficultyTone(test.difficulty)}`}>
-                        {test.difficulty}
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="font-semibold leading-tight text-[15px] line-clamp-2">{test.name}</div>
-                </div>
-                {!owned && (
-                  <div className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-500">
-                    <Lock className="h-3.5 w-3.5" />
-                  </div>
-                )}
-                {owned && soon && (
-                  <Badge className="shrink-0 text-[10px] bg-amber-500 hover:bg-amber-500 gap-0.5">
-                    <Sparkles className="h-3 w-3" /> Soon
-                  </Badge>
-                )}
-              </div>
+  return (
+    <Card
+      className={`group relative overflow-hidden p-0 flex flex-col transition-all hover:shadow-lg hover:-translate-y-0.5 ${
+        !owned ? "border-sky-100" : "border-slate-200"
+      }`}
+    >
+      {/* top accent bar */}
+      <div
+        className={`h-1.5 w-full ${
+          !owned
+            ? "bg-gradient-to-r from-slate-200 to-slate-300"
+            : lock
+            ? "bg-gradient-to-r from-amber-400 to-orange-500"
+            : latestSubmitted
+            ? "bg-gradient-to-r from-emerald-400 to-teal-500"
+            : inProgress
+            ? "bg-gradient-to-r from-sky-400 to-blue-500"
+            : "bg-gradient-to-r from-violet-400 to-purple-500"
+        }`}
+      />
 
-              <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                <span className="inline-flex items-center gap-1">
-                  <Clock className="h-3 w-3" /> {test.total_duration_minutes ?? "—"} min
-                </span>
-                {soon && (
-                  <span className="inline-flex items-center gap-1 text-amber-600">
-                    <Calendar className="h-3 w-3" /> {soon}
-                  </span>
-                )}
-              </div>
-
-              {owned && latestSubmitted && pct != null && (
-                <div className="rounded-lg border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50/50 p-3 mb-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[11px] font-medium text-emerald-700 inline-flex items-center gap-1">
-                      <Award className="h-3 w-3" /> Last Attempt
-                    </span>
-                    <span className="text-lg font-bold text-emerald-700 leading-none">{pct}<span className="text-xs">%ile</span></span>
-                  </div>
-                  <Progress value={pct} className="h-1.5 bg-emerald-100" />
-                  <div className="flex justify-between mt-2 text-[11px] text-emerald-700/80">
-                    <span>Score {latestSubmitted.total_score ?? 0}/{latestSubmitted.max_score ?? 0}</span>
-                    {accuracy != null && <span>Accuracy {accuracy}%</span>}
-                  </div>
-                </div>
+      <div className="p-4 flex flex-col flex-1">
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+              {test.exam_code && (
+                <Badge variant="outline" className="text-[10px] border-sky-200 text-sky-700 bg-sky-50">
+                  {test.exam_code}
+                </Badge>
               )}
-
-              {owned && inProgress && !latestSubmitted && (
-                <div className="rounded-lg border border-sky-100 bg-sky-50/60 p-2.5 mb-3 text-xs text-sky-700 font-medium inline-flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5" /> Attempt in progress — resume now
-                </div>
+              {test.difficulty && (
+                <Badge variant="outline" className={`text-[10px] ${difficultyTone(test.difficulty)}`}>
+                  {test.difficulty}
+                </Badge>
               )}
+            </div>
+            <div className="font-semibold leading-tight text-[15px] line-clamp-2">{test.name}</div>
+          </div>
+          {!owned && (
+            <div className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-500">
+              <Lock className="h-3.5 w-3.5" />
+            </div>
+          )}
+          {owned && lock && (
+            <Badge className="shrink-0 text-[10px] bg-amber-500 hover:bg-amber-500 gap-0.5">
+              <Sparkles className="h-3 w-3" /> {lock.kind === "scheduled" ? "Scheduled" : "Soon"}
+            </Badge>
+          )}
+        </div>
 
-              <div className="mt-auto flex flex-wrap gap-2 pt-1">
-                {!owned ? (
-                  <Button
-                    size="sm"
-                    className="w-full gap-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-sm"
-                    onClick={onUpgrade}
-                  >
-                    <Sparkles className="h-3.5 w-3.5" /> Upgrade to unlock
-                  </Button>
-                ) : soon ? (
-                  <Button size="sm" disabled className="w-full gap-1">
-                    <Calendar className="h-3.5 w-3.5" /> Coming Soon
-                  </Button>
-                ) : inProgress ? (
-                  <Link to={mockAttemptPath(inProgress.id)} className="flex-1" {...studentMockLinkProps}>
-                    <Button size="sm" className="w-full gap-1 bg-sky-600 hover:bg-sky-700">
-                      <Clock className="h-3.5 w-3.5" /> Resume Attempt
-                    </Button>
-                  </Link>
-                ) : latestSubmitted ? (
-                  <div className="w-full flex flex-col gap-2">
-                    <div className="flex gap-2">
-                      <Link to={mockResultPath(latestSubmitted.id)} className="flex-1" {...studentMockLinkProps}>
+        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+          <span className="inline-flex items-center gap-1">
+            <Clock className="h-3 w-3" /> {test.total_duration_minutes ?? "—"} min
+          </span>
+        </div>
+
+        {owned && lock && (
+          <div className="rounded-lg border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50/50 p-3 mb-3">
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-amber-700 mb-1">
+              <Calendar className="h-3.5 w-3.5" />
+              {lock.kind === "scheduled" ? "To be unlocked on" : "Status"}
+            </div>
+            <div className="text-sm font-semibold text-amber-900 leading-tight">{lock.label}</div>
+            {lock.kind === "scheduled" && (
+              <div className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-amber-700/90">
+                <Clock className="h-3 w-3" /> Unlocks in <span className="font-semibold">{countdown}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {owned && latestSubmitted && pct != null && !lock && (
+          <div className="rounded-lg border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50/50 p-3 mb-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-medium text-emerald-700 inline-flex items-center gap-1">
+                <Award className="h-3 w-3" /> Last Attempt
+              </span>
+              <span className="text-lg font-bold text-emerald-700 leading-none">{pct}<span className="text-xs">%ile</span></span>
+            </div>
+            <Progress value={pct} className="h-1.5 bg-emerald-100" />
+            <div className="flex justify-between mt-2 text-[11px] text-emerald-700/80">
+              <span>Score {latestSubmitted.total_score ?? 0}/{latestSubmitted.max_score ?? 0}</span>
+              {accuracy != null && <span>Accuracy {accuracy}%</span>}
+            </div>
+          </div>
+        )}
+
+        {owned && inProgress && !latestSubmitted && !lock && (
+          <div className="rounded-lg border border-sky-100 bg-sky-50/60 p-2.5 mb-3 text-xs text-sky-700 font-medium inline-flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5" /> Attempt in progress — resume now
+          </div>
+        )}
+
+        <div className="mt-auto flex flex-wrap gap-2 pt-1">
+          {!owned ? (
+            <Button
+              size="sm"
+              className="w-full gap-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-sm"
+              onClick={onUpgrade}
+            >
+              <Sparkles className="h-3.5 w-3.5" /> Upgrade to unlock
+            </Button>
+          ) : lock ? (
+            <Button size="sm" disabled className="w-full gap-1">
+              <Lock className="h-3.5 w-3.5" />
+              {lock.kind === "scheduled" ? `Unlocks in ${countdown}` : "Coming soon"}
+            </Button>
+          ) : inProgress ? (
+            <Link to={mockAttemptPath(inProgress.id)} className="flex-1" {...studentMockLinkProps}>
+              <Button size="sm" className="w-full gap-1 bg-sky-600 hover:bg-sky-700">
+                <Clock className="h-3.5 w-3.5" /> Resume Attempt
+              </Button>
+            </Link>
+          ) : latestSubmitted ? (
+            <div className="w-full flex flex-col gap-2">
+              <div className="flex gap-2">
+                <Link to={mockResultPath(latestSubmitted.id)} className="flex-1" {...studentMockLinkProps}>
                         <Button size="sm" variant="outline" className="w-full gap-1">
                           <BarChart3 className="h-3.5 w-3.5" /> Report
                         </Button>
