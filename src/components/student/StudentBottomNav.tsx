@@ -33,17 +33,16 @@ export default function StudentBottomNav() {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-card/95 backdrop-blur border-t border-border"
+      className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-card/95 backdrop-blur-xl border-t border-border shadow-[0_-4px_20px_-8px_rgba(2,132,199,0.15)]"
       style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       aria-label="Student bottom navigation"
     >
-      <ul className="grid grid-cols-5">
+      <ul className="grid grid-cols-5 px-1 pt-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = tab.match.some((m) =>
             tab.end ? location.pathname === m : location.pathname === m || location.pathname.startsWith(m + "/")
           );
-          // Aggregate any badge belonging to a route that matches this tab.
           const badge = Object.entries(counts).reduce((sum, [route, n]) => {
             const matched = tab.match.some((m) => route === m || route.startsWith(m + "/"));
             return sum + (matched ? n : 0);
@@ -55,24 +54,26 @@ export default function StudentBottomNav() {
                 to={tab.to}
                 end={tab.end}
                 className={cn(
-                  "relative flex flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors",
+                  "relative flex flex-col items-center justify-center gap-1 py-2 mx-0.5 rounded-xl text-[10px] font-semibold transition-all duration-200",
                   isActive
-                    ? "text-sky-600 dark:text-sky-300"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "text-white bg-gradient-to-br from-sky-500 to-blue-600 shadow-md shadow-sky-500/30"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
                 )}
               >
                 <span className="relative">
-                  <Icon className={cn("h-5 w-5 transition-transform", isActive && "scale-110")} />
+                  <Icon className={cn("h-[18px] w-[18px] transition-transform", isActive && "scale-110")} />
                   {badge > 0 && (
-                    <span className="absolute -top-1 -right-2 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full text-[9px] font-bold bg-rose-500 text-white">
+                    <span className={cn(
+                      "absolute -top-1.5 -right-2 inline-flex items-center justify-center min-w-[15px] h-[15px] px-1 rounded-full text-[9px] font-bold ring-2",
+                      isActive
+                        ? "bg-white text-rose-600 ring-sky-500"
+                        : "bg-rose-500 text-white ring-card"
+                    )}>
                       {badge > 9 ? "9+" : badge}
                     </span>
                   )}
                 </span>
-                <span className="leading-none">{tab.label}</span>
-                {isActive && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-gradient-to-r from-sky-500 to-blue-600" />
-                )}
+                <span className="leading-none tracking-tight">{tab.label}</span>
               </NavLink>
             </li>
           );
