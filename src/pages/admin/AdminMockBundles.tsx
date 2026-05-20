@@ -320,16 +320,17 @@ export default function AdminMockBundles() {
                       </div>
                     </div>
                     <div>
-                      <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Type</div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Category (pick one)</div>
                       <div className="flex flex-wrap gap-1">
-                        {testTypes.map((t) => (
-                          <button key={t} type="button" onClick={() => setTypeFilter(t)}
-                            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition capitalize ${typeFilter === t ? "bg-sky-500 text-white border-sky-500" : "bg-background border-border hover:bg-muted"}`}>
-                            {t === "all" ? "All" : t.replace(/_/g, " ")}
+                        {TYPE_OPTIONS.map((t) => (
+                          <button key={t.v} type="button" onClick={() => setTypeFilter(t.v)}
+                            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition ${typeFilter === t.v ? "bg-sky-500 text-white border-sky-500" : "bg-background border-border hover:bg-muted"}`}>
+                            {t.l}
                           </button>
                         ))}
                       </div>
                     </div>
+
                     <div>
                       <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Status</div>
                       <div className="flex flex-wrap gap-1">
