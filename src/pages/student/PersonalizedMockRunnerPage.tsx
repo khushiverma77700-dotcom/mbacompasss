@@ -98,9 +98,14 @@ export default function PersonalizedMockRunnerPage() {
             <div className="text-sm font-semibold truncate">{attempt.exam_code} · {attempt.difficulty}</div>
             <div className="text-xs text-muted-foreground">Question {idx + 1} of {questions.length} · {current.section}</div>
           </div>
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-mono text-sm ${lowTime ? "bg-rose-50 text-rose-700" : "bg-sky-50 text-sky-700"}`}>
-            <Timer className="h-4 w-4" />
-            {mm}:{ss}
+          <div className="flex items-center gap-2">
+            <div className="[&_button]:!bg-sky-600 [&_button]:!text-white [&_button:hover]:!bg-sky-700">
+              <MockCalculator />
+            </div>
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-mono text-sm ${lowTime ? "bg-rose-50 text-rose-700" : "bg-sky-50 text-sky-700"}`}>
+              <Timer className="h-4 w-4" />
+              {mm}:{ss}
+            </div>
           </div>
         </div>
       </header>
