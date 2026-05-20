@@ -70,6 +70,9 @@ export default function MockBundleDetailPage() {
   const [enrolled, setEnrolled] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
   const [buyerEmail, setBuyerEmail] = useState("");
+  const [phoneGateOpen, setPhoneGateOpen] = useState(false);
+  const [phoneGateUser, setPhoneGateUser] = useState<{ id: string; email?: string | null } | null>(null);
+
 
   useEffect(() => {
     if (!slug) return;
