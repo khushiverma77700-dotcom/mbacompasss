@@ -122,7 +122,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
         supabase
           .from("mock_tests")
           .select("id, name, slug, total_duration_minutes, difficulty, exam_code, category, test_type, is_live, scheduled_start_at, launch_date, banner_url, is_published")
-          .eq("is_published", true)
+          .or("is_published.eq.true,is_live.eq.true")
           .order("name"),
         supabase
           .from("mock_bundle_items")
