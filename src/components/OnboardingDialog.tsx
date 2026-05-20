@@ -194,11 +194,19 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium select-none">+91</span>
               <Input
+                ref={phoneInputRef}
                 type="tel"
                 inputMode="numeric"
+                autoComplete="tel-national"
                 value={phone}
                 onChange={(e) => handlePhoneChange(e.target.value)}
                 onBlur={() => { setPhoneTouched(true); setPhoneError(validatePhone(phone)); }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && phone.length === 10 && !otpSending) {
+                    e.preventDefault();
+                    void handleSendOtp();
+                  }
+                }}
                 placeholder="Enter 10-digit mobile number"
                 className={`pl-12 h-11 ${phoneTouched && phoneError ? "border-destructive" : ""} ${phoneVerified ? "border-emerald-500" : ""}`}
                 maxLength={10}
