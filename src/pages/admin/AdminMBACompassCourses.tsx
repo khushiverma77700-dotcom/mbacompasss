@@ -112,7 +112,25 @@ const FEATURE_TOGGLES: { key: keyof Course; label: string; group: string }[] = [
   { key: "has_doubt_resolution",    label: "Support Center",            group: "Support" },
 ];
 
-const empty: Partial<Course> = {
+// Exam options for the multi-select filter. Used both by admin tagging and
+// the public /mba-compass exam tabs filter.
+const EXAM_OPTIONS = [
+  { value: "CAT",  label: "CAT" },
+  { value: "XAT",  label: "XAT" },
+  { value: "GMAT", label: "GMAT" },
+  { value: "SNAP", label: "SNAP" },
+  { value: "NMAT", label: "NMAT" },
+  { value: "IIFT", label: "IIFT" },
+  { value: "CMAT", label: "CMAT" },
+  { value: "MAT",  label: "MAT"  },
+];
+
+// Random initial "students enrolled" seed for new courses (400–3000).
+// A daily cron job (`mba-compass-courses-daily-enroll-bump`) bumps the
+// number by +1..+5 every night so it grows organically.
+const seedEnrollment = () => 400 + Math.floor(Math.random() * 2601);
+
+const buildEmpty = (): Partial<Course> => ({
   title: "", slug: "", subtitle: "", description: "",
   exam_focus: ["CAT"], mode: "online", level: "beginner", language: "English",
   validity_months: 12,
@@ -120,8 +138,8 @@ const empty: Partial<Course> = {
   features: [], highlights: [], curriculum: [],
   what_youll_learn: [], faqs: [], instructors: [], gallery_images: [],
   is_featured: false, is_active: true, sort_order: 0,
-  total_students_enrolled: 0, rating: 0, reviews_count: 0,
-};
+  total_students_enrolled: seedEnrollment(), rating: 0, reviews_count: 0,
+});
 
 type BundleOpt = { id: string; name: string; exam_code: string | null; is_published: boolean };
 
