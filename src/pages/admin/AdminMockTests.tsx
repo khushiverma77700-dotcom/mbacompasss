@@ -11,7 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, ArrowLeft, Settings2, ExternalLink, Loader2, Sparkles } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowLeft, Settings2, ExternalLink, Loader2, Sparkles, CheckSquare } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+
 import { slugify } from "@/lib/slugify";
 import FileUpload from "@/components/admin/FileUpload";
 import AIGenerateMockDialog from "@/components/admin/AIGenerateMockDialog";
@@ -69,6 +71,33 @@ const AdminMockTests = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [examFilter, setExamFilter] = useState<string>("all");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkBusy, setBulkBusy] = useState(false);
+
+  const visibleTests = tests
+    .filter((t) => categoryFilter === "all" || (t.category || t.test_type) === categoryFilter)
+    .filter((t) => examFilter === "all" || t.exam_code === examFilter)
+    .filter((t) => difficultyFilter === "all" || t.difficulty === difficultyFilter);
+
+  const allVisibleSelected = visibleTests.length > 0 && visibleTests.every((t) => selectedIds.includes(t.id));
+  const toggleAllVisible = () => {
+    if (allVisibleSelected) setSelectedIds((prev) => prev.filter((id) => !visibleTests.some((t) => t.id === id)));
+    else setSelectedIds((prev) => Array.from(new Set([...prev, ...visibleTests.map((t) => t.id)])));
+  };
+  const toggleRow = (id: string) =>
+    setSelectedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+
+  const bulkUpdate = async (patch: Record<string, any>, label: string) => {
+    if (selectedIds.length === 0) return;
+    setBulkBusy(true);
+    const { error } = await supabase.from("mock_tests").update(patch).in("id", selectedIds);
+    setBulkBusy(false);
+    if (error) { toast({ title: "Bulk update failed", description: error.message, variant: "destructive" }); return; }
+    toast({ title: `${selectedIds.length} mock(s) ${label}` });
+    setSelectedIds([]);
+    fetchTests();
+  };
+
 
   const fetchTests = async () => {
     setLoading(true);
@@ -317,11 +346,29 @@ const AdminMockTests = () => {
         )}
       </div>
 
+      {selectedIds.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-3 rounded-md border bg-sky-50/60 px-3 py-2">
+          <span className="text-sm font-medium flex items-center gap-1.5">
+            <CheckSquare className="w-4 h-4 text-sky-600" />
+            {selectedIds.length} selected
+          </span>
+          <div className="ml-auto flex flex-wrap gap-2">
+            <Button size="sm" variant="default" disabled={bulkBusy} onClick={() => bulkUpdate({ is_published: true, is_live: true }, "made Live")}>Make Live</Button>
+            <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => bulkUpdate({ is_published: true }, "Published")}>Publish</Button>
+            <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => bulkUpdate({ is_live: false, is_published: false }, "moved to Draft")}>Make Draft</Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelectedIds([])}>Clear</Button>
+          </div>
+        </div>
+      )}
+
       <Card>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox checked={allVisibleSelected} onCheckedChange={toggleAllVisible} />
+                </TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Exam</TableHead>
@@ -333,18 +380,18 @@ const AdminMockTests = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading && (<TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>)}
+              {loading && (<TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>)}
               {!loading && tests.length === 0 && (
-                <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
                   No mock tests yet. Click <strong>Generate Mocks From AI</strong> or <strong>New Mock Test</strong>.
                 </TableCell></TableRow>
               )}
-              {tests
-                .filter((t) => categoryFilter === "all" || (t.category || t.test_type) === categoryFilter)
-                .filter((t) => examFilter === "all" || t.exam_code === examFilter)
-                .filter((t) => difficultyFilter === "all" || t.difficulty === difficultyFilter)
-                .map((t) => (
-                <TableRow key={t.id}>
+              {visibleTests.map((t) => (
+                <TableRow key={t.id} className={selectedIds.includes(t.id) ? "bg-sky-50/40" : ""}>
+                  <TableCell>
+                    <Checkbox checked={selectedIds.includes(t.id)} onCheckedChange={() => toggleRow(t.id)} />
+                  </TableCell>
+
                   <TableCell>
                     <div className="font-medium flex items-center gap-1.5">
                       {t.name}

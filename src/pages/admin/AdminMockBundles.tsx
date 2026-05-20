@@ -38,8 +38,10 @@ type MockOption = {
   slug: string;
   exam_code: string | null;
   test_type: string | null;
+  category: string | null;
   is_published: boolean | null;
 };
+
 
 const slugify = (s: string) =>
   s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
@@ -64,7 +66,7 @@ export default function AdminMockBundles() {
   const [mocksLoading, setMocksLoading] = useState(false);
   const [mockSearch, setMockSearch] = useState("");
   const [examFilter, setExamFilter] = useState<string>("all");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("full_length");
   const [statusFilter, setStatusFilter] = useState<"all" | "live" | "draft">("all");
   const [selectionFilter, setSelectionFilter] = useState<"all" | "selected" | "unselected">("all");
 
@@ -80,10 +82,11 @@ export default function AdminMockBundles() {
     setMocksLoading(true);
     const { data } = await supabase
       .from("mock_tests")
-      .select("id, name, slug, exam_code, test_type, is_published")
+      .select("id, name, slug, exam_code, test_type, category, is_published")
       .order("name");
     setAllMocks((data ?? []) as MockOption[]);
     setMocksLoading(false);
+
   };
 
   const openNew = () => {
@@ -91,7 +94,8 @@ export default function AdminMockBundles() {
     setEditingItems([]);
     setShowAdvanced(false);
     setMockSearch("");
-    setExamFilter("all");
+    setExamFilter("all"); setTypeFilter("full_length");
+
     loadMocks();
   };
   const openEdit = async (b: Bundle) => {
@@ -105,7 +109,8 @@ export default function AdminMockBundles() {
     setEditingItems((data ?? []).map((x: any) => x.test_id));
     setShowAdvanced(false);
     setMockSearch("");
-    setExamFilter("all");
+    setExamFilter("all"); setTypeFilter("full_length");
+
     loadMocks();
   };
 
@@ -117,16 +122,21 @@ export default function AdminMockBundles() {
     return ["all", ...Array.from(set).sort()];
   }, [allMocks]);
 
-  const testTypes = useMemo(() => {
-    const set = new Set<string>();
-    allMocks.forEach((m) => m.test_type && set.add(m.test_type));
-    return ["all", ...Array.from(set).sort()];
-  }, [allMocks]);
+  const TYPE_OPTIONS = [
+    { v: "full_length", l: "Full Length" },
+    { v: "sectional", l: "Sectional" },
+    { v: "topic_wise", l: "Topic-wise" },
+    { v: "practice_set", l: "Practice" },
+    { v: "daily", l: "Daily Test" },
+  ];
+  const testTypes = useMemo(() => ["all", ...TYPE_OPTIONS.map((t) => t.v)], []);
+
+  const kindOf = (m: MockOption) => (m.category || m.test_type || "").toLowerCase();
 
   const filteredMocks = useMemo(() => {
     return allMocks.filter((m) => {
       if (examFilter !== "all" && m.exam_code !== examFilter) return false;
-      if (typeFilter !== "all" && m.test_type !== typeFilter) return false;
+      if (typeFilter !== "all" && kindOf(m) !== typeFilter) return false;
       if (statusFilter === "live" && !m.is_published) return false;
       if (statusFilter === "draft" && m.is_published) return false;
       const sel = editingItems.includes(m.id);
@@ -138,8 +148,9 @@ export default function AdminMockBundles() {
   }, [allMocks, examFilter, typeFilter, statusFilter, selectionFilter, mockSearch, editingItems]);
 
   const clearFilters = () => {
-    setMockSearch(""); setExamFilter("all"); setTypeFilter("all"); setStatusFilter("all"); setSelectionFilter("all");
+    setMockSearch(""); setExamFilter("all"); setTypeFilter("full_length"); setStatusFilter("all"); setSelectionFilter("all");
   };
+
 
   const toggleMock = (id: string) => {
     setEditingItems((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
@@ -311,16 +322,17 @@ export default function AdminMockBundles() {
                       </div>
                     </div>
                     <div>
-                      <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Type</div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Category (pick one)</div>
                       <div className="flex flex-wrap gap-1">
-                        {testTypes.map((t) => (
-                          <button key={t} type="button" onClick={() => setTypeFilter(t)}
-                            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition capitalize ${typeFilter === t ? "bg-sky-500 text-white border-sky-500" : "bg-background border-border hover:bg-muted"}`}>
-                            {t === "all" ? "All" : t.replace(/_/g, " ")}
+                        {TYPE_OPTIONS.map((t) => (
+                          <button key={t.v} type="button" onClick={() => setTypeFilter(t.v)}
+                            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition ${typeFilter === t.v ? "bg-sky-500 text-white border-sky-500" : "bg-background border-border hover:bg-muted"}`}>
+                            {t.l}
                           </button>
                         ))}
                       </div>
                     </div>
+
                     <div>
                       <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Status</div>
                       <div className="flex flex-wrap gap-1">
