@@ -29,7 +29,7 @@ import {
   FileText,
   AlertTriangle,
   Award,
-} from "lucide-react";
+  Download,
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/student/ThemeToggle";
