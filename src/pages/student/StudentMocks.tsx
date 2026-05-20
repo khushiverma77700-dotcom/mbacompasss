@@ -618,14 +618,14 @@ function AttemptedGrid({ items }: { items: { test: Test; attempt: Attempt }[] })
                 <Calendar className="h-3 w-3" /> Submitted {attempt.submitted_at ? new Date(attempt.submitted_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
               </div>
               <div className="mt-auto flex gap-2">
-                <Link to={`/mocks/result/${attempt.id}`} className="flex-1">
+                <Link to={mockResultPath(attempt.id)} className="flex-1" {...studentMockLinkProps}>
                   <Button size="sm" variant="outline" className="w-full gap-1"><FileText className="h-3.5 w-3.5" /> Result</Button>
                 </Link>
-                <Link to={`/mocks/review/${attempt.id}`} className="flex-1">
+                <Link to={mockReviewPath(attempt.id)} className="flex-1" {...studentMockLinkProps}>
                   <Button size="sm" className="w-full gap-1 bg-sky-600 hover:bg-sky-700"><CheckCircle2 className="h-3.5 w-3.5" /> Review</Button>
                 </Link>
                 {test.slug && (
-                  <Link to={`/mocks/leaderboard/${test.slug}`}>
+                  <Link to={mockLeaderboardPath(test.slug)} {...studentMockLinkProps}>
                     <Button size="sm" variant="ghost" title="Leaderboard"><Trophy className="h-4 w-4" /></Button>
                   </Link>
                 )}
