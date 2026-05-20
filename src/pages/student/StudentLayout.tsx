@@ -243,17 +243,26 @@ export default function StudentLayout() {
           </div>
         </header>
 
-        <div className="flex pt-14">
+        <div
+          className="flex"
+          style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 3.5rem)" }}
+        >
           {/* Sidebar - desktop: FIXED. Scrolls independently of main content. */}
-          <aside className="hidden lg:flex flex-col w-64 shrink-0 border-r border-border bg-card/80 backdrop-blur fixed left-0 bottom-0 overflow-y-auto z-20 top-14">
+          <aside
+            className="hidden lg:flex flex-col w-64 shrink-0 border-r border-border bg-card/80 backdrop-blur fixed left-0 bottom-0 overflow-y-auto z-20"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 3.5rem)" }}
+          >
             <SidebarContent />
           </aside>
 
           {/* Sidebar - mobile drawer */}
           {mobileOpen && (
             <div className="fixed inset-0 z-40 lg:hidden">
-              <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
-              <aside className="absolute left-0 top-0 bottom-0 w-72 bg-card shadow-xl border-r border-border pt-14 overflow-y-auto">
+              <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setMobileOpen(false)} />
+              <aside
+                className="absolute left-0 top-0 bottom-0 w-[82vw] max-w-sm bg-card shadow-2xl border-r border-border overflow-y-auto animate-in slide-in-from-left duration-300"
+                style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 3.5rem)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+              >
                 <SidebarContent />
               </aside>
             </div>
