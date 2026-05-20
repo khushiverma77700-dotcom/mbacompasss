@@ -178,7 +178,7 @@ export default function StudentLayout() {
 
   return (
     <StudentThemeProvider>
-      <div className="min-h-[100dvh] bg-gradient-to-br from-sky-50/40 via-white to-blue-50/30 dark:from-background dark:via-background dark:to-background text-foreground">
+      <div className="student-scope min-h-[100dvh] bg-gradient-to-br from-sky-50/40 via-white to-blue-50/30 dark:from-background dark:via-background dark:to-background text-foreground">
         {/* Top bar */}
         <header
           className="fixed top-0 left-0 right-0 z-30 bg-card/95 backdrop-blur border-b border-border"
