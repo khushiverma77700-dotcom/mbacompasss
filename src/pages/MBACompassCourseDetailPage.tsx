@@ -15,6 +15,7 @@ import PageKeywords from "@/components/PageKeywords";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import { useCtaGate, openLoginDialog } from "@/hooks/useCtaGate";
 import { CompassCompareProvider, useCompassCompare } from "@/contexts/CompassCompareContext";
+import OnboardingDialog from "@/components/OnboardingDialog";
 import { toast } from "sonner";
 
 const formatINR = (n: number | null) => n == null ? "—" : `₹${Math.round(n).toLocaleString("en-IN")}`;
