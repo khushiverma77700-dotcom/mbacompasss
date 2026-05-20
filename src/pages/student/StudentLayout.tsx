@@ -214,6 +214,22 @@ export default function StudentLayout() {
             </div>
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <ThemeToggle />
+              <Link
+                to="/student/install"
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-semibold px-2.5 py-1.5 shadow hover:from-sky-600 hover:to-blue-700"
+                aria-label="Install app"
+                title="Install MBA Compass as an app"
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span className="hidden md:inline">Install App</span>
+              </Link>
+              <Link
+                to="/student/install"
+                className="sm:hidden p-2 rounded-md hover:bg-accent text-sky-600"
+                aria-label="Install app"
+              >
+                <Download className="h-5 w-5" />
+              </Link>
               <Link to="/student/notifications" className="relative p-2 rounded-md hover:bg-accent" aria-label="Notifications">
                 <Bell className="h-5 w-5 text-foreground/70" />
               </Link>
