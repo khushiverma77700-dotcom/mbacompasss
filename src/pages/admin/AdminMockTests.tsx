@@ -184,11 +184,9 @@ const AdminMockTests = () => {
   const handleSave = async () => {
     if (!form.name.trim()) { toast({ title: "Name is required", variant: "destructive" }); return; }
     const slug = slugify(form.name); // always derived from name
-    if (form.pricing_type === "paid" && Number(form.price_inr) <= 0) {
-      toast({ title: "Paid mocks need a price > 0", variant: "destructive" }); return;
-    }
     setSaving(true);
-    const payload = { ...form, slug, price_inr: Number(form.price_inr) || 0 };
+    // Mocks are always free at the mock level — monetization happens via bundles → courses.
+    const payload = { ...form, slug, pricing_type: "free" as const, price_inr: 0 };
     if (editId) {
       const { error } = await supabase.from("mock_tests").update(payload).eq("id", editId);
       if (error) {
