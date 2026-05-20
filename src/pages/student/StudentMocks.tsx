@@ -112,7 +112,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
       const [{ data: e }, { data: a }, { data: c }, { data: bi }] = await Promise.all([
         supabase
           .from("mock_enrollments")
-          .select("id, test_id, source, expires_at, admin_notes, test:mock_tests(id, name, slug, total_duration_minutes, difficulty, exam_code, category, test_type, is_live, scheduled_start_at, launch_date, banner_url, is_published)")
+          .select("id, test_id, source, expires_at, admin_notes, test:mock_tests(id, name, slug, total_duration_minutes, difficulty, exam_code, category, test_type, is_live, scheduled_start_at, launch_date, banner_url, is_published, sort_order)")
           .eq("user_id", user.id)
           .order("enrolled_at", { ascending: false }),
         supabase
@@ -122,8 +122,9 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
           .order("started_at", { ascending: false }),
         supabase
           .from("mock_tests")
-          .select("id, name, slug, total_duration_minutes, difficulty, exam_code, category, test_type, is_live, scheduled_start_at, launch_date, banner_url, is_published")
+          .select("id, name, slug, total_duration_minutes, difficulty, exam_code, category, test_type, is_live, scheduled_start_at, launch_date, banner_url, is_published, sort_order")
           .or("is_published.eq.true,is_live.eq.true")
+          .order("sort_order", { ascending: true })
           .order("name"),
         supabase
           .from("mock_bundle_items")
