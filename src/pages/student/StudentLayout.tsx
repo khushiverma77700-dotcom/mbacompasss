@@ -58,7 +58,7 @@ const navItems: NavItem[] = [
   // "My Mocks" group is rendered separately as an expandable section.
   // "My Insights" group (Strength / Weak / Performance / Leaderboard) is also rendered separately.
   { to: "/student/buy-mocks", label: "Buy Mocks", icon: ShoppingBag, feature: "buy_mocks" },
-  { to: "/student/goals", label: "CAT Score Engine", icon: Target, feature: "study_planner" },
+  // { to: "/student/goals", label: "CAT Score Engine", icon: Target, feature: "study_planner" }, // hidden
   { to: "/student/day-planner", label: "My Day Planner", icon: CalendarCheck, feature: "day_planner" },
   { to: "/student/orders", label: "My Orders", icon: Receipt },
   { to: "/student/announcements", label: "Announcements", icon: Bell },
