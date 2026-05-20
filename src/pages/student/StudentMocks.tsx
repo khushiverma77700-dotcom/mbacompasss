@@ -194,7 +194,12 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
       .filter((t) => getKind(t) === typeKey)
       .filter(matchesExam)
       .filter(matchesQuery)
-      .filter((t) => t.is_published !== false)
+      .filter((t) => {
+        if (t.is_published) return true;
+        // Live-only (unpublished) mocks stay hidden until scheduled time passes.
+        if (t.is_live && t.scheduled_start_at && new Date(t.scheduled_start_at).getTime() <= Date.now()) return true;
+        return false;
+      })
       .sort((a, b) => {
         const ao = bundleOrder[a.id] ?? 9999;
         const bo = bundleOrder[b.id] ?? 9999;
