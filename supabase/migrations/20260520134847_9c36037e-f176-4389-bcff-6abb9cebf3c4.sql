@@ -1,0 +1,2 @@
+ALTER TABLE public.mock_tests ADD COLUMN IF NOT EXISTS readiness_status text NOT NULL DEFAULT 'incomplete' CHECK (readiness_status IN ('ready','needs_changes','incomplete'));
+CREATE INDEX IF NOT EXISTS idx_mock_tests_readiness_status ON public.mock_tests(readiness_status);

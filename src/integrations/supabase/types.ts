@@ -4272,6 +4272,7 @@ export type Database = {
           name: string
           price_inr: number
           pricing_type: Database["public"]["Enums"]["mock_pricing_type"]
+          readiness_status: string
           scheduled_end_at: string | null
           scheduled_start_at: string | null
           slug: string
@@ -4303,6 +4304,7 @@ export type Database = {
           name: string
           price_inr?: number
           pricing_type?: Database["public"]["Enums"]["mock_pricing_type"]
+          readiness_status?: string
           scheduled_end_at?: string | null
           scheduled_start_at?: string | null
           slug: string
@@ -4334,6 +4336,7 @@ export type Database = {
           name?: string
           price_inr?: number
           pricing_type?: Database["public"]["Enums"]["mock_pricing_type"]
+          readiness_status?: string
           scheduled_end_at?: string | null
           scheduled_start_at?: string | null
           slug?: string

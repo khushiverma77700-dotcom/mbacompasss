@@ -72,6 +72,8 @@ const AdminMockTests = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [examFilter, setExamFilter] = useState<string>("all");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
+  const [readinessFilter, setReadinessFilter] = useState<string>("all");
+  const [readinessSaving, setReadinessSaving] = useState<Record<string, boolean>>({});
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bundleMap, setBundleMap] = useState<Record<string, { id: string; name: string; slug: string }[]>>({});
@@ -81,7 +83,28 @@ const AdminMockTests = () => {
   const visibleTests = tests
     .filter((t) => categoryFilter === "all" || (t.category || t.test_type) === categoryFilter)
     .filter((t) => examFilter === "all" || t.exam_code === examFilter)
-    .filter((t) => difficultyFilter === "all" || t.difficulty === difficultyFilter);
+    .filter((t) => difficultyFilter === "all" || t.difficulty === difficultyFilter)
+    .filter((t) => readinessFilter === "all" || (t.readiness_status || "incomplete") === readinessFilter);
+
+  const updateReadiness = async (id: string, value: string) => {
+    setReadinessSaving((p) => ({ ...p, [id]: true }));
+    // optimistic
+    setTests((prev) => prev.map((x) => (x.id === id ? { ...x, readiness_status: value } : x)));
+    const { error } = await supabase.from("mock_tests").update({ readiness_status: value }).eq("id", id);
+    setReadinessSaving((p) => ({ ...p, [id]: false }));
+    if (error) {
+      toast({ title: "Update failed", description: error.message, variant: "destructive" });
+      fetchTests();
+    } else {
+      toast({ title: "Readiness updated" });
+    }
+  };
+
+  const readinessMeta: Record<string, { label: string; className: string }> = {
+    ready: { label: "Ready", className: "bg-emerald-100 text-emerald-700 border-emerald-300" },
+    needs_changes: { label: "Needs Changes", className: "bg-amber-100 text-amber-700 border-amber-300" },
+    incomplete: { label: "Incomplete", className: "bg-rose-100 text-rose-700 border-rose-300" },
+  };
 
   const allVisibleSelected = visibleTests.length > 0 && visibleTests.every((t) => selectedIds.includes(t.id));
   const toggleAllVisible = () => {
@@ -378,8 +401,20 @@ const AdminMockTests = () => {
             </SelectContent>
           </Select>
         </div>
-        {(examFilter !== "all" || difficultyFilter !== "all") && (
-          <Button size="sm" variant="ghost" onClick={() => { setExamFilter("all"); setDifficultyFilter("all"); }}>
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground">Readiness</Label>
+          <Select value={readinessFilter} onValueChange={setReadinessFilter}>
+            <SelectTrigger className="w-[170px] h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="ready">Ready</SelectItem>
+              <SelectItem value="needs_changes">Needs Changes</SelectItem>
+              <SelectItem value="incomplete">Incomplete</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {(examFilter !== "all" || difficultyFilter !== "all" || readinessFilter !== "all") && (
+          <Button size="sm" variant="ghost" onClick={() => { setExamFilter("all"); setDifficultyFilter("all"); setReadinessFilter("all"); }}>
             Clear filters
           </Button>
         )}
@@ -395,6 +430,10 @@ const AdminMockTests = () => {
             <Button size="sm" variant="default" disabled={bulkBusy} onClick={() => bulkUpdate({ is_published: true, is_live: true }, "made Live")}>Make Live</Button>
             <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => bulkUpdate({ is_published: true }, "Published")}>Publish</Button>
             <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => bulkUpdate({ is_live: false, is_published: false }, "moved to Draft")}>Make Draft</Button>
+            <div className="w-px h-6 bg-border mx-1" />
+            <Button size="sm" variant="outline" disabled={bulkBusy} className="border-emerald-300 text-emerald-700 hover:bg-emerald-50" onClick={() => bulkUpdate({ readiness_status: "ready" }, "marked Ready")}>Mark Ready</Button>
+            <Button size="sm" variant="outline" disabled={bulkBusy} className="border-amber-300 text-amber-700 hover:bg-amber-50" onClick={() => bulkUpdate({ readiness_status: "needs_changes" }, "marked Needs Changes")}>Needs Changes</Button>
+            <Button size="sm" variant="outline" disabled={bulkBusy} className="border-rose-300 text-rose-700 hover:bg-rose-50" onClick={() => bulkUpdate({ readiness_status: "incomplete" }, "marked Incomplete")}>Incomplete</Button>
             <Button size="sm" variant="ghost" onClick={() => setSelectedIds([])}>Clear</Button>
           </div>
         </div>
@@ -414,6 +453,7 @@ const AdminMockTests = () => {
                 <TableHead>Pricing</TableHead>
                 <TableHead>Duration</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Readiness</TableHead>
                 <TableHead>Bundles</TableHead>
                 <TableHead>Courses</TableHead>
                 <TableHead>Takers</TableHead>
@@ -421,9 +461,9 @@ const AdminMockTests = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading && (<TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>)}
+              {loading && (<TableRow><TableCell colSpan={12} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>)}
               {!loading && tests.length === 0 && (
-                <TableRow><TableCell colSpan={11} className="text-center py-12 text-muted-foreground">
+                <TableRow><TableCell colSpan={12} className="text-center py-12 text-muted-foreground">
                   No mock tests yet. Click <strong>Generate Mocks From AI</strong> or <strong>New Mock Test</strong>.
                 </TableCell></TableRow>
               )}
@@ -460,6 +500,24 @@ const AdminMockTests = () => {
                   <TableCell>
                     {t.is_published ? <Badge className="bg-emerald-600 hover:bg-emerald-700">Published</Badge> : <Badge variant="outline">Draft</Badge>}
                     {t.is_live && <Badge className="ml-1 bg-orange-500 hover:bg-orange-600">Live</Badge>}
+                  </TableCell>
+                  <TableCell>
+                    {(() => {
+                      const cur = (t.readiness_status || "incomplete") as keyof typeof readinessMeta;
+                      const meta = readinessMeta[cur] ?? readinessMeta.incomplete;
+                      return (
+                        <Select value={cur} onValueChange={(v) => updateReadiness(t.id, v)} disabled={!!readinessSaving[t.id]}>
+                          <SelectTrigger className={`h-8 w-[150px] text-xs font-medium border ${meta.className}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="ready">Ready</SelectItem>
+                            <SelectItem value="needs_changes">Needs Changes</SelectItem>
+                            <SelectItem value="incomplete">Incomplete</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell>
                     {bundles.length === 0 ? (
