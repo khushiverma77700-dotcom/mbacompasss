@@ -71,6 +71,33 @@ const AdminMockTests = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [examFilter, setExamFilter] = useState<string>("all");
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkBusy, setBulkBusy] = useState(false);
+
+  const visibleTests = tests
+    .filter((t) => categoryFilter === "all" || (t.category || t.test_type) === categoryFilter)
+    .filter((t) => examFilter === "all" || t.exam_code === examFilter)
+    .filter((t) => difficultyFilter === "all" || t.difficulty === difficultyFilter);
+
+  const allVisibleSelected = visibleTests.length > 0 && visibleTests.every((t) => selectedIds.includes(t.id));
+  const toggleAllVisible = () => {
+    if (allVisibleSelected) setSelectedIds((prev) => prev.filter((id) => !visibleTests.some((t) => t.id === id)));
+    else setSelectedIds((prev) => Array.from(new Set([...prev, ...visibleTests.map((t) => t.id)])));
+  };
+  const toggleRow = (id: string) =>
+    setSelectedIds((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+
+  const bulkUpdate = async (patch: Record<string, any>, label: string) => {
+    if (selectedIds.length === 0) return;
+    setBulkBusy(true);
+    const { error } = await supabase.from("mock_tests").update(patch).in("id", selectedIds);
+    setBulkBusy(false);
+    if (error) { toast({ title: "Bulk update failed", description: error.message, variant: "destructive" }); return; }
+    toast({ title: `${selectedIds.length} mock(s) ${label}` });
+    setSelectedIds([]);
+    fetchTests();
+  };
+
 
   const fetchTests = async () => {
     setLoading(true);
