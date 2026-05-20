@@ -123,7 +123,7 @@ export default function MockCalculator() {
             </button>
           </div>
           <div className="p-3">
-            <div className="bg-slate-50 border rounded px-3 py-2 mb-3 text-right font-mono text-lg min-h-[40px] truncate">
+            <div className="bg-slate-50 border border-slate-200 rounded px-3 py-2 mb-3 text-right font-mono text-lg min-h-[40px] truncate text-slate-900">
               {display}
             </div>
             <div className="grid grid-cols-4 gap-1.5">
