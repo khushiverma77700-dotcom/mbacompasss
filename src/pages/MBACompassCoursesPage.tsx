@@ -97,7 +97,9 @@ function CoursesInner() {
 
   const filtered = useMemo(() => {
     let out = courses;
-    if (tab !== "all") out = out.filter((c) => (c.exam_focus ?? []).includes(tab));
+    if (selectedExams.length > 0) {
+      out = out.filter((c) => (c.exam_focus ?? []).some((e) => selectedExams.includes(e)));
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       out = out.filter((c) => c.title.toLowerCase().includes(q) || (c.subtitle ?? "").toLowerCase().includes(q));
