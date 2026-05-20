@@ -34,7 +34,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/student/ThemeToggle";
-import StudentAvatar from "@/components/student/StudentAvatar";
+
 import StudentBottomNav from "@/components/student/StudentBottomNav";
 import InstallAppPrompt from "@/components/student/InstallAppPrompt";
 import { StudentThemeProvider } from "@/contexts/StudentThemeContext";

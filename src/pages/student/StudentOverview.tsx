@@ -313,7 +313,7 @@ export default function StudentOverview() {
           }}
         />
 
-        <div className="relative p-5 sm:p-6 md:p-8">
+        <div className="relative p-4 sm:p-6 md:p-8">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5 sm:gap-6">
             {/* Left: greeting */}
             <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
@@ -421,7 +421,7 @@ export default function StudentOverview() {
           </div>
 
           {/* Inline KPI strip */}
-          <div className="relative mt-5 sm:mt-6 grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-2">
+          <div className="relative mt-5 sm:mt-6 grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2">
             <Kpi label="Enrolled" value={stats.enrolledCount} />
             <Kpi label="Completed" value={stats.submittedCount} />
             <Kpi label="Avg %ile" value={stats.avgPercentile} />
