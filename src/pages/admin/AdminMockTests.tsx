@@ -326,15 +326,54 @@ const AdminMockTests = () => {
                 <Input value={form.meta_description} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} maxLength={160} />
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-6 pt-2 border-t">
-              <div className="flex items-center gap-2">
-                <Switch checked={form.is_published} onCheckedChange={(v) => setForm({ ...form, is_published: v })} />
-                <Label className="text-sm">Published (visible to students)</Label>
+            <div className="space-y-3 pt-3 border-t">
+              <Label className="text-sm font-semibold">Launch & Visibility</Label>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={form.is_published && !form.is_live ? "default" : "outline"}
+                  onClick={() => setForm({ ...form, is_published: true, is_live: false })}
+                >
+                  Publish
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={form.is_live ? "default" : "outline"}
+                  onClick={() => setForm({ ...form, is_published: true, is_live: true })}
+                >
+                  Live Mock Scheduled
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={!form.is_published && !form.is_live ? "default" : "outline"}
+                  onClick={() => setForm({ ...form, is_published: false, is_live: false, scheduled_start_at: "" })}
+                >
+                  Draft
+                </Button>
               </div>
-              <div className="flex items-center gap-2">
-                <Switch checked={form.is_live} onCheckedChange={(v) => setForm({ ...form, is_live: v })} />
-                <Label className="text-sm">Live mock (scheduled)</Label>
-              </div>
+              {form.is_live && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">Scheduled Launch Date & Time</Label>
+                    <Input
+                      type="datetime-local"
+                      value={form.scheduled_start_at}
+                      onChange={(e) => setForm({ ...form, scheduled_start_at: e.target.value })}
+                    />
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Students will see the mock card with a countdown. It unlocks automatically at this time. Leave empty to show "To be launched soon".
+                    </p>
+                  </div>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                <span className="font-medium">Publish:</span> visible & playable immediately. {" "}
+                <span className="font-medium">Live Mock Scheduled:</span> visible with countdown, unlocks at the chosen time. {" "}
+                <span className="font-medium">Draft:</span> hidden from students.
+              </p>
             </div>
             <div className="flex gap-3 pt-4">
               <Button onClick={handleSave} disabled={saving} className="flex-1">
