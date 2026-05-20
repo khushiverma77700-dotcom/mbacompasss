@@ -39,6 +39,7 @@ type Form = {
   difficulty: "easy" | "medium" | "hard";
   is_published: boolean;
   is_live: boolean;
+  scheduled_start_at: string; // datetime-local string ("" when unset)
   meta_title: string;
   meta_description: string;
 };
@@ -56,8 +57,18 @@ const emptyForm: Form = {
   difficulty: "medium",
   is_published: false,
   is_live: false,
+  scheduled_start_at: "",
   meta_title: "",
   meta_description: "",
+};
+
+// ISO -> "YYYY-MM-DDTHH:mm" for <input type="datetime-local">
+const isoToLocalInput = (iso: string | null | undefined): string => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
 const AdminMockTests = () => {
