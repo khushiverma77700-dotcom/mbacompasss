@@ -63,6 +63,7 @@ type Test = {
   launch_date: string | null;
   banner_url: string | null;
   is_published: boolean | null;
+  sort_order: number | null;
 };
 
 type Enrollment = { id: string; test_id: string; source: string; expires_at: string | null; admin_notes: string | null };
