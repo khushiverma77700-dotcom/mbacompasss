@@ -533,11 +533,6 @@ function MockCardItem({
                   {test.exam_code}
                 </Badge>
               )}
-              {test.difficulty && (
-                <Badge variant="outline" className={`text-[10px] ${difficultyTone(test.difficulty)}`}>
-                  {test.difficulty}
-                </Badge>
-              )}
             </div>
             <div className="font-semibold leading-tight text-[15px] line-clamp-2">{test.name}</div>
           </div>
