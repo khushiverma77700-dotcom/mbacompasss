@@ -184,11 +184,9 @@ const AdminMockTests = () => {
   const handleSave = async () => {
     if (!form.name.trim()) { toast({ title: "Name is required", variant: "destructive" }); return; }
     const slug = slugify(form.name); // always derived from name
-    if (form.pricing_type === "paid" && Number(form.price_inr) <= 0) {
-      toast({ title: "Paid mocks need a price > 0", variant: "destructive" }); return;
-    }
     setSaving(true);
-    const payload = { ...form, slug, price_inr: Number(form.price_inr) || 0 };
+    // Mocks are always free at the mock level — monetization happens via bundles → courses.
+    const payload = { ...form, slug, pricing_type: "free" as const, price_inr: 0 };
     if (editId) {
       const { error } = await supabase.from("mock_tests").update(payload).eq("id", editId);
       if (error) {
@@ -283,23 +281,7 @@ const AdminMockTests = () => {
                 <Input type="number" value={form.access_validity_days} onChange={(e) => setForm({ ...form, access_validity_days: parseInt(e.target.value) || 0 })} />
               </div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div>
-                <Label className="text-xs">Pricing</Label>
-                <Select value={form.pricing_type} onValueChange={(v: any) => setForm({ ...form, pricing_type: v, price_inr: v === "free" ? 0 : form.price_inr })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="free">Free</SelectItem>
-                    <SelectItem value="paid">Paid</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {form.pricing_type === "paid" && (
-                <div>
-                  <Label className="text-xs">Price (INR)</Label>
-                  <Input type="number" value={form.price_inr} onChange={(e) => setForm({ ...form, price_inr: parseFloat(e.target.value) || 0 })} />
-                </div>
-              )}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label className="text-xs">Banner URL</Label>
                 <Input value={form.banner_url} onChange={(e) => setForm({ ...form, banner_url: e.target.value })} placeholder="https://..." />
@@ -450,7 +432,7 @@ const AdminMockTests = () => {
                 <TableHead>Name</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Exam</TableHead>
-                <TableHead>Pricing</TableHead>
+                
                 <TableHead>Duration</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Readiness</TableHead>
@@ -489,13 +471,6 @@ const AdminMockTests = () => {
                     </Badge>
                   </TableCell>
                   <TableCell><Badge variant="secondary">{t.exam_code || "CAT"}</Badge></TableCell>
-                  <TableCell>
-                    {t.pricing_type === "free" ? (
-                      <Badge variant="secondary">Free</Badge>
-                    ) : (
-                      <Badge>₹{Number(t.price_inr).toLocaleString("en-IN")}</Badge>
-                    )}
-                  </TableCell>
                   <TableCell>{t.total_duration_minutes} min</TableCell>
                   <TableCell>
                     {t.is_published ? <Badge className="bg-emerald-600 hover:bg-emerald-700">Published</Badge> : <Badge variant="outline">Draft</Badge>}
