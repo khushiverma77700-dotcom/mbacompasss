@@ -453,6 +453,7 @@ const AdminMockTests = () => {
                 <TableHead>Pricing</TableHead>
                 <TableHead>Duration</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Readiness</TableHead>
                 <TableHead>Bundles</TableHead>
                 <TableHead>Courses</TableHead>
                 <TableHead>Takers</TableHead>
