@@ -4276,6 +4276,7 @@ export type Database = {
           scheduled_end_at: string | null
           scheduled_start_at: string | null
           slug: string
+          sort_order: number
           stripe_price_id: string | null
           test_type: Database["public"]["Enums"]["mock_test_type"]
           total_attempts: number
@@ -4308,6 +4309,7 @@ export type Database = {
           scheduled_end_at?: string | null
           scheduled_start_at?: string | null
           slug: string
+          sort_order?: number
           stripe_price_id?: string | null
           test_type?: Database["public"]["Enums"]["mock_test_type"]
           total_attempts?: number
@@ -4340,6 +4342,7 @@ export type Database = {
           scheduled_end_at?: string | null
           scheduled_start_at?: string | null
           slug?: string
+          sort_order?: number
           stripe_price_id?: string | null
           test_type?: Database["public"]["Enums"]["mock_test_type"]
           total_attempts?: number
