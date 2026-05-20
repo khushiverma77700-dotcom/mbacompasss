@@ -389,13 +389,50 @@ function StatTile({ icon: Icon, label, value }: { icon: any; label: string; valu
   );
 }
 
-function comingSoon(t: Test): string | null {
+type LockInfo =
+  | { kind: "scheduled"; unlocksAt: Date; label: string }
+  | { kind: "soon"; label: string }
+  | null;
+
+function getLockInfo(t: Test): LockInfo {
   const launch = t.launch_date ? new Date(t.launch_date) : null;
   const sched = t.scheduled_start_at ? new Date(t.scheduled_start_at) : null;
   const future = [launch, sched].filter((d): d is Date => !!d && d.getTime() > Date.now());
-  if (future.length === 0) return null;
-  const earliest = future.sort((a, b) => a.getTime() - b.getTime())[0];
-  return earliest.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  if (future.length > 0) {
+    const earliest = future.sort((a, b) => a.getTime() - b.getTime())[0];
+    return {
+      kind: "scheduled",
+      unlocksAt: earliest,
+      label: earliest.toLocaleString("en-IN", {
+        day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+      }),
+    };
+  }
+  // Published but flagged as live without a date → "to be launched soon"
+  if (t.is_live && !sched && !launch) {
+    return { kind: "soon", label: "To be launched soon" };
+  }
+  return null;
+}
+
+function useCountdown(target: Date | null): string {
+  const [, setTick] = React.useState(0);
+  React.useEffect(() => {
+    if (!target) return;
+    const id = setInterval(() => setTick((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, [target]);
+  if (!target) return "";
+  const diff = target.getTime() - Date.now();
+  if (diff <= 0) return "Unlocking…";
+  const s = Math.floor(diff / 1000);
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (d > 0) return `${d}d ${h}h ${m}m`;
+  if (h > 0) return `${h}h ${m}m ${sec}s`;
+  return `${m}m ${sec}s`;
 }
 
 function BucketGrid({
