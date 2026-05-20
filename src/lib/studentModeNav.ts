@@ -38,6 +38,7 @@ export const clearStudentMode = () => {
 
 export const isStudentMode = (): boolean => {
   if (typeof window === "undefined") return false;
+  if (isDashboardHost()) return true;
   try {
     return window.sessionStorage.getItem(KEY) === "1";
   } catch {
