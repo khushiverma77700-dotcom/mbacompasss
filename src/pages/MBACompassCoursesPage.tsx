@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import MultiSelectTags from "@/components/admin/MultiSelectTags";
 import {
   GraduationCap, Clock, Sparkles, CheckCircle2, ArrowRight, Star, Users, Target, Flame, BookOpen,
   Search, GitCompare, X, Award, Zap, Filter,
@@ -13,6 +13,17 @@ import {
 import SEOHead from "@/components/SEOHead";
 import { CompassCompareProvider, useCompassCompare } from "@/contexts/CompassCompareContext";
 import { toast } from "sonner";
+
+const EXAM_OPTIONS = [
+  { value: "CAT", label: "CAT" },
+  { value: "XAT", label: "XAT" },
+  { value: "GMAT", label: "GMAT" },
+  { value: "SNAP", label: "SNAP" },
+  { value: "NMAT", label: "NMAT" },
+  { value: "IIFT", label: "IIFT" },
+  { value: "CMAT", label: "CMAT" },
+  { value: "MAT", label: "MAT" },
+];
 
 interface Course {
   id: string;
@@ -64,7 +75,7 @@ export default function MBACompassCoursesPage() {
 function CoursesInner() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState("all");
+  const [selectedExams, setSelectedExams] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [mode, setMode] = useState<string>("all");
   const [level, setLevel] = useState<string>("all");
@@ -86,7 +97,9 @@ function CoursesInner() {
 
   const filtered = useMemo(() => {
     let out = courses;
-    if (tab !== "all") out = out.filter((c) => (c.exam_focus ?? []).includes(tab));
+    if (selectedExams.length > 0) {
+      out = out.filter((c) => (c.exam_focus ?? []).some((e) => selectedExams.includes(e)));
+    }
     if (search.trim()) {
       const q = search.toLowerCase();
       out = out.filter((c) => c.title.toLowerCase().includes(q) || (c.subtitle ?? "").toLowerCase().includes(q));
@@ -99,7 +112,7 @@ function CoursesInner() {
     else if (sort === "price_high") out.sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
     else if (sort === "rating") out.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
     return out;
-  }, [courses, tab, search, mode, level, priceMax, sort]);
+  }, [courses, selectedExams, search, mode, level, priceMax, sort]);
 
   return (
     <>
@@ -176,36 +189,37 @@ function CoursesInner() {
           </div>
         </Card>
 
-        <Tabs value={tab} onValueChange={setTab} className="mt-5">
-          <TabsList className="flex-wrap h-auto bg-sky-50">
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="CAT">CAT</TabsTrigger>
-            <TabsTrigger value="XAT">XAT</TabsTrigger>
-            <TabsTrigger value="GMAT">GMAT</TabsTrigger>
-            <TabsTrigger value="SNAP">SNAP</TabsTrigger>
-            <TabsTrigger value="NMAT">NMAT</TabsTrigger>
-            <TabsTrigger value="IIFT">IIFT</TabsTrigger>
-          </TabsList>
-          <TabsContent value={tab} className="mt-6">
-            <div className="text-sm text-muted-foreground mb-3 flex items-center gap-2">
-              <Filter className="h-4 w-4" />
-              Showing <span className="font-semibold text-gray-900">{filtered.length}</span> {filtered.length === 1 ? "course" : "courses"}
+        <div className="mt-5">
+          <div className="flex flex-col sm:flex-row gap-3 items-start">
+            <div className="w-full sm:w-64">
+              <label className="text-sm font-medium text-gray-700 mb-1.5 block">Filter by Exam</label>
+              <MultiSelectTags
+                options={EXAM_OPTIONS}
+                selected={selectedExams}
+                onChange={setSelectedExams}
+                placeholder="Select exams…"
+              />
             </div>
-            {loading ? (
-              <div className="text-muted-foreground">Loading programs…</div>
-            ) : filtered.length === 0 ? (
-              <Card className="p-12 text-center">
-                <GraduationCap className="h-10 w-10 mx-auto text-sky-500 mb-3" />
-                <h3 className="font-semibold">No courses match your filters</h3>
-                <p className="text-sm text-muted-foreground mt-1">Try adjusting the filters or clearing search.</p>
-              </Card>
-            ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {filtered.map((c) => <CourseCard key={c.id} course={c} />)}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+          </div>
+
+          <div className="text-sm text-muted-foreground mt-6 mb-3 flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            Showing <span className="font-semibold text-gray-900">{filtered.length}</span> {filtered.length === 1 ? "course" : "courses"}
+          </div>
+          {loading ? (
+            <div className="text-muted-foreground">Loading programs…</div>
+          ) : filtered.length === 0 ? (
+            <Card className="p-12 text-center">
+              <GraduationCap className="h-10 w-10 mx-auto text-sky-500 mb-3" />
+              <h3 className="font-semibold">No courses match your filters</h3>
+              <p className="text-sm text-muted-foreground mt-1">Try adjusting the filters or clearing search.</p>
+            </Card>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {filtered.map((c) => <CourseCard key={c.id} course={c} />)}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* What's included */}
