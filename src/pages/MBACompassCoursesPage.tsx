@@ -112,7 +112,7 @@ function CoursesInner() {
     else if (sort === "price_high") out.sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
     else if (sort === "rating") out.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
     return out;
-  }, [courses, tab, search, mode, level, priceMax, sort]);
+  }, [courses, selectedExams, search, mode, level, priceMax, sort]);
 
   return (
     <>
