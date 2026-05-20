@@ -157,9 +157,12 @@ export default function StudentLogin() {
               <div className="text-xs text-slate-600 leading-relaxed">
                 <span className="font-medium text-slate-800">Don't have an account?</span>{" "}
                 Student accounts are created automatically after course purchase.{" "}
-                <Link to="/courses" className="text-sky-600 font-medium hover:underline">
+                <a
+                  href="https://mbacompass.in/courses"
+                  className="text-sky-600 font-medium hover:underline"
+                >
                   Browse courses →
-                </Link>
+                </a>
               </div>
             </div>
           </div>
