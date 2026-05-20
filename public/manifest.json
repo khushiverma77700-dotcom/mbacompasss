@@ -1,0 +1,24 @@
+{
+  "name": "MBA Compass — Student Dashboard",
+  "short_name": "MBA Compass",
+  "description": "Your personal MBA prep dashboard — daily mocks, performance tracking, planner and AI tools.",
+  "start_url": "/student",
+  "scope": "/student/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "lang": "en-IN",
+  "categories": ["education", "productivity"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Daily Test", "short_name": "Daily", "url": "/student/daily-test", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Full-Length Mocks", "short_name": "Mocks", "url": "/student/mocks/full-length", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Performance", "short_name": "Perf", "url": "/student/performance", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Day Planner", "short_name": "Planner", "url": "/student/day-planner", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+  ]
+}
