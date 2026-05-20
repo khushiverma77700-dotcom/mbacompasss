@@ -401,8 +401,20 @@ const AdminMockTests = () => {
             </SelectContent>
           </Select>
         </div>
-        {(examFilter !== "all" || difficultyFilter !== "all") && (
-          <Button size="sm" variant="ghost" onClick={() => { setExamFilter("all"); setDifficultyFilter("all"); }}>
+        <div className="flex items-center gap-2">
+          <Label className="text-xs text-muted-foreground">Readiness</Label>
+          <Select value={readinessFilter} onValueChange={setReadinessFilter}>
+            <SelectTrigger className="w-[170px] h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="ready">Ready</SelectItem>
+              <SelectItem value="needs_changes">Needs Changes</SelectItem>
+              <SelectItem value="incomplete">Incomplete</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {(examFilter !== "all" || difficultyFilter !== "all" || readinessFilter !== "all") && (
+          <Button size="sm" variant="ghost" onClick={() => { setExamFilter("all"); setDifficultyFilter("all"); setReadinessFilter("all"); }}>
             Clear filters
           </Button>
         )}
