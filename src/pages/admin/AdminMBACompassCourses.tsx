@@ -396,11 +396,13 @@ export default function AdminMBACompassCourses() {
                     <div><Label>Discount %</Label><Input type="number" value={edit.discount_percent ?? 0} onChange={(e) => setEdit({ ...edit, discount_percent: parseInt(e.target.value) || 0 })} /></div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3">
-                    <div><Label>Students enrolled</Label><Input type="number" value={edit.total_students_enrolled ?? 0} onChange={(e) => setEdit({ ...edit, total_students_enrolled: parseInt(e.target.value) || 0 })} /></div>
+                  <div className="grid grid-cols-2 gap-3">
                     <div><Label>Rating (0-5)</Label><Input type="number" step="0.1" min={0} max={5} value={edit.rating ?? 0} onChange={(e) => setEdit({ ...edit, rating: parseFloat(e.target.value) || 0 })} /></div>
                     <div><Label>Reviews count</Label><Input type="number" value={edit.reviews_count ?? 0} onChange={(e) => setEdit({ ...edit, reviews_count: parseInt(e.target.value) || 0 })} /></div>
                   </div>
+                  <p className="text-xs text-muted-foreground -mt-1">
+                    Students enrolled is set automatically (random 400–3000 on creation) and grows by a few learners every day via a background job. No manual input needed.
+                  </p>
 
                   <div className="grid grid-cols-2 gap-3 pt-2 border-t">
                     <div><Label>Sort order</Label><Input type="number" value={edit.sort_order ?? 0} onChange={(e) => setEdit({ ...edit, sort_order: parseInt(e.target.value) || 0 })} /></div>
