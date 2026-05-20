@@ -109,7 +109,8 @@ export default function AdminMockBundles() {
     setEditingItems((data ?? []).map((x: any) => x.test_id));
     setShowAdvanced(false);
     setMockSearch("");
-    setExamFilter("all");
+    setExamFilter("all"); setTypeFilter("full_length");
+
     loadMocks();
   };
 
