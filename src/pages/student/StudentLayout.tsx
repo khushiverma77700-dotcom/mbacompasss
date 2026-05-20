@@ -33,6 +33,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/student/ThemeToggle";
+import StudentAvatar from "@/components/student/StudentAvatar";
 import { StudentThemeProvider } from "@/contexts/StudentThemeContext";
 import type { FeatureKey } from "@/lib/courseFeatures";
 import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
@@ -180,10 +181,8 @@ export default function StudentLayout() {
               >
                 {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
+              <StudentAvatar />
               <Link to={homePath} className="flex items-center gap-2 min-w-0">
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white shrink-0">
-                  <GraduationCap className="h-4 w-4" />
-                </div>
                 <div className="leading-tight min-w-0">
                   <div className="text-sm font-semibold flex items-center gap-1.5 min-w-0">
                     <span className="truncate">Student Dashboard</span>

@@ -131,7 +131,11 @@ export default function AdminMockBundles() {
   ];
   const testTypes = useMemo(() => ["all", ...TYPE_OPTIONS.map((t) => t.v)], []);
 
-  const kindOf = (m: MockOption) => (m.category || m.test_type || "").toLowerCase();
+  // IMPORTANT: prefer test_type (which carries the precise enum like "daily",
+  // "full_length", "sectional", etc.) over the looser "category" field. Daily
+  // tests historically have category="full_length" but test_type="daily", so
+  // using category first caused them to leak into the Full-Length filter.
+  const kindOf = (m: MockOption) => (m.test_type || m.category || "").toLowerCase();
 
   const filteredMocks = useMemo(() => {
     return allMocks.filter((m) => {
