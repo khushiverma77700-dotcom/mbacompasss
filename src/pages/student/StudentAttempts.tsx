@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { History, Search, Filter, ArrowDownAZ, Calendar, Trophy, Eye, Brain, Download } from "lucide-react";
+import { ensureStudentMode, mockAttemptPath, mockResultPath } from "@/lib/studentModeNav";
 
 const STATUS_LABEL: Record<string, string> = {
   submitted: "Completed", auto_submitted: "Auto-submitted",
@@ -273,10 +274,10 @@ export default function StudentAttempts() {
                       <td className="py-2 pr-3 text-right">
                         <div className="flex justify-end gap-1">
                           {a.status === "in_progress" ? (
-                            <Link to={`/mocks/attempt/${a.id}`}><Button size="sm">Resume</Button></Link>
+                            <Link to={mockAttemptPath(a.id)} onClick={ensureStudentMode} onPointerDown={ensureStudentMode}><Button size="sm">Resume</Button></Link>
                           ) : (
                             <>
-                              <Link to={`/mocks/result/${a.id}`}><Button size="sm" variant="outline" className="gap-1"><Eye className="h-3 w-3" />Result</Button></Link>
+                              <Link to={mockResultPath(a.id)} onClick={ensureStudentMode} onPointerDown={ensureStudentMode}><Button size="sm" variant="outline" className="gap-1"><Eye className="h-3 w-3" />Result</Button></Link>
                               <Link to={`/student/analysis/${a.id}`}><Button size="sm" variant="ghost" className="gap-1"><Brain className="h-3 w-3" />AI</Button></Link>
                             </>
                           )}

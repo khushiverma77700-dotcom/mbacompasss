@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Clock, AlertTriangle, Layers, ShieldAlert } from "lucide-react";
-import { isStudentMode, studentBackToMocksPath } from "@/lib/studentModeNav";
+import { isStudentMode, mockAttemptPath, studentBackToMocksPath } from "@/lib/studentModeNav";
 
 
 export default function MockTestIntroPage() {
@@ -75,7 +75,7 @@ export default function MockTestIntroPage() {
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
       const attempt = (data as any).attempt;
-      navigate(`/mocks/attempt/${attempt.id}`);
+      navigate(mockAttemptPath(attempt.id));
     } catch (e: any) {
       toast.error(e.message ?? "Failed to start test");
       setStarting(false);

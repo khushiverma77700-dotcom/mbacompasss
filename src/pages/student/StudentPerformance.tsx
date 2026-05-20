@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
+import { ensureStudentMode, mockResultPath } from "@/lib/studentModeNav";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -211,7 +212,7 @@ export default function StudentPerformance() {
                   <td className="py-2 pr-3 font-semibold text-sky-700">{a.percentile ?? 0}</td>
                   <td className="py-2 pr-3">{a.accuracy ?? 0}%</td>
                   <td className="py-2 pr-3">
-                    <Link to={`/mocks/result/${a.id}`} className="text-sky-700 hover:underline text-xs">View →</Link>
+                    <Link to={mockResultPath(a.id)} onClick={ensureStudentMode} onPointerDown={ensureStudentMode} className="text-sky-700 hover:underline text-xs">View →</Link>
                   </td>
                 </tr>
               ))}

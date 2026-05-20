@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { ensureStudentMode, mockAttemptPath, mockIntroPath, mockResultPath } from "@/lib/studentModeNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -346,13 +347,13 @@ export default function StudentOverview() {
 
                 <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 mt-4">
                   {resumeMock ? (
-                    <Link to={`/mocks/attempt/${resumeMock.id}`} className="col-span-2 sm:col-auto">
+                    <Link to={mockAttemptPath(resumeMock.id)} className="col-span-2 sm:col-auto" onClick={ensureStudentMode} onPointerDown={ensureStudentMode}>
                       <Button size="lg" className="w-full sm:w-auto gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-lg">
                         <Clock className="h-4 w-4" /> Resume Mock
                       </Button>
                     </Link>
                   ) : nextMock?.test?.slug ? (
-                    <Link to={`/mocks/${nextMock.test.slug}`} className="col-span-2 sm:col-auto">
+                    <Link to={mockIntroPath(nextMock.test.slug)} className="col-span-2 sm:col-auto" onClick={ensureStudentMode} onPointerDown={ensureStudentMode}>
                       <Button size="lg" className="w-full sm:w-auto gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-lg">
                         <Rocket className="h-4 w-4" /> Start Next Mock
                       </Button>
@@ -724,9 +725,9 @@ export default function StudentOverview() {
                       </div>
                     )}
                     {a.status === "in_progress" ? (
-                      <Link to={`/mocks/attempt/${a.id}`}><Button size="sm">Resume</Button></Link>
+                      <Link to={mockAttemptPath(a.id)} onClick={ensureStudentMode} onPointerDown={ensureStudentMode}><Button size="sm">Resume</Button></Link>
                     ) : (
-                      <Link to={`/mocks/result/${a.id}`}><Button size="sm" variant="outline">View</Button></Link>
+                      <Link to={mockResultPath(a.id)} onClick={ensureStudentMode} onPointerDown={ensureStudentMode}><Button size="sm" variant="outline">View</Button></Link>
                     )}
                   </div>
                 </div>

@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, AlertTriangle, Lightbulb, TrendingDown, Target, Clock, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { ensureStudentMode, mockResultPath } from "@/lib/studentModeNav";
 
 export default function StudentDeepAnalysis() {
   const { attemptId } = useParams();
@@ -53,7 +54,7 @@ export default function StudentDeepAnalysis() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2"><Sparkles className="h-6 w-6 text-sky-600" /> AI Deep Analysis</h1>
-        <Link to={`/mocks/result/${attemptId}`} className="text-sm text-sky-700 hover:underline">View score report →</Link>
+        <Link to={mockResultPath(attemptId ?? "")} onClick={ensureStudentMode} onPointerDown={ensureStudentMode} className="text-sm text-sky-700 hover:underline">View score report →</Link>
       </div>
 
       {analysis.summary && (

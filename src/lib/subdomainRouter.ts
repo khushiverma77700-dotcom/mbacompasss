@@ -6,12 +6,13 @@
  *       Owns: home, /colleges, /exams, /coaching, /mocks, /courses, /blog,
  *             /auth, etc. (everything public)
  *   - dashboard.mbacompass.in           → student LMS only
- *       Owns: /student/* and shared /auth + password reset.
+ *       Owns: /student/*, mock-taking/report routes, and shared auth pages.
  *
  * Rules:
- *   1. On the dashboard host, only /student/* and auth pages render. Anything
- *      else (someone typing dashboard.mbacompass.in/mocks) is bounced to
- *      /student so the dashboard subdomain stays a clean LMS surface.
+ *   1. On the dashboard host, only /student/*, /mocks/* test/report routes,
+ *      and auth pages render. Anything else is bounced to / so the dashboard
+ *      subdomain stays a clean LMS surface while still letting students open
+ *      Report, Review, Resume, and Retake screens.
  *   2. On the main marketing host we DO NOT redirect anything. /mocks,
  *      /courses, /student all render normally on bschoolbuzz / mbacompass.
  *      The two hosts operate independently — no cross-host hops.
@@ -24,6 +25,7 @@ export const MAIN_HOSTS = ["mbacompass.in", "www.mbacompass.in"];
 /** Paths that are allowed on the dashboard subdomain. */
 const DASHBOARD_ALLOWED_PREFIXES = [
   "/student",
+  "/mocks",
   "/auth",
   "/forgot-password",
   "/reset-password",
