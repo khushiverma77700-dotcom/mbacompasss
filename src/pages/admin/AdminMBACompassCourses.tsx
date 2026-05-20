@@ -328,7 +328,7 @@ export default function AdminMBACompassCourses() {
           </Button>
           <Dialog open={!!edit} onOpenChange={(o) => !o && setEdit(null)}>
             <DialogTrigger asChild>
-              <Button onClick={() => setEdit(empty)} className="bg-sky-600 hover:bg-sky-700">
+              <Button onClick={() => setEdit(buildEmpty())} className="bg-sky-600 hover:bg-sky-700">
                 <Plus className="h-4 w-4 mr-2" /> New Course
               </Button>
             </DialogTrigger>
