@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Flag, Timer, CheckCircle2 } from "lucide-react";
 import { useForceLightTheme } from "@/hooks/useForceLightTheme";
 import MathContent from "@/components/mock/MathContent";
+import MockCalculator from "@/components/mock/MockCalculator";
 
 type Q = { id: string; section: string; difficulty: string; question_text: string; options: string[]; topic?: string };
 
