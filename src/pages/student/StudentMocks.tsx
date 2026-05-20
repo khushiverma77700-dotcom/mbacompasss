@@ -242,28 +242,29 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
   const completion = stats.totalUnlocked > 0 ? Math.round((stats.totalAttempted / stats.totalUnlocked) * 100) : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Hero header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sky-500 via-sky-600 to-blue-700 text-white p-6 sm:p-8 shadow-lg">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sky-500 via-sky-600 to-blue-700 text-white p-4 sm:p-8 shadow-lg">
         <div className="absolute -top-16 -right-16 w-64 h-64 rounded-full bg-white/10 blur-2xl pointer-events-none" />
         <div className="absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-blue-400/20 blur-3xl pointer-events-none" />
-        <div className="relative flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur text-[11px] font-medium mb-3">
+        <div className="relative flex flex-wrap items-start justify-between gap-3 sm:gap-4">
+          <div className="min-w-0 flex-1">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-white/15 backdrop-blur text-[10px] sm:text-[11px] font-medium mb-2 sm:mb-3">
               <Zap className="h-3 w-3" /> Mock Test Hub
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{heading.title}</h1>
-            <p className="text-sm sm:text-base text-sky-100 mt-1 max-w-xl">{heading.subtitle}</p>
+            <h1 className="text-xl sm:text-3xl font-bold tracking-tight leading-tight">{heading.title}</h1>
+            <p className="text-xs sm:text-base text-sky-100 mt-1 max-w-xl">{heading.subtitle}</p>
           </div>
-          <Link to="/courses">
-            <Button className="gap-2 bg-white text-sky-700 hover:bg-sky-50 shadow-md">
-              <ShoppingBag className="h-4 w-4" /> Browse Courses
+          <Link to="/courses" className="shrink-0">
+            <Button size="sm" className="gap-1.5 bg-white text-sky-700 hover:bg-sky-50 shadow-md sm:h-10 sm:px-4 sm:text-sm">
+              <ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline">Browse </span>Courses
             </Button>
           </Link>
         </div>
 
         {/* Stat tiles */}
-        <div className="relative mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+        <div className="relative mt-4 sm:mt-6 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           <StatTile icon={Layers} label="Unlocked" value={stats.totalUnlocked} />
           <StatTile icon={CheckCircle2} label="Attempted" value={stats.totalAttempted} />
           <StatTile icon={TrendingUp} label="Avg %ile" value={stats.avgPercentile} />
@@ -271,8 +272,8 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
         </div>
 
         {stats.totalUnlocked > 0 && (
-          <div className="relative mt-4">
-            <div className="flex items-center justify-between text-xs text-sky-100 mb-1.5">
+          <div className="relative mt-3 sm:mt-4">
+            <div className="flex items-center justify-between text-[11px] sm:text-xs text-sky-100 mb-1.5">
               <span className="inline-flex items-center gap-1"><Flame className="h-3 w-3" /> Course completion</span>
               <span className="font-semibold text-white">{completion}%</span>
             </div>
@@ -284,31 +285,33 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
       </div>
 
       {/* Filter row */}
-      <Card className="p-4 border-sky-100/60">
+      <Card className="p-3 sm:p-4 border-sky-100/60">
         <div className="flex flex-col gap-3">
           <div className="relative">
             <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search mocks by name…"
-              className="pl-9 h-10 bg-white"
+              placeholder="Search mocks…"
+              className="pl-9 h-10 bg-white text-sm"
             />
           </div>
-          <div className="flex flex-wrap gap-1.5">
-            {EXAM_FILTERS.map((f) => (
-              <button
-                key={f}
-                onClick={() => setExamFilter(f)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
-                  examFilter === f
-                    ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-transparent shadow-sm scale-105"
-                    : "bg-white text-slate-600 border-slate-200 hover:border-sky-300 hover:text-sky-700"
-                }`}
-              >
-                {f}
-              </button>
-            ))}
+          <div className="-mx-1 px-1 overflow-x-auto sm:overflow-visible">
+            <div className="flex sm:flex-wrap gap-1.5 min-w-max sm:min-w-0">
+              {EXAM_FILTERS.map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setExamFilter(f)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
+                    examFilter === f
+                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-transparent shadow-sm scale-105"
+                      : "bg-white text-slate-600 border-slate-200 hover:border-sky-300 hover:text-sky-700"
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </Card>
@@ -326,7 +329,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
         )
       ) : (
         <Tabs defaultValue="full_length" className="w-full">
-          <div className="overflow-x-auto -mx-1 px-1 pb-1">
+          <div className="overflow-x-auto -mx-1 px-1 pb-1 scrollbar-none">
             <TabsList className="inline-flex h-auto bg-slate-100/70 p-1 gap-1">
               {TYPE_TABS.map((t) => {
                 const Icon = t.icon;
@@ -335,7 +338,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
                   <TabsTrigger
                     key={t.key}
                     value={t.key}
-                    className="gap-1.5 px-3 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-sky-700 rounded-md"
+                    className="gap-1.5 px-2.5 sm:px-3 py-2 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-sky-700 rounded-md text-xs sm:text-sm whitespace-nowrap"
                   >
                     <Icon className="h-3.5 w-3.5" />
                     <span className="font-medium">{t.label}</span>
@@ -349,7 +352,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
           </div>
 
           {TYPE_TABS.map((t) => (
-            <TabsContent key={t.key} value={t.key} className="mt-5">
+            <TabsContent key={t.key} value={t.key} className="mt-4 sm:mt-5">
               {t.key === "attempted" ? (
                 <AttemptedGrid items={buildBucket("attempted") as any} />
               ) : (
@@ -372,11 +375,11 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
 
 function StatTile({ icon: Icon, label, value }: { icon: any; label: string; value: number }) {
   return (
-    <div className="rounded-xl bg-white/15 backdrop-blur border border-white/20 p-3 hover:bg-white/20 transition-colors">
-      <div className="flex items-center gap-1.5 text-[11px] text-sky-100 mb-1">
-        <Icon className="h-3.5 w-3.5" /> {label}
+    <div className="rounded-xl bg-white/15 backdrop-blur border border-white/20 p-2.5 sm:p-3 hover:bg-white/20 transition-colors">
+      <div className="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-sky-100 mb-0.5 sm:mb-1">
+        <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> {label}
       </div>
-      <div className="text-xl sm:text-2xl font-bold tracking-tight">{value}</div>
+      <div className="text-lg sm:text-2xl font-bold tracking-tight">{value}</div>
     </div>
   );
 }

@@ -38,6 +38,7 @@ import StudentAvatar from "@/components/student/StudentAvatar";
 import StudentBottomNav from "@/components/student/StudentBottomNav";
 import InstallAppPrompt from "@/components/student/InstallAppPrompt";
 import { StudentThemeProvider } from "@/contexts/StudentThemeContext";
+import BRAND_LOGO_URL from "@/assets/brandLogo";
 import type { FeatureKey } from "@/lib/courseFeatures";
 import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
 import { markStudentMode, clearStudentMode } from "@/lib/studentModeNav";
@@ -164,10 +165,10 @@ export default function StudentLayout() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-sky-50/40 via-white to-blue-50/30 dark:from-background dark:via-background dark:to-background">
         <div className="fixed top-0 left-0 right-0 z-30 bg-card/95 backdrop-blur border-b border-border h-14 flex items-center px-4 gap-2">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white">
-            <GraduationCap className="h-4 w-4" />
+          <div className="h-8 w-8 rounded-lg overflow-hidden bg-white ring-1 ring-sky-100 grid place-items-center">
+            <img src={BRAND_LOGO_URL} alt="MBA Compass" className="h-full w-full object-contain" />
           </div>
-          <div className="text-sm font-semibold">Student Dashboard</div>
+          <div className="text-sm font-semibold">MBA Compass</div>
         </div>
         <div className="flex pt-14">
           <aside className="hidden lg:block w-64 shrink-0 border-r border-border bg-card/80 h-[calc(100vh-3.5rem)]">
