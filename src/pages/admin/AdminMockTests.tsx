@@ -518,6 +518,7 @@ const AdminMockTests = () => {
                         </Select>
                       );
                     })()}
+                  </TableCell>
                   <TableCell>
                     {bundles.length === 0 ? (
                       <span className="text-xs text-muted-foreground">—</span>
