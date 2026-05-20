@@ -362,7 +362,7 @@ const StudentBackGuard = () => {
     const path = location.pathname;
     const mockWorkPath = path.startsWith("/mocks/attempt/") || path.startsWith("/mocks/result/") || path.startsWith("/mocks/review/") || path.startsWith("/mocks/leaderboard/");
     const insideLms = onDashHost
-      ? (path === "/" || path.startsWith("/student") || mockWorkPath)
+      ? (path === "/" || path.startsWith("/student"))
       : (path.startsWith("/student") || mockWorkPath);
     if (path === "/student/login" || !insideLms) {
       navigate(onDashHost ? "/" : "/student", { replace: true });
@@ -799,6 +799,11 @@ const App = () => (
               <Route path="mocks/topic-wise" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
               <Route path="mocks/practice" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
               <Route path="mocks/attempted" element={<InnerLazyPage><StudentMocks /></InnerLazyPage>} />
+              <Route path="mocks/test/:slug" element={<InnerLazyPage><MockTestIntroPage /></InnerLazyPage>} />
+              <Route path="mocks/attempt/:attemptId" element={<InnerLazyPage><MockTestRunnerPage /></InnerLazyPage>} />
+              <Route path="mocks/result/:attemptId" element={<InnerLazyPage><MockResultPage /></InnerLazyPage>} />
+              <Route path="mocks/review/:attemptId" element={<InnerLazyPage><MockReviewPage /></InnerLazyPage>} />
+              <Route path="mocks/leaderboard/:slug" element={<InnerLazyPage><MockLeaderboardPage /></InnerLazyPage>} />
               <Route path="weak-areas" element={<InnerLazyPage><StudentWeakAreas /></InnerLazyPage>} />
               <Route path="strength-areas" element={<InnerLazyPage><StudentStrengthAreas /></InnerLazyPage>} />
               <Route path="buy-mocks" element={<InnerLazyPage><StudentBuyMocks /></InnerLazyPage>} />
