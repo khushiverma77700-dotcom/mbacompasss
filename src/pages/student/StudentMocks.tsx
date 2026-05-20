@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -122,7 +122,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
         supabase
           .from("mock_tests")
           .select("id, name, slug, total_duration_minutes, difficulty, exam_code, category, test_type, is_live, scheduled_start_at, launch_date, banner_url, is_published")
-          .eq("is_published", true)
+          .or("is_published.eq.true,is_live.eq.true")
           .order("name"),
         supabase
           .from("mock_bundle_items")
@@ -194,7 +194,12 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
       .filter((t) => getKind(t) === typeKey)
       .filter(matchesExam)
       .filter(matchesQuery)
-      .filter((t) => t.is_published !== false)
+      .filter((t) => {
+        if (t.is_published) return true;
+        // Live-only (unpublished) mocks stay hidden until scheduled time passes.
+        if (t.is_live && t.scheduled_start_at && new Date(t.scheduled_start_at).getTime() <= Date.now()) return true;
+        return false;
+      })
       .sort((a, b) => {
         const ao = bundleOrder[a.id] ?? 9999;
         const bo = bundleOrder[b.id] ?? 9999;
@@ -384,13 +389,50 @@ function StatTile({ icon: Icon, label, value }: { icon: any; label: string; valu
   );
 }
 
-function comingSoon(t: Test): string | null {
+type LockInfo =
+  | { kind: "scheduled"; unlocksAt: Date; label: string }
+  | { kind: "soon"; label: string }
+  | null;
+
+function getLockInfo(t: Test): LockInfo {
   const launch = t.launch_date ? new Date(t.launch_date) : null;
   const sched = t.scheduled_start_at ? new Date(t.scheduled_start_at) : null;
   const future = [launch, sched].filter((d): d is Date => !!d && d.getTime() > Date.now());
-  if (future.length === 0) return null;
-  const earliest = future.sort((a, b) => a.getTime() - b.getTime())[0];
-  return earliest.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  if (future.length > 0) {
+    const earliest = future.sort((a, b) => a.getTime() - b.getTime())[0];
+    return {
+      kind: "scheduled",
+      unlocksAt: earliest,
+      label: earliest.toLocaleString("en-IN", {
+        day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
+      }),
+    };
+  }
+  // Published but flagged as live without a date → "to be launched soon"
+  if (t.is_live && !sched && !launch) {
+    return { kind: "soon", label: "To be launched soon" };
+  }
+  return null;
+}
+
+function useCountdown(target: Date | null): string {
+  const [, setTick] = React.useState(0);
+  React.useEffect(() => {
+    if (!target) return;
+    const id = setInterval(() => setTick((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, [target]);
+  if (!target) return "";
+  const diff = target.getTime() - Date.now();
+  if (diff <= 0) return "Unlocking…";
+  const s = Math.floor(diff / 1000);
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (d > 0) return `${d}d ${h}h ${m}m`;
+  if (h > 0) return `${h}h ${m}m ${sec}s`;
+  return `${m}m ${sec}s`;
 }
 
 function BucketGrid({
@@ -422,154 +464,179 @@ function BucketGrid({
 
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {items.map(({ test, owned, inProgress, latestSubmitted }) => {
-        const soon = comingSoon(test);
-        const pct = latestSubmitted?.percentile ?? null;
-        const accuracy = latestSubmitted?.total_attempted
-          ? Math.round(((latestSubmitted.total_correct ?? 0) / latestSubmitted.total_attempted) * 100)
-          : null;
-
-        return (
-          <Card
-            key={test.id}
-            className={`group relative overflow-hidden p-0 flex flex-col transition-all hover:shadow-lg hover:-translate-y-0.5 ${
-              !owned ? "border-sky-100" : "border-slate-200"
-            }`}
-          >
-            {/* top accent bar */}
-            <div
-              className={`h-1.5 w-full ${
-                !owned
-                  ? "bg-gradient-to-r from-slate-200 to-slate-300"
-                  : soon
-                  ? "bg-gradient-to-r from-amber-400 to-orange-500"
-                  : latestSubmitted
-                  ? "bg-gradient-to-r from-emerald-400 to-teal-500"
-                  : inProgress
-                  ? "bg-gradient-to-r from-sky-400 to-blue-500"
-                  : "bg-gradient-to-r from-violet-400 to-purple-500"
-              }`}
-            />
-
-            <div className="p-4 flex flex-col flex-1">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                    {test.exam_code && (
-                      <Badge variant="outline" className="text-[10px] border-sky-200 text-sky-700 bg-sky-50">
-                        {test.exam_code}
-                      </Badge>
-                    )}
-                    {test.difficulty && (
-                      <Badge variant="outline" className={`text-[10px] ${difficultyTone(test.difficulty)}`}>
-                        {test.difficulty}
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="font-semibold leading-tight text-[15px] line-clamp-2">{test.name}</div>
-                </div>
-                {!owned && (
-                  <div className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-500">
-                    <Lock className="h-3.5 w-3.5" />
-                  </div>
-                )}
-                {owned && soon && (
-                  <Badge className="shrink-0 text-[10px] bg-amber-500 hover:bg-amber-500 gap-0.5">
-                    <Sparkles className="h-3 w-3" /> Soon
-                  </Badge>
-                )}
-              </div>
-
-              <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                <span className="inline-flex items-center gap-1">
-                  <Clock className="h-3 w-3" /> {test.total_duration_minutes ?? "—"} min
-                </span>
-                {soon && (
-                  <span className="inline-flex items-center gap-1 text-amber-600">
-                    <Calendar className="h-3 w-3" /> {soon}
-                  </span>
-                )}
-              </div>
-
-              {owned && latestSubmitted && pct != null && (
-                <div className="rounded-lg border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50/50 p-3 mb-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[11px] font-medium text-emerald-700 inline-flex items-center gap-1">
-                      <Award className="h-3 w-3" /> Last Attempt
-                    </span>
-                    <span className="text-lg font-bold text-emerald-700 leading-none">{pct}<span className="text-xs">%ile</span></span>
-                  </div>
-                  <Progress value={pct} className="h-1.5 bg-emerald-100" />
-                  <div className="flex justify-between mt-2 text-[11px] text-emerald-700/80">
-                    <span>Score {latestSubmitted.total_score ?? 0}/{latestSubmitted.max_score ?? 0}</span>
-                    {accuracy != null && <span>Accuracy {accuracy}%</span>}
-                  </div>
-                </div>
-              )}
-
-              {owned && inProgress && !latestSubmitted && (
-                <div className="rounded-lg border border-sky-100 bg-sky-50/60 p-2.5 mb-3 text-xs text-sky-700 font-medium inline-flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5" /> Attempt in progress — resume now
-                </div>
-              )}
-
-              <div className="mt-auto flex flex-wrap gap-2 pt-1">
-                {!owned ? (
-                  <Button
-                    size="sm"
-                    className="w-full gap-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-sm"
-                    onClick={onUpgrade}
-                  >
-                    <Sparkles className="h-3.5 w-3.5" /> Upgrade to unlock
-                  </Button>
-                ) : soon ? (
-                  <Button size="sm" disabled className="w-full gap-1">
-                    <Calendar className="h-3.5 w-3.5" /> Coming Soon
-                  </Button>
-                ) : inProgress ? (
-                  <Link to={mockAttemptPath(inProgress.id)} className="flex-1" {...studentMockLinkProps}>
-                    <Button size="sm" className="w-full gap-1 bg-sky-600 hover:bg-sky-700">
-                      <Clock className="h-3.5 w-3.5" /> Resume Attempt
-                    </Button>
-                  </Link>
-                ) : latestSubmitted ? (
-                  <div className="w-full flex flex-col gap-2">
-                    <div className="flex gap-2">
-                      <Link to={mockResultPath(latestSubmitted.id)} className="flex-1" {...studentMockLinkProps}>
-                        <Button size="sm" variant="outline" className="w-full gap-1">
-                          <BarChart3 className="h-3.5 w-3.5" /> Report
-                        </Button>
-                      </Link>
-                      <Link to={mockReviewPath(latestSubmitted.id)} className="flex-1" {...studentMockLinkProps}>
-                        <Button size="sm" variant="outline" className="w-full gap-1">
-                          <FileText className="h-3.5 w-3.5" /> Review
-                        </Button>
-                      </Link>
-                    </div>
-                    {test.slug && (
-                      <Link to={mockIntroPath(test.slug)} className="w-full" {...studentMockLinkProps}>
-                        <Button size="sm" className="w-full gap-1 bg-emerald-600 hover:bg-emerald-700">
-                          <Play className="h-3.5 w-3.5" /> Retake Mock
-                        </Button>
-                      </Link>
-                    )}
-                  </div>
-                ) : (
-                  test.slug && (
-                    <Link to={mockIntroPath(test.slug)} className="flex-1" {...studentMockLinkProps}>
-                      <Button size="sm" className="w-full gap-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700">
-                        <Play className="h-3.5 w-3.5" /> Start Mock
-                        <ChevronRight className="h-3.5 w-3.5 ml-auto" />
-                      </Button>
-                    </Link>
-                  )
-                )}
-              </div>
-            </div>
-          </Card>
-        );
-      })}
+      {items.map((item) => (
+        <MockCardItem
+          key={item.test.id}
+          item={item}
+          onUpgrade={onUpgrade}
+        />
+      ))}
     </div>
+  );
+}
+
+function MockCardItem({
+  item, onUpgrade,
+}: {
+  item: { test: Test; owned: boolean; inProgress: Attempt | null; latestSubmitted: Attempt | null };
+  onUpgrade: () => void;
+}) {
+  const { test, owned, inProgress, latestSubmitted } = item;
+  const lock = getLockInfo(test);
+  const countdown = useCountdown(lock?.kind === "scheduled" ? lock.unlocksAt : null);
+  const pct = latestSubmitted?.percentile ?? null;
+  const accuracy = latestSubmitted?.total_attempted
+    ? Math.round(((latestSubmitted.total_correct ?? 0) / latestSubmitted.total_attempted) * 100)
+    : null;
+
+  return (
+    <Card
+      className={`group relative overflow-hidden p-0 flex flex-col transition-all hover:shadow-lg hover:-translate-y-0.5 ${
+        !owned ? "border-sky-100" : "border-slate-200"
+      }`}
+    >
+      {/* top accent bar */}
+      <div
+        className={`h-1.5 w-full ${
+          !owned
+            ? "bg-gradient-to-r from-slate-200 to-slate-300"
+            : lock
+            ? "bg-gradient-to-r from-amber-400 to-orange-500"
+            : latestSubmitted
+            ? "bg-gradient-to-r from-emerald-400 to-teal-500"
+            : inProgress
+            ? "bg-gradient-to-r from-sky-400 to-blue-500"
+            : "bg-gradient-to-r from-violet-400 to-purple-500"
+        }`}
+      />
+
+      <div className="p-4 flex flex-col flex-1">
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+              {test.exam_code && (
+                <Badge variant="outline" className="text-[10px] border-sky-200 text-sky-700 bg-sky-50">
+                  {test.exam_code}
+                </Badge>
+              )}
+              {test.difficulty && (
+                <Badge variant="outline" className={`text-[10px] ${difficultyTone(test.difficulty)}`}>
+                  {test.difficulty}
+                </Badge>
+              )}
+            </div>
+            <div className="font-semibold leading-tight text-[15px] line-clamp-2">{test.name}</div>
+          </div>
+          {!owned && (
+            <div className="shrink-0 inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 text-slate-500">
+              <Lock className="h-3.5 w-3.5" />
+            </div>
+          )}
+          {owned && lock && (
+            <Badge className="shrink-0 text-[10px] bg-amber-500 hover:bg-amber-500 gap-0.5">
+              <Sparkles className="h-3 w-3" /> {lock.kind === "scheduled" ? "Scheduled" : "Soon"}
+            </Badge>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
+          <span className="inline-flex items-center gap-1">
+            <Clock className="h-3 w-3" /> {test.total_duration_minutes ?? "—"} min
+          </span>
+        </div>
+
+        {owned && lock && (
+          <div className="rounded-lg border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50/50 p-3 mb-3">
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-amber-700 mb-1">
+              <Calendar className="h-3.5 w-3.5" />
+              {lock.kind === "scheduled" ? "To be unlocked on" : "Status"}
+            </div>
+            <div className="text-sm font-semibold text-amber-900 leading-tight">{lock.label}</div>
+            {lock.kind === "scheduled" && (
+              <div className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-amber-700/90">
+                <Clock className="h-3 w-3" /> Unlocks in <span className="font-semibold">{countdown}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {owned && latestSubmitted && pct != null && !lock && (
+          <div className="rounded-lg border border-emerald-100 bg-gradient-to-br from-emerald-50 to-teal-50/50 p-3 mb-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] font-medium text-emerald-700 inline-flex items-center gap-1">
+                <Award className="h-3 w-3" /> Last Attempt
+              </span>
+              <span className="text-lg font-bold text-emerald-700 leading-none">{pct}<span className="text-xs">%ile</span></span>
+            </div>
+            <Progress value={pct} className="h-1.5 bg-emerald-100" />
+            <div className="flex justify-between mt-2 text-[11px] text-emerald-700/80">
+              <span>Score {latestSubmitted.total_score ?? 0}/{latestSubmitted.max_score ?? 0}</span>
+              {accuracy != null && <span>Accuracy {accuracy}%</span>}
+            </div>
+          </div>
+        )}
+
+        {owned && inProgress && !latestSubmitted && !lock && (
+          <div className="rounded-lg border border-sky-100 bg-sky-50/60 p-2.5 mb-3 text-xs text-sky-700 font-medium inline-flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5" /> Attempt in progress — resume now
+          </div>
+        )}
+
+        <div className="mt-auto flex flex-wrap gap-2 pt-1">
+          {!owned ? (
+            <Button
+              size="sm"
+              className="w-full gap-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 shadow-sm"
+              onClick={onUpgrade}
+            >
+              <Sparkles className="h-3.5 w-3.5" /> Upgrade to unlock
+            </Button>
+          ) : lock ? (
+            <Button size="sm" disabled className="w-full gap-1">
+              <Lock className="h-3.5 w-3.5" />
+              {lock.kind === "scheduled" ? `Unlocks in ${countdown}` : "Coming soon"}
+            </Button>
+          ) : inProgress ? (
+            <Link to={mockAttemptPath(inProgress.id)} className="flex-1" {...studentMockLinkProps}>
+              <Button size="sm" className="w-full gap-1 bg-sky-600 hover:bg-sky-700">
+                <Clock className="h-3.5 w-3.5" /> Resume Attempt
+              </Button>
+            </Link>
+          ) : latestSubmitted ? (
+            <div className="w-full flex flex-col gap-2">
+              <div className="flex gap-2">
+                <Link to={mockResultPath(latestSubmitted.id)} className="flex-1" {...studentMockLinkProps}>
+                  <Button size="sm" variant="outline" className="w-full gap-1">
+                    <BarChart3 className="h-3.5 w-3.5" /> Report
+                  </Button>
+                </Link>
+                <Link to={mockReviewPath(latestSubmitted.id)} className="flex-1" {...studentMockLinkProps}>
+                  <Button size="sm" variant="outline" className="w-full gap-1">
+                    <FileText className="h-3.5 w-3.5" /> Review
+                  </Button>
+                </Link>
+              </div>
+              {test.slug && (
+                <Link to={mockIntroPath(test.slug)} className="w-full" {...studentMockLinkProps}>
+                  <Button size="sm" className="w-full gap-1 bg-emerald-600 hover:bg-emerald-700">
+                    <Play className="h-3.5 w-3.5" /> Retake Mock
+                  </Button>
+                </Link>
+              )}
+            </div>
+          ) : (
+            test.slug && (
+              <Link to={mockIntroPath(test.slug)} className="flex-1" {...studentMockLinkProps}>
+                <Button size="sm" className="w-full gap-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700">
+                  <Play className="h-3.5 w-3.5" /> Start Mock
+                  <ChevronRight className="h-3.5 w-3.5 ml-auto" />
+                </Button>
+              </Link>
+            )
+          )}
+        </div>
+      </div>
+    </Card>
   );
 }
 

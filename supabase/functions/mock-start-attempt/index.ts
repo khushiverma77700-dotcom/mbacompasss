@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
     // Auto-enroll free tests
     const { data: test, error: testErr } = await admin
       .from("mock_tests")
-      .select("id, pricing_type, total_duration_minutes, is_published, access_validity_days")
+      .select("id, pricing_type, total_duration_minutes, is_published, is_live, scheduled_start_at, access_validity_days")
       .eq("id", test_id)
       .maybeSingle();
     if (testErr || !test) {
@@ -63,11 +63,27 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (!test.is_published) {
+    if (!test.is_published && !test.is_live) {
       return new Response(JSON.stringify({ error: "Test not published" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+    // Block attempts before scheduled launch time
+    if (test.scheduled_start_at && new Date(test.scheduled_start_at).getTime() > Date.now()) {
+      return new Response(
+        JSON.stringify({
+          error: `This mock unlocks on ${new Date(test.scheduled_start_at).toLocaleString("en-IN")}.`,
+        }),
+        { status: 423, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    // Live mocks flagged without a scheduled time aren't playable yet
+    if (!test.is_published && test.is_live && !test.scheduled_start_at) {
+      return new Response(
+        JSON.stringify({ error: "This mock will be launched soon." }),
+        { status: 423, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     const { data: existingEnrollment } = await admin

@@ -39,6 +39,7 @@ type Form = {
   difficulty: "easy" | "medium" | "hard";
   is_published: boolean;
   is_live: boolean;
+  scheduled_start_at: string; // datetime-local string ("" when unset)
   meta_title: string;
   meta_description: string;
 };
@@ -56,8 +57,18 @@ const emptyForm: Form = {
   difficulty: "medium",
   is_published: false,
   is_live: false,
+  scheduled_start_at: "",
   meta_title: "",
   meta_description: "",
+};
+
+// ISO -> "YYYY-MM-DDTHH:mm" for <input type="datetime-local">
+const isoToLocalInput = (iso: string | null | undefined): string => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
 const AdminMockTests = () => {
@@ -186,6 +197,7 @@ const AdminMockTests = () => {
       test_type: t.test_type, total_duration_minutes: t.total_duration_minutes,
       pricing_type: t.pricing_type, price_inr: Number(t.price_inr), access_validity_days: t.access_validity_days,
       difficulty: t.difficulty, is_published: !!t.is_published, is_live: !!t.is_live,
+      scheduled_start_at: isoToLocalInput(t.scheduled_start_at),
       meta_title: t.meta_title ?? "", meta_description: t.meta_description ?? "",
     });
     setEditId(t.id); setShowForm(true);
@@ -196,7 +208,14 @@ const AdminMockTests = () => {
     const slug = slugify(form.name); // always derived from name
     setSaving(true);
     // Mocks are always free at the mock level — monetization happens via bundles → courses.
-    const payload = { ...form, slug, pricing_type: "free" as const, price_inr: 0 };
+    const scheduledISO = form.scheduled_start_at ? new Date(form.scheduled_start_at).toISOString() : null;
+    const payload = {
+      ...form,
+      slug,
+      pricing_type: "free" as const,
+      price_inr: 0,
+      scheduled_start_at: scheduledISO,
+    };
     if (editId) {
       const { error } = await supabase.from("mock_tests").update(payload).eq("id", editId);
       if (error) {
@@ -307,15 +326,54 @@ const AdminMockTests = () => {
                 <Input value={form.meta_description} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} maxLength={160} />
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-6 pt-2 border-t">
-              <div className="flex items-center gap-2">
-                <Switch checked={form.is_published} onCheckedChange={(v) => setForm({ ...form, is_published: v })} />
-                <Label className="text-sm">Published (visible to students)</Label>
+            <div className="space-y-3 pt-3 border-t">
+              <Label className="text-sm font-semibold">Launch & Visibility</Label>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={form.is_published && !form.is_live ? "default" : "outline"}
+                  onClick={() => setForm({ ...form, is_published: true, is_live: false })}
+                >
+                  Publish
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={form.is_live ? "default" : "outline"}
+                  onClick={() => setForm({ ...form, is_published: true, is_live: true })}
+                >
+                  Live Mock Scheduled
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant={!form.is_published && !form.is_live ? "default" : "outline"}
+                  onClick={() => setForm({ ...form, is_published: false, is_live: false, scheduled_start_at: "" })}
+                >
+                  Draft
+                </Button>
               </div>
-              <div className="flex items-center gap-2">
-                <Switch checked={form.is_live} onCheckedChange={(v) => setForm({ ...form, is_live: v })} />
-                <Label className="text-sm">Live mock (scheduled)</Label>
-              </div>
+              {form.is_live && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-xs">Scheduled Launch Date & Time</Label>
+                    <Input
+                      type="datetime-local"
+                      value={form.scheduled_start_at}
+                      onChange={(e) => setForm({ ...form, scheduled_start_at: e.target.value })}
+                    />
+                    <p className="text-[11px] text-muted-foreground mt-1">
+                      Students will see the mock card with a countdown. It unlocks automatically at this time. Leave empty to show "To be launched soon".
+                    </p>
+                  </div>
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                <span className="font-medium">Publish:</span> visible & playable immediately. {" "}
+                <span className="font-medium">Live Mock Scheduled:</span> visible with countdown, unlocks at the chosen time. {" "}
+                <span className="font-medium">Draft:</span> hidden from students.
+              </p>
             </div>
             <div className="flex gap-3 pt-4">
               <Button onClick={handleSave} disabled={saving} className="flex-1">
