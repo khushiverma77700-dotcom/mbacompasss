@@ -38,8 +38,10 @@ type MockOption = {
   slug: string;
   exam_code: string | null;
   test_type: string | null;
+  category: string | null;
   is_published: boolean | null;
 };
+
 
 const slugify = (s: string) =>
   s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
