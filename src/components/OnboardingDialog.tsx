@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Phone, AlertCircle, ShieldCheck, Loader2, ArrowRight } from "lucide-react";
+import { Phone, AlertCircle, ShieldCheck, Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
 
 interface OnboardingDialogProps {
   open: boolean;
