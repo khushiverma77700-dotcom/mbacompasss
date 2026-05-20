@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Star, GraduationCap, X, Package, Sparkles, Loader2, Hash, Search, TrendingUp } from "lucide-react";
 import FileUpload from "@/components/admin/FileUpload";
+import MultiSelectTags from "@/components/admin/MultiSelectTags";
 import SeoEnhanceFields from "@/components/admin/SeoEnhanceFields";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
