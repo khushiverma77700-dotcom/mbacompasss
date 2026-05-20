@@ -359,8 +359,13 @@ export default function AdminMBACompassCourses() {
 
                   <div className="grid grid-cols-3 gap-3">
                     <div>
-                      <Label>Exam focus (comma)</Label>
-                      <Input value={(edit.exam_focus ?? []).join(", ")} onChange={(e) => setEdit({ ...edit, exam_focus: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })} placeholder="CAT, XAT" />
+                      <Label>Exam focus (multi-select)</Label>
+                      <MultiSelectTags
+                        options={EXAM_OPTIONS}
+                        selected={edit.exam_focus ?? []}
+                        onChange={(next) => setEdit({ ...edit, exam_focus: next })}
+                        placeholder="Pick one or more exams"
+                      />
                     </div>
                     <div>
                       <Label>Mode</Label>
