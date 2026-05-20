@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Phone, AlertCircle, ShieldCheck, Loader2, ArrowRight } from "lucide-react";
+import { Phone, AlertCircle, ShieldCheck, Loader2, ArrowRight, CheckCircle2 } from "lucide-react";
 
 interface OnboardingDialogProps {
   open: boolean;
@@ -31,12 +31,22 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const phoneInputRef = useRef<HTMLInputElement | null>(null);
+  const lastVerifiedOtp = useRef<string>("");
 
   useEffect(() => {
     if (resendTimer <= 0) return;
     const interval = setInterval(() => setResendTimer((t) => t - 1), 1000);
     return () => clearInterval(interval);
   }, [resendTimer]);
+
+  // Auto-focus the phone field when the dialog opens so the user can start typing immediately.
+  useEffect(() => {
+    if (open && !otpStep && !phoneVerified) {
+      const t = setTimeout(() => phoneInputRef.current?.focus(), 80);
+      return () => clearTimeout(t);
+    }
+  }, [open, otpStep, phoneVerified]);
 
   const validatePhone = (value: string) => {
     const d = value.replace(/\D/g, "");
@@ -128,24 +138,39 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
     }
   };
 
-  const handleVerifyOtp = async () => {
-    if (otpValue.length !== 6) return;
+  const handleVerifyOtp = async (codeOverride?: string) => {
+    const code = codeOverride ?? otpValue;
+    if (code.length !== 6 || otpVerifying) return;
+    if (lastVerifiedOtp.current === code) return; // prevent double-submit from auto + click
+    lastVerifiedOtp.current = code;
     setOtpVerifying(true);
     try {
-      const { data, error } = await supabase.functions.invoke("verify-otp", { body: { phone, otp: otpValue } });
+      const { data, error } = await supabase.functions.invoke("verify-otp", { body: { phone, otp: code } });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
       if (data?.verified) {
         setPhoneVerified(true);
         setOtpStep(false);
         await finalize();
+      } else {
+        throw new Error("Invalid OTP");
       }
     } catch (err: any) {
-      toast({ title: "Verification failed", description: err.message, variant: "destructive" });
+      toast({ title: "Verification failed", description: err.message || "Invalid OTP. Try again.", variant: "destructive" });
+      setOtpValue("");
+      lastVerifiedOtp.current = "";
     } finally {
       setOtpVerifying(false);
     }
   };
+
+  // Auto-verify the moment the user enters / pastes the 6th digit — no extra click needed.
+  useEffect(() => {
+    if (otpStep && !phoneVerified && otpValue.length === 6 && !otpVerifying) {
+      void handleVerifyOtp(otpValue);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [otpValue, otpStep, phoneVerified]);
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
@@ -169,11 +194,19 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground font-medium select-none">+91</span>
               <Input
+                ref={phoneInputRef}
                 type="tel"
                 inputMode="numeric"
+                autoComplete="tel-national"
                 value={phone}
                 onChange={(e) => handlePhoneChange(e.target.value)}
                 onBlur={() => { setPhoneTouched(true); setPhoneError(validatePhone(phone)); }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && phone.length === 10 && !otpSending) {
+                    e.preventDefault();
+                    void handleSendOtp();
+                  }
+                }}
                 placeholder="Enter 10-digit mobile number"
                 className={`pl-12 h-11 ${phoneTouched && phoneError ? "border-destructive" : ""} ${phoneVerified ? "border-emerald-500" : ""}`}
                 maxLength={10}
@@ -206,7 +239,7 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
                   </InputOTPGroup>
                 </InputOTP>
               </div>
-              <Button onClick={handleVerifyOtp} className="w-full h-11"
+              <Button onClick={() => handleVerifyOtp()} className="w-full h-11"
                 disabled={otpVerifying || loading || otpValue.length !== 6}>
                 {otpVerifying || loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Finishing…</> : <>Verify & Continue <ArrowRight className="w-4 h-4 ml-1" /></>}
               </Button>
@@ -224,6 +257,12 @@ const OnboardingDialog = ({ open, onComplete, userId, userEmail }: OnboardingDia
                   {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend OTP"}
                 </button>
               </div>
+            </div>
+          )}
+
+          {phoneVerified && (
+            <div className="flex items-center justify-center gap-2 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium">
+              <CheckCircle2 className="w-4 h-4" /> Mobile verified — finishing up…
             </div>
           )}
         </div>
