@@ -6,13 +6,12 @@
  *       Owns: home, /colleges, /exams, /coaching, /mocks, /courses, /blog,
  *             /auth, etc. (everything public)
  *   - dashboard.mbacompass.in           → student LMS only
- *       Owns: /student/*, mock-taking/report routes, and shared auth pages.
+ *       Owns: /student/* and shared auth pages.
  *
  * Rules:
- *   1. On the dashboard host, only /student/*, /mocks/* test/report routes,
- *      and auth pages render. Anything else is bounced to / so the dashboard
- *      subdomain stays a clean LMS surface while still letting students open
- *      Report, Review, Resume, and Retake screens.
+ *   1. On the dashboard host, only /student/* and auth pages render. Legacy
+ *      /mocks/* student links are rewritten under /student/mocks/* so the LMS
+ *      header/sidebar remain mounted for Report, Review, Resume, and Retake.
  *   2. On the main marketing host we DO NOT redirect anything. /mocks,
  *      /courses, /student all render normally on bschoolbuzz / mbacompass.
  *      The two hosts operate independently — no cross-host hops.
@@ -25,11 +24,19 @@ export const MAIN_HOSTS = ["mbacompass.in", "www.mbacompass.in"];
 /** Paths that are allowed on the dashboard subdomain. */
 const DASHBOARD_ALLOWED_PREFIXES = [
   "/student",
-  "/mocks",
   "/auth",
   "/forgot-password",
   "/reset-password",
 ];
+
+const rewriteDashboardMockPath = (pathname: string): string | null => {
+  if (pathname === "/mocks" || pathname === "/mocks/") return "/student/mocks/full-length";
+  const testMatch = pathname.match(/^\/mocks\/([^/]+)\/?$/);
+  if (testMatch) return `/student/mocks/test/${testMatch[1]}`;
+  const workMatch = pathname.match(/^\/mocks\/(attempt|result|review|leaderboard)\/(.+)$/);
+  if (workMatch) return `/student/mocks/${workMatch[1]}/${workMatch[2]}`;
+  return null;
+};
 
 const isDashboardHost = (hostname: string) => hostname === DASHBOARD_HOST;
 const isMainHost = (hostname: string) => MAIN_HOSTS.includes(hostname);
@@ -44,6 +51,9 @@ export const computeSubdomainRedirect = (loc: Location): string | null => {
 
   // ---- Dashboard host: lock to /student/* + auth, but keep "/" as the home ----
   if (isDashboardHost(hostname)) {
+    const rewrittenMockPath = rewriteDashboardMockPath(pathname);
+    if (rewrittenMockPath) return `${protocol}//${hostname}${rewrittenMockPath}${search}${hash}`;
+
     if (pathname === "/" || pathname === "") return null;
     const allowed = DASHBOARD_ALLOWED_PREFIXES.some(
       (p) => pathname === p || pathname.startsWith(p + "/")
