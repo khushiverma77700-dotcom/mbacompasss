@@ -34,6 +34,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/student/ThemeToggle";
 import StudentAvatar from "@/components/student/StudentAvatar";
+import StudentBottomNav from "@/components/student/StudentBottomNav";
+import InstallAppPrompt from "@/components/student/InstallAppPrompt";
 import { StudentThemeProvider } from "@/contexts/StudentThemeContext";
 import type { FeatureKey } from "@/lib/courseFeatures";
 import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
@@ -167,11 +169,21 @@ export default function StudentLayout() {
     );
   }
 
+  // Lock body scroll while the mobile drawer is open.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
+
   return (
     <StudentThemeProvider>
-      <div className="min-h-screen bg-gradient-to-br from-sky-50/40 via-white to-blue-50/30 dark:from-background dark:via-background dark:to-background text-foreground">
+      <div className="student-scope min-h-[100dvh] bg-gradient-to-br from-sky-50/40 via-white to-blue-50/30 dark:from-background dark:via-background dark:to-background text-foreground">
         {/* Top bar */}
-        <header className="fixed top-0 left-0 right-0 z-30 bg-card/95 backdrop-blur border-b border-border">
+        <header
+          className="fixed top-0 left-0 right-0 z-30 bg-card/95 backdrop-blur border-b border-border"
+          style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+        >
           <div className="flex items-center justify-between gap-2 px-3 sm:px-6 h-14">
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <button
@@ -231,27 +243,44 @@ export default function StudentLayout() {
           </div>
         </header>
 
-        <div className="flex pt-14">
+        <div
+          className="flex"
+          style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 3.5rem)" }}
+        >
           {/* Sidebar - desktop: FIXED. Scrolls independently of main content. */}
-          <aside className="hidden lg:flex flex-col w-64 shrink-0 border-r border-border bg-card/80 backdrop-blur fixed left-0 bottom-0 overflow-y-auto z-20 top-14">
+          <aside
+            className="hidden lg:flex flex-col w-64 shrink-0 border-r border-border bg-card/80 backdrop-blur fixed left-0 bottom-0 overflow-y-auto z-20"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 3.5rem)" }}
+          >
             <SidebarContent />
           </aside>
 
           {/* Sidebar - mobile drawer */}
           {mobileOpen && (
             <div className="fixed inset-0 z-40 lg:hidden">
-              <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
-              <aside className="absolute left-0 top-0 bottom-0 w-72 bg-card shadow-xl border-r border-border pt-14 overflow-y-auto">
+              <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setMobileOpen(false)} />
+              <aside
+                className="absolute left-0 top-0 bottom-0 w-[82vw] max-w-sm bg-card shadow-2xl border-r border-border overflow-y-auto animate-in slide-in-from-left duration-300"
+                style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 3.5rem)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+              >
                 <SidebarContent />
               </aside>
             </div>
           )}
 
-          {/* Main — offset by sidebar width on desktop so layout doesn't overlap */}
-          <main className="flex-1 min-w-0 px-3 sm:px-6 lg:px-8 py-4 sm:py-6 lg:ml-64">
+          {/* Main — offset by sidebar width on desktop; padded for bottom nav on mobile */}
+          <main
+            className="flex-1 min-w-0 px-3 sm:px-5 lg:px-8 py-4 sm:py-6 lg:ml-64 pb-[calc(env(safe-area-inset-bottom,0px)+88px)] lg:pb-8"
+          >
             <Outlet />
           </main>
         </div>
+
+        {/* Mobile bottom tab bar — hidden on lg+ */}
+        <StudentBottomNav />
+
+        {/* Floating install banner — handles its own visibility */}
+        <InstallAppPrompt />
       </div>
     </StudentThemeProvider>
   );
@@ -481,12 +510,22 @@ function SidebarContent() {
 
       {restItems.map((item) => renderRow(item))}
 
-      <div className="pt-4 mt-4 border-t border-border">
+      <div className="pt-4 mt-4 border-t border-border space-y-1">
         <Link
           to="/student/mocks/full-length"
           className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground px-3 py-2"
         >
           Browse all mocks →
+        </Link>
+        <Link
+          to="/student/install"
+          className="flex items-center justify-between gap-2 text-xs font-medium text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-500/10 rounded-md px-3 py-2"
+        >
+          <span className="flex items-center gap-2">
+            <span className="h-5 w-5 rounded-md bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white text-[10px]">↓</span>
+            Install app
+          </span>
+          <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-sky-500 text-white font-bold">PWA</span>
         </Link>
       </div>
     </nav>

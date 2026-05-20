@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport meta is set below with viewport-fit=cover for installable standalone mode -->
     <!--
       Subdomain lockdown for dashboard.mbacompass.in.
       Only /student/* and auth pages render on the dashboard host. Marketing
@@ -46,7 +46,20 @@
       })();
     </script>
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
-    <link rel="apple-touch-icon" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Installable Student Dashboard (Add to Home Screen).
+         Manifest is scoped to /student/* so it only activates inside the LMS. -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#3b82f6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="MBA Compass" />
+    <meta name="application-name" content="MBA Compass" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5" />
     <title>MBA Compass — Find &amp; Compare Top MBA Colleges &amp; Coaching in India</title>
     <meta name="description" content="MBA Compass is India's trusted platform to find, compare & review the best MBA colleges and coaching institutes for CAT, GMAT, XAT, SNAP & GRE. Fees, rankings, placements & student reviews.">
     <meta name="author" content="MBA Compass" />

@@ -584,3 +584,41 @@
   .admin-scope .overflow-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .admin-scope img { max-width: 100%; height: auto; }
 }
+
+/* ───────────────────────── Student Dashboard — Responsive & PWA polish ─────────────────────────
+ * Scoped to /student/* so it never affects the public site.
+ * Goals:
+ *   • Make every page comfortable on mobile, tablet and laptop without per-page edits.
+ *   • Behave like a native app when installed (standalone display-mode).
+ *   • Smooth scrolling, comfortable tap targets, no horizontal overflow.
+ */
+.student-scope {
+  -webkit-tap-highlight-color: transparent;
+  text-size-adjust: 100%;
+  -webkit-text-size-adjust: 100%;
+}
+.student-scope * { min-width: 0; }
+.student-scope img,
+.student-scope video,
+.student-scope canvas { max-width: 100%; height: auto; }
+
+/* Wide tables stay scrollable instead of breaking the page */
+@media (max-width: 1023px) {
+  .student-scope table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+  .student-scope .overflow-table { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .student-scope pre { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
+/* Comfortable tap targets on phones */
+@media (max-width: 640px) {
+  .student-scope button,
+  .student-scope [role="button"],
+  .student-scope a.btn,
+  .student-scope .tap-target { min-height: 40px; }
+}
+
+/* When installed as a standalone web app, drop the address-bar margin tricks */
+@media (display-mode: standalone) {
+  html, body { overscroll-behavior-y: none; }
+  body { background: hsl(var(--background)); }
+}

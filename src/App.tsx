@@ -157,6 +157,7 @@ const StudentGoals = lazyWithPreload(() => import("./pages/student/StudentGoals"
 const StudentAnnouncements = lazyWithPreload(() => import("./pages/student/StudentAnnouncements"));
 const StudentTools = lazyWithPreload(() => import("./pages/student/StudentTools"));
 const StudentProfile = lazyWithPreload(() => import("./pages/student/StudentProfile"));
+const StudentInstall = lazyWithPreload(() => import("./pages/student/StudentInstall"));
 const StudentRewards = lazyWithPreload(() => import("./pages/student/StudentRewards"));
 const StudentDayPlanner = lazyWithPreload(() => import("./pages/student/StudentDayPlanner"));
 const StudentPlannerPerformance = lazyWithPreload(() => import("./pages/student/StudentPlannerPerformance"));
@@ -812,6 +813,7 @@ const App = () => (
               <Route path="announcements" element={<InnerLazyPage><StudentAnnouncements /></InnerLazyPage>} />
               <Route path="tools" element={<InnerLazyPage><StudentTools /></InnerLazyPage>} />
               <Route path="profile" element={<InnerLazyPage><StudentProfile /></InnerLazyPage>} />
+              <Route path="install" element={<InnerLazyPage><StudentInstall /></InnerLazyPage>} />
               <Route path="rewards" element={<InnerLazyPage><StudentRewards /></InnerLazyPage>} />
               <Route path="day-planner" element={<InnerLazyPage><StudentDayPlanner /></InnerLazyPage>} />
               <Route path="day-planner/performance" element={<InnerLazyPage><StudentPlannerPerformance /></InnerLazyPage>} />
