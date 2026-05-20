@@ -524,7 +524,7 @@ function BucketGrid({
                     <Calendar className="h-3.5 w-3.5" /> Coming Soon
                   </Button>
                 ) : inProgress ? (
-                  <Link to={`/mocks/attempt/${inProgress.id}`} className="flex-1">
+                  <Link to={mockAttemptPath(inProgress.id)} className="flex-1" {...studentMockLinkProps}>
                     <Button size="sm" className="w-full gap-1 bg-sky-600 hover:bg-sky-700">
                       <Clock className="h-3.5 w-3.5" /> Resume Attempt
                     </Button>
@@ -532,19 +532,19 @@ function BucketGrid({
                 ) : latestSubmitted ? (
                   <div className="w-full flex flex-col gap-2">
                     <div className="flex gap-2">
-                      <Link to={`/mocks/result/${latestSubmitted.id}`} className="flex-1">
+                      <Link to={mockResultPath(latestSubmitted.id)} className="flex-1" {...studentMockLinkProps}>
                         <Button size="sm" variant="outline" className="w-full gap-1">
                           <BarChart3 className="h-3.5 w-3.5" /> Report
                         </Button>
                       </Link>
-                      <Link to={`/mocks/review/${latestSubmitted.id}`} className="flex-1">
+                      <Link to={mockReviewPath(latestSubmitted.id)} className="flex-1" {...studentMockLinkProps}>
                         <Button size="sm" variant="outline" className="w-full gap-1">
                           <FileText className="h-3.5 w-3.5" /> Review
                         </Button>
                       </Link>
                     </div>
                     {test.slug && (
-                      <Link to={`/mocks/${test.slug}`} className="w-full" onClick={() => { try { sessionStorage.setItem("mbc-student-mode", "1"); } catch {} }}>
+                      <Link to={mockIntroPath(test.slug)} className="w-full" {...studentMockLinkProps}>
                         <Button size="sm" className="w-full gap-1 bg-emerald-600 hover:bg-emerald-700">
                           <Play className="h-3.5 w-3.5" /> Retake Mock
                         </Button>
@@ -553,7 +553,7 @@ function BucketGrid({
                   </div>
                 ) : (
                   test.slug && (
-                    <Link to={`/mocks/${test.slug}`} className="flex-1" onClick={() => { try { sessionStorage.setItem("mbc-student-mode", "1"); } catch {} }}>
+                    <Link to={mockIntroPath(test.slug)} className="flex-1" {...studentMockLinkProps}>
                       <Button size="sm" className="w-full gap-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700">
                         <Play className="h-3.5 w-3.5" /> Start Mock
                         <ChevronRight className="h-3.5 w-3.5 ml-auto" />
