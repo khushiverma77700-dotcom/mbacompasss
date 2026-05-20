@@ -11,8 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, ArrowLeft, Settings2, ExternalLink, Loader2, Sparkles, CheckSquare } from "lucide-react";
+import { Plus, Pencil, Trash2, ArrowLeft, Settings2, ExternalLink, Loader2, Sparkles, CheckSquare, Package, BookOpen } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 import { slugify } from "@/lib/slugify";
 import FileUpload from "@/components/admin/FileUpload";
@@ -73,6 +74,9 @@ const AdminMockTests = () => {
   const [difficultyFilter, setDifficultyFilter] = useState<string>("all");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkBusy, setBulkBusy] = useState(false);
+  const [bundleMap, setBundleMap] = useState<Record<string, { id: string; name: string; slug: string }[]>>({});
+  const [courseMap, setCourseMap] = useState<Record<string, { id: string; name: string; slug: string }[]>>({});
+  const [linkDialog, setLinkDialog] = useState<{ kind: "bundle" | "course"; testName: string; items: { id: string; name: string; slug: string }[] } | null>(null);
 
   const visibleTests = tests
     .filter((t) => categoryFilter === "all" || (t.category || t.test_type) === categoryFilter)
@@ -104,6 +108,41 @@ const AdminMockTests = () => {
     const { data } = await supabase.from("mock_tests").select("*").order("created_at", { ascending: false });
     setTests(data ?? []);
     setLoading(false);
+
+    // Load bundle memberships per mock
+    const { data: bItems } = await supabase
+      .from("mock_bundle_items")
+      .select("test_id, bundle:mock_bundles(id, name, slug)");
+    const bMap: Record<string, { id: string; name: string; slug: string }[]> = {};
+    const testToBundleIds: Record<string, string[]> = {};
+    (bItems ?? []).forEach((row: any) => {
+      if (!row.bundle) return;
+      (bMap[row.test_id] ||= []).push({ id: row.bundle.id, name: row.bundle.name, slug: row.bundle.slug });
+      (testToBundleIds[row.test_id] ||= []).push(row.bundle.id);
+    });
+    setBundleMap(bMap);
+
+    // Load courses that include those bundles
+    const { data: cLinks } = await supabase
+      .from("course_bundles")
+      .select("bundle_id, course:mba_compass_courses(id, title, slug)");
+    const bundleToCourses: Record<string, { id: string; name: string; slug: string }[]> = {};
+    (cLinks ?? []).forEach((row: any) => {
+      if (!row.course) return;
+      (bundleToCourses[row.bundle_id] ||= []).push({ id: row.course.id, name: row.course.title, slug: row.course.slug });
+    });
+    const cMap: Record<string, { id: string; name: string; slug: string }[]> = {};
+    Object.entries(testToBundleIds).forEach(([testId, bundleIds]) => {
+      const seen = new Set<string>();
+      bundleIds.forEach((bid) => {
+        (bundleToCourses[bid] ?? []).forEach((c) => {
+          if (seen.has(c.id)) return;
+          seen.add(c.id);
+          (cMap[testId] ||= []).push(c);
+        });
+      });
+    });
+    setCourseMap(cMap);
   };
   useEffect(() => { fetchTests(); }, []);
 
@@ -375,18 +414,23 @@ const AdminMockTests = () => {
                 <TableHead>Pricing</TableHead>
                 <TableHead>Duration</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Bundles</TableHead>
+                <TableHead>Courses</TableHead>
                 <TableHead>Takers</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading && (<TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>)}
+              {loading && (<TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>)}
               {!loading && tests.length === 0 && (
-                <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
+                <TableRow><TableCell colSpan={11} className="text-center py-12 text-muted-foreground">
                   No mock tests yet. Click <strong>Generate Mocks From AI</strong> or <strong>New Mock Test</strong>.
                 </TableCell></TableRow>
               )}
-              {visibleTests.map((t) => (
+              {visibleTests.map((t) => {
+                const bundles = bundleMap[t.id] ?? [];
+                const courses = courseMap[t.id] ?? [];
+                return (
                 <TableRow key={t.id} className={selectedIds.includes(t.id) ? "bg-sky-50/40" : ""}>
                   <TableCell>
                     <Checkbox checked={selectedIds.includes(t.id)} onCheckedChange={() => toggleRow(t.id)} />
@@ -417,6 +461,36 @@ const AdminMockTests = () => {
                     {t.is_published ? <Badge className="bg-emerald-600 hover:bg-emerald-700">Published</Badge> : <Badge variant="outline">Draft</Badge>}
                     {t.is_live && <Badge className="ml-1 bg-orange-500 hover:bg-orange-600">Live</Badge>}
                   </TableCell>
+                  <TableCell>
+                    {bundles.length === 0 ? (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setLinkDialog({ kind: "bundle", testName: t.name, items: bundles })}
+                        className="inline-flex items-center gap-1 rounded-full bg-sky-50 hover:bg-sky-100 border border-sky-200 px-2 py-0.5 text-xs font-medium text-sky-700 transition-colors"
+                        title="View bundles containing this mock"
+                      >
+                        <Package className="w-3 h-3" />
+                        {bundles.length}
+                      </button>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {courses.length === 0 ? (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setLinkDialog({ kind: "course", testName: t.name, items: courses })}
+                        className="inline-flex items-center gap-1 rounded-full bg-violet-50 hover:bg-violet-100 border border-violet-200 px-2 py-0.5 text-xs font-medium text-violet-700 transition-colors"
+                        title="View courses including this mock"
+                      >
+                        <BookOpen className="w-3 h-3" />
+                        {courses.length}
+                      </button>
+                    )}
+                  </TableCell>
                   <TableCell>{t.total_takers ?? 0}</TableCell>
                   <TableCell className="text-right space-x-1">
                     <Button asChild variant="outline" size="sm" title="Manage sections & questions">
@@ -433,7 +507,8 @@ const AdminMockTests = () => {
                     <Button variant="ghost" size="sm" onClick={() => handleDelete(t.id, t.name)}><Trash2 className="w-3.5 h-3.5 text-destructive" /></Button>
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>
@@ -444,6 +519,44 @@ const AdminMockTests = () => {
         onOpenChange={setAiOpen}
         onCreated={fetchTests}
       />
+
+      <Dialog open={!!linkDialog} onOpenChange={(o) => !o && setLinkDialog(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {linkDialog?.kind === "bundle" ? <Package className="w-4 h-4 text-sky-600" /> : <BookOpen className="w-4 h-4 text-violet-600" />}
+              {linkDialog?.kind === "bundle" ? "Bundles" : "Courses"} containing
+              <span className="font-semibold">"{linkDialog?.testName}"</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+            {(linkDialog?.items ?? []).map((item) => {
+              const path = linkDialog?.kind === "bundle"
+                ? `/admin/mock-bundles?edit=${item.id}`
+                : `/admin/mba-compass-courses?edit=${item.id}`;
+              const publicPath = linkDialog?.kind === "bundle"
+                ? `/courses/${item.slug}`
+                : `/mba-compass/${item.slug}`;
+              return (
+                <div key={item.id} className="flex items-center justify-between gap-2 rounded-md border p-3 hover:bg-muted/40">
+                  <div className="min-w-0">
+                    <div className="font-medium text-sm truncate">{item.name}</div>
+                    <div className="text-xs text-muted-foreground truncate">/{item.slug}</div>
+                  </div>
+                  <div className="flex gap-1 shrink-0">
+                    <Button asChild size="sm" variant="outline">
+                      <Link to={path} onClick={() => setLinkDialog(null)}>Manage</Link>
+                    </Button>
+                    <Button asChild size="sm" variant="ghost" title="Open public page">
+                      <Link to={publicPath} target="_blank"><ExternalLink className="w-3.5 h-3.5" /></Link>
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
