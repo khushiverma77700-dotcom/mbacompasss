@@ -574,7 +574,10 @@ const OnboardingGate = () => {
   }, [loading, user, checked, location.pathname]);
 
   if (!showOnboarding || !user) return null;
-  if (typeof window !== "undefined" && window.location.pathname.startsWith("/student")) return null;
+  if (typeof window !== "undefined" && (
+    window.location.pathname.startsWith("/student") ||
+    window.location.hostname === "dashboard.mbacompass.in"
+  )) return null;
 
   return (
     <Suspense fallback={null}>
