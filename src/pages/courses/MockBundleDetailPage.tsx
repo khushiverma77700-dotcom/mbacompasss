@@ -18,6 +18,7 @@ import {
 import { useMetaPixel, pixelTrack } from "@/lib/metaPixel";
 import { useCtaGate, openLoginDialog } from "@/hooks/useCtaGate";
 import PurchaseSuccessDialog from "@/components/courses/PurchaseSuccessDialog";
+import OnboardingDialog from "@/components/OnboardingDialog";
 
 const HIGHLIGHT_ICONS: Record<HighlightKey, any> = {
   daily_tests: Calendar,
