@@ -85,7 +85,29 @@ export default function StudentLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
   const displayName = (user?.user_metadata?.display_name as string | undefined) || user?.email?.split("@")[0] || "Student";
+
+  // Detect whether the app is running as an installed PWA (standalone display
+  // mode or iOS home-screen launch). When installed, we hide the "Install App"
+  // button in the header since it's no longer needed.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const check = () => {
+      const standalone =
+        window.matchMedia?.("(display-mode: standalone)").matches ||
+        (navigator as any).standalone === true;
+      setIsStandalone(!!standalone);
+    };
+    check();
+    const mql = window.matchMedia?.("(display-mode: standalone)");
+    mql?.addEventListener?.("change", check);
+    window.addEventListener("appinstalled", check);
+    return () => {
+      mql?.removeEventListener?.("change", check);
+      window.removeEventListener("appinstalled", check);
+    };
+  }, []);
 
   // On dashboard.mbacompass.in, the LMS lives at "/" instead of "/student".
   const onDashboardHost =
@@ -214,22 +236,26 @@ export default function StudentLayout() {
             </div>
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <ThemeToggle />
-              <Link
-                to="/student/install"
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-semibold px-2.5 py-1.5 shadow hover:from-sky-600 hover:to-blue-700"
-                aria-label="Install app"
-                title="Install MBA Compass as an app"
-              >
-                <Download className="h-3.5 w-3.5" />
-                <span className="hidden md:inline">Install App</span>
-              </Link>
-              <Link
-                to="/student/install"
-                className="sm:hidden p-2 rounded-md hover:bg-accent text-sky-600"
-                aria-label="Install app"
-              >
-                <Download className="h-5 w-5" />
-              </Link>
+              {!isStandalone && (
+                <>
+                  <Link
+                    to="/student/install"
+                    className="hidden sm:inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-semibold px-2.5 py-1.5 shadow hover:from-sky-600 hover:to-blue-700"
+                    aria-label="Install app"
+                    title="Install MBA Compass - CAT Prep as an app"
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    <span className="hidden md:inline">Install App</span>
+                  </Link>
+                  <Link
+                    to="/student/install"
+                    className="sm:hidden p-2 rounded-md hover:bg-accent text-sky-600"
+                    aria-label="Install app"
+                  >
+                    <Download className="h-5 w-5" />
+                  </Link>
+                </>
+              )}
               <Link to="/student/notifications" className="relative p-2 rounded-md hover:bg-accent" aria-label="Notifications">
                 <Bell className="h-5 w-5 text-foreground/70" />
               </Link>
