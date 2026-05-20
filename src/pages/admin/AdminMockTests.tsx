@@ -197,6 +197,7 @@ const AdminMockTests = () => {
       test_type: t.test_type, total_duration_minutes: t.total_duration_minutes,
       pricing_type: t.pricing_type, price_inr: Number(t.price_inr), access_validity_days: t.access_validity_days,
       difficulty: t.difficulty, is_published: !!t.is_published, is_live: !!t.is_live,
+      scheduled_start_at: isoToLocalInput(t.scheduled_start_at),
       meta_title: t.meta_title ?? "", meta_description: t.meta_description ?? "",
     });
     setEditId(t.id); setShowForm(true);
