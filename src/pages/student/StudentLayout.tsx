@@ -169,11 +169,21 @@ export default function StudentLayout() {
     );
   }
 
+  // Lock body scroll while the mobile drawer is open.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
+
   return (
     <StudentThemeProvider>
-      <div className="min-h-screen bg-gradient-to-br from-sky-50/40 via-white to-blue-50/30 dark:from-background dark:via-background dark:to-background text-foreground">
+      <div className="min-h-[100dvh] bg-gradient-to-br from-sky-50/40 via-white to-blue-50/30 dark:from-background dark:via-background dark:to-background text-foreground">
         {/* Top bar */}
-        <header className="fixed top-0 left-0 right-0 z-30 bg-card/95 backdrop-blur border-b border-border">
+        <header
+          className="fixed top-0 left-0 right-0 z-30 bg-card/95 backdrop-blur border-b border-border"
+          style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+        >
           <div className="flex items-center justify-between gap-2 px-3 sm:px-6 h-14">
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <button
