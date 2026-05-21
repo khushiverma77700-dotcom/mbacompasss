@@ -10,7 +10,10 @@ import {
   ArrowLeft, Star, Users, Clock, Award, CheckCircle2, GraduationCap,
   Sparkles, Target, BookOpen, Download, ArrowRight, GitCompare,
   ListChecks, Layers, BarChart3, FileText, Shield, Calendar, Zap, Flame,
+  Trophy, Headphones, RefreshCw, BadgeCheck, Brain, Rocket, LineChart,
+  PlayCircle, X as XIcon, MessageSquare, Globe, IndianRupee, TrendingUp,
 } from "lucide-react";
+
 
 import SEOHead from "@/components/SEOHead";
 import PageKeywords from "@/components/PageKeywords";
