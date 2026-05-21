@@ -175,7 +175,29 @@ const AdminMockTests = () => {
   const fetchTests = async () => {
     setLoading(true);
     const { data } = await supabase.from("mock_tests").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false });
-    setTests(data ?? []);
+
+    // Expected questions from sections
+    const { data: secData } = await supabase.from("mock_sections").select("id, test_id, total_questions");
+    const sectionToTest: Record<string, string> = {};
+    const expectedMap: Record<string, number> = {};
+    (secData ?? []).forEach((s: any) => {
+      sectionToTest[s.id] = s.test_id;
+      expectedMap[s.test_id] = (expectedMap[s.test_id] || 0) + (s.total_questions || 0);
+    });
+
+    // Actual questions count
+    const { data: qData } = await supabase.from("mock_questions").select("section_id");
+    const actualMap: Record<string, number> = {};
+    (qData ?? []).forEach((q: any) => {
+      const tid = sectionToTest[q.section_id];
+      if (tid) actualMap[tid] = (actualMap[tid] || 0) + 1;
+    });
+
+    setTests((data ?? []).map((t: any) => ({
+      ...t,
+      expected_questions: expectedMap[t.id] || 0,
+      actual_questions: actualMap[t.id] || 0,
+    })));
     setLoading(false);
 
     // Load bundle memberships per mock
@@ -535,8 +557,8 @@ const AdminMockTests = () => {
                 <TableHead>Name</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Exam</TableHead>
-                
                 <TableHead>Duration</TableHead>
+                <TableHead>Questions</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Readiness</TableHead>
                 <TableHead className="w-[90px]">Sort</TableHead>
@@ -547,9 +569,9 @@ const AdminMockTests = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading && (<TableRow><TableCell colSpan={12} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>)}
+              {loading && (<TableRow><TableCell colSpan={13} className="text-center py-8 text-muted-foreground">Loading…</TableCell></TableRow>)}
               {!loading && tests.length === 0 && (
-                <TableRow><TableCell colSpan={12} className="text-center py-12 text-muted-foreground">
+                <TableRow><TableCell colSpan={13} className="text-center py-12 text-muted-foreground">
                   No mock tests yet. Click <strong>Generate Mocks From AI</strong> or <strong>New Mock Test</strong>.
                 </TableCell></TableRow>
               )}
@@ -576,6 +598,24 @@ const AdminMockTests = () => {
                   </TableCell>
                   <TableCell><Badge variant="secondary">{t.exam_code || "CAT"}</Badge></TableCell>
                   <TableCell>{t.total_duration_minutes} min</TableCell>
+                  <TableCell>
+                    {(() => {
+                      const expected = (t.expected_questions as number) ?? 0;
+                      const actual = (t.actual_questions as number) ?? 0;
+                      const complete = expected > 0 && actual >= expected;
+                      const partial = expected > 0 && actual > 0 && actual < expected;
+                      const cls = complete
+                        ? "bg-emerald-100 text-emerald-700 border-emerald-300"
+                        : partial
+                        ? "bg-amber-100 text-amber-700 border-amber-300"
+                        : "bg-slate-100 text-slate-600 border-slate-300";
+                      return (
+                        <Badge variant="outline" className={cls} title={`${actual} questions added / ${expected} expected`}>
+                          {actual}/{expected}
+                        </Badge>
+                      );
+                    })()}
+                  </TableCell>
                   <TableCell>
                     {t.is_published ? <Badge className="bg-emerald-600 hover:bg-emerald-700">Published</Badge> : <Badge variant="outline">Draft</Badge>}
                     {t.is_live && <Badge className="ml-1 bg-orange-500 hover:bg-orange-600">Live</Badge>}
