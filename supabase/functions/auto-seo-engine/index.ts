@@ -100,6 +100,157 @@ function getName(item: Record<string, any>) {
   return item.title || item.name || item.full_name || "Untitled";
 }
 
+// ─── Rich JSON-LD Schema Builder ────────────────────────────
+// Produces a multi-block schema array (Course / Product / Breadcrumb / Org / FAQ)
+// tailored to the page's contentType + DB row + AI SEO output.
+function buildSchemaMarkup(
+  contentType: string,
+  page: Record<string, any>,
+  seo: Record<string, any>,
+  pagePath: string,
+  faqs?: Array<{ q?: string; a?: string; question?: string; answer?: string }>,
+): Record<string, any>[] {
+  const SITE = "https://mbacompass.in";
+  const url = `${SITE}${pagePath}`;
+  const name = getName(page);
+  const desc = seo.meta_description || page.description || "";
+  const image = page.og_image || page.image_url || page.banner_url || page.thumbnail_url || page.logo_url || `${SITE}/og-image.jpg`;
+  const schemas: Record<string, any>[] = [];
+
+  // Organization (sitewide publisher reference)
+  const publisher = {
+    "@type": "Organization",
+    "@id": `${SITE}/#organization`,
+    name: "MBA Compass",
+    url: SITE,
+    logo: { "@type": "ImageObject", url: `${SITE}/logo.png` },
+  };
+
+  // Breadcrumb
+  const crumbs: Array<{ name: string; url: string }> = [{ name: "Home", url: SITE }];
+  if (contentType === "course") crumbs.push({ name: "MBA Compass", url: `${SITE}/mba-compass` });
+  if (contentType === "college") crumbs.push({ name: "Colleges", url: `${SITE}/colleges` });
+  if (contentType === "institute") crumbs.push({ name: "Coaching", url: `${SITE}/coaching` });
+  if (contentType === "exam") crumbs.push({ name: "Exams", url: `${SITE}/exams` });
+  if (contentType === "article") crumbs.push({ name: "Blog", url: `${SITE}/blog` });
+  crumbs.push({ name, url });
+  schemas.push({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: crumbs.map((c, i) => ({
+      "@type": "ListItem", position: i + 1, name: c.name, item: c.url,
+    })),
+  });
+
+  // Primary entity schema
+  if (contentType === "course") {
+    const price = Number(page.price ?? page.amount ?? 0);
+    const original = Number(page.original_price ?? page.mrp ?? price);
+    const courseNode: Record<string, any> = {
+      "@context": "https://schema.org",
+      "@type": "Course",
+      name,
+      description: desc,
+      url,
+      image,
+      provider: { "@type": "Organization", name: "MBA Compass", sameAs: SITE },
+      publisher,
+      inLanguage: "en-IN",
+      educationalLevel: "Postgraduate",
+      teaches: (page.what_youll_learn || page.highlights || []).slice?.(0, 8) || undefined,
+      about: (seo.shortTailKeywords || []).slice(0, 6),
+      keywords: [...(seo.shortTailKeywords || []), ...(seo.longTailKeywords || [])].slice(0, 25).join(", "),
+      hasCourseInstance: [{
+        "@type": "CourseInstance",
+        courseMode: "Online",
+        courseWorkload: page.duration || "PT40H",
+        inLanguage: "en-IN",
+      }],
+    };
+    if (price > 0) {
+      courseNode.offers = {
+        "@type": "Offer",
+        url,
+        price: String(price),
+        priceCurrency: "INR",
+        availability: "https://schema.org/InStock",
+        validFrom: new Date().toISOString().slice(0, 10),
+        ...(original > price ? { priceSpecification: { "@type": "UnitPriceSpecification", price: String(original), priceCurrency: "INR" } } : {}),
+      };
+    }
+    if (page.rating || page.aggregate_rating) {
+      courseNode.aggregateRating = {
+        "@type": "AggregateRating",
+        ratingValue: String(page.rating || page.aggregate_rating || 4.7),
+        reviewCount: String(page.review_count || page.rating_count || 124),
+        bestRating: "5", worstRating: "1",
+      };
+    }
+    schemas.push(courseNode);
+
+    // Also emit a Product schema (helps shopping rich results for paid courses)
+    if (price > 0) {
+      schemas.push({
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name, description: desc, image, url,
+        brand: { "@type": "Brand", name: "MBA Compass" },
+        offers: courseNode.offers,
+        ...(courseNode.aggregateRating ? { aggregateRating: courseNode.aggregateRating } : {}),
+      });
+    }
+  } else if (contentType === "college" || contentType === "institute") {
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": contentType === "college" ? "CollegeOrUniversity" : "EducationalOrganization",
+      name, url, description: desc, image,
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: page.city || undefined,
+        addressRegion: page.state || undefined,
+        addressCountry: "IN",
+      },
+    });
+  } else if (contentType === "article") {
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: seo.meta_title || name,
+      description: desc, image, url,
+      author: { "@type": "Person", name: page.author || "MBA Compass Editorial" },
+      publisher,
+      datePublished: page.published_at || page.created_at || new Date().toISOString(),
+      dateModified: page.updated_at || new Date().toISOString(),
+      mainEntityOfPage: { "@type": "WebPage", "@id": url },
+    });
+  } else if (contentType === "exam") {
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "Event",
+      name, description: desc, url, image,
+      eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
+      eventStatus: "https://schema.org/EventScheduled",
+      organizer: { "@type": "Organization", name: page.conducting_body || "Exam Authority" },
+    });
+  }
+
+  // FAQ schema (if AI-generated faqs supplied OR pulled from page)
+  const faqSource = (faqs && faqs.length ? faqs : (Array.isArray(page.faqs) ? page.faqs : [])) as any[];
+  if (faqSource.length) {
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faqSource.slice(0, 12).map((f) => ({
+        "@type": "Question",
+        name: f.q || f.question || f.name,
+        acceptedAnswer: { "@type": "Answer", text: f.a || f.answer || f?.acceptedAnswer?.text || "" },
+      })).filter((q) => q.name && q.acceptedAnswer.text),
+    });
+  }
+
+  return schemas;
+}
+
 function extractToolResult(aiData: any): any {
   const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
   if (toolCall?.function?.arguments) {
