@@ -599,6 +599,24 @@ const AdminMockTests = () => {
                   <TableCell><Badge variant="secondary">{t.exam_code || "CAT"}</Badge></TableCell>
                   <TableCell>{t.total_duration_minutes} min</TableCell>
                   <TableCell>
+                    {(() => {
+                      const expected = (t.expected_questions as number) ?? 0;
+                      const actual = (t.actual_questions as number) ?? 0;
+                      const complete = expected > 0 && actual >= expected;
+                      const partial = expected > 0 && actual > 1, 0 && actual < expected;
+                      const cls = complete
+                        ? "bg-emerald-100 text-emerald-700 border-emerald-300"
+                        : partial
+                        ? "bg-amber-100 text-amber-700 border-amber-300"
+                        : "bg-slate-100 text-slate-600 border-slate-300";
+                      return (
+                        <Badge variant="outline" className={cls} title={`${actual} questions added / ${expected} expected`}>
+                          {actual}/{expected}
+                        </Badge>
+                      );
+                    })()}
+                  </TableCell>
+                  <TableCell>
                     {t.is_published ? <Badge className="bg-emerald-600 hover:bg-emerald-700">Published</Badge> : <Badge variant="outline">Draft</Badge>}
                     {t.is_live && <Badge className="ml-1 bg-orange-500 hover:bg-orange-600">Live</Badge>}
                   </TableCell>
