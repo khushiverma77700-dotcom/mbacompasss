@@ -367,28 +367,36 @@ Deno.serve(async (req) => {
                   role: "system",
                   content: `You are a world-class SEO strategist for Indian MBA education (CAT/XAT/GMAT/SNAP/NMAT/CMAT/IIFT/MAT). You generate UNIQUE, research-grade, page-specific SEO that wins featured snippets, People-Also-Ask boxes, and AI Overviews.
 
+CRITICAL BRAND RULE:
+- DO NOT use the course's internal product name, brand name, or any unknown/proprietary brand (e.g. "BSB", "B School Buzz", "MBA Compass", or the literal course title) as a keyword, primary keyword, secondary keyword, or in meta_title / meta_description.
+- Brands like ours have ZERO search volume. Treat them as invisible.
+- Build every keyword around what real Indian MBA aspirants actually type into Google: exam names (CAT, XAT, NMAT, SNAP, CMAT, IIFT, MAT), intent words (mock test, mock series, free mock, full length mock, sectional test, previous year paper, syllabus, preparation, online course, crash course, coaching), audiences (for working professionals, beginners, repeaters), and year modifiers (2026).
+- Examples of GOOD primary keywords: "CAT mock test series 2026", "free MBA mock tests", "NMAT mock test online", "XAT full length mocks", "CAT preparation online course".
+- Examples of BAD primary keywords (NEVER use): the course title verbatim, "<BrandName> mocks", "<BrandName> course", any in-house product label.
+
 OUTPUT RULES:
-- meta_title: UNIQUE, ≤60 chars, primary keyword at the start, includes a power word (Best/Top/2026/Guide/Compare/Review/Live) and a qualifier (year/city/exam) when natural.
-- meta_description: 150-160 chars, contains primary + 1 secondary keyword + a clear CTA (Enroll Now / Compare / Check Fees / Read Guide). End with punctuation.
-- h1_tag: Different wording from meta_title, keyword-rich, student-facing.
-- primary_keyword: ONE highest-intent search term this page must rank for.
-- secondary_keyword: 1 supporting keyword closely related to primary.
-- shortTailKeywords: 10-14 short 1-3 word terms with real India search volume.
-- longTailKeywords: 18-25 specific 4-9 word phrases reflecting real search intent (include year 2026 variants, "for working professionals", "with fees", "vs", "syllabus", "preparation").
-- lsi_keywords: 10-15 latent-semantic / semantically related terms Google expects to see in this topic (entities, sub-topics, course names, exam sections).
-- faq_keywords: 8-12 natural question phrases users type (start with "how", "what", "is", "why", "when", "which").
-- voice_search_keywords: 6-10 conversational long-tail queries ("hey google, what is the best...").
-- trending_keywords: 4-8 trending modifiers (2026 cutoff, latest pattern, new syllabus, ai-based prep).
-- entity_mentions: 8-12 named entities Google's knowledge graph associates with this page (IIM Ahmedabad, CAT, XLRI, GMAC, etc.).
-- usp_bullets: 5-7 short conversion bullets (≤90 chars each) about this page.
-- og_alt_text: 1 alt-text string for the OG image describing the page visually.
-- internalLinks: 6-10 high-value internal links (path + anchorText) using paths like /college/<slug>, /exam/<slug>, /mba-compass/<slug>, /blog/<slug>.
+- meta_title: UNIQUE, ≤60 chars, primary keyword (a real search query) at the start, includes a power word (Best/Top/2026/Free/Online/Guide) and a qualifier (year/exam/audience). No brand names.
+- meta_description: 150-160 chars, contains primary + 1 secondary keyword + a clear CTA (Start Free Mock / Enroll Now / Compare / Check Syllabus). End with punctuation. No brand names.
+- h1_tag: Different wording from meta_title, keyword-rich, student-facing, search-intent driven.
+- primary_keyword: ONE highest-intent REAL search term (exam + intent), never the brand or course label.
+- secondary_keyword: 1 supporting real search keyword closely related to primary.
+- shortTailKeywords: 10-14 short 1-3 word terms with real India search volume (e.g. "cat mocks", "mba mock test", "nmat prep").
+- longTailKeywords: 18-25 specific 4-9 word phrases reflecting real search intent (e.g. "free cat mock test with solutions 2026", "best nmat mock series for repeaters").
+- lsi_keywords: 10-15 latent-semantic / semantically related terms Google expects (VARC, DILR, QA, percentile, sectional cutoff, AIR, scaled score, normalization, etc.).
+- faq_keywords: 8-12 natural question phrases users type ("how many mocks should i give for cat", "are free cat mocks enough", "which is the best mock series for nmat").
+- voice_search_keywords: 6-10 conversational long-tail queries.
+- trending_keywords: 4-8 trending modifiers (2026 pattern, new cat syllabus, ai-based mock analysis, adaptive mock test).
+- entity_mentions: 8-12 named entities Google's knowledge graph associates with this page (IIM Ahmedabad, CAT, XLRI, GMAC, IIFT Delhi, etc.) — entities, NOT our brand.
+- usp_bullets: 5-7 short conversion bullets (≤90 chars each) about this page — focus on student benefit, not brand.
+- og_alt_text: 1 alt-text string for the OG image describing the page visually (use exam + intent, not brand).
+- internalLinks: 6-10 high-value internal links (path + anchorText) using paths like /college/<slug>, /exam/<slug>, /mba-compass/<slug>, /blog/<slug>. Anchor text must be search-intent based, never brand.
 
 QUALITY:
-- Be SPECIFIC to THIS page's content, city, category, exam — never placeholders, never duplicates.
+- Be SPECIFIC to THIS page's exam(s), category, audience — never placeholders, never duplicates, never the brand.
 - Prefer transactional/commercial intent for course/college pages; informational for articles.
 
 NEVER reuse these existing meta titles: ${existingMetas.map((m: any) => m.title).filter(Boolean).slice(0, 30).join(" | ")}`,
+
                 },
                 {
                   role: "user",
@@ -966,7 +974,7 @@ RULES:
           const aiResp = await callAIGateway({
               model: "google/gemini-2.5-flash-lite",
               messages: [
-                { role: "system", content: "Generate SEO keywords for Indian MBA education pages. Return short-tail (1-2 words) and long-tail (3-6 words) keywords students search for." },
+                { role: "system", content: "Generate SEO keywords for Indian MBA education pages based on REAL student search behavior (CAT/XAT/NMAT/SNAP/CMAT/IIFT/MAT mocks, prep, coaching, syllabus, percentile). NEVER use the course's brand name, product name, or course title as a keyword — our brand has zero search volume. Anchor every keyword to exam name + intent (mock test, mock series, free mock, preparation, online course, previous year paper, syllabus, cutoff). Return short-tail (1-2 words) and long-tail (3-6 words) keywords students actually search." },
                 { role: "user", content: `Page: ${getName(page)}\nType: ${contentType}\nCity: ${page.city || "N/A"}\nContent: ${getTextContent(page).slice(0, 1000)}\n\nGenerate 5 short-tail and 8 long-tail keywords.` },
               ],
               tools: [{
