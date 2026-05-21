@@ -599,6 +599,17 @@ const AdminMockTests = () => {
                     })()}
                   </TableCell>
                   <TableCell>
+                    <Input
+                      type="number"
+                      className="h-8 w-20 text-xs"
+                      value={sortOrderDraft[t.id] ?? String(t.sort_order ?? 0)}
+                      disabled={!!sortOrderSaving[t.id]}
+                      onChange={(e) => setSortOrderDraft((p) => ({ ...p, [t.id]: e.target.value }))}
+                      onBlur={(e) => updateSortOrder(t.id, e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                    />
+                  </TableCell>
+                  <TableCell>
                     {bundles.length === 0 ? (
                       <span className="text-xs text-muted-foreground">—</span>
                     ) : (
