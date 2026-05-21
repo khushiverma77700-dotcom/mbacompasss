@@ -861,7 +861,6 @@ function BreakdownRow({ label, value }: { label: string; value: any }) {
   );
 }
 
-
 function CompareCell({ value, positive }: { value: any; positive: boolean }) {
   if (value === true) return (
     <div className={`px-4 py-3 text-center border-b border-sky-100 ${positive ? "bg-sky-50/40" : ""}`}>
