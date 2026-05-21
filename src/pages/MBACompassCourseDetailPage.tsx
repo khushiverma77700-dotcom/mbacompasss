@@ -119,6 +119,13 @@ function DetailInner() {
   };
 
 
+  const { seo } = useResolvedSeo("course", c?.id ?? "", {
+    title: c?.meta_title || c?.seo_title || (c?.title ? `${c.title} — MBA Compass` : "MBA Compass Course"),
+    description: c?.meta_description || c?.seo_description || c?.subtitle || c?.description || `${c?.title ?? ""} program details`,
+    keywords: c?.keywords || undefined,
+    canonical: c?.slug ? `https://mbacompass.in/mba-compass/${c.slug}` : undefined,
+  });
+
   if (loading) return <div className="container mx-auto px-4 py-12 text-muted-foreground">Loading…</div>;
   if (!c) return (
     <div className="container mx-auto px-4 py-16 text-center">
@@ -168,13 +175,6 @@ function DetailInner() {
     ["Certificate", c.has_certificate],
     ["Lifetime Access", c.has_lifetime_access],
   ] as [string, boolean][];
-
-  const { seo } = useResolvedSeo("course", c.id, {
-    title: c.meta_title || c.seo_title || `${c.title} — MBA Compass`,
-    description: c.meta_description || c.seo_description || c.subtitle || c.description || `${c.title} program details`,
-    keywords: c.keywords || undefined,
-    canonical: `https://mbacompass.in/mba-compass/${c.slug}`,
-  });
 
   return (
     <>
