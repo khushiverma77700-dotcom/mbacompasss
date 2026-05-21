@@ -781,8 +781,11 @@ const App = () => (
             <Route path="/list-your-business/:type/:id" element={<PublicLayout><LazyPage><ListingFormPage /></LazyPage></PublicLayout>} />
             <Route path="/my-listings" element={<PublicLayout><LazyPage><MyListingsPage /></LazyPage></PublicLayout>} />
             <Route path="/mocks" element={<PublicLayout><LazyPage><MocksListPage /></LazyPage></PublicLayout>} />
-            <Route path="/courses" element={<PublicLayout><LazyPage><MockBundlesListPage /></LazyPage></PublicLayout>} />
-            <Route path="/courses/:slug" element={<PublicLayout><LazyPage><MockBundleDetailPage /></LazyPage></PublicLayout>} />
+            <Route path="/courses" element={<PublicLayout><LazyPage><MBACompassCoursesPage /></LazyPage></PublicLayout>} />
+            <Route path="/courses/:slug" element={<PublicLayout><LazyPage><MBACompassCourseDetailPage /></LazyPage></PublicLayout>} />
+            <Route path="/bundles" element={<PublicLayout><LazyPage><MockBundlesListPage /></LazyPage></PublicLayout>} />
+            <Route path="/bundles/:slug" element={<PublicLayout><LazyPage><MockBundleDetailPage /></LazyPage></PublicLayout>} />
+
             <Route path="/mocks/:slug" element={<PublicLayout><LazyPage><MockTestIntroPage /></LazyPage></PublicLayout>} />
             <Route path="/mocks/attempt/:attemptId" element={<LazyPage><MockTestRunnerPage /></LazyPage>} />
             <Route path="/mocks/result/:attemptId" element={<PublicLayout><LazyPage><MockResultPage /></LazyPage></PublicLayout>} />
