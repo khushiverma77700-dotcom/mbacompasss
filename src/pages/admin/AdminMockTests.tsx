@@ -97,6 +97,29 @@ const AdminMockTests = () => {
   const setDifficultyFilter = (v: string) => setFilter("difficulty", v);
   const setReadinessFilter = (v: string) => setFilter("readiness", v);
   const [readinessSaving, setReadinessSaving] = useState<Record<string, boolean>>({});
+  const [sortOrderDraft, setSortOrderDraft] = useState<Record<string, string>>({});
+  const [sortOrderSaving, setSortOrderSaving] = useState<Record<string, boolean>>({});
+
+  const updateSortOrder = async (id: string, raw: string) => {
+    const parsed = parseInt(raw, 10);
+    const value = Number.isFinite(parsed) ? parsed : 0;
+    const current = tests.find((x) => x.id === id);
+    if (current && (current.sort_order ?? 0) === value) {
+      setSortOrderDraft((p) => { const n = { ...p }; delete n[id]; return n; });
+      return;
+    }
+    setSortOrderSaving((p) => ({ ...p, [id]: true }));
+    setTests((prev) => prev.map((x) => (x.id === id ? { ...x, sort_order: value } : x)));
+    const { error } = await supabase.from("mock_tests").update({ sort_order: value }).eq("id", id);
+    setSortOrderSaving((p) => ({ ...p, [id]: false }));
+    setSortOrderDraft((p) => { const n = { ...p }; delete n[id]; return n; });
+    if (error) {
+      toast({ title: "Failed to update sort order", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Sort order updated" });
+    }
+  };
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkBusy, setBulkBusy] = useState(false);
   const [bundleMap, setBundleMap] = useState<Record<string, { id: string; name: string; slug: string }[]>>({});
@@ -516,6 +539,7 @@ const AdminMockTests = () => {
                 <TableHead>Duration</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Readiness</TableHead>
+                <TableHead className="w-[90px]">Sort</TableHead>
                 <TableHead>Bundles</TableHead>
                 <TableHead>Courses</TableHead>
                 <TableHead>Takers</TableHead>
@@ -573,6 +597,17 @@ const AdminMockTests = () => {
                         </Select>
                       );
                     })()}
+                  </TableCell>
+                  <TableCell>
+                    <Input
+                      type="number"
+                      className="h-8 w-20 text-xs"
+                      value={sortOrderDraft[t.id] ?? String(t.sort_order ?? 0)}
+                      disabled={!!sortOrderSaving[t.id]}
+                      onChange={(e) => setSortOrderDraft((p) => ({ ...p, [t.id]: e.target.value }))}
+                      onBlur={(e) => updateSortOrder(t.id, e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                    />
                   </TableCell>
                   <TableCell>
                     {bundles.length === 0 ? (
