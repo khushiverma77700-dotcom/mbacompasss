@@ -122,28 +122,18 @@ const LEVELS = [
   { value: "mixed", label: "Mixed" },
 ];
 
-const SECTION_CODES = [
-  { value: "VARC", label: "VARC — Verbal & RC" },
-  { value: "DILR", label: "DILR — DI & LR" },
-  { value: "QA", label: "QA — Quantitative" },
-  { value: "VALR", label: "VALR — Verbal & Logical Ability" },
-  { value: "DM", label: "DM — Decision Making" },
-  { value: "QADI", label: "QADI — Quant & DI" },
-  { value: "LS", label: "LS — Language Skills" },
-  { value: "LR", label: "LR — Logical Reasoning" },
-  { value: "QS", label: "QS — Quantitative Skills" },
-  { value: "GE", label: "GE — General English" },
-  { value: "AR", label: "AR — Analytical Reasoning" },
-  { value: "QADS", label: "QADS — Quant, DI & Sufficiency" },
-  { value: "GK", label: "GK — General Awareness" },
-  { value: "GA", label: "GA — General Awareness" },
-  { value: "IE", label: "IE — Innovation & Entrepreneurship" },
-  { value: "LC", label: "LC — Language Comprehension" },
-  { value: "MS", label: "MS — Mathematical Skills" },
-  { value: "DA", label: "DA — Data Analysis" },
-  { value: "ICR", label: "ICR — Intelligence & Critical Reasoning" },
-  { value: "IGE", label: "IGE — Indian & Global Environment" },
-];
+// Sections grouped by exam — derived from EXAM_PROFILES so the dropdown
+// only shows sections relevant to the selected exam (e.g. CAT QA, CAT VARC).
+const SECTIONS_BY_EXAM: Record<string, { value: string; label: string }[]> =
+  Object.fromEntries(
+    Object.entries(EXAM_PROFILES).map(([examCode, p]) => [
+      examCode,
+      p.sections.map((s) => ({
+        value: s.code,
+        label: `${examCode} ${s.code} — ${s.name}`,
+      })),
+    ]),
+  );
 
 interface Props {
   open: boolean;
