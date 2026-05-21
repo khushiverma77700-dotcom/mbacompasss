@@ -171,13 +171,37 @@ export default function AdminMBACompassCourses() {
     const isBulk = courseIds.length > 1;
     if (isBulk) setBulkOptimizing(true); else setSingleOptimizing(courseIds[0]);
     try {
+      // 1) Bulk optimize (meta title, meta desc, keywords, schema, internal links)
       const { data, error } = await supabase.functions.invoke("auto-seo-engine", {
         body: { mode: "bulk_optimize", contentType: "course", pageIds: courseIds, allPages: list },
       });
       if (error) throw error;
       const ok = (data?.results || []).filter((r: any) => r.status === "success").length;
       const cached = (data?.results || []).filter((r: any) => r.status === "cached_skip").length;
-      toast.success(`AI SEO done — ${ok} optimized${cached ? `, ${cached} cached` : ""}`);
+
+      // 2) For single-course runs, also deep-audit + generate FAQs + auto keywords
+      // for a "very advanced" SEO pass that auto-injects on the live course page.
+      if (!isBulk && courseIds[0]) {
+        const id = courseIds[0];
+        const page = list.find((p) => p.id === id);
+        try {
+          await Promise.allSettled([
+            page ? supabase.functions.invoke("auto-seo-engine", {
+              body: { mode: "full_audit", contentType: "course", pageId: id, pageData: page },
+            }) : Promise.resolve(),
+            supabase.functions.invoke("auto-seo-engine", {
+              body: { mode: "faq_generate", contentType: "course", pageId: id },
+            }),
+            supabase.functions.invoke("auto-seo-engine", {
+              body: { mode: "auto_keywords", contentType: "course" },
+            }),
+          ]);
+        } catch (e) {
+          console.warn("Deep SEO pass partial failure", e);
+        }
+      }
+
+      toast.success(`AI SEO done — ${ok} optimized${cached ? `, ${cached} cached` : ""}${isBulk ? "" : " • deep audit + FAQs injected"}`);
       await load();
       await refetchSnap();
       queryClient.invalidateQueries({ queryKey: ["seo-snapshot-course"] });
@@ -187,6 +211,7 @@ export default function AdminMBACompassCourses() {
       setBulkOptimizing(false); setSingleOptimizing(null);
     }
   };
+
 
 
   const load = async () => {
