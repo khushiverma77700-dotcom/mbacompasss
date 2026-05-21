@@ -233,10 +233,11 @@ export default function AdminMockBundles() {
   };
 
   const removeBundle = async (id: string) => {
-    if (!confirm("Delete this bundle? Existing student access remains intact.")) return;
-    const { error } = await supabase.from("mock_bundles").delete().eq("id", id);
+    if (!confirm("Delete this bundle?\n\nThis will ALSO revoke every student's access (per-mock + bundle enrollments) granted by this bundle. This cannot be undone.")) return;
+    const { data, error } = await supabase.rpc("admin_delete_bundle", { _bundle_id: id });
     if (error) return toast.error(error.message);
-    toast.success("Deleted");
+    const r = (data ?? {}) as { removed_mock_enrollments?: number; removed_bundle_enrollments?: number };
+    toast.success(`Deleted • revoked ${r.removed_mock_enrollments ?? 0} mock access · ${r.removed_bundle_enrollments ?? 0} bundle enrollment(s)`);
     load();
   };
 
