@@ -51,6 +51,10 @@ function DetailInner() {
   const [c, setC] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
+  const [enrolled, setEnrolled] = useState(false);
+  const [phoneGateOpen, setPhoneGateOpen] = useState(false);
+  const [phoneGateUser, setPhoneGateUser] = useState<{ id: string; email?: string | null } | null>(null);
+
   const [mockAgg, setMockAgg] = useState<{
     total: number;
     byType: Record<string, number>;
