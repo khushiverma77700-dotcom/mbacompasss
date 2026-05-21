@@ -58,10 +58,10 @@ Deno.serve(async (req) => {
     await admin.from("course_orders").insert({
       user_id: user.id, course_id: course.id,
       razorpay_order_id: order.id, amount, currency: "INR", status: "created",
-    });
-
     return new Response(JSON.stringify({
       order_id: order.id, amount, currency: "INR",
+      key_id: KEY_ID, course_name: course.title,
+    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
       key_id: KEY_ID, course_name: course.name,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
