@@ -598,9 +598,11 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                     Section <span className="text-destructive">*</span>
                   </Label>
                   <Select value={sectionCode} onValueChange={setSectionCode}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={`Select ${exam} section`} /></SelectTrigger>
                     <SelectContent>
-                      {SECTION_CODES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                      {(SECTIONS_BY_EXAM[exam] ?? []).map((s) => (
+                        <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <p className="text-[11px] text-muted-foreground mt-1">
