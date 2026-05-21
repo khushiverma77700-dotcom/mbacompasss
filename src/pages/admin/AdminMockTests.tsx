@@ -175,7 +175,29 @@ const AdminMockTests = () => {
   const fetchTests = async () => {
     setLoading(true);
     const { data } = await supabase.from("mock_tests").select("*").order("sort_order", { ascending: true }).order("created_at", { ascending: false });
-    setTests(data ?? []);
+
+    // Expected questions from sections
+    const { data: secData } = await supabase.from("mock_sections").select("id, test_id, total_questions");
+    const sectionToTest: Record<string, string> = {};
+    const expectedMap: Record<string, number> = {};
+    (secData ?? []).forEach((s: any) => {
+      sectionToTest[s.id] = s.test_id;
+      expectedMap[s.test_id] = (expectedMap[s.test_id] || 0) + (s.total_questions || 0);
+    });
+
+    // Actual questions count
+    const { data: qData } = await supabase.from("mock_questions").select("section_id");
+    const actualMap: Record<string, number> = {};
+    (qData ?? []).forEach((q: any) => {
+      const tid = sectionToTest[q.section_id];
+      if (tid) actualMap[tid] = (actualMap[tid] || 0) + 1;
+    });
+
+    setTests((data ?? []).map((t: any) => ({
+      ...t,
+      expected_questions: expectedMap[t.id] || 0,
+      actual_questions: actualMap[t.id] || 0,
+    })));
     setLoading(false);
 
     // Load bundle memberships per mock
