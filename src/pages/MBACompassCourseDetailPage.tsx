@@ -51,21 +51,18 @@ function DetailInner() {
   const [c, setC] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [paying, setPaying] = useState(false);
-  const [enrolled, setEnrolled] = useState(false);
-  const [phoneGateOpen, setPhoneGateOpen] = useState(false);
-  const [phoneGateUser, setPhoneGateUser] = useState<{ id: string; email?: string | null } | null>(null);
   const [mockAgg, setMockAgg] = useState<{
     total: number;
     byType: Record<string, number>;
     byExam: Record<string, number>;
     bySection: Record<string, number>;
+    totalDurationMins: number;
+    totalQuestions: number;
+    tests: Array<{ id: string; name: string; slug: string; exam_code: string; test_type: string; total_duration_minutes: number; difficulty: string }>;
   }>({ total: 0, byType: {}, byExam: {}, bySection: {}, totalDurationMins: 0, totalQuestions: 0, tests: [] });
   const [related, setRelated] = useState<any[]>([]);
   const compare = useCompassCompare();
 
-    tests: Array<{ id: string; name: string; slug: string; exam_code: string; test_type: string; total_duration_minutes: number; difficulty: string }>;
-  }>({ total: 0, byType: {}, byExam: {}, bySection: {}, totalDurationMins: 0, totalQuestions: 0, tests: [] });
-  const compare = useCompassCompare();
 
   useEffect(() => {
     if (!slug) return;
