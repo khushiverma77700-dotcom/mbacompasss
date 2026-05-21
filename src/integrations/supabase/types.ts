@@ -3418,7 +3418,7 @@ export type Database = {
       mock_bundle_orders: {
         Row: {
           amount: number
-          bundle_id: string
+          bundle_id: string | null
           created_at: string
           currency: string
           id: string
@@ -3431,7 +3431,7 @@ export type Database = {
         }
         Insert: {
           amount: number
-          bundle_id: string
+          bundle_id?: string | null
           created_at?: string
           currency?: string
           id?: string
@@ -3444,7 +3444,7 @@ export type Database = {
         }
         Update: {
           amount?: number
-          bundle_id?: string
+          bundle_id?: string | null
           created_at?: string
           currency?: string
           id?: string
@@ -6525,6 +6525,7 @@ export type Database = {
       }
     }
     Functions: {
+      admin_delete_bundle: { Args: { _bundle_id: string }; Returns: Json }
       admin_search_students: {
         Args: { _limit?: number; _query?: string }
         Returns: {
