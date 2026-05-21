@@ -974,7 +974,7 @@ RULES:
           const aiResp = await callAIGateway({
               model: "google/gemini-2.5-flash-lite",
               messages: [
-                { role: "system", content: "Generate SEO keywords for Indian MBA education pages. Return short-tail (1-2 words) and long-tail (3-6 words) keywords students search for." },
+                { role: "system", content: "Generate SEO keywords for Indian MBA education pages based on REAL student search behavior (CAT/XAT/NMAT/SNAP/CMAT/IIFT/MAT mocks, prep, coaching, syllabus, percentile). NEVER use the course's brand name, product name, or course title as a keyword — our brand has zero search volume. Anchor every keyword to exam name + intent (mock test, mock series, free mock, preparation, online course, previous year paper, syllabus, cutoff). Return short-tail (1-2 words) and long-tail (3-6 words) keywords students actually search." },
                 { role: "user", content: `Page: ${getName(page)}\nType: ${contentType}\nCity: ${page.city || "N/A"}\nContent: ${getTextContent(page).slice(0, 1000)}\n\nGenerate 5 short-tail and 8 long-tail keywords.` },
               ],
               tools: [{
