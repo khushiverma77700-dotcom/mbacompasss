@@ -861,3 +861,31 @@ function BreakdownRow({ label, value }: { label: string; value: any }) {
   );
 }
 
+
+function CompareCell({ value, positive }: { value: any; positive: boolean }) {
+  if (value === true) return (
+    <div className={`px-4 py-3 text-center border-b border-sky-100 ${positive ? "bg-sky-50/40" : ""}`}>
+      <CheckCircle2 className={`h-5 w-5 mx-auto ${positive ? "text-emerald-500" : "text-slate-400"}`} />
+    </div>
+  );
+  if (value === false) return (
+    <div className={`px-4 py-3 text-center border-b border-sky-100 ${positive ? "bg-sky-50/40" : ""}`}>
+      <XIcon className="h-5 w-5 mx-auto text-rose-300" />
+    </div>
+  );
+  return (
+    <div className={`px-4 py-3 text-center text-sm border-b border-sky-100 ${positive ? "bg-sky-50/40 font-semibold text-sky-800" : "text-slate-500"}`}>
+      {String(value)}
+    </div>
+  );
+}
+
+function CompareRow({ label, a, b }: { label: string; a: any; b: any }) {
+  return (
+    <>
+      <div className="col-span-6 px-4 py-3 text-sm font-medium text-gray-800 border-b border-r border-sky-100 bg-white">{label}</div>
+      <div className="col-span-3 border-r border-sky-100"><CompareCell value={a} positive /></div>
+      <div className="col-span-3"><CompareCell value={b} positive={false} /></div>
+    </>
+  );
+}
