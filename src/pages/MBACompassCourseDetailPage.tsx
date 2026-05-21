@@ -341,11 +341,27 @@ function loadRzp(): Promise<boolean> {
                   </div>
 
                   <div className="mt-5 grid grid-cols-2 gap-2 text-center text-xs">
-                    <Stat n={c.full_mocks_count ?? 0} l="Full Mocks" />
-                    <Stat n={c.sectional_mocks_count ?? 0} l="Sectional Tests" />
-                    <Stat n={`${c.total_video_hours ?? 0}h`} l="Video Lessons" />
+                    <Stat n={mockAgg.total || c.full_mocks_count || 0} l="Total Mocks" />
+                    <Stat n={mockAgg.byType.full_length || c.full_mocks_count || 0} l="Full Length" />
+                    <Stat n={(mockAgg.byType.sectional || 0) + (mockAgg.byType.topic_wise || 0) || c.sectional_mocks_count || 0} l="Sectional / Topic" />
+                    <Stat n={mockAgg.totalQuestions ? `${mockAgg.totalQuestions.toLocaleString("en-IN")}` : "—"} l="Total Questions" />
+                    <Stat n={mockAgg.totalDurationMins ? `${Math.round(mockAgg.totalDurationMins / 60)}h` : `${c.total_video_hours ?? 0}h`} l="Mock Hours" />
                     <Stat n={c.live_classes_count ?? 0} l="Live Classes" />
                   </div>
+
+                  {Object.keys(mockAgg.byExam).length > 0 && (
+                    <div className="mt-4">
+                      <div className="text-[11px] font-semibold text-gray-600 mb-1.5">Exams Covered</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {Object.entries(mockAgg.byExam).sort((a,b)=>b[1]-a[1]).map(([exam, n]) => (
+                          <span key={exam} className="inline-flex items-center gap-1 text-[11px] bg-sky-50 border border-sky-200 text-sky-700 rounded-full px-2 py-0.5">
+                            {exam} <span className="font-bold">{n}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                 </div>
               </Card>
             </div>
