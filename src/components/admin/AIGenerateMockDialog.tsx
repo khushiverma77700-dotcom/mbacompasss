@@ -304,6 +304,9 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
       setMcq(Math.round(e.default_total * 0.85));
       setTita(e.default_total - Math.round(e.default_total * 0.85));
     }
+    // Reset section to first valid section for this exam
+    const firstSection = SECTIONS_BY_EXAM[code]?.[0]?.value;
+    if (firstSection) setSectionCode(firstSection);
   };
 
   const onPerSetChange = (n: number) => {
