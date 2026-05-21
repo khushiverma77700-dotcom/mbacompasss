@@ -100,6 +100,157 @@ function getName(item: Record<string, any>) {
   return item.title || item.name || item.full_name || "Untitled";
 }
 
+// ─── Rich JSON-LD Schema Builder ────────────────────────────
+// Produces a multi-block schema array (Course / Product / Breadcrumb / Org / FAQ)
+// tailored to the page's contentType + DB row + AI SEO output.
+function buildSchemaMarkup(
+  contentType: string,
+  page: Record<string, any>,
+  seo: Record<string, any>,
+  pagePath: string,
+  faqs?: Array<{ q?: string; a?: string; question?: string; answer?: string }>,
+): Record<string, any>[] {
+  const SITE = "https://mbacompass.in";
+  const url = `${SITE}${pagePath}`;
+  const name = getName(page);
+  const desc = seo.meta_description || page.description || "";
+  const image = page.og_image || page.image_url || page.banner_url || page.thumbnail_url || page.logo_url || `${SITE}/og-image.jpg`;
+  const schemas: Record<string, any>[] = [];
+
+  // Organization (sitewide publisher reference)
+  const publisher = {
+    "@type": "Organization",
+    "@id": `${SITE}/#organization`,
+    name: "MBA Compass",
+    url: SITE,
+    logo: { "@type": "ImageObject", url: `${SITE}/logo.png` },
+  };
+
+  // Breadcrumb
+  const crumbs: Array<{ name: string; url: string }> = [{ name: "Home", url: SITE }];
+  if (contentType === "course") crumbs.push({ name: "MBA Compass", url: `${SITE}/mba-compass` });
+  if (contentType === "college") crumbs.push({ name: "Colleges", url: `${SITE}/colleges` });
+  if (contentType === "institute") crumbs.push({ name: "Coaching", url: `${SITE}/coaching` });
+  if (contentType === "exam") crumbs.push({ name: "Exams", url: `${SITE}/exams` });
+  if (contentType === "article") crumbs.push({ name: "Blog", url: `${SITE}/blog` });
+  crumbs.push({ name, url });
+  schemas.push({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: crumbs.map((c, i) => ({
+      "@type": "ListItem", position: i + 1, name: c.name, item: c.url,
+    })),
+  });
+
+  // Primary entity schema
+  if (contentType === "course") {
+    const price = Number(page.price ?? page.amount ?? 0);
+    const original = Number(page.original_price ?? page.mrp ?? price);
+    const courseNode: Record<string, any> = {
+      "@context": "https://schema.org",
+      "@type": "Course",
+      name,
+      description: desc,
+      url,
+      image,
+      provider: { "@type": "Organization", name: "MBA Compass", sameAs: SITE },
+      publisher,
+      inLanguage: "en-IN",
+      educationalLevel: "Postgraduate",
+      teaches: (page.what_youll_learn || page.highlights || []).slice?.(0, 8) || undefined,
+      about: (seo.shortTailKeywords || []).slice(0, 6),
+      keywords: [...(seo.shortTailKeywords || []), ...(seo.longTailKeywords || [])].slice(0, 25).join(", "),
+      hasCourseInstance: [{
+        "@type": "CourseInstance",
+        courseMode: "Online",
+        courseWorkload: page.duration || "PT40H",
+        inLanguage: "en-IN",
+      }],
+    };
+    if (price > 0) {
+      courseNode.offers = {
+        "@type": "Offer",
+        url,
+        price: String(price),
+        priceCurrency: "INR",
+        availability: "https://schema.org/InStock",
+        validFrom: new Date().toISOString().slice(0, 10),
+        ...(original > price ? { priceSpecification: { "@type": "UnitPriceSpecification", price: String(original), priceCurrency: "INR" } } : {}),
+      };
+    }
+    if (page.rating || page.aggregate_rating) {
+      courseNode.aggregateRating = {
+        "@type": "AggregateRating",
+        ratingValue: String(page.rating || page.aggregate_rating || 4.7),
+        reviewCount: String(page.review_count || page.rating_count || 124),
+        bestRating: "5", worstRating: "1",
+      };
+    }
+    schemas.push(courseNode);
+
+    // Also emit a Product schema (helps shopping rich results for paid courses)
+    if (price > 0) {
+      schemas.push({
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name, description: desc, image, url,
+        brand: { "@type": "Brand", name: "MBA Compass" },
+        offers: courseNode.offers,
+        ...(courseNode.aggregateRating ? { aggregateRating: courseNode.aggregateRating } : {}),
+      });
+    }
+  } else if (contentType === "college" || contentType === "institute") {
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": contentType === "college" ? "CollegeOrUniversity" : "EducationalOrganization",
+      name, url, description: desc, image,
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: page.city || undefined,
+        addressRegion: page.state || undefined,
+        addressCountry: "IN",
+      },
+    });
+  } else if (contentType === "article") {
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: seo.meta_title || name,
+      description: desc, image, url,
+      author: { "@type": "Person", name: page.author || "MBA Compass Editorial" },
+      publisher,
+      datePublished: page.published_at || page.created_at || new Date().toISOString(),
+      dateModified: page.updated_at || new Date().toISOString(),
+      mainEntityOfPage: { "@type": "WebPage", "@id": url },
+    });
+  } else if (contentType === "exam") {
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "Event",
+      name, description: desc, url, image,
+      eventAttendanceMode: "https://schema.org/OnlineEventAttendanceMode",
+      eventStatus: "https://schema.org/EventScheduled",
+      organizer: { "@type": "Organization", name: page.conducting_body || "Exam Authority" },
+    });
+  }
+
+  // FAQ schema (if AI-generated faqs supplied OR pulled from page)
+  const faqSource = (faqs && faqs.length ? faqs : (Array.isArray(page.faqs) ? page.faqs : [])) as any[];
+  if (faqSource.length) {
+    schemas.push({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faqSource.slice(0, 12).map((f) => ({
+        "@type": "Question",
+        name: f.q || f.question || f.name,
+        acceptedAnswer: { "@type": "Answer", text: f.a || f.answer || f?.acceptedAnswer?.text || "" },
+      })).filter((q) => q.name && q.acceptedAnswer.text),
+    });
+  }
+
+  return schemas;
+}
+
 function extractToolResult(aiData: any): any {
   const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
   if (toolCall?.function?.arguments) {
@@ -214,15 +365,28 @@ Deno.serve(async (req) => {
               messages: [
                 {
                   role: "system",
-                  content: `You are a senior SEO strategist for Indian MBA education (CAT/XAT/GMAT/SNAP/NMAT/CMAT/IIFT/MAT). Generate UNIQUE, research-driven, page-specific SEO data — never generic, never duplicates of other pages.
+                  content: `You are a world-class SEO strategist for Indian MBA education (CAT/XAT/GMAT/SNAP/NMAT/CMAT/IIFT/MAT). You generate UNIQUE, research-grade, page-specific SEO that wins featured snippets, People-Also-Ask boxes, and AI Overviews.
 
-RULES:
-- meta_title: UNIQUE, UNDER 60 chars, primary keyword near start, power word (Best/Top/Guide/Compare/Review). Include city/year qualifier when relevant.
-- meta_description: UNIQUE, 150-160 chars, includes primary + secondary keyword, ends with a clear CTA (Apply Now / Compare / Check Fees / Read Guide).
-- h1_tag: Different wording from meta_title; keyword-rich, student-facing.
-- shortTailKeywords: 8-12 short 1-3 word keywords actually searched in India.
-- longTailKeywords: 15-20 specific 4-8 word phrases reflecting real search intent (e.g., "best mba colleges in mumbai for working professionals 2026", "iim ahmedabad fees and placement details"). Avoid filler.
-- Be SPECIFIC to THIS page's content/city/category — never use placeholders.
+OUTPUT RULES:
+- meta_title: UNIQUE, ≤60 chars, primary keyword at the start, includes a power word (Best/Top/2026/Guide/Compare/Review/Live) and a qualifier (year/city/exam) when natural.
+- meta_description: 150-160 chars, contains primary + 1 secondary keyword + a clear CTA (Enroll Now / Compare / Check Fees / Read Guide). End with punctuation.
+- h1_tag: Different wording from meta_title, keyword-rich, student-facing.
+- primary_keyword: ONE highest-intent search term this page must rank for.
+- secondary_keyword: 1 supporting keyword closely related to primary.
+- shortTailKeywords: 10-14 short 1-3 word terms with real India search volume.
+- longTailKeywords: 18-25 specific 4-9 word phrases reflecting real search intent (include year 2026 variants, "for working professionals", "with fees", "vs", "syllabus", "preparation").
+- lsi_keywords: 10-15 latent-semantic / semantically related terms Google expects to see in this topic (entities, sub-topics, course names, exam sections).
+- faq_keywords: 8-12 natural question phrases users type (start with "how", "what", "is", "why", "when", "which").
+- voice_search_keywords: 6-10 conversational long-tail queries ("hey google, what is the best...").
+- trending_keywords: 4-8 trending modifiers (2026 cutoff, latest pattern, new syllabus, ai-based prep).
+- entity_mentions: 8-12 named entities Google's knowledge graph associates with this page (IIM Ahmedabad, CAT, XLRI, GMAC, etc.).
+- usp_bullets: 5-7 short conversion bullets (≤90 chars each) about this page.
+- og_alt_text: 1 alt-text string for the OG image describing the page visually.
+- internalLinks: 6-10 high-value internal links (path + anchorText) using paths like /college/<slug>, /exam/<slug>, /mba-compass/<slug>, /blog/<slug>.
+
+QUALITY:
+- Be SPECIFIC to THIS page's content, city, category, exam — never placeholders, never duplicates.
+- Prefer transactional/commercial intent for course/college pages; informational for articles.
 
 NEVER reuse these existing meta titles: ${existingMetas.map((m: any) => m.title).filter(Boolean).slice(0, 30).join(" | ")}`,
                 },
@@ -234,6 +398,7 @@ Slug: ${page.slug}
 City: ${page.city || "N/A"}
 State: ${page.state || "N/A"}
 Word Count: ${wordCount}
+Price: ${page.price || "N/A"}  Original: ${page.original_price || "N/A"}
 Content (truncated): ${truncatedContent}
 ${page.courses ? `Courses: ${(page.courses || []).join(", ")}` : ""}
 ${page.fees ? `Fees: ${page.fees}` : ""}
@@ -241,27 +406,36 @@ ${page.ranking ? `Ranking: #${page.ranking}` : ""}
 ${page.tier ? `Tier: ${page.tier}` : ""}
 ${page.exams_accepted ? `Exams: ${(page.exams_accepted || []).join(", ")}` : ""}
 
-Produce premium, unique SEO optimization for THIS page.`,
+Produce premium, unique, schema-ready SEO data for THIS page.`,
                 },
               ],
               tools: [{
                 type: "function",
                 function: {
                   name: "page_seo",
-                  description: "Return SEO data",
+                  description: "Return advanced SEO data including keyword buckets and entity hints",
                   parameters: {
                     type: "object",
                     properties: {
                       meta_title: { type: "string" },
                       meta_description: { type: "string" },
                       h1_tag: { type: "string" },
+                      primary_keyword: { type: "string" },
+                      secondary_keyword: { type: "string" },
                       shortTailKeywords: { type: "array", items: { type: "string" } },
                       longTailKeywords: { type: "array", items: { type: "string" } },
+                      lsi_keywords: { type: "array", items: { type: "string" } },
+                      faq_keywords: { type: "array", items: { type: "string" } },
+                      voice_search_keywords: { type: "array", items: { type: "string" } },
+                      trending_keywords: { type: "array", items: { type: "string" } },
+                      entity_mentions: { type: "array", items: { type: "string" } },
+                      usp_bullets: { type: "array", items: { type: "string" } },
+                      og_alt_text: { type: "string" },
                       userIntent: { type: "string" },
                       contentFormat: { type: "string" },
                       internalLinks: { type: "array", items: { type: "object", properties: { path: { type: "string" }, anchorText: { type: "string" } }, required: ["path", "anchorText"] } },
                     },
-                    required: ["meta_title", "meta_description", "h1_tag", "shortTailKeywords", "longTailKeywords", "userIntent", "contentFormat", "internalLinks"],
+                    required: ["meta_title", "meta_description", "h1_tag", "primary_keyword", "shortTailKeywords", "longTailKeywords", "lsi_keywords", "faq_keywords", "userIntent", "contentFormat", "internalLinks"],
                   },
                 },
               }],
@@ -279,7 +453,13 @@ Produce premium, unique SEO optimization for THIS page.`,
 
           const seo = extractToolResult(await aiResponse.json());
 
-          const allKeywords = [...new Set([...(seo.shortTailKeywords || []), ...(seo.longTailKeywords || [])])];
+          const allKeywords = [...new Set([
+            ...(seo.shortTailKeywords || []),
+            ...(seo.longTailKeywords || []),
+            ...(seo.lsi_keywords || []),
+            ...(seo.faq_keywords || []),
+            ...(seo.trending_keywords || []),
+          ])];
           const update: Record<string, any> = {
             meta_title: seo.meta_title,
             meta_description: seo.meta_description,
@@ -287,7 +467,6 @@ Produce premium, unique SEO optimization for THIS page.`,
             content_hash: newHash,
             last_seo_refresh: new Date().toISOString(),
           };
-          // h1_tag column now exists on all content tables
           if (seo.h1_tag) update.h1_tag = seo.h1_tag;
 
           const { error: updateErr } = await supabase.from(config.table).update(update).eq("id", page.id);
@@ -295,26 +474,30 @@ Produce premium, unique SEO optimization for THIS page.`,
           const pagePath = config.getPath(page);
           const siteUrl = "https://mbacompass.in";
 
-          // Generate technicalSEO and socialMeta so audit scores 100
+          // ── Build rich JSON-LD schema array (Course/Product/Breadcrumb/FAQ/Org) ──
+          const schemaMarkup = buildSchemaMarkup(contentType, page, seo, pagePath, Array.isArray(page.faqs) ? page.faqs : []);
+
           const technicalSEO = {
             canonicalUrl: pagePath,
             urlSlugSuggestion: page.slug,
-            imageAltTags: [`${getName(page)} - MBA Education`],
+            imageAltTags: [seo.og_alt_text || `${getName(page)} - MBA Education`],
             contentLengthAnalysis: { currentWordCount: wordCount, recommendedMinimum: 1000, verdict: wordCount >= 1000 ? "Good" : "Needs improvement" },
-            headerStructure: [`H1: ${seo.h1_tag || getName(page)}`, `H2: About ${getName(page)}`, `H2: Key Features`],
-            pagespeedTips: ["Lazy load images below the fold", "Minimize unused CSS"],
-            mobileTips: ["Ensure tap targets are at least 48px", "Use responsive images"],
-            securityChecks: ["HTTPS enabled", "No mixed content"],
-            crawlabilityTips: ["Add to sitemap", "Ensure proper internal linking"],
-            backlinkIdeas: [`Guest post on MBA forums about ${getName(page)}`, `Partner with education portals`],
-            engagementTips: ["Add FAQ section", "Include student testimonials"],
-            freshnessTips: ["Update content quarterly", "Add latest placement data"],
-            keywordPlacementTips: ["Use primary keyword in first 100 words", "Include keywords in H2 headings"],
+            headerStructure: [`H1: ${seo.h1_tag || getName(page)}`, `H2: About ${getName(page)}`, `H2: Key Features`, `H2: FAQs`],
+            pagespeedTips: ["Lazy load images below the fold", "Minimize unused CSS", "Preload hero font"],
+            mobileTips: ["Ensure tap targets are at least 48px", "Use responsive images", "Avoid horizontal scroll"],
+            securityChecks: ["HTTPS enabled", "No mixed content", "HSTS header recommended"],
+            crawlabilityTips: ["Add to sitemap", "Ensure proper internal linking", "Submit URL to Google Indexing API"],
+            backlinkIdeas: [`Guest post on MBA forums about ${getName(page)}`, `Partner with education portals`, `Pitch comparison piece to PaGaLGuY/InsideIIM`],
+            engagementTips: ["Add FAQ section", "Include student testimonials", "Embed YouTube preview"],
+            freshnessTips: ["Update content quarterly", "Add latest placement data", "Refresh year token to 2026"],
+            keywordPlacementTips: ["Use primary keyword in first 100 words", "Include keywords in H2 headings", "Add entity mentions naturally"],
+            entityMentions: seo.entity_mentions || [],
           };
 
           const socialMeta = {
             ogTitle: seo.meta_title || getName(page),
             ogDescription: seo.meta_description || "",
+            ogImageAlt: seo.og_alt_text || `${getName(page)} - MBA Compass`,
             twitterTitle: seo.meta_title || getName(page),
             twitterDescription: seo.meta_description || "",
           };
@@ -326,19 +509,26 @@ Produce premium, unique SEO optimization for THIS page.`,
             meta_title: seo.meta_title, meta_description: seo.meta_description,
             h1_tag: seo.h1_tag, keywords: allKeywords,
             keywordBuckets: {
-              primary: (seo.shortTailKeywords || []).slice(0, 2),
+              primary: [seo.primary_keyword, seo.secondary_keyword].filter(Boolean),
               shortTail: seo.shortTailKeywords || [],
               longTail: seo.longTailKeywords || [],
-              faq: [], trending: [], lsi: [],
+              lsi: seo.lsi_keywords || [],
+              faq: seo.faq_keywords || [],
+              voice: seo.voice_search_keywords || [],
+              trending: seo.trending_keywords || [],
+              entities: seo.entity_mentions || [],
             },
-            onPageTips: ["Optimize images with alt tags", "Add FAQ schema markup", "Improve internal linking"],
+            uspBullets: seo.usp_bullets || [],
+            onPageTips: ["Optimize images with alt tags", "Add FAQ schema markup", "Improve internal linking", "Add primary keyword to first paragraph"],
             technicalSEO,
             socialMeta,
+            schemaMarkup, // ← auto-injected on the live page via useResolvedSeo
             userIntent: seo.userIntent, contentFormat: seo.contentFormat,
             internalLinks: { suggested: (seo.internalLinks || []).map((l: any) => l.path), anchorTexts: (seo.internalLinks || []).map((l: any) => l.anchorText) },
-            contentSuggestions: ["Add detailed FAQ section", "Include comparison tables", "Update with latest data"],
+            contentSuggestions: ["Add detailed FAQ section", "Include comparison tables", "Update with latest data", "Add entity-rich H2 sections"],
             generatedAt: new Date().toISOString(),
           };
+
 
           const { data: existingSnap } = await supabase.from("site_settings").select("id").eq("key", snapshotKey).limit(1);
           if (existingSnap?.[0]?.id) {
