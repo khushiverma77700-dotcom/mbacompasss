@@ -185,13 +185,23 @@ const AdminMockTests = () => {
       expectedMap[s.test_id] = (expectedMap[s.test_id] || 0) + (s.total_questions || 0);
     });
 
-    // Actual questions count
-    const { data: qData } = await supabase.from("mock_questions").select("section_id");
+    // Actual questions count (paginate to bypass 1000-row default limit)
     const actualMap: Record<string, number> = {};
-    (qData ?? []).forEach((q: any) => {
-      const tid = sectionToTest[q.section_id];
-      if (tid) actualMap[tid] = (actualMap[tid] || 0) + 1;
-    });
+    const pageSize = 1000;
+    let from = 0;
+    while (true) {
+      const { data: qPage, error: qErr } = await supabase
+        .from("mock_questions")
+        .select("section_id")
+        .range(from, from + pageSize - 1);
+      if (qErr || !qPage || qPage.length === 0) break;
+      qPage.forEach((q: any) => {
+        const tid = sectionToTest[q.section_id];
+        if (tid) actualMap[tid] = (actualMap[tid] || 0) + 1;
+      });
+      if (qPage.length < pageSize) break;
+      from += pageSize;
+    }
 
     setTests((data ?? []).map((t: any) => ({
       ...t,
