@@ -610,7 +610,36 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                   <Select value={sectionCode} onValueChange={setSectionCode}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {SECTION_CODES.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+                      {(() => {
+                        const examSections = EXAM_PROFILES[exam]?.sections ?? [];
+                        const otherExams = Object.entries(EXAM_PROFILES).filter(([code]) => code !== exam);
+                        return (
+                          <>
+                            {examSections.length > 0 && (
+                              <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                {exam} sections
+                              </div>
+                            )}
+                            {examSections.map((s) => (
+                              <SelectItem key={`${exam}-${s.code}`} value={s.code}>
+                                {exam} — {s.code} — {s.name}
+                              </SelectItem>
+                            ))}
+                            {otherExams.map(([examCode, profile]) => (
+                              <div key={examCode}>
+                                <div className="px-2 py-1 mt-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground border-t">
+                                  {examCode} sections
+                                </div>
+                                {profile.sections.map((s) => (
+                                  <SelectItem key={`${examCode}-${s.code}`} value={s.code}>
+                                    {examCode} — {s.code} — {s.name}
+                                  </SelectItem>
+                                ))}
+                              </div>
+                            ))}
+                          </>
+                        );
+                      })()}
                     </SelectContent>
                   </Select>
                   <p className="text-[11px] text-muted-foreground mt-1">
