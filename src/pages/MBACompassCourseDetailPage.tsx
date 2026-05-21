@@ -120,8 +120,7 @@ function loadRzp(): Promise<boolean> {
     })();
   }, [slug]);
 
-    })();
-  }, [slug]);
+
 
   const { requiresLogin: courseRequiresLogin } = useCtaGate("course_enroll");
   const handlePay = async () => {
