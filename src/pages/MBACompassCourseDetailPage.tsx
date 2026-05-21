@@ -625,6 +625,145 @@ function DetailInner() {
         </section>
       )}
 
+      {/* FEATURED MOCKS PREVIEW */}
+      {mockAgg.tests.length > 0 && (
+        <section className="container mx-auto px-4 py-12">
+          <SectionHead eyebrow="Mock library preview" title="A glimpse of the mocks waiting inside" />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-8">
+            {mockAgg.tests.slice(0, 9).map((t) => (
+              <Card key={t.id} className="p-4 border-sky-100 hover:shadow-md transition group">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-sky-600">{t.exam_code} • {(t.test_type || "").replace(/_/g, " ")}</div>
+                    <div className="font-semibold text-gray-900 text-sm mt-1 line-clamp-2">{t.name}</div>
+                  </div>
+                  <span className="h-8 w-8 rounded-lg bg-sky-100 text-sky-600 grid place-items-center shrink-0 group-hover:bg-sky-600 group-hover:text-white transition">
+                    <PlayCircle className="h-4 w-4" />
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 mt-3 text-[11px] text-muted-foreground">
+                  <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {t.total_duration_minutes || 0} min</span>
+                  {t.difficulty && <span className="inline-flex items-center gap-1 capitalize"><BarChart3 className="h-3 w-3" /> {t.difficulty}</span>}
+                </div>
+              </Card>
+            ))}
+          </div>
+          {mockAgg.tests.length > 9 && (
+            <p className="text-center text-xs text-muted-foreground mt-4">
+              + {mockAgg.tests.length - 9} more mocks unlock after enrolment
+            </p>
+          )}
+        </section>
+      )}
+
+      {/* HOW IT WORKS */}
+      <section className="container mx-auto px-4 py-12">
+        <SectionHead eyebrow="How the program works" title="From day one to test day — a clear path" />
+        <div className="grid md:grid-cols-4 gap-4 mt-8">
+          {[
+            { icon: Rocket, title: "Enrol & onboard", desc: "Quick mobile-verified signup. Instant access to all mocks and modules." },
+            { icon: Brain, title: "Diagnose", desc: "Take a baseline mock — get a personalised study plan and weak-area map." },
+            { icon: Target, title: "Practice daily", desc: "Daily tests, sectional drills, full-length mocks with AI analytics." },
+            { icon: Trophy, title: "Track & crack", desc: "Live percentile tracker, predictor and GD-PI prep until you convert." },
+          ].map((s, i) => (
+            <Card key={i} className="p-5 border-sky-100 relative overflow-hidden">
+              <div className="absolute top-2 right-3 text-5xl font-black text-sky-50 select-none">{i + 1}</div>
+              <span className="h-10 w-10 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 text-white grid place-items-center shadow-sm">
+                <s.icon className="h-5 w-5" />
+              </span>
+              <div className="font-bold text-gray-900 mt-3">{s.title}</div>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{s.desc}</p>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      {/* WHY THIS COURSE — Comparison table */}
+      <section className="container mx-auto px-4 py-12">
+        <SectionHead eyebrow="Why MBA Compass" title="How this course compares with typical prep" />
+        <Card className="mt-8 border-sky-100 overflow-hidden">
+          <div className="grid grid-cols-12 text-sm">
+            <div className="col-span-6 md:col-span-6 px-4 py-3 font-semibold bg-slate-50 border-b border-r border-sky-100">Feature</div>
+            <div className="col-span-3 md:col-span-3 px-4 py-3 font-semibold bg-gradient-to-r from-sky-600 to-blue-700 text-white text-center border-b border-sky-100">This Course</div>
+            <div className="col-span-3 md:col-span-3 px-4 py-3 font-semibold bg-slate-100 text-slate-700 text-center border-b border-l border-sky-100">Typical Prep</div>
+            {[
+              ["AI-personalised study plan", true, false],
+              ["Section-wise analytics", true, "Limited"],
+              ["Daily tests + sectional mocks", true, "Weekly only"],
+              ["Live mentor support", c.has_mentorship_1on1 || c.has_live_classes, false],
+              ["Percentile predictor", c.has_percentile_predictor, false],
+              ["GD-PI prep included", c.has_gd_pi_prep, "Extra cost"],
+              ["Lifetime access", c.has_lifetime_access, false],
+              ["Total questions", mockAgg.totalQuestions ? `${mockAgg.totalQuestions.toLocaleString("en-IN")}+` : "5,000+", "1,500"],
+            ].map(([label, a, b]: any, i) => (
+              <CompareRow key={i} label={label} a={a} b={b} />
+            ))}
+          </div>
+        </Card>
+      </section>
+
+      {/* GUARANTEE STRIP */}
+      <section className="container mx-auto px-4 py-8">
+        <div className="grid md:grid-cols-4 gap-3">
+          {[
+            { icon: BadgeCheck, title: "Verified mentors", desc: "IIM alumni & 99%ilers" },
+            { icon: RefreshCw, title: "Lifetime updates", desc: "Stay current every season" },
+            { icon: Headphones, title: "Priority support", desc: "Response within 24 hours" },
+            { icon: Shield, title: "Secure checkout", desc: "Razorpay • UPI • Cards • EMI" },
+          ].map((g, i) => (
+            <div key={i} className="rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/60 to-white p-4 flex items-start gap-3">
+              <span className="h-10 w-10 rounded-lg bg-emerald-500 text-white grid place-items-center shrink-0">
+                <g.icon className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <div className="font-bold text-gray-900 text-sm">{g.title}</div>
+                <div className="text-xs text-muted-foreground">{g.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* RELATED COURSES */}
+      {related.length > 0 && (
+        <section className="container mx-auto px-4 py-12">
+          <SectionHead eyebrow="Explore more" title="Other courses you may like" />
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
+            {related.map((r) => (
+              <Link key={r.id} to={`/mba-compass/${r.slug}`} className="group">
+                <Card className="overflow-hidden border-sky-100 hover:shadow-lg transition h-full">
+                  {r.thumbnail_url ? (
+                    <img src={r.thumbnail_url} alt={r.title} className="w-full aspect-video object-cover group-hover:scale-[1.02] transition" />
+                  ) : (
+                    <div className="aspect-video bg-gradient-to-br from-sky-100 to-blue-100 grid place-items-center"><GraduationCap className="h-10 w-10 text-sky-400" /></div>
+                  )}
+                  <div className="p-4">
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {(r.exam_focus ?? []).slice(0, 3).map((e: string) => (
+                        <Badge key={e} className="bg-sky-100 text-sky-700 border-sky-200 text-[10px]">{e}</Badge>
+                      ))}
+                    </div>
+                    <div className="font-bold text-gray-900 group-hover:text-sky-700 transition line-clamp-2">{r.title}</div>
+                    {r.subtitle && <div className="text-xs text-muted-foreground mt-1 line-clamp-2">{r.subtitle}</div>}
+                    <div className="flex items-center justify-between mt-3">
+                      <div className="text-lg font-bold text-sky-700">{formatINR(r.price)}</div>
+                      {r.rating ? (
+                        <div className="flex items-center gap-1 text-xs">
+                          <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                          <span className="font-semibold">{r.rating.toFixed(1)}</span>
+                          <span className="text-muted-foreground">({r.reviews_count ?? 0})</span>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+
       {/* CTA FOOTER */}
       <section className="container mx-auto px-4 py-12">
         <Card className="p-8 md:p-10 border-0 bg-gradient-to-r from-sky-600 to-blue-700 text-white text-center shadow-xl">
