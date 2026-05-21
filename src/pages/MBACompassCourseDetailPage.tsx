@@ -130,6 +130,21 @@ function DetailInner() {
     })();
   }, [slug]);
 
+  // Related courses (other live MBA Compass courses)
+  useEffect(() => {
+    if (!c?.id) return;
+    (async () => {
+      const { data } = await supabase
+        .from("mba_compass_courses")
+        .select("id,title,slug,subtitle,thumbnail_url,price,original_price,rating,reviews_count,exam_focus,full_mocks_count,is_published")
+        .neq("id", c.id)
+        .eq("is_published", true)
+        .order("sort_order")
+        .limit(3);
+      setRelated(data ?? []);
+    })();
+  }, [c?.id]);
+
 
 
   const { requiresLogin: courseRequiresLogin } = useCtaGate("course_enroll");
