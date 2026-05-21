@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     );
     const { data: course, error: ce } = await admin
       .from("mba_compass_courses")
-      .select("id, name, price")
+      .select("id, title, price")
       .eq("id", course_id)
       .maybeSingle();
     if (ce || !course || !course.price) throw new Error("Course not found or no price");
@@ -47,7 +47,9 @@ Deno.serve(async (req) => {
       headers: { "Authorization": `Basic ${auth}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         amount, currency: "INR", receipt,
-        notes: { user_id: user.id, course_id: course.id, course_name: course.name },
+        notes: { user_id: user.id, course_id: course.id, course_name: course.title },
+      }),
+    });
       }),
     });
     const order = await rzpRes.json();
