@@ -39,7 +39,10 @@ function loadRzp(): Promise<boolean> {
     s.onerror = () => resolve(false);
     document.body.appendChild(s);
   });
+}
+
 function DetailInner() {
+
   const { slug } = useParams<{ slug: string }>();
 
   const [c, setC] = useState<any | null>(null);
