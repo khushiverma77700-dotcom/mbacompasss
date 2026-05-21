@@ -9,7 +9,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   ArrowLeft, Star, Users, Clock, Award, CheckCircle2, GraduationCap,
   Sparkles, Target, BookOpen, Download, ArrowRight, GitCompare,
+  ListChecks, Layers, BarChart3, FileText, Shield, Calendar, Zap, Flame,
 } from "lucide-react";
+
 import SEOHead from "@/components/SEOHead";
 import PageKeywords from "@/components/PageKeywords";
 import { useResolvedSeo } from "@/hooks/useResolvedSeo";
