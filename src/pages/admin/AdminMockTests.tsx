@@ -603,7 +603,7 @@ const AdminMockTests = () => {
                       const expected = (t.expected_questions as number) ?? 0;
                       const actual = (t.actual_questions as number) ?? 0;
                       const complete = expected > 0 && actual >= expected;
-                      const partial = expected > 0 && actual > 1, 0 && actual < expected;
+                      const partial = expected > 0 && actual > 0 && actual < expected;
                       const cls = complete
                         ? "bg-emerald-100 text-emerald-700 border-emerald-300"
                         : partial
