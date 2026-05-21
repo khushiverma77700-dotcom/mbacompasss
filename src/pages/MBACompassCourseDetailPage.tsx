@@ -649,3 +649,54 @@ function Stat({ n, l }: { n: any; l: string }) {
     </div>
   );
 }
+
+function HeroChip({ icon: Icon, label, value, tint }: { icon: any; label: string; value: any; tint: "sky"|"violet"|"emerald"|"amber" }) {
+  const map: Record<string,string> = {
+    sky: "from-sky-50 to-blue-50 border-sky-200 text-sky-700",
+    violet: "from-violet-50 to-purple-50 border-violet-200 text-violet-700",
+    emerald: "from-emerald-50 to-teal-50 border-emerald-200 text-emerald-700",
+    amber: "from-amber-50 to-orange-50 border-amber-200 text-amber-700",
+  };
+  return (
+    <div className={`rounded-xl border bg-gradient-to-br ${map[tint]} p-3 shadow-sm`}>
+      <div className="flex items-center gap-2">
+        <Icon className="h-4 w-4" />
+        <span className="text-[11px] uppercase tracking-wide font-semibold">{label}</span>
+      </div>
+      <div className="mt-1 text-xl font-bold text-gray-900">{value}</div>
+    </div>
+  );
+}
+
+function StatCard({ icon: Icon, value, label }: { icon: any; value: any; label: string }) {
+  return (
+    <div className="rounded-2xl bg-white border border-sky-100 shadow-sm p-4 hover:shadow-md transition">
+      <div className="h-9 w-9 rounded-lg bg-sky-100 text-sky-600 grid place-items-center mb-2">
+        <Icon className="h-5 w-5" />
+      </div>
+      <div className="text-2xl font-bold text-gray-900 leading-none">{value}</div>
+      <div className="text-xs text-muted-foreground mt-1">{label}</div>
+    </div>
+  );
+}
+
+function SectionHead({ eyebrow, title }: { eyebrow: string; title: string }) {
+  return (
+    <div className="text-center max-w-2xl mx-auto">
+      <div className="inline-flex items-center gap-2 text-xs font-bold tracking-[0.15em] uppercase text-sky-600 bg-sky-50 border border-sky-200 rounded-full px-3 py-1">
+        <Sparkles className="h-3 w-3" /> {eyebrow}
+      </div>
+      <h2 className="text-2xl md:text-4xl font-bold text-gray-900 mt-3 tracking-tight">{title}</h2>
+    </div>
+  );
+}
+
+function BreakdownRow({ label, value }: { label: string; value: any }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-white/80">{label}</span>
+      <span className="font-bold">{value}</span>
+    </div>
+  );
+}
+
