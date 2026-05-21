@@ -539,6 +539,7 @@ const AdminMockTests = () => {
                 <TableHead>Duration</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Readiness</TableHead>
+                <TableHead className="w-[90px]">Sort</TableHead>
                 <TableHead>Bundles</TableHead>
                 <TableHead>Courses</TableHead>
                 <TableHead>Takers</TableHead>
