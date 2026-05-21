@@ -136,12 +136,13 @@ function DetailInner() {
     (async () => {
       const { data } = await supabase
         .from("mba_compass_courses")
-        .select("id,title,slug,subtitle,thumbnail_url,price,original_price,rating,reviews_count,exam_focus,full_mocks_count,is_published")
+        .select("id,title,slug,subtitle,thumbnail_url,price,original_price,rating,reviews_count,exam_focus,full_mocks_count,is_active")
         .neq("id", c.id)
-        .eq("is_published", true)
+        .eq("is_active", true)
         .order("sort_order")
         .limit(3);
       setRelated(data ?? []);
+
     })();
   }, [c?.id]);
 
