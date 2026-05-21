@@ -59,8 +59,10 @@ function DetailInner() {
     byType: Record<string, number>;
     byExam: Record<string, number>;
     bySection: Record<string, number>;
-    totalDurationMins: number;
-    totalQuestions: number;
+  }>({ total: 0, byType: {}, byExam: {}, bySection: {}, totalDurationMins: 0, totalQuestions: 0, tests: [] });
+  const [related, setRelated] = useState<any[]>([]);
+  const compare = useCompassCompare();
+
     tests: Array<{ id: string; name: string; slug: string; exam_code: string; test_type: string; total_duration_minutes: number; difficulty: string }>;
   }>({ total: 0, byType: {}, byExam: {}, bySection: {}, totalDurationMins: 0, totalQuestions: 0, tests: [] });
   const compare = useCompassCompare();
