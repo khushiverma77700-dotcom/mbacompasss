@@ -40,8 +40,6 @@ function loadRzp(): Promise<boolean> {
     document.body.appendChild(s);
   });
 }
-
-function DetailInner() {
   const { slug } = useParams<{ slug: string }>();
   const [c, setC] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,6 +47,15 @@ function DetailInner() {
   const [enrolled, setEnrolled] = useState(false);
   const [phoneGateOpen, setPhoneGateOpen] = useState(false);
   const [phoneGateUser, setPhoneGateUser] = useState<{ id: string; email?: string | null } | null>(null);
+  const [mockAgg, setMockAgg] = useState<{
+    total: number;
+    byType: Record<string, number>;
+    byExam: Record<string, number>;
+    bySection: Record<string, number>;
+    totalDurationMins: number;
+    totalQuestions: number;
+    tests: Array<{ id: string; name: string; slug: string; exam_code: string; test_type: string; total_duration_minutes: number; difficulty: string }>;
+  }>({ total: 0, byType: {}, byExam: {}, bySection: {}, totalDurationMins: 0, totalQuestions: 0, tests: [] });
   const compare = useCompassCompare();
 
   useEffect(() => {
@@ -56,14 +63,63 @@ function DetailInner() {
     (async () => {
       const { data } = await supabase.from("mba_compass_courses").select("*").eq("slug", slug).maybeSingle();
       setC(data); setLoading(false);
-      if (data) {
-        const { data: u } = await supabase.auth.getUser();
-        if (u.user) {
-          const { data: e } = await supabase.from("course_enrollments")
-            .select("id").eq("user_id", u.user.id).eq("course_id", data.id).maybeSingle();
-          if (e) setEnrolled(true);
-        }
+      if (!data) return;
+
+      const { data: u } = await supabase.auth.getUser();
+      if (u.user) {
+        const { data: e } = await supabase.from("course_enrollments")
+          .select("id").eq("user_id", u.user.id).eq("course_id", data.id).maybeSingle();
+        if (e) setEnrolled(true);
       }
+
+      // Aggregate mocks from linked bundles (admin-only concept; user only sees totals)
+      const { data: cb } = await supabase.from("course_bundles").select("bundle_id").eq("course_id", data.id);
+      const bundleIds = (cb ?? []).map((r: any) => r.bundle_id);
+      if (bundleIds.length === 0) return;
+
+      const { data: items } = await supabase.from("mock_bundle_items").select("test_id").in("bundle_id", bundleIds);
+      const testIds = Array.from(new Set((items ?? []).map((r: any) => r.test_id)));
+      if (testIds.length === 0) return;
+
+      const { data: tests } = await supabase.from("mock_tests")
+        .select("id,name,slug,exam_code,test_type,total_duration_minutes,difficulty,is_published")
+        .in("id", testIds);
+
+      const live = (tests ?? []).filter((t: any) => t.is_published !== false);
+
+      const byType: Record<string, number> = {};
+      const byExam: Record<string, number> = {};
+      let totalDuration = 0;
+      live.forEach((t: any) => {
+        byType[t.test_type] = (byType[t.test_type] ?? 0) + 1;
+        byExam[t.exam_code] = (byExam[t.exam_code] ?? 0) + 1;
+        totalDuration += t.total_duration_minutes ?? 0;
+      });
+
+      // Section breakdown + total questions via mock_sections
+      const liveIds = live.map((t: any) => t.id);
+      const bySection: Record<string, number> = {};
+      let totalQuestions = 0;
+      if (liveIds.length > 0) {
+        const { data: secs } = await supabase.from("mock_sections")
+          .select("name,total_questions,test_id").in("test_id", liveIds);
+        (secs ?? []).forEach((s: any) => {
+          const key = (s.name ?? "Other").trim();
+          bySection[key] = (bySection[key] ?? 0) + 1;
+          totalQuestions += s.total_questions ?? 0;
+        });
+      }
+
+      setMockAgg({
+        total: live.length,
+        byType, byExam, bySection,
+        totalDurationMins: totalDuration,
+        totalQuestions,
+        tests: live as any,
+      });
+    })();
+  }, [slug]);
+
     })();
   }, [slug]);
 
