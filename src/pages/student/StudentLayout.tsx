@@ -75,6 +75,7 @@ const navItems: NavItem[] = [
 
 // "My Insights" — performance analytics group (Strength, Weak, Performance, Leaderboard)
 const insightsGroup: NavItem[] = [
+  { to: "/student/all-india-rank", label: "All India Rank", icon: Trophy,         feature: "performance_tracker" },
   { to: "/student/strength-areas", label: "My Strength Areas", icon: Award,          feature: "performance_tracker" },
   { to: "/student/weak-areas",     label: "My Weak Areas",     icon: AlertTriangle,  feature: "performance_tracker" },
   { to: "/student/performance",    label: "Performance",       icon: BarChart3,      feature: "performance_tracker" },
@@ -343,6 +344,7 @@ function SidebarContent() {
 
   // Auto-open the Insights group when on any of its routes.
   const isInsightsActive =
+    location.pathname.startsWith("/student/all-india-rank") ||
     location.pathname.startsWith("/student/strength-areas") ||
     location.pathname.startsWith("/student/weak-areas") ||
     location.pathname.startsWith("/student/performance") ||

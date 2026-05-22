@@ -811,6 +811,7 @@ const App = () => (
               <Route path="weak-areas" element={<InnerLazyPage><StudentWeakAreas /></InnerLazyPage>} />
               <Route path="strength-areas" element={<InnerLazyPage><StudentStrengthAreas /></InnerLazyPage>} />
               <Route path="buy-mocks" element={<InnerLazyPage><StudentBuyMocks /></InnerLazyPage>} />
+              <Route path="all-india-rank" element={<InnerLazyPage><StudentPerformance /></InnerLazyPage>} />
               <Route path="performance" element={<InnerLazyPage><StudentPerformance /></InnerLazyPage>} />
               <Route path="goals" element={<InnerLazyPage><StudentGoals /></InnerLazyPage>} />
               <Route path="announcements" element={<InnerLazyPage><StudentAnnouncements /></InnerLazyPage>} />
