@@ -1,5 +1,7 @@
 // Projected AIR engine — computes a stable, synthetic-population-based
 // All India Rank for a given mock attempt. Unlocks 7 days after submission.
+// Also returns a deterministic leaderboard (top + window around the user)
+// blending real cohort names with seeded synthetic aspirants.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -13,7 +15,7 @@ const TARGET_POOL = 2000;
 const UNLOCK_DAYS = 7;
 const AIR_BUCKET = 50;
 
-// Seeded RNG so that for a given (test_id) the synthetic distribution is identical
+// ---------- seeded RNG ----------
 function mulberry32(seed: number) {
   return function () {
     let t = (seed += 0x6d2b79f5);
@@ -54,7 +56,36 @@ function bucketLabel(rank: number, pool: number) {
   return `Approx AIR ${lo}–${hi}`;
 }
 
-function buildPool(realScores: number[], maxScore: number, seedKey: string) {
+// ---------- synthetic identities ----------
+const FIRST = [
+  "Aarav","Aditi","Aman","Ananya","Arjun","Diya","Ishaan","Kabir","Kavya","Krish",
+  "Meera","Neha","Nikhil","Priya","Rahul","Riya","Rohan","Sanya","Siddharth","Tanvi",
+  "Vihaan","Aisha","Dev","Ira","Reyansh","Saanvi","Yash","Zara","Aryan","Ayaan",
+  "Anika","Vivaan","Ojas","Pari","Naina","Mira","Lakshya","Karan","Jiya","Hari",
+  "Esha","Dhruv","Chaitra","Bhavya","Atharv","Aanya","Aarush","Advik","Ahaan","Akshay",
+];
+const LAST_INIT = ["S.","K.","M.","R.","P.","G.","J.","B.","N.","T.","V.","C.","D.","A.","H."];
+
+function synthName(rand: () => number) {
+  const f = FIRST[Math.floor(rand() * FIRST.length) % FIRST.length];
+  const l = LAST_INIT[Math.floor(rand() * LAST_INIT.length) % LAST_INIT.length];
+  return `${f} ${l}`;
+}
+
+// ---------- pool builder (returns scores + tagged entries) ----------
+type PoolEntry = {
+  score: number;
+  is_real: boolean;
+  user_id?: string;
+  display_name?: string;
+};
+
+function buildPoolTagged(
+  realEntries: { score: number; user_id: string; display_name: string }[],
+  maxScore: number,
+  seedKey: string
+) {
+  const realScores = realEntries.map((e) => e.score);
   const realMean =
     realScores.length > 0
       ? realScores.reduce((a, b) => a + b, 0) / realScores.length
@@ -71,28 +102,34 @@ function buildPool(realScores: number[], maxScore: number, seedKey: string) {
 
   const syntheticCount = Math.max(0, TARGET_POOL - realScores.length);
   const rand = mulberry32(hashStr(seedKey));
-  const synth: number[] = [];
+  const entries: PoolEntry[] = realEntries.map((e) => ({
+    score: e.score,
+    is_real: true,
+    user_id: e.user_id,
+    display_name: e.display_name,
+  }));
   for (let i = 0; i < syntheticCount; i++) {
     let s = gaussian(rand, adjMean, std);
     s = Math.max(0, Math.min(maxScore, s));
-    synth.push(+s.toFixed(2));
+    entries.push({
+      score: +s.toFixed(2),
+      is_real: false,
+      display_name: synthName(rand),
+    });
   }
-  return {
-    pool: [...realScores, ...synth].sort((a, b) => b - a),
-    difficulty,
-  };
+  entries.sort((a, b) => b.score - a.score);
+  return { entries, difficulty };
 }
 
-function rankOf(sorted: number[], score: number) {
-  // 1-based rank using upper_bound (number strictly greater)
+function rankOfScore(sorted: PoolEntry[], score: number) {
   let lo = 0,
     hi = sorted.length;
   while (lo < hi) {
     const mid = (lo + hi) >>> 1;
-    if (sorted[mid] > score) lo = mid + 1;
+    if (sorted[mid].score > score) lo = mid + 1;
     else hi = mid;
   }
-  return lo + 1; // first index where sorted[i] <= score, +1 for 1-based
+  return lo + 1;
 }
 
 Deno.serve(async (req) => {
@@ -127,7 +164,6 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE);
 
-    // Load attempt (verify ownership)
     const { data: attempt, error: aErr } = await admin
       .from("mock_attempts")
       .select(
@@ -150,17 +186,12 @@ Deno.serve(async (req) => {
     if (!attempt.submitted_at) {
       return new Response(
         JSON.stringify({ locked: true, reason: "not_submitted" }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const submittedAt = new Date(attempt.submitted_at);
-    const unlocksAt = new Date(
-      submittedAt.getTime() + UNLOCK_DAYS * 86400 * 1000
-    );
+    const unlocksAt = new Date(submittedAt.getTime() + UNLOCK_DAYS * 86400 * 1000);
     if (Date.now() < unlocksAt.getTime()) {
       return new Response(
         JSON.stringify({
@@ -169,59 +200,84 @@ Deno.serve(async (req) => {
           submitted_at: attempt.submitted_at,
           reason: "cooldown",
         }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Cache hit?
-    const { data: cached } = await admin
-      .from("mock_projected_ranks")
-      .select("*")
-      .eq("attempt_id", attempt_id)
-      .maybeSingle();
-    if (cached) {
-      return new Response(
-        JSON.stringify({ locked: false, ...cached, unlocks_at: unlocksAt.toISOString() }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Cohort = all real submitted attempts for this test up to unlock cutoff
+    // --- Build cohort (real submitted attempts for this test) ---
     const { data: cohort } = await admin
       .from("mock_attempts")
-      .select("total_score, sectional_scores")
+      .select("user_id, total_score, sectional_scores")
       .eq("test_id", attempt.test_id)
       .in("status", ["submitted", "auto_submitted"])
       .lte("submitted_at", unlocksAt.toISOString());
 
-    const maxScore = Number(attempt.max_score ?? 0) || 100;
-    const realScores = (cohort ?? [])
-      .map((c: any) => Number(c.total_score ?? 0))
-      .filter((n) => Number.isFinite(n));
+    const realUserIds = Array.from(
+      new Set((cohort ?? []).map((c: any) => c.user_id).filter(Boolean))
+    );
+    const { data: profs } = realUserIds.length
+      ? await admin
+          .from("profiles")
+          .select("user_id, display_name")
+          .in("user_id", realUserIds)
+      : { data: [] as any[] };
+    const nameMap = new Map<string, string>();
+    (profs ?? []).forEach((p: any) =>
+      nameMap.set(p.user_id, p.display_name || "Aspirant")
+    );
 
-    const { pool, difficulty } = buildPool(
-      realScores,
+    const maxScore = Number(attempt.max_score ?? 0) || 100;
+    const realEntries = (cohort ?? [])
+      .map((c: any) => ({
+        score: Number(c.total_score ?? 0),
+        user_id: c.user_id as string,
+        display_name: nameMap.get(c.user_id) || "Aspirant",
+      }))
+      .filter((e) => Number.isFinite(e.score));
+
+    const { entries: pool, difficulty } = buildPoolTagged(
+      realEntries,
       maxScore,
       `${attempt.test_id}`
     );
 
     const myScore = Number(attempt.total_score ?? 0);
-    const myRank = rankOf(pool, myScore);
+    const myRank = rankOfScore(pool, myScore);
     const studentsAhead = myRank - 1;
     const studentsBehind = pool.length - myRank;
-    const topperScore = pool[0] ?? maxScore;
+    const topperScore = pool[0]?.score ?? maxScore;
     const projectedPercentile = +(
-      ((pool.length - myRank) / pool.length) *
-      100
+      ((pool.length - myRank) / pool.length) * 100
     ).toFixed(2);
 
-    // Sectional projections (per section in sectional_scores)
+    // Replace my row in the pool with my actual identity
+    const myIdx = Math.min(pool.length - 1, Math.max(0, myRank - 1));
+    pool[myIdx] = {
+      score: myScore,
+      is_real: true,
+      user_id: user.id,
+      display_name: nameMap.get(user.id) || "You",
+    };
+
+    // Top 10 + window of ±5 around the user
+    const top = pool.slice(0, 10).map((e, i) => ({
+      rank: i + 1,
+      name: e.display_name,
+      score: e.score,
+      is_self: e.user_id === user.id,
+      is_real: e.is_real,
+    }));
+    const winStart = Math.max(0, myIdx - 5);
+    const winEnd = Math.min(pool.length, myIdx + 6);
+    const window = pool.slice(winStart, winEnd).map((e, i) => ({
+      rank: winStart + i + 1,
+      name: e.display_name,
+      score: e.score,
+      is_self: e.user_id === user.id,
+      is_real: e.is_real,
+    }));
+
+    // Sectional projections
     const sectional: Record<string, any> = {};
     const ssRaw: any = attempt.sectional_scores ?? {};
     for (const key of Object.keys(ssRaw)) {
@@ -229,14 +285,18 @@ Deno.serve(async (req) => {
       const myScoreS = Number(my.score ?? 0);
       const maxS = Number(my.max ?? my.max_score ?? 0) || Math.max(myScoreS, 30);
       const realS = (cohort ?? [])
-        .map((c: any) => Number((c.sectional_scores ?? {})?.[key]?.score ?? NaN))
-        .filter((n: number) => Number.isFinite(n));
-      const { pool: poolS, difficulty: dS } = buildPool(
+        .map((c: any) => ({
+          score: Number((c.sectional_scores ?? {})?.[key]?.score ?? NaN),
+          user_id: c.user_id,
+          display_name: nameMap.get(c.user_id) || "Aspirant",
+        }))
+        .filter((e: any) => Number.isFinite(e.score));
+      const { entries: poolS, difficulty: dS } = buildPoolTagged(
         realS,
         maxS,
         `${attempt.test_id}:${key}`
       );
-      const rS = rankOf(poolS, myScoreS);
+      const rS = rankOfScore(poolS, myScoreS);
       sectional[key] = {
         section: key,
         score: myScoreS,
@@ -244,8 +304,7 @@ Deno.serve(async (req) => {
         projected_air: rS,
         air_bucket: bucketLabel(rS, poolS.length),
         projected_percentile: +(
-          ((poolS.length - rS) / poolS.length) *
-          100
+          ((poolS.length - rS) / poolS.length) * 100
         ).toFixed(2),
         difficulty: difficultyLabel(dS),
       };
@@ -264,9 +323,10 @@ Deno.serve(async (req) => {
       difficulty: difficultyLabel(difficulty),
       sectional,
       pool_size: pool.length,
-      real_pool_size: realScores.length,
+      real_pool_size: realEntries.length,
     };
 
+    // Cache the stable per-attempt row
     await admin.from("mock_projected_ranks").upsert(row, {
       onConflict: "attempt_id",
     });
@@ -275,21 +335,16 @@ Deno.serve(async (req) => {
       JSON.stringify({
         locked: false,
         ...row,
+        leaderboard: { top, window, my_rank: myRank, pool_size: pool.length },
         unlocks_at: unlocksAt.toISOString(),
         computed_at: new Date().toISOString(),
       }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e: any) {
     return new Response(
       JSON.stringify({ error: e?.message ?? "internal_error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });
