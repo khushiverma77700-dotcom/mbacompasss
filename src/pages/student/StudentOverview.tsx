@@ -763,7 +763,7 @@ export default function StudentOverview() {
         </h2>
         <div className="grid sm:grid-cols-3 gap-3">
           <ToolCard title="AI Profile Analyzer" desc="Get an MBA admission probability score." href="/profile-analyzer" />
-          <ToolCard title="College Shortlister" desc="Personalized college list based on your CAT %ile." href="/college-shortlister" />
+          <ToolCard title="College Shortlister" desc="Personalized college list based on your scores." href="/college-shortlister" />
           <ToolCard title="MBA ROI Calculator" desc="Project your ROI across top B-schools." href="/roi-calculator" />
         </div>
       </Card>
