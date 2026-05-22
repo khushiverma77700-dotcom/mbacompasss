@@ -204,14 +204,42 @@ function AttemptCard({ attempt }: { attempt: Attempt }) {
           </div>
         </div>
         <div className="text-right">
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Projected AIR</div>
-          <div className="text-2xl font-bold text-sky-700">{data.air_bucket}</div>
-          <div className="text-[10px] text-muted-foreground">of {data.pool_size?.toLocaleString()} aspirants</div>
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Your All India Rank</div>
+          <div className="text-3xl font-extrabold text-sky-700 leading-none">
+            #{data.projected_air?.toLocaleString()}
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-0.5">
+            out of {data.pool_size?.toLocaleString()} aspirants
+          </div>
         </div>
       </div>
 
+      {/* Position bar — visualize where the student stands */}
+      {data.pool_size && data.projected_air ? (
+        <div className="mt-3 rounded-lg border border-sky-100 bg-gradient-to-r from-amber-50 via-white to-sky-50 p-2.5">
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1">
+            <span>Topper</span>
+            <span className="font-semibold text-sky-800">
+              You stand at position {data.projected_air.toLocaleString()} of {data.pool_size.toLocaleString()}
+            </span>
+            <span>Last</span>
+          </div>
+          <div className="relative h-2 rounded-full bg-sky-100 overflow-hidden">
+            <div
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-400 via-sky-500 to-emerald-500"
+              style={{ width: `${Math.min(100, Math.max(2, ((data.pool_size - data.projected_air) / data.pool_size) * 100))}%` }}
+            />
+            <div
+              className="absolute -top-1 h-4 w-1 bg-sky-900 rounded"
+              style={{ left: `calc(${Math.min(100, Math.max(0, ((data.projected_air - 1) / Math.max(1, data.pool_size - 1)) * 100))}% - 2px)` }}
+              title={`Rank #${data.projected_air}`}
+            />
+          </div>
+        </div>
+      ) : null}
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3">
-        <Stat label="Est. Percentile" value={`${data.projected_percentile?.toFixed(1)}%`} accent="text-sky-700" />
+        <Stat label="Percentile" value={`${data.projected_percentile?.toFixed(2)}%ile`} accent="text-emerald-600" />
         <Stat label="Students Ahead" value={(data.students_ahead ?? 0).toLocaleString()} />
         <Stat label="Students Behind" value={(data.students_behind ?? 0).toLocaleString()} />
         <Stat label="Gap from Topper" value={`${Math.max(0, Number(data.topper_score ?? 0) - Number(attempt.total_score ?? 0)).toFixed(0)}`} />
