@@ -181,15 +181,36 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
     return "full_length";
   };
 
-  // Distinct topics across all topic-wise tests (for the chip filter on the Topic-wise tab)
-  const topicChips = useMemo(() => {
+  // Distinct sections across all topic-wise tests (for the section filter on the Topic-wise tab)
+  const sectionChips = useMemo(() => {
     const s = new Set<string>();
     Object.values(tests).forEach((t) => {
-      if (getKind(t) === "topic_wise" && t.topic && t.topic.trim()) s.add(t.topic.trim());
+      if (getKind(t) === "topic_wise" && matchesExam(t)) {
+        const sec = (t.category || "").trim().toUpperCase();
+        if (sec) s.add(sec);
+      }
     });
     return Array.from(s).sort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tests]);
+  }, [tests, examFilter]);
+
+  // Distinct topics across all topic-wise tests (filtered by section if set)
+  const topicChips = useMemo(() => {
+    const s = new Set<string>();
+    Object.values(tests).forEach((t) => {
+      if (getKind(t) !== "topic_wise") return;
+      if (!matchesExam(t)) return;
+      if (sectionFilter !== "All" && (t.category || "").trim().toUpperCase() !== sectionFilter) return;
+      if (t.topic && t.topic.trim()) s.add(t.topic.trim());
+    });
+    return Array.from(s).sort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tests, examFilter, sectionFilter]);
+
+  // Reset topic when section changes and current topic isn't available
+  useEffect(() => {
+    if (topicFilter !== "All" && !topicChips.includes(topicFilter)) setTopicFilter("All");
+  }, [topicChips, topicFilter]);
 
   const buildBucket = (typeKey: TypeKey) => {
     if (typeKey === "attempted") {
