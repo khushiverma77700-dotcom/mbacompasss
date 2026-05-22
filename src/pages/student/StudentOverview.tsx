@@ -724,7 +724,7 @@ export default function StudentOverview() {
                     {a.status !== "in_progress" && (
                       <div className="text-right">
                         <div className="text-sm font-semibold">{a.total_score ?? 0}/{a.max_score ?? 0}</div>
-                        <div className="text-[11px] text-muted-foreground">%ile {a.percentile ?? 0} · Acc {a.accuracy ?? 0}%</div>
+                        <div className="text-[11px] text-muted-foreground">Acc {a.accuracy ?? 0}%</div>
                       </div>
                     )}
                     {a.status === "in_progress" ? (
