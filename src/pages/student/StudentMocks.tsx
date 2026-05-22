@@ -211,6 +211,10 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
       .filter(matchesExam)
       .filter(matchesQuery)
       .filter((t) => {
+        if (typeKey !== "topic_wise" || topicFilter === "All") return true;
+        return (t.topic || "").trim() === topicFilter;
+      })
+      .filter((t) => {
         if (t.is_published) return true;
         // Live-only (unpublished) mocks stay hidden until scheduled time passes.
         if (t.is_live && t.scheduled_start_at && new Date(t.scheduled_start_at).getTime() <= Date.now()) return true;
