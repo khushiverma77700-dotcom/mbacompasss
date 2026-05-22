@@ -167,7 +167,7 @@ Deno.serve(async (req) => {
     const { data: attempt, error: aErr } = await admin
       .from("mock_attempts")
       .select(
-        "id, user_id, test_id, total_score, max_score, submitted_at, status, sectional_scores"
+        "id, user_id, test_id, total_score, max_score, submitted_at, status, sectional_scores, test:mock_tests(test_type)"
       )
       .eq("id", attempt_id)
       .maybeSingle();
@@ -190,6 +190,37 @@ Deno.serve(async (req) => {
       );
     }
 
+    // AIR is only for full-length mocks
+    const testType = (attempt as any).test?.test_type ?? "full_length";
+    if (testType !== "full_length") {
+      return new Response(
+        JSON.stringify({ locked: true, reason: "not_full_length", message: "All India Rank is calculated only for full-length mocks." }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Only the FIRST submitted attempt of this test counts towards AIR
+    const { data: firstAttempt } = await admin
+      .from("mock_attempts")
+      .select("id, submitted_at")
+      .eq("user_id", user.id)
+      .eq("test_id", attempt.test_id)
+      .in("status", ["submitted", "auto_submitted"])
+      .order("submitted_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (firstAttempt && firstAttempt.id !== attempt.id) {
+      return new Response(
+        JSON.stringify({
+          locked: true,
+          reason: "not_first_attempt",
+          first_attempt_id: firstAttempt.id,
+          message: "Only your first attempt of a mock counts towards All India Rank. View the report of your first attempt to see your AIR.",
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const submittedAt = new Date(attempt.submitted_at);
     const unlocksAt = new Date(submittedAt.getTime() + UNLOCK_DAYS * 86400 * 1000);
     if (Date.now() < unlocksAt.getTime()) {
@@ -204,13 +235,21 @@ Deno.serve(async (req) => {
       );
     }
 
-    // --- Build cohort (real submitted attempts for this test) ---
-    const { data: cohort } = await admin
+    // --- Build cohort (FIRST submitted attempt per user for this test) ---
+    const { data: cohortRaw } = await admin
       .from("mock_attempts")
-      .select("user_id, total_score, sectional_scores")
+      .select("user_id, total_score, sectional_scores, submitted_at")
       .eq("test_id", attempt.test_id)
       .in("status", ["submitted", "auto_submitted"])
-      .lte("submitted_at", unlocksAt.toISOString());
+      .lte("submitted_at", unlocksAt.toISOString())
+      .order("submitted_at", { ascending: true });
+
+    // Dedupe: keep earliest attempt per user
+    const firstByUser = new Map<string, any>();
+    (cohortRaw ?? []).forEach((r: any) => {
+      if (r.user_id && !firstByUser.has(r.user_id)) firstByUser.set(r.user_id, r);
+    });
+    const cohort = Array.from(firstByUser.values());
 
     const realUserIds = Array.from(
       new Set((cohort ?? []).map((c: any) => c.user_id).filter(Boolean))
