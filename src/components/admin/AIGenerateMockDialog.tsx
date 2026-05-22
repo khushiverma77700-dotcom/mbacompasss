@@ -651,19 +651,69 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                       : "Section to draw practice questions from."}
                   </p>
                 </div>
-                {(category === "topic" || category === "practice") && (
-                  <div>
-                    <Label className="text-xs">
-                      Topic {category === "topic" && <span className="text-destructive">*</span>}
-                    </Label>
-                    <Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. Time Speed Distance, RC, Syllogism" />
-                    {category === "topic" && (
-                      <p className="text-[11px] text-muted-foreground mt-1">
-                        Every question will be strictly from this topic — no mixing.
-                      </p>
-                    )}
-                  </div>
-                )}
+                {(category === "topic" || category === "practice") && (() => {
+                  const topicOptions = getTopicsFor(exam, sectionCode);
+                  const isCustom = topic !== "" && !topicOptions.includes(topic);
+                  const selectValue = isCustom ? "__custom__" : (topic || "");
+                  return (
+                    <div>
+                      <Label className="text-xs">
+                        Topic {category === "topic" && <span className="text-destructive">*</span>}
+                      </Label>
+                      {topicOptions.length > 0 ? (
+                        <>
+                          <Select
+                            value={selectValue}
+                            onValueChange={(v) => {
+                              if (v === "__custom__") {
+                                setTopic(" "); // placeholder so Input shows
+                                setTimeout(() => setTopic(""), 0);
+                              } else {
+                                setTopic(v);
+                              }
+                            }}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder={`Pick a ${exam} ${sectionCode} topic`} />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-72">
+                              <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                {exam} — {sectionCode} topics
+                              </div>
+                              {topicOptions.map((t) => (
+                                <SelectItem key={t} value={t}>{t}</SelectItem>
+                              ))}
+                              <div className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground border-t mt-1">
+                                Custom
+                              </div>
+                              <SelectItem value="__custom__">Other (type a custom topic)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {(isCustom || selectValue === "__custom__") && (
+                            <Input
+                              className="mt-2"
+                              value={topic}
+                              onChange={(e) => setTopic(e.target.value)}
+                              placeholder="Type custom topic (e.g. Pipes & Cisterns)"
+                              autoFocus
+                            />
+                          )}
+                        </>
+                      ) : (
+                        <Input
+                          value={topic}
+                          onChange={(e) => setTopic(e.target.value)}
+                          placeholder="e.g. Time Speed Distance, RC, Syllogism"
+                        />
+                      )}
+                      {category === "topic" && (
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Every question will be strictly from this topic — no mixing. Auto-grouped on the student dashboard under <strong>Topic-wise → {topic || "Topic"}</strong>.
+                        </p>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             )}
 
