@@ -175,9 +175,20 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
 
   const getKind = (t: Test): TypeKey | null => {
     const k = (t.test_type || "").toLowerCase();
-    if (k === "full_length" || k === "sectional" || k === "topic_wise" || k === "practice_set") return k as TypeKey;
+    if (k === "topic" || k === "topic_wise") return "topic_wise";
+    if (k === "full_length" || k === "sectional" || k === "practice_set") return k as TypeKey;
     return "full_length";
   };
+
+  // Distinct topics across all topic-wise tests (for the chip filter on the Topic-wise tab)
+  const topicChips = useMemo(() => {
+    const s = new Set<string>();
+    Object.values(tests).forEach((t) => {
+      if (getKind(t) === "topic_wise" && t.topic && t.topic.trim()) s.add(t.topic.trim());
+    });
+    return Array.from(s).sort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tests]);
 
   const buildBucket = (typeKey: TypeKey) => {
     if (typeKey === "attempted") {
