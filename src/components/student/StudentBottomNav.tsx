@@ -19,10 +19,10 @@ const tabs = [
   },
   { to: "/student/day-planner", label: "Planner", icon: CalendarCheck, match: ["/student/day-planner"] },
   {
-    to: "/student/performance",
+    to: "/student/all-india-rank",
     label: "Insights",
     icon: BarChart3,
-    match: ["/student/performance", "/student/strength-areas", "/student/weak-areas", "/student/leaderboard"],
+    match: ["/student/all-india-rank", "/student/performance", "/student/strength-areas", "/student/weak-areas", "/student/leaderboard"],
   },
   { to: "/student/profile", label: "Profile", icon: UserIcon, match: ["/student/profile"] },
 ];
