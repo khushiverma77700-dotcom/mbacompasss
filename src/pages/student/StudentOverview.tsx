@@ -217,14 +217,18 @@ export default function StudentOverview() {
     };
   }, [enrollments, attempts, submitted]);
 
+  // Projected score % (replaces percentile predictor) using weighted avg of last 5 mocks
   const predicted = useMemo(() => {
-    const last = submitted.slice(0, 5).map((x) => Number(x.percentile || 0));
+    const last = submitted.slice(0, 5).map((x) => {
+      const max = Number(x.max_score || 0);
+      return max > 0 ? (Number(x.total_score || 0) / max) * 100 : 0;
+    });
     if (!last.length) return null;
     const weights = last.map((_, i) => 5 - i);
     const wsum = weights.reduce((a, b) => a + b, 0);
     const w = last.reduce((s, v, i) => s + v * weights[i], 0) / wsum;
     const trend = last.length >= 3 ? (last[0] - last[last.length - 1]) / last.length : 0;
-    return Math.max(0, Math.min(99.9, +(w + trend * 0.5).toFixed(1))) || 0;
+    return Math.max(0, Math.min(100, +(w + trend * 0.5).toFixed(1))) || 0;
   }, [submitted]);
 
   // Trend with cumulative average
