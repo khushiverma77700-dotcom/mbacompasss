@@ -308,7 +308,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
   // Topic-wise: force sets=1 when topic doesn't need passages/caselets
   useEffect(() => {
     if (category !== "topic") return;
-    const isRcPassage = /reading\s*comprehension|passage/i.test(topic) && !/inference|tone|vocabulary|main\s*idea|primary\s*purpose|title|author|question\s*type|strategy|practice/i.test(topic);
+    const isRcPassage = /reading\s*comprehension|\brc\b|passage/i.test(topic);
     const isDiCaselet = /caselet|data\s*interpretation|tables?|graphs?|charts?|bar|pie|line\s*graph/i.test(topic);
     const isLrSet = /puzzle|arrangement|seating|grouping|matrix|cubes?|games?|tournaments?/i.test(topic);
     if (!(isRcPassage || isDiCaselet || isLrSet)) setSets(1);
@@ -826,7 +826,7 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
             {/* Non-full-length: simple total controls */}
             {category !== "full_length" && (() => {
               // Topic-wise tests: only RC passages, DI caselets, LR puzzles need sets
-              const isRcPassageTopic = /reading\s*comprehension|passage/i.test(topic) && !/inference|tone|vocabulary|main\s*idea|primary\s*purpose|title|author|question\s*type|strategy|practice/i.test(topic);
+              const isRcPassageTopic = /reading\s*comprehension|\brc\b|passage/i.test(topic);
               const isDiCaseletTopic = /caselet|data\s*interpretation|tables?|graphs?|charts?|bar|pie|line\s*graph/i.test(topic);
               const isLrSetTopic = /puzzle|arrangement|seating|grouping|matrix|cubes?|games?|tournaments?/i.test(topic);
               const topicNeedsSets = category !== "topic" || isRcPassageTopic || isDiCaseletTopic || isLrSetTopic;

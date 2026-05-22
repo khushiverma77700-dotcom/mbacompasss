@@ -1062,14 +1062,12 @@ Deno.serve(async (req) => {
         } else if (category === "topic") {
           // Topic-wise tests are standalone by default. Sets/passages are only
           // added when the topic itself is intrinsically passage- or caselet-
-          // bound (full RC passages, DI caselets, LR puzzles/arrangements).
-          // Sub-topics like "RC — Inference", "RC — Tone", "RC — Vocabulary"
-          // are question-type drills and must stay standalone.
+          // bound (RC passages, DI caselets, LR puzzles/arrangements).
+          // Any Reading Comprehension topic needs passage sets; non-RC verbal
+          // drills like parajumbles, grammar and vocabulary stay standalone.
           const sc = String(sec.code || "").toUpperCase();
           const t = String(topic || "").toLowerCase();
-          const isRcPassageTopic =
-            /reading comprehension/.test(t) &&
-            !/(inference|tone|vocabulary|main idea|primary purpose|title|author|question type|strategy|practice)/.test(t);
+          const isRcPassageTopic = /(reading\s*comprehension|\brc\b|passage)/.test(t);
           const isDiCaseletTopic = /(data interpretation|di caselet|caselet|bar chart|pie chart|line chart|tables? .*chart|graphs?)/.test(t);
           const isLrSetTopic = /(arrangement|seating|puzzle|distribution|games?|network|grouping|scheduling|matrix puzzle)/.test(t);
           if (isRcPassageTopic && ["VARC", "VALR", "LS", "GE", "LC", "VABI"].includes(sc)) {
