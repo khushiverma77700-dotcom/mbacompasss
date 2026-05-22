@@ -106,7 +106,7 @@ function buildPoolTagged(
   const adjMean = realMean * adjustmentFactor(difficulty);
   const std = Math.max(realStd, Math.max(8, maxScore * 0.08));
 
-  const syntheticCount = Math.max(0, TARGET_POOL - realScores.length);
+  const syntheticCount = Math.max(0, targetPool - realScores.length);
   const rand = mulberry32(hashStr(seedKey));
   const entries: PoolEntry[] = realEntries.map((e) => ({
     score: e.score,
