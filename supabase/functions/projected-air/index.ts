@@ -11,7 +11,9 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const TARGET_POOL = 2000;
+const POOL_MIN = 1000;
+const POOL_MAX = 2500;
+const POOL_GROWTH_PER_DAY = 55; // ~27 days to reach the ceiling
 const UNLOCK_DAYS = 7;
 const AIR_BUCKET = 50;
 
