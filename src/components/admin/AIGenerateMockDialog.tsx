@@ -815,11 +815,18 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
             )}
 
             {/* Non-full-length: simple total controls */}
-            {category !== "full_length" && (
+            {category !== "full_length" && (() => {
+              // Topic-wise tests: only RC passages, DI caselets, LR puzzles need sets
+              const isRcPassageTopic = /reading\s*comprehension|passage/i.test(topic) && !/inference|tone|vocabulary|main\s*idea|primary\s*purpose|title|author|question\s*type|strategy|practice/i.test(topic);
+              const isDiCaseletTopic = /caselet|data\s*interpretation|tables?|graphs?|charts?|bar|pie|line\s*graph/i.test(topic);
+              const isLrSetTopic = /puzzle|arrangement|seating|grouping|matrix|cubes?|games?|tournaments?/i.test(topic);
+              const topicNeedsSets = category !== "topic" || isRcPassageTopic || isDiCaseletTopic || isLrSetTopic;
+              const perLabel = topicNeedsSets ? "(per set)" : "";
+              return (
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-xs">Number of Questions (per set)</Label>
+                    <Label className="text-xs">Number of Questions {perLabel}</Label>
                     <Input type="number" min={1} value={perSet} onChange={(e) => onPerSetChange(parseInt(e.target.value) || 1)} />
                     <p className="text-[11px] text-muted-foreground mt-1">Auto-filled from exam pattern, editable.</p>
                   </div>
@@ -834,17 +841,19 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3">
+                <div className={`grid ${topicNeedsSets ? "grid-cols-3" : "grid-cols-2"} gap-3`}>
+                  {topicNeedsSets && (
+                    <div>
+                      <Label className="text-xs">Number of Sets</Label>
+                      <Input type="number" min={1} max={10} value={sets} onChange={(e) => setSets(parseInt(e.target.value) || 1)} />
+                    </div>
+                  )}
                   <div>
-                    <Label className="text-xs">Number of Sets</Label>
-                    <Input type="number" min={1} max={10} value={sets} onChange={(e) => setSets(parseInt(e.target.value) || 1)} />
-                  </div>
-                  <div>
-                    <Label className="text-xs">MCQs per set</Label>
+                    <Label className="text-xs">MCQs {perLabel}</Label>
                     <Input type="number" min={0} max={perSet} value={mcq} onChange={(e) => onMcqChange(parseInt(e.target.value) || 0)} />
                   </div>
                   <div>
-                    <Label className="text-xs">TITA per set</Label>
+                    <Label className="text-xs">TITA {perLabel}</Label>
                     <Input type="number" min={0} max={perSet} value={tita} onChange={(e) => onTitaChange(parseInt(e.target.value) || 0)} />
                   </div>
                 </div>
@@ -859,7 +868,8 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
                   )}
                 </div>
               </>
-            )}
+              );
+            })()}
 
             {/* Full-Length still needs Sets + Level */}
             {category === "full_length" && (
