@@ -280,10 +280,14 @@ Deno.serve(async (req) => {
       }))
       .filter((e) => Number.isFinite(e.score));
 
+    // Dynamic pool size — grows over time, capped at 2,500.
+    const targetPool = computePoolSize(submittedAt, `${attempt.test_id}`);
+
     const { entries: pool, difficulty } = buildPoolTagged(
       realEntries,
       maxScore,
-      `${attempt.test_id}`
+      `${attempt.test_id}`,
+      targetPool
     );
 
     const myScore = Number(attempt.total_score ?? 0);
