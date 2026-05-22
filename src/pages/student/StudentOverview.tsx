@@ -483,8 +483,8 @@ export default function StudentOverview() {
         <SectionHeading icon={Gauge} title="Your numbers at a glance" subtitle="Live snapshot — updates the moment you submit a mock" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <StatTile icon={BookOpenCheck} label="Mocks Enrolled" value={stats.enrolledCount} sub={`${stats.inProgressCount} in progress`} tone="sky" />
-          <StatTile icon={CheckCircle2} label="Mocks Completed" value={stats.submittedCount} sub={stats.improvement >= 0 ? `▲ ${stats.improvement} %ile growth` : `▼ ${Math.abs(stats.improvement)} %ile`} tone="emerald" trend={stats.improvement} />
-          <StatTile icon={Trophy} label="Best Percentile" value={stats.bestPercentile} sub={`Avg ${stats.avgPercentile}`} tone="amber" />
+          <StatTile icon={CheckCircle2} label="Mocks Completed" value={stats.submittedCount} sub={`Avg score ${stats.avgScore}/${stats.avgMaxScore}`} tone="emerald" />
+          <StatTile icon={Trophy} label="Avg Score %" value={`${stats.avgPctScore}%`} sub={`across ${stats.submittedCount} mock${stats.submittedCount === 1 ? "" : "s"}`} tone="amber" />
           <StatTile icon={Activity} label="Questions Solved" value={stats.totalAttempted} sub={`${stats.totalCorrect} correct`} tone="rose" />
         </div>
       </div>
