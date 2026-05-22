@@ -47,9 +47,12 @@ function difficultyLabel(d: number) {
   return "Hard";
 }
 function adjustmentFactor(d: number) {
-  if (d >= 0.65) return 0.95;
-  if (d <= 0.3) return 1.1;
-  return 1.05;
+  // Synthetic mean is set slightly BELOW student baseline so percentiles
+  // reflect a realistic competitive aspirant pool (most candidates score lower
+  // than serious test-takers using the platform).
+  if (d >= 0.65) return 0.82;
+  if (d <= 0.3) return 0.95;
+  return 0.88;
 }
 function bucketLabel(rank: number, pool: number) {
   if (rank <= 10) return `AIR ${rank}`;
