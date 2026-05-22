@@ -58,6 +58,7 @@ type Test = {
   exam_code: string | null;
   category: string | null;
   test_type: string | null;
+  topic: string | null;
   is_live: boolean | null;
   scheduled_start_at: string | null;
   launch_date: string | null;
@@ -105,6 +106,8 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
   const [examFilter, setExamFilter] = useState<string>("All");
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
+  const [topicFilter, setTopicFilter] = useState<string>("All");
+
   useEffect(() => {
     if (!user) return;
     (async () => {
@@ -112,7 +115,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
       const [{ data: e }, { data: a }, { data: c }, { data: bi }] = await Promise.all([
         supabase
           .from("mock_enrollments")
-          .select("id, test_id, source, expires_at, admin_notes, test:mock_tests(id, name, slug, total_duration_minutes, difficulty, exam_code, category, test_type, is_live, scheduled_start_at, launch_date, banner_url, is_published, sort_order)")
+          .select("id, test_id, source, expires_at, admin_notes, test:mock_tests(id, name, slug, total_duration_minutes, difficulty, exam_code, category, test_type, topic, is_live, scheduled_start_at, launch_date, banner_url, is_published, sort_order)")
           .eq("user_id", user.id)
           .order("enrolled_at", { ascending: false }),
         supabase
@@ -122,7 +125,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
           .order("started_at", { ascending: false }),
         supabase
           .from("mock_tests")
-          .select("id, name, slug, total_duration_minutes, difficulty, exam_code, category, test_type, is_live, scheduled_start_at, launch_date, banner_url, is_published, sort_order")
+          .select("id, name, slug, total_duration_minutes, difficulty, exam_code, category, test_type, topic, is_live, scheduled_start_at, launch_date, banner_url, is_published, sort_order")
           .or("is_published.eq.true,is_live.eq.true")
           .order("sort_order", { ascending: true })
           .order("name"),
@@ -172,9 +175,20 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
 
   const getKind = (t: Test): TypeKey | null => {
     const k = (t.test_type || "").toLowerCase();
-    if (k === "full_length" || k === "sectional" || k === "topic_wise" || k === "practice_set") return k as TypeKey;
+    if (k === "topic" || k === "topic_wise") return "topic_wise";
+    if (k === "full_length" || k === "sectional" || k === "practice_set") return k as TypeKey;
     return "full_length";
   };
+
+  // Distinct topics across all topic-wise tests (for the chip filter on the Topic-wise tab)
+  const topicChips = useMemo(() => {
+    const s = new Set<string>();
+    Object.values(tests).forEach((t) => {
+      if (getKind(t) === "topic_wise" && t.topic && t.topic.trim()) s.add(t.topic.trim());
+    });
+    return Array.from(s).sort();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tests]);
 
   const buildBucket = (typeKey: TypeKey) => {
     if (typeKey === "attempted") {
@@ -196,6 +210,10 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
       .filter((t) => getKind(t) === typeKey)
       .filter(matchesExam)
       .filter(matchesQuery)
+      .filter((t) => {
+        if (typeKey !== "topic_wise" || topicFilter === "All") return true;
+        return (t.topic || "").trim() === topicFilter;
+      })
       .filter((t) => {
         if (t.is_published) return true;
         // Live-only (unpublished) mocks stay hidden until scheduled time passes.
@@ -339,12 +357,17 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
         fixedType === "attempted" ? (
           <AttemptedGrid items={buildBucket("attempted") as any} />
         ) : (
-          <BucketGrid
-            items={buildBucket(fixedType) as any}
-            typeLabel={TYPE_TITLES[fixedType].title}
-            examFilter={examFilter}
-            onUpgrade={() => setUpgradeOpen(true)}
-          />
+          <>
+            {fixedType === "topic_wise" && topicChips.length > 0 && (
+              <TopicChipStrip topics={topicChips} value={topicFilter} onChange={setTopicFilter} />
+            )}
+            <BucketGrid
+              items={buildBucket(fixedType) as any}
+              typeLabel={TYPE_TITLES[fixedType].title}
+              examFilter={examFilter}
+              onUpgrade={() => setUpgradeOpen(true)}
+            />
+          </>
         )
       ) : (
         <Tabs defaultValue="full_length" className="w-full">
@@ -375,12 +398,17 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
               {t.key === "attempted" ? (
                 <AttemptedGrid items={buildBucket("attempted") as any} />
               ) : (
-                <BucketGrid
-                  items={buildBucket(t.key) as any}
-                  typeLabel={t.label}
-                  examFilter={examFilter}
-                  onUpgrade={() => setUpgradeOpen(true)}
-                />
+                <>
+                  {t.key === "topic_wise" && topicChips.length > 0 && (
+                    <TopicChipStrip topics={topicChips} value={topicFilter} onChange={setTopicFilter} />
+                  )}
+                  <BucketGrid
+                    items={buildBucket(t.key) as any}
+                    typeLabel={t.label}
+                    examFilter={examFilter}
+                    onUpgrade={() => setUpgradeOpen(true)}
+                  />
+                </>
               )}
             </TabsContent>
           ))}
@@ -399,6 +427,30 @@ function StatTile({ icon: Icon, label, value }: { icon: any; label: string; valu
         <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> {label}
       </div>
       <div className="text-lg sm:text-2xl font-bold tracking-tight">{value}</div>
+    </div>
+  );
+}
+
+function TopicChipStrip({ topics, value, onChange }: { topics: string[]; value: string; onChange: (v: string) => void }) {
+  const all = ["All", ...topics];
+  return (
+    <div className="mb-3 -mx-1 px-1 overflow-x-auto scrollbar-none">
+      <div className="flex gap-1.5 min-w-max items-center">
+        <span className="text-[11px] font-semibold text-slate-500 mr-1 shrink-0">Topic:</span>
+        {all.map((t) => (
+          <button
+            key={t}
+            onClick={() => onChange(t)}
+            className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all whitespace-nowrap ${
+              value === t
+                ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-transparent shadow-sm"
+                : "bg-white text-slate-600 border-slate-200 hover:border-emerald-300 hover:text-emerald-700"
+            }`}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
