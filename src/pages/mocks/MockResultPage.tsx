@@ -258,7 +258,7 @@ export default function MockResultPage() {
     label: `M${i + 1}`,
     score: Number(h.total_score ?? 0),
     accuracy: Number(h.accuracy ?? 0),
-    percentile: Number(h.percentile ?? 0),
+    maxScore: Number(h.max_score ?? 0),
   })), [historyAttempts]);
 
   const totalTimeSec = useMemo(() => responses.reduce((a, r) => a + Number(r.time_spent_seconds ?? 0), 0), [responses]);
