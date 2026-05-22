@@ -478,12 +478,18 @@ function StatTile({ icon: Icon, label, value }: { icon: any; label: string; valu
 }
 
 function ChipStrip({
-  label, options, value, onChange, gradient = "from-emerald-500 to-teal-600", hoverColor = "emerald",
+  label, options, value, onChange, tone = "emerald",
 }: {
   label: string; options: string[]; value: string; onChange: (v: string) => void;
-  gradient?: string; hoverColor?: string;
+  tone?: "emerald" | "sky";
 }) {
   const all = ["All", ...options];
+  const activeCls = tone === "sky"
+    ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-transparent shadow-sm"
+    : "bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-transparent shadow-sm";
+  const inactiveCls = tone === "sky"
+    ? "bg-white text-slate-600 border-slate-200 hover:border-sky-300 hover:text-sky-700"
+    : "bg-white text-slate-600 border-slate-200 hover:border-emerald-300 hover:text-emerald-700";
   return (
     <div className="-mx-1 px-1 overflow-x-auto scrollbar-none">
       <div className="flex gap-1.5 min-w-max items-center">
@@ -493,9 +499,7 @@ function ChipStrip({
             key={t}
             onClick={() => onChange(t)}
             className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all whitespace-nowrap ${
-              value === t
-                ? `bg-gradient-to-r ${gradient} text-white border-transparent shadow-sm`
-                : `bg-white text-slate-600 border-slate-200 hover:border-${hoverColor}-300 hover:text-${hoverColor}-700`
+              value === t ? activeCls : inactiveCls
             }`}
           >
             {t}
