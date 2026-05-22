@@ -433,18 +433,28 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
             <TabsContent key={t.key} value={t.key} className="mt-4 sm:mt-5">
               {t.key === "attempted" ? (
                 <AttemptedGrid items={buildBucket("attempted") as any} />
+              ) : t.key === "topic_wise" ? (
+                <TopicWiseView
+                  items={buildBucket("topic_wise") as any}
+                  allTopicWise={Object.values(tests).filter((tt) => getKind(tt) === "topic_wise" && matchesExam(tt))}
+                  attemptedByTest={attemptedByTest}
+                  enrolledTestIds={enrolledTestIds}
+                  sections={sectionChips}
+                  sectionFilter={sectionFilter}
+                  onSectionChange={setSectionFilter}
+                  topics={topicChips}
+                  topicFilter={topicFilter}
+                  onTopicChange={setTopicFilter}
+                  examFilter={examFilter}
+                  onUpgrade={() => setUpgradeOpen(true)}
+                />
               ) : (
-                <>
-                  {t.key === "topic_wise" && topicChips.length > 0 && (
-                    <TopicChipStrip topics={topicChips} value={topicFilter} onChange={setTopicFilter} />
-                  )}
-                  <BucketGrid
-                    items={buildBucket(t.key) as any}
-                    typeLabel={t.label}
-                    examFilter={examFilter}
-                    onUpgrade={() => setUpgradeOpen(true)}
-                  />
-                </>
+                <BucketGrid
+                  items={buildBucket(t.key) as any}
+                  typeLabel={t.label}
+                  examFilter={examFilter}
+                  onUpgrade={() => setUpgradeOpen(true)}
+                />
               )}
             </TabsContent>
           ))}
