@@ -88,7 +88,8 @@ type PoolEntry = {
 function buildPoolTagged(
   realEntries: { score: number; user_id: string; display_name: string }[],
   maxScore: number,
-  seedKey: string
+  seedKey: string,
+  targetPool: number
 ) {
   const realScores = realEntries.map((e) => e.score);
   const realMean =
