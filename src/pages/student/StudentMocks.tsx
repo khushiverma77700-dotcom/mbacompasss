@@ -169,8 +169,11 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
 
   const matchesExam = (t: Test) => {
     if (examFilter === "All") return true;
-    const code = (t.exam_code || t.category || "").toUpperCase();
-    return code.includes(examFilter);
+    const tokens = `${t.exam_code || ""} ${t.category || ""}`
+      .toUpperCase()
+      .split(/[^A-Z0-9]+/)
+      .filter(Boolean);
+    return tokens.includes(examFilter.toUpperCase());
   };
   const matchesQuery = (t: Test) => !q || t.name.toLowerCase().includes(q.toLowerCase());
 
