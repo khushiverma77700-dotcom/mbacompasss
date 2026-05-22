@@ -43,15 +43,25 @@ function fmtCountdown(target: string) {
 
 function AttemptRow({ attempt }: { attempt: Attempt }) {
   const [data, setData] = useState<RankResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     let alive = true;
     (async () => {
-      const { data: res } = await supabase.functions.invoke("projected-air", {
-        body: { attempt_id: attempt.id },
-      });
-      if (alive) setData((res as RankResult) ?? null);
+      try {
+        const { data: res, error: err } = await supabase.functions.invoke("projected-air", {
+          body: { attempt_id: attempt.id },
+        });
+        if (!alive) return;
+        if (err) {
+          setError(err.message || "Could not load rank");
+          return;
+        }
+        setData((res as RankResult) ?? null);
+      } catch (e: any) {
+        if (alive) setError(e?.message || "Could not load rank");
+      }
     })();
     return () => {
       alive = false;
@@ -62,6 +72,20 @@ function AttemptRow({ attempt }: { attempt: Attempt }) {
     ? new Date(attempt.submitted_at).toLocaleDateString()
     : "—";
 
+  if (error) {
+    return (
+      <Card className="p-4 border-amber-200 bg-amber-50/50">
+        <div className="font-semibold text-sm truncate">{attempt.test?.name ?? "Mock"}</div>
+        <div className="text-[11px] text-muted-foreground mt-0.5">
+          Submitted {submittedFmt} · Score {attempt.total_score ?? 0}/{attempt.max_score ?? 0}
+        </div>
+        <p className="text-[11px] text-amber-700 mt-2">
+          Projected AIR temporarily unavailable. {error}
+        </p>
+      </Card>
+    );
+  }
+
   if (!data) {
     return (
       <Card className="p-4">
@@ -69,6 +93,7 @@ function AttemptRow({ attempt }: { attempt: Attempt }) {
       </Card>
     );
   }
+
 
   if (data.locked) {
     return (
