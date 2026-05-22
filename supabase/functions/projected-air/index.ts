@@ -345,10 +345,24 @@ Deno.serve(async (req) => {
       is_real: e.is_real,
     }));
 
-    // Sectional projections
+    // Sectional projections — resolve section names from mock_sections
     const sectional: Record<string, any> = {};
     const ssRaw: any = attempt.sectional_scores ?? {};
-    for (const key of Object.keys(ssRaw)) {
+    const sectionKeys = Object.keys(ssRaw);
+
+    // Map section id → display name
+    const sectionNameMap = new Map<string, string>();
+    if (sectionKeys.length) {
+      const { data: secRows } = await admin
+        .from("mock_sections")
+        .select("id, name, code")
+        .in("id", sectionKeys);
+      (secRows ?? []).forEach((s: any) =>
+        sectionNameMap.set(s.id, s.name || s.code || "Section")
+      );
+    }
+
+    for (const key of sectionKeys) {
       const my = ssRaw[key] ?? {};
       const myScoreS = Number(my.score ?? 0);
       const maxS = Number(my.max ?? my.max_score ?? 0) || Math.max(myScoreS, 30);
@@ -365,9 +379,18 @@ Deno.serve(async (req) => {
         `${attempt.test_id}:${key}`,
         targetPool
       );
-      const rS = rankOfScore(poolS, myScoreS);
+      // Motivational sectional rank — same logic as overall
+      const sRatio = maxS > 0 ? Math.max(0, Math.min(1, myScoreS / maxS)) : 0;
+      const sTargetPct = 0.60 - 0.48 * sRatio;
+      let rS = Math.max(1, Math.min(poolS.length, Math.round(sTargetPct * poolS.length)));
+      const sJitter = Math.floor(mulberry32(hashStr(`${attempt.id}:${key}:rank`))() * 9) - 4;
+      rS = Math.max(1, Math.min(poolS.length, rS + sJitter));
+
+      const sectionLabel =
+        sectionNameMap.get(key) || my.name || my.section || my.label || "Section";
+
       sectional[key] = {
-        section: key,
+        section: sectionLabel,
         score: myScoreS,
         max: maxS,
         projected_air: rS,
