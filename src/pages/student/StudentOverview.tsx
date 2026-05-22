@@ -231,22 +231,25 @@ export default function StudentOverview() {
     return Math.max(0, Math.min(100, +(w + trend * 0.5).toFixed(1))) || 0;
   }, [submitted]);
 
-  // Trend with cumulative average
+  // Trend with cumulative average — now score-based (no percentile rendered)
   const trendData = useMemo(() => {
     const chrono = submitted.slice().reverse();
-    let cumP = 0, cumA = 0, cumS = 0;
+    let cumS = 0, cumA = 0, cumP = 0;
     return chrono.slice(-12).map((x, i) => {
-      cumP += Number(x.percentile || 0);
-      cumA += Number(x.accuracy || 0);
+      const sp = Number(x.max_score || 0) > 0
+        ? +((Number(x.total_score || 0) / Number(x.max_score)) * 100).toFixed(1)
+        : 0;
       cumS += Number(x.total_score || 0);
+      cumA += Number(x.accuracy || 0);
+      cumP += sp;
       return {
         name: `M${i + 1}`,
-        percentile: Number(x.percentile || 0),
         score: Number(x.total_score || 0),
         accuracy: Number(x.accuracy || 0),
-        cumPercentile: +(cumP / (i + 1)).toFixed(1),
-        cumAccuracy: +(cumA / (i + 1)).toFixed(1),
+        scorePct: sp,
         cumScore: +(cumS / (i + 1)).toFixed(1),
+        cumAccuracy: +(cumA / (i + 1)).toFixed(1),
+        cumScorePct: +(cumP / (i + 1)).toFixed(1),
       };
     });
   }, [submitted]);
