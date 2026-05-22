@@ -280,7 +280,7 @@ function AttemptCard({ attempt }: { attempt: Attempt }) {
                   <div key={k} className="rounded border border-sky-100 bg-sky-50/40 p-2">
                     <div className="text-[11px] font-semibold text-sky-800">{v.section ?? k}</div>
                     <div className="text-[11px] text-muted-foreground">
-                      {v.air_bucket} · {v.projected_percentile?.toFixed(1)}% · {v.difficulty}
+                      AIR #{Number(v.projected_air ?? 0).toLocaleString()} · {v.projected_percentile?.toFixed(2)}%ile · {v.difficulty}
                     </div>
                   </div>
                 ))}
