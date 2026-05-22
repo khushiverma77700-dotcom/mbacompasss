@@ -1059,6 +1059,27 @@ Deno.serve(async (req) => {
             // 4 caselets × 5 = 20; if section has fewer Qs, scale down qPerSet.
             secSets = 4; secQPerSet = Math.max(4, Math.floor(sec.questions / 4));
           }
+        } else if (category === "topic") {
+          // Topic-wise tests are standalone by default. Sets/passages are only
+          // added when the topic itself is intrinsically passage- or caselet-
+          // bound (full RC passages, DI caselets, LR puzzles/arrangements).
+          // Sub-topics like "RC — Inference", "RC — Tone", "RC — Vocabulary"
+          // are question-type drills and must stay standalone.
+          const sc = String(sec.code || "").toUpperCase();
+          const t = String(topic || "").toLowerCase();
+          const isRcPassageTopic =
+            /reading comprehension/.test(t) &&
+            !/(inference|tone|vocabulary|main idea|primary purpose|title|author|question type|strategy|practice)/.test(t);
+          const isDiCaseletTopic = /(data interpretation|di caselet|caselet|bar chart|pie chart|line chart|tables? .*chart|graphs?)/.test(t);
+          const isLrSetTopic = /(arrangement|seating|puzzle|distribution|games?|network|grouping|scheduling|matrix puzzle)/.test(t);
+          if (isRcPassageTopic && ["VARC", "VALR", "LS", "GE", "LC", "VABI"].includes(sc)) {
+            secSets = Math.max(1, Math.min(4, Math.floor(sec.questions / 4)));
+            secQPerSet = 4;
+          } else if ((isDiCaseletTopic || isLrSetTopic) && ["DILR", "LRDI", "DI", "LR", "AR", "QADI"].includes(sc)) {
+            secSets = Math.max(1, Math.min(4, Math.floor(sec.questions / 5)));
+            secQPerSet = 5;
+          }
+          // else: secSets stays 0 → fully standalone topic-wise test
         }
         // ── HARD CAP: any RC-style verbal section must have 4–5 Qs per passage.
         // CAT/XAT/IIFT/SNAP RCs never exceed 5 questions. Prevents the bug
