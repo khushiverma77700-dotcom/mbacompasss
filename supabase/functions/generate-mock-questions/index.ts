@@ -966,11 +966,12 @@ Deno.serve(async (req) => {
         name: baseName,
         slug,
         description: `AI-generated ${labelForCategory(category)} for ${exam_code}. Level: ${level}.`,
-        test_type: category === "topic" ? "topic"
+        test_type: category === "topic" ? "topic_wise"
                  : category === "sectional" ? "sectional"
                  : "full_length",
         category,
         exam_code,
+        topic: category === "topic" ? (topic || null) : null,
         launch_date,
         total_duration_minutes: sectionPlan.reduce((s, x) => s + x.duration, 0),
         difficulty: normalizeDifficulty(null, level),
