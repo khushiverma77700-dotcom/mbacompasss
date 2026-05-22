@@ -431,6 +431,30 @@ function StatTile({ icon: Icon, label, value }: { icon: any; label: string; valu
   );
 }
 
+function TopicChipStrip({ topics, value, onChange }: { topics: string[]; value: string; onChange: (v: string) => void }) {
+  const all = ["All", ...topics];
+  return (
+    <div className="mb-3 -mx-1 px-1 overflow-x-auto scrollbar-none">
+      <div className="flex gap-1.5 min-w-max items-center">
+        <span className="text-[11px] font-semibold text-slate-500 mr-1 shrink-0">Topic:</span>
+        {all.map((t) => (
+          <button
+            key={t}
+            onClick={() => onChange(t)}
+            className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all whitespace-nowrap ${
+              value === t
+                ? "bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-transparent shadow-sm"
+                : "bg-white text-slate-600 border-slate-200 hover:border-emerald-300 hover:text-emerald-700"
+            }`}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 type LockInfo =
   | { kind: "scheduled"; unlocksAt: Date; label: string }
   | { kind: "soon"; label: string }
