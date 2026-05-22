@@ -504,7 +504,7 @@ export default function StudentOverview() {
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="p-5">
           <h2 className="font-semibold flex items-center gap-2 mb-1">
-            <Brain className="h-4 w-4 text-sky-600" /> Percentile Predictor
+            <Brain className="h-4 w-4 text-sky-600" /> Score % Predictor
           </h2>
           <p className="text-xs text-muted-foreground mb-3">Weighted projection from your last 5 mocks.</p>
           {predicted == null ? (
@@ -516,9 +516,9 @@ export default function StudentOverview() {
           )}
           {target > 0 && predicted != null && (
             <div className="mt-4 text-xs flex items-center justify-between">
-              <span className="text-muted-foreground">Target {target}%ile</span>
+              <span className="text-muted-foreground">Target {target}%</span>
               <Badge variant={predicted >= target ? "default" : "secondary"}>
-                {predicted >= target ? "On track" : `Gap ${(target - predicted).toFixed(1)}`}
+                {predicted >= target ? "On track" : `Gap ${(target - predicted).toFixed(1)}%`}
               </Badge>
             </div>
           )}
