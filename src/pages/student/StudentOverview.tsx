@@ -624,7 +624,7 @@ export default function StudentOverview() {
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="p-5">
           <h2 className="font-semibold flex items-center gap-2 mb-3">
-            <BarChart3 className="h-4 w-4 text-sky-600" /> Percentile Distribution
+            <BarChart3 className="h-4 w-4 text-sky-600" /> Score % Distribution
           </h2>
           {submitted.length === 0 ? (
             <div className="h-40 grid place-items-center text-sm text-muted-foreground">No mocks yet</div>
