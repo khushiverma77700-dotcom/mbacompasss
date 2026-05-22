@@ -11,7 +11,9 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const TARGET_POOL = 2000;
+const POOL_MIN = 1000;
+const POOL_MAX = 2500;
+const POOL_GROWTH_PER_DAY = 55; // ~27 days to reach the ceiling
 const UNLOCK_DAYS = 7;
 const AIR_BUCKET = 50;
 
@@ -32,6 +34,16 @@ function hashStr(s: string) {
   }
   return h >>> 0;
 }
+// Dynamic, deterministic pool size — starts small, grows daily, capped.
+function computePoolSize(submittedAt: Date, seedKey: string): number {
+  const daysSince = Math.max(
+    0,
+    Math.floor((Date.now() - submittedAt.getTime()) / 86400000)
+  );
+  const base = POOL_MIN + daysSince * POOL_GROWTH_PER_DAY;
+  const jitter = Math.floor(mulberry32(hashStr(seedKey + ":pool"))() * 121) - 60;
+  return Math.max(POOL_MIN, Math.min(POOL_MAX, base + jitter));
+}
 function gaussian(rand: () => number, mean: number, std: number) {
   const u = Math.max(1e-9, rand());
   const v = Math.max(1e-9, rand());
@@ -45,9 +57,12 @@ function difficultyLabel(d: number) {
   return "Hard";
 }
 function adjustmentFactor(d: number) {
-  if (d >= 0.65) return 0.95;
-  if (d <= 0.3) return 1.1;
-  return 1.05;
+  // Synthetic mean is set slightly BELOW student baseline so percentiles
+  // reflect a realistic competitive aspirant pool (most candidates score lower
+  // than serious test-takers using the platform).
+  if (d >= 0.65) return 0.82;
+  if (d <= 0.3) return 0.95;
+  return 0.88;
 }
 function bucketLabel(rank: number, pool: number) {
   if (rank <= 10) return `AIR ${rank}`;
@@ -83,7 +98,8 @@ type PoolEntry = {
 function buildPoolTagged(
   realEntries: { score: number; user_id: string; display_name: string }[],
   maxScore: number,
-  seedKey: string
+  seedKey: string,
+  targetPool: number
 ) {
   const realScores = realEntries.map((e) => e.score);
   const realMean =
@@ -100,7 +116,7 @@ function buildPoolTagged(
   const adjMean = realMean * adjustmentFactor(difficulty);
   const std = Math.max(realStd, Math.max(8, maxScore * 0.08));
 
-  const syntheticCount = Math.max(0, TARGET_POOL - realScores.length);
+  const syntheticCount = Math.max(0, targetPool - realScores.length);
   const rand = mulberry32(hashStr(seedKey));
   const entries: PoolEntry[] = realEntries.map((e) => ({
     score: e.score,
@@ -274,10 +290,14 @@ Deno.serve(async (req) => {
       }))
       .filter((e) => Number.isFinite(e.score));
 
+    // Dynamic pool size — grows over time, capped at 2,500.
+    const targetPool = computePoolSize(submittedAt, `${attempt.test_id}`);
+
     const { entries: pool, difficulty } = buildPoolTagged(
       realEntries,
       maxScore,
-      `${attempt.test_id}`
+      `${attempt.test_id}`,
+      targetPool
     );
 
     const myScore = Number(attempt.total_score ?? 0);
@@ -333,7 +353,8 @@ Deno.serve(async (req) => {
       const { entries: poolS, difficulty: dS } = buildPoolTagged(
         realS,
         maxS,
-        `${attempt.test_id}:${key}`
+        `${attempt.test_id}:${key}`,
+        targetPool
       );
       const rS = rankOfScore(poolS, myScoreS);
       sectional[key] = {
