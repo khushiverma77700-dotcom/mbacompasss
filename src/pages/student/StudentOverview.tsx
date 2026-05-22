@@ -580,7 +580,7 @@ export default function StudentOverview() {
             <h2 className="font-semibold flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-sky-600" /> Sectional Average Performance
             </h2>
-            <p className="text-xs text-muted-foreground">Average score, percentile, accuracy and questions attempted per section</p>
+            <p className="text-xs text-muted-foreground">Average score, accuracy and questions attempted per section</p>
           </div>
         </div>
         {sectional.length === 0 ? (
