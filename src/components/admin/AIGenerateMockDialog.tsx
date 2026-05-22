@@ -305,6 +305,15 @@ export default function AIGenerateMockDialog({ open, onOpenChange, onCreated }: 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [exam, category]);
 
+  // Topic-wise: force sets=1 when topic doesn't need passages/caselets
+  useEffect(() => {
+    if (category !== "topic") return;
+    const isRcPassage = /reading\s*comprehension|passage/i.test(topic) && !/inference|tone|vocabulary|main\s*idea|primary\s*purpose|title|author|question\s*type|strategy|practice/i.test(topic);
+    const isDiCaselet = /caselet|data\s*interpretation|tables?|graphs?|charts?|bar|pie|line\s*graph/i.test(topic);
+    const isLrSet = /puzzle|arrangement|seating|grouping|matrix|cubes?|games?|tournaments?/i.test(topic);
+    if (!(isRcPassage || isDiCaselet || isLrSet)) setSets(1);
+  }, [category, topic]);
+
   // Auto-fill defaults when exam changes
   const onExamChange = (code: string) => {
     setExam(code);
