@@ -290,18 +290,19 @@ export default function StudentOverview() {
       .sort((a, b) => b.avgPercentile - a.avgPercentile);
   }, [submitted, sectionNameMap]);
 
-  // Percentile band distribution
+  // Score % band distribution (replaces percentile band)
   const bandData = useMemo(() => {
     const bands = [
-      { name: "<70", min: 0, max: 70, count: 0 },
-      { name: "70-80", min: 70, max: 80, count: 0 },
-      { name: "80-90", min: 80, max: 90, count: 0 },
-      { name: "90-95", min: 90, max: 95, count: 0 },
-      { name: "95-99", min: 95, max: 99, count: 0 },
-      { name: "99+", min: 99, max: 101, count: 0 },
+      { name: "<30%", min: 0, max: 30, count: 0 },
+      { name: "30-50%", min: 30, max: 50, count: 0 },
+      { name: "50-65%", min: 50, max: 65, count: 0 },
+      { name: "65-80%", min: 65, max: 80, count: 0 },
+      { name: "80-90%", min: 80, max: 90, count: 0 },
+      { name: "90%+", min: 90, max: 101, count: 0 },
     ];
     for (const a of submitted) {
-      const p = Number(a.percentile || 0);
+      const max = Number(a.max_score || 0);
+      const p = max > 0 ? (Number(a.total_score || 0) / max) * 100 : 0;
       const b = bands.find((x) => p >= x.min && p < x.max);
       if (b) b.count += 1;
     }
