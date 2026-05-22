@@ -22,7 +22,7 @@ type Attempt = {
   total_score: number | null;
   max_score: number | null;
   submitted_at: string | null;
-  test?: { name?: string; exam_code?: string } | null;
+  test?: { name?: string; exam_code?: string; test_type?: string } | null;
 };
 
 type LeaderRow = { rank: number; name: string; score: number; is_self?: boolean; is_real?: boolean };
@@ -278,15 +278,24 @@ function AttemptCard({ attempt }: { attempt: Attempt }) {
 }
 
 export default function AllIndiaRankTab({ attempts }: { attempts: Attempt[] }) {
-  // Sorted by submission date (newest first)
-  const sorted = useMemo(
-    () =>
-      attempts
-        .filter((a) => !!a.submitted_at)
-        .slice()
-        .sort((a, b) => new Date(b.submitted_at!).getTime() - new Date(a.submitted_at!).getTime()),
-    [attempts]
-  );
+  // AIR only for full-length mocks, and only the FIRST submitted attempt per test
+  const sorted = useMemo(() => {
+    const fullLength = attempts.filter(
+      (a) => !!a.submitted_at && (a.test?.test_type ?? "full_length") === "full_length"
+    );
+    // Keep earliest submitted attempt per test_id
+    const firstByTest = new Map<string, Attempt>();
+    fullLength
+      .slice()
+      .sort((a, b) => new Date(a.submitted_at!).getTime() - new Date(b.submitted_at!).getTime())
+      .forEach((a) => {
+        if (!firstByTest.has(a.test_id)) firstByTest.set(a.test_id, a);
+      });
+    // Display newest first
+    return Array.from(firstByTest.values()).sort(
+      (a, b) => new Date(b.submitted_at!).getTime() - new Date(a.submitted_at!).getTime()
+    );
+  }, [attempts]);
 
   // Exam filter — only exams the student has actually attempted (== purchased)
   const examOptions = useMemo(() => {
