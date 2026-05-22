@@ -366,10 +366,10 @@ export default function StudentOverview() {
                 <p className="text-sky-100/90 mt-1.5 text-[13px] sm:text-sm max-w-lg">
                   {target && gap != null
                     ? gap > 0
-                      ? `You're ${gap} %ile away from your ${target}%ile target — let's close the gap.`
-                      : `You've crossed your ${target}%ile target. Aim higher today!`
+                      ? `You're ${gap}% away from your ${target}% score target — let's close the gap.`
+                      : `You've crossed your ${target}% score target. Aim higher today!`
                     : stats.submittedCount > 0
-                      ? `${stats.submittedCount} mock${stats.submittedCount > 1 ? "s" : ""} done, best at ${stats.bestPercentile}%ile. Keep momentum.`
+                      ? `${stats.submittedCount} mock${stats.submittedCount > 1 ? "s" : ""} done — avg score ${stats.avgScore}/${stats.avgMaxScore}. Keep momentum.`
                       : "Take your first mock to unlock AI-powered insights and a personalised plan."}
                 </p>
 
