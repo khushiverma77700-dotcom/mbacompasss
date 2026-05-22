@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import MockGenerationProgressPanel from "@/components/admin/MockGenerationProgressPanel";
 import { useMockGenerationProgress } from "@/hooks/useMockGenerationProgress";
 import { Progress } from "@/components/ui/progress";
+import { getTopicsFor } from "@/data/mockTopics";
 
 // Mirrors EXAM_PROFILES on the backend so the per-section editor
 // for Full-Length mocks can prefill defaults.
