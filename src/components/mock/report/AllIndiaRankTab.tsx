@@ -41,6 +41,8 @@ type RankResult = {
   pool_size?: number;
   real_pool_size?: number;
   leaderboard?: { top: LeaderRow[]; window: LeaderRow[]; my_rank: number; pool_size: number };
+  reason?: string;
+  message?: string;
 };
 
 function fmtCountdown(target: string) {
