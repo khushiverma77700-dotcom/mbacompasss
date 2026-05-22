@@ -34,6 +34,15 @@ function hashStr(s: string) {
   }
   return h >>> 0;
 }
+// Dynamic, deterministic pool size — starts small, grows daily, capped.
+function computePoolSize(submittedAt: Date, seedKey: string): number {
+  const daysSince = Math.max(
+    0,
+    Math.floor((Date.now() - submittedAt.getTime()) / 86400000)
+  );
+  const base = POOL_MIN + daysSince * POOL_GROWTH_PER_DAY;
+  const jitter = Math.floor(mulberry32(hashStr(seedKey + ":pool"))() * 121) - 60;
+  return Math.max(POOL_MIN, Math.min(POOL_MAX, base + jitter));
 function gaussian(rand: () => number, mean: number, std: number) {
   const u = Math.max(1e-9, rand());
   const v = Math.max(1e-9, rand());
