@@ -600,7 +600,7 @@ export default function StudentOverview() {
                 <div key={s.name} className="rounded-lg border border-sky-100 bg-sky-50/40 p-3">
                   <div className="flex items-center justify-between mb-2">
                     <div className="font-semibold text-sm">{s.name}</div>
-                    <Badge variant="secondary">{s.avgPercentile} %ile</Badge>
+                    <Badge variant="secondary">{s.pctOfMax}%</Badge>
                   </div>
                   <div className="grid grid-cols-2 gap-y-1.5 text-xs">
                     <div className="text-muted-foreground">Avg score</div>
