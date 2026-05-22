@@ -343,7 +343,8 @@ Deno.serve(async (req) => {
       const { entries: poolS, difficulty: dS } = buildPoolTagged(
         realS,
         maxS,
-        `${attempt.test_id}:${key}`
+        `${attempt.test_id}:${key}`,
+        targetPool
       );
       const rS = rankOfScore(poolS, myScoreS);
       sectional[key] = {
