@@ -357,12 +357,17 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
         fixedType === "attempted" ? (
           <AttemptedGrid items={buildBucket("attempted") as any} />
         ) : (
-          <BucketGrid
-            items={buildBucket(fixedType) as any}
-            typeLabel={TYPE_TITLES[fixedType].title}
-            examFilter={examFilter}
-            onUpgrade={() => setUpgradeOpen(true)}
-          />
+          <>
+            {fixedType === "topic_wise" && topicChips.length > 0 && (
+              <TopicChipStrip topics={topicChips} value={topicFilter} onChange={setTopicFilter} />
+            )}
+            <BucketGrid
+              items={buildBucket(fixedType) as any}
+              typeLabel={TYPE_TITLES[fixedType].title}
+              examFilter={examFilter}
+              onUpgrade={() => setUpgradeOpen(true)}
+            />
+          </>
         )
       ) : (
         <Tabs defaultValue="full_length" className="w-full">
@@ -393,12 +398,17 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
               {t.key === "attempted" ? (
                 <AttemptedGrid items={buildBucket("attempted") as any} />
               ) : (
-                <BucketGrid
-                  items={buildBucket(t.key) as any}
-                  typeLabel={t.label}
-                  examFilter={examFilter}
-                  onUpgrade={() => setUpgradeOpen(true)}
-                />
+                <>
+                  {t.key === "topic_wise" && topicChips.length > 0 && (
+                    <TopicChipStrip topics={topicChips} value={topicFilter} onChange={setTopicFilter} />
+                  )}
+                  <BucketGrid
+                    items={buildBucket(t.key) as any}
+                    typeLabel={t.label}
+                    examFilter={examFilter}
+                    onUpgrade={() => setUpgradeOpen(true)}
+                  />
+                </>
               )}
             </TabsContent>
           ))}
