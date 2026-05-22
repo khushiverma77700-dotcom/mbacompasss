@@ -107,6 +107,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const [topicFilter, setTopicFilter] = useState<string>("All");
+  const [sectionFilter, setSectionFilter] = useState<string>("All");
 
   useEffect(() => {
     if (!user) return;
