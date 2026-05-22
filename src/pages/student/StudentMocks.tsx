@@ -58,6 +58,7 @@ type Test = {
   exam_code: string | null;
   category: string | null;
   test_type: string | null;
+  topic: string | null;
   is_live: boolean | null;
   scheduled_start_at: string | null;
   launch_date: string | null;
