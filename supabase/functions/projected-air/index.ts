@@ -43,6 +43,7 @@ function computePoolSize(submittedAt: Date, seedKey: string): number {
   const base = POOL_MIN + daysSince * POOL_GROWTH_PER_DAY;
   const jitter = Math.floor(mulberry32(hashStr(seedKey + ":pool"))() * 121) - 60;
   return Math.max(POOL_MIN, Math.min(POOL_MAX, base + jitter));
+}
 function gaussian(rand: () => number, mean: number, std: number) {
   const u = Math.max(1e-9, rand());
   const v = Math.max(1e-9, rand());
