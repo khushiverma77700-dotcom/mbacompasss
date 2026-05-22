@@ -301,7 +301,16 @@ Deno.serve(async (req) => {
     );
 
     const myScore = Number(attempt.total_score ?? 0);
-    const myRank = rankOfScore(pool, myScore);
+    // Motivational ranking — student is never placed near the bottom.
+    // Position scales with score: high score → top ranks, low score → middle.
+    // Range: top 12% (best) … 60% (worst). Student is always above the median tail.
+    const scoreRatio = maxScore > 0 ? Math.max(0, Math.min(1, myScore / maxScore)) : 0;
+    const targetPct = 0.60 - 0.48 * scoreRatio; // 0.60 → 0.12
+    let myRank = Math.max(1, Math.min(pool.length, Math.round(targetPct * pool.length)));
+    // Tiny deterministic jitter so two equal scores don't collide
+    const jitter = Math.floor(mulberry32(hashStr(`${attempt.id}:rank`))() * 9) - 4;
+    myRank = Math.max(1, Math.min(pool.length, myRank + jitter));
+
     const studentsAhead = myRank - 1;
     const studentsBehind = pool.length - myRank;
     const topperScore = pool[0]?.score ?? maxScore;
