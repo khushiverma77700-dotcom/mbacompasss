@@ -452,8 +452,8 @@ export default function StudentOverview() {
           <div className="relative mt-5 sm:mt-6 grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2">
             <Kpi label="Enrolled" value={stats.enrolledCount} />
             <Kpi label="Completed" value={stats.submittedCount} />
-            <Kpi label="Avg %ile" value={stats.avgPercentile} />
-            <Kpi label="Best %ile" value={stats.bestPercentile} />
+            <Kpi label="Avg Score" value={stats.avgScore} />
+            <Kpi label="Avg Score %" value={`${stats.avgPctScore}%`} />
             <Kpi label="Accuracy" value={`${stats.accuracy}%`} />
             <Kpi label="Streak" value={`${stats.streak}d`} icon={<Flame className="h-3.5 w-3.5" />} />
           </div>
