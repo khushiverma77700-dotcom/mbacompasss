@@ -477,12 +477,194 @@ function StatTile({ icon: Icon, label, value }: { icon: any; label: string; valu
   );
 }
 
+function ChipStrip({
+  label, options, value, onChange, gradient = "from-emerald-500 to-teal-600", hoverColor = "emerald",
+}: {
+  label: string; options: string[]; value: string; onChange: (v: string) => void;
+  gradient?: string; hoverColor?: string;
+}) {
+  const all = ["All", ...options];
+  return (
+    <div className="-mx-1 px-1 overflow-x-auto scrollbar-none">
+      <div className="flex gap-1.5 min-w-max items-center">
+        <span className="text-[11px] font-semibold text-slate-500 mr-1 shrink-0">{label}:</span>
+        {all.map((t) => (
+          <button
+            key={t}
+            onClick={() => onChange(t)}
+            className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all whitespace-nowrap ${
+              value === t
+                ? `bg-gradient-to-r ${gradient} text-white border-transparent shadow-sm`
+                : `bg-white text-slate-600 border-slate-200 hover:border-${hoverColor}-300 hover:text-${hoverColor}-700`
+            }`}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TopicWiseView({
+  items, allTopicWise, attemptedByTest, enrolledTestIds,
+  sections, sectionFilter, onSectionChange,
+  topics, topicFilter, onTopicChange,
+  examFilter, onUpgrade,
+}: {
+  items: { test: Test; owned: boolean; inProgress: Attempt | null; latestSubmitted: Attempt | null }[];
+  allTopicWise: Test[];
+  attemptedByTest: Record<string, Attempt[]>;
+  enrolledTestIds: Set<string>;
+  sections: string[]; sectionFilter: string; onSectionChange: (v: string) => void;
+  topics: string[]; topicFilter: string; onTopicChange: (v: string) => void;
+  examFilter: string; onUpgrade: () => void;
+}) {
+  // Summary across the current exam scope (ignore section/topic filter so it reflects total catalog)
+  const summary = useMemo(() => {
+    const total = allTopicWise.length;
+    const secSet = new Set<string>();
+    const topicSet = new Set<string>();
+    let attempted = 0;
+    allTopicWise.forEach((t) => {
+      const sec = (t.category || "").trim().toUpperCase();
+      if (sec) secSet.add(sec);
+      if (t.topic && t.topic.trim()) topicSet.add(`${sec}::${t.topic.trim()}`);
+      const subs = attemptedByTest[t.id]?.some((a) => a.status === "submitted" || a.status === "auto_submitted");
+      if (subs) attempted += 1;
+    });
+    const unattempted = Math.max(0, total - attempted);
+    const progress = total > 0 ? Math.round((attempted / total) * 100) : 0;
+    return { total, sections: secSet.size, topics: topicSet.size, attempted, unattempted, progress };
+  }, [allTopicWise, attemptedByTest]);
+
+  // Group filtered items by section → topic for display
+  const grouped = useMemo(() => {
+    const out: Record<string, Record<string, typeof items>> = {};
+    items.forEach((it) => {
+      const sec = (it.test.category || "Other").trim().toUpperCase() || "Other";
+      const top = (it.test.topic || "General").trim() || "General";
+      ((out[sec] ||= {})[top] ||= []).push(it);
+    });
+    return out;
+  }, [items]);
+
+  const sectionKeys = Object.keys(grouped).sort();
+
+  return (
+    <div className="space-y-4">
+      {/* Summary strip */}
+      <Card className="p-3 sm:p-4 border-emerald-100/70 bg-gradient-to-br from-emerald-50/60 via-white to-teal-50/40">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3">
+          <SummaryTile icon={BookOpen} label="Total Topic Tests" value={summary.total} tone="emerald" />
+          <SummaryTile icon={Layers} label="Sections" value={summary.sections} tone="sky" />
+          <SummaryTile icon={Target} label="Topics" value={summary.topics} tone="violet" />
+          <SummaryTile icon={CheckCircle2} label="Attempted" value={summary.attempted} tone="teal" />
+          <SummaryTile icon={Clock} label="Unattempted" value={summary.unattempted} tone="amber" />
+        </div>
+        <div className="mt-3">
+          <div className="flex items-center justify-between text-[11px] text-slate-600 mb-1">
+            <span className="inline-flex items-center gap-1 font-medium"><Flame className="h-3 w-3 text-emerald-600" /> Topic-wise progress</span>
+            <span className="font-semibold text-emerald-700">{summary.progress}%</span>
+          </div>
+          <div className="h-2 rounded-full bg-emerald-100 overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all" style={{ width: `${summary.progress}%` }} />
+          </div>
+        </div>
+      </Card>
+
+      {/* Filters */}
+      <div className="space-y-2">
+        {sections.length > 0 && (
+          <ChipStrip label="Section" options={sections} value={sectionFilter} onChange={onSectionChange} gradient="from-sky-500 to-blue-600" hoverColor="sky" />
+        )}
+        {topics.length > 0 && (
+          <ChipStrip label="Topic" options={topics} value={topicFilter} onChange={onTopicChange} gradient="from-emerald-500 to-teal-600" hoverColor="emerald" />
+        )}
+      </div>
+
+      {/* Grouped grid */}
+      {sectionKeys.length === 0 ? (
+        <Card className="p-10 text-center border-dashed border-2 border-sky-100 bg-gradient-to-br from-sky-50/40 to-white">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-sky-100 mb-3">
+            <Lock className="h-7 w-7 text-sky-600" />
+          </div>
+          <div className="font-semibold text-base">
+            No Topic-wise{examFilter !== "All" ? ` (${examFilter})` : ""} mocks yet
+          </div>
+          <p className="text-sm text-muted-foreground mt-1 mb-4 max-w-sm mx-auto">
+            Unlock these mocks by upgrading to a course bundle that includes them.
+          </p>
+          <Link to="/courses">
+            <Button className="gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700">
+              <ShoppingBag className="h-4 w-4" /> Browse Courses
+            </Button>
+          </Link>
+        </Card>
+      ) : (
+        sectionKeys.map((sec) => {
+          const topicKeys = Object.keys(grouped[sec]).sort();
+          const sectionCount = topicKeys.reduce((n, tp) => n + grouped[sec][tp].length, 0);
+          return (
+            <div key={sec} className="space-y-3">
+              <div className="flex items-center gap-2 pt-1">
+                <div className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-semibold shadow-sm">
+                  <Layers className="h-3.5 w-3.5" /> {sec}
+                </div>
+                <span className="text-xs text-slate-500">{sectionCount} {sectionCount === 1 ? "test" : "tests"} · {topicKeys.length} {topicKeys.length === 1 ? "topic" : "topics"}</span>
+              </div>
+              {topicKeys.map((tp) => (
+                <div key={tp} className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[12px] font-semibold text-emerald-700 inline-flex items-center gap-1">
+                      <BookOpen className="h-3.5 w-3.5" /> {tp}
+                    </span>
+                    <span className="text-[10px] text-slate-400">({grouped[sec][tp].length})</span>
+                    <div className="flex-1 h-px bg-slate-100" />
+                  </div>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {grouped[sec][tp].map((item) => (
+                      <MockCardItem key={item.test.id} item={item} onUpgrade={onUpgrade} />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}
+
+function SummaryTile({ icon: Icon, label, value, tone }: { icon: any; label: string; value: number; tone: "emerald" | "sky" | "violet" | "teal" | "amber" }) {
+  const toneMap: Record<string, string> = {
+    emerald: "bg-emerald-100 text-emerald-700",
+    sky: "bg-sky-100 text-sky-700",
+    violet: "bg-violet-100 text-violet-700",
+    teal: "bg-teal-100 text-teal-700",
+    amber: "bg-amber-100 text-amber-700",
+  };
+  return (
+    <div className="rounded-lg bg-white border border-slate-100 p-2.5 flex items-center gap-2">
+      <div className={`h-8 w-8 rounded-md grid place-items-center ${toneMap[tone]}`}>
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0">
+        <div className="text-[10px] uppercase tracking-wider text-slate-500 leading-none truncate">{label}</div>
+        <div className="text-base sm:text-lg font-bold text-slate-800 leading-tight">{value}</div>
+      </div>
+    </div>
+  );
+}
+
 function TopicChipStrip({ topics, value, onChange }: { topics: string[]; value: string; onChange: (v: string) => void }) {
   const all = ["All", ...topics];
   return (
     <div className="mb-3 -mx-1 px-1 overflow-x-auto scrollbar-none">
       <div className="flex gap-1.5 min-w-max items-center">
         <span className="text-[11px] font-semibold text-slate-500 mr-1 shrink-0">Topic:</span>
+
         {all.map((t) => (
           <button
             key={t}
