@@ -258,7 +258,7 @@ export default function MockResultPage() {
     label: `M${i + 1}`,
     score: Number(h.total_score ?? 0),
     accuracy: Number(h.accuracy ?? 0),
-    percentile: Number(h.percentile ?? 0),
+    maxScore: Number(h.max_score ?? 0),
   })), [historyAttempts]);
 
   const totalTimeSec = useMemo(() => responses.reduce((a, r) => a + Number(r.time_spent_seconds ?? 0), 0), [responses]);
@@ -354,7 +354,7 @@ export default function MockResultPage() {
               </div>
               <div className="flex items-center gap-2 text-sky-700">
                 <Trophy className="h-6 w-6" />
-                <div className="text-3xl font-bold">{attempt.percentile ?? 0}<span className="text-sm font-normal text-muted-foreground"> %ile</span></div>
+                <div className="text-3xl font-bold">{attempt.total_score ?? 0}<span className="text-sm font-normal text-muted-foreground"> / {attempt.max_score ?? 0}</span></div>
               </div>
             </div>
           </Card>

@@ -3796,6 +3796,72 @@ export type Database = {
           },
         ]
       }
+      mock_projected_ranks: {
+        Row: {
+          air_bucket: string
+          attempt_id: string
+          computed_at: string
+          difficulty: string
+          pool_size: number
+          projected_air: number
+          projected_percentile: number
+          real_pool_size: number
+          sectional: Json
+          students_ahead: number
+          students_behind: number
+          test_id: string
+          topper_score: number
+          user_id: string
+        }
+        Insert: {
+          air_bucket: string
+          attempt_id: string
+          computed_at?: string
+          difficulty: string
+          pool_size: number
+          projected_air: number
+          projected_percentile: number
+          real_pool_size: number
+          sectional?: Json
+          students_ahead: number
+          students_behind: number
+          test_id: string
+          topper_score: number
+          user_id: string
+        }
+        Update: {
+          air_bucket?: string
+          attempt_id?: string
+          computed_at?: string
+          difficulty?: string
+          pool_size?: number
+          projected_air?: number
+          projected_percentile?: number
+          real_pool_size?: number
+          sectional?: Json
+          students_ahead?: number
+          students_behind?: number
+          test_id?: string
+          topper_score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_projected_ranks_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: true
+            referencedRelation: "mock_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mock_projected_ranks_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: true
+            referencedRelation: "mock_leaderboard"
+            referencedColumns: ["attempt_id"]
+          },
+        ]
+      }
       mock_purchase_orders: {
         Row: {
           account_created: boolean

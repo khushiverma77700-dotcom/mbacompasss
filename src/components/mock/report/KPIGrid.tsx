@@ -4,7 +4,7 @@ import { Trophy, Target, Activity, Clock, ListChecks } from "lucide-react";
 type KPI = {
   totalScore: number;
   maxScore: number;
-  percentile: number;
+  percentile?: number; // kept for backward-compat, not rendered
   accuracy: number;
   attempted: number;
   totalQuestions: number;
@@ -25,14 +25,14 @@ export default function KPIGrid({ data }: { data: KPI }) {
           <Trophy className="h-4 w-4" /> Total Score
         </div>
         <div className="text-2xl font-bold mt-1.5">{data.totalScore}</div>
-        <div className="text-xs text-muted-foreground mt-0.5">/ {data.maxScore} ({scorePct}%)</div>
+        <div className="text-xs text-muted-foreground mt-0.5">/ {data.maxScore}</div>
       </Card>
       <Card className="p-4 bg-gradient-to-br from-sky-50 to-sky-100/30 border-sky-200">
         <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-sky-700">
-          <Target className="h-4 w-4" /> Percentile
+          <Target className="h-4 w-4" /> Score %
         </div>
-        <div className="text-2xl font-bold mt-1.5">{data.percentile}</div>
-        <div className="text-xs text-muted-foreground mt-0.5">vs all test-takers</div>
+        <div className="text-2xl font-bold mt-1.5">{scorePct}%</div>
+        <div className="text-xs text-muted-foreground mt-0.5">of maximum marks</div>
       </Card>
       <Card className="p-4 bg-gradient-to-br from-green-50 to-green-100/30 border-green-200">
         <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-green-700">

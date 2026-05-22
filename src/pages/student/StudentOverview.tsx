@@ -217,32 +217,39 @@ export default function StudentOverview() {
     };
   }, [enrollments, attempts, submitted]);
 
+  // Projected score % (replaces percentile predictor) using weighted avg of last 5 mocks
   const predicted = useMemo(() => {
-    const last = submitted.slice(0, 5).map((x) => Number(x.percentile || 0));
+    const last = submitted.slice(0, 5).map((x) => {
+      const max = Number(x.max_score || 0);
+      return max > 0 ? (Number(x.total_score || 0) / max) * 100 : 0;
+    });
     if (!last.length) return null;
     const weights = last.map((_, i) => 5 - i);
     const wsum = weights.reduce((a, b) => a + b, 0);
     const w = last.reduce((s, v, i) => s + v * weights[i], 0) / wsum;
     const trend = last.length >= 3 ? (last[0] - last[last.length - 1]) / last.length : 0;
-    return Math.max(0, Math.min(99.9, +(w + trend * 0.5).toFixed(1))) || 0;
+    return Math.max(0, Math.min(100, +(w + trend * 0.5).toFixed(1))) || 0;
   }, [submitted]);
 
-  // Trend with cumulative average
+  // Trend with cumulative average — now score-based (no percentile rendered)
   const trendData = useMemo(() => {
     const chrono = submitted.slice().reverse();
-    let cumP = 0, cumA = 0, cumS = 0;
+    let cumS = 0, cumA = 0, cumP = 0;
     return chrono.slice(-12).map((x, i) => {
-      cumP += Number(x.percentile || 0);
-      cumA += Number(x.accuracy || 0);
+      const sp = Number(x.max_score || 0) > 0
+        ? +((Number(x.total_score || 0) / Number(x.max_score)) * 100).toFixed(1)
+        : 0;
       cumS += Number(x.total_score || 0);
+      cumA += Number(x.accuracy || 0);
+      cumP += sp;
       return {
         name: `M${i + 1}`,
-        percentile: Number(x.percentile || 0),
         score: Number(x.total_score || 0),
         accuracy: Number(x.accuracy || 0),
-        cumPercentile: +(cumP / (i + 1)).toFixed(1),
-        cumAccuracy: +(cumA / (i + 1)).toFixed(1),
+        scorePct: sp,
         cumScore: +(cumS / (i + 1)).toFixed(1),
+        cumAccuracy: +(cumA / (i + 1)).toFixed(1),
+        cumScorePct: +(cumP / (i + 1)).toFixed(1),
       };
     });
   }, [submitted]);
@@ -283,18 +290,19 @@ export default function StudentOverview() {
       .sort((a, b) => b.avgPercentile - a.avgPercentile);
   }, [submitted, sectionNameMap]);
 
-  // Percentile band distribution
+  // Score % band distribution (replaces percentile band)
   const bandData = useMemo(() => {
     const bands = [
-      { name: "<70", min: 0, max: 70, count: 0 },
-      { name: "70-80", min: 70, max: 80, count: 0 },
-      { name: "80-90", min: 80, max: 90, count: 0 },
-      { name: "90-95", min: 90, max: 95, count: 0 },
-      { name: "95-99", min: 95, max: 99, count: 0 },
-      { name: "99+", min: 99, max: 101, count: 0 },
+      { name: "<30%", min: 0, max: 30, count: 0 },
+      { name: "30-50%", min: 30, max: 50, count: 0 },
+      { name: "50-65%", min: 50, max: 65, count: 0 },
+      { name: "65-80%", min: 65, max: 80, count: 0 },
+      { name: "80-90%", min: 80, max: 90, count: 0 },
+      { name: "90%+", min: 90, max: 101, count: 0 },
     ];
     for (const a of submitted) {
-      const p = Number(a.percentile || 0);
+      const max = Number(a.max_score || 0);
+      const p = max > 0 ? (Number(a.total_score || 0) / max) * 100 : 0;
       const b = bands.find((x) => p >= x.min && p < x.max);
       if (b) b.count += 1;
     }
@@ -358,10 +366,10 @@ export default function StudentOverview() {
                 <p className="text-sky-100/90 mt-1.5 text-[13px] sm:text-sm max-w-lg">
                   {target && gap != null
                     ? gap > 0
-                      ? `You're ${gap} %ile away from your ${target}%ile target — let's close the gap.`
-                      : `You've crossed your ${target}%ile target. Aim higher today!`
+                      ? `You're ${gap}% away from your ${target}% score target — let's close the gap.`
+                      : `You've crossed your ${target}% score target. Aim higher today!`
                     : stats.submittedCount > 0
-                      ? `${stats.submittedCount} mock${stats.submittedCount > 1 ? "s" : ""} done, best at ${stats.bestPercentile}%ile. Keep momentum.`
+                      ? `${stats.submittedCount} mock${stats.submittedCount > 1 ? "s" : ""} done — avg score ${stats.avgScore}/${stats.avgMaxScore}. Keep momentum.`
                       : "Take your first mock to unlock AI-powered insights and a personalised plan."}
                 </p>
 
@@ -412,14 +420,14 @@ export default function StudentOverview() {
                   <div className="absolute inset-0 grid place-items-center text-center">
                     <div>
                       <div className="text-xl sm:text-2xl font-bold leading-none">{predicted ?? "—"}</div>
-                      <div className="text-[9px] uppercase tracking-wider text-sky-100/80 mt-0.5">%ile</div>
+                      <div className="text-[9px] uppercase tracking-wider text-sky-100/80 mt-0.5">score %</div>
                     </div>
                   </div>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[10px] uppercase tracking-wider text-sky-100/80">Projected Percentile</div>
+                  <div className="text-[10px] uppercase tracking-wider text-sky-100/80">Projected Score %</div>
                   <div className="text-sm font-semibold mt-0.5">
-                    {target > 0 ? `Target ${target}%ile` : "Set a target to track gap"}
+                    {target > 0 ? `Target ${target}%` : "Set a target to track gap"}
                   </div>
                   {target > 0 && (
                     <div className="mt-2">
@@ -444,8 +452,8 @@ export default function StudentOverview() {
           <div className="relative mt-5 sm:mt-6 grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-1.5 sm:gap-2">
             <Kpi label="Enrolled" value={stats.enrolledCount} />
             <Kpi label="Completed" value={stats.submittedCount} />
-            <Kpi label="Avg %ile" value={stats.avgPercentile} />
-            <Kpi label="Best %ile" value={stats.bestPercentile} />
+            <Kpi label="Avg Score" value={stats.avgScore} />
+            <Kpi label="Avg Score %" value={`${stats.avgPctScore}%`} />
             <Kpi label="Accuracy" value={`${stats.accuracy}%`} />
             <Kpi label="Streak" value={`${stats.streak}d`} icon={<Flame className="h-3.5 w-3.5" />} />
           </div>
@@ -475,8 +483,8 @@ export default function StudentOverview() {
         <SectionHeading icon={Gauge} title="Your numbers at a glance" subtitle="Live snapshot — updates the moment you submit a mock" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <StatTile icon={BookOpenCheck} label="Mocks Enrolled" value={stats.enrolledCount} sub={`${stats.inProgressCount} in progress`} tone="sky" />
-          <StatTile icon={CheckCircle2} label="Mocks Completed" value={stats.submittedCount} sub={stats.improvement >= 0 ? `▲ ${stats.improvement} %ile growth` : `▼ ${Math.abs(stats.improvement)} %ile`} tone="emerald" trend={stats.improvement} />
-          <StatTile icon={Trophy} label="Best Percentile" value={stats.bestPercentile} sub={`Avg ${stats.avgPercentile}`} tone="amber" />
+          <StatTile icon={CheckCircle2} label="Mocks Completed" value={stats.submittedCount} sub={`Avg score ${stats.avgScore}/${stats.avgMaxScore}`} tone="emerald" />
+          <StatTile icon={Trophy} label="Avg Score %" value={`${stats.avgPctScore}%`} sub={`across ${stats.submittedCount} mock${stats.submittedCount === 1 ? "" : "s"}`} tone="amber" />
           <StatTile icon={Activity} label="Questions Solved" value={stats.totalAttempted} sub={`${stats.totalCorrect} correct`} tone="rose" />
         </div>
       </div>
@@ -496,7 +504,7 @@ export default function StudentOverview() {
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="p-5">
           <h2 className="font-semibold flex items-center gap-2 mb-1">
-            <Brain className="h-4 w-4 text-sky-600" /> Percentile Predictor
+            <Brain className="h-4 w-4 text-sky-600" /> Score % Predictor
           </h2>
           <p className="text-xs text-muted-foreground mb-3">Weighted projection from your last 5 mocks.</p>
           {predicted == null ? (
@@ -508,9 +516,9 @@ export default function StudentOverview() {
           )}
           {target > 0 && predicted != null && (
             <div className="mt-4 text-xs flex items-center justify-between">
-              <span className="text-muted-foreground">Target {target}%ile</span>
+              <span className="text-muted-foreground">Target {target}%</span>
               <Badge variant={predicted >= target ? "default" : "secondary"}>
-                {predicted >= target ? "On track" : `Gap ${(target - predicted).toFixed(1)}`}
+                {predicted >= target ? "On track" : `Gap ${(target - predicted).toFixed(1)}%`}
               </Badge>
             </div>
           )}
@@ -520,7 +528,7 @@ export default function StudentOverview() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="font-semibold flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-sky-600" /> Percentile — Mock vs Cumulative Avg
+                <TrendingUp className="h-4 w-4 text-sky-600" /> Score % — Mock vs Cumulative Avg
               </h2>
               <p className="text-xs text-muted-foreground">Bars: each mock • Line: running average</p>
             </div>
@@ -533,7 +541,7 @@ export default function StudentOverview() {
               Take a mock to see your trend chart
             </div>
           ) : (
-            <MiniTrendChart data={trendData} barKey="percentile" lineKey="cumPercentile" max={100} target={target} />
+            <MiniTrendChart data={trendData} barKey="scorePct" lineKey="cumScorePct" max={100} target={target} />
           )}
         </Card>
       </div>
@@ -572,7 +580,7 @@ export default function StudentOverview() {
             <h2 className="font-semibold flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-sky-600" /> Sectional Average Performance
             </h2>
-            <p className="text-xs text-muted-foreground">Average score, percentile, accuracy and questions attempted per section</p>
+            <p className="text-xs text-muted-foreground">Average score, accuracy and questions attempted per section</p>
           </div>
         </div>
         {sectional.length === 0 ? (
@@ -584,7 +592,7 @@ export default function StudentOverview() {
             <div className="grid md:grid-cols-2 gap-6">
               <MiniGroupedBars data={sectional} firstKey="avgScore" secondKey="avgMax" />
 
-              <MiniGroupedBars data={sectional} firstKey="avgPercentile" secondKey="avgAccuracy" max={100} />
+              <MiniGroupedBars data={sectional} firstKey="pctOfMax" secondKey="avgAccuracy" max={100} />
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5">
@@ -592,7 +600,7 @@ export default function StudentOverview() {
                 <div key={s.name} className="rounded-lg border border-sky-100 bg-sky-50/40 p-3">
                   <div className="flex items-center justify-between mb-2">
                     <div className="font-semibold text-sm">{s.name}</div>
-                    <Badge variant="secondary">{s.avgPercentile} %ile</Badge>
+                    <Badge variant="secondary">{s.pctOfMax}%</Badge>
                   </div>
                   <div className="grid grid-cols-2 gap-y-1.5 text-xs">
                     <div className="text-muted-foreground">Avg score</div>
@@ -616,7 +624,7 @@ export default function StudentOverview() {
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="p-5">
           <h2 className="font-semibold flex items-center gap-2 mb-3">
-            <BarChart3 className="h-4 w-4 text-sky-600" /> Percentile Distribution
+            <BarChart3 className="h-4 w-4 text-sky-600" /> Score % Distribution
           </h2>
           {submitted.length === 0 ? (
             <div className="h-40 grid place-items-center text-sm text-muted-foreground">No mocks yet</div>
@@ -716,7 +724,7 @@ export default function StudentOverview() {
                     {a.status !== "in_progress" && (
                       <div className="text-right">
                         <div className="text-sm font-semibold">{a.total_score ?? 0}/{a.max_score ?? 0}</div>
-                        <div className="text-[11px] text-muted-foreground">%ile {a.percentile ?? 0} · Acc {a.accuracy ?? 0}%</div>
+                        <div className="text-[11px] text-muted-foreground">Acc {a.accuracy ?? 0}%</div>
                       </div>
                     )}
                     {a.status === "in_progress" ? (
@@ -755,7 +763,7 @@ export default function StudentOverview() {
         </h2>
         <div className="grid sm:grid-cols-3 gap-3">
           <ToolCard title="AI Profile Analyzer" desc="Get an MBA admission probability score." href="/profile-analyzer" />
-          <ToolCard title="College Shortlister" desc="Personalized college list based on your CAT %ile." href="/college-shortlister" />
+          <ToolCard title="College Shortlister" desc="Personalized college list based on your scores." href="/college-shortlister" />
           <ToolCard title="MBA ROI Calculator" desc="Project your ROI across top B-schools." href="/roi-calculator" />
         </div>
       </Card>
@@ -774,7 +782,7 @@ function PredictorGauge({ value }: { value: number }) {
         <div className="h-full w-full rounded-full bg-card grid place-items-center border border-border">
           <div className="text-center">
             <div className="text-3xl font-bold text-primary tabular-nums">{value}</div>
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">projected %ile</div>
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">projected score %</div>
           </div>
         </div>
       </div>
