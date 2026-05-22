@@ -528,7 +528,7 @@ export default function StudentOverview() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="font-semibold flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-sky-600" /> Percentile — Mock vs Cumulative Avg
+                <TrendingUp className="h-4 w-4 text-sky-600" /> Score % — Mock vs Cumulative Avg
               </h2>
               <p className="text-xs text-muted-foreground">Bars: each mock • Line: running average</p>
             </div>
@@ -541,7 +541,7 @@ export default function StudentOverview() {
               Take a mock to see your trend chart
             </div>
           ) : (
-            <MiniTrendChart data={trendData} barKey="percentile" lineKey="cumPercentile" max={100} target={target} />
+            <MiniTrendChart data={trendData} barKey="scorePct" lineKey="cumScorePct" max={100} target={target} />
           )}
         </Card>
       </div>
