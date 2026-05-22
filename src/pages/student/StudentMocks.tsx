@@ -580,10 +580,10 @@ function TopicWiseView({
       {/* Filters */}
       <div className="space-y-2">
         {sections.length > 0 && (
-          <ChipStrip label="Section" options={sections} value={sectionFilter} onChange={onSectionChange} gradient="from-sky-500 to-blue-600" hoverColor="sky" />
+          <ChipStrip label="Section" options={sections} value={sectionFilter} onChange={onSectionChange} tone="sky" />
         )}
         {topics.length > 0 && (
-          <ChipStrip label="Topic" options={topics} value={topicFilter} onChange={onTopicChange} gradient="from-emerald-500 to-teal-600" hoverColor="emerald" />
+          <ChipStrip label="Topic" options={topics} value={topicFilter} onChange={onTopicChange} tone="emerald" />
         )}
       </div>
 
