@@ -782,7 +782,7 @@ function PredictorGauge({ value }: { value: number }) {
         <div className="h-full w-full rounded-full bg-card grid place-items-center border border-border">
           <div className="text-center">
             <div className="text-3xl font-bold text-primary tabular-nums">{value}</div>
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">projected %ile</div>
+            <div className="text-[11px] uppercase tracking-wider text-muted-foreground">projected score %</div>
           </div>
         </div>
       </div>
