@@ -382,18 +382,28 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
       {fixedType ? (
         fixedType === "attempted" ? (
           <AttemptedGrid items={buildBucket("attempted") as any} />
+        ) : fixedType === "topic_wise" ? (
+          <TopicWiseView
+            items={buildBucket("topic_wise") as any}
+            allTopicWise={Object.values(tests).filter((t) => getKind(t) === "topic_wise" && matchesExam(t))}
+            attemptedByTest={attemptedByTest}
+            enrolledTestIds={enrolledTestIds}
+            sections={sectionChips}
+            sectionFilter={sectionFilter}
+            onSectionChange={setSectionFilter}
+            topics={topicChips}
+            topicFilter={topicFilter}
+            onTopicChange={setTopicFilter}
+            examFilter={examFilter}
+            onUpgrade={() => setUpgradeOpen(true)}
+          />
         ) : (
-          <>
-            {fixedType === "topic_wise" && topicChips.length > 0 && (
-              <TopicChipStrip topics={topicChips} value={topicFilter} onChange={setTopicFilter} />
-            )}
-            <BucketGrid
-              items={buildBucket(fixedType) as any}
-              typeLabel={TYPE_TITLES[fixedType].title}
-              examFilter={examFilter}
-              onUpgrade={() => setUpgradeOpen(true)}
-            />
-          </>
+          <BucketGrid
+            items={buildBucket(fixedType) as any}
+            typeLabel={TYPE_TITLES[fixedType].title}
+            examFilter={examFilter}
+            onUpgrade={() => setUpgradeOpen(true)}
+          />
         )
       ) : (
         <Tabs defaultValue="full_length" className="w-full">
