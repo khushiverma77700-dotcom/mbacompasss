@@ -426,7 +426,7 @@ export default function AllIndiaRankTab({ attempts }: { attempts: Attempt[] }) {
               <Badge variant="secondary" className="text-[10px]">AI-powered</Badge>
             </div>
             <p className="text-[11px] text-muted-foreground mt-1 max-w-md">
-              Projected All India Rank benchmarked against a 2,000-aspirant pool. Stable seed — never changes on refresh.
+              Your exact All India Rank, benchmarked against a live aspirant pool that grows each day. Stable seed — your rank never changes on refresh.
             </p>
           </div>
           <div className="grid grid-cols-4 gap-2 min-w-[280px]">
