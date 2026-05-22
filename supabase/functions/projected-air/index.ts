@@ -235,13 +235,21 @@ Deno.serve(async (req) => {
       );
     }
 
-    // --- Build cohort (real submitted attempts for this test) ---
-    const { data: cohort } = await admin
+    // --- Build cohort (FIRST submitted attempt per user for this test) ---
+    const { data: cohortRaw } = await admin
       .from("mock_attempts")
-      .select("user_id, total_score, sectional_scores")
+      .select("user_id, total_score, sectional_scores, submitted_at")
       .eq("test_id", attempt.test_id)
       .in("status", ["submitted", "auto_submitted"])
-      .lte("submitted_at", unlocksAt.toISOString());
+      .lte("submitted_at", unlocksAt.toISOString())
+      .order("submitted_at", { ascending: true });
+
+    // Dedupe: keep earliest attempt per user
+    const firstByUser = new Map<string, any>();
+    (cohortRaw ?? []).forEach((r: any) => {
+      if (r.user_id && !firstByUser.has(r.user_id)) firstByUser.set(r.user_id, r);
+    });
+    const cohort = Array.from(firstByUser.values());
 
     const realUserIds = Array.from(
       new Set((cohort ?? []).map((c: any) => c.user_id).filter(Boolean))
