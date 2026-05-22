@@ -420,14 +420,14 @@ export default function StudentOverview() {
                   <div className="absolute inset-0 grid place-items-center text-center">
                     <div>
                       <div className="text-xl sm:text-2xl font-bold leading-none">{predicted ?? "—"}</div>
-                      <div className="text-[9px] uppercase tracking-wider text-sky-100/80 mt-0.5">%ile</div>
+                      <div className="text-[9px] uppercase tracking-wider text-sky-100/80 mt-0.5">score %</div>
                     </div>
                   </div>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="text-[10px] uppercase tracking-wider text-sky-100/80">Projected Percentile</div>
+                  <div className="text-[10px] uppercase tracking-wider text-sky-100/80">Projected Score %</div>
                   <div className="text-sm font-semibold mt-0.5">
-                    {target > 0 ? `Target ${target}%ile` : "Set a target to track gap"}
+                    {target > 0 ? `Target ${target}%` : "Set a target to track gap"}
                   </div>
                   {target > 0 && (
                     <div className="mt-2">
