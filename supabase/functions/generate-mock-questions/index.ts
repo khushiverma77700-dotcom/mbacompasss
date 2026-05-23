@@ -549,7 +549,11 @@ For STANDALONE questions:
 - Mix MCQ and TITA per the requested counts.
 - Tag each standalone with "is_set_question": false (no set_index).`;
   } else if (sectionFamily(opts.section_code) === "logic-data") {
-    setsBlock = `\n\nDATA/REASONING REQUIREMENT: Every question must be exam-realistic with concrete data wherever relevant — include an HTML <table> or ASCII chart in <pre> tags for DI/data-heavy prompts. Never write a vague caselet.`;
+    setsBlock = `\n\nDATA/REASONING REQUIREMENT: Every question must be exam-realistic with concrete data wherever relevant — include an HTML <table> or an inline <svg> chart for DI/data-heavy prompts. Never write a vague caselet.
+
+LR-DI VISUAL MANDATE (NON-NEGOTIABLE): For every DI caselet that references a bar chart, pie chart, line graph, scatter plot, radar, stacked bar, Venn diagram, network/flow, or any visual data; and for every LR caselet involving seating arrangement (circular/linear/rectangular), floor/building layout, routes/network, tournament brackets, blood-relations tree, or matching grids — you MUST emit a SELF-CONTAINED inline <svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg">…</svg> with proper <rect>, <circle>, <line>, <polyline>, <polygon>, <path>, and <text> elements rendering the actual data values / arrangement. Numeric labels MUST appear on bars/slices/axes. NEVER skip the SVG, NEVER write "see figure" or "image not shown", NEVER reference base64 or external URLs. A pure HTML <table> is acceptable ONLY for tabular DI; charts always need SVG.`;
+  } else if (sectionFamily(opts.section_code) === "quant") {
+    setsBlock = `\n\nQUANT GEOMETRY VISUAL MANDATE (NON-NEGOTIABLE): For every Quant question involving geometry, mensuration, coordinate geometry, trigonometry diagrams, circles/triangles/polygons, 3D solids, or any spatial figure — you MUST emit a SELF-CONTAINED inline <svg viewBox="0 0 480 320" xmlns="http://www.w3.org/2000/svg">…</svg> diagram with labelled vertices (A, B, C…), angle marks, side lengths, and any given measurements. Use <line>, <polygon>, <circle>, <path> and <text> appropriately. NEVER write "as shown in figure" without actually drawing the figure. NEVER reference external images. For non-geometry Quant (algebra/arithmetic/number system), SVG is not required.`;
   }
 
   const examCalibration = buildExamCalibrationBlock(opts.exam, opts.level, opts.section_code);
@@ -581,7 +585,7 @@ CRITICAL RULES:
    - "options[].text" must contain ONLY the pure option text. Do NOT prefix it with "A)", "(A)", "A.", "a)", "1)" or any letter/number label.
    - For set-bound questions, keep the shared passage/caselet INSIDE <div class="passage">…</div> exactly as instructed; do NOT write "Question 1 of Set 2", "Set 1 — Q3" etc. anywhere.
 10. MATH RENDERING — render every fraction, root, exponent, summation or symbol with LaTeX delimited by $...$ for inline (e.g. $\\frac{a}{b}$, $\\sqrt{x^2+1}$, $x_1 \\le x_2$) or $$...$$ for block. Never write fractions as "a/b" when they should be stacked. Never use Unicode hacks for math operators when LaTeX is clearer.
-11. DI-LR VISUALS — when a caselet needs a chart, ALWAYS emit a clean inline <svg viewBox="0 0 600 300">…</svg> with proper <rect>/<line>/<text> elements (or a well-formatted HTML <table>). NEVER emit base64 images, NEVER reference external image URLs, NEVER write "see image below". The SVG must be self-contained and human-readable.`;
+11. INLINE SVG VISUALS — whenever a question implies a chart, graph, diagram, arrangement, or geometric figure, you MUST emit a clean inline <svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg">…</svg> (or 480x320 for geometry) with proper <rect>/<circle>/<line>/<polygon>/<path>/<text> elements. Required for: DI charts (bar/pie/line/scatter/stacked/Venn), LR arrangements (seating/floor/network/tournament/blood-relations), Quant geometry/mensuration/coordinate/trigonometry diagrams. Label vertices (A, B, C…), axes, bars, slices, and given measurements directly in the SVG. NEVER emit base64 images, NEVER reference external image URLs, NEVER write "see image below" or "as shown in figure" without actually drawing it. The SVG must be self-contained, human-readable, and use stroke="#1e293b" fill colors that render on white backgrounds.`;
 }
 
 function buildUserPrompt(opts: {
@@ -654,8 +658,8 @@ async function callOpenAIBatch(args: {
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
   const modelId = "gpt-4o-mini";
   const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.35;
-  // ~1100 tokens per question is plenty (stem + 4 options + explanation). Cap by batch size.
-  const tokenBudget = Math.min(8000, 1200 * Math.max(1, args.count));
+  // ~1700 tokens per question covers stem + 4 options + explanation + inline SVG visuals.
+  const tokenBudget = Math.min(12000, 1800 * Math.max(1, args.count));
   const reqBody: Record<string, unknown> = {
     model: modelId,
     messages: [
