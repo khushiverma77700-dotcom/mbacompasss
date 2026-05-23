@@ -387,12 +387,18 @@ Deno.serve(async (req) => {
         `${attempt.test_id}:${key}`,
         targetPool
       );
-      // Motivational sectional rank — same logic as overall
-      const sRatio = maxS > 0 ? Math.max(0, Math.min(1, myScoreS / maxS)) : 0;
-      const sTargetPct = 0.60 - 0.48 * sRatio;
-      let rS = Math.max(1, Math.min(poolS.length, Math.round(sTargetPct * poolS.length)));
-      const sJitter = Math.floor(mulberry32(hashStr(`${attempt.id}:${key}:rank`))() * 9) - 4;
-      rS = Math.max(1, Math.min(poolS.length, rS + sJitter));
+      let rS: number;
+      if (mode === "realistic") {
+        rS = rankOfScore(poolS, myScoreS);
+        const sJ = Math.floor(mulberry32(hashStr(`${attempt.id}:${key}:rank:real`))() * 5) - 2;
+        rS = Math.max(1, Math.min(poolS.length, rS + sJ));
+      } else {
+        const sRatio = maxS > 0 ? Math.max(0, Math.min(1, myScoreS / maxS)) : 0;
+        const sTargetPct = 0.60 - 0.48 * sRatio;
+        rS = Math.max(1, Math.min(poolS.length, Math.round(sTargetPct * poolS.length)));
+        const sJitter = Math.floor(mulberry32(hashStr(`${attempt.id}:${key}:rank`))() * 9) - 4;
+        rS = Math.max(1, Math.min(poolS.length, rS + sJitter));
+      }
 
       const sectionLabel =
         sectionNameMap.get(key) || my.name || my.section || my.label || "Section";
