@@ -99,7 +99,7 @@ export const explanationCleaner = {
   },
 
   buildFilters(config: CleanerConfig) {
-    const f: any = { force: config.force };
+    const f: any = { force: config.force, done_only: config.done_only === true };
     if (config.scope === "test") f.test_id = config.test_id || undefined;
     if (config.scope === "section") f.section_id = config.section_id || undefined;
     if (config.scope === "topic") {
