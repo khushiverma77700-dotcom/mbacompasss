@@ -16,7 +16,7 @@ import {
 import UpgradeDialog from "@/components/student/UpgradeDialog";
 import { ensureStudentMode, mockAttemptPath, mockIntroPath, mockLeaderboardPath, mockResultPath, mockReviewPath } from "@/lib/studentModeNav";
 
-const EXAM_FILTERS = ["All", "CAT", "XAT", "NMAT", "SNAP", "IIFT", "CMAT", "MAT", "TISSNET"];
+const EXAM_FILTERS = ["CAT", "XAT", "NMAT", "SNAP", "IIFT", "CMAT", "MAT", "TISSNET"];
 
 const studentMockLinkProps = {
   onClick: ensureStudentMode,
@@ -103,7 +103,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
   const [bundleOrder, setBundleOrder] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
-  const [examFilter, setExamFilter] = useState<string>("All");
+  const [examFilter, setExamFilter] = useState<string>("CAT");
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const [topicFilter, setTopicFilter] = useState<string>("All");
@@ -168,7 +168,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
   }, [attempts]);
 
   const matchesExam = (t: Test) => {
-    if (examFilter === "All") return true;
+    if (!examFilter || examFilter === "All") return true;
     const tokens = `${t.exam_code || ""} ${t.category || ""}`
       .toUpperCase()
       .split(/[^A-Z0-9]+/)
@@ -406,6 +406,9 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
             typeLabel={TYPE_TITLES[fixedType].title}
             examFilter={examFilter}
             onUpgrade={() => setUpgradeOpen(true)}
+            groupBySection={fixedType === "sectional"}
+            sectionFilter={fixedType === "sectional" ? sectionFilter : undefined}
+            onSectionChange={fixedType === "sectional" ? setSectionFilter : undefined}
           />
         )
       ) : (
@@ -457,6 +460,9 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
                   typeLabel={t.label}
                   examFilter={examFilter}
                   onUpgrade={() => setUpgradeOpen(true)}
+                  groupBySection={t.key === "sectional"}
+                  sectionFilter={t.key === "sectional" ? sectionFilter : undefined}
+                  onSectionChange={t.key === "sectional" ? setSectionFilter : undefined}
                 />
               )}
             </TabsContent>
@@ -737,31 +743,96 @@ function useCountdown(target: Date | null): string {
 }
 
 function BucketGrid({
-  items, typeLabel, examFilter, onUpgrade,
+  items, typeLabel, examFilter, onUpgrade, groupBySection,
+  sectionFilter, onSectionChange,
 }: {
   items: { test: Test; owned: boolean; inProgress: Attempt | null; latestSubmitted: Attempt | null }[];
   typeLabel: string; examFilter: string; onUpgrade: () => void;
+  groupBySection?: boolean;
+  sectionFilter?: string;
+  onSectionChange?: (v: string) => void;
 }) {
-  if (!items.length) {
+  // Section chips + filtering for sectional mocks
+  const sectionsAvailable = useMemo(() => {
+    if (!groupBySection) return [] as string[];
+    const s = new Set<string>();
+    items.forEach((it) => {
+      const sec = (it.test.category || "").trim().toUpperCase();
+      if (sec) s.add(sec);
+    });
+    return Array.from(s).sort();
+  }, [items, groupBySection]);
+
+  const filteredItems = useMemo(() => {
+    if (!groupBySection || !sectionFilter || sectionFilter === "All") return items;
+    return items.filter((it) => (it.test.category || "").trim().toUpperCase() === sectionFilter);
+  }, [items, groupBySection, sectionFilter]);
+
+  const grouped = useMemo(() => {
+    if (!groupBySection) return null;
+    const map: Record<string, typeof items> = {};
+    filteredItems.forEach((it) => {
+      const sec = (it.test.category || "Other").trim().toUpperCase() || "Other";
+      (map[sec] ||= []).push(it);
+    });
+    return map;
+  }, [filteredItems, groupBySection]);
+
+  const renderEmpty = (
+    <Card className="p-10 text-center border-dashed border-2 border-sky-100 bg-gradient-to-br from-sky-50/40 to-white">
+      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-sky-100 mb-3">
+        <Lock className="h-7 w-7 text-sky-600" />
+      </div>
+      <div className="font-semibold text-base">
+        No {typeLabel}{examFilter && examFilter !== "All" ? ` (${examFilter})` : ""} mocks yet
+      </div>
+      <p className="text-sm text-muted-foreground mt-1 mb-4 max-w-sm mx-auto">
+        Unlock these mocks by upgrading to a course bundle that includes them.
+      </p>
+      <Link to="/courses">
+        <Button className="gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700">
+          <ShoppingBag className="h-4 w-4" /> Browse Courses
+        </Button>
+      </Link>
+    </Card>
+  );
+
+  if (groupBySection) {
+    const sectionKeys = grouped ? Object.keys(grouped).sort() : [];
     return (
-      <Card className="p-10 text-center border-dashed border-2 border-sky-100 bg-gradient-to-br from-sky-50/40 to-white">
-        <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-sky-100 mb-3">
-          <Lock className="h-7 w-7 text-sky-600" />
-        </div>
-        <div className="font-semibold text-base">
-          No {typeLabel}{examFilter !== "All" ? ` (${examFilter})` : ""} mocks yet
-        </div>
-        <p className="text-sm text-muted-foreground mt-1 mb-4 max-w-sm mx-auto">
-          Unlock these mocks by upgrading to a course bundle that includes them.
-        </p>
-        <Link to="/courses">
-          <Button className="gap-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700">
-            <ShoppingBag className="h-4 w-4" /> Browse Courses
-          </Button>
-        </Link>
-      </Card>
+      <div className="space-y-4">
+        {sectionsAvailable.length > 0 && onSectionChange && (
+          <ChipStrip
+            label="Section"
+            options={sectionsAvailable}
+            value={sectionFilter || "All"}
+            onChange={onSectionChange}
+            tone="sky"
+          />
+        )}
+        {sectionKeys.length === 0 ? renderEmpty : (
+          sectionKeys.map((sec) => (
+            <div key={sec} className="space-y-3">
+              <div className="flex items-center gap-2 pt-1">
+                <div className="h-7 px-2.5 inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-violet-500 to-purple-600 text-white text-xs font-semibold shadow-sm">
+                  <Target className="h-3.5 w-3.5" /> {sec}
+                </div>
+                <span className="text-xs text-slate-500">{grouped![sec].length} {grouped![sec].length === 1 ? "test" : "tests"}</span>
+                <div className="flex-1 h-px bg-slate-100" />
+              </div>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {grouped![sec].map((item) => (
+                  <MockCardItem key={item.test.id} item={item} onUpgrade={onUpgrade} />
+                ))}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
     );
   }
+
+  if (!items.length) return renderEmpty;
 
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
