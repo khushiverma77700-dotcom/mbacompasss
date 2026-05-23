@@ -74,6 +74,7 @@ const AdminColleges = lazyWithPreload(() => import("./pages/admin/AdminColleges"
 const AdminProgrammes = lazyWithPreload(() => import("./pages/admin/AdminProgrammes"));
 const AdminSubscribers = lazyWithPreload(() => import("./pages/admin/AdminSubscribers"));
 const AdminExams = lazyWithPreload(() => import("./pages/admin/AdminExams"));
+const AdminExamCountdowns = lazyWithPreload(() => import("./pages/admin/AdminExamCountdowns"));
 const AdminCategories = lazyWithPreload(() => import("./pages/admin/AdminCategories"));
 const AdminSiteSettings = lazyWithPreload(() => import("./pages/admin/AdminSiteSettings"));
 const AdminTestimonials = lazyWithPreload(() => import("./pages/admin/AdminTestimonials"));
