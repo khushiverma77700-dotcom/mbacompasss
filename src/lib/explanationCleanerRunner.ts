@@ -139,7 +139,7 @@ export const explanationCleaner = {
       costUsd: 0,
       startTs: Date.now(),
       lastTickTs: Date.now(),
-      log: [`Started · scope=${config.scope} · batch=${config.batchSize}${config.force ? " · force" : ""}`],
+      log: [`Started · scope=${config.scope} · batch=${config.batchSize}${config.done_only ? " · redo-done" : config.force ? " · force" : ""}`],
       errors: [],
     });
     await this.refreshStats(config);
