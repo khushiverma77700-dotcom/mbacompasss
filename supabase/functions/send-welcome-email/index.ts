@@ -17,6 +17,37 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
+  // Authorization: allow only service-role callers (other edge functions) or admin users.
+  // External callers without service-role or admin JWT are rejected to prevent email abuse.
+  const authHeader = req.headers.get("Authorization") || "";
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const isServiceRole = authHeader === `Bearer ${serviceRoleKey}`;
+  let isAdmin = false;
+  if (!isServiceRole && authHeader.startsWith("Bearer ")) {
+    try {
+      const userClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } }
+      );
+      const { data: { user } } = await userClient.auth.getUser();
+      if (user) {
+        const { data: roleRow } = await admin
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .eq("role", "admin")
+          .maybeSingle();
+        isAdmin = !!roleRow;
+      }
+    } catch (_) { /* ignore */ }
+  }
+  if (!isServiceRole && !isAdmin) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   let payload: any = {};
   try {
     payload = await req.json();
