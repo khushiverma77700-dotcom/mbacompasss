@@ -147,6 +147,57 @@ Deno.serve(async (req) => {
       (report.errors as string[]).push(`mock recovery: ${(err as Error).message}`);
     }
 
+    // Auto-fail any mock_section_jobs idle for >30 minutes — abandoned jobs
+    // (rate-limited / worker crashed) otherwise sit forever wasting AI credits.
+    try {
+      const staleCutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      const { data: autoFailed, error: failErr } = await admin
+        .from("mock_section_jobs")
+        .update({
+          status: "failed",
+          current_step: "Auto-failed by watchdog — idle for more than 30 minutes.",
+          final_reason: "auto_failed_stale",
+          updated_at: new Date().toISOString(),
+        })
+        .in("status", ["pending", "processing"])
+        .lt("updated_at", staleCutoff)
+        .select("id");
+      (report as any).mock_section_jobs_auto_failed = (autoFailed || []).map((r: any) => r.id);
+      if (failErr) (report.errors as string[]).push(`mock auto-fail: ${failErr.message}`);
+    } catch (err) {
+      (report.errors as string[]).push(`mock auto-fail: ${(err as Error).message}`);
+    }
+
+    // Also close out parent generations that are 'running' but have no live work.
+    try {
+      await admin.rpc("exec_sql", { sql: "" }).catch(() => {}); // no-op; close via direct update below
+      const { data: staleGens } = await admin
+        .from("ai_mock_generations")
+        .select("id")
+        .eq("status", "running")
+        .lt("created_at", new Date(Date.now() - 30 * 60 * 1000).toISOString());
+      for (const g of (staleGens || []) as any[]) {
+        const { count: liveCount } = await admin
+          .from("mock_section_jobs")
+          .select("id", { count: "exact", head: true })
+          .eq("generation_id", g.id)
+          .in("status", ["pending", "processing"])
+          .gt("updated_at", new Date(Date.now() - 30 * 60 * 1000).toISOString());
+        if ((liveCount || 0) === 0) {
+          await admin
+            .from("ai_mock_generations")
+            .update({
+              status: "failed",
+              error_message: "Auto-failed: no active section jobs remaining.",
+              finished_at: new Date().toISOString(),
+            })
+            .eq("id", g.id);
+        }
+      }
+    } catch (err) {
+      (report.errors as string[]).push(`gen auto-fail: ${(err as Error).message}`);
+    }
+
     const { data: pendingMockJobs, error: e3 } = await admin
       .from("mock_section_jobs")
       .select("id,generation_id,status,updated_at,worker_lock_until,error_message,current_step")
