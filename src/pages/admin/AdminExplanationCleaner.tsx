@@ -73,12 +73,26 @@ export default function AdminExplanationCleaner() {
 
   const refreshStats = async () => {
     const { data, error } = await supabase.functions.invoke("reformat-explanations", { body: { mode: "stats", ...filters } });
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(error.message); setLog((l) => [`Stats error: ${error.message}`, ...l].slice(0,50)); return null; }
     setRemaining(data?.remaining ?? 0);
     setTotal(data?.total ?? 0);
+    return data;
   };
 
   useEffect(() => { refreshStats(); /* eslint-disable-next-line */ }, [scope, testId, sectionId, topic, questionId, force]);
+
+  // Auto-start on first mount: if there is anything to clean in "All mocks" scope, start immediately
+  const autoStartedRef = useRef(false);
+  useEffect(() => {
+    if (autoStartedRef.current) return;
+    if (scope !== "all") return;
+    if (running) return;
+    if (total > 0 || remaining > 0) {
+      autoStartedRef.current = true;
+      runLoop();
+    }
+    // eslint-disable-next-line
+  }, [total, remaining]);
 
   const runLoop = async () => {
     if (scope === "test" && !testId) return toast.error("Pick a mock test");
@@ -121,6 +135,14 @@ export default function AdminExplanationCleaner() {
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
+      <div className="rounded-lg border-2 border-sky-300 bg-gradient-to-r from-sky-50 to-blue-50 p-4 flex items-center gap-3">
+        <Sparkles className="h-6 w-6 text-sky-600 shrink-0" />
+        <div className="flex-1 text-sm">
+          <div className="font-semibold text-sky-900">Auto-cleanup is {running ? "running now" : (total > 0 ? "starting…" : "idle (nothing messy detected)")}</div>
+          <div className="text-sky-700">{running ? `Processed ${processed} this run · ${remaining} remaining · ETA ${etaText}` : "When you open this page we automatically scan all mocks and start rewriting any messy explanations in the background. Keep this tab open."}</div>
+        </div>
+        {!running ? <Button onClick={runLoop} className="bg-sky-600 hover:bg-sky-700"><Play className="h-4 w-4 mr-2" />Start now</Button> : <Button onClick={stop} variant="destructive"><Square className="h-4 w-4 mr-2" />Stop</Button>}
+      </div>
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><Sparkles className="h-6 w-6 text-sky-600" /> Explanation Cleaner</h1>
@@ -213,8 +235,8 @@ export default function AdminExplanationCleaner() {
 
           <div className="flex gap-2 pt-1">
             {!running ? (
-              <Button onClick={runLoop} disabled={total === 0 && !force} size="lg" className="bg-sky-600 hover:bg-sky-700">
-                <Play className="h-4 w-4 mr-2" />Start cleaning ({total} questions)
+              <Button onClick={runLoop} size="lg" className="bg-sky-600 hover:bg-sky-700">
+                <Play className="h-4 w-4 mr-2" />Start cleaning ({total > 0 ? total : "scan & run"})
               </Button>
             ) : (
               <Button onClick={stop} variant="destructive" size="lg"><Square className="h-4 w-4 mr-2" />Stop</Button>
