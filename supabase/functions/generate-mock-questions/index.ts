@@ -964,16 +964,17 @@ Deno.serve(async (req) => {
       const rawBase = test_name_prefix
         ? (setsCount > 1 ? `${test_name_prefix} #${setIdx}` : test_name_prefix)
         : `${exam_code} ${labelForCategory(category)} ${setIdx} — AI`;
-      // Append exam_code + short unique suffix so concurrent generations across exams
-      // never collide on mock_tests_unique_name_idx (was the cause of "stuck" UI).
-      const uniqSuffix = `${exam_code}-${Date.now().toString(36).slice(-5)}${Math.random().toString(36).slice(2, 5)}`;
-      let baseName = `${rawBase} (${uniqSuffix})`;
-      // Safety net: if name already exists (extreme edge), keep adding random suffix.
-      for (let attempt = 0; attempt < 3; attempt++) {
+      // Use clean name by default; only append a short suffix if a duplicate name exists.
+      let baseName = rawBase;
+      for (let attempt = 0; attempt < 4; attempt++) {
         const { data: dup } = await admin.from("mock_tests").select("id").eq("name", baseName).maybeSingle();
         if (!dup) break;
-        baseName = `${rawBase} (${exam_code}-${Math.random().toString(36).slice(2, 8)})`;
+        baseName = `${rawBase} #${attempt + 2}`;
+        if (attempt === 3) {
+          baseName = `${rawBase} (${Math.random().toString(36).slice(2, 6)})`;
+        }
       }
+
       const slug = slugify(baseName) + "-" + Date.now().toString(36) + "-" + setIdx;
 
       // Decide sections for this set based on category (custom plan wins for full_length)
