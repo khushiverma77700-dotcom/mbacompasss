@@ -7,8 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
+import {
   Loader2, Play, Square, RefreshCw, Sparkles, Clock,
-  CheckCircle2, AlertTriangle, DollarSign, Coins, Filter,
+  CheckCircle2, AlertTriangle, DollarSign, Coins, Filter, Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -101,19 +104,44 @@ export default function AdminExplanationCleaner() {
     // eslint-disable-next-line
   }, [config.scope, config.test_id, config.section_id, config.topic, config.question_id, config.force]);
 
-  const start = () => {
+  const start = (opts: { pendingOnly?: boolean } = {}) => {
     if (scope === "test" && !testId) return toast.error("Pick a mock test");
     if (scope === "section" && !sectionId) return toast.error("Pick a section");
     if (scope === "topic" && !topic) return toast.error("Pick a topic");
     if (scope === "question" && !questionId) return toast.error("Paste a question id");
-    explanationCleaner.start(config);
+    explanationCleaner.start({ ...config, force: opts.pendingOnly ? false : config.force });
   };
+  // "Run ALL" always = pending only, never re-cleans already-done (saves cost)
+  const startPendingOnly = () => start({ pendingOnly: true });
 
   // Browse panel
   const [browseStatus, setBrowseStatus] = useState<BrowseStatus | "failed">("pending");
   const [browseRows, setBrowseRows] = useState<Row[]>([]);
   const [browseCount, setBrowseCount] = useState<number | null>(null);
   const [browseLoading, setBrowseLoading] = useState(false);
+
+  // before/after diff modal
+  const [diffOpen, setDiffOpen] = useState(false);
+  const [diffLoading, setDiffLoading] = useState(false);
+  const [diffRow, setDiffRow] = useState<{ id: string; before: string | null; after: string | null } | null>(null);
+
+  const openDiff = async (id: string) => {
+    setDiffOpen(true);
+    setDiffLoading(true);
+    setDiffRow({ id, before: null, after: null });
+    const { data, error } = await supabase
+      .from("mock_questions")
+      .select("id, explanation_html, explanation_html_original")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) toast.error(error.message);
+    setDiffRow({
+      id,
+      before: (data as any)?.explanation_html_original ?? null,
+      after: (data as any)?.explanation_html ?? null,
+    });
+    setDiffLoading(false);
+  };
 
   const loadBrowse = async () => {
     if (browseStatus === "failed") {
@@ -189,7 +217,7 @@ export default function AdminExplanationCleaner() {
           </div>
         </div>
         {!rs.running
-          ? <Button onClick={start} className="bg-sky-600 hover:bg-sky-700"><Play className="h-4 w-4 mr-2" />Start</Button>
+          ? <Button onClick={() => start()} className="bg-sky-600 hover:bg-sky-700"><Play className="h-4 w-4 mr-2" />Start</Button>
           : <Button onClick={() => explanationCleaner.stop()} variant="destructive"><Square className="h-4 w-4 mr-2" />Stop</Button>}
       </div>
 
@@ -279,11 +307,14 @@ export default function AdminExplanationCleaner() {
               <p className="text-xs text-muted-foreground mt-1">Runner loops automatically until everything in scope is done.</p>
             </div>
             <div className="flex items-end">
-              <Button onClick={start} disabled={rs.running} size="lg" className="bg-emerald-600 hover:bg-emerald-700 w-full">
-                <Play className="h-4 w-4 mr-2" /> Run ALL at once ({rs.total > 0 ? `${rs.total} questions` : "scan & start"})
+              <Button onClick={startPendingOnly} disabled={rs.running} size="lg" className="bg-emerald-600 hover:bg-emerald-700 w-full">
+                <Play className="h-4 w-4 mr-2" /> Run ALL pending ({rs.remaining > 0 ? `${rs.remaining} left` : rs.total > 0 ? "0 left" : "scan & start"})
               </Button>
             </div>
           </div>
+          <p className="text-xs text-muted-foreground -mt-2">
+            "Run ALL pending" always skips questions already cleaned, so re-clicking it never costs you twice.
+          </p>
         </CardContent>
       </Card>
 
@@ -340,7 +371,7 @@ export default function AdminExplanationCleaner() {
           <div className="flex gap-2 pt-1">
             {!rs.running ? (
               <>
-                <Button onClick={start} size="lg" className="bg-sky-600 hover:bg-sky-700">
+                <Button onClick={() => start()} size="lg" className="bg-sky-600 hover:bg-sky-700">
                   <Play className="h-4 w-4 mr-2" />Start cleaning ({rs.total > 0 ? rs.total : "scan & run"})
                 </Button>
                 {(rs.processed > 0 || rs.failed > 0) && (
@@ -423,7 +454,12 @@ export default function AdminExplanationCleaner() {
                 </thead>
                 <tbody>
                   {browseRows.map((r) => (
-                    <tr key={r.id} className="border-t hover:bg-slate-50">
+                    <tr
+                      key={r.id}
+                      className={`border-t hover:bg-sky-50 ${browseStatus === "done" ? "cursor-pointer" : ""}`}
+                      onClick={() => browseStatus === "done" && openDiff(r.id)}
+                      title={browseStatus === "done" ? "Click to view before/after" : undefined}
+                    >
                       <td className="px-2 py-2 font-mono text-[10px] truncate max-w-[140px]">{r.id}</td>
                       <td className="px-2 py-2">{r.mock_sections?.code ?? "—"}</td>
                       <td className="px-2 py-2">{r.topic ?? "—"}</td>
@@ -433,7 +469,7 @@ export default function AdminExplanationCleaner() {
                       <td className="px-2 py-2 text-right">
                         {browseStatus === "pending"
                           ? <Badge variant="outline" className="border-amber-400 text-amber-700">Pending</Badge>
-                          : <Badge variant="outline" className="border-emerald-400 text-emerald-700">Done</Badge>}
+                          : <Badge variant="outline" className="border-emerald-400 text-emerald-700 gap-1"><Eye className="h-3 w-3" />Done</Badge>}
                       </td>
                     </tr>
                   ))}
@@ -452,6 +488,50 @@ export default function AdminExplanationCleaner() {
           </div>
         </CardContent>
       </Card>
+
+      {/* BEFORE/AFTER DIFF DIALOG */}
+      <Dialog open={diffOpen} onOpenChange={setDiffOpen}>
+        <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5 text-sky-600" />
+              Before / After review
+            </DialogTitle>
+            <DialogDescription className="font-mono text-[11px]">
+              {diffRow?.id}
+            </DialogDescription>
+          </DialogHeader>
+
+          {diffLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-6 w-6 animate-spin text-sky-600" />
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-4 overflow-auto flex-1">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="border-amber-400 text-amber-700">BEFORE (original)</Badge>
+                </div>
+                <div className="border rounded-lg p-3 bg-amber-50/30 max-h-[60vh] overflow-auto text-sm prose prose-sm max-w-none">
+                  {diffRow?.before
+                    ? <div dangerouslySetInnerHTML={{ __html: diffRow.before }} />
+                    : <div className="text-muted-foreground italic">No backup found. This question was cleaned before the backup feature was added — only the cleaned version is available.</div>}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="border-emerald-400 text-emerald-700">AFTER (cleaned)</Badge>
+                </div>
+                <div className="border rounded-lg p-3 bg-emerald-50/30 max-h-[60vh] overflow-auto text-sm prose prose-sm max-w-none">
+                  {diffRow?.after
+                    ? <div dangerouslySetInnerHTML={{ __html: diffRow.after }} />
+                    : <div className="text-muted-foreground italic">empty</div>}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

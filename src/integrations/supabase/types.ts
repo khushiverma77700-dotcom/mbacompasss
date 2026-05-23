@@ -3977,6 +3977,7 @@ export type Database = {
           created_at: string
           difficulty: Database["public"]["Enums"]["mock_difficulty"]
           explanation_html: string | null
+          explanation_html_original: string | null
           id: string
           image_urls: string[] | null
           negative_marks: number
@@ -3999,6 +4000,7 @@ export type Database = {
           created_at?: string
           difficulty?: Database["public"]["Enums"]["mock_difficulty"]
           explanation_html?: string | null
+          explanation_html_original?: string | null
           id?: string
           image_urls?: string[] | null
           negative_marks?: number
@@ -4021,6 +4023,7 @@ export type Database = {
           created_at?: string
           difficulty?: Database["public"]["Enums"]["mock_difficulty"]
           explanation_html?: string | null
+          explanation_html_original?: string | null
           id?: string
           image_urls?: string[] | null
           negative_marks?: number
