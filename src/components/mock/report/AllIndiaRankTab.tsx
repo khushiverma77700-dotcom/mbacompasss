@@ -153,8 +153,8 @@ function Stat({ label, value, accent }: { label: string; value: string | number;
   );
 }
 
-function AttemptCard({ attempt }: { attempt: Attempt }) {
-  const { data, error } = useProjectedAir(attempt.id);
+function AttemptCard({ attempt, mode }: { attempt: Attempt; mode: AirMode }) {
+  const { data, error } = useProjectedAir(attempt.id, mode);
   const [open, setOpen] = useState(false);
 
   const submittedFmt = attempt.submitted_at
