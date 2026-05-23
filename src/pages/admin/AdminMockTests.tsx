@@ -54,7 +54,7 @@ const emptyForm: Form = {
   total_duration_minutes: 120,
   pricing_type: "free",
   price_inr: 0,
-  access_validity_days: 30,
+  access_validity_days: 365,
   difficulty: "medium",
   is_published: false,
   is_live: false,
@@ -627,8 +627,12 @@ const AdminMockTests = () => {
                     })()}
                   </TableCell>
                   <TableCell>
-                    {t.is_published ? <Badge className="bg-emerald-600 hover:bg-emerald-700">Published</Badge> : <Badge variant="outline">Draft</Badge>}
-                    {t.is_live && <Badge className="ml-1 bg-orange-500 hover:bg-orange-600">Live</Badge>}
+                    <InlineLaunchControls
+                      test={t}
+                      onChanged={(patch) => {
+                        setTests((prev) => prev.map((x) => (x.id === t.id ? { ...x, ...patch } : x)));
+                      }}
+                    />
                   </TableCell>
                   <TableCell>
                     {(() => {
@@ -758,5 +762,71 @@ const AdminMockTests = () => {
     </div>
   );
 };
+
+function InlineLaunchControls({ test, onChanged }: { test: any; onChanged: (patch: any) => void }) {
+  const { toast } = useToast();
+  const [saving, setSaving] = useState(false);
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [dt, setDt] = useState<string>(isoToLocalInput(test.scheduled_start_at));
+
+  const mode: "draft" | "publish" | "live" =
+    test.is_live ? "live" : test.is_published ? "publish" : "draft";
+
+  const apply = async (patch: { is_published: boolean; is_live: boolean; scheduled_start_at?: string | null }) => {
+    setSaving(true);
+    const { error } = await supabase.from("mock_tests").update(patch).eq("id", test.id);
+    setSaving(false);
+    if (error) { toast({ title: "Update failed", description: error.message, variant: "destructive" }); return; }
+    onChanged(patch);
+    toast({ title: "Status updated" });
+  };
+
+  const saveSchedule = async () => {
+    const iso = dt ? new Date(dt).toISOString() : null;
+    await apply({ is_published: true, is_live: true, scheduled_start_at: iso });
+    setShowSchedule(false);
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex flex-wrap gap-1">
+        <Button
+          size="sm" variant={mode === "draft" ? "default" : "outline"}
+          className="h-7 px-2 text-[11px]" disabled={saving}
+          onClick={() => apply({ is_published: false, is_live: false, scheduled_start_at: null })}
+        >Draft</Button>
+        <Button
+          size="sm" variant={mode === "publish" ? "default" : "outline"}
+          className={`h-7 px-2 text-[11px] ${mode === "publish" ? "bg-emerald-600 hover:bg-emerald-700" : ""}`}
+          disabled={saving}
+          onClick={() => apply({ is_published: true, is_live: false, scheduled_start_at: null })}
+        >Publish</Button>
+        <Button
+          size="sm" variant={mode === "live" ? "default" : "outline"}
+          className={`h-7 px-2 text-[11px] ${mode === "live" ? "bg-orange-500 hover:bg-orange-600" : ""}`}
+          disabled={saving}
+          onClick={() => { setDt(isoToLocalInput(test.scheduled_start_at) || ""); setShowSchedule(true); }}
+        >Live</Button>
+      </div>
+      {mode === "live" && test.scheduled_start_at && !showSchedule && (
+        <div className="text-[10px] text-muted-foreground">
+          {new Date(test.scheduled_start_at).toLocaleString()}
+        </div>
+      )}
+      {showSchedule && (
+        <div className="flex items-center gap-1 pt-1">
+          <Input
+            type="datetime-local" value={dt}
+            onChange={(e) => setDt(e.target.value)}
+            className="h-7 text-[11px] w-[180px]"
+          />
+          <Button size="sm" className="h-7 px-2 text-[11px]" disabled={saving} onClick={saveSchedule}>Save</Button>
+          <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px]" onClick={() => setShowSchedule(false)}>×</Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 export default AdminMockTests;
