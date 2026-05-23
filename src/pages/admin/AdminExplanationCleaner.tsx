@@ -10,7 +10,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import {
-  Loader2, Play, Square, RefreshCw, Sparkles, Clock,
+  Loader2, Play, Pause, Square, RefreshCw, Sparkles, Clock,
   CheckCircle2, AlertTriangle, DollarSign, Coins, Filter, Eye,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -238,21 +238,26 @@ export default function AdminExplanationCleaner() {
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       {/* HERO STATUS */}
-      <div className="rounded-xl border-2 border-sky-300 bg-gradient-to-r from-sky-50 to-blue-50 p-4 flex items-center gap-3">
-        <Sparkles className="h-6 w-6 text-sky-600 shrink-0" />
+      <div className={`rounded-xl border-2 p-4 flex items-center gap-3 ${rs.paused ? "border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50" : "border-sky-300 bg-gradient-to-r from-sky-50 to-blue-50"}`}>
+        {rs.paused ? <Pause className="h-6 w-6 text-amber-600 shrink-0" /> : <Sparkles className="h-6 w-6 text-sky-600 shrink-0" />}
         <div className="flex-1 text-sm">
-          <div className="font-semibold text-sky-900">
-            {rs.running ? "Cleanup running in the background" : (rs.total > 0 ? "Ready to clean" : "Idle — nothing messy detected")}
+          <div className={`font-semibold ${rs.paused ? "text-amber-900" : "text-sky-900"}`}>
+            {rs.running ? "Cleanup running in the background" : rs.paused ? "Paused — click Resume to continue" : (rs.total > 0 ? "Ready to clean" : "Idle — nothing messy detected")}
           </div>
-          <div className="text-sky-700">
-            {rs.running
+          <div className={rs.paused ? "text-amber-700" : "text-sky-700"}>
+            {rs.running || rs.paused
               ? `${done}/${rs.total} done · ${rs.remaining} left · ETA ${etaText} · est. $${totalProjected.toFixed(3)} total`
               : "You can switch tabs, browse the admin, even close this page — but to keep the loop alive keep this browser tab open."}
           </div>
         </div>
-        {!rs.running
+        {!rs.running && !rs.paused
           ? <Button onClick={() => start()} className="bg-sky-600 hover:bg-sky-700"><Play className="h-4 w-4 mr-2" />Start</Button>
-          : <Button onClick={() => explanationCleaner.stop()} variant="destructive"><Square className="h-4 w-4 mr-2" />Stop</Button>}
+          : rs.paused
+            ? <Button onClick={() => explanationCleaner.resume()} className="bg-emerald-600 hover:bg-emerald-700"><Play className="h-4 w-4 mr-2" />Resume</Button>
+            : <div className="flex gap-2">
+                <Button onClick={() => explanationCleaner.pause()} variant="outline" className="border-amber-500 text-amber-700 hover:bg-amber-50"><Pause className="h-4 w-4 mr-2" />Pause</Button>
+                <Button onClick={() => explanationCleaner.stop()} variant="destructive"><Square className="h-4 w-4 mr-2" />Stop</Button>
+              </div>}
       </div>
 
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -262,7 +267,7 @@ export default function AdminExplanationCleaner() {
             Rewrites messy mock explanations into clean structured HTML with proper LaTeX. The cleanup engine runs in the background and survives tab switches inside the admin.
           </p>
         </div>
-        <Button onClick={() => explanationCleaner.refreshStats(config)} variant="outline" disabled={rs.running}>
+        <Button onClick={() => explanationCleaner.refreshStats(config)} variant="outline" disabled={rs.running || rs.paused}>
           <RefreshCw className="h-4 w-4 mr-2" />Refresh stats
         </Button>
       </div>
@@ -275,7 +280,7 @@ export default function AdminExplanationCleaner() {
             <Label>Scope</Label>
             <div className="flex flex-wrap gap-2 mt-2">
               {(["all","test","section","topic","question"] as CleanerScope[]).map((s) => (
-                <Button key={s} size="sm" variant={scope === s ? "default" : "outline"} onClick={() => setScope(s)} disabled={rs.running}>
+                <Button key={s} size="sm" variant={scope === s ? "default" : "outline"} onClick={() => setScope(s)} disabled={rs.running || rs.paused}>
                   {s === "all" ? "All mocks" : s === "test" ? "Mock-wise" : s === "section" ? "Section-wise" : s === "topic" ? "Topic-wise" : "Single question"}
                 </Button>
               ))}
@@ -285,7 +290,7 @@ export default function AdminExplanationCleaner() {
           {(scope === "test" || scope === "section" || scope === "topic") && (
             <div>
               <Label>Mock test{scope === "topic" ? " (optional)" : ""}</Label>
-              <select className="w-full mt-1 border rounded px-3 py-2 text-sm bg-background" value={testId} onChange={(e) => { setTestId(e.target.value); setSectionId(""); setTopic(""); }} disabled={rs.running}>
+              <select className="w-full mt-1 border rounded px-3 py-2 text-sm bg-background" value={testId} onChange={(e) => { setTestId(e.target.value); setSectionId(""); setTopic(""); }} disabled={rs.running || rs.paused}>
                 <option value="">{scope === "topic" ? "Any mock" : "— Pick a mock —"}</option>
                 {tests.map((t) => <option key={t.id} value={t.id}>{t.exam_code} — {t.name}</option>)}
               </select>
@@ -295,7 +300,7 @@ export default function AdminExplanationCleaner() {
           {scope === "section" && testId && (
             <div>
               <Label>Section</Label>
-              <select className="w-full mt-1 border rounded px-3 py-2 text-sm bg-background" value={sectionId} onChange={(e) => setSectionId(e.target.value)} disabled={rs.running}>
+              <select className="w-full mt-1 border rounded px-3 py-2 text-sm bg-background" value={sectionId} onChange={(e) => setSectionId(e.target.value)} disabled={rs.running || rs.paused}>
                 <option value="">— Pick a section —</option>
                 {sections.map((s) => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}
               </select>
@@ -305,7 +310,7 @@ export default function AdminExplanationCleaner() {
           {scope === "topic" && (
             <div>
               <Label>Topic</Label>
-              <select className="w-full mt-1 border rounded px-3 py-2 text-sm bg-background" value={topic} onChange={(e) => setTopic(e.target.value)} disabled={rs.running}>
+              <select className="w-full mt-1 border rounded px-3 py-2 text-sm bg-background" value={topic} onChange={(e) => setTopic(e.target.value)} disabled={rs.running || rs.paused}>
                 <option value="">— Pick a topic —</option>
                 {topics.map((t) => <option key={t.topic} value={t.topic}>{t.topic} ({t.n})</option>)}
               </select>
@@ -315,17 +320,17 @@ export default function AdminExplanationCleaner() {
           {scope === "question" && (
             <div>
               <Label>Question ID (uuid)</Label>
-              <Input value={questionId} onChange={(e) => setQuestionId(e.target.value.trim())} placeholder="e.g. 9f3c…" disabled={rs.running} />
+              <Input value={questionId} onChange={(e) => setQuestionId(e.target.value.trim())} placeholder="e.g. 9f3c…" disabled={rs.running || rs.paused} />
             </div>
           )}
 
           <div>
             <Label>Status filter</Label>
             <div className="flex flex-wrap gap-2 mt-2">
-              <Button size="sm" variant={!force ? "default" : "outline"} onClick={() => setForce(false)} disabled={rs.running}>
+              <Button size="sm" variant={!force ? "default" : "outline"} onClick={() => setForce(false)} disabled={rs.running || rs.paused}>
                 <AlertTriangle className="h-3.5 w-3.5 mr-1 text-amber-600" /> Pending only
               </Button>
-              <Button size="sm" variant={force ? "default" : "outline"} onClick={() => setForce(true)} disabled={rs.running}>
+              <Button size="sm" variant={force ? "default" : "outline"} onClick={() => setForce(true)} disabled={rs.running || rs.paused}>
                 <RefreshCw className="h-3.5 w-3.5 mr-1" /> All (re-clean done too)
               </Button>
               <span className="text-xs text-muted-foreground self-center ml-2">
@@ -337,11 +342,11 @@ export default function AdminExplanationCleaner() {
           <div className="grid sm:grid-cols-2 gap-4 pt-2">
             <div>
               <Label>Batch size (1–40, parallel AI calls)</Label>
-              <Input type="number" min={1} max={40} value={batchSize} onChange={(e) => setBatchSize(Math.min(40, Math.max(1, Number(e.target.value) || 20)))} disabled={rs.running} />
+              <Input type="number" min={1} max={40} value={batchSize} onChange={(e) => setBatchSize(Math.min(40, Math.max(1, Number(e.target.value) || 20)))} disabled={rs.running || rs.paused} />
               <p className="text-xs text-muted-foreground mt-1">Runner loops automatically until everything in scope is done.</p>
             </div>
             <div className="flex items-end">
-              <Button onClick={startPendingOnly} disabled={rs.running} size="lg" className="bg-emerald-600 hover:bg-emerald-700 w-full">
+              <Button onClick={startPendingOnly} disabled={rs.running || rs.paused} size="lg" className="bg-emerald-600 hover:bg-emerald-700 w-full">
                 <Play className="h-4 w-4 mr-2" /> Run ALL pending ({rs.remaining > 0 ? `${rs.remaining} left` : rs.total > 0 ? "0 left" : "scan & start"})
               </Button>
             </div>
@@ -349,7 +354,7 @@ export default function AdminExplanationCleaner() {
           <div className="flex flex-wrap gap-2 items-center -mt-2">
             <Button
               onClick={startRedoDone}
-              disabled={rs.running}
+              disabled={rs.running || rs.paused}
               size="sm"
               variant="outline"
               className="border-amber-500 text-amber-700 hover:bg-amber-50"
@@ -372,6 +377,7 @@ export default function AdminExplanationCleaner() {
           <CardTitle className="flex items-center justify-between">
             <span>2. Progress & Cost</span>
             {rs.running && <Badge className="bg-emerald-600 hover:bg-emerald-600 animate-pulse">LIVE</Badge>}
+            {rs.paused && <Badge className="bg-amber-500 hover:bg-amber-500">PAUSED</Badge>}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
@@ -410,14 +416,15 @@ export default function AdminExplanationCleaner() {
                 )}
               </span>
               {rs.running && <span className="flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> running in background</span>}
+              {rs.paused && <span className="flex items-center gap-1 text-amber-600"><Pause className="h-3 w-3" /> paused — click Resume to continue</span>}
             </div>
             <div className="text-[10px] text-muted-foreground">
               Pricing model: Gemini 2.5 Flash · ${PRICING.PRICE_IN_PER_M}/M input · ${PRICING.PRICE_OUT_PER_M}/M output (estimate)
             </div>
           </div>
 
-          <div className="flex gap-2 pt-1">
-            {!rs.running ? (
+          <div className="flex gap-2 pt-1 flex-wrap">
+            {!rs.running && !rs.paused ? (
               <>
                 <Button onClick={() => start()} size="lg" className="bg-sky-600 hover:bg-sky-700">
                   <Play className="h-4 w-4 mr-2" />Start cleaning ({rs.total > 0 ? rs.total : "scan & run"})
@@ -426,10 +433,24 @@ export default function AdminExplanationCleaner() {
                   <Button onClick={() => explanationCleaner.reset()} variant="ghost" size="lg">Reset counters</Button>
                 )}
               </>
+            ) : rs.paused ? (
+              <>
+                <Button onClick={() => explanationCleaner.resume()} size="lg" className="bg-emerald-600 hover:bg-emerald-700">
+                  <Play className="h-4 w-4 mr-2" />Resume cleaning
+                </Button>
+                <Button onClick={() => explanationCleaner.stop()} variant="destructive" size="lg">
+                  <Square className="h-4 w-4 mr-2" />Stop
+                </Button>
+              </>
             ) : (
-              <Button onClick={() => explanationCleaner.stop()} variant="destructive" size="lg">
-                <Square className="h-4 w-4 mr-2" />Stop
-              </Button>
+              <>
+                <Button onClick={() => explanationCleaner.pause()} variant="outline" size="lg" className="border-amber-500 text-amber-700 hover:bg-amber-50">
+                  <Pause className="h-4 w-4 mr-2" />Pause
+                </Button>
+                <Button onClick={() => explanationCleaner.stop()} variant="destructive" size="lg">
+                  <Square className="h-4 w-4 mr-2" />Stop
+                </Button>
+              </>
             )}
           </div>
 

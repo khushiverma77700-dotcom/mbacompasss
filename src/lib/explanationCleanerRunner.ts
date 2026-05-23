@@ -19,6 +19,7 @@ export type CleanerError = { id: string; message: string; at: number };
 
 export type CleanerState = {
   running: boolean;
+  paused: boolean;
   config: CleanerConfig | null;
   total: number;
   remaining: number;
@@ -44,8 +45,8 @@ const loadPersisted = (): Partial<CleanerState> => {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return {};
     const p = JSON.parse(raw);
-    // never restore "running" — the loop only lives in memory.
-    return { ...p, running: false };
+    // never restore "running" or "paused" — the loop only lives in memory.
+    return { ...p, running: false, paused: false };
   } catch {
     return {};
   }
@@ -53,6 +54,7 @@ const loadPersisted = (): Partial<CleanerState> => {
 
 const initial: CleanerState = {
   running: false,
+  paused: false,
   config: null,
   total: 0,
   remaining: 0,
@@ -126,30 +128,42 @@ export const explanationCleaner = {
     return data;
   },
 
-  async start(config: CleanerConfig) {
+  async start(config: CleanerConfig, resume = false) {
     if (state.running) return;
     stopRequested = false;
-    update({
-      running: true,
-      config,
-      processed: 0,
-      failed: 0,
-      promptTokens: 0,
-      completionTokens: 0,
-      costUsd: 0,
-      startTs: Date.now(),
-      lastTickTs: Date.now(),
-      log: [`Started · scope=${config.scope} · batch=${config.batchSize}${config.done_only ? " · redo-done" : config.force ? " · force" : ""}`],
-      errors: [],
-    });
-    await this.refreshStats(config);
 
-    const filters = this.buildFilters(config);
+    const activeConfig = resume ? (state.config ?? config) : config;
+
+    if (!resume) {
+      update({
+        running: true,
+        paused: false,
+        config: activeConfig,
+        processed: 0,
+        failed: 0,
+        promptTokens: 0,
+        completionTokens: 0,
+        costUsd: 0,
+        startTs: Date.now(),
+        lastTickTs: Date.now(),
+        log: [`Started · scope=${activeConfig.scope} · batch=${activeConfig.batchSize}${activeConfig.done_only ? " · redo-done" : activeConfig.force ? " · force" : ""}`],
+        errors: [],
+      });
+      await this.refreshStats(activeConfig);
+    } else {
+      update({
+        running: true,
+        paused: false,
+        lastTickTs: Date.now(),
+      });
+    }
+
+    const filters = this.buildFilters(activeConfig);
 
     while (!stopRequested) {
       try {
         const { data, error } = await supabase.functions.invoke("reformat-explanations", {
-          body: { mode: "process", batch_size: config.batchSize, ...filters },
+          body: { mode: "process", batch_size: activeConfig.batchSize, ...filters },
         });
         if (error) {
           update({
@@ -192,8 +206,19 @@ export const explanationCleaner = {
     update({ running: false });
   },
 
+  pause() {
+    stopRequested = true;
+    update({ paused: true });
+  },
+
   stop() {
     stopRequested = true;
+    update({ paused: false });
+  },
+
+  resume() {
+    if (!state.config || state.running) return;
+    this.start(state.config, true);
   },
 
   reset() {
@@ -207,6 +232,7 @@ export const explanationCleaner = {
       errors: [],
       startTs: null,
       lastTickTs: null,
+      paused: false,
     });
   },
 };
