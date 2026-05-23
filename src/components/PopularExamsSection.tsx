@@ -82,6 +82,9 @@ const PopularExamsSection = () => {
           <p className="text-muted-foreground max-w-2xl mx-auto text-sm md:text-base">
             Key dates, exam patterns, and live countdowns — everything you need at a glance
           </p>
+          <p className="text-xs text-muted-foreground/60 mt-2 italic">
+            *Dates are tentative and subject to change. Please verify with official exam websites.
+          </p>
         </motion.div>
 
         {/* Exam Cards */}
