@@ -354,7 +354,7 @@ export default function AdminExplanationCleaner() {
           <div className="flex flex-wrap gap-2 items-center -mt-2">
             <Button
               onClick={startRedoDone}
-              disabled={rs.running}
+              disabled={rs.running || rs.paused}
               size="sm"
               variant="outline"
               className="border-amber-500 text-amber-700 hover:bg-amber-50"
