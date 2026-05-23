@@ -544,7 +544,9 @@ export default function AdminExplanationCleaner() {
             <div className="grid md:grid-cols-2 gap-4 overflow-auto flex-1">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="border-amber-400 text-amber-700">BEFORE (original)</Badge>
+                  <Badge variant="outline" className="border-amber-400 text-amber-700">
+                    {diffRow?.hasOriginal ? "BEFORE (original)" : "BEFORE (current saved)"}
+                  </Badge>
                 </div>
                 <div className="border rounded-lg p-3 bg-amber-50/30 max-h-[60vh] overflow-auto text-sm">
                   {diffRow?.before
