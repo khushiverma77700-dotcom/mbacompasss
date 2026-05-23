@@ -90,17 +90,21 @@ const AdminMockTests = () => {
   const [aiOpen, setAiOpen] = useState(false);
   const { filters, setFilter } = useAdminFilters({
     storageKey: "admin.mockTests.filters",
-    defaults: { category: "all", exam: "all", difficulty: "all", readiness: "all" },
+    defaults: { category: "all", exam: "all", difficulty: "all", readiness: "all", section: "all", topic: "all" },
     preserveKeys: ["edit"],
   });
   const categoryFilter = filters.category;
   const examFilter = filters.exam;
   const difficultyFilter = filters.difficulty;
   const readinessFilter = filters.readiness;
-  const setCategoryFilter = (v: string) => setFilter("category", v);
-  const setExamFilter = (v: string) => setFilter("exam", v);
+  const sectionFilter = filters.section;
+  const topicFilter = filters.topic;
+  const setCategoryFilter = (v: string) => { setFilter("category", v); setFilter("section", "all"); setFilter("topic", "all"); };
+  const setExamFilter = (v: string) => { setFilter("exam", v); setFilter("section", "all"); setFilter("topic", "all"); };
   const setDifficultyFilter = (v: string) => setFilter("difficulty", v);
   const setReadinessFilter = (v: string) => setFilter("readiness", v);
+  const setSectionFilter = (v: string) => { setFilter("section", v); setFilter("topic", "all"); };
+  const setTopicFilter = (v: string) => setFilter("topic", v);
   const [readinessSaving, setReadinessSaving] = useState<Record<string, boolean>>({});
   const [sortOrderDraft, setSortOrderDraft] = useState<Record<string, string>>({});
   const [sortOrderSaving, setSortOrderSaving] = useState<Record<string, boolean>>({});
