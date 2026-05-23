@@ -24,7 +24,7 @@ Output rules (NON-NEGOTIABLE):
 - Use inline $...$ for variables and small expressions inside sentences.
 - Use <strong> to highlight final numeric results.
 - Indian English, no emojis, no "Therefore the answer is" wall-of-text.
-- If the input is already well-structured, return it unchanged.`;
+- Always emit at least <h4>Concept</h4>, <h4>Step-by-step Solution</h4> and <h4>Answer</h4> sections.`;
 
 async function rewriteOne(html: string): Promise<string> {
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -44,9 +44,36 @@ async function rewriteOne(html: string): Promise<string> {
   if (!res.ok) throw new Error(`AI gateway ${res.status}: ${await res.text()}`);
   const j = await res.json();
   let out: string = j?.choices?.[0]?.message?.content ?? "";
-  // strip accidental markdown fences
   out = out.replace(/^```(?:html)?\s*/i, "").replace(/```\s*$/i, "").trim();
   return out;
+}
+
+type Filters = {
+  test_id?: string;
+  section_id?: string;
+  topic?: string;
+  question_id?: string;
+  force?: boolean;
+};
+
+function buildQuery(admin: any, f: Filters, opts: { count?: boolean } = {}) {
+  let q = admin
+    .from("mock_questions")
+    .select(
+      "id, section_id, topic, explanation_html, mock_sections!inner(test_id, name, code)",
+      opts.count ? { count: "exact" } : undefined,
+    )
+    .not("explanation_html", "is", null)
+    .neq("explanation_html", "");
+
+  if (!f.force) {
+    q = q.not("explanation_html", "ilike", "%<h4>%");
+  }
+  if (f.question_id) q = q.eq("id", f.question_id);
+  if (f.section_id) q = q.eq("section_id", f.section_id);
+  if (f.topic) q = q.ilike("topic", f.topic);
+  if (f.test_id) q = q.eq("mock_sections.test_id", f.test_id);
+  return q;
 }
 
 Deno.serve(async (req) => {
@@ -67,29 +94,30 @@ Deno.serve(async (req) => {
     if (!isAdmin) return new Response(JSON.stringify({ error: "not admin" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
-    const testId: string | undefined = body.test_id;
-    const batchSize: number = Math.min(Math.max(body.batch_size ?? 15, 1), 40);
-    const dryRun: boolean = body.dry_run === true;
-    const mode: "count" | "process" = body.mode === "count" ? "count" : "process";
+    const filters: Filters = {
+      test_id: body.test_id || undefined,
+      section_id: body.section_id || undefined,
+      topic: body.topic || undefined,
+      question_id: body.question_id || undefined,
+      force: body.force === true,
+    };
+    const batchSize: number = Math.min(Math.max(body.batch_size ?? 20, 1), 40);
+    const mode: "count" | "process" | "stats" = body.mode === "count" ? "count" : body.mode === "stats" ? "stats" : "process";
 
-    // Pick rows that are NOT already structured: missing <h4>, missing <ol>, or single-paragraph.
-    let query = admin
-      .from("mock_questions")
-      .select("id, section_id, explanation_html, mock_sections!inner(test_id)", { count: "exact" })
-      .not("explanation_html", "is", null)
-      .not("explanation_html", "ilike", "%<h4>%");
-    if (testId) query = query.eq("mock_sections.test_id", testId);
-
-    if (mode === "count") {
-      const { count, error } = await query.limit(1);
-      if (error) throw error;
-      return new Response(JSON.stringify({ remaining: count ?? 0 }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (mode === "count" || mode === "stats") {
+      const { count: remaining } = await buildQuery(admin, filters, { count: true }).limit(1);
+      // total = remaining (force ignores h4) OR remaining + already formatted
+      const { count: totalRaw } = await buildQuery(admin, { ...filters, force: true }, { count: true }).limit(1);
+      return new Response(
+        JSON.stringify({ remaining: remaining ?? 0, total: totalRaw ?? 0, done: (totalRaw ?? 0) - (remaining ?? 0) }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
-    const { data: rows, error: selErr } = await query.limit(batchSize);
+    const { data: rows, error: selErr } = await buildQuery(admin, filters).limit(batchSize);
     if (selErr) throw selErr;
     if (!rows || rows.length === 0) {
-      return new Response(JSON.stringify({ processed: 0, remaining: 0, done: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ processed: 0, failed: 0, remaining: 0, done: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     let ok = 0, failed = 0;
@@ -98,13 +126,11 @@ Deno.serve(async (req) => {
       try {
         const cleaned = await rewriteOne(r.explanation_html);
         if (!cleaned || cleaned.length < 30) throw new Error("empty rewrite");
-        if (!dryRun) {
-          const { error: upErr } = await admin
-            .from("mock_questions")
-            .update({ explanation_html: cleaned })
-            .eq("id", r.id);
-          if (upErr) throw upErr;
-        }
+        const { error: upErr } = await admin
+          .from("mock_questions")
+          .update({ explanation_html: cleaned })
+          .eq("id", r.id);
+        if (upErr) throw upErr;
         ok++;
       } catch (e) {
         failed++;
@@ -112,7 +138,7 @@ Deno.serve(async (req) => {
       }
     }));
 
-    const { count: remaining } = await query.limit(1);
+    const { count: remaining } = await buildQuery(admin, filters, { count: true }).limit(1);
     return new Response(
       JSON.stringify({ processed: ok, failed, remaining: remaining ?? 0, done: (remaining ?? 0) === 0, errors: errors.slice(0, 5) }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
