@@ -6,7 +6,7 @@ import {
   GraduationCap, Mail, FileText, Tag, Menu, Settings, MessageCircle, Trophy,
   Ticket, Star, BarChart3, MapPin, Trash2, Users, Globe, Link2, GitCompare,
   TrendingUp, Sparkles, ShieldCheck, Briefcase, Target, PhoneCall, Database,
-  Activity, Calculator, Bell, RefreshCw, PenLine, ClipboardList, Package, KeyRound, ShoppingCart,
+  Activity, Calculator, Bell, RefreshCw, PenLine, ClipboardList, Package, KeyRound, ShoppingCart, CalendarClock,
 } from "lucide-react";
 
 export type AdminNavItem = {
@@ -68,6 +68,7 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Mocks Landing Page", path: "/admin/mocks-landing", icon: ClipboardList },
       { label: "Personalized Hub", path: "/admin/personalized-hub", icon: Sparkles },
       { label: "Daily Tests", path: "/admin/daily-tests", icon: ClipboardList },
+      { label: "Exam Countdowns", path: "/admin/exam-countdowns", icon: CalendarClock },
       { label: "Student Announcements", path: "/admin/student-announcements", icon: Bell },
       { label: "Push Notifications", path: "/admin/student-notifications", icon: Bell },
     ],
