@@ -37,10 +37,24 @@ const PopularExamsSection = () => {
     queryFn: async () => {
       const { data } = await supabase
         .from("exams")
-        .select("name, slug, full_name, exam_date, registration_deadline, conducting_body, frequency, eligibility, description, pattern")
-        .order("created_at")
-        .limit(6);
-      return data || [];
+        .select("name, slug, full_name, exam_date, registration_deadline, conducting_body, frequency, eligibility, description, pattern");
+      const now = new Date();
+      const all = (data || []).filter((e: any) => e.name?.trim());
+      // Sort by nearest upcoming exam date ascending; past/unknown dates go last
+      const sorted = all.sort((a: any, b: any) => {
+        const da = parseExamDate(a.exam_date);
+        const db = parseExamDate(b.exam_date);
+        const aFuture = da && da.getTime() >= now.getTime() - 86400000;
+        const bFuture = db && db.getTime() >= now.getTime() - 86400000;
+        if (aFuture && bFuture) return da!.getTime() - db!.getTime();
+        if (aFuture) return -1;
+        if (bFuture) return 1;
+        if (da && db) return da.getTime() - db.getTime();
+        if (da) return -1;
+        if (db) return 1;
+        return 0;
+      });
+      return sorted.slice(0, 6);
     },
   });
 
