@@ -100,9 +100,14 @@
       body{margin:0;font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:#fff;color:#0f172a;-webkit-font-smoothing:antialiased}
       #root{min-height:100vh}
       h1,h2,h3{font-family:'Plus Jakarta Sans',system-ui,sans-serif;margin:0}
-      #app-loading{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#fff}
-      #app-loading::before{content:"";width:28px;height:28px;border-radius:999px;border:3px solid #dbeafe;border-top-color:#3b82f6;animation:appspin .8s linear infinite}
-      @keyframes appspin{to{transform:rotate(360deg)}}
+      /* Static hero shell painted before React mounts — gives Lighthouse an LCP candidate at ~FCP time. */
+      #app-shell{min-height:100vh;background:linear-gradient(135deg,#1d8eef 0%,#0fa3e5 50%,#10b3c4 100%);display:flex;align-items:flex-start;justify-content:center;padding:64px 16px 0}
+      #app-shell .shell-inner{max-width:768px;text-align:center;color:#fff}
+      #app-shell .shell-badge{display:inline-block;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);border-radius:9999px;padding:4px 16px;font-size:12px;font-weight:600;margin-bottom:12px}
+      #app-shell h1{font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:clamp(24px,5vw,48px);font-weight:800;line-height:1.15;letter-spacing:-0.02em;margin:0 0 6px}
+      #app-shell .shell-sub{font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:clamp(18px,3vw,28px);font-weight:700;opacity:0.85;margin:0 0 8px}
+      #app-shell .shell-tag{font-size:13px;opacity:0.75;margin:0}
+      .app-mounted #app-shell{display:none}
     </style>
 
     <meta property="og:type" content="website" />
@@ -155,7 +160,15 @@
   </head>
 
   <body>
-    <div id="root"><div id="app-loading" aria-label="Loading"></div></div>
+    <div id="app-shell" aria-hidden="true">
+      <div class="shell-inner">
+        <span class="shell-badge">India's #1 MBA Coaching Discovery Platform</span>
+        <h1>Find the Best MBA Coaching</h1>
+        <p class="shell-sub">for Your Dream B-School</p>
+        <p class="shell-tag">Compare top MBA coaching institutes, read reviews, and make informed decisions</p>
+      </div>
+    </div>
+    <div id="root"></div>
     <noscript>
       <div style="max-width:960px;margin:0 auto;padding:24px;font-family:system-ui,sans-serif">
         <h1>MBA Compass — MBA Colleges &amp; Coaching Comparison Platform</h1>

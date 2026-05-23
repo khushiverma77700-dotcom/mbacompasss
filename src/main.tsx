@@ -27,3 +27,11 @@ createRoot(document.getElementById("root")!).render(
     <App />
   </ErrorBoundary>
 );
+
+// Hide the static LCP shell once React has committed the real hero.
+// Two rAFs guarantee the real hero has painted before we hide the shell — no flash.
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    document.documentElement.classList.add("app-mounted");
+  });
+});
