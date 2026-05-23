@@ -23,6 +23,12 @@
   RewriteCond %{HTTP_HOST} ^www\.mbacompass\.in$ [NC]
   RewriteRule ^(.*)$ https://mbacompass.in/$1 [R=301,L]
 
+  # 0.5) Always serve sitemap.xml from the live DB-backed edge function so
+  #      Google never reads a stale static copy. 302 (not 301) keeps Google
+  #      treating https://mbacompass.in/sitemap.xml as the canonical sitemap
+  #      URL in Search Console. Googlebot follows redirects on sitemap fetches.
+  RewriteRule ^sitemap\.xml$ https://mttoiqruzzxooveooldo.supabase.co/functions/v1/serve-sitemap [R=302,L,NC]
+
   # 1) Send obvious "this can never be a page" requests to a real 404.
   #    - Files with non-web extensions commonly probed by scanners
   #    - WordPress / phpMyAdmin paths we don't host
