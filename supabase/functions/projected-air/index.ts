@@ -432,10 +432,12 @@ Deno.serve(async (req) => {
       real_pool_size: realEntries.length,
     };
 
-    // Cache the stable per-attempt row
-    await admin.from("mock_projected_ranks").upsert(row, {
-      onConflict: "attempt_id",
-    });
+    // Cache only the motivational (default) result to avoid mode collisions.
+    if (mode === "motivational") {
+      await admin.from("mock_projected_ranks").upsert(row, {
+        onConflict: "attempt_id",
+      });
+    }
 
     return new Response(
       JSON.stringify({
