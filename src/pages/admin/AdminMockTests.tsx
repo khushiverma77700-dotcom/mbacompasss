@@ -54,7 +54,7 @@ const emptyForm: Form = {
   total_duration_minutes: 120,
   pricing_type: "free",
   price_inr: 0,
-  access_validity_days: 30,
+  access_validity_days: 365,
   difficulty: "medium",
   is_published: false,
   is_live: false,
