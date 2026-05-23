@@ -6775,6 +6775,10 @@ export type Database = {
         Args: { _through?: string; _user_id: string }
         Returns: number
       }
+      mirror_mock_question_to_personalized: {
+        Args: { _question_id: string }
+        Returns: undefined
+      }
       normalize_faq_question: { Args: { _question: string }; Returns: string }
       personalized_hub_today_count: {
         Args: { _user_id: string }
