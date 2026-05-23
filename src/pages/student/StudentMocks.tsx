@@ -406,6 +406,9 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
             typeLabel={TYPE_TITLES[fixedType].title}
             examFilter={examFilter}
             onUpgrade={() => setUpgradeOpen(true)}
+            groupBySection={fixedType === "sectional"}
+            sectionFilter={fixedType === "sectional" ? sectionFilter : undefined}
+            onSectionChange={fixedType === "sectional" ? setSectionFilter : undefined}
           />
         )
       ) : (
