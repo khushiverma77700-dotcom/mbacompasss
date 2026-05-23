@@ -160,7 +160,9 @@ export default function AdminMockBundles() {
     });
   }, [allMocks, examFilter, typeFilter, statusFilter, selectionFilter, mockSearch, editingItems, sectionFilter, topicFilter]);
 
-  const showAdvancedFilters = typeFilter === "sectional" || typeFilter === "topic_wise";
+  // Section filter is always shown so admins can slice any bundle by section.
+  // Topic filter only makes sense for topic-wise mocks.
+  const showAdvancedFilters = true;
   const showTopicFilter = typeFilter === "topic_wise";
 
   const sectionOptions = useMemo(() => {
