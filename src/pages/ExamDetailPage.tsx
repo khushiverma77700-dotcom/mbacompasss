@@ -14,6 +14,7 @@ import { useResolvedSeo } from "@/hooks/useResolvedSeo";
 import { examDetails } from "@/data/mockData";
 import AIGistSection from "@/components/AIGistSection";
 import InlineAIToolCTA from "@/components/InlineAIToolCTA";
+import DOMPurify from "isomorphic-dompurify";
 
 const stripHtml = (value?: string | null) => (value || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
 
