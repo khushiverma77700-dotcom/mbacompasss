@@ -581,8 +581,36 @@ const AdminMockTests = () => {
             </SelectContent>
           </Select>
         </div>
-        {(examFilter !== "all" || difficultyFilter !== "all" || readinessFilter !== "all") && (
-          <Button size="sm" variant="ghost" onClick={() => { setExamFilter("all"); setDifficultyFilter("all"); setReadinessFilter("all"); }}>
+        {showAdvancedFilters && (
+          <div className="flex items-center gap-2">
+            <Label className="text-xs text-muted-foreground">Section</Label>
+            <Select value={sectionFilter} onValueChange={setSectionFilter}>
+              <SelectTrigger className="w-[150px] h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sections</SelectItem>
+                {sectionOptions.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        {showTopicFilter && (
+          <div className="flex items-center gap-2">
+            <Label className="text-xs text-muted-foreground">Topic</Label>
+            <Select value={topicFilter} onValueChange={setTopicFilter}>
+              <SelectTrigger className="w-[260px] h-9"><SelectValue /></SelectTrigger>
+              <SelectContent className="max-h-72">
+                <SelectItem value="all">All Topics</SelectItem>
+                {topicOptions.map((t) => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        {(examFilter !== "all" || difficultyFilter !== "all" || readinessFilter !== "all" || sectionFilter !== "all" || topicFilter !== "all") && (
+          <Button size="sm" variant="ghost" onClick={() => { setExamFilter("all"); setDifficultyFilter("all"); setReadinessFilter("all"); setFilter("section", "all"); setFilter("topic", "all"); }}>
             Clear filters
           </Button>
         )}
