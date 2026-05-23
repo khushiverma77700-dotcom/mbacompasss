@@ -454,7 +454,12 @@ export default function AdminExplanationCleaner() {
                 </thead>
                 <tbody>
                   {browseRows.map((r) => (
-                    <tr key={r.id} className="border-t hover:bg-slate-50">
+                    <tr
+                      key={r.id}
+                      className={`border-t hover:bg-sky-50 ${browseStatus === "done" ? "cursor-pointer" : ""}`}
+                      onClick={() => browseStatus === "done" && openDiff(r.id)}
+                      title={browseStatus === "done" ? "Click to view before/after" : undefined}
+                    >
                       <td className="px-2 py-2 font-mono text-[10px] truncate max-w-[140px]">{r.id}</td>
                       <td className="px-2 py-2">{r.mock_sections?.code ?? "—"}</td>
                       <td className="px-2 py-2">{r.topic ?? "—"}</td>
@@ -464,7 +469,7 @@ export default function AdminExplanationCleaner() {
                       <td className="px-2 py-2 text-right">
                         {browseStatus === "pending"
                           ? <Badge variant="outline" className="border-amber-400 text-amber-700">Pending</Badge>
-                          : <Badge variant="outline" className="border-emerald-400 text-emerald-700">Done</Badge>}
+                          : <Badge variant="outline" className="border-emerald-400 text-emerald-700 gap-1"><Eye className="h-3 w-3" />Done</Badge>}
                       </td>
                     </tr>
                   ))}
