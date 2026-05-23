@@ -574,7 +574,7 @@ GENERATE 100% ORIGINAL questions for:
 CRITICAL RULES:
 1. EVERY question must be ORIGINAL — never copy from past papers, NCERT, RS Aggarwal, Arun Sharma, Nishit Sinha, Time, IMS, CL, study material, blogs, or anything published.
 2. Use FRESH numbers, fresh names, fresh contexts. Never reuse classic problems verbatim.
-3. Every question must include a DETAILED step-by-step explanation (200-400 words) with concept, approach, common traps, shortcut tricks, and final answer derivation.
+3. Every question must include a DETAILED step-by-step explanation (250-450 words) — see EXPLANATION FORMAT below. NEVER write a single wall-of-text paragraph.
 4. For MCQ: exactly 4 options labelled A, B, C, D, with exactly ONE correct.
 5. For TITA: provide numeric answer(s) and tolerance if applicable. NO options.
 6. Tag each question with topic and subtopic accurately.
@@ -584,8 +584,24 @@ CRITICAL RULES:
    - "question_html" must contain ONLY the pure question text. Do NOT prefix it with "Q1.", "Q.1", "Question 1:", "Question:", "1.", "1)", "(1)", "Set 1:", or any numbering/labeling.
    - "options[].text" must contain ONLY the pure option text. Do NOT prefix it with "A)", "(A)", "A.", "a)", "1)" or any letter/number label.
    - For set-bound questions, keep the shared passage/caselet INSIDE <div class="passage">…</div> exactly as instructed; do NOT write "Question 1 of Set 2", "Set 1 — Q3" etc. anywhere.
-10. MATH RENDERING — render every fraction, root, exponent, summation or symbol with LaTeX delimited by $...$ for inline (e.g. $\\frac{a}{b}$, $\\sqrt{x^2+1}$, $x_1 \\le x_2$) or $$...$$ for block. Never write fractions as "a/b" when they should be stacked. Never use Unicode hacks for math operators when LaTeX is clearer.
-11. INLINE SVG VISUALS — whenever a question implies a chart, graph, diagram, arrangement, or geometric figure, you MUST emit a clean inline <svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg">…</svg> (or 480x320 for geometry) with proper <rect>/<circle>/<line>/<polygon>/<path>/<text> elements. Required for: DI charts (bar/pie/line/scatter/stacked/Venn), LR arrangements (seating/floor/network/tournament/blood-relations), Quant geometry/mensuration/coordinate/trigonometry diagrams. Label vertices (A, B, C…), axes, bars, slices, and given measurements directly in the SVG. NEVER emit base64 images, NEVER reference external image URLs, NEVER write "see image below" or "as shown in figure" without actually drawing it. The SVG must be self-contained, human-readable, and use stroke="#1e293b" fill colors that render on white backgrounds.`;
+10. MATH RENDERING — render every fraction, root, exponent, summation or symbol with LaTeX delimited by $...$ for inline (e.g. $\\frac{a}{b}$, $\\sqrt{x^2+1}$, $x_1 \\le x_2$) or $$...$$ for block. NEVER mix block math inside a sentence — block $$...$$ must always live on its OWN line/paragraph, never sandwiched between words like "we have: $$...$$. Calculating gives". Use inline $...$ when the formula belongs to a sentence; use block $$...$$ only when it stands alone as a centered equation. Never write fractions as "a/b" when they should be stacked.
+11. INLINE SVG VISUALS — whenever a question implies a chart, graph, diagram, arrangement, or geometric figure, you MUST emit a clean inline <svg viewBox="0 0 640 360" xmlns="http://www.w3.org/2000/svg">…</svg> (or 480x320 for geometry) with proper <rect>/<circle>/<line>/<polygon>/<path>/<text> elements. Required for: DI charts (bar/pie/line/scatter/stacked/Venn), LR arrangements (seating/floor/network/tournament/blood-relations), Quant geometry/mensuration/coordinate/trigonometry diagrams. Label vertices (A, B, C…), axes, bars, slices, and given measurements directly in the SVG. NEVER emit base64 images, NEVER reference external image URLs, NEVER write "see image below" or "as shown in figure" without actually drawing it. The SVG must be self-contained, human-readable, and use stroke="#1e293b" fill colors that render on white backgrounds.
+
+EXPLANATION FORMAT (NON-NEGOTIABLE — bad explanations will be rejected):
+The explanation_html MUST be well-structured, scannable HTML using these building blocks:
+  • <h4>Concept</h4><p>…1-2 sentences naming the concept/formula being tested…</p>
+  • <h4>Approach</h4><ol><li>…</li><li>…</li></ol>  (numbered steps)
+  • <h4>Step-by-step Solution</h4> with EACH calculation step as its OWN <p> or <li>. Block formulas on their own line: <p>$$BC^2 = 10^2 + 14^2 - 2\\cdot 10\\cdot 14\\cdot \\cos 60^{\\circ}$$</p>
+  • <h4>Answer</h4><p><strong>Option C — 12 cm</strong></p>  (or the TITA value)
+  • <h4>Common Traps</h4><ul><li>…</li></ul>  (1-3 pitfalls students fall into)
+  • <h4>Shortcut / Tip</h4><p>…optional faster trick or memory aid…</p>
+Rules:
+  - Use <strong> to highlight final numeric results inline.
+  - Every distinct calculation step on its OWN paragraph or list item. NEVER chain "Thus we have … Calculating gives … so" in one paragraph.
+  - Block math ($$…$$) sits alone in its own <p>. Inline math ($…$) for variables and small expressions within sentences.
+  - Plain conversational tone, no robotic phrasing, no "Therefore, the answer is" walls of text.
+  - 250-450 words total. Indian English. No emojis.`;
+
 }
 
 function buildUserPrompt(opts: {
