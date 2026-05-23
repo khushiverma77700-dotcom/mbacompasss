@@ -47,30 +47,82 @@ export type StudentPerformanceData = {
 };
 
 const QUERY_KEY = (uid?: string) => ["student-performance", uid] as const;
+const QUERY_KEY_SECTIONAL = (uid?: string) => ["student-performance-sectional", uid] as const;
+const CACHE_KEY = (uid?: string) => `sp-attempts-v1:${uid ?? ""}`;
 
+// Fast path: skip the heavy `sectional_scores` JSONB so the dashboard paints
+// quickly. Sectional data is hydrated in a second background query and merged.
 async function fetchAttempts(userId: string): Promise<MockAttempt[]> {
   const { data, error } = await supabase
     .from("mock_attempts")
     .select(
-      "id, test_id, status, started_at, submitted_at, total_score, max_score, percentile, total_correct, total_attempted, total_incorrect, accuracy, sectional_scores, test:mock_tests(name, slug, exam_code, test_type)"
+      "id, test_id, status, started_at, submitted_at, total_score, max_score, percentile, total_correct, total_attempted, total_incorrect, accuracy, test:mock_tests(name, slug, exam_code, test_type)"
     )
     .eq("user_id", userId)
     .order("started_at", { ascending: false })
-    .limit(100);
+    .limit(60);
   if (error) throw error;
   return ((data ?? []) as unknown) as MockAttempt[];
+}
+
+async function fetchSectionalScores(userId: string): Promise<Record<string, any>> {
+  const { data, error } = await supabase
+    .from("mock_attempts")
+    .select("id, sectional_scores")
+    .eq("user_id", userId)
+    .in("status", ["submitted", "auto_submitted"])
+    .order("started_at", { ascending: false })
+    .limit(60);
+  if (error) throw error;
+  const map: Record<string, any> = {};
+  for (const row of (data ?? []) as any[]) map[row.id] = row.sectional_scores;
+  return map;
 }
 
 export function useStudentPerformance(): StudentPerformanceData {
   const { user } = useAuth();
   const qc = useQueryClient();
 
-  const { data: attempts = [], isLoading } = useQuery({
+  const initialAttempts = useMemo<MockAttempt[] | undefined>(() => {
+    if (!user?.id || typeof window === "undefined") return undefined;
+    try {
+      const raw = sessionStorage.getItem(CACHE_KEY(user.id));
+      if (!raw) return undefined;
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) && parsed.length ? parsed : undefined;
+    } catch { return undefined; }
+  }, [user?.id]);
+
+  const { data: baseAttempts = [], isLoading } = useQuery({
     queryKey: QUERY_KEY(user?.id),
     queryFn: () => fetchAttempts(user!.id),
     enabled: !!user?.id,
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+    initialData: initialAttempts,
   });
+
+  const { data: sectionalMap = {} } = useQuery({
+    queryKey: QUERY_KEY_SECTIONAL(user?.id),
+    queryFn: () => fetchSectionalScores(user!.id),
+    enabled: !!user?.id,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
+  });
+
+  // Persist base attempts for instant paint on next mount
+  useEffect(() => {
+    if (!user?.id || typeof window === "undefined" || !baseAttempts.length) return;
+    try { sessionStorage.setItem(CACHE_KEY(user.id), JSON.stringify(baseAttempts)); } catch {}
+  }, [user?.id, baseAttempts]);
+
+  const attempts = useMemo(() => {
+    if (!baseAttempts.length) return baseAttempts as MockAttempt[];
+    return baseAttempts.map((a: any) => ({
+      ...a,
+      sectional_scores: (sectionalMap as any)[a.id] ?? a.sectional_scores ?? {},
+    })) as MockAttempt[];
+  }, [baseAttempts, sectionalMap]);
 
   // Realtime: refresh whenever this user's attempts change.
   useEffect(() => {
