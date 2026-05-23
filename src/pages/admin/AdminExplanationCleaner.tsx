@@ -101,13 +101,15 @@ export default function AdminExplanationCleaner() {
     // eslint-disable-next-line
   }, [config.scope, config.test_id, config.section_id, config.topic, config.question_id, config.force]);
 
-  const start = () => {
+  const start = (opts: { pendingOnly?: boolean } = {}) => {
     if (scope === "test" && !testId) return toast.error("Pick a mock test");
     if (scope === "section" && !sectionId) return toast.error("Pick a section");
     if (scope === "topic" && !topic) return toast.error("Pick a topic");
     if (scope === "question" && !questionId) return toast.error("Paste a question id");
-    explanationCleaner.start(config);
+    explanationCleaner.start({ ...config, force: opts.pendingOnly ? false : config.force });
   };
+  // "Run ALL" always = pending only, never re-cleans already-done (saves cost)
+  const startPendingOnly = () => start({ pendingOnly: true });
 
   // Browse panel
   const [browseStatus, setBrowseStatus] = useState<BrowseStatus | "failed">("pending");
