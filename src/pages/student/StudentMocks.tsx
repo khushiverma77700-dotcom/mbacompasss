@@ -16,7 +16,7 @@ import {
 import UpgradeDialog from "@/components/student/UpgradeDialog";
 import { ensureStudentMode, mockAttemptPath, mockIntroPath, mockLeaderboardPath, mockResultPath, mockReviewPath } from "@/lib/studentModeNav";
 
-const EXAM_FILTERS = ["All", "CAT", "XAT", "NMAT", "SNAP", "IIFT", "CMAT", "MAT", "TISSNET"];
+const EXAM_FILTERS = ["CAT", "XAT", "NMAT", "SNAP", "IIFT", "CMAT", "MAT", "TISSNET"];
 
 const studentMockLinkProps = {
   onClick: ensureStudentMode,
