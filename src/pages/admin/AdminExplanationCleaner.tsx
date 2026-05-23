@@ -310,7 +310,7 @@ export default function AdminExplanationCleaner() {
           {scope === "topic" && (
             <div>
               <Label>Topic</Label>
-              <select className="w-full mt-1 border rounded px-3 py-2 text-sm bg-background" value={topic} onChange={(e) => setTopic(e.target.value)} disabled={rs.running}>
+              <select className="w-full mt-1 border rounded px-3 py-2 text-sm bg-background" value={topic} onChange={(e) => setTopic(e.target.value)} disabled={rs.running || rs.paused}>
                 <option value="">— Pick a topic —</option>
                 {topics.map((t) => <option key={t.topic} value={t.topic}>{t.topic} ({t.n})</option>)}
               </select>
