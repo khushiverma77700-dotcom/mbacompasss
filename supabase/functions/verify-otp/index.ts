@@ -68,7 +68,11 @@ Deno.serve(async (req) => {
       .update({ attempts: otpRecord.attempts + 1 })
       .eq("id", otpRecord.id);
 
-    if (otpRecord.otp_code !== otp) {
+    // Hash the submitted OTP the same way send-otp did and compare hex digests
+    const hashBuf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${phone}:${otp}`));
+    const otpHash = Array.from(new Uint8Array(hashBuf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+
+    if (otpRecord.otp_code !== otpHash) {
       return new Response(
         JSON.stringify({ error: "Invalid OTP. Please try again." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
