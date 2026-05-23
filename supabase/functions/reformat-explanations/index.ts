@@ -140,9 +140,20 @@ Deno.serve(async (req) => {
         promptTokens += pt;
         completionTokens += ct;
         if (!cleaned || cleaned.length < 30) throw new Error("empty rewrite");
+        // Preserve original on first cleanup so admins can compare before/after
+        const update: Record<string, unknown> = { explanation_html: cleaned };
+        // Fetch current original-backup status to avoid clobbering it on re-runs
+        const { data: existing } = await admin
+          .from("mock_questions")
+          .select("explanation_html_original")
+          .eq("id", r.id)
+          .maybeSingle();
+        if (!existing?.explanation_html_original) {
+          update.explanation_html_original = r.explanation_html;
+        }
         const { error: upErr } = await admin
           .from("mock_questions")
-          .update({ explanation_html: cleaned })
+          .update(update)
           .eq("id", r.id);
         if (upErr) throw upErr;
         ok++;
