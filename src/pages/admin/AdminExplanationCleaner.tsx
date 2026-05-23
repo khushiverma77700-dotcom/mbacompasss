@@ -327,10 +327,10 @@ export default function AdminExplanationCleaner() {
           <div>
             <Label>Status filter</Label>
             <div className="flex flex-wrap gap-2 mt-2">
-              <Button size="sm" variant={!force ? "default" : "outline"} onClick={() => setForce(false)} disabled={rs.running}>
+              <Button size="sm" variant={!force ? "default" : "outline"} onClick={() => setForce(false)} disabled={rs.running || rs.paused}>
                 <AlertTriangle className="h-3.5 w-3.5 mr-1 text-amber-600" /> Pending only
               </Button>
-              <Button size="sm" variant={force ? "default" : "outline"} onClick={() => setForce(true)} disabled={rs.running}>
+              <Button size="sm" variant={force ? "default" : "outline"} onClick={() => setForce(true)} disabled={rs.running || rs.paused}>
                 <RefreshCw className="h-3.5 w-3.5 mr-1" /> All (re-clean done too)
               </Button>
               <span className="text-xs text-muted-foreground self-center ml-2">
