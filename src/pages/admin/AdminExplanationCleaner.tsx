@@ -14,6 +14,7 @@ import {
   CheckCircle2, AlertTriangle, DollarSign, Coins, Filter, Eye,
 } from "lucide-react";
 import { toast } from "sonner";
+import MathContent from "@/components/mock/MathContent";
 import {
   explanationCleaner,
   type CleanerScope,
@@ -47,7 +48,10 @@ export default function AdminExplanationCleaner() {
 
   // live runner state
   const [rs, setRs] = useState<CleanerState>(explanationCleaner.getState());
-  useEffect(() => { const u = explanationCleaner.subscribe(setRs); return () => { u; }; }, []);
+  useEffect(() => {
+    const unsubscribe = explanationCleaner.subscribe(setRs);
+    return () => { unsubscribe(); };
+  }, []);
 
   // hydrate from previously-running config if any
   useEffect(() => {
@@ -123,24 +127,46 @@ export default function AdminExplanationCleaner() {
   // before/after diff modal
   const [diffOpen, setDiffOpen] = useState(false);
   const [diffLoading, setDiffLoading] = useState(false);
-  const [diffRow, setDiffRow] = useState<{ id: string; before: string | null; after: string | null } | null>(null);
+  const [diffRecleaning, setDiffRecleaning] = useState(false);
+  const [diffRow, setDiffRow] = useState<{ id: string; before: string | null; after: string | null; hasOriginal: boolean } | null>(null);
 
-  const openDiff = async (id: string) => {
-    setDiffOpen(true);
+  const loadDiffRow = async (id: string) => {
     setDiffLoading(true);
-    setDiffRow({ id, before: null, after: null });
+    setDiffRow({ id, before: null, after: null, hasOriginal: false });
     const { data, error } = await supabase
       .from("mock_questions")
       .select("id, explanation_html, explanation_html_original")
       .eq("id", id)
       .maybeSingle();
     if (error) toast.error(error.message);
+    const original = (data as any)?.explanation_html_original ?? null;
+    const current = (data as any)?.explanation_html ?? null;
     setDiffRow({
       id,
-      before: (data as any)?.explanation_html_original ?? null,
-      after: (data as any)?.explanation_html ?? null,
+      before: original || current,
+      after: current,
+      hasOriginal: Boolean(original),
     });
     setDiffLoading(false);
+  };
+
+  const openDiff = async (id: string) => {
+    setDiffOpen(true);
+    await loadDiffRow(id);
+  };
+
+  const recleanDiffQuestion = async () => {
+    if (!diffRow?.id) return;
+    setDiffRecleaning(true);
+    const { data, error } = await supabase.functions.invoke("reformat-explanations", {
+      body: { mode: "process", question_id: diffRow.id, force: true, batch_size: 1 },
+    });
+    if (error) toast.error(error.message);
+    else if ((data?.failed ?? 0) > 0) toast.error(data?.errors?.[0]?.message ?? "Re-clean failed");
+    else toast.success("Question re-cleaned with the improved format");
+    await loadDiffRow(diffRow.id);
+    await loadBrowse();
+    setDiffRecleaning(false);
   };
 
   const loadBrowse = async () => {
@@ -493,13 +519,21 @@ export default function AdminExplanationCleaner() {
       <Dialog open={diffOpen} onOpenChange={setDiffOpen}>
         <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Eye className="h-5 w-5 text-sky-600" />
-              Before / After review
-            </DialogTitle>
-            <DialogDescription className="font-mono text-[11px]">
-              {diffRow?.id}
-            </DialogDescription>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <DialogTitle className="flex items-center gap-2">
+                  <Eye className="h-5 w-5 text-sky-600" />
+                  Before / After review
+                </DialogTitle>
+                <DialogDescription className="font-mono text-[11px]">
+                  {diffRow?.id}
+                </DialogDescription>
+              </div>
+              <Button size="sm" variant="outline" onClick={recleanDiffQuestion} disabled={diffLoading || diffRecleaning || !diffRow?.id}>
+                {diffRecleaning ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+                Re-clean this question
+              </Button>
+            </div>
           </DialogHeader>
 
           {diffLoading ? (
@@ -510,21 +544,28 @@ export default function AdminExplanationCleaner() {
             <div className="grid md:grid-cols-2 gap-4 overflow-auto flex-1">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="border-amber-400 text-amber-700">BEFORE (original)</Badge>
+                  <Badge variant="outline" className="border-amber-400 text-amber-700">
+                    {diffRow?.hasOriginal ? "BEFORE (original)" : "BEFORE (current saved)"}
+                  </Badge>
                 </div>
-                <div className="border rounded-lg p-3 bg-amber-50/30 max-h-[60vh] overflow-auto text-sm prose prose-sm max-w-none">
+                <div className="border rounded-lg p-3 bg-amber-50/30 max-h-[60vh] overflow-auto text-sm">
                   {diffRow?.before
-                    ? <div dangerouslySetInnerHTML={{ __html: diffRow.before }} />
+                    ? <MathContent html={diffRow.before} className="prose prose-sm max-w-none text-sm leading-relaxed break-words" />
                     : <div className="text-muted-foreground italic">No backup found. This question was cleaned before the backup feature was added — only the cleaned version is available.</div>}
+                  {diffRow?.before && !diffRow.hasOriginal && (
+                    <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                      Original backup was not captured for this older cleaned question. Showing current saved content here until it is re-cleaned again.
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="border-emerald-400 text-emerald-700">AFTER (cleaned)</Badge>
                 </div>
-                <div className="border rounded-lg p-3 bg-emerald-50/30 max-h-[60vh] overflow-auto text-sm prose prose-sm max-w-none">
+                <div className="border rounded-lg p-3 bg-emerald-50/30 max-h-[60vh] overflow-auto text-sm">
                   {diffRow?.after
-                    ? <div dangerouslySetInnerHTML={{ __html: diffRow.after }} />
+                    ? <MathContent html={diffRow.after} className="prose prose-sm max-w-none text-sm leading-relaxed break-words" />
                     : <div className="text-muted-foreground italic">empty</div>}
                 </div>
               </div>
