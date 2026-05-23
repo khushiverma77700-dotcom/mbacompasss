@@ -45,8 +45,8 @@ const loadPersisted = (): Partial<CleanerState> => {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return {};
     const p = JSON.parse(raw);
-    // never restore "running" — the loop only lives in memory.
-    return { ...p, running: false };
+    // never restore "running" or "paused" — the loop only lives in memory.
+    return { ...p, running: false, paused: false };
   } catch {
     return {};
   }
@@ -54,6 +54,7 @@ const loadPersisted = (): Partial<CleanerState> => {
 
 const initial: CleanerState = {
   running: false,
+  paused: false,
   config: null,
   total: 0,
   remaining: 0,
