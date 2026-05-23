@@ -103,7 +103,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
   const [bundleOrder, setBundleOrder] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
-  const [examFilter, setExamFilter] = useState<string>("All");
+  const [examFilter, setExamFilter] = useState<string>("CAT");
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const [topicFilter, setTopicFilter] = useState<string>("All");
