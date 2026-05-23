@@ -460,6 +460,9 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
                   typeLabel={t.label}
                   examFilter={examFilter}
                   onUpgrade={() => setUpgradeOpen(true)}
+                  groupBySection={t.key === "sectional"}
+                  sectionFilter={t.key === "sectional" ? sectionFilter : undefined}
+                  onSectionChange={t.key === "sectional" ? setSectionFilter : undefined}
                 />
               )}
             </TabsContent>
