@@ -280,7 +280,7 @@ export default function AdminExplanationCleaner() {
             <Label>Scope</Label>
             <div className="flex flex-wrap gap-2 mt-2">
               {(["all","test","section","topic","question"] as CleanerScope[]).map((s) => (
-                <Button key={s} size="sm" variant={scope === s ? "default" : "outline"} onClick={() => setScope(s)} disabled={rs.running}>
+                <Button key={s} size="sm" variant={scope === s ? "default" : "outline"} onClick={() => setScope(s)} disabled={rs.running || rs.paused}>
                   {s === "all" ? "All mocks" : s === "test" ? "Mock-wise" : s === "section" ? "Section-wise" : s === "topic" ? "Topic-wise" : "Single question"}
                 </Button>
               ))}
