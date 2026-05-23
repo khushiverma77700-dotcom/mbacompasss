@@ -416,6 +416,7 @@ export default function AdminExplanationCleaner() {
                 )}
               </span>
               {rs.running && <span className="flex items-center gap-1"><Loader2 className="h-3 w-3 animate-spin" /> running in background</span>}
+              {rs.paused && <span className="flex items-center gap-1 text-amber-600"><Pause className="h-3 w-3" /> paused — click Resume to continue</span>}
             </div>
             <div className="text-[10px] text-muted-foreground">
               Pricing model: Gemini 2.5 Flash · ${PRICING.PRICE_IN_PER_M}/M input · ${PRICING.PRICE_OUT_PER_M}/M output (estimate)
