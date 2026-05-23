@@ -658,8 +658,8 @@ async function callOpenAIBatch(args: {
   const isHardVariant = ["very_hard", "extremely_hard", "cat_pyq"].includes(lvlLower);
   const modelId = "gpt-4o-mini";
   const temp = lvlLower === "cat_pyq" ? 0.55 : isHardVariant ? 0.45 : 0.35;
-  // ~1100 tokens per question is plenty (stem + 4 options + explanation). Cap by batch size.
-  const tokenBudget = Math.min(8000, 1200 * Math.max(1, args.count));
+  // ~1700 tokens per question covers stem + 4 options + explanation + inline SVG visuals.
+  const tokenBudget = Math.min(12000, 1800 * Math.max(1, args.count));
   const reqBody: Record<string, unknown> = {
     model: modelId,
     messages: [
