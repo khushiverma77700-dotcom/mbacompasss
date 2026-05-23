@@ -19,6 +19,7 @@ export type CleanerError = { id: string; message: string; at: number };
 
 export type CleanerState = {
   running: boolean;
+  paused: boolean;
   config: CleanerConfig | null;
   total: number;
   remaining: number;
