@@ -267,7 +267,7 @@ export default function AdminExplanationCleaner() {
             Rewrites messy mock explanations into clean structured HTML with proper LaTeX. The cleanup engine runs in the background and survives tab switches inside the admin.
           </p>
         </div>
-        <Button onClick={() => explanationCleaner.refreshStats(config)} variant="outline" disabled={rs.running}>
+        <Button onClick={() => explanationCleaner.refreshStats(config)} variant="outline" disabled={rs.running || rs.paused}>
           <RefreshCw className="h-4 w-4 mr-2" />Refresh stats
         </Button>
       </div>
