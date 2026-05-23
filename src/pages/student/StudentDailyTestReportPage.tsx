@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, CheckCircle2, XCircle, Circle, Clock, Target, Award, TrendingUp, BarChart3, ListChecks, Flame, Trophy } from "lucide-react";
+import MathContent from "@/components/mock/MathContent";
 
 type Section = { id: string; name: string; code: string; total_questions: number; duration_minutes: number };
 type Question = { id: string; section_id: string; question_number: number; question_html: string; question_type: string; positive_marks: number; negative_marks: number; difficulty: string | null; topic: string | null; explanation_html: string | null; tita_correct_answers: string[] | null };
