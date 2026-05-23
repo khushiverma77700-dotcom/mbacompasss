@@ -550,6 +550,11 @@ export default function AdminExplanationCleaner() {
                   {diffRow?.before
                     ? <MathContent html={diffRow.before} className="prose prose-sm max-w-none text-sm leading-relaxed break-words" />
                     : <div className="text-muted-foreground italic">No backup found. This question was cleaned before the backup feature was added — only the cleaned version is available.</div>}
+                  {diffRow?.before && !diffRow.hasOriginal && (
+                    <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                      Original backup was not captured for this older cleaned question. Showing current saved content here until it is re-cleaned again.
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="space-y-2">
