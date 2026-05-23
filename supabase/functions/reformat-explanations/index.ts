@@ -61,6 +61,7 @@ type Filters = {
   topic?: string;
   question_id?: string;
   force?: boolean;
+  done_only?: boolean;
 };
 
 function buildQuery(admin: any, f: Filters, opts: { count?: boolean } = {}) {
@@ -73,7 +74,10 @@ function buildQuery(admin: any, f: Filters, opts: { count?: boolean } = {}) {
     .not("explanation_html", "is", null)
     .neq("explanation_html", "");
 
-  if (!f.force) {
+  if (f.done_only) {
+    // Only already-formatted questions (those containing our <h4> markers)
+    q = q.ilike("explanation_html", "%<h4>%");
+  } else if (!f.force) {
     q = q.not("explanation_html", "ilike", "%<h4>%");
   }
   if (f.question_id) q = q.eq("id", f.question_id);
