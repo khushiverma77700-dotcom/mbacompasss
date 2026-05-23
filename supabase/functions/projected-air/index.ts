@@ -170,7 +170,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { attempt_id } = await req.json().catch(() => ({}));
+    const body = await req.json().catch(() => ({}));
+    const { attempt_id } = body;
+    const mode: "realistic" | "motivational" =
+      body?.mode === "realistic" ? "realistic" : "motivational";
     if (!attempt_id) {
       return new Response(JSON.stringify({ error: "attempt_id required" }), {
         status: 400,
