@@ -1212,10 +1212,9 @@ function ExamCountdownStrip({ exams }: { exams: any[] }) {
           const weekday = new Date(ex.exam_date).toLocaleDateString("en-IN", { weekday: "short" });
 
           return (
-            <Link
+            <div
               key={ex.slug}
-              to={`/exams/${ex.slug}`}
-              className={`group relative overflow-hidden rounded-2xl border ${cardTone} p-3 sm:p-4 hover:shadow-lg hover:-translate-y-0.5 transition-all`}
+              className={`group relative overflow-hidden rounded-2xl border ${cardTone} p-3 sm:p-4 transition-all`}
             >
               {/* Badge: full-width row on top so it never overlaps exam name */}
               <div className="flex items-center justify-between mb-2 gap-2">
