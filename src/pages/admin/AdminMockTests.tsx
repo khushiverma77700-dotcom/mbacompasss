@@ -139,7 +139,49 @@ const AdminMockTests = () => {
     .filter((t) => categoryFilter === "all" || (t.category || t.test_type) === categoryFilter)
     .filter((t) => examFilter === "all" || t.exam_code === examFilter)
     .filter((t) => difficultyFilter === "all" || t.difficulty === difficultyFilter)
-    .filter((t) => readinessFilter === "all" || (t.readiness_status || "incomplete") === readinessFilter);
+    .filter((t) => readinessFilter === "all" || (t.readiness_status || "incomplete") === readinessFilter)
+    .filter((t) => sectionFilter === "all" || sectionCodeOf(t) === sectionFilter)
+    .filter((t) => topicFilter === "all" || (t.topic || "") === topicFilter);
+
+  // Advanced filter visibility: only relevant for sectional / topic categories
+  const showAdvancedFilters = categoryFilter === "sectional" || categoryFilter === "topic_wise" || categoryFilter === "topic";
+  const showTopicFilter = categoryFilter === "topic_wise" || categoryFilter === "topic";
+
+  // Section options derived from MOCK_TOPIC_CATALOG (filtered by selected exam if any)
+  const sectionOptions = (() => {
+    const codes = new Set<string>();
+    if (examFilter !== "all") {
+      Object.keys(MOCK_TOPIC_CATALOG[examFilter] ?? {}).forEach((c) => codes.add(c));
+    } else {
+      Object.values(MOCK_TOPIC_CATALOG).forEach((sec) => Object.keys(sec).forEach((c) => codes.add(c)));
+    }
+    // Also include any section_code present in existing tests of the current category
+    tests
+      .filter((t) => categoryFilter === "all" || (t.category || t.test_type) === categoryFilter)
+      .filter((t) => examFilter === "all" || t.exam_code === examFilter)
+      .forEach((t) => { const c = sectionCodeOf(t); if (c) codes.add(c); });
+    return Array.from(codes).sort();
+  })();
+
+  // Topic options: catalog topics for the selected exam+section, plus any topic actually present
+  const topicOptions = (() => {
+    const topics = new Set<string>();
+    const exams = examFilter !== "all" ? [examFilter] : Object.keys(MOCK_TOPIC_CATALOG);
+    exams.forEach((ex) => {
+      const secMap = MOCK_TOPIC_CATALOG[ex] ?? {};
+      if (sectionFilter !== "all") {
+        (secMap[sectionFilter] ?? []).forEach((t) => topics.add(t));
+      } else {
+        Object.values(secMap).forEach((list) => list.forEach((t) => topics.add(t)));
+      }
+    });
+    tests
+      .filter((t) => (t.category || t.test_type) === "topic_wise")
+      .filter((t) => examFilter === "all" || t.exam_code === examFilter)
+      .filter((t) => sectionFilter === "all" || sectionCodeOf(t) === sectionFilter)
+      .forEach((t) => { if (t.topic) topics.add(t.topic); });
+    return Array.from(topics).sort();
+  })();
 
   const updateReadiness = async (id: string, value: string) => {
     setReadinessSaving((p) => ({ ...p, [id]: true }));
