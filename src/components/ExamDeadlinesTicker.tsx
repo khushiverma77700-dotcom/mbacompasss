@@ -61,6 +61,9 @@ const ExamDeadlinesTicker = () => {
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Stay updated with registration deadlines and exam dates for your MBA preparation
           </p>
+          <p className="text-xs text-muted-foreground/60 mt-2 italic">
+            *Dates are tentative and subject to change. Please verify with official exam websites.
+          </p>
         </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
