@@ -238,21 +238,26 @@ export default function AdminExplanationCleaner() {
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
       {/* HERO STATUS */}
-      <div className="rounded-xl border-2 border-sky-300 bg-gradient-to-r from-sky-50 to-blue-50 p-4 flex items-center gap-3">
-        <Sparkles className="h-6 w-6 text-sky-600 shrink-0" />
+      <div className={`rounded-xl border-2 p-4 flex items-center gap-3 ${rs.paused ? "border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50" : "border-sky-300 bg-gradient-to-r from-sky-50 to-blue-50"}`}>
+        {rs.paused ? <Pause className="h-6 w-6 text-amber-600 shrink-0" /> : <Sparkles className="h-6 w-6 text-sky-600 shrink-0" />}
         <div className="flex-1 text-sm">
-          <div className="font-semibold text-sky-900">
-            {rs.running ? "Cleanup running in the background" : (rs.total > 0 ? "Ready to clean" : "Idle — nothing messy detected")}
+          <div className={`font-semibold ${rs.paused ? "text-amber-900" : "text-sky-900"}`}>
+            {rs.running ? "Cleanup running in the background" : rs.paused ? "Paused — click Resume to continue" : (rs.total > 0 ? "Ready to clean" : "Idle — nothing messy detected")}
           </div>
-          <div className="text-sky-700">
-            {rs.running
+          <div className={rs.paused ? "text-amber-700" : "text-sky-700"}>
+            {rs.running || rs.paused
               ? `${done}/${rs.total} done · ${rs.remaining} left · ETA ${etaText} · est. $${totalProjected.toFixed(3)} total`
               : "You can switch tabs, browse the admin, even close this page — but to keep the loop alive keep this browser tab open."}
           </div>
         </div>
-        {!rs.running
+        {!rs.running && !rs.paused
           ? <Button onClick={() => start()} className="bg-sky-600 hover:bg-sky-700"><Play className="h-4 w-4 mr-2" />Start</Button>
-          : <Button onClick={() => explanationCleaner.stop()} variant="destructive"><Square className="h-4 w-4 mr-2" />Stop</Button>}
+          : rs.paused
+            ? <Button onClick={() => explanationCleaner.resume()} className="bg-emerald-600 hover:bg-emerald-700"><Play className="h-4 w-4 mr-2" />Resume</Button>
+            : <div className="flex gap-2">
+                <Button onClick={() => explanationCleaner.pause()} variant="outline" className="border-amber-500 text-amber-700 hover:bg-amber-50"><Pause className="h-4 w-4 mr-2" />Pause</Button>
+                <Button onClick={() => explanationCleaner.stop()} variant="destructive"><Square className="h-4 w-4 mr-2" />Stop</Button>
+              </div>}
       </div>
 
       <div className="flex items-start justify-between gap-4 flex-wrap">
