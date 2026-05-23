@@ -488,6 +488,50 @@ export default function AdminExplanationCleaner() {
           </div>
         </CardContent>
       </Card>
+
+      {/* BEFORE/AFTER DIFF DIALOG */}
+      <Dialog open={diffOpen} onOpenChange={setDiffOpen}>
+        <DialogContent className="max-w-6xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5 text-sky-600" />
+              Before / After review
+            </DialogTitle>
+            <DialogDescription className="font-mono text-[11px]">
+              {diffRow?.id}
+            </DialogDescription>
+          </DialogHeader>
+
+          {diffLoading ? (
+            <div className="flex items-center justify-center py-16">
+              <Loader2 className="h-6 w-6 animate-spin text-sky-600" />
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-4 overflow-auto flex-1">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="border-amber-400 text-amber-700">BEFORE (original)</Badge>
+                </div>
+                <div className="border rounded-lg p-3 bg-amber-50/30 max-h-[60vh] overflow-auto text-sm prose prose-sm max-w-none">
+                  {diffRow?.before
+                    ? <div dangerouslySetInnerHTML={{ __html: diffRow.before }} />
+                    : <div className="text-muted-foreground italic">No backup found. This question was cleaned before the backup feature was added — only the cleaned version is available.</div>}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="border-emerald-400 text-emerald-700">AFTER (cleaned)</Badge>
+                </div>
+                <div className="border rounded-lg p-3 bg-emerald-50/30 max-h-[60vh] overflow-auto text-sm prose prose-sm max-w-none">
+                  {diffRow?.after
+                    ? <div dangerouslySetInnerHTML={{ __html: diffRow.after }} />
+                    : <div className="text-muted-foreground italic">empty</div>}
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
