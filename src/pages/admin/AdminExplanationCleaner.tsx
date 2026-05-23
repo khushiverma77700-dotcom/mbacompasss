@@ -290,7 +290,7 @@ export default function AdminExplanationCleaner() {
           {(scope === "test" || scope === "section" || scope === "topic") && (
             <div>
               <Label>Mock test{scope === "topic" ? " (optional)" : ""}</Label>
-              <select className="w-full mt-1 border rounded px-3 py-2 text-sm bg-background" value={testId} onChange={(e) => { setTestId(e.target.value); setSectionId(""); setTopic(""); }} disabled={rs.running}>
+              <select className="w-full mt-1 border rounded px-3 py-2 text-sm bg-background" value={testId} onChange={(e) => { setTestId(e.target.value); setSectionId(""); setTopic(""); }} disabled={rs.running || rs.paused}>
                 <option value="">{scope === "topic" ? "Any mock" : "— Pick a mock —"}</option>
                 {tests.map((t) => <option key={t.id} value={t.id}>{t.exam_code} — {t.name}</option>)}
               </select>
