@@ -346,6 +346,20 @@ export default function AdminExplanationCleaner() {
               </Button>
             </div>
           </div>
+          <div className="flex flex-wrap gap-2 items-center -mt-2">
+            <Button
+              onClick={startRedoDone}
+              disabled={rs.running}
+              size="sm"
+              variant="outline"
+              className="border-amber-500 text-amber-700 hover:bg-amber-50"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" /> Redo ALL already-done{rs.total > 0 && rs.remaining >= 0 ? ` (${Math.max(0, rs.total - rs.remaining)})` : ""}
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Re-runs the AI on every question that was already cleaned (in current scope). Use this if previous formatting was wrong. Costs tokens.
+            </p>
+          </div>
           <p className="text-xs text-muted-foreground -mt-2">
             "Run ALL pending" always skips questions already cleaned, so re-clicking it never costs you twice.
           </p>
