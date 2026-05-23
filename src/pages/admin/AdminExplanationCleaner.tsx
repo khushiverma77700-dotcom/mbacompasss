@@ -346,7 +346,7 @@ export default function AdminExplanationCleaner() {
               <p className="text-xs text-muted-foreground mt-1">Runner loops automatically until everything in scope is done.</p>
             </div>
             <div className="flex items-end">
-              <Button onClick={startPendingOnly} disabled={rs.running} size="lg" className="bg-emerald-600 hover:bg-emerald-700 w-full">
+              <Button onClick={startPendingOnly} disabled={rs.running || rs.paused} size="lg" className="bg-emerald-600 hover:bg-emerald-700 w-full">
                 <Play className="h-4 w-4 mr-2" /> Run ALL pending ({rs.remaining > 0 ? `${rs.remaining} left` : rs.total > 0 ? "0 left" : "scan & start"})
               </Button>
             </div>
