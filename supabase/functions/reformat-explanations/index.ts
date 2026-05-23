@@ -26,7 +26,7 @@ Output rules (NON-NEGOTIABLE):
 - Indian English, no emojis, no "Therefore the answer is" wall-of-text.
 - Always emit at least <h4>Concept</h4>, <h4>Step-by-step Solution</h4> and <h4>Answer</h4> sections.`;
 
-async function rewriteOne(html: string): Promise<string> {
+async function rewriteOne(html: string): Promise<{ text: string; promptTokens: number; completionTokens: number }> {
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -45,7 +45,12 @@ async function rewriteOne(html: string): Promise<string> {
   const j = await res.json();
   let out: string = j?.choices?.[0]?.message?.content ?? "";
   out = out.replace(/^```(?:html)?\s*/i, "").replace(/```\s*$/i, "").trim();
-  return out;
+  const u = j?.usage ?? {};
+  return {
+    text: out,
+    promptTokens: u.prompt_tokens ?? u.input_tokens ?? 0,
+    completionTokens: u.completion_tokens ?? u.output_tokens ?? 0,
+  };
 }
 
 type Filters = {
