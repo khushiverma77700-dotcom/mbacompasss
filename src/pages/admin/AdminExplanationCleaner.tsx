@@ -135,6 +135,14 @@ export default function AdminExplanationCleaner() {
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-6">
+      <div className="rounded-lg border-2 border-sky-300 bg-gradient-to-r from-sky-50 to-blue-50 p-4 flex items-center gap-3">
+        <Sparkles className="h-6 w-6 text-sky-600 shrink-0" />
+        <div className="flex-1 text-sm">
+          <div className="font-semibold text-sky-900">Auto-cleanup is {running ? "running now" : (total > 0 ? "starting…" : "idle (nothing messy detected)")}</div>
+          <div className="text-sky-700">{running ? `Processed ${processed} this run · ${remaining} remaining · ETA ${etaText}` : "When you open this page we automatically scan all mocks and start rewriting any messy explanations in the background. Keep this tab open."}</div>
+        </div>
+        {!running ? <Button onClick={runLoop} className="bg-sky-600 hover:bg-sky-700"><Play className="h-4 w-4 mr-2" />Start now</Button> : <Button onClick={stop} variant="destructive"><Square className="h-4 w-4 mr-2" />Stop</Button>}
+      </div>
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><Sparkles className="h-6 w-6 text-sky-600" /> Explanation Cleaner</h1>
