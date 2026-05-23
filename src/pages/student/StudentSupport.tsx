@@ -179,8 +179,14 @@ export default function StudentSupport() {
       toast({ title: "Upload failed", description: error.message, variant: "destructive" });
       return null;
     }
-    const { data } = supabase.storage.from("ticket-attachments").getPublicUrl(path);
-    return { url: data.publicUrl, name: file.name };
+    const { data, error: signErr } = await supabase.storage
+      .from("ticket-attachments")
+      .createSignedUrl(path, 60 * 60 * 24 * 365);
+    if (signErr || !data?.signedUrl) {
+      toast({ title: "Could not link attachment", description: signErr?.message, variant: "destructive" });
+      return null;
+    }
+    return { url: data.signedUrl, name: file.name };
   };
 
   const submitTicket = async () => {
