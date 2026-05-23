@@ -257,16 +257,31 @@ export default function AdminExplanationCleaner() {
             </div>
           )}
 
-          <div className="grid sm:grid-cols-3 gap-4 pt-2">
+          <div>
+            <Label>Status filter</Label>
+            <div className="flex flex-wrap gap-2 mt-2">
+              <Button size="sm" variant={!force ? "default" : "outline"} onClick={() => setForce(false)} disabled={rs.running}>
+                <AlertTriangle className="h-3.5 w-3.5 mr-1 text-amber-600" /> Pending only
+              </Button>
+              <Button size="sm" variant={force ? "default" : "outline"} onClick={() => setForce(true)} disabled={rs.running}>
+                <RefreshCw className="h-3.5 w-3.5 mr-1" /> All (re-clean done too)
+              </Button>
+              <span className="text-xs text-muted-foreground self-center ml-2">
+                {force ? "Will rewrite every question in scope, even ones already formatted." : "Skips questions already containing structured headers."}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-4 pt-2">
             <div>
-              <Label>Batch size (1–40)</Label>
+              <Label>Batch size (1–40, parallel AI calls)</Label>
               <Input type="number" min={1} max={40} value={batchSize} onChange={(e) => setBatchSize(Math.min(40, Math.max(1, Number(e.target.value) || 20)))} disabled={rs.running} />
+              <p className="text-xs text-muted-foreground mt-1">Runner loops automatically until everything in scope is done.</p>
             </div>
             <div className="flex items-end">
-              <label className="flex items-center gap-2 text-sm">
-                <input type="checkbox" checked={force} onChange={(e) => setForce(e.target.checked)} disabled={rs.running} />
-                Force re-format (even already-clean ones)
-              </label>
+              <Button onClick={start} disabled={rs.running} size="lg" className="bg-emerald-600 hover:bg-emerald-700 w-full">
+                <Play className="h-4 w-4 mr-2" /> Run ALL at once ({rs.total > 0 ? `${rs.total} questions` : "scan & start"})
+              </Button>
             </div>
           </div>
         </CardContent>

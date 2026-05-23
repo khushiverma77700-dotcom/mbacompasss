@@ -95,8 +95,14 @@ Deno.serve(async (req) => {
     if (!uid) return new Response(JSON.stringify({ error: "unauthenticated" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
-    const { data: isAdmin } = await admin.rpc("has_role", { _user_id: uid, _role: "admin" });
-    if (!isAdmin) return new Response(JSON.stringify({ error: "not admin" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // Direct check (has_role RPC requires auth.uid() which is null from service-role context)
+    const { data: roleRow } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", uid)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!roleRow) return new Response(JSON.stringify({ error: "not admin" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const filters: Filters = {
