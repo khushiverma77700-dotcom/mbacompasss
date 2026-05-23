@@ -11,6 +11,7 @@ export type CleanerConfig = {
   topic?: string;
   question_id?: string;
   force: boolean;
+  done_only?: boolean;
   batchSize: number;
 };
 
@@ -98,7 +99,7 @@ export const explanationCleaner = {
   },
 
   buildFilters(config: CleanerConfig) {
-    const f: any = { force: config.force };
+    const f: any = { force: config.force, done_only: config.done_only === true };
     if (config.scope === "test") f.test_id = config.test_id || undefined;
     if (config.scope === "section") f.section_id = config.section_id || undefined;
     if (config.scope === "topic") {
@@ -138,7 +139,7 @@ export const explanationCleaner = {
       costUsd: 0,
       startTs: Date.now(),
       lastTickTs: Date.now(),
-      log: [`Started · scope=${config.scope} · batch=${config.batchSize}${config.force ? " · force" : ""}`],
+      log: [`Started · scope=${config.scope} · batch=${config.batchSize}${config.done_only ? " · redo-done" : config.force ? " · force" : ""}`],
       errors: [],
     });
     await this.refreshStats(config);

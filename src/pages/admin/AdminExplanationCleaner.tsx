@@ -108,15 +108,23 @@ export default function AdminExplanationCleaner() {
     // eslint-disable-next-line
   }, [config.scope, config.test_id, config.section_id, config.topic, config.question_id, config.force]);
 
-  const start = (opts: { pendingOnly?: boolean } = {}) => {
+  const start = (opts: { pendingOnly?: boolean; doneOnly?: boolean } = {}) => {
     if (scope === "test" && !testId) return toast.error("Pick a mock test");
     if (scope === "section" && !sectionId) return toast.error("Pick a section");
     if (scope === "topic" && !topic) return toast.error("Pick a topic");
     if (scope === "question" && !questionId) return toast.error("Paste a question id");
-    explanationCleaner.start({ ...config, force: opts.pendingOnly ? false : config.force });
+    explanationCleaner.start({
+      ...config,
+      force: opts.doneOnly ? true : opts.pendingOnly ? false : config.force,
+      done_only: opts.doneOnly === true,
+    });
   };
   // "Run ALL" always = pending only, never re-cleans already-done (saves cost)
   const startPendingOnly = () => start({ pendingOnly: true });
+  const startRedoDone = () => {
+    if (!confirm("This will re-run the AI on EVERY already-cleaned question in scope. It will cost tokens. Continue?")) return;
+    start({ doneOnly: true });
+  };
 
   // Browse panel
   const [browseStatus, setBrowseStatus] = useState<BrowseStatus | "failed">("pending");
@@ -337,6 +345,20 @@ export default function AdminExplanationCleaner() {
                 <Play className="h-4 w-4 mr-2" /> Run ALL pending ({rs.remaining > 0 ? `${rs.remaining} left` : rs.total > 0 ? "0 left" : "scan & start"})
               </Button>
             </div>
+          </div>
+          <div className="flex flex-wrap gap-2 items-center -mt-2">
+            <Button
+              onClick={startRedoDone}
+              disabled={rs.running}
+              size="sm"
+              variant="outline"
+              className="border-amber-500 text-amber-700 hover:bg-amber-50"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" /> Redo ALL already-done{rs.total > 0 && rs.remaining >= 0 ? ` (${Math.max(0, rs.total - rs.remaining)})` : ""}
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Re-runs the AI on every question that was already cleaned (in current scope). Use this if previous formatting was wrong. Costs tokens.
+            </p>
           </div>
           <p className="text-xs text-muted-foreground -mt-2">
             "Run ALL pending" always skips questions already cleaned, so re-clicking it never costs you twice.

@@ -61,6 +61,7 @@ type Filters = {
   topic?: string;
   question_id?: string;
   force?: boolean;
+  done_only?: boolean;
 };
 
 function buildQuery(admin: any, f: Filters, opts: { count?: boolean } = {}) {
@@ -73,7 +74,10 @@ function buildQuery(admin: any, f: Filters, opts: { count?: boolean } = {}) {
     .not("explanation_html", "is", null)
     .neq("explanation_html", "");
 
-  if (!f.force) {
+  if (f.done_only) {
+    // Only already-formatted questions (those containing our <h4> markers)
+    q = q.ilike("explanation_html", "%<h4>%");
+  } else if (!f.force) {
     q = q.not("explanation_html", "ilike", "%<h4>%");
   }
   if (f.question_id) q = q.eq("id", f.question_id);
@@ -113,14 +117,15 @@ Deno.serve(async (req) => {
       topic: body.topic || undefined,
       question_id: body.question_id || undefined,
       force: body.force === true,
+      done_only: body.done_only === true,
     };
     const batchSize: number = Math.min(Math.max(body.batch_size ?? 20, 1), 40);
     const mode: "count" | "process" | "stats" = body.mode === "count" ? "count" : body.mode === "stats" ? "stats" : "process";
 
     if (mode === "count" || mode === "stats") {
       const { count: remaining } = await buildQuery(admin, filters, { count: true }).limit(1);
-      // total = remaining (force ignores h4) OR remaining + already formatted
-      const { count: totalRaw } = await buildQuery(admin, { ...filters, force: true }, { count: true }).limit(1);
+      // total ignores pending/done filter so we can show "done / total"
+      const { count: totalRaw } = await buildQuery(admin, { ...filters, force: true, done_only: false }, { count: true }).limit(1);
       return new Response(
         JSON.stringify({ remaining: remaining ?? 0, total: totalRaw ?? 0, done: (totalRaw ?? 0) - (remaining ?? 0) }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
