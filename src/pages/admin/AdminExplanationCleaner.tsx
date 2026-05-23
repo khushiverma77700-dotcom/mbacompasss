@@ -191,7 +191,7 @@ export default function AdminExplanationCleaner() {
           </div>
         </div>
         {!rs.running
-          ? <Button onClick={start} className="bg-sky-600 hover:bg-sky-700"><Play className="h-4 w-4 mr-2" />Start</Button>
+          ? <Button onClick={() => start()} className="bg-sky-600 hover:bg-sky-700"><Play className="h-4 w-4 mr-2" />Start</Button>
           : <Button onClick={() => explanationCleaner.stop()} variant="destructive"><Square className="h-4 w-4 mr-2" />Stop</Button>}
       </div>
 
@@ -281,7 +281,7 @@ export default function AdminExplanationCleaner() {
               <p className="text-xs text-muted-foreground mt-1">Runner loops automatically until everything in scope is done.</p>
             </div>
             <div className="flex items-end">
-              <Button onClick={start} disabled={rs.running} size="lg" className="bg-emerald-600 hover:bg-emerald-700 w-full">
+              <Button onClick={() => start()} disabled={rs.running} size="lg" className="bg-emerald-600 hover:bg-emerald-700 w-full">
                 <Play className="h-4 w-4 mr-2" /> Run ALL at once ({rs.total > 0 ? `${rs.total} questions` : "scan & start"})
               </Button>
             </div>
@@ -342,7 +342,7 @@ export default function AdminExplanationCleaner() {
           <div className="flex gap-2 pt-1">
             {!rs.running ? (
               <>
-                <Button onClick={start} size="lg" className="bg-sky-600 hover:bg-sky-700">
+                <Button onClick={() => start()} size="lg" className="bg-sky-600 hover:bg-sky-700">
                   <Play className="h-4 w-4 mr-2" />Start cleaning ({rs.total > 0 ? rs.total : "scan & run"})
                 </Button>
                 {(rs.processed > 0 || rs.failed > 0) && (
