@@ -10,7 +10,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
 import {
-  Loader2, Play, Square, RefreshCw, Sparkles, Clock,
+  Loader2, Play, Pause, Square, RefreshCw, Sparkles, Clock,
   CheckCircle2, AlertTriangle, DollarSign, Coins, Filter, Eye,
 } from "lucide-react";
 import { toast } from "sonner";
