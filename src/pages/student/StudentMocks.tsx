@@ -168,7 +168,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
   }, [attempts]);
 
   const matchesExam = (t: Test) => {
-    if (examFilter === "All") return true;
+    if (!examFilter || examFilter === "All") return true;
     const tokens = `${t.exam_code || ""} ${t.category || ""}`
       .toUpperCase()
       .split(/[^A-Z0-9]+/)
