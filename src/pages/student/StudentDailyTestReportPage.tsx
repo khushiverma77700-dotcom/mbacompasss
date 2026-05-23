@@ -295,7 +295,7 @@ export default function StudentDailyTestReportPage() {
                             {r && <span><Clock className="h-3 w-3 inline mr-1" />{fmtTime(r.time_spent_seconds)}</span>}
                             <span className="ml-auto">{r ? `${(Number(r.marks_awarded) || 0).toFixed(2)} marks` : "—"}</span>
                           </div>
-                          <div className="text-sm" dangerouslySetInnerHTML={{ __html: q.question_html }} />
+                          <MathContent html={q.question_html} className="text-sm" />
                         </div>
                       </div>
 
