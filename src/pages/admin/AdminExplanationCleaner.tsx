@@ -14,6 +14,7 @@ import {
   CheckCircle2, AlertTriangle, DollarSign, Coins, Filter, Eye,
 } from "lucide-react";
 import { toast } from "sonner";
+import MathContent from "@/components/mock/MathContent";
 import {
   explanationCleaner,
   type CleanerScope,
@@ -47,7 +48,7 @@ export default function AdminExplanationCleaner() {
 
   // live runner state
   const [rs, setRs] = useState<CleanerState>(explanationCleaner.getState());
-  useEffect(() => { const u = explanationCleaner.subscribe(setRs); return () => { u; }; }, []);
+  useEffect(() => explanationCleaner.subscribe(setRs), []);
 
   // hydrate from previously-running config if any
   useEffect(() => {
@@ -123,10 +124,10 @@ export default function AdminExplanationCleaner() {
   // before/after diff modal
   const [diffOpen, setDiffOpen] = useState(false);
   const [diffLoading, setDiffLoading] = useState(false);
+  const [diffRecleaning, setDiffRecleaning] = useState(false);
   const [diffRow, setDiffRow] = useState<{ id: string; before: string | null; after: string | null } | null>(null);
 
-  const openDiff = async (id: string) => {
-    setDiffOpen(true);
+  const loadDiffRow = async (id: string) => {
     setDiffLoading(true);
     setDiffRow({ id, before: null, after: null });
     const { data, error } = await supabase
@@ -141,6 +142,25 @@ export default function AdminExplanationCleaner() {
       after: (data as any)?.explanation_html ?? null,
     });
     setDiffLoading(false);
+  };
+
+  const openDiff = async (id: string) => {
+    setDiffOpen(true);
+    await loadDiffRow(id);
+  };
+
+  const recleanDiffQuestion = async () => {
+    if (!diffRow?.id) return;
+    setDiffRecleaning(true);
+    const { data, error } = await supabase.functions.invoke("reformat-explanations", {
+      body: { mode: "process", question_id: diffRow.id, force: true, batch_size: 1 },
+    });
+    if (error) toast.error(error.message);
+    else if ((data?.failed ?? 0) > 0) toast.error(data?.errors?.[0]?.message ?? "Re-clean failed");
+    else toast.success("Question re-cleaned with the improved format");
+    await loadDiffRow(diffRow.id);
+    await loadBrowse();
+    setDiffRecleaning(false);
   };
 
   const loadBrowse = async () => {
