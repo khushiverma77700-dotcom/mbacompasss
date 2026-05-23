@@ -55,15 +55,19 @@ function fmtCountdown(target: string) {
   return `${h}h ${m}m`;
 }
 
-function useProjectedAir(attemptId: string) {
+type AirMode = "realistic" | "motivational";
+
+function useProjectedAir(attemptId: string, mode: AirMode) {
   const [data, setData] = useState<RankResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     let alive = true;
+    setData(null);
+    setError(null);
     (async () => {
       try {
         const { data: res, error: err } = await supabase.functions.invoke("projected-air", {
-          body: { attempt_id: attemptId },
+          body: { attempt_id: attemptId, mode },
         });
         if (!alive) return;
         if (err) { setError(err.message || "Could not load rank"); return; }
@@ -73,7 +77,7 @@ function useProjectedAir(attemptId: string) {
       }
     })();
     return () => { alive = false; };
-  }, [attemptId]);
+  }, [attemptId, mode]);
   return { data, error };
 }
 
