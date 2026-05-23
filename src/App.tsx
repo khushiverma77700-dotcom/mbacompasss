@@ -142,6 +142,7 @@ const AdminMockBundles = lazyWithPreload(() => import("./pages/admin/AdminMockBu
 const AdminMockOrders = lazyWithPreload(() => import("./pages/admin/AdminMockOrders"));
 const AdminMockBuilder = lazyWithPreload(() => import("./pages/admin/AdminMockBuilder"));
 const AdminBulkMockGeneration = lazyWithPreload(() => import("./pages/admin/AdminBulkMockGeneration"));
+const AdminExplanationCleaner = lazyWithPreload(() => import("./pages/admin/AdminExplanationCleaner"));
 const AdminMocksLanding = lazyWithPreload(() => import("./pages/admin/AdminMocksLanding"));
 const AdminStudentMocks = lazyWithPreload(() => import("./pages/admin/AdminStudentMocks"));
 const AdminSupportTickets = lazyWithPreload(() => import("./pages/admin/AdminSupportTickets"));
@@ -728,6 +729,7 @@ const App = () => (
               <Route path="mock-tests" element={<LazyPage><AdminMockTests /></LazyPage>} />
               <Route path="mock-tests/:testId/builder" element={<LazyPage><AdminMockBuilder /></LazyPage>} />
               <Route path="bulk-mock-generation" element={<LazyPage><AdminBulkMockGeneration /></LazyPage>} />
+              <Route path="explanation-cleaner" element={<LazyPage><AdminExplanationCleaner /></LazyPage>} />
               <Route path="mock-bundles" element={<LazyPage><AdminMockBundles /></LazyPage>} />
               <Route path="mock-orders" element={<LazyPage><AdminMockOrders /></LazyPage>} />
               <Route path="mocks-landing" element={<LazyPage><AdminMocksLanding /></LazyPage>} />
