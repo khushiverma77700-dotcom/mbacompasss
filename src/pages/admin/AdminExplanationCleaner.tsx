@@ -421,8 +421,8 @@ export default function AdminExplanationCleaner() {
             </div>
           </div>
 
-          <div className="flex gap-2 pt-1">
-            {!rs.running ? (
+          <div className="flex gap-2 pt-1 flex-wrap">
+            {!rs.running && !rs.paused ? (
               <>
                 <Button onClick={() => start()} size="lg" className="bg-sky-600 hover:bg-sky-700">
                   <Play className="h-4 w-4 mr-2" />Start cleaning ({rs.total > 0 ? rs.total : "scan & run"})
@@ -431,10 +431,24 @@ export default function AdminExplanationCleaner() {
                   <Button onClick={() => explanationCleaner.reset()} variant="ghost" size="lg">Reset counters</Button>
                 )}
               </>
+            ) : rs.paused ? (
+              <>
+                <Button onClick={() => explanationCleaner.resume()} size="lg" className="bg-emerald-600 hover:bg-emerald-700">
+                  <Play className="h-4 w-4 mr-2" />Resume cleaning
+                </Button>
+                <Button onClick={() => explanationCleaner.stop()} variant="destructive" size="lg">
+                  <Square className="h-4 w-4 mr-2" />Stop
+                </Button>
+              </>
             ) : (
-              <Button onClick={() => explanationCleaner.stop()} variant="destructive" size="lg">
-                <Square className="h-4 w-4 mr-2" />Stop
-              </Button>
+              <>
+                <Button onClick={() => explanationCleaner.pause()} variant="outline" size="lg" className="border-amber-500 text-amber-700 hover:bg-amber-50">
+                  <Pause className="h-4 w-4 mr-2" />Pause
+                </Button>
+                <Button onClick={() => explanationCleaner.stop()} variant="destructive" size="lg">
+                  <Square className="h-4 w-4 mr-2" />Stop
+                </Button>
+              </>
             )}
           </div>
 
