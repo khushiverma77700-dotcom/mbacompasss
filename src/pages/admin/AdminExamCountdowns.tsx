@@ -6,7 +6,25 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { differenceInDays, parseISO, isValid } from "date-fns";
-import { CalendarClock, Save, Search } from "lucide-react";
+import { CalendarClock, Save, Search, Plus, Trash2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { slugify } from "@/lib/slugify";
 
 type ExamRow = {
   id: string;
@@ -18,7 +36,6 @@ type ExamRow = {
 
 const toIsoDate = (s: string | null) => {
   if (!s) return "";
-  // accept yyyy-mm-dd directly
   if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
   const d = new Date(s);
   return isValid(d) ? d.toISOString().slice(0, 10) : "";
@@ -39,17 +56,39 @@ export default function AdminExamCountdowns() {
   const [saving, setSaving] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [edits, setEdits] = useState<Record<string, Partial<ExamRow>>>({});
+  const [addOpen, setAddOpen] = useState(false);
+  const [newExam, setNewExam] = useState({ name: "", slug: "", exam_date: "", registration_deadline: "" });
+  const [adding, setAdding] = useState(false);
+  const [toDelete, setToDelete] = useState<ExamRow | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("exams")
-      .select("id, name, slug, exam_date, registration_deadline")
-      .order("name");
+      .select("id, name, slug, exam_date, registration_deadline");
     if (error) {
       toast({ title: "Failed to load exams", description: error.message, variant: "destructive" });
     } else {
-      setRows((data || []).filter((r: any) => r.name?.trim()));
+      const cleaned = (data || []).filter((r: any) => r.name?.trim());
+      // Sort ascending by exam_date (upcoming first, past last, undated last)
+      const now = Date.now();
+      cleaned.sort((a: any, b: any) => {
+        const da = toIsoDate(a.exam_date);
+        const db = toIsoDate(b.exam_date);
+        const ta = da ? new Date(da).getTime() : null;
+        const tb = db ? new Date(db).getTime() : null;
+        const aFuture = ta !== null && ta >= now - 86400000;
+        const bFuture = tb !== null && tb >= now - 86400000;
+        if (aFuture && bFuture) return ta! - tb!;
+        if (aFuture) return -1;
+        if (bFuture) return 1;
+        if (ta !== null && tb !== null) return ta - tb;
+        if (ta !== null) return -1;
+        if (tb !== null) return 1;
+        return a.name.localeCompare(b.name);
+      });
+      setRows(cleaned);
     }
     setLoading(false);
   };
@@ -91,6 +130,44 @@ export default function AdminExamCountdowns() {
     load();
   };
 
+  const addExam = async () => {
+    if (!newExam.name.trim()) {
+      toast({ title: "Name is required", variant: "destructive" });
+      return;
+    }
+    setAdding(true);
+    const slug = (newExam.slug || slugify(newExam.name)).trim();
+    const { error } = await supabase.from("exams").insert({
+      name: newExam.name.trim(),
+      slug,
+      exam_date: newExam.exam_date || null,
+      registration_deadline: newExam.registration_deadline || null,
+    });
+    setAdding(false);
+    if (error) {
+      toast({ title: "Add failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Exam added", description: newExam.name });
+    setAddOpen(false);
+    setNewExam({ name: "", slug: "", exam_date: "", registration_deadline: "" });
+    load();
+  };
+
+  const confirmDelete = async () => {
+    if (!toDelete) return;
+    setDeleting(true);
+    const { error } = await supabase.from("exams").delete().eq("id", toDelete.id);
+    setDeleting(false);
+    if (error) {
+      toast({ title: "Delete failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Deleted", description: `${toDelete.name} removed.` });
+    setToDelete(null);
+    load();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -99,17 +176,22 @@ export default function AdminExamCountdowns() {
             <CalendarClock className="h-6 w-6 text-primary" /> Exam Countdowns
           </h1>
           <p className="text-sm text-muted-foreground">
-            Set exam date and registration deadline. Countdowns on the site auto-calculate from these values.
+            Set exam date and registration deadline. Sorted by nearest upcoming exam. Countdowns auto-calculate.
           </p>
         </div>
-        <div className="relative w-72 max-w-full">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search exam by name or slug"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            className="pl-9"
-          />
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="relative w-72 max-w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search exam by name or slug"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Button onClick={() => setAddOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" /> Add Exam
+          </Button>
         </div>
       </div>
 
@@ -164,7 +246,15 @@ export default function AdminExamCountdowns() {
                       />
                     </div>
                   </div>
-                  <div className="flex justify-end">
+                  <div className="flex justify-between items-center">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => setToDelete(row)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" /> Delete
+                    </Button>
                     <Button size="sm" disabled={!dirty || saving === row.id} onClick={() => save(row)}>
                       <Save className="h-4 w-4 mr-1" />
                       {saving === row.id ? "Saving…" : "Save"}
@@ -176,6 +266,84 @@ export default function AdminExamCountdowns() {
           })}
         </div>
       )}
+
+      {/* Add Exam Dialog */}
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Exam</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">Exam name *</Label>
+              <Input
+                placeholder="e.g. CAT 2026"
+                value={newExam.name}
+                onChange={(e) => setNewExam((p) => ({ ...p, name: e.target.value }))}
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Slug (optional — auto-generated)</Label>
+              <Input
+                placeholder="cat-2026"
+                value={newExam.slug}
+                onChange={(e) => setNewExam((p) => ({ ...p, slug: e.target.value }))}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs">Exam date</Label>
+                <Input
+                  type="date"
+                  value={newExam.exam_date}
+                  onChange={(e) => setNewExam((p) => ({ ...p, exam_date: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Registration deadline</Label>
+                <Input
+                  type="date"
+                  value={newExam.registration_deadline}
+                  onChange={(e) => setNewExam((p) => ({ ...p, registration_deadline: e.target.value }))}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddOpen(false)} disabled={adding}>
+              Cancel
+            </Button>
+            <Button onClick={addExam} disabled={adding}>
+              {adding ? "Adding…" : "Add Exam"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirm */}
+      <AlertDialog open={!!toDelete} onOpenChange={(o) => !o && setToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this exam?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes <b>{toDelete?.name}</b> from the database. This cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                confirmDelete();
+              }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting…" : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
