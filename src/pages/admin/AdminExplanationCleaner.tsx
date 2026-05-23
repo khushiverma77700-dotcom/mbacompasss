@@ -73,12 +73,26 @@ export default function AdminExplanationCleaner() {
 
   const refreshStats = async () => {
     const { data, error } = await supabase.functions.invoke("reformat-explanations", { body: { mode: "stats", ...filters } });
-    if (error) { toast.error(error.message); return; }
+    if (error) { toast.error(error.message); setLog((l) => [`Stats error: ${error.message}`, ...l].slice(0,50)); return null; }
     setRemaining(data?.remaining ?? 0);
     setTotal(data?.total ?? 0);
+    return data;
   };
 
   useEffect(() => { refreshStats(); /* eslint-disable-next-line */ }, [scope, testId, sectionId, topic, questionId, force]);
+
+  // Auto-start on first mount: if there is anything to clean in "All mocks" scope, start immediately
+  const autoStartedRef = useRef(false);
+  useEffect(() => {
+    if (autoStartedRef.current) return;
+    if (scope !== "all") return;
+    if (running) return;
+    if (total > 0 || remaining > 0) {
+      autoStartedRef.current = true;
+      runLoop();
+    }
+    // eslint-disable-next-line
+  }, [total, remaining]);
 
   const runLoop = async () => {
     if (scope === "test" && !testId) return toast.error("Pick a mock test");
