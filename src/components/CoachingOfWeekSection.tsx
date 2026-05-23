@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginRequiredDialog from "@/components/LoginRequiredDialog";
+import DOMPurify from "isomorphic-dompurify";
 
 const CoachingOfWeekSection = () => {
   const { user } = useAuth();
