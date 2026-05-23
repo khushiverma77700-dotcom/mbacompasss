@@ -100,8 +100,8 @@
       body{margin:0;font-family:'DM Sans',system-ui,-apple-system,sans-serif;background:#fff;color:#0f172a;-webkit-font-smoothing:antialiased}
       #root{min-height:100vh}
       h1,h2,h3{font-family:'Plus Jakarta Sans',system-ui,sans-serif;margin:0}
-      /* Static hero shell painted before React mounts — gives Lighthouse an LCP candidate at ~FCP time. */
-      #app-shell{min-height:100vh;background:linear-gradient(135deg,#1d8eef 0%,#0fa3e5 50%,#10b3c4 100%);display:flex;align-items:flex-start;justify-content:center;padding:64px 16px 0}
+      /* Static hero shell painted before React mounts — overlays #root so it never adds vertical space. */
+      #app-shell{position:fixed;inset:0;z-index:1;background:linear-gradient(135deg,#1d8eef 0%,#0fa3e5 50%,#10b3c4 100%);display:flex;align-items:flex-start;justify-content:center;padding:64px 16px 0;pointer-events:none}
       #app-shell .shell-inner{max-width:768px;text-align:center;color:#fff}
       #app-shell .shell-badge{display:inline-block;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);border-radius:9999px;padding:4px 16px;font-size:12px;font-weight:600;margin-bottom:12px}
       #app-shell h1{font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:clamp(24px,5vw,48px);font-weight:800;line-height:1.15;letter-spacing:-0.02em;margin:0 0 6px}
