@@ -26,7 +26,7 @@ Output rules (NON-NEGOTIABLE):
 - Indian English, no emojis, no "Therefore the answer is" wall-of-text.
 - Always emit at least <h4>Concept</h4>, <h4>Step-by-step Solution</h4> and <h4>Answer</h4> sections.`;
 
-async function rewriteOne(html: string): Promise<string> {
+async function rewriteOne(html: string): Promise<{ text: string; promptTokens: number; completionTokens: number }> {
   const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -45,7 +45,12 @@ async function rewriteOne(html: string): Promise<string> {
   const j = await res.json();
   let out: string = j?.choices?.[0]?.message?.content ?? "";
   out = out.replace(/^```(?:html)?\s*/i, "").replace(/```\s*$/i, "").trim();
-  return out;
+  const u = j?.usage ?? {};
+  return {
+    text: out,
+    promptTokens: u.prompt_tokens ?? u.input_tokens ?? 0,
+    completionTokens: u.completion_tokens ?? u.output_tokens ?? 0,
+  };
 }
 
 type Filters = {
@@ -121,10 +126,13 @@ Deno.serve(async (req) => {
     }
 
     let ok = 0, failed = 0;
-    const errors: string[] = [];
+    let promptTokens = 0, completionTokens = 0;
+    const errors: { id: string; message: string }[] = [];
     await Promise.all(rows.map(async (r: any) => {
       try {
-        const cleaned = await rewriteOne(r.explanation_html);
+        const { text: cleaned, promptTokens: pt, completionTokens: ct } = await rewriteOne(r.explanation_html);
+        promptTokens += pt;
+        completionTokens += ct;
         if (!cleaned || cleaned.length < 30) throw new Error("empty rewrite");
         const { error: upErr } = await admin
           .from("mock_questions")
@@ -134,13 +142,21 @@ Deno.serve(async (req) => {
         ok++;
       } catch (e) {
         failed++;
-        errors.push(`${r.id}: ${(e as Error).message}`);
+        errors.push({ id: r.id, message: (e as Error).message });
       }
     }));
 
     const { count: remaining } = await buildQuery(admin, filters, { count: true }).limit(1);
     return new Response(
-      JSON.stringify({ processed: ok, failed, remaining: remaining ?? 0, done: (remaining ?? 0) === 0, errors: errors.slice(0, 5) }),
+      JSON.stringify({
+        processed: ok,
+        failed,
+        remaining: remaining ?? 0,
+        done: (remaining ?? 0) === 0,
+        prompt_tokens: promptTokens,
+        completion_tokens: completionTokens,
+        errors: errors.slice(0, 10),
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
