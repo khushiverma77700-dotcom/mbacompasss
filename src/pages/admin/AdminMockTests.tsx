@@ -627,8 +627,12 @@ const AdminMockTests = () => {
                     })()}
                   </TableCell>
                   <TableCell>
-                    {t.is_published ? <Badge className="bg-emerald-600 hover:bg-emerald-700">Published</Badge> : <Badge variant="outline">Draft</Badge>}
-                    {t.is_live && <Badge className="ml-1 bg-orange-500 hover:bg-orange-600">Live</Badge>}
+                    <InlineLaunchControls
+                      test={t}
+                      onChanged={(patch) => {
+                        setTests((prev) => prev.map((x) => (x.id === t.id ? { ...x, ...patch } : x)));
+                      }}
+                    />
                   </TableCell>
                   <TableCell>
                     {(() => {
