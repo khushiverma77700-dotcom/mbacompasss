@@ -41,7 +41,11 @@ type MockOption = {
   test_type: string | null;
   category: string | null;
   is_published: boolean | null;
+  topic: string | null;
+  generation_meta: any;
 };
+
+const sectionCodeOf = (m: MockOption): string | null => m?.generation_meta?.request?.section_code ?? null;
 
 
 const slugify = (s: string) =>
