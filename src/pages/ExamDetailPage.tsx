@@ -181,7 +181,7 @@ const ExamDetailPage = () => {
               <CardHeader><CardTitle className="font-heading">About {exam.name}</CardTitle></CardHeader>
               <CardContent>
                 {exam.rawDescription?.includes("<") ? (
-                  <div className="prose prose-sm max-w-none text-muted-foreground dark:prose-invert" dangerouslySetInnerHTML={{ __html: exam.rawDescription }} />
+                  <div className="prose prose-sm max-w-none text-muted-foreground dark:prose-invert" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(exam.rawDescription || "") }} />
                 ) : (
                   <p className="text-muted-foreground leading-relaxed">{exam.description}</p>
                 )}
