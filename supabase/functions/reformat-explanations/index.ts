@@ -126,10 +126,13 @@ Deno.serve(async (req) => {
     }
 
     let ok = 0, failed = 0;
-    const errors: string[] = [];
+    let promptTokens = 0, completionTokens = 0;
+    const errors: { id: string; message: string }[] = [];
     await Promise.all(rows.map(async (r: any) => {
       try {
-        const cleaned = await rewriteOne(r.explanation_html);
+        const { text: cleaned, promptTokens: pt, completionTokens: ct } = await rewriteOne(r.explanation_html);
+        promptTokens += pt;
+        completionTokens += ct;
         if (!cleaned || cleaned.length < 30) throw new Error("empty rewrite");
         const { error: upErr } = await admin
           .from("mock_questions")
@@ -139,13 +142,21 @@ Deno.serve(async (req) => {
         ok++;
       } catch (e) {
         failed++;
-        errors.push(`${r.id}: ${(e as Error).message}`);
+        errors.push({ id: r.id, message: (e as Error).message });
       }
     }));
 
     const { count: remaining } = await buildQuery(admin, filters, { count: true }).limit(1);
     return new Response(
-      JSON.stringify({ processed: ok, failed, remaining: remaining ?? 0, done: (remaining ?? 0) === 0, errors: errors.slice(0, 5) }),
+      JSON.stringify({
+        processed: ok,
+        failed,
+        remaining: remaining ?? 0,
+        done: (remaining ?? 0) === 0,
+        prompt_tokens: promptTokens,
+        completion_tokens: completionTokens,
+        errors: errors.slice(0, 10),
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
