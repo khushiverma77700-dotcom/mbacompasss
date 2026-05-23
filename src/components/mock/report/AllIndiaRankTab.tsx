@@ -443,6 +443,40 @@ export default function AllIndiaRankTab({ attempts }: { attempts: Attempt[] }) {
         </div>
       </Card>
 
+      {/* MODE SWITCH: Realistic vs Motivational */}
+      <Card className="p-3 border-sky-100 bg-white">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="min-w-0">
+            <div className="text-xs font-semibold text-sky-900">Ranking view</div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              {mode === "realistic"
+                ? "Realistic: actual rank from your score vs the aspirant pool — can be harsh."
+                : "Motivational: clamped to keep you in the top 60% — encouraging but optimistic."}
+            </p>
+          </div>
+          <div className="inline-flex rounded-full border border-sky-200 bg-sky-50 p-0.5">
+            <button
+              onClick={() => setMode("motivational")}
+              className={cn(
+                "text-[11px] px-3 py-1 rounded-full transition",
+                mode === "motivational" ? "bg-sky-600 text-white shadow-sm" : "text-sky-800 hover:bg-white"
+              )}
+            >
+              Motivational
+            </button>
+            <button
+              onClick={() => setMode("realistic")}
+              className={cn(
+                "text-[11px] px-3 py-1 rounded-full transition",
+                mode === "realistic" ? "bg-sky-600 text-white shadow-sm" : "text-sky-800 hover:bg-white"
+              )}
+            >
+              Realistic
+            </button>
+          </div>
+        </div>
+      </Card>
+
       {/* EXAM FILTER (purchased only — derived from attempts) */}
       {examOptions.length > 0 && (
         <div className="flex items-center gap-1.5 flex-wrap">
