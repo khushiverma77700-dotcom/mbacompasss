@@ -89,7 +89,7 @@ export default function AdminMockBundles() {
     setMocksLoading(true);
     const { data } = await supabase
       .from("mock_tests")
-      .select("id, name, slug, exam_code, test_type, category, is_published")
+      .select("id, name, slug, exam_code, test_type, category, is_published, topic, generation_meta")
       .order("name");
     setAllMocks((data ?? []) as MockOption[]);
     setMocksLoading(false);
