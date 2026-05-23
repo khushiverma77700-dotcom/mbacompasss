@@ -352,13 +352,13 @@ export default function AllIndiaRankTab({ attempts }: { attempts: Attempt[] }) {
   const [rankMap, setRankMap] = useState<Record<string, RankResult>>({});
   useEffect(() => {
     let alive = true;
+    setRankMap({});
     (async () => {
       const ids = filtered.map((a) => a.id);
       const results = await Promise.all(
         ids.map(async (id) => {
-          if (rankMap[id]) return [id, rankMap[id]] as const;
           try {
-            const { data } = await supabase.functions.invoke("projected-air", { body: { attempt_id: id } });
+            const { data } = await supabase.functions.invoke("projected-air", { body: { attempt_id: id, mode } });
             return [id, data as RankResult] as const;
           } catch {
             return [id, null] as const;
@@ -373,7 +373,7 @@ export default function AllIndiaRankTab({ attempts }: { attempts: Attempt[] }) {
       });
     })();
     return () => { alive = false; };
-  }, [filtered]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filtered, mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const unlockedAttempts = filtered.filter((a) => {
     const r = rankMap[a.id];
