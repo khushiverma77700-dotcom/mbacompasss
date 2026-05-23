@@ -326,7 +326,7 @@ export default function StudentDailyTestReportPage() {
                       {q.explanation_html && (
                         <div className="ml-6 mt-2 p-3 rounded bg-sky-50/60 border border-sky-100 text-sm">
                           <div className="font-semibold text-sky-800 mb-1">Solution</div>
-                          <div dangerouslySetInnerHTML={{ __html: q.explanation_html }} />
+                          <MathContent html={q.explanation_html} className="prose prose-sm max-w-none" />
                         </div>
                       )}
                     </div>
