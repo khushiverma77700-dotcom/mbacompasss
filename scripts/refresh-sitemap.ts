@@ -5,7 +5,7 @@
 // Runs via the `prebuild` npm hook. Fails soft — if the fetch errors, the existing
 // public/sitemap.xml is left untouched so a build can still ship.
 
-import { writeFileSync, existsSync, statSync } from "fs";
+import { writeFileSync, existsSync, statSync, readFileSync } from "fs";
 import { resolve } from "path";
 
 const SITEMAP_URL =
@@ -24,7 +24,7 @@ const OUT = resolve("public/sitemap.xml");
     if (count < 50) throw new Error(`Suspicious URL count: ${count}`);
 
     const prevCount = existsSync(OUT)
-      ? ((require("fs").readFileSync(OUT, "utf8") as string).match(/<url>/g) || []).length
+      ? (readFileSync(OUT, "utf8").match(/<url>/g) || []).length
       : 0;
 
     writeFileSync(OUT, xml, "utf8");
