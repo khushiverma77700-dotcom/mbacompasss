@@ -13,6 +13,7 @@ import { Plus, Pencil, Trash2, Search, Package, Loader2, ChevronDown, ChevronRig
 import { toast } from "sonner";
 import { FeatureMap } from "@/lib/courseFeatures";
 import { HighlightMap } from "@/lib/courseHighlights";
+import { MOCK_TOPIC_CATALOG } from "@/data/mockTopics";
 
 type Bundle = {
   id: string;
@@ -40,7 +41,11 @@ type MockOption = {
   test_type: string | null;
   category: string | null;
   is_published: boolean | null;
+  topic: string | null;
+  generation_meta: any;
 };
+
+const sectionCodeOf = (m: MockOption): string | null => m?.generation_meta?.request?.section_code ?? null;
 
 
 const slugify = (s: string) =>
@@ -69,6 +74,8 @@ export default function AdminMockBundles() {
   const [typeFilter, setTypeFilter] = useState<string>("full_length");
   const [statusFilter, setStatusFilter] = useState<"all" | "live" | "draft">("all");
   const [selectionFilter, setSelectionFilter] = useState<"all" | "selected" | "unselected">("all");
+  const [sectionFilter, setSectionFilter] = useState<string>("all");
+  const [topicFilter, setTopicFilter] = useState<string>("all");
 
   const load = async () => {
     setLoading(true);
@@ -82,7 +89,7 @@ export default function AdminMockBundles() {
     setMocksLoading(true);
     const { data } = await supabase
       .from("mock_tests")
-      .select("id, name, slug, exam_code, test_type, category, is_published")
+      .select("id, name, slug, exam_code, test_type, category, is_published, topic, generation_meta")
       .order("name");
     setAllMocks((data ?? []) as MockOption[]);
     setMocksLoading(false);
@@ -147,12 +154,49 @@ export default function AdminMockBundles() {
       if (selectionFilter === "selected" && !sel) return false;
       if (selectionFilter === "unselected" && sel) return false;
       if (mockSearch && !m.name.toLowerCase().includes(mockSearch.toLowerCase())) return false;
+      if (sectionFilter !== "all" && sectionCodeOf(m) !== sectionFilter) return false;
+      if (topicFilter !== "all" && (m.topic || "") !== topicFilter) return false;
       return true;
     });
-  }, [allMocks, examFilter, typeFilter, statusFilter, selectionFilter, mockSearch, editingItems]);
+  }, [allMocks, examFilter, typeFilter, statusFilter, selectionFilter, mockSearch, editingItems, sectionFilter, topicFilter]);
+
+  const showAdvancedFilters = typeFilter === "sectional" || typeFilter === "topic_wise";
+  const showTopicFilter = typeFilter === "topic_wise";
+
+  const sectionOptions = useMemo(() => {
+    const codes = new Set<string>();
+    if (examFilter !== "all") {
+      Object.keys(MOCK_TOPIC_CATALOG[examFilter] ?? {}).forEach((c) => codes.add(c));
+    } else {
+      Object.values(MOCK_TOPIC_CATALOG).forEach((sec) => Object.keys(sec).forEach((c) => codes.add(c)));
+    }
+    allMocks
+      .filter((m) => kindOf(m) === typeFilter && (examFilter === "all" || m.exam_code === examFilter))
+      .forEach((m) => { const c = sectionCodeOf(m); if (c) codes.add(c); });
+    return Array.from(codes).sort();
+  }, [allMocks, examFilter, typeFilter]);
+
+  const topicOptions = useMemo(() => {
+    const topics = new Set<string>();
+    const exams = examFilter !== "all" ? [examFilter] : Object.keys(MOCK_TOPIC_CATALOG);
+    exams.forEach((ex) => {
+      const secMap = MOCK_TOPIC_CATALOG[ex] ?? {};
+      if (sectionFilter !== "all") {
+        (secMap[sectionFilter] ?? []).forEach((t) => topics.add(t));
+      } else {
+        Object.values(secMap).forEach((list) => list.forEach((t) => topics.add(t)));
+      }
+    });
+    allMocks
+      .filter((m) => kindOf(m) === "topic_wise" && (examFilter === "all" || m.exam_code === examFilter))
+      .filter((m) => sectionFilter === "all" || sectionCodeOf(m) === sectionFilter)
+      .forEach((m) => { if (m.topic) topics.add(m.topic); });
+    return Array.from(topics).sort();
+  }, [allMocks, examFilter, sectionFilter]);
 
   const clearFilters = () => {
     setMockSearch(""); setExamFilter("all"); setTypeFilter("full_length"); setStatusFilter("all"); setSelectionFilter("all");
+    setSectionFilter("all"); setTopicFilter("all");
   };
 
 
@@ -330,7 +374,7 @@ export default function AdminMockBundles() {
                       <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Category (pick one)</div>
                       <div className="flex flex-wrap gap-1">
                         {TYPE_OPTIONS.map((t) => (
-                          <button key={t.v} type="button" onClick={() => setTypeFilter(t.v)}
+                          <button key={t.v} type="button" onClick={() => { setTypeFilter(t.v); setSectionFilter("all"); setTopicFilter("all"); }}
                             className={`px-2 py-1 rounded-full text-[11px] font-medium border transition ${typeFilter === t.v ? "bg-sky-500 text-white border-sky-500" : "bg-background border-border hover:bg-muted"}`}>
                             {t.l}
                           </button>
@@ -350,6 +394,36 @@ export default function AdminMockBundles() {
                       </div>
                     </div>
                   </div>
+
+                  {showAdvancedFilters && (
+                    <div className="grid grid-cols-1 gap-2 rounded-md border border-sky-100 bg-sky-50/40 p-2">
+                      <div>
+                        <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Section</div>
+                        <div className="flex flex-wrap gap-1">
+                          <button type="button" onClick={() => { setSectionFilter("all"); setTopicFilter("all"); }}
+                            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition ${sectionFilter === "all" ? "bg-sky-600 text-white border-sky-600" : "bg-background border-border hover:bg-muted"}`}>All</button>
+                          {sectionOptions.map((s) => (
+                            <button key={s} type="button" onClick={() => { setSectionFilter(s); setTopicFilter("all"); }}
+                              className={`px-2 py-1 rounded-full text-[11px] font-medium border transition ${sectionFilter === s ? "bg-sky-600 text-white border-sky-600" : "bg-background border-border hover:bg-muted"}`}>{s}</button>
+                          ))}
+                        </div>
+                      </div>
+                      {showTopicFilter && (
+                        <div>
+                          <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Topic</div>
+                          <div className="flex flex-wrap gap-1 max-h-28 overflow-y-auto">
+                            <button type="button" onClick={() => setTopicFilter("all")}
+                              className={`px-2 py-1 rounded-full text-[11px] font-medium border transition ${topicFilter === "all" ? "bg-violet-600 text-white border-violet-600" : "bg-background border-border hover:bg-muted"}`}>All Topics</button>
+                            {topicOptions.map((t) => (
+                              <button key={t} type="button" onClick={() => setTopicFilter(t)}
+                                className={`px-2 py-1 rounded-full text-[11px] font-medium border transition ${topicFilter === t ? "bg-violet-600 text-white border-violet-600" : "bg-background border-border hover:bg-muted"}`}>{t}</button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
 
                   <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                     <div className="flex gap-1">

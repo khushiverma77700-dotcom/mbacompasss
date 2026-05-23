@@ -19,6 +19,11 @@ import { slugify } from "@/lib/slugify";
 import FileUpload from "@/components/admin/FileUpload";
 import AIGenerateMockDialog from "@/components/admin/AIGenerateMockDialog";
 import { useAdminFilters } from "@/hooks/useAdminFilters";
+import { MOCK_TOPIC_CATALOG } from "@/data/mockTopics";
+
+const sectionCodeOf = (t: any): string | null => {
+  return t?.generation_meta?.request?.section_code ?? null;
+};
 
 const SECTION_DEFAULTS = [
   { code: "VARC" as const, name: "Verbal Ability & Reading Comprehension", duration_minutes: 40, total_questions: 24, sort_order: 0 },
@@ -85,17 +90,21 @@ const AdminMockTests = () => {
   const [aiOpen, setAiOpen] = useState(false);
   const { filters, setFilter } = useAdminFilters({
     storageKey: "admin.mockTests.filters",
-    defaults: { category: "all", exam: "all", difficulty: "all", readiness: "all" },
+    defaults: { category: "all", exam: "all", difficulty: "all", readiness: "all", section: "all", topic: "all" },
     preserveKeys: ["edit"],
   });
   const categoryFilter = filters.category;
   const examFilter = filters.exam;
   const difficultyFilter = filters.difficulty;
   const readinessFilter = filters.readiness;
-  const setCategoryFilter = (v: string) => setFilter("category", v);
-  const setExamFilter = (v: string) => setFilter("exam", v);
+  const sectionFilter = filters.section;
+  const topicFilter = filters.topic;
+  const setCategoryFilter = (v: string) => { setFilter("category", v); setFilter("section", "all"); setFilter("topic", "all"); };
+  const setExamFilter = (v: string) => { setFilter("exam", v); setFilter("section", "all"); setFilter("topic", "all"); };
   const setDifficultyFilter = (v: string) => setFilter("difficulty", v);
   const setReadinessFilter = (v: string) => setFilter("readiness", v);
+  const setSectionFilter = (v: string) => { setFilter("section", v); setFilter("topic", "all"); };
+  const setTopicFilter = (v: string) => setFilter("topic", v);
   const [readinessSaving, setReadinessSaving] = useState<Record<string, boolean>>({});
   const [sortOrderDraft, setSortOrderDraft] = useState<Record<string, string>>({});
   const [sortOrderSaving, setSortOrderSaving] = useState<Record<string, boolean>>({});
@@ -130,7 +139,49 @@ const AdminMockTests = () => {
     .filter((t) => categoryFilter === "all" || (t.category || t.test_type) === categoryFilter)
     .filter((t) => examFilter === "all" || t.exam_code === examFilter)
     .filter((t) => difficultyFilter === "all" || t.difficulty === difficultyFilter)
-    .filter((t) => readinessFilter === "all" || (t.readiness_status || "incomplete") === readinessFilter);
+    .filter((t) => readinessFilter === "all" || (t.readiness_status || "incomplete") === readinessFilter)
+    .filter((t) => sectionFilter === "all" || sectionCodeOf(t) === sectionFilter)
+    .filter((t) => topicFilter === "all" || (t.topic || "") === topicFilter);
+
+  // Advanced filter visibility: only relevant for sectional / topic categories
+  const showAdvancedFilters = categoryFilter === "sectional" || categoryFilter === "topic_wise" || categoryFilter === "topic";
+  const showTopicFilter = categoryFilter === "topic_wise" || categoryFilter === "topic";
+
+  // Section options derived from MOCK_TOPIC_CATALOG (filtered by selected exam if any)
+  const sectionOptions = (() => {
+    const codes = new Set<string>();
+    if (examFilter !== "all") {
+      Object.keys(MOCK_TOPIC_CATALOG[examFilter] ?? {}).forEach((c) => codes.add(c));
+    } else {
+      Object.values(MOCK_TOPIC_CATALOG).forEach((sec) => Object.keys(sec).forEach((c) => codes.add(c)));
+    }
+    // Also include any section_code present in existing tests of the current category
+    tests
+      .filter((t) => categoryFilter === "all" || (t.category || t.test_type) === categoryFilter)
+      .filter((t) => examFilter === "all" || t.exam_code === examFilter)
+      .forEach((t) => { const c = sectionCodeOf(t); if (c) codes.add(c); });
+    return Array.from(codes).sort();
+  })();
+
+  // Topic options: catalog topics for the selected exam+section, plus any topic actually present
+  const topicOptions = (() => {
+    const topics = new Set<string>();
+    const exams = examFilter !== "all" ? [examFilter] : Object.keys(MOCK_TOPIC_CATALOG);
+    exams.forEach((ex) => {
+      const secMap = MOCK_TOPIC_CATALOG[ex] ?? {};
+      if (sectionFilter !== "all") {
+        (secMap[sectionFilter] ?? []).forEach((t) => topics.add(t));
+      } else {
+        Object.values(secMap).forEach((list) => list.forEach((t) => topics.add(t)));
+      }
+    });
+    tests
+      .filter((t) => (t.category || t.test_type) === "topic_wise")
+      .filter((t) => examFilter === "all" || t.exam_code === examFilter)
+      .filter((t) => sectionFilter === "all" || sectionCodeOf(t) === sectionFilter)
+      .forEach((t) => { if (t.topic) topics.add(t.topic); });
+    return Array.from(topics).sort();
+  })();
 
   const updateReadiness = async (id: string, value: string) => {
     setReadinessSaving((p) => ({ ...p, [id]: true }));
@@ -530,8 +581,36 @@ const AdminMockTests = () => {
             </SelectContent>
           </Select>
         </div>
-        {(examFilter !== "all" || difficultyFilter !== "all" || readinessFilter !== "all") && (
-          <Button size="sm" variant="ghost" onClick={() => { setExamFilter("all"); setDifficultyFilter("all"); setReadinessFilter("all"); }}>
+        {showAdvancedFilters && (
+          <div className="flex items-center gap-2">
+            <Label className="text-xs text-muted-foreground">Section</Label>
+            <Select value={sectionFilter} onValueChange={setSectionFilter}>
+              <SelectTrigger className="w-[150px] h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sections</SelectItem>
+                {sectionOptions.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        {showTopicFilter && (
+          <div className="flex items-center gap-2">
+            <Label className="text-xs text-muted-foreground">Topic</Label>
+            <Select value={topicFilter} onValueChange={setTopicFilter}>
+              <SelectTrigger className="w-[260px] h-9"><SelectValue /></SelectTrigger>
+              <SelectContent className="max-h-72">
+                <SelectItem value="all">All Topics</SelectItem>
+                {topicOptions.map((t) => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        {(examFilter !== "all" || difficultyFilter !== "all" || readinessFilter !== "all" || sectionFilter !== "all" || topicFilter !== "all") && (
+          <Button size="sm" variant="ghost" onClick={() => { setExamFilter("all"); setDifficultyFilter("all"); setReadinessFilter("all"); setFilter("section", "all"); setFilter("topic", "all"); }}>
             Clear filters
           </Button>
         )}
