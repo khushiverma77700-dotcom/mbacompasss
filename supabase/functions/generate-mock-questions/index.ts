@@ -961,8 +961,9 @@ Deno.serve(async (req) => {
     const runGeneration = async () => {
      try {
     for (let setIdx = 1; setIdx <= setsCount; setIdx++) {
-      const rawBase = test_name_prefix
-        ? (setsCount > 1 ? `${test_name_prefix} #${setIdx}` : test_name_prefix)
+      const requestedName = cleanMockTestName(test_name_prefix || "", exam_code);
+      const rawBase = requestedName
+        ? (setsCount > 1 ? `${requestedName} #${setIdx}` : requestedName)
         : `${exam_code} ${labelForCategory(category)} ${setIdx} — AI`;
       // Use clean name by default; only append a short suffix if a duplicate name exists.
       let baseName = rawBase;
@@ -970,9 +971,7 @@ Deno.serve(async (req) => {
         const { data: dup } = await admin.from("mock_tests").select("id").eq("name", baseName).maybeSingle();
         if (!dup) break;
         baseName = `${rawBase} #${attempt + 2}`;
-        if (attempt === 3) {
-          baseName = `${rawBase} (${Math.random().toString(36).slice(2, 6)})`;
-        }
+        if (attempt === 3) baseName = `${rawBase} #${attempt + 2}`;
       }
 
       const slug = slugify(baseName) + "-" + Date.now().toString(36) + "-" + setIdx;
@@ -1246,6 +1245,25 @@ function labelForCategory(c: string) {
 
 function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+function cleanMockTestName(name: string | null | undefined, examCode?: string) {
+  let cleaned = String(name || "").trim();
+  if (!cleaned) return "";
+
+  const examCodes = Object.keys(EXAM_PROFILES).join("|");
+  const scopedCode = String(examCode || "").replace(/[^A-Z0-9]/gi, "");
+  const codeGroup = scopedCode ? `${scopedCode}|${examCodes}` : examCodes;
+
+  for (let i = 0; i < 3; i++) {
+    cleaned = cleaned
+      .replace(new RegExp(`\\s*\\(?\\b(?:${codeGroup})-[a-z0-9]{4,16}\\)?\\s*$`, "i"), "")
+      .replace(/\s*\([a-z0-9]{4,8}\)\s*$/i, "")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+  }
+
+  return cleaned;
 }
 
 function planSections(
