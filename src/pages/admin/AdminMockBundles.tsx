@@ -395,6 +395,36 @@ export default function AdminMockBundles() {
                     </div>
                   </div>
 
+                  {showAdvancedFilters && (
+                    <div className="grid grid-cols-1 gap-2 rounded-md border border-sky-100 bg-sky-50/40 p-2">
+                      <div>
+                        <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Section</div>
+                        <div className="flex flex-wrap gap-1">
+                          <button type="button" onClick={() => { setSectionFilter("all"); setTopicFilter("all"); }}
+                            className={`px-2 py-1 rounded-full text-[11px] font-medium border transition ${sectionFilter === "all" ? "bg-sky-600 text-white border-sky-600" : "bg-background border-border hover:bg-muted"}`}>All</button>
+                          {sectionOptions.map((s) => (
+                            <button key={s} type="button" onClick={() => { setSectionFilter(s); setTopicFilter("all"); }}
+                              className={`px-2 py-1 rounded-full text-[11px] font-medium border transition ${sectionFilter === s ? "bg-sky-600 text-white border-sky-600" : "bg-background border-border hover:bg-muted"}`}>{s}</button>
+                          ))}
+                        </div>
+                      </div>
+                      {showTopicFilter && (
+                        <div>
+                          <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Topic</div>
+                          <div className="flex flex-wrap gap-1 max-h-28 overflow-y-auto">
+                            <button type="button" onClick={() => setTopicFilter("all")}
+                              className={`px-2 py-1 rounded-full text-[11px] font-medium border transition ${topicFilter === "all" ? "bg-violet-600 text-white border-violet-600" : "bg-background border-border hover:bg-muted"}`}>All Topics</button>
+                            {topicOptions.map((t) => (
+                              <button key={t} type="button" onClick={() => setTopicFilter(t)}
+                                className={`px-2 py-1 rounded-full text-[11px] font-medium border transition ${topicFilter === t ? "bg-violet-600 text-white border-violet-600" : "bg-background border-border hover:bg-muted"}`}>{t}</button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+
                   <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                     <div className="flex gap-1">
                       {(["all","selected","unselected"] as const).map((s) => (
