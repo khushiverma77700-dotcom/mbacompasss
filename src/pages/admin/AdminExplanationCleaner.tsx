@@ -377,6 +377,7 @@ export default function AdminExplanationCleaner() {
           <CardTitle className="flex items-center justify-between">
             <span>2. Progress & Cost</span>
             {rs.running && <Badge className="bg-emerald-600 hover:bg-emerald-600 animate-pulse">LIVE</Badge>}
+            {rs.paused && <Badge className="bg-amber-500 hover:bg-amber-500">PAUSED</Badge>}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
