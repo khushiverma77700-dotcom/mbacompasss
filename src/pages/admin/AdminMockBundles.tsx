@@ -374,7 +374,7 @@ export default function AdminMockBundles() {
                       <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">Category (pick one)</div>
                       <div className="flex flex-wrap gap-1">
                         {TYPE_OPTIONS.map((t) => (
-                          <button key={t.v} type="button" onClick={() => setTypeFilter(t.v)}
+                          <button key={t.v} type="button" onClick={() => { setTypeFilter(t.v); setSectionFilter("all"); setTopicFilter("all"); }}
                             className={`px-2 py-1 rounded-full text-[11px] font-medium border transition ${typeFilter === t.v ? "bg-sky-500 text-white border-sky-500" : "bg-background border-border hover:bg-muted"}`}>
                             {t.l}
                           </button>
