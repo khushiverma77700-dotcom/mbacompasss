@@ -74,6 +74,8 @@ export default function AdminMockBundles() {
   const [typeFilter, setTypeFilter] = useState<string>("full_length");
   const [statusFilter, setStatusFilter] = useState<"all" | "live" | "draft">("all");
   const [selectionFilter, setSelectionFilter] = useState<"all" | "selected" | "unselected">("all");
+  const [sectionFilter, setSectionFilter] = useState<string>("all");
+  const [topicFilter, setTopicFilter] = useState<string>("all");
 
   const load = async () => {
     setLoading(true);
