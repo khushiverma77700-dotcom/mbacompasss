@@ -300,7 +300,7 @@ export default function AdminExplanationCleaner() {
           {scope === "section" && testId && (
             <div>
               <Label>Section</Label>
-              <select className="w-full mt-1 border rounded px-3 py-2 text-sm bg-background" value={sectionId} onChange={(e) => setSectionId(e.target.value)} disabled={rs.running}>
+              <select className="w-full mt-1 border rounded px-3 py-2 text-sm bg-background" value={sectionId} onChange={(e) => setSectionId(e.target.value)} disabled={rs.running || rs.paused}>
                 <option value="">— Pick a section —</option>
                 {sections.map((s) => <option key={s.id} value={s.id}>{s.code} — {s.name}</option>)}
               </select>
