@@ -47,10 +47,14 @@ Deno.serve(async (req) => {
     // Generate 6-digit OTP
     const otp = String(Math.floor(100000 + Math.random() * 900000));
 
-    // Store OTP in database
+    // Hash OTP before storage so even privileged DB reads cannot recover the code
+    const hashBuf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${phone}:${otp}`));
+    const otpHash = Array.from(new Uint8Array(hashBuf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+
+    // Store hashed OTP in database (column name retained; value is now a SHA-256 hex digest)
     const { error: insertError } = await supabase.from("phone_otps").insert({
       phone,
-      otp_code: otp,
+      otp_code: otpHash,
       expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
     });
 
