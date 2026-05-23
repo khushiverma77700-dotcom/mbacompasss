@@ -546,18 +546,6 @@ const AdminMockTests = () => {
 
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <div className="flex items-center gap-2">
-          <Label className="text-xs text-muted-foreground">Exam</Label>
-          <Select value={examFilter} onValueChange={setExamFilter}>
-            <SelectTrigger className="w-[160px] h-9"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Exams</SelectItem>
-              {Array.from(new Set(tests.map((t) => t.exam_code).filter(Boolean))).sort().map((ex) => (
-                <SelectItem key={ex as string} value={ex as string}>{ex as string}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex items-center gap-2">
           <Label className="text-xs text-muted-foreground">Difficulty</Label>
           <Select value={difficultyFilter} onValueChange={setDifficultyFilter}>
             <SelectTrigger className="w-[140px] h-9"><SelectValue /></SelectTrigger>
@@ -582,32 +570,46 @@ const AdminMockTests = () => {
           </Select>
         </div>
         {showAdvancedFilters && (
-          <div className="flex items-center gap-2">
-            <Label className="text-xs text-muted-foreground">Section</Label>
-            <Select value={sectionFilter} onValueChange={setSectionFilter}>
-              <SelectTrigger className="w-[150px] h-9"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Sections</SelectItem>
-                {sectionOptions.map((s) => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-        {showTopicFilter && (
-          <div className="flex items-center gap-2">
-            <Label className="text-xs text-muted-foreground">Topic</Label>
-            <Select value={topicFilter} onValueChange={setTopicFilter}>
-              <SelectTrigger className="w-[260px] h-9"><SelectValue /></SelectTrigger>
-              <SelectContent className="max-h-72">
-                <SelectItem value="all">All Topics</SelectItem>
-                {topicOptions.map((t) => (
-                  <SelectItem key={t} value={t}>{t}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <>
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground">Exam</Label>
+              <Select value={examFilter} onValueChange={setExamFilter}>
+                <SelectTrigger className="w-[160px] h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Exams</SelectItem>
+                  {Object.keys(MOCK_TOPIC_CATALOG).sort().map((ex) => (
+                    <SelectItem key={ex} value={ex}>{ex}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground">Section</Label>
+              <Select value={sectionFilter} onValueChange={setSectionFilter}>
+                <SelectTrigger className="w-[150px] h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sections</SelectItem>
+                  {sectionOptions.map((s) => (
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {showTopicFilter && (
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-muted-foreground">Topic</Label>
+                <Select value={topicFilter} onValueChange={setTopicFilter}>
+                  <SelectTrigger className="w-[260px] h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    <SelectItem value="all">All Topics</SelectItem>
+                    {topicOptions.map((t) => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </>
         )}
         {(examFilter !== "all" || difficultyFilter !== "all" || readinessFilter !== "all" || sectionFilter !== "all" || topicFilter !== "all") && (
           <Button size="sm" variant="ghost" onClick={() => { setExamFilter("all"); setDifficultyFilter("all"); setReadinessFilter("all"); setFilter("section", "all"); setFilter("topic", "all"); }}>
