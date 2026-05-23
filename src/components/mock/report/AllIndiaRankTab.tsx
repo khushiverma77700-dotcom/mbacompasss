@@ -55,15 +55,19 @@ function fmtCountdown(target: string) {
   return `${h}h ${m}m`;
 }
 
-function useProjectedAir(attemptId: string) {
+type AirMode = "realistic" | "motivational";
+
+function useProjectedAir(attemptId: string, mode: AirMode) {
   const [data, setData] = useState<RankResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     let alive = true;
+    setData(null);
+    setError(null);
     (async () => {
       try {
         const { data: res, error: err } = await supabase.functions.invoke("projected-air", {
-          body: { attempt_id: attemptId },
+          body: { attempt_id: attemptId, mode },
         });
         if (!alive) return;
         if (err) { setError(err.message || "Could not load rank"); return; }
@@ -73,7 +77,7 @@ function useProjectedAir(attemptId: string) {
       }
     })();
     return () => { alive = false; };
-  }, [attemptId]);
+  }, [attemptId, mode]);
   return { data, error };
 }
 
@@ -149,8 +153,8 @@ function Stat({ label, value, accent }: { label: string; value: string | number;
   );
 }
 
-function AttemptCard({ attempt }: { attempt: Attempt }) {
-  const { data, error } = useProjectedAir(attempt.id);
+function AttemptCard({ attempt, mode }: { attempt: Attempt; mode: AirMode }) {
+  const { data, error } = useProjectedAir(attempt.id, mode);
   const [open, setOpen] = useState(false);
 
   const submittedFmt = attempt.submitted_at
@@ -338,6 +342,7 @@ export default function AllIndiaRankTab({ attempts }: { attempts: Attempt[] }) {
   }, [sorted]);
 
   const [exam, setExam] = useState<string>("ALL");
+  const [mode, setMode] = useState<AirMode>("motivational");
   const filtered = useMemo(
     () => (exam === "ALL" ? sorted : sorted.filter((a) => (a.test?.exam_code || "GEN").toUpperCase() === exam)),
     [sorted, exam]
@@ -347,13 +352,13 @@ export default function AllIndiaRankTab({ attempts }: { attempts: Attempt[] }) {
   const [rankMap, setRankMap] = useState<Record<string, RankResult>>({});
   useEffect(() => {
     let alive = true;
+    setRankMap({});
     (async () => {
       const ids = filtered.map((a) => a.id);
       const results = await Promise.all(
         ids.map(async (id) => {
-          if (rankMap[id]) return [id, rankMap[id]] as const;
           try {
-            const { data } = await supabase.functions.invoke("projected-air", { body: { attempt_id: id } });
+            const { data } = await supabase.functions.invoke("projected-air", { body: { attempt_id: id, mode } });
             return [id, data as RankResult] as const;
           } catch {
             return [id, null] as const;
@@ -368,7 +373,7 @@ export default function AllIndiaRankTab({ attempts }: { attempts: Attempt[] }) {
       });
     })();
     return () => { alive = false; };
-  }, [filtered]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filtered, mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const unlockedAttempts = filtered.filter((a) => {
     const r = rankMap[a.id];
@@ -434,6 +439,40 @@ export default function AllIndiaRankTab({ attempts }: { attempts: Attempt[] }) {
             <Stat label="Avg AIR" value={kpis.avgAir} accent="text-sky-700" />
             <Stat label="Avg %ile" value={kpis.avgPctile} accent="text-emerald-600" />
             <Stat label="Unlocked" value={kpis.topper} />
+          </div>
+        </div>
+      </Card>
+
+      {/* MODE SWITCH: Realistic vs Motivational */}
+      <Card className="p-3 border-sky-100 bg-white">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="min-w-0">
+            <div className="text-xs font-semibold text-sky-900">Ranking view</div>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              {mode === "realistic"
+                ? "Realistic: actual rank from your score vs the aspirant pool — can be harsh."
+                : "Motivational: clamped to keep you in the top 60% — encouraging but optimistic."}
+            </p>
+          </div>
+          <div className="inline-flex rounded-full border border-sky-200 bg-sky-50 p-0.5">
+            <button
+              onClick={() => setMode("motivational")}
+              className={cn(
+                "text-[11px] px-3 py-1 rounded-full transition",
+                mode === "motivational" ? "bg-sky-600 text-white shadow-sm" : "text-sky-800 hover:bg-white"
+              )}
+            >
+              Motivational
+            </button>
+            <button
+              onClick={() => setMode("realistic")}
+              className={cn(
+                "text-[11px] px-3 py-1 rounded-full transition",
+                mode === "realistic" ? "bg-sky-600 text-white shadow-sm" : "text-sky-800 hover:bg-white"
+              )}
+            >
+              Realistic
+            </button>
           </div>
         </div>
       </Card>
@@ -530,7 +569,7 @@ export default function AllIndiaRankTab({ attempts }: { attempts: Attempt[] }) {
             <h4 className="font-semibold text-sm">Mock-wise Analysis</h4>
             <Badge variant="secondary" className="text-[10px] ml-1">{filtered.length} mocks</Badge>
           </div>
-          {filtered.map((a) => <AttemptCard key={a.id} attempt={a} />)}
+          {filtered.map((a) => <AttemptCard key={`${a.id}:${mode}`} attempt={a} mode={mode} />)}
         </div>
       )}
 

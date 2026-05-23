@@ -170,7 +170,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { attempt_id } = await req.json().catch(() => ({}));
+    const body = await req.json().catch(() => ({}));
+    const { attempt_id } = body;
+    const mode: "realistic" | "motivational" =
+      body?.mode === "realistic" ? "realistic" : "motivational";
     if (!attempt_id) {
       return new Response(JSON.stringify({ error: "attempt_id required" }), {
         status: 400,
@@ -301,15 +304,20 @@ Deno.serve(async (req) => {
     );
 
     const myScore = Number(attempt.total_score ?? 0);
-    // Motivational ranking — student is never placed near the bottom.
-    // Position scales with score: high score → top ranks, low score → middle.
-    // Range: top 12% (best) … 60% (worst). Student is always above the median tail.
-    const scoreRatio = maxScore > 0 ? Math.max(0, Math.min(1, myScore / maxScore)) : 0;
-    const targetPct = 0.60 - 0.48 * scoreRatio; // 0.60 → 0.12
-    let myRank = Math.max(1, Math.min(pool.length, Math.round(targetPct * pool.length)));
-    // Tiny deterministic jitter so two equal scores don't collide
-    const jitter = Math.floor(mulberry32(hashStr(`${attempt.id}:rank`))() * 9) - 4;
-    myRank = Math.max(1, Math.min(pool.length, myRank + jitter));
+    let myRank: number;
+    if (mode === "realistic") {
+      // Realistic: actual rank from the score distribution (no clamping).
+      myRank = rankOfScore(pool, myScore);
+      const jitter = Math.floor(mulberry32(hashStr(`${attempt.id}:rank:real`))() * 5) - 2;
+      myRank = Math.max(1, Math.min(pool.length, myRank + jitter));
+    } else {
+      // Motivational: clamped between top 12% (best) … 60% (worst).
+      const scoreRatio = maxScore > 0 ? Math.max(0, Math.min(1, myScore / maxScore)) : 0;
+      const targetPct = 0.60 - 0.48 * scoreRatio;
+      myRank = Math.max(1, Math.min(pool.length, Math.round(targetPct * pool.length)));
+      const jitter = Math.floor(mulberry32(hashStr(`${attempt.id}:rank`))() * 9) - 4;
+      myRank = Math.max(1, Math.min(pool.length, myRank + jitter));
+    }
 
     const studentsAhead = myRank - 1;
     const studentsBehind = pool.length - myRank;
@@ -379,12 +387,18 @@ Deno.serve(async (req) => {
         `${attempt.test_id}:${key}`,
         targetPool
       );
-      // Motivational sectional rank — same logic as overall
-      const sRatio = maxS > 0 ? Math.max(0, Math.min(1, myScoreS / maxS)) : 0;
-      const sTargetPct = 0.60 - 0.48 * sRatio;
-      let rS = Math.max(1, Math.min(poolS.length, Math.round(sTargetPct * poolS.length)));
-      const sJitter = Math.floor(mulberry32(hashStr(`${attempt.id}:${key}:rank`))() * 9) - 4;
-      rS = Math.max(1, Math.min(poolS.length, rS + sJitter));
+      let rS: number;
+      if (mode === "realistic") {
+        rS = rankOfScore(poolS, myScoreS);
+        const sJ = Math.floor(mulberry32(hashStr(`${attempt.id}:${key}:rank:real`))() * 5) - 2;
+        rS = Math.max(1, Math.min(poolS.length, rS + sJ));
+      } else {
+        const sRatio = maxS > 0 ? Math.max(0, Math.min(1, myScoreS / maxS)) : 0;
+        const sTargetPct = 0.60 - 0.48 * sRatio;
+        rS = Math.max(1, Math.min(poolS.length, Math.round(sTargetPct * poolS.length)));
+        const sJitter = Math.floor(mulberry32(hashStr(`${attempt.id}:${key}:rank`))() * 9) - 4;
+        rS = Math.max(1, Math.min(poolS.length, rS + sJitter));
+      }
 
       const sectionLabel =
         sectionNameMap.get(key) || my.name || my.section || my.label || "Section";
@@ -418,15 +432,18 @@ Deno.serve(async (req) => {
       real_pool_size: realEntries.length,
     };
 
-    // Cache the stable per-attempt row
-    await admin.from("mock_projected_ranks").upsert(row, {
-      onConflict: "attempt_id",
-    });
+    // Cache only the motivational (default) result to avoid mode collisions.
+    if (mode === "motivational") {
+      await admin.from("mock_projected_ranks").upsert(row, {
+        onConflict: "attempt_id",
+      });
+    }
 
     return new Response(
       JSON.stringify({
         locked: false,
         ...row,
+        mode,
         leaderboard: { top, window, my_rank: myRank, pool_size: pool.length },
         unlocks_at: unlocksAt.toISOString(),
         computed_at: new Date().toISOString(),
