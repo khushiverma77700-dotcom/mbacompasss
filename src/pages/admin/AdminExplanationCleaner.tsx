@@ -342,7 +342,7 @@ export default function AdminExplanationCleaner() {
           <div className="grid sm:grid-cols-2 gap-4 pt-2">
             <div>
               <Label>Batch size (1–40, parallel AI calls)</Label>
-              <Input type="number" min={1} max={40} value={batchSize} onChange={(e) => setBatchSize(Math.min(40, Math.max(1, Number(e.target.value) || 20)))} disabled={rs.running} />
+              <Input type="number" min={1} max={40} value={batchSize} onChange={(e) => setBatchSize(Math.min(40, Math.max(1, Number(e.target.value) || 20)))} disabled={rs.running || rs.paused} />
               <p className="text-xs text-muted-foreground mt-1">Runner loops automatically until everything in scope is done.</p>
             </div>
             <div className="flex items-end">
