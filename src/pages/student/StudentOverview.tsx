@@ -1139,6 +1139,7 @@ function ExamCountdownStrip({ exams }: { exams: any[] }) {
             Exam Countdowns
           </h2>
           <p className="text-[11px] text-muted-foreground mt-0.5 ml-9">Track every D-day. Updates live.</p>
+          <p className="text-[11px] italic text-muted-foreground/70 mt-0.5 ml-9">*Dates are tentative and subject to change. Please verify with official exam websites.</p>
         </div>
         <Link to="/exams" className="text-xs font-medium text-sky-700 dark:text-sky-300 hover:underline">View all →</Link>
       </div>
