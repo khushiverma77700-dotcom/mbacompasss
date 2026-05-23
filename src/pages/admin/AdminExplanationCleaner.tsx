@@ -120,6 +120,29 @@ export default function AdminExplanationCleaner() {
   const [browseCount, setBrowseCount] = useState<number | null>(null);
   const [browseLoading, setBrowseLoading] = useState(false);
 
+  // before/after diff modal
+  const [diffOpen, setDiffOpen] = useState(false);
+  const [diffLoading, setDiffLoading] = useState(false);
+  const [diffRow, setDiffRow] = useState<{ id: string; before: string | null; after: string | null } | null>(null);
+
+  const openDiff = async (id: string) => {
+    setDiffOpen(true);
+    setDiffLoading(true);
+    setDiffRow({ id, before: null, after: null });
+    const { data, error } = await supabase
+      .from("mock_questions")
+      .select("id, explanation_html, explanation_html_original")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) toast.error(error.message);
+    setDiffRow({
+      id,
+      before: (data as any)?.explanation_html_original ?? null,
+      after: (data as any)?.explanation_html ?? null,
+    });
+    setDiffLoading(false);
+  };
+
   const loadBrowse = async () => {
     if (browseStatus === "failed") {
       // local failed list from this session
