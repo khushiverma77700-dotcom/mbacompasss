@@ -443,6 +443,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         locked: false,
         ...row,
+        mode,
         leaderboard: { top, window, my_rank: myRank, pool_size: pool.length },
         unlocks_at: unlocksAt.toISOString(),
         computed_at: new Date().toISOString(),
