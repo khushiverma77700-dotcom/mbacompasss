@@ -48,7 +48,10 @@ export default function AdminExplanationCleaner() {
 
   // live runner state
   const [rs, setRs] = useState<CleanerState>(explanationCleaner.getState());
-  useEffect(() => explanationCleaner.subscribe(setRs), []);
+  useEffect(() => {
+    const unsubscribe = explanationCleaner.subscribe(setRs);
+    return () => { unsubscribe(); };
+  }, []);
 
   // hydrate from previously-running config if any
   useEffect(() => {
