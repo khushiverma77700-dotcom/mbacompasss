@@ -227,8 +227,8 @@ export default function AdminExplanationCleaner() {
 
           <div className="flex gap-2 pt-1">
             {!running ? (
-              <Button onClick={runLoop} disabled={total === 0 && !force} size="lg" className="bg-sky-600 hover:bg-sky-700">
-                <Play className="h-4 w-4 mr-2" />Start cleaning ({total} questions)
+              <Button onClick={runLoop} size="lg" className="bg-sky-600 hover:bg-sky-700">
+                <Play className="h-4 w-4 mr-2" />Start cleaning ({total > 0 ? total : "scan & run"})
               </Button>
             ) : (
               <Button onClick={stop} variant="destructive" size="lg"><Square className="h-4 w-4 mr-2" />Stop</Button>
