@@ -11,6 +11,7 @@ export type CleanerConfig = {
   topic?: string;
   question_id?: string;
   force: boolean;
+  done_only?: boolean;
   batchSize: number;
 };
 
