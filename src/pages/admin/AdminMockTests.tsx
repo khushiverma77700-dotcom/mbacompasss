@@ -99,7 +99,14 @@ const AdminMockTests = () => {
   const readinessFilter = filters.readiness;
   const sectionFilter = filters.section;
   const topicFilter = filters.topic;
-  const setCategoryFilter = (v: string) => { setFilter("category", v); setFilter("section", "all"); setFilter("topic", "all"); };
+  const setCategoryFilter = (v: string) => {
+    setFilter("category", v);
+    setFilter("section", "all");
+    setFilter("topic", "all");
+    if (v !== "sectional" && v !== "topic" && v !== "topic_wise") {
+      setFilter("exam", "all");
+    }
+  };
   const setExamFilter = (v: string) => { setFilter("exam", v); setFilter("section", "all"); setFilter("topic", "all"); };
   const setDifficultyFilter = (v: string) => setFilter("difficulty", v);
   const setReadinessFilter = (v: string) => setFilter("readiness", v);
