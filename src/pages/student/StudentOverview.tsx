@@ -1254,7 +1254,7 @@ function ExamCountdownStrip({ exams }: { exams: any[] }) {
                   </div>
                 </div>
               </div>
-            </Link>
+            </div>
           );
         })}
       </div>
