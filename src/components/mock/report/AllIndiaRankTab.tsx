@@ -535,7 +535,7 @@ export default function AllIndiaRankTab({ attempts }: { attempts: Attempt[] }) {
             <h4 className="font-semibold text-sm">Mock-wise Analysis</h4>
             <Badge variant="secondary" className="text-[10px] ml-1">{filtered.length} mocks</Badge>
           </div>
-          {filtered.map((a) => <AttemptCard key={a.id} attempt={a} />)}
+          {filtered.map((a) => <AttemptCard key={`${a.id}:${mode}`} attempt={a} mode={mode} />)}
         </div>
       )}
 
