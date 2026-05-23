@@ -13,6 +13,7 @@ import { Plus, Pencil, Trash2, Search, Package, Loader2, ChevronDown, ChevronRig
 import { toast } from "sonner";
 import { FeatureMap } from "@/lib/courseFeatures";
 import { HighlightMap } from "@/lib/courseHighlights";
+import { MOCK_TOPIC_CATALOG } from "@/data/mockTopics";
 
 type Bundle = {
   id: string;
