@@ -134,6 +134,7 @@ export function useStudentPerformance(): StudentPerformanceData {
         { event: "*", schema: "public", table: "mock_attempts", filter: `user_id=eq.${user.id}` },
         () => {
           qc.invalidateQueries({ queryKey: QUERY_KEY(user.id) });
+          qc.invalidateQueries({ queryKey: QUERY_KEY_SECTIONAL(user.id) });
         }
       )
       .subscribe();
