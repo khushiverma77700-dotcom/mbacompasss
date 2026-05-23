@@ -622,3 +622,43 @@
   html, body { overscroll-behavior-y: none; }
   body { background: hsl(var(--background)); }
 }
+
+/* === Math (KaTeX) rendering safeguards ===
+   The `prose` typography plugin and other content wrappers can override
+   KaTeX font-family / line-height which breaks fractions, powers, and
+   square roots. Force KaTeX glyphs to keep their own metrics. */
+.math-content .katex,
+.math-content .katex * {
+  font-family: KaTeX_Main, "Times New Roman", serif;
+  line-height: 1.2;
+  white-space: normal;
+  text-indent: 0;
+}
+.math-content .katex-display {
+  margin: 0.75em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.25em 0;
+}
+.math-content .katex-display > .katex {
+  display: inline-block;
+  white-space: nowrap;
+}
+.math-content h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  margin: 0.9rem 0 0.35rem;
+  padding-bottom: 0.2rem;
+  border-bottom: 1px solid hsl(var(--border));
+}
+.math-content p { margin: 0.35rem 0; }
+.math-content ul, .math-content ol { margin: 0.4rem 0 0.4rem 1.2rem; }
+.math-content li { margin: 0.15rem 0; }
+.math-content code {
+  background: hsl(var(--muted));
+  padding: 0.05rem 0.3rem;
+  border-radius: 0.25rem;
+  font-size: 0.85em;
+}
+

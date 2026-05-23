@@ -295,7 +295,7 @@ export default function StudentDailyTestReportPage() {
                             {r && <span><Clock className="h-3 w-3 inline mr-1" />{fmtTime(r.time_spent_seconds)}</span>}
                             <span className="ml-auto">{r ? `${(Number(r.marks_awarded) || 0).toFixed(2)} marks` : "—"}</span>
                           </div>
-                          <div className="text-sm" dangerouslySetInnerHTML={{ __html: q.question_html }} />
+                          <MathContent html={q.question_html} className="text-sm" />
                         </div>
                       </div>
 
@@ -307,7 +307,7 @@ export default function StudentDailyTestReportPage() {
                             return (
                               <div key={o.id} className={`p-2 rounded border text-sm ${cls}`}>
                                 <span className="font-semibold mr-2">{o.option_label}.</span>
-                                <span dangerouslySetInnerHTML={{ __html: o.option_html }} />
+                                <MathContent html={o.option_html} className="inline text-sm" />
                                 {o.is_correct && <Badge variant="outline" className="ml-2 text-emerald-700 border-emerald-300">Correct</Badge>}
                                 {isPick && !o.is_correct && <Badge variant="outline" className="ml-2 text-rose-700 border-rose-300">Your answer</Badge>}
                               </div>
