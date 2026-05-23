@@ -154,12 +154,49 @@ export default function AdminMockBundles() {
       if (selectionFilter === "selected" && !sel) return false;
       if (selectionFilter === "unselected" && sel) return false;
       if (mockSearch && !m.name.toLowerCase().includes(mockSearch.toLowerCase())) return false;
+      if (sectionFilter !== "all" && sectionCodeOf(m) !== sectionFilter) return false;
+      if (topicFilter !== "all" && (m.topic || "") !== topicFilter) return false;
       return true;
     });
-  }, [allMocks, examFilter, typeFilter, statusFilter, selectionFilter, mockSearch, editingItems]);
+  }, [allMocks, examFilter, typeFilter, statusFilter, selectionFilter, mockSearch, editingItems, sectionFilter, topicFilter]);
+
+  const showAdvancedFilters = typeFilter === "sectional" || typeFilter === "topic_wise";
+  const showTopicFilter = typeFilter === "topic_wise";
+
+  const sectionOptions = useMemo(() => {
+    const codes = new Set<string>();
+    if (examFilter !== "all") {
+      Object.keys(MOCK_TOPIC_CATALOG[examFilter] ?? {}).forEach((c) => codes.add(c));
+    } else {
+      Object.values(MOCK_TOPIC_CATALOG).forEach((sec) => Object.keys(sec).forEach((c) => codes.add(c)));
+    }
+    allMocks
+      .filter((m) => kindOf(m) === typeFilter && (examFilter === "all" || m.exam_code === examFilter))
+      .forEach((m) => { const c = sectionCodeOf(m); if (c) codes.add(c); });
+    return Array.from(codes).sort();
+  }, [allMocks, examFilter, typeFilter]);
+
+  const topicOptions = useMemo(() => {
+    const topics = new Set<string>();
+    const exams = examFilter !== "all" ? [examFilter] : Object.keys(MOCK_TOPIC_CATALOG);
+    exams.forEach((ex) => {
+      const secMap = MOCK_TOPIC_CATALOG[ex] ?? {};
+      if (sectionFilter !== "all") {
+        (secMap[sectionFilter] ?? []).forEach((t) => topics.add(t));
+      } else {
+        Object.values(secMap).forEach((list) => list.forEach((t) => topics.add(t)));
+      }
+    });
+    allMocks
+      .filter((m) => kindOf(m) === "topic_wise" && (examFilter === "all" || m.exam_code === examFilter))
+      .filter((m) => sectionFilter === "all" || sectionCodeOf(m) === sectionFilter)
+      .forEach((m) => { if (m.topic) topics.add(m.topic); });
+    return Array.from(topics).sort();
+  }, [allMocks, examFilter, sectionFilter]);
 
   const clearFilters = () => {
     setMockSearch(""); setExamFilter("all"); setTypeFilter("full_length"); setStatusFilter("all"); setSelectionFilter("all");
+    setSectionFilter("all"); setTopicFilter("all");
   };
 
 
