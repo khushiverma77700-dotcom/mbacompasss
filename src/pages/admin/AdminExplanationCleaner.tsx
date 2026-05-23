@@ -320,7 +320,7 @@ export default function AdminExplanationCleaner() {
           {scope === "question" && (
             <div>
               <Label>Question ID (uuid)</Label>
-              <Input value={questionId} onChange={(e) => setQuestionId(e.target.value.trim())} placeholder="e.g. 9f3c…" disabled={rs.running} />
+              <Input value={questionId} onChange={(e) => setQuestionId(e.target.value.trim())} placeholder="e.g. 9f3c…" disabled={rs.running || rs.paused} />
             </div>
           )}
 
