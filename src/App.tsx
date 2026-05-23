@@ -729,6 +729,7 @@ const App = () => (
               <Route path="mock-tests" element={<LazyPage><AdminMockTests /></LazyPage>} />
               <Route path="mock-tests/:testId/builder" element={<LazyPage><AdminMockBuilder /></LazyPage>} />
               <Route path="bulk-mock-generation" element={<LazyPage><AdminBulkMockGeneration /></LazyPage>} />
+              <Route path="explanation-cleaner" element={<LazyPage><AdminExplanationCleaner /></LazyPage>} />
               <Route path="mock-bundles" element={<LazyPage><AdminMockBundles /></LazyPage>} />
               <Route path="mock-orders" element={<LazyPage><AdminMockOrders /></LazyPage>} />
               <Route path="mocks-landing" element={<LazyPage><AdminMocksLanding /></LazyPage>} />
