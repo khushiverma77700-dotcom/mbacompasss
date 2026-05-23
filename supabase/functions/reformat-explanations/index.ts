@@ -22,6 +22,7 @@ Output rules (NON-NEGOTIABLE):
    <h4>Why this works</h4><p>One simple line only when useful.</p>
 - Block math ($$...$$) MUST sit alone in its own <p>. Never sandwich $$...$$ between words in a sentence.
 - Use inline $...$ for variables and small expressions inside sentences.
+- Do not wrap plain numbers in LaTeX commands like \text{28}; write normal numbers unless a real formula is needed.
 - Use <strong> to highlight final numeric results.
 - Indian English, no emojis, no "Therefore the answer is" wall-of-text, no repeated "First/Next/Given" filler.
 - Do not output long raw-looking LaTeX paragraphs. Prefer: one short sentence, one formula line, one result sentence.
