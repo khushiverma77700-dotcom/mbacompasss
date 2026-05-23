@@ -128,21 +128,24 @@ export default function AdminExplanationCleaner() {
   const [diffOpen, setDiffOpen] = useState(false);
   const [diffLoading, setDiffLoading] = useState(false);
   const [diffRecleaning, setDiffRecleaning] = useState(false);
-  const [diffRow, setDiffRow] = useState<{ id: string; before: string | null; after: string | null } | null>(null);
+  const [diffRow, setDiffRow] = useState<{ id: string; before: string | null; after: string | null; hasOriginal: boolean } | null>(null);
 
   const loadDiffRow = async (id: string) => {
     setDiffLoading(true);
-    setDiffRow({ id, before: null, after: null });
+    setDiffRow({ id, before: null, after: null, hasOriginal: false });
     const { data, error } = await supabase
       .from("mock_questions")
       .select("id, explanation_html, explanation_html_original")
       .eq("id", id)
       .maybeSingle();
     if (error) toast.error(error.message);
+    const original = (data as any)?.explanation_html_original ?? null;
+    const current = (data as any)?.explanation_html ?? null;
     setDiffRow({
       id,
-      before: (data as any)?.explanation_html_original ?? null,
-      after: (data as any)?.explanation_html ?? null,
+      before: original || current,
+      after: current,
+      hasOriginal: Boolean(original),
     });
     setDiffLoading(false);
   };
