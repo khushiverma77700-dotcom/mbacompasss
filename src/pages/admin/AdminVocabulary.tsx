@@ -77,7 +77,7 @@ export default function AdminVocabulary() {
     setBulkJob(null);
     const { data, error } = await supabase.functions.invoke("vocab-bulk-generate", {
       body: {
-        count: Math.max(1, Math.min(2000, Number(bulkCount) || 100)),
+        count: Math.max(1, Math.min(5000, Number(bulkCount) || 100)),
         category: bulkCategory === "any" ? null : bulkCategory,
         difficulty: bulkDifficulty === "any" ? null : bulkDifficulty,
       },
