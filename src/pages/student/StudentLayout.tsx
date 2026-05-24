@@ -478,6 +478,7 @@ function SidebarContent() {
     <nav className="w-full p-3 space-y-0.5">
       {overview && renderRow(overview)}
       {updates && renderRow(updates)}
+      {dayPlanner && renderRow(dayPlanner)}
 
       {/* My Mocks — subtle highlight so students immediately recognise it as the primary section */}
       <div
