@@ -10,8 +10,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { EXAMS, DIFFICULTIES, getExam } from "@/data/personalizedExams";
-import { Sparkles, Timer, ListChecks, TrendingUp, Lock, RefreshCcw } from "lucide-react";
+import { Sparkles, Timer, ListChecks, TrendingUp, Lock, RefreshCcw, PlayCircle } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import PersonalizedHubGuide from "@/components/student/PersonalizedHubGuide";
 
 const QUESTION_OPTIONS = [5, 10, 15, 20, 25, 30, 40, 50];
 
