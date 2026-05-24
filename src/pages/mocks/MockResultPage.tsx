@@ -18,7 +18,7 @@ import DifficultyAnalysis, { DiffRow } from "@/components/mock/report/Difficulty
 import PeerBenchmark from "@/components/mock/report/PeerBenchmark";
 import StrengthsWeaknesses, { TopicRow } from "@/components/mock/report/StrengthsWeaknesses";
 import ProgressTrend, { TrendPoint } from "@/components/mock/report/ProgressTrend";
-import AIAnalysisPanel from "@/components/mock/report/AIAnalysisPanel";
+
 import { isStudentMode, mockLeaderboardPath, mockReviewPath, studentBackToMocksPath } from "@/lib/studentModeNav";
 
 export default function MockResultPage() {
@@ -420,11 +420,6 @@ export default function MockResultPage() {
           {/* 10. Progress */}
           <Section title="10. Progress Tracking">
             <ProgressTrend points={trendPoints} />
-          </Section>
-
-          {/* AI Analysis (manual) */}
-          <Section title="AI Deep Analysis (Optional)">
-            <AIAnalysisPanel attemptId={attempt.id} />
           </Section>
 
           <div className="text-center text-xs text-muted-foreground pt-4 border-t">
