@@ -142,7 +142,8 @@ LaTeX rules (strict — non-negotiable):
 - Use \\sqrt{x} or \\sqrt[n]{x} for roots. Never use "sqrt(x)" or "√".
 - Use ^{} and _{} for powers and subscripts. Use \\cdot for multiplication (not "*").
 - Use \\sum_{i=1}^{n}, \\prod, \\int, \\log_{b}, \\binom{n}{r}, \\pi, \\theta, \\Delta, \\Rightarrow as needed.
-- NEVER wrap with $ or $$.
+- NEVER wrap any math with $, $$, \\( \\), or \\[ \\] in any field. Store clean LaTeX only.
+- Use LaTeX symbols in prose too: write S_{n}, \\mathbb{N}, \\in, \\leq, \\geq, \\ldots instead of Unicode/Word-style math.
 - expression_latex must render cleanly in KaTeX displayMode.
 
 ANTI-DUPLICATION (CRITICAL):
@@ -165,7 +166,7 @@ Importance 4-5 only for high-frequency formulas.
 
 DEPTH REQUIREMENT: explanation field MUST be at least 400 characters covering every variable's meaning, units, intuition, geometric/algebraic interpretation, and edge cases. notes field MUST be at least 300 characters covering when/how/prerequisites/related formulas.
 
-Return strictly via the emit_formulas tool. Reject your own output mentally and retry if any LaTeX uses "/" for fractions, "sqrt(" for roots, or "**" for powers, or if explanation/notes are shallow.`;
+Return strictly via the emit_formulas tool. Reject your own output mentally and retry if any LaTeX uses "/" for fractions, "sqrt(" for roots, "**" for powers, Unicode math symbols, or math delimiters like \\(S_n\\). Do not create broad/basic duplicates already present in the library.`;
 
       const tool = {
         type: "function",
