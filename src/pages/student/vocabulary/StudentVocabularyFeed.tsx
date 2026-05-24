@@ -399,7 +399,7 @@ export default function StudentVocabularyFeed() {
 
       {/* WORD OF THE DAY — Featured */}
       {wotd && (
-        <section className="relative overflow-hidden rounded-2xl border-2 border-amber-200/80 bg-gradient-to-br from-amber-50 via-orange-50/60 to-rose-50/40 p-6 md:p-8">
+        <section className="relative overflow-hidden rounded-2xl border-2 border-amber-200/80 bg-gradient-to-br from-amber-50 via-orange-50/60 to-rose-50/40 p-4 sm:p-6 md:p-8">
           <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-amber-200/40 blur-3xl" />
           <div className="relative">
             <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -419,8 +419,8 @@ export default function StudentVocabularyFeed() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
-              <div>
-                <h2 className="font-heading text-4xl font-bold leading-none tracking-tight text-slate-900 md:text-5xl">
+              <div className="min-w-0">
+                <h2 className="font-heading text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl md:text-5xl break-words">
                   {wotd.word}
                 </h2>
                 {wotd.part_of_speech && (
@@ -430,16 +430,16 @@ export default function StudentVocabularyFeed() {
                 {/* Pronunciation - bigger, tap-to-play */}
                 <button
                   onClick={() => speak(wotd.word)}
-                  className="group mt-4 inline-flex items-center gap-3 rounded-2xl border-2 border-amber-300 bg-white/80 px-4 py-3 shadow-sm transition-all hover:scale-[1.02] hover:border-amber-400 hover:shadow-md active:scale-95"
+                  className="group mt-4 inline-flex max-w-full items-center gap-3 rounded-2xl border-2 border-amber-300 bg-white/80 px-3 py-2.5 shadow-sm transition-all hover:scale-[1.02] hover:border-amber-400 hover:shadow-md active:scale-95 sm:px-4 sm:py-3"
                   aria-label={`Play pronunciation of ${wotd.word}`}
                 >
-                  <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow group-hover:from-amber-600 group-hover:to-orange-600">
-                    <Volume2 className="h-5 w-5" />
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow sm:h-10 sm:w-10">
+                    <Volume2 className="h-4 w-4 sm:h-5 sm:w-5" />
                   </span>
-                  <span className="flex flex-col text-left">
+                  <span className="flex min-w-0 flex-col text-left">
                     <span className="flex flex-wrap gap-1">
                       {(wotd.pronunciation_syllables || wotd.word).split(/[-·•\s]+/).filter(Boolean).map((p: string, i: number) => (
-                        <span key={i} className="rounded border border-amber-200 bg-amber-50 px-2 py-0.5 font-mono text-sm font-semibold text-amber-900">
+                        <span key={i} className="rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 font-mono text-xs font-semibold text-amber-900 sm:px-2 sm:text-sm">
                           {p}
                         </span>
                       ))}
@@ -449,7 +449,7 @@ export default function StudentVocabularyFeed() {
                 </button>
 
                 <div className="mt-4 space-y-1.5">
-                  <p className="text-base leading-relaxed text-slate-800">{wotd.meaning}</p>
+                  <p className="text-[15px] leading-relaxed text-slate-800 sm:text-base">{wotd.meaning}</p>
                   {wotd.meaning_hindi && (
                     <p className="text-sm text-slate-600">
                       <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">हिन्दी · </span>
@@ -459,12 +459,12 @@ export default function StudentVocabularyFeed() {
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex w-full gap-2 md:w-auto">
                 <Button
                   variant={bookmarkIds.has(wotd.id) ? "default" : "outline"}
                   onClick={() => toggleBookmark(wotd.id)}
                   disabled={busy === wotd.id}
-                  className="gap-1.5"
+                  className="flex-1 gap-1.5 md:flex-none"
                 >
                   <Bookmark className={`h-4 w-4 ${bookmarkIds.has(wotd.id) ? "fill-current" : ""}`} />
                   {bookmarkIds.has(wotd.id) ? "Saved" : "Save"}
@@ -473,12 +473,12 @@ export default function StudentVocabularyFeed() {
                   <Button
                     onClick={() => markRead(wotd.id)}
                     disabled={busy === wotd.id}
-                    className="gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95"
+                    className="flex-1 gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 md:flex-none"
                   >
                     <CheckCircle2 className="h-4 w-4" /> Mark Read
                   </Button>
                 ) : (
-                  <Button variant="secondary" disabled className="gap-1.5">
+                  <Button variant="secondary" disabled className="flex-1 gap-1.5 md:flex-none">
                     <CheckCircle2 className="h-4 w-4" /> Read
                   </Button>
                 )}
