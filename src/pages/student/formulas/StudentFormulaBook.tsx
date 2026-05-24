@@ -474,7 +474,7 @@ export default function StudentFormulaBook() {
                     <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                       <BookOpen className="h-3 w-3" /> Explanation
                     </div>
-                    <p className="text-[0.92rem] leading-7 text-slate-700">{f.explanation}</p>
+                    <MathInlineText as="p" text={f.explanation} className="text-[0.92rem] leading-7 text-slate-700" />
                   </div>
 
                   {/* When to Use */}
