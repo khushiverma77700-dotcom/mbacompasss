@@ -397,6 +397,9 @@ function SidebarContent() {
         to={item.to}
         end={item.end}
         onClick={() => badge > 0 && markSeen(item.to)}
+        onMouseEnter={() => preloadStudentRoute(item.to)}
+        onTouchStart={() => preloadStudentRoute(item.to)}
+        onFocus={() => preloadStudentRoute(item.to)}
         className={({ isActive }) =>
           cn(
             "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors relative",
