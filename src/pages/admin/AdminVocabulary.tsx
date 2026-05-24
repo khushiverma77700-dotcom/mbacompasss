@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash2, Pencil, Sparkles, Upload, BookOpen, Calendar } from "lucide-react";
+import { Loader2, Plus, Trash2, Pencil, Sparkles, Upload, BookOpen, Calendar, Wand2 } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 
 const CATEGORIES = ["finance","marketing","consulting","hr","economics","corp_comm","general"];
