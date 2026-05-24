@@ -25,6 +25,7 @@ export default function StudentAttempts() {
 
   const [q, setQ] = useState("");
   const [exam, setExam] = useState<string>("all");
+  const [type, setType] = useState<string>("all");
   const [status, setStatus] = useState<string>("submitted");
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
