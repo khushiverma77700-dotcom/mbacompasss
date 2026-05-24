@@ -293,58 +293,42 @@ export default function StudentDailyTest() {
         </Card>
       </div>
 
-      {/* History */}
+      {/* History with filters */}
       <Card className="p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold flex items-center gap-2"><Trophy className="h-4 w-4 text-sky-600" /> Last 30 days</h2>
-          <span className="text-xs text-muted-foreground">{history.filter(h => h.progress?.completed_at).length} of {history.length} done</span>
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <h2 className="font-semibold flex items-center gap-2"><Trophy className="h-4 w-4 text-sky-600" /> Daily Test Schedule</h2>
+          <span className="text-xs text-muted-foreground">{completed.length} completed · {missed.length} missed · {upcoming.length} upcoming</span>
         </div>
-        {history.length === 0 ? (
-          <div className="text-sm text-muted-foreground">No daily tests have been scheduled yet.</div>
-        ) : (
-          <div className="divide-y">
-            {history.map(h => (
-              <div key={h.assigned_date} className="py-3 flex items-center justify-between gap-3">
-                <div className="min-w-0 flex items-center gap-3">
-                  <div className={`h-9 w-9 rounded-lg grid place-items-center text-xs font-bold ${h.progress?.completed_at ? "bg-emerald-100 text-emerald-700" : "bg-sky-50 text-sky-700"}`}>
-                    {new Date(h.assigned_date).getDate()}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium truncate">{h.title || h.test?.name}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(h.assigned_date).toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" })}
-                      {h.test?.total_duration_minutes && <> · {h.test.total_duration_minutes} min</>}
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {h.progress?.completed_at ? (
-                    <>
-                      <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 border-emerald-100">Completed</Badge>
-                      {h.progress.attempt_id && (
-                        <Link to={`/student/daily-test/report/${h.progress.attempt_id}`}>
-                          <Button size="sm" variant="outline">View report</Button>
-                        </Link>
-                      )}
-                    </>
-                  ) : (
-                    h.test?.slug && (
-                      dailyEnabled ? (
-                        <Link to={`/mocks/${h.test.slug}`}>
-                          <Button size="sm" variant="outline">Attempt</Button>
-                        </Link>
-                      ) : (
-                        <Button size="sm" variant="outline" onClick={() => setUpgradeOpen(true)} className="gap-1">
-                          <Lock className="h-3 w-3" /> Locked
-                        </Button>
-                      )
-                    )
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+
+        <Tabs defaultValue="missed" className="w-full">
+          <TabsList className="grid grid-cols-4 w-full max-w-2xl">
+            <TabsTrigger value="missed" className="gap-1.5">
+              <AlertCircle className="h-3.5 w-3.5" /> Missed
+              {missed.length > 0 && <Badge variant="secondary" className="ml-1 bg-rose-100 text-rose-700 border-0 h-4 px-1.5 text-[10px]">{missed.length}</Badge>}
+            </TabsTrigger>
+            <TabsTrigger value="upcoming" className="gap-1.5">
+              <CalendarClock className="h-3.5 w-3.5" /> Upcoming
+              {upcoming.length > 0 && <Badge variant="secondary" className="ml-1 bg-sky-100 text-sky-700 border-0 h-4 px-1.5 text-[10px]">{upcoming.length}</Badge>}
+            </TabsTrigger>
+            <TabsTrigger value="completed" className="gap-1.5">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Done
+            </TabsTrigger>
+            <TabsTrigger value="all">All</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="missed" className="mt-4">
+            <HistoryList rows={missed} emptyText="No missed tests. Great job staying consistent!" dailyEnabled={dailyEnabled} setUpgradeOpen={setUpgradeOpen} />
+          </TabsContent>
+          <TabsContent value="upcoming" className="mt-4">
+            <HistoryList rows={upcoming} emptyText="No upcoming tests scheduled yet." dailyEnabled={dailyEnabled} setUpgradeOpen={setUpgradeOpen} isUpcoming />
+          </TabsContent>
+          <TabsContent value="completed" className="mt-4">
+            <HistoryList rows={completed} emptyText="No completed tests yet." dailyEnabled={dailyEnabled} setUpgradeOpen={setUpgradeOpen} />
+          </TabsContent>
+          <TabsContent value="all" className="mt-4">
+            <HistoryList rows={history} emptyText="No daily tests have been scheduled yet." dailyEnabled={dailyEnabled} setUpgradeOpen={setUpgradeOpen} />
+          </TabsContent>
+        </Tabs>
       </Card>
 
       <UpgradeDialog open={upgradeOpen} onOpenChange={setUpgradeOpen} featureLabel="Daily Tests" />
