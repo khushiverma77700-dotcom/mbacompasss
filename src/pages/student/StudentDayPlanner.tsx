@@ -267,25 +267,70 @@ export default function StudentDayPlanner() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <CalendarDays className="h-6 w-6 text-sky-600" /> My Day Planner
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {fmtFullDate(today)} · plan, track and stay consistent.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Link to="/student/day-planner/performance">
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <TrendingUp className="h-4 w-4" /> Performance
+      {/* Premium Header */}
+      <div className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-sky-50 via-white to-blue-50 shadow-sm">
+        <div className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full bg-sky-200/40 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-blue-200/30 blur-3xl" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(14,165,233,0.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(14,165,233,0.06)_1px,transparent_1px)] bg-[size:32px_32px]" />
+
+        <div className="relative p-5 sm:p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <div className="hidden sm:flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/30 ring-4 ring-white">
+              <CalendarDays className="h-7 w-7" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-sky-700 to-blue-600 bg-clip-text text-transparent">
+                  My Day Planner
+                </h1>
+                <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100 gap-1">
+                  <Zap className="h-3 w-3" /> Smart
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1.5">
+                {fmtFullDate(today)} · plan, track and stay consistent.
+              </p>
+              <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                <span className="inline-flex items-center gap-1"><Flame className="h-3.5 w-3.5 text-orange-500" /> {rewards?.streak_days ?? 0}-day streak</span>
+                <span className="text-sky-300">•</span>
+                <span className="inline-flex items-center gap-1"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> {completedToday}/{todayTasks.length} done today</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowGuide(true)}
+              className="gap-1.5 border-sky-200 text-sky-700 hover:bg-sky-50"
+            >
+              <HelpCircle className="h-4 w-4" /> How it works
             </Button>
-          </Link>
-          <Button onClick={() => { setEditing(null); setOpenCreate(true); }} className="bg-sky-600 hover:bg-sky-700">
-            <Plus className="h-4 w-4 mr-1" /> Add Task
-          </Button>
+
+            <Link to="/student/day-planner/performance">
+              <Button
+                size="lg"
+                className="relative gap-2 h-11 px-5 text-sm font-semibold text-white bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 hover:from-amber-600 hover:via-orange-600 hover:to-rose-600 shadow-lg shadow-orange-500/30 ring-1 ring-white/40"
+              >
+                <BarChart3 className="h-5 w-5" />
+                Planner Performance
+                <ArrowRight className="h-4 w-4" />
+                <span className="absolute -top-1.5 -right-1.5 flex h-3 w-3">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300 opacity-75" />
+                  <span className="relative inline-flex h-3 w-3 rounded-full bg-amber-400 ring-2 ring-white" />
+                </span>
+              </Button>
+            </Link>
+
+            <Button
+              size="lg"
+              onClick={() => { setEditing(null); setOpenCreate(true); }}
+              className="h-11 gap-1.5 bg-sky-600 hover:bg-sky-700 shadow-md shadow-sky-500/20"
+            >
+              <Plus className="h-5 w-5" /> Add Task
+            </Button>
+          </div>
         </div>
       </div>
 
