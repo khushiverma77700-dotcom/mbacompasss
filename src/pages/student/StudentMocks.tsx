@@ -192,27 +192,26 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
   const sectionChips = useMemo(() => {
     const s = new Set<string>();
     Object.values(tests).forEach((t) => {
-      if (getKind(t) === "topic_wise" && matchesExam(t)) {
+      if (getKind(t) === "topic_wise") {
         const sec = (t.category || "").trim().toUpperCase();
         if (sec) s.add(sec);
       }
     });
     return Array.from(s).sort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tests, examFilter]);
+  }, [tests]);
 
   // Distinct topics across all topic-wise tests (filtered by section if set)
   const topicChips = useMemo(() => {
     const s = new Set<string>();
     Object.values(tests).forEach((t) => {
       if (getKind(t) !== "topic_wise") return;
-      if (!matchesExam(t)) return;
       if (sectionFilter !== "All" && (t.category || "").trim().toUpperCase() !== sectionFilter) return;
       if (t.topic && t.topic.trim()) s.add(t.topic.trim());
     });
     return Array.from(s).sort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tests, examFilter, sectionFilter]);
+  }, [tests, sectionFilter]);
 
   // Reset topic when section changes and current topic isn't available
   useEffect(() => {
@@ -245,7 +244,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
 
     const list = Object.values(tests)
       .filter((t) => getKind(t) === typeKey)
-      .filter(matchesExam)
+      .filter((t) => typeKey === "topic_wise" || matchesExam(t))
       .filter(matchesQuery)
       .filter((t) => {
         if (typeKey !== "topic_wise" || topicFilter === "All") return true;
@@ -374,19 +373,21 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
               className="pl-9 h-10 bg-white text-sm"
             />
           </div>
-          <div>
-            <Select value={examFilter} onValueChange={setExamFilter}>
-              <SelectTrigger className="h-10 bg-white text-sm">
-                <SelectValue placeholder="Select exam" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="All">All Exams</SelectItem>
-                {EXAM_FILTERS.map((f) => (
-                  <SelectItem key={f} value={f}>{f}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {fixedType !== "topic_wise" && (
+            <div>
+              <Select value={examFilter} onValueChange={setExamFilter}>
+                <SelectTrigger className="h-10 bg-white text-sm">
+                  <SelectValue placeholder="Select exam" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Exams</SelectItem>
+                  {EXAM_FILTERS.map((f) => (
+                    <SelectItem key={f} value={f}>{f}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           {fixedType === "attempted" && (
             <div>
               <Select value={attemptedTypeFilter} onValueChange={setAttemptedTypeFilter}>
@@ -413,7 +414,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
         ) : fixedType === "topic_wise" ? (
           <TopicWiseView
             items={buildBucket("topic_wise") as any}
-            allTopicWise={Object.values(tests).filter((t) => getKind(t) === "topic_wise" && matchesExam(t))}
+            allTopicWise={Object.values(tests).filter((t) => getKind(t) === "topic_wise")}
             attemptedByTest={attemptedByTest}
             enrolledTestIds={enrolledTestIds}
             sections={sectionChips}
@@ -422,7 +423,6 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
             topics={topicChips}
             topicFilter={topicFilter}
             onTopicChange={setTopicFilter}
-            examFilter={examFilter}
             onUpgrade={() => setUpgradeOpen(true)}
           />
         ) : (
@@ -484,7 +484,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
               ) : t.key === "topic_wise" ? (
                 <TopicWiseView
                   items={buildBucket("topic_wise") as any}
-                  allTopicWise={Object.values(tests).filter((tt) => getKind(tt) === "topic_wise" && matchesExam(tt))}
+                  allTopicWise={Object.values(tests).filter((tt) => getKind(tt) === "topic_wise")}
                   attemptedByTest={attemptedByTest}
                   enrolledTestIds={enrolledTestIds}
                   sections={sectionChips}
@@ -493,7 +493,6 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
                   topics={topicChips}
                   topicFilter={topicFilter}
                   onTopicChange={setTopicFilter}
-                  examFilter={examFilter}
                   onUpgrade={() => setUpgradeOpen(true)}
                 />
               ) : (
@@ -565,7 +564,7 @@ function TopicWiseView({
   items, allTopicWise, attemptedByTest, enrolledTestIds,
   sections, sectionFilter, onSectionChange,
   topics, topicFilter, onTopicChange,
-  examFilter, onUpgrade,
+  onUpgrade,
 }: {
   items: { test: Test; owned: boolean; inProgress: Attempt | null; latestSubmitted: Attempt | null }[];
   allTopicWise: Test[];
@@ -573,7 +572,7 @@ function TopicWiseView({
   enrolledTestIds: Set<string>;
   sections: string[]; sectionFilter: string; onSectionChange: (v: string) => void;
   topics: string[]; topicFilter: string; onTopicChange: (v: string) => void;
-  examFilter: string; onUpgrade: () => void;
+  onUpgrade: () => void;
 }) {
   // Summary across the current exam scope (ignore section/topic filter so it reflects total catalog)
   const summary = useMemo(() => {
@@ -671,7 +670,7 @@ function TopicWiseView({
             <Lock className="h-7 w-7 text-sky-600" />
           </div>
           <div className="font-semibold text-base">
-            No Topic-wise{examFilter !== "All" ? ` (${examFilter})` : ""} mocks yet
+            No Topic-wise mocks yet
           </div>
           <p className="text-sm text-muted-foreground mt-1 mb-4 max-w-sm mx-auto">
             Unlock these mocks by upgrading to a course bundle that includes them.
