@@ -14,6 +14,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { MathExpression } from "@/components/formulas/MathExpression";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Layers as LayersIcon, BookOpen, GraduationCap as GradIcon, Gauge, ListChecks, X } from "lucide-react";
 
 const EXAMS = ["CAT", "XAT", "NMAT", "SNAP", "CMAT", "IIFT", "MAT"];
 const DIFFS = [
@@ -44,6 +46,7 @@ export default function StudentFormulaBook() {
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const q = params.get("q") || "";
+  const section = params.get("section") || "all";
   const topic = params.get("topic") || "all";
   const exam = params.get("exam") || "all";
   const difficulty = params.get("difficulty") || "all";
@@ -79,6 +82,7 @@ export default function StudentFormulaBook() {
   const setFilter = (k: string, v: string) => {
     const p = new URLSearchParams(params);
     if (!v || v === "all") p.delete(k); else p.set(k, v);
+    if (k === "section") p.delete("topic"); // reset topic when section changes
     setParams(p);
   };
   const toggleFlag = (k: string) => {
@@ -87,10 +91,21 @@ export default function StudentFormulaBook() {
     setParams(p);
   };
 
+  const sections = useMemo(() => topics.filter((t) => !t.parent_slug), [topics]);
+  const topicsInSection = useMemo(
+    () => (section === "all" ? [] : topics.filter((t) => t.parent_slug === section)),
+    [topics, section],
+  );
+  const topicSlugsInSection = useMemo(() => new Set(topicsInSection.map((t) => t.slug)), [topicsInSection]);
+
   // Instant smart filter
   const visible = useMemo(() => {
     const qLower = q.trim().toLowerCase();
     return formulas.filter((f) => {
+      if (section !== "all") {
+        // formula belongs to section if topic_slug == section or its topic has parent_slug == section
+        if (f.topic_slug !== section && !topicSlugsInSection.has(f.topic_slug)) return false;
+      }
       if (topic !== "all" && f.topic_slug !== topic) return false;
       if (exam !== "all" && !(f.exam_tags || []).includes(exam)) return false;
       if (difficulty !== "all" && f.difficulty !== difficulty) return false;
@@ -109,7 +124,7 @@ export default function StudentFormulaBook() {
       }
       return true;
     });
-  }, [formulas, q, topic, exam, difficulty, status, shortcutOnly, importantOnly, progress]);
+  }, [formulas, q, section, topic, exam, difficulty, status, shortcutOnly, importantOnly, progress, topicSlugsInSection]);
 
   // Suggestions while typing
   const suggestions = useMemo(() => {
@@ -276,31 +291,83 @@ export default function StudentFormulaBook() {
             )}
           </div>
 
-          <div className="mt-4 space-y-3">
-            <FilterRow label="Topic">
-              <Chip active={topic === "all"} onClick={() => setFilter("topic", "all")}>All</Chip>
-              {topics.filter((t) => !t.parent_slug).map((t) => (
-                <Chip key={t.slug} active={topic === t.slug} onClick={() => setFilter("topic", t.slug)}>{t.name}</Chip>
-              ))}
-            </FilterRow>
-            <FilterRow label="Exam">
-              <Chip active={exam === "all"} onClick={() => setFilter("exam", "all")}>All</Chip>
-              {EXAMS.map((e) => (
-                <Chip key={e} active={exam === e} onClick={() => setFilter("exam", e)}>{e}</Chip>
-              ))}
-            </FilterRow>
-            <FilterRow label="Difficulty">
-              {DIFFS.map((d) => (
-                <Chip key={d.k} active={difficulty === d.k} onClick={() => setFilter("difficulty", d.k)}>{d.l}</Chip>
-              ))}
-            </FilterRow>
-            <FilterRow label="Status">
-              {STATUSES.map((s) => (
-                <Chip key={s.k} active={status === s.k} onClick={() => setFilter("status", s.k)}>{s.l}</Chip>
-              ))}
+          {/* PROMINENT FILTER BAR */}
+          <div className="mt-5 rounded-2xl border-2 border-sky-200 bg-gradient-to-br from-sky-50 via-white to-blue-50/60 p-4 shadow-sm">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div className="inline-flex items-center gap-2">
+                <div className="rounded-lg bg-gradient-to-br from-sky-600 to-blue-600 p-1.5 text-white shadow">
+                  <Filter className="h-3.5 w-3.5" />
+                </div>
+                <div>
+                  <div className="font-heading text-sm font-bold text-slate-900">Smart Filters</div>
+                  <div className="text-[10px] uppercase tracking-wider text-slate-500">Pick a section, then drill into topics</div>
+                </div>
+              </div>
+              {(section !== "all" || topic !== "all" || exam !== "all" || difficulty !== "all" || status !== "all" || shortcutOnly || importantOnly) && (
+                <button
+                  onClick={() => setParams(new URLSearchParams(q ? { q } : {}))}
+                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:border-rose-300 hover:text-rose-600"
+                >
+                  <X className="h-3 w-3" /> Clear all
+                </button>
+              )}
+            </div>
+
+            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
+              {/* SECTION — primary */}
+              <DropdownField
+                primary
+                icon={<LayersIcon className="h-3.5 w-3.5" />}
+                label="Section"
+                value={section}
+                onChange={(v) => setFilter("section", v)}
+                placeholder="All sections"
+                options={[{ k: "all", l: "All sections" }, ...sections.map((s) => ({ k: s.slug, l: s.name }))]}
+              />
+              {/* TOPIC — dependent */}
+              <DropdownField
+                icon={<BookOpen className="h-3.5 w-3.5" />}
+                label="Topic"
+                value={topic}
+                onChange={(v) => setFilter("topic", v)}
+                placeholder={section === "all" ? "Pick a section first" : "All topics"}
+                disabled={section === "all" || topicsInSection.length === 0}
+                options={[
+                  { k: "all", l: section === "all" ? "All topics" : "All topics in section" },
+                  ...topicsInSection.map((t) => ({ k: t.slug, l: t.name })),
+                ]}
+              />
+              <DropdownField
+                icon={<GradIcon className="h-3.5 w-3.5" />}
+                label="Exam"
+                value={exam}
+                onChange={(v) => setFilter("exam", v)}
+                placeholder="All exams"
+                options={[{ k: "all", l: "All exams" }, ...EXAMS.map((e) => ({ k: e, l: e }))]}
+              />
+              <DropdownField
+                icon={<Gauge className="h-3.5 w-3.5" />}
+                label="Difficulty"
+                value={difficulty}
+                onChange={(v) => setFilter("difficulty", v)}
+                placeholder="All levels"
+                options={DIFFS.map((d) => ({ k: d.k, l: d.l }))}
+              />
+              <DropdownField
+                icon={<ListChecks className="h-3.5 w-3.5" />}
+                label="Status"
+                value={status}
+                onChange={(v) => setFilter("status", v)}
+                placeholder="All"
+                options={STATUSES.map((s) => ({ k: s.k, l: s.l }))}
+              />
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-sky-100 pt-3">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Quick toggles:</span>
               <Chip active={importantOnly} onClick={() => toggleFlag("important")}>★ High weightage</Chip>
               <Chip active={shortcutOnly} onClick={() => toggleFlag("shortcut")}>⚡ Shortcut</Chip>
-            </FilterRow>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -491,6 +558,52 @@ function Pill({ icon, label, value, tone }: { icon: React.ReactNode; label: stri
     <div className={cn("relative overflow-hidden rounded-xl border border-white/60 bg-gradient-to-br p-3 backdrop-blur", TONE[tone])}>
       <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider opacity-90">{icon} {label}</div>
       <div className="mt-1 font-heading text-xl font-bold text-slate-900">{value}</div>
+    </div>
+  );
+}
+
+function DropdownField({
+  label, value, onChange, options, placeholder, icon, primary, disabled,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: { k: string; l: string }[];
+  placeholder?: string;
+  icon?: React.ReactNode;
+  primary?: boolean;
+  disabled?: boolean;
+}) {
+  const active = value && value !== "all";
+  return (
+    <div>
+      <div className="mb-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+        <span className={cn("inline-flex items-center justify-center rounded-md p-0.5", primary ? "bg-sky-600 text-white" : "bg-slate-200 text-slate-600")}>
+          {icon}
+        </span>
+        {label}
+        {primary && <span className="ml-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-amber-700">Start here</span>}
+      </div>
+      <Select value={value} onValueChange={onChange} disabled={disabled}>
+        <SelectTrigger
+          className={cn(
+            "h-10 w-full border-2 bg-white text-sm font-semibold transition-all",
+            primary
+              ? "border-sky-400 ring-2 ring-sky-100 hover:border-sky-500"
+              : active
+                ? "border-sky-300 text-sky-700"
+                : "border-slate-200 hover:border-sky-300",
+            disabled && "opacity-60",
+          )}
+        >
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent className="max-h-72">
+          {options.map((o) => (
+            <SelectItem key={o.k} value={o.k} className="text-sm">{o.l}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
