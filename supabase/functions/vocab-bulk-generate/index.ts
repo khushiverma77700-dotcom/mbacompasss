@@ -154,30 +154,53 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     consecutiveEmpty = 0;
 
     const rows: any[] = [];
+    let rejectedIncomplete = 0;
     for (const w of batch) {
-      if (!w?.word || !w?.meaning) continue;
+      if (!w?.word || !w?.meaning) { rejectedIncomplete++; continue; }
       const slug = slugify(w.word);
       if (!slug || seenSlugs.has(slug)) { duplicates++; continue; }
+
+      // STRICT: every required field must be a non-empty string / non-empty array.
+      const hasText = (v: any) => typeof v === "string" && v.trim().length > 1;
+      const hasArr = (v: any) => Array.isArray(v) && v.filter((x) => typeof x === "string" && x.trim()).length > 0;
+      const complete =
+        hasText(w.meaning) &&
+        hasText(w.meaning_hindi) &&
+        /[\u0900-\u097F]/.test(w.meaning_hindi) && // must contain Devanagari
+        hasText(w.hinglish_meaning) &&
+        hasText(w.pronunciation_syllables) &&
+        w.pronunciation_syllables.includes("-") && // must be hyphen-broken
+        hasText(w.example_business) &&
+        hasText(w.example_interview) &&
+        hasText(w.example_email) &&
+        hasArr(w.synonyms) &&
+        hasArr(w.antonyms) &&
+        hasText(w.part_of_speech);
+      if (!complete) { rejectedIncomplete++; continue; }
+
       seenSlugs.add(slug);
       rows.push({
         word: w.word,
         slug,
-        part_of_speech: w.part_of_speech || null,
+        part_of_speech: w.part_of_speech,
         meaning: w.meaning,
-        meaning_hindi: w.meaning_hindi || null,
-        hinglish_meaning: w.hinglish_meaning || null,
-        pronunciation: w.pronunciation || null,
-        pronunciation_syllables: w.pronunciation_syllables || null,
-        synonyms: Array.isArray(w.synonyms) ? w.synonyms : [],
-        antonyms: Array.isArray(w.antonyms) ? w.antonyms : [],
-        example_business: w.example_business || null,
-        example_interview: w.example_interview || null,
-        example_email: w.example_email || null,
+        meaning_hindi: w.meaning_hindi,
+        hinglish_meaning: w.hinglish_meaning,
+        pronunciation: w.pronunciation || w.pronunciation_syllables,
+        pronunciation_syllables: w.pronunciation_syllables,
+        synonyms: w.synonyms,
+        antonyms: w.antonyms,
+        example_business: w.example_business,
+        example_interview: w.example_interview,
+        example_email: w.example_email,
         exam_appearances: Array.isArray(w.exam_appearances) ? w.exam_appearances : [],
         category: CATEGORIES.includes(w.category) ? w.category : (category || "general"),
         difficulty: DIFFICULTIES.includes(w.difficulty) ? w.difficulty : (difficulty || "intermediate"),
         source: "ai_bulk",
       });
+    }
+    if (rejectedIncomplete) {
+      console.log(`Rejected ${rejectedIncomplete} incomplete words in batch ${attempts}`);
     }
 
     if (rows.length) {
