@@ -235,7 +235,7 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     let count = Number(body.count || 100);
     if (!Number.isFinite(count) || count < 1) count = 100;
-    count = Math.min(count, 2000);
+    count = Math.min(count, 5000);
     const category = body.category && CATEGORIES.includes(body.category) ? body.category : null;
     const difficulty = body.difficulty && DIFFICULTIES.includes(body.difficulty) ? body.difficulty : null;
 
