@@ -197,8 +197,8 @@ export default function AdminFormulas() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-xs">Count (max 20 per run)</Label>
-                  <Input type="number" min={1} max={20} value={genCount} onChange={(e) => setGenCount(Math.min(20, Math.max(1, Number(e.target.value) || 1)))} />
+                  <Label className="text-xs">Count (max 100 per run — auto-batched in 10s)</Label>
+                  <Input type="number" min={1} max={100} value={genCount} onChange={(e) => setGenCount(Math.min(100, Math.max(1, Number(e.target.value) || 1)))} />
                 </div>
                 <div>
                   <Label className="text-xs">Default difficulty</Label>
@@ -263,19 +263,19 @@ export default function AdminFormulas() {
                         size="sm"
                         className="h-8 flex-1 gap-1 bg-gradient-to-r from-sky-600 to-blue-600 text-xs"
                         disabled={isBusy || genBusy}
-                        onClick={() => runAiBulk(t.slug, 10)}
+                        onClick={() => runAiBulk(t.slug, 100)}
                       >
                         {isBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-                        {isBusy ? "Generating…" : "Generate 10"}
+                        {isBusy ? "Generating…" : "Generate 100"}
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
                         className="h-8 gap-1 text-xs"
                         disabled={isBusy || genBusy}
-                        onClick={() => runAiBulk(t.slug, 5)}
+                        onClick={() => runAiBulk(t.slug, 25)}
                       >
-                        +5
+                        +25
                       </Button>
                       <Button
                         size="sm"
