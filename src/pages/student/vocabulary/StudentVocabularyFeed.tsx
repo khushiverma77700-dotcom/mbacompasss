@@ -14,29 +14,33 @@ import {
 import {
   CheckCircle2, Bookmark, Volume2, GraduationCap, BookOpen, Filter, Sparkles,
   ArrowUpRight, Target, Flame, Trophy, Crown, Zap, TrendingUp, PlusCircle, Settings2, Star,
+  Search, X, Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-const CATS = [
-  { k: "all", l: "All" },
-  { k: "finance", l: "Finance" },
-  { k: "marketing", l: "Marketing" },
-  { k: "consulting", l: "Consulting" },
-  { k: "hr", l: "HR" },
-  { k: "economics", l: "Economics" },
-  { k: "corp_comm", l: "Corp Comm" },
+// MBA exam-focused filters (CAT + OMETs)
+const EXAMS = [
+  { k: "all", l: "All Exams" },
+  { k: "CAT", l: "CAT" },
+  { k: "XAT", l: "XAT" },
+  { k: "NMAT", l: "NMAT" },
+  { k: "SNAP", l: "SNAP" },
+  { k: "IIFT", l: "IIFT" },
+  { k: "CMAT", l: "CMAT" },
+  { k: "MAT", l: "MAT" },
+  { k: "GDPI", l: "GDPI / WAT" },
 ];
 
 const LEVELS = [
   { k: "all", l: "All Levels" },
-  { k: "beginner", l: "Beginner" },
   { k: "intermediate", l: "Intermediate" },
-  { k: "cat", l: "CAT" },
-  { k: "gdpi", l: "GDPI" },
+  { k: "cat", l: "CAT Level" },
+  { k: "gdpi", l: "GDPI Level" },
 ];
 
 const TARGET_PRESETS = [3, 5, 10, 15, 20];
+
 
 export default function StudentVocabularyFeed() {
   const [params, setParams] = useSearchParams();
