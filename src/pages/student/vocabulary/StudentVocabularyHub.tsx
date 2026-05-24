@@ -168,17 +168,17 @@ export default function StudentVocabularyHub() {
             <Card className="relative h-full overflow-hidden border-sky-100 bg-white shadow-sm">
               <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500" />
               <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-sky-100/70 blur-3xl" />
-              <CardContent className="relative p-6 md:p-7">
+              <CardContent className="relative p-4 sm:p-6 md:p-7">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Badge className="gap-1 border-0 bg-sky-100 text-sky-700 hover:bg-sky-100">
                         <Sparkles className="h-3 w-3" /> Word of the Day
                       </Badge>
-                      <span className="text-[11px] text-slate-500">{new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short" })}</span>
+                      <span className="text-[11px] text-slate-500">{new Date().toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}</span>
                     </div>
-                    <div className="mt-3 flex flex-wrap items-end gap-3">
-                      <h2 className="font-heading text-4xl font-bold tracking-tight text-slate-900 md:text-5xl">{wotd.word}</h2>
+                    <div className="mt-3 flex flex-wrap items-end gap-2 sm:gap-3">
+                      <h2 className="font-heading text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl md:text-5xl break-words">{wotd.word}</h2>
                       <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full text-sky-600 hover:bg-sky-50" onClick={() => speak(wotd.word)} aria-label="Pronounce">
                         <Volume2 className="h-4 w-4" />
                       </Button>
