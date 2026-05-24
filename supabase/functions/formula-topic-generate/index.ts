@@ -98,8 +98,8 @@ Deno.serve(async (req) => {
     const existingLatex = new Set((existing || []).map((r: any) => normalizeLatex(r.expression_latex)).filter(Boolean));
     const existingNamesList = (existing || []).map((r: any) => r.name).filter(Boolean);
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const OPENAI_API_KEY = await getCredential("OPENAI_API_KEY").catch(() => "") || Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY not configured");
 
     const safeCount = Math.min(100, Math.max(1, Number(count) || 8));
     const BATCH_SIZE = 10;
