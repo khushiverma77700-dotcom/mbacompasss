@@ -1,7 +1,7 @@
 // Bulk-generate unique MBA vocabulary words via Lovable AI.
 // POST { count, category?, difficulty? } -> creates job, runs in background, returns { job_id }
 // GET ?job_id=...                         -> returns job row
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -163,20 +163,33 @@ If you cannot fully complete ALL fields with high quality, OMIT the word. Unique
 
   if (!apiKey) throw new Error(provider === "openai" ? "OPENAI_API_KEY not configured" : "LOVABLE_API_KEY not configured");
 
-  const resp = await fetch(endpoint, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-      tools: [toolSchema],
-      tool_choice: { type: "function", function: { name: "emit_vocab_batch" } },
-      ...(provider === "openai" ? { temperature: 0.7 } : {}),
-    }),
-  });
+  const timeoutMs = provider === "openai" ? 55_000 : 50_000;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  let resp: Response;
+  try {
+    resp = await fetch(endpoint, {
+      method: "POST",
+      signal: controller.signal,
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+        tools: [toolSchema],
+        tool_choice: { type: "function", function: { name: "emit_vocab_batch" } },
+        max_tokens: provider === "openai" ? 6500 : 6000,
+        ...(provider === "openai" ? { temperature: 0.55 } : {}),
+      }),
+    });
+  } catch (e) {
+    if ((e as Error)?.name === "AbortError") throw new Error("AI_TIMEOUT");
+    throw e;
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (resp.status === 429) throw new Error("RATE_LIMIT");
   if (resp.status === 402) throw new Error("CREDITS_EXHAUSTED");
@@ -191,6 +204,21 @@ If you cannot fully complete ALL fields with high quality, OMIT the word. Unique
     inputTokens: j.usage?.prompt_tokens || promptTokenEstimate,
     outputTokens: j.usage?.completion_tokens || estimateTokens(args),
   };
+}
+
+async function kickNextInvocation(jobId: string) {
+  const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/vocab-bulk-generate`;
+  const token = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  if (!url || !token) return;
+  try {
+    await fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, apikey: token, "Content-Type": "application/json" },
+      body: JSON.stringify({ resume_job_id: jobId, internal_worker: true }),
+    });
+  } catch (e) {
+    console.error("Auto-resume kickoff failed", (e as Error).message);
+  }
 }
 
 async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null, provider: Provider, seed?: { generated: number; duplicates: number; failed: number; attempts?: number; rejected?: number; estimated_input_tokens?: number; estimated_output_tokens?: number; estimated_cost_usd?: number }) {
@@ -230,36 +258,38 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     status: "running",
     provider,
     exam,
-    batch_size: provider === "openai" ? 30 : 20,
+    batch_size: provider === "openai" ? 18 : 14,
     started_at: seed ? undefined : originalStartedAt,
     current_activity: seed ? `Resuming from ${generated}/${total} (${provider})…` : `Warming up (${provider})…`,
   }).eq("id", jobId);
 
-  // OpenAI handles bigger batches reliably -> fewer calls -> lower cost.
-  const BATCH = provider === "openai" ? 30 : 20;
+  // Keep each AI call small enough to finish inside edge runtime limits.
+  const BATCH = provider === "openai" ? 18 : 14;
   let consecutiveEmpty = 0;
+  let consecutiveTimeouts = 0;
   const MAX_ATTEMPTS = Math.ceil(total / BATCH) * 4 + 10; // safety cap
   // Soft wall-clock budget: exit cleanly before the edge runtime kills us.
   // Mark the job as `paused` so the UI can offer a Resume button.
   const startMs = Date.now();
-  const MAX_RUN_MS = 4 * 60 * 1000; // 4 minutes per invocation
+  const MAX_RUN_MS = 85 * 1000; // short worker slices prevent edge shutdowns during long AI jobs
 
   while (generated < total && attempts < MAX_ATTEMPTS) {
     if (Date.now() - startMs > MAX_RUN_MS) {
       await supabase.from("vocab_generation_jobs").update({
         status: "paused",
-        current_activity: `Paused at ${generated}/${total}. Click Resume to continue.`,
+        current_activity: `Continuing automatically from ${generated}/${total} in the next worker slice…`,
         generated, duplicates, failed, attempts, rejected,
         estimated_input_tokens: inputTokens,
         estimated_output_tokens: outputTokens,
         estimated_cost_usd: costUsd,
-        progress_details: { cpu_proxy: 12, throughput_per_min: 0, last_batch_added: 0, last_batch_duplicates: 0, last_batch_rejected: 0, note: "Paused before runtime limit; resume continues safely." },
+        progress_details: { phase: "handoff", cpu_proxy: 12, throughput_per_min: 0, last_batch_added: 0, last_batch_duplicates: 0, last_batch_rejected: 0, note: "Worker slice ended safely; auto-resume is starting." },
       }).eq("id", jobId);
+      await kickNextInvocation(jobId);
       return;
     }
 
     attempts++;
-    const need = Math.min(BATCH, total - generated);
+    const need = Math.min(Math.max(6, BATCH - consecutiveTimeouts * 4), total - generated);
     const targetWords = pickTargetWords(seenSlugs, need, attempts);
     await supabase.from("vocab_generation_jobs").update({
       current_activity: `Generating advanced CAT-level batch ${attempts} via ${provider} (${generated}/${total})…`,
@@ -272,6 +302,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     const batchStarted = Date.now();
     try {
       const generatedBatch = await generateBatch(provider, keys, need, category, difficulty, exam, Array.from(seenSlugs), recentDupes, targetWords);
+      consecutiveTimeouts = 0;
       batch = generatedBatch.words;
       batchTokens = { inputTokens: generatedBatch.inputTokens, outputTokens: generatedBatch.outputTokens };
       inputTokens += batchTokens.inputTokens;
@@ -283,6 +314,19 @@ async function runJob(jobId: string, total: number, category: string | null, dif
       if (msg === "RATE_LIMIT") {
         await supabase.from("vocab_generation_jobs").update({ current_activity: "Rate limited, sleeping 15s…" }).eq("id", jobId);
         await new Promise((r) => setTimeout(r, 15000));
+        continue;
+      }
+      if (msg === "AI_TIMEOUT") {
+        consecutiveTimeouts++;
+        await supabase.from("vocab_generation_jobs").update({
+          status: consecutiveTimeouts >= 2 ? "paused" : "running",
+          current_activity: consecutiveTimeouts >= 2
+            ? `Paused safely after AI timeout at ${generated}/${total}. Resume will continue with smaller batches.`
+            : `AI call was slow; retrying with a smaller batch (${generated}/${total})…`,
+          generated, duplicates, failed, attempts, rejected,
+          progress_details: { phase: "ai_timeout", cpu_proxy: 92, timeout_count: consecutiveTimeouts, next_batch_size: Math.max(6, BATCH - consecutiveTimeouts * 4) },
+        }).eq("id", jobId);
+        if (consecutiveTimeouts >= 2) return;
         continue;
       }
       if (msg === "CREDITS_EXHAUSTED") {
@@ -420,6 +464,20 @@ async function runJob(jobId: string, total: number, category: string | null, dif
         target_words: targetWords.slice(0, 8),
       },
     }).eq("id", jobId);
+
+    if (generated < total && Date.now() - startMs > MAX_RUN_MS) {
+      await supabase.from("vocab_generation_jobs").update({
+        status: "paused",
+        current_activity: `Continuing automatically from ${generated}/${total} in the next worker slice…`,
+        generated, duplicates, failed, attempts, rejected,
+        estimated_input_tokens: inputTokens,
+        estimated_output_tokens: outputTokens,
+        estimated_cost_usd: costUsd,
+        progress_details: { phase: "handoff", cpu_proxy: 12, throughput_per_min: throughput, last_batch_added: addedNow, note: "Worker slice ended safely; auto-resume is starting." },
+      }).eq("id", jobId);
+      await kickNextInvocation(jobId);
+      return;
+    }
   }
 
   const finalStatus = generated >= total ? "completed" : "paused";
@@ -443,20 +501,26 @@ Deno.serve(async (req) => {
   try {
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    // Auth check
+    const body = req.method === "GET" ? {} : await req.json().catch(() => ({}));
+
+    // Auth check. Internal auto-resume calls use the backend service token and can only resume existing jobs.
     const authHeader = req.headers.get("Authorization") || "";
     const token = authHeader.replace("Bearer ", "");
-    const { data: userData } = await supabase.auth.getUser(token);
-    const user = userData?.user;
-    if (!user) return new Response(JSON.stringify({ error: "Not authenticated" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    // Direct lookup with service role — has_role() RPC is restricted to auth.uid() context.
-    const { data: roleRow } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin")
-      .maybeSingle();
-    if (!roleRow) return new Response(JSON.stringify({ error: "Not authorized" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const internalWorker = req.method !== "GET" && body.internal_worker === true && token === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") && !!body.resume_job_id;
+    let user: any = null;
+    if (!internalWorker) {
+      const { data: userData } = await supabase.auth.getUser(token);
+      user = userData?.user;
+      if (!user) return new Response(JSON.stringify({ error: "Not authenticated" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      // Direct lookup with service role — has_role() RPC is restricted to auth.uid() context.
+      const { data: roleRow } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (!roleRow) return new Response(JSON.stringify({ error: "Not authorized" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     if (req.method === "GET") {
       const url = new URL(req.url);
@@ -467,15 +531,13 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ job: data }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const body = await req.json().catch(() => ({}));
-
     // ---- RESUME path ----
     if (body.resume_job_id) {
       const { data: existing, error: jErr } = await supabase
         .from("vocab_generation_jobs").select("*").eq("id", body.resume_job_id).maybeSingle();
       if (jErr || !existing) return new Response(JSON.stringify({ error: "Job not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       if (existing.status === "completed") return new Response(JSON.stringify({ job_id: existing.id, status: "completed" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      const resumeProvider: Provider = body.provider === "openai" ? "openai" : (body.provider === "lovable" ? "lovable" : "lovable");
+      const resumeProvider: Provider = body.provider === "openai" ? "openai" : (body.provider === "lovable" ? "lovable" : (existing.provider === "openai" ? "openai" : "lovable"));
       const resumeExam = body.exam && EXAMS.includes(String(body.exam).toUpperCase()) ? String(body.exam).toUpperCase() : null;
       await supabase.from("vocab_generation_jobs").update({ status: "running", error: null, current_activity: "Resuming…" }).eq("id", existing.id);
       // @ts-ignore Edge runtime background tasks
