@@ -42,6 +42,12 @@ import {
   Plus,
   ArrowLeft,
   ImageIcon,
+  Timer,
+  Inbox,
+  Activity,
+  TrendingUp,
+  MessageSquare,
+  Sparkles,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
