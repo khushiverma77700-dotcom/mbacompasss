@@ -188,7 +188,7 @@ export default function FormulaDetailPage() {
         </TabsContent>
 
         <TabsContent value="derive">
-          <Card><CardContent className="p-6 whitespace-pre-line leading-relaxed text-slate-700">{formula.derivation || "Derivation not provided — use AI Assist → Derive step."}</CardContent></Card>
+          <Card><CardContent className="p-6"><MathInlineText as="div" text={formula.derivation || "Derivation not provided — use AI Assist → Derive step."} className="whitespace-pre-line leading-relaxed text-slate-700" /></CardContent></Card>
         </TabsContent>
 
         <TabsContent value="examples">
