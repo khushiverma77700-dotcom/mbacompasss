@@ -43,6 +43,7 @@ import BRAND_LOGO_URL from "@/assets/brandLogo";
 import type { FeatureKey } from "@/lib/courseFeatures";
 import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
 import { markStudentMode, clearStudentMode } from "@/lib/studentModeNav";
+import { preloadAllStudentRoutes, preloadStudentRoute } from "@/lib/preloadStudentRoutes";
 
 type NavItem = { to: string; label: string; icon: any; end?: boolean; feature?: FeatureKey };
 
@@ -123,6 +124,10 @@ export default function StudentLayout() {
   // and route their back / post-submit navigation back into /student/*.
   useEffect(() => {
     markStudentMode();
+    // Aggressively prefetch every student page chunk during idle time so
+    // navigating between tabs is effectively instant — no extra network
+    // round-trip when the user clicks "Mocks", "Performance", etc.
+    preloadAllStudentRoutes();
   }, []);
 
   useEffect(() => {
@@ -392,6 +397,9 @@ function SidebarContent() {
         to={item.to}
         end={item.end}
         onClick={() => badge > 0 && markSeen(item.to)}
+        onMouseEnter={() => preloadStudentRoute(item.to)}
+        onTouchStart={() => preloadStudentRoute(item.to)}
+        onFocus={() => preloadStudentRoute(item.to)}
         className={({ isActive }) =>
           cn(
             "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors relative",

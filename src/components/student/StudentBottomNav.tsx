@@ -2,6 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { LayoutDashboard, FlaskConical, CalendarCheck, BarChart3, User as UserIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
+import { preloadStudentRoute } from "@/lib/preloadStudentRoutes";
 
 /**
  * Mobile-only bottom tab bar for the student dashboard.
@@ -53,6 +54,8 @@ export default function StudentBottomNav() {
               <NavLink
                 to={tab.to}
                 end={tab.end}
+                onTouchStart={() => preloadStudentRoute(tab.to)}
+                onMouseEnter={() => preloadStudentRoute(tab.to)}
                 className={cn(
                   "relative flex flex-col items-center justify-center gap-1 py-2 mx-0.5 rounded-xl text-[10px] font-semibold transition-all duration-200",
                   isActive
