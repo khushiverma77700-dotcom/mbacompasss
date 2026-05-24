@@ -45,10 +45,9 @@ export function useStudentNavBadges(): StudentNavBadges {
       const cutoff30 = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
       const seenDaily = seen["/student/daily-test"] ?? "1970-01-01";
       const seenMocks = seen["/student/mocks"] ?? "1970-01-01";
-      const seenAnn = seen["/student/announcements"] ?? "1970-01-01";
       const seenSupport = seen["/student/support"] ?? "1970-01-01";
 
-      const [dailyRes, enrollRes, attemptsRes, annRes, notifRes, supportRes] = await Promise.all([
+      const [dailyRes, enrollRes, attemptsRes, notifRes, supportRes] = await Promise.all([
         // Daily tests scheduled in last 30d
         supabase.from("daily_test_assignments")
           .select("assigned_date, test_id, created_at")
@@ -63,11 +62,6 @@ export function useStudentNavBadges(): StudentNavBadges {
           .select("test_id, status")
           .eq("user_id", user.id)
           .in("status", ["submitted", "auto_submitted"]),
-        // Announcements
-        supabase.from("announcements" as any)
-          .select("id, created_at, published")
-          .order("created_at", { ascending: false })
-          .limit(50),
         // Updates timeline (per-user notifications) — true unread count
         supabase.from("student_notifications")
           .select("id", { count: "exact", head: true })
@@ -99,14 +93,9 @@ export function useStudentNavBadges(): StudentNavBadges {
         !attemptedSet.has(e.test_id) && (e.enrolled_at ?? "") > seenMocks
       ).length;
 
-      // Announcements: published & created after last seen
-      const annNew = (annRes.data ?? [])
-        .filter((a: any) => (a.published ?? true) && a.created_at > seenAnn).length;
-
       setCounts({
         "/student/daily-test": dailyNew,
         "/student/mocks": mocksNew,
-        "/student/announcements": annNew,
         "/student/notifications": notifRes.count ?? 0,
         "/student/support": (supportRes.data ?? []).length,
       });
