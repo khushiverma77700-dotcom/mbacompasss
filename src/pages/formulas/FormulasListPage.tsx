@@ -41,23 +41,60 @@ export default function FormulasListPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4 pb-20 md:p-6">
-      <header className="rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/60 to-blue-50/40 p-6">
-        <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-white px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-sky-700">
-          <Calculator className="h-3 w-3" /> Free Quant Formula Book
-        </div>
-        <h1 className="font-heading mt-2 text-3xl font-bold text-slate-900">MBA Quant Formula Book — CAT, XAT, NMAT</h1>
-        <p className="mt-1 max-w-2xl text-sm text-slate-700">
-          500+ exam-relevant formulas with explanations, shortcuts, derivations and AI assistance. Created for MBA Compass students.
-        </p>
-        <div className="relative mt-4">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <Input placeholder="Search any formula or concept…" value={q} onChange={(e) => { const p = new URLSearchParams(params); e.target.value ? p.set("q", e.target.value) : p.delete("q"); setParams(p); }} className="h-11 pl-9" />
-        </div>
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          <button onClick={() => { const p = new URLSearchParams(params); p.delete("topic"); setParams(p); }} className={`rounded-full px-3 py-1 text-xs font-medium ${topic === "all" ? "bg-sky-600 text-white" : "border border-slate-200 bg-white text-slate-600"}`}>All topics</button>
-          {topics.filter((t) => !t.parent_slug).map((t) => (
-            <button key={t.slug} onClick={() => { const p = new URLSearchParams(params); p.set("topic", t.slug); setParams(p); }} className={`rounded-full px-3 py-1 text-xs font-medium ${topic === t.slug ? "bg-sky-600 text-white" : "border border-slate-200 bg-white text-slate-600 hover:border-sky-300"}`}>{t.name}</button>
-          ))}
+      <header className="relative overflow-hidden rounded-3xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/80 to-blue-50/60 p-6 md:p-10">
+        <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-sky-200/30 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute -bottom-20 -left-10 h-56 w-56 rounded-full bg-blue-200/30 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "radial-gradient(circle at 1px 1px, #0ea5e9 1px, transparent 0)", backgroundSize: "24px 24px" }} />
+
+        <div className="relative">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-sky-700 shadow-sm backdrop-blur">
+            <Sparkles className="h-3 w-3" /> The Only Formula Book You Need
+          </div>
+
+          <h1 className="font-heading mt-3 text-3xl font-bold leading-tight text-slate-900 md:text-5xl">
+            MBA Quant <span className="bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">Formula Book</span>
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm text-slate-700 md:text-base">
+            Your last-mile companion for CAT, XAT, NMAT, SNAP &amp; IIFT — 500+ exam-relevant formulas with deep explanations, shortcuts, derivations and worked examples. Built by faculty, refined with AI.
+          </p>
+
+          <div className="mt-5 grid gap-2 sm:grid-cols-3">
+            {[
+              { icon: BookOpen, label: "Know", desc: "Every must-know formula in one place" },
+              { icon: Brain, label: "Learn", desc: "Intuition, derivation & usage notes" },
+              { icon: Repeat, label: "Revise", desc: "Quick-recall cards before D-day" },
+            ].map((p) => (
+              <div key={p.label} className="flex items-center gap-3 rounded-xl border border-sky-100 bg-white/70 px-3 py-2 backdrop-blur">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 text-white shadow-sm">
+                  <p.icon className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-bold text-slate-900">{p.label}</div>
+                  <div className="text-[11px] leading-tight text-slate-600">{p.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="relative mt-5">
+            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+              placeholder="Search any formula, concept or topic…"
+              value={q}
+              onChange={(e) => { const p = new URLSearchParams(params); e.target.value ? p.set("q", e.target.value) : p.delete("q"); setParams(p); }}
+              className="h-12 rounded-xl border-sky-200 bg-white/90 pl-10 pr-4 text-sm shadow-sm backdrop-blur focus-visible:ring-sky-400"
+            />
+            <div className="pointer-events-none absolute right-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-medium text-slate-500 md:inline-flex">
+              <Zap className="h-3 w-3" /> {formulas.length}+ formulas
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-1.5">
+            <button onClick={() => { const p = new URLSearchParams(params); p.delete("topic"); setParams(p); }} className={`rounded-full px-3 py-1 text-xs font-medium transition ${topic === "all" ? "bg-sky-600 text-white shadow-sm" : "border border-slate-200 bg-white text-slate-600 hover:border-sky-300"}`}>All topics</button>
+            {topics.filter((t) => !t.parent_slug).map((t) => (
+              <button key={t.slug} onClick={() => { const p = new URLSearchParams(params); p.set("topic", t.slug); setParams(p); }} className={`rounded-full px-3 py-1 text-xs font-medium transition ${topic === t.slug ? "bg-sky-600 text-white shadow-sm" : "border border-slate-200 bg-white text-slate-600 hover:border-sky-300"}`}>{t.name}</button>
+            ))}
+          </div>
         </div>
       </header>
 
