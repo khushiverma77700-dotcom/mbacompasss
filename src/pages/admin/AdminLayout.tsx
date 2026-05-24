@@ -49,15 +49,17 @@ const AdminLayout = () => {
         { count: profileCount },
         { count: subCount },
         { count: bizCount },
+        { count: ticketCount },
       ] = await Promise.all([
         supabase.from("inquiries").select("*", { count: "exact", head: true }).eq("read", false),
         supabase.from("inquiries").select("*", { count: "exact", head: true }).gte("created_at", since),
         supabase.from("profiles").select("*", { count: "exact", head: true }).gte("created_at", since),
         supabase.from("newsletter_subscribers").select("*", { count: "exact", head: true }).gte("created_at", since),
         supabase.from("business_inquiries").select("*", { count: "exact", head: true }).gte("created_at", since),
+        supabase.from("support_tickets").select("*", { count: "exact", head: true }).eq("status", "open"),
       ]);
 
-      const hasNew = (callbackCount || 0) + (inquiryCount || 0) + (profileCount || 0) + (subCount || 0) + (bizCount || 0) > 0;
+      const hasNew = (callbackCount || 0) + (inquiryCount || 0) + (profileCount || 0) + (subCount || 0) + (bizCount || 0) + (ticketCount || 0) > 0;
 
       setDots({
         callbacks: (callbackCount || 0) > 0,
@@ -66,6 +68,7 @@ const AdminLayout = () => {
         master: hasNew,
         subscribers: (subCount || 0) > 0,
         business: (bizCount || 0) > 0,
+        supportTickets: (ticketCount || 0) > 0,
       });
     };
 
@@ -80,6 +83,7 @@ const AdminLayout = () => {
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "profiles" }, () => checkNewLeads())
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "newsletter_subscribers" }, () => checkNewLeads())
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "business_inquiries" }, () => checkNewLeads())
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "support_tickets" }, () => checkNewLeads())
       .subscribe();
 
     return () => {
