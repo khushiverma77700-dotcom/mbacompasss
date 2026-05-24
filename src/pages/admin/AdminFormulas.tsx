@@ -197,8 +197,8 @@ export default function AdminFormulas() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-xs">Count (max 15 per run)</Label>
-                  <Input type="number" min={1} max={15} value={genCount} onChange={(e) => setGenCount(Math.min(15, Math.max(1, Number(e.target.value) || 1)))} />
+                  <Label className="text-xs">Count (max 20 per run)</Label>
+                  <Input type="number" min={1} max={20} value={genCount} onChange={(e) => setGenCount(Math.min(20, Math.max(1, Number(e.target.value) || 1)))} />
                 </div>
                 <div>
                   <Label className="text-xs">Default difficulty</Label>
