@@ -598,27 +598,47 @@ export default function StudentVocabularyFeed() {
 
       </Card>
 
+      {/* SEARCH RESULTS BANNER */}
+      {searchOpen && searchResults.length > 0 && (
+        <div className="flex items-center justify-between rounded-xl border border-sky-200 bg-sky-50/40 px-3 py-2 text-xs text-sky-800 dark:bg-sky-500/10">
+          <span>Showing <strong>{searchResults.length}</strong> result{searchResults.length > 1 ? "s" : ""} for "<strong>{searchQuery}</strong>"</span>
+          <Button size="sm" variant="ghost" className="h-7 gap-1 px-2 text-xs" onClick={closeSearch}>
+            <X className="h-3 w-3" /> Back to feed
+          </Button>
+        </div>
+      )}
+
       {/* FEED */}
-      {loading ? (
+      {(loading || aiSearching) ? (
         <div className="grid gap-4 md:grid-cols-2">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-64 animate-pulse rounded-2xl bg-slate-100" />
+          {[...Array(aiSearching ? 1 : 4)].map((_, i) => (
+            <div key={i} className="h-64 animate-pulse rounded-2xl bg-slate-100 dark:bg-muted/40" />
           ))}
         </div>
-      ) : visible.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="py-12 text-center">
-            <BookOpen className="mx-auto mb-3 h-8 w-8 text-sky-400" />
-            <p className="text-slate-600">
-              {readIds.size > 0
-                ? "You've read every word in this filter. Switch a filter or toggle 'Show read' to revisit."
-                : "No words match this filter yet."}
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
+      ) : (searchOpen && searchResults.length === 0 && searchQuery && !searching) ? null : (() => {
+        const list = searchOpen && searchResults.length > 0 ? searchResults : visible;
+        if (list.length === 0) {
+          return (
+            <Card className="border-dashed">
+              <CardContent className="py-12 text-center">
+                <BookOpen className="mx-auto mb-3 h-8 w-8 text-sky-400" />
+                <p className="text-slate-600">
+                  {readIds.size > 0
+                    ? "You've read every word in this filter. Switch a filter or toggle 'Show read' to revisit."
+                    : "No words match this filter yet."}
+                </p>
+              </CardContent>
+            </Card>
+          );
+        }
+        return (
         <div className="grid gap-4 md:grid-cols-2">
-          {visible.map((w) => {
+          {list.map((w) => {
+            const isRead = readIds.has(w.id);
+            const isSaved = bookmarkIds.has(w.id);
+            const syllables = (w.pronunciation_syllables || w.word).split(/[-·•\s]+/).filter(Boolean);
+            return (
+
             const isRead = readIds.has(w.id);
             const isSaved = bookmarkIds.has(w.id);
             const syllables = (w.pronunciation_syllables || w.word).split(/[-·•\s]+/).filter(Boolean);
