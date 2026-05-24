@@ -262,20 +262,20 @@ export default function StudentVocabularyFeed() {
   return (
     <div className="space-y-6 pb-24">
       {/* HERO — Gamified header */}
-      <section className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/70 to-blue-50/50 p-5 md:p-7">
+      <section className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/70 to-blue-50/50 p-4 sm:p-5 md:p-7">
         <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
         <div aria-hidden className="pointer-events-none absolute -left-20 -bottom-20 h-56 w-56 rounded-full bg-blue-200/30 blur-3xl" />
 
-        <div className="relative grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div className="relative grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
           <div className="space-y-4">
             <div>
               <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/80 bg-white/80 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-sky-700 backdrop-blur">
                 <Sparkles className="h-3 w-3" /> B-School Vocabulary
               </div>
-              <h1 className="font-heading mt-2 text-2xl font-bold text-slate-900 md:text-3xl">
+              <h1 className="font-heading mt-2 text-xl font-bold text-slate-900 sm:text-2xl md:text-3xl">
                 Level {level} · {xp.toLocaleString()} XP
               </h1>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-[13px] text-slate-600 sm:text-sm">
                 Daily streak builds your CAT/GDPI vocabulary muscle. Hit your target every day.
               </p>
             </div>
@@ -292,7 +292,7 @@ export default function StudentVocabularyFeed() {
             <div>
               <div className="mb-1 flex items-center justify-between text-[11px] font-medium text-slate-600">
                 <span className="inline-flex items-center gap-1"><Zap className="h-3 w-3 text-amber-500" /> Level {level}</span>
-                <span>{xpInLevel} / 500 XP to Lv {level + 1}</span>
+                <span>{xpInLevel} / 500 XP</span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-white/70 ring-1 ring-sky-100">
                 <div
@@ -302,6 +302,7 @@ export default function StudentVocabularyFeed() {
               </div>
             </div>
           </div>
+
 
           {/* Target ring */}
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-sky-100 bg-white/70 p-5 backdrop-blur lg:min-w-[240px]">
@@ -398,7 +399,7 @@ export default function StudentVocabularyFeed() {
 
       {/* WORD OF THE DAY — Featured */}
       {wotd && (
-        <section className="relative overflow-hidden rounded-2xl border-2 border-amber-200/80 bg-gradient-to-br from-amber-50 via-orange-50/60 to-rose-50/40 p-6 md:p-8">
+        <section className="relative overflow-hidden rounded-2xl border-2 border-amber-200/80 bg-gradient-to-br from-amber-50 via-orange-50/60 to-rose-50/40 p-4 sm:p-6 md:p-8">
           <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-amber-200/40 blur-3xl" />
           <div className="relative">
             <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -418,8 +419,8 @@ export default function StudentVocabularyFeed() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
-              <div>
-                <h2 className="font-heading text-4xl font-bold leading-none tracking-tight text-slate-900 md:text-5xl">
+              <div className="min-w-0">
+                <h2 className="font-heading text-3xl font-bold leading-tight tracking-tight text-slate-900 sm:text-4xl md:text-5xl break-words">
                   {wotd.word}
                 </h2>
                 {wotd.part_of_speech && (
@@ -429,16 +430,16 @@ export default function StudentVocabularyFeed() {
                 {/* Pronunciation - bigger, tap-to-play */}
                 <button
                   onClick={() => speak(wotd.word)}
-                  className="group mt-4 inline-flex items-center gap-3 rounded-2xl border-2 border-amber-300 bg-white/80 px-4 py-3 shadow-sm transition-all hover:scale-[1.02] hover:border-amber-400 hover:shadow-md active:scale-95"
+                  className="group mt-4 inline-flex max-w-full items-center gap-3 rounded-2xl border-2 border-amber-300 bg-white/80 px-3 py-2.5 shadow-sm transition-all hover:scale-[1.02] hover:border-amber-400 hover:shadow-md active:scale-95 sm:px-4 sm:py-3"
                   aria-label={`Play pronunciation of ${wotd.word}`}
                 >
-                  <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow group-hover:from-amber-600 group-hover:to-orange-600">
-                    <Volume2 className="h-5 w-5" />
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow sm:h-10 sm:w-10">
+                    <Volume2 className="h-4 w-4 sm:h-5 sm:w-5" />
                   </span>
-                  <span className="flex flex-col text-left">
+                  <span className="flex min-w-0 flex-col text-left">
                     <span className="flex flex-wrap gap-1">
                       {(wotd.pronunciation_syllables || wotd.word).split(/[-·•\s]+/).filter(Boolean).map((p: string, i: number) => (
-                        <span key={i} className="rounded border border-amber-200 bg-amber-50 px-2 py-0.5 font-mono text-sm font-semibold text-amber-900">
+                        <span key={i} className="rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 font-mono text-xs font-semibold text-amber-900 sm:px-2 sm:text-sm">
                           {p}
                         </span>
                       ))}
@@ -448,7 +449,7 @@ export default function StudentVocabularyFeed() {
                 </button>
 
                 <div className="mt-4 space-y-1.5">
-                  <p className="text-base leading-relaxed text-slate-800">{wotd.meaning}</p>
+                  <p className="text-[15px] leading-relaxed text-slate-800 sm:text-base">{wotd.meaning}</p>
                   {wotd.meaning_hindi && (
                     <p className="text-sm text-slate-600">
                       <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">हिन्दी · </span>
@@ -458,12 +459,12 @@ export default function StudentVocabularyFeed() {
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex w-full gap-2 md:w-auto">
                 <Button
                   variant={bookmarkIds.has(wotd.id) ? "default" : "outline"}
                   onClick={() => toggleBookmark(wotd.id)}
                   disabled={busy === wotd.id}
-                  className="gap-1.5"
+                  className="flex-1 gap-1.5 md:flex-none"
                 >
                   <Bookmark className={`h-4 w-4 ${bookmarkIds.has(wotd.id) ? "fill-current" : ""}`} />
                   {bookmarkIds.has(wotd.id) ? "Saved" : "Save"}
@@ -472,12 +473,12 @@ export default function StudentVocabularyFeed() {
                   <Button
                     onClick={() => markRead(wotd.id)}
                     disabled={busy === wotd.id}
-                    className="gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95"
+                    className="flex-1 gap-1.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:opacity-95 md:flex-none"
                   >
                     <CheckCircle2 className="h-4 w-4" /> Mark Read
                   </Button>
                 ) : (
-                  <Button variant="secondary" disabled className="gap-1.5">
+                  <Button variant="secondary" disabled className="flex-1 gap-1.5 md:flex-none">
                     <CheckCircle2 className="h-4 w-4" /> Read
                   </Button>
                 )}
@@ -544,21 +545,23 @@ export default function StudentVocabularyFeed() {
             </button>
           ) : (
             <div className="space-y-2 rounded-xl border-2 border-sky-300 bg-sky-50/40 p-2 dark:bg-sky-500/5">
-              <div className="flex items-center gap-2">
-                <Search className="ml-1 h-4 w-4 text-sky-600" />
-                <Input
-                  autoFocus
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && runSearch()}
-                  placeholder="Type a word, e.g. arbitrage, ubiquitous, prevaricate"
-                  className="h-9 border-0 bg-transparent shadow-none focus-visible:ring-0"
-                />
-                <Button size="sm" onClick={runSearch} disabled={searching || !searchQuery.trim()} className="h-9 gap-1 bg-gradient-to-r from-sky-600 to-blue-600">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex min-w-0 flex-1 items-center gap-2">
+                  <Search className="ml-1 h-4 w-4 shrink-0 text-sky-600" />
+                  <Input
+                    autoFocus
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && runSearch()}
+                    placeholder="Type a word…"
+                    className="h-9 min-w-0 flex-1 border-0 bg-transparent shadow-none focus-visible:ring-0"
+                  />
+                  <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0" onClick={closeSearch} aria-label="Close">
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Button size="sm" onClick={runSearch} disabled={searching || !searchQuery.trim()} className="h-9 w-full gap-1 bg-gradient-to-r from-sky-600 to-blue-600 sm:w-auto">
                   {searching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />} Search
-                </Button>
-                <Button size="icon" variant="ghost" className="h-9 w-9" onClick={closeSearch} aria-label="Close">
-                  <X className="h-4 w-4" />
                 </Button>
               </div>
               <div className="px-1 text-[11px] text-slate-500">
@@ -653,11 +656,11 @@ export default function StudentVocabularyFeed() {
                     isRead ? "bg-emerald-400" : "bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500",
                   )}
                 />
-                <CardContent className="relative flex flex-1 flex-col p-6">
+                <CardContent className="relative flex flex-1 flex-col p-4 sm:p-6">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <Link to={`/student/vocabulary/word/${w.slug}`} className="block">
-                        <h3 className="font-heading text-3xl font-bold leading-tight text-slate-900 transition-colors group-hover:text-sky-700 md:text-4xl">
+                        <h3 className="font-heading text-2xl font-bold leading-tight text-slate-900 transition-colors group-hover:text-sky-700 sm:text-3xl md:text-4xl break-words">
                           {w.word}
                         </h3>
                       </Link>
@@ -713,15 +716,15 @@ export default function StudentVocabularyFeed() {
                     </div>
                   )}
 
-                  <div className="mt-auto flex items-center justify-between gap-2 border-t border-slate-100 pt-4">
+                  <div className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4">
                     <Badge variant="secondary" className="bg-slate-100 text-[10px] capitalize text-slate-600">
                       {w.category?.replace("_", " ")}
                     </Badge>
-                    <div className="flex gap-1.5">
+                    <div className="flex flex-1 justify-end gap-1.5 sm:flex-none">
                       <Button
                         variant={isSaved ? "default" : "outline"}
                         size="sm"
-                        className="h-8 gap-1 px-3 text-xs"
+                        className="h-8 gap-1 px-2.5 text-xs sm:px-3"
                         disabled={busy === w.id}
                         onClick={() => toggleBookmark(w.id)}
                       >
@@ -732,7 +735,7 @@ export default function StudentVocabularyFeed() {
                         variant={isRead ? "secondary" : "default"}
                         size="sm"
                         className={cn(
-                          "h-8 gap-1 px-3 text-xs",
+                          "h-8 gap-1 px-2.5 text-xs sm:px-3",
                           !isRead && "bg-gradient-to-r from-sky-600 to-blue-600 hover:opacity-95",
                         )}
                         disabled={busy === w.id || isRead}
