@@ -29,7 +29,7 @@ function escapeHtml(s: string): string {
 
 function renderInline(expr: string): string {
   try {
-    return katex.renderToString(expr, {
+    return katex.renderToString(normalizeMathExpression(expr), {
       displayMode: false,
       throwOnError: false,
       output: "html",
@@ -39,19 +39,32 @@ function renderInline(expr: string): string {
   }
 }
 
-export function renderMathInline(text: string): string {
-  if (!text) return "";
+function normalizeMathExpression(expr: string): string {
+  return String(expr || "")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/∈/g, "\\in")
+    .replace(/ℕ/g, "\\mathbb{N}")
+    .replace(/ℤ/g, "\\mathbb{Z}")
+    .replace(/ℚ/g, "\\mathbb{Q}")
+    .replace(/ℝ/g, "\\mathbb{R}")
+    .replace(/≤/g, "\\leq")
+    .replace(/≥/g, "\\geq")
+    .replace(/≠/g, "\\neq")
+    .replace(/×/g, "\\times")
+    .replace(/÷/g, "\\div")
+    .replace(/…/g, "\\ldots")
+    .trim();
+}
 
+function renderBareMathAtoms(text: string): string {
   const matches: { start: number; end: number }[] = [];
   let m: RegExpExecArray | null;
-  // Reset lastIndex (regex is /g)
   ATOM_RE.lastIndex = 0;
   while ((m = ATOM_RE.exec(text)) !== null) {
     matches.push({ start: m.index, end: m.index + m[0].length });
   }
   if (matches.length === 0) return escapeHtml(text);
 
-  // Merge atoms separated only by connector chars (=, +, -, *, /, digits, dots, parens, spaces)
   const merged: { start: number; end: number }[] = [];
   for (const cur of matches) {
     const last = merged[merged.length - 1];
@@ -74,6 +87,29 @@ export function renderMathInline(text: string): string {
   }
   out += escapeHtml(text.slice(cursor));
   return out;
+}
+
+export function renderMathInline(text: string): string {
+  if (!text) return "";
+
+  const cleaned = String(text).replace(/[\u200B-\u200D\uFEFF]/g, "");
+  const delimiterRe = /\\\(([\s\S]*?)\\\)|\\\[([\s\S]*?)\\\]|\$([^$\n]+?)\$/g;
+  let out = "";
+  let cursor = 0;
+  let match: RegExpExecArray | null;
+
+  while ((match = delimiterRe.exec(cleaned)) !== null) {
+    out += renderBareMathAtoms(cleaned.slice(cursor, match.index));
+    out += renderInline(match[1] ?? match[2] ?? match[3] ?? "");
+    cursor = match.index + match[0].length;
+  }
+
+  if (cursor > 0) {
+    out += renderBareMathAtoms(cleaned.slice(cursor));
+    return out;
+  }
+
+  return renderBareMathAtoms(cleaned);
 }
 
 export function MathInlineText({
