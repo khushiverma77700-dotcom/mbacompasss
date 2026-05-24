@@ -184,7 +184,7 @@ export default function FormulaDetailPage() {
         </TabsList>
 
         <TabsContent value="explain">
-          <Card><CardContent className="p-6 leading-relaxed text-slate-700">{formula.explanation}</CardContent></Card>
+          <Card><CardContent className="p-6"><MathInlineText as="div" text={formula.explanation} className="leading-relaxed text-slate-700" /></CardContent></Card>
         </TabsContent>
 
         <TabsContent value="derive">
