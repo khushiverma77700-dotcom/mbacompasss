@@ -72,7 +72,16 @@ const AdminLayout = () => {
         business: (bizCount || 0) > 0,
         supportTickets: (ticketCount || 0) > 0,
       });
+      setCounts({
+        callbacks: callbackCount || 0,
+        inquiries: inquiryCount || 0,
+        leads: profileCount || 0,
+        subscribers: subCount || 0,
+        business: bizCount || 0,
+        supportTickets: ticketCount || 0,
+      });
     };
+
 
     const w = window as any;
     const schedule = w.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 2500));
