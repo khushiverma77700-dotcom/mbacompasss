@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Search, Clock, CheckCircle2, Play, Trophy, FileText, ShoppingBag,
   Lock, Sparkles, Calendar, BookOpen, Layers, Target, Repeat, History,
@@ -108,6 +109,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
 
   const [topicFilter, setTopicFilter] = useState<string>("All");
   const [sectionFilter, setSectionFilter] = useState<string>("All");
+  const [attemptedTypeFilter, setAttemptedTypeFilter] = useState<string>("all");
 
   useEffect(() => {
     if (!user) return;
@@ -224,7 +226,15 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
         .filter((a) => a.status === "submitted" || a.status === "auto_submitted")
         .forEach((a) => {
           const t = tests[a.test_id];
-          if (t && matchesExam(t) && matchesQuery(t)) items.push({ test: t, attempt: a });
+          if (!t || !matchesExam(t) || !matchesQuery(t)) return;
+          if (attemptedTypeFilter !== "all") {
+            const cat = (t.category || "").toLowerCase();
+            const tt = (t.test_type || "").toLowerCase();
+            if (attemptedTypeFilter === "daily") { if (cat !== "daily") return; }
+            else if (attemptedTypeFilter === "topic_wise") { if (cat !== "topic" && tt !== "topic_wise") return; }
+            else { if (cat !== attemptedTypeFilter && tt !== attemptedTypeFilter) return; }
+          }
+          items.push({ test: t, attempt: a });
         });
       const seen = new Set<string>();
       return items.filter((i) => {
@@ -354,7 +364,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
 
       {/* Filter row */}
       <Card className="p-3 sm:p-4 border-sky-100/60">
-        <div className="flex flex-col gap-3">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <div className="relative">
             <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -364,23 +374,36 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
               className="pl-9 h-10 bg-white text-sm"
             />
           </div>
-          <div className="-mx-1 px-1 overflow-x-auto sm:overflow-visible">
-            <div className="flex sm:flex-wrap gap-1.5 min-w-max sm:min-w-0">
-              {EXAM_FILTERS.map((f) => (
-                <button
-                  key={f}
-                  onClick={() => setExamFilter(f)}
-                  className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap ${
-                    examFilter === f
-                      ? "bg-gradient-to-r from-sky-500 to-blue-600 text-white border-transparent shadow-sm"
-                      : "bg-white text-slate-600 border-slate-200 hover:border-sky-300 hover:text-sky-700"
-                  }`}
-                >
-                  {f}
-                </button>
-              ))}
-            </div>
+          <div>
+            <Select value={examFilter} onValueChange={setExamFilter}>
+              <SelectTrigger className="h-10 bg-white text-sm">
+                <SelectValue placeholder="Select exam" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Exams</SelectItem>
+                {EXAM_FILTERS.map((f) => (
+                  <SelectItem key={f} value={f}>{f}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
+          {fixedType === "attempted" && (
+            <div>
+              <Select value={attemptedTypeFilter} onValueChange={setAttemptedTypeFilter}>
+                <SelectTrigger className="h-10 bg-white text-sm">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="daily">Daily Test</SelectItem>
+                  <SelectItem value="full_length">Full Length</SelectItem>
+                  <SelectItem value="sectional">Sectional</SelectItem>
+                  <SelectItem value="topic_wise">Topic-wise</SelectItem>
+                  <SelectItem value="practice_set">Practice Set</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
       </Card>
 
@@ -440,7 +463,24 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
           {TYPE_TABS.map((t) => (
             <TabsContent key={t.key} value={t.key} className="mt-4 sm:mt-5">
               {t.key === "attempted" ? (
-                <AttemptedGrid items={buildBucket("attempted") as any} />
+                <div className="space-y-3">
+                  <div className="flex justify-end">
+                    <Select value={attemptedTypeFilter} onValueChange={setAttemptedTypeFilter}>
+                      <SelectTrigger className="w-48 h-9 text-xs bg-white">
+                        <SelectValue placeholder="Filter by type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="daily">Daily Test</SelectItem>
+                        <SelectItem value="full_length">Full Length</SelectItem>
+                        <SelectItem value="sectional">Sectional</SelectItem>
+                        <SelectItem value="topic_wise">Topic-wise</SelectItem>
+                        <SelectItem value="practice_set">Practice Set</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <AttemptedGrid items={buildBucket("attempted") as any} />
+                </div>
               ) : t.key === "topic_wise" ? (
                 <TopicWiseView
                   items={buildBucket("topic_wise") as any}
@@ -589,12 +629,38 @@ function TopicWiseView({
       </Card>
 
       {/* Filters */}
-      <div className="space-y-2">
+      <div className="flex flex-wrap items-center gap-3">
         {sections.length > 0 && (
-          <ChipStrip label="Section" options={sections} value={sectionFilter} onChange={onSectionChange} tone="sky" />
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-slate-500 shrink-1">Section:</span>
+            <Select value={sectionFilter} onValueChange={onSectionChange}>
+              <SelectTrigger className="h-9 w-44 bg-white text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Sections</SelectItem>
+                {sections.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         )}
         {topics.length > 0 && (
-          <ChipStrip label="Topic" options={topics} value={topicFilter} onChange={onTopicChange} tone="emerald" />
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-slate-500 shrink-1">Topic:</span>
+            <Select value={topicFilter} onValueChange={onTopicChange}>
+              <SelectTrigger className="h-9 w-44 bg-white text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Topics</SelectItem>
+                {topics.map((t) => (
+                  <SelectItem key={t} value={t}>{t}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         )}
       </div>
 
@@ -804,13 +870,20 @@ function BucketGrid({
     return (
       <div className="space-y-4">
         {sectionsAvailable.length > 0 && onSectionChange && (
-          <ChipStrip
-            label="Section"
-            options={sectionsAvailable}
-            value={sectionFilter || "All"}
-            onChange={onSectionChange}
-            tone="sky"
-          />
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs font-semibold text-slate-500 shrink-1">Section:</span>
+            <Select value={sectionFilter || "All"} onValueChange={onSectionChange}>
+              <SelectTrigger className="h-9 w-44 bg-white text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Sections</SelectItem>
+                {sectionsAvailable.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         )}
         {sectionKeys.length === 0 ? renderEmpty : (
           sectionKeys.map((sec) => (
