@@ -848,6 +848,15 @@ const App = () => (
               <Route path="personalized-hub/attempt/:attemptId" element={<InnerLazyPage><PersonalizedMockRunnerPage /></InnerLazyPage>} />
               <Route path="personalized-hub/result/:attemptId" element={<InnerLazyPage><PersonalizedMockResultPage /></InnerLazyPage>} />
               <Route path="sop-review" element={<InnerLazyPage><StudentSOPReview /></InnerLazyPage>} />
+              <Route path="vocabulary" element={<InnerLazyPage><StudentVocabularyHub /></InnerLazyPage>} />
+              <Route path="vocabulary/feed" element={<InnerLazyPage><StudentVocabularyFeed /></InnerLazyPage>} />
+              <Route path="vocabulary/search" element={<InnerLazyPage><StudentVocabularySearch /></InnerLazyPage>} />
+              <Route path="vocabulary/bookmarks" element={<InnerLazyPage><StudentVocabularyBookmarks /></InnerLazyPage>} />
+              <Route path="vocabulary/quiz" element={<InnerLazyPage><StudentVocabularyQuiz /></InnerLazyPage>} />
+              <Route path="vocabulary/revision" element={<InnerLazyPage><StudentVocabularyRevision /></InnerLazyPage>} />
+              <Route path="vocabulary/leaderboard" element={<InnerLazyPage><StudentVocabularyLeaderboard /></InnerLazyPage>} />
+              <Route path="vocabulary/analytics" element={<InnerLazyPage><StudentVocabularyAnalytics /></InnerLazyPage>} />
+              <Route path="vocabulary/word/:slug" element={<InnerLazyPage><StudentVocabularyWord /></InnerLazyPage>} />
             </Route>
             <Route path="/mba-compass" element={<PublicLayout><LazyPage><MBACompassCoursesPage /></LazyPage></PublicLayout>} />
             <Route path="/mba-compass/compare" element={<PublicLayout><LazyPage><MBACompassComparePage /></LazyPage></PublicLayout>} />
