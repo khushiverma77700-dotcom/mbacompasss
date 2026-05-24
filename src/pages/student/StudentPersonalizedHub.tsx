@@ -10,8 +10,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { EXAMS, DIFFICULTIES, getExam } from "@/data/personalizedExams";
-import { Sparkles, Timer, ListChecks, TrendingUp, Lock, RefreshCcw } from "lucide-react";
+import { Sparkles, Timer, ListChecks, TrendingUp, Lock, RefreshCcw, PlayCircle } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import PersonalizedHubGuide from "@/components/student/PersonalizedHubGuide";
 
 const QUESTION_OPTIONS = [5, 10, 15, 20, 25, 30, 40, 50];
 
@@ -26,6 +27,7 @@ export default function StudentPersonalizedHub() {
   const [access, setAccess] = useState<any>(null);
   const [todayCount, setTodayCount] = useState(0);
   const [history, setHistory] = useState<any[]>([]);
+  const [showGuide, setShowGuide] = useState(false);
 
   const exam = getExam(examCode);
 
@@ -103,9 +105,20 @@ export default function StudentPersonalizedHub() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Sparkles className="h-5 w-5 text-sky-600" />
-        <h1 className="text-2xl font-bold">Personalized Mock Hub</h1>
+      <PersonalizedHubGuide forceOpen={showGuide} onClose={() => setShowGuide(false)} />
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-sky-600" />
+          <h1 className="text-2xl font-bold">Personalized Mock Hub</h1>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="border-sky-300 text-sky-700 hover:bg-sky-50"
+          onClick={() => setShowGuide(true)}
+        >
+          <PlayCircle className="h-4 w-4 mr-1" /> How it works
+        </Button>
       </div>
 
       {/* Overall report */}
