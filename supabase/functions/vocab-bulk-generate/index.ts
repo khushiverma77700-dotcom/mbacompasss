@@ -11,6 +11,16 @@ const corsHeaders = {
 const CATEGORIES = ["finance","marketing","consulting","hr","economics","corp_comm","general"];
 const DIFFICULTIES = ["beginner","intermediate","cat","gdpi"];
 const EXAMS = ["CAT","XAT","NMAT","SNAP","IIFT","CMAT","MAT"];
+const ADVANCED_WORD_POOL = `abnegation abrogate abscond abstruse accretion acerbic acquiesce adumbrate alacrity anachronistic anodyne antipathy apocryphal approbation arduous ascetic assiduous attenuate audacious austere axiomatic bellicose bombastic bowdlerize cacophony calumny capricious castigate chicanery circumspect cogent compunction conciliatory conflate connivance conspicuous contumacious copious deleterious demagogue demur descry desultory diatribe dichotomy diffident dilatory disabuse discordant disingenuous disinterested dogmatic ebullient eclectic effrontery egregious enervate enigmatic ephemeral equanimity equivocate eschew esoteric eulogy exacerbate excoriate exculpate exigent expostulate expunge fastidious fecund felicity fulminate garrulous hegemony iconoclast idiosyncrasy immutable impecunious imperious implacable inchoate incipient indefatigable indolent ineffable ineluctable ingenuous inimical innocuous insidious intransigent inveterate irascible jejune laconic lambaste lassitude limpid loquacious lugubrious magnanimous malapropism malleable maudlin mendacious mercurial meticulous misanthrope mitigant mollify moribund munificent nebulous nefarious obdurate obfuscate obsequious obstreperous officious ostentatious palliate parsimonious paucity pellucid perfidious perfunctory perspicacious pertinacious phlegmatic polemic portentous pragmatic prevaricate prodigious propitiate punctilious pusillanimous quixotic recalcitrant redolent refractory reify reticent sagacious sanguine sardonic scintillating sedulous sententious soporific specious spurious stolid stratagem stringent supercilious surreptitious sycophantic taciturn temerity tenacious torpor trenchant truculent ubiquitous umbrage vacillate vacuous venerable veracity verbose vicissitude vituperate vitriolic vociferous winnow zealous aberration abeyance abstemious accost acrimony acumen adamant admonish adulterate aesthetic affable aggrandize alchemy alienate altruism ambivalent ameliorate amenable amorphous anathema ancillary animus anomaly antediluvian antithesis aplomb apostate arbitrary arcane artifice asperity assuage atavistic august avarice banal bane benign bolster brazen bucolic burgeon burnish cajole candor canny censure chastise circumscribe clairvoyant clamor coalesce coercive complacent complaisant conflagration connoisseur contrite convivial convoluted corroborate credulous cryptic culpable debacle debauchery debunk decorum deference deft denigrate deride derivative didactic digress discerning discomfit disconcert disenfranchise disparate dispel docile duplicity edifying efface effusive elegy elicit embellish empirical emulate endemic ephemeral erudite ethereal euphony evanescent exacting exiguous expedient extirpate extraneous facetious facile fallacious fatuous fervent fetter flippant foible forbearance fortuitous frugal furtive gainsay genial germane grandiloquent gregarious guile hapless harangue heresy heterodox hyperbole ignominious illustrious impassive impecunious impetuous imperturbable impervious impugn inadvertent incisive incongruous indignant indolent inexorable infelicitous ingratiate insouciant intrepid irrefutable jaundiced juxtapose largesse latent lethargy levity lucid machination malfeasance malinger mawkish mendicant modicum mordant myriad nascent nettlesome obviate occlude onerous opprobrium oscillate overt pallid parochial pedantic penury perennial perfidy pernicious perspicuity petulant placate platitude plausible plebeian poignant polemical preclude predilection prescient probity proclivity profligate prolific promulgate prudent puerile pugnacious quandary querulous quiescent rancor rarefied rebuke redoubtable refute relegate remiss reprisal reproach repudiation resilient reverent rhetorical ruminate salubrious sanction scrupulous seminal solicitous somnolent splenetic sporadic stymie subjugate sublime subterfuge succinct supplant surfeit tantamount tedious timorous transitory ubiquitous unctuous untenable upbraid vacillate vainglorious venal venerate vestigial vilify virulent voluble whimsical`.split(/\s+/);
+
+function estimateTokens(text: string): number {
+  return Math.ceil(String(text || "").length / 4);
+}
+
+function estimateCostUsd(provider: Provider, inputTokens: number, outputTokens: number): number {
+  if (provider === "openai") return (inputTokens / 1_000_000) * 0.15 + (outputTokens / 1_000_000) * 0.60;
+  return (inputTokens + outputTokens) * 0.0000015;
+}
 
 function slugify(w: string): string {
   return String(w).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -27,6 +37,12 @@ function sampleArray<T>(arr: T[], n: number): T[] {
     out.push(arr[i]);
   }
   return out;
+}
+
+function pickTargetWords(seen: Set<string>, need: number, attempt: number): string[] {
+  const offset = attempt % Math.max(ADVANCED_WORD_POOL.length, 1);
+  const rotated = ADVANCED_WORD_POOL.slice(offset).concat(ADVANCED_WORD_POOL.slice(0, offset));
+  return rotated.filter((w) => !seen.has(slugify(w))).slice(0, need);
 }
 
 type Provider = "lovable" | "openai";
