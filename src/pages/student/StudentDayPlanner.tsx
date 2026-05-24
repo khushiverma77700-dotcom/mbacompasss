@@ -531,6 +531,71 @@ export default function StudentDayPlanner() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* First-time / Help Guide */}
+      <Dialog open={showGuide} onOpenChange={(o) => (o ? setShowGuide(true) : dismissGuide())}>
+        <DialogContent className="max-w-2xl p-0 overflow-hidden">
+          <div className="relative p-6 bg-gradient-to-br from-sky-500 via-blue-500 to-indigo-600 text-white">
+            <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+            <div className="flex items-center gap-3">
+              <div className="h-12 w-12 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center ring-1 ring-white/30">
+                <Sparkles className="h-6 w-6" />
+              </div>
+              <div>
+                <DialogTitle className="text-2xl font-bold text-white">Welcome to your Day Planner</DialogTitle>
+                <DialogDescription className="text-white/85 mt-1">
+                  A quick tour to help you plan smarter, build streaks, and crack your target.
+                </DialogDescription>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+            <GuideStep
+              n={1}
+              icon={<Plus className="h-5 w-5 text-sky-600" />}
+              title="Add your first task"
+              desc="Tap “Add Task” to schedule a mock, sectional, revision or any study block. Set time, priority and even recurrence."
+            />
+            <GuideStep
+              n={2}
+              icon={<Lightbulb className="h-5 w-5 text-amber-500" />}
+              title="Use Smart Suggestions"
+              desc="Personalised study suggestions appear on top — one click adds them to your plan based on your weak areas and upcoming exams."
+            />
+            <GuideStep
+              n={3}
+              icon={<ListChecks className="h-5 w-5 text-emerald-600" />}
+              title="Tick off as you go"
+              desc="Switch between Yesterday, Today and Tomorrow. Complete tasks to earn XP, fuel your streak, and roll over missed work."
+            />
+            <GuideStep
+              n={4}
+              icon={<Flame className="h-5 w-5 text-orange-500" />}
+              title="Keep your streak alive"
+              desc="Complete at least one task daily. Your streak and longest streak are tracked at the top — consistency beats intensity."
+            />
+            <GuideStep
+              n={5}
+              icon={<BarChart3 className="h-5 w-5 text-rose-500" />}
+              title="Review Planner Performance"
+              desc="Open the highlighted Planner Performance button to see completion %, time spent per subject, and trends over weeks."
+            />
+
+            <div className="rounded-xl border border-sky-100 bg-sky-50/60 p-3 text-xs text-sky-800 flex items-start gap-2">
+              <Award className="h-4 w-4 mt-0.5 shrink-0" />
+              <span>Pro tip: plan tomorrow tonight. 5 minutes of planning saves an hour of confusion.</span>
+            </div>
+          </div>
+
+          <DialogFooter className="px-6 py-4 border-t bg-muted/30">
+            <Button variant="ghost" onClick={dismissGuide}>Skip</Button>
+            <Button onClick={dismissGuide} className="bg-sky-600 hover:bg-sky-700 gap-1.5">
+              Got it, let’s plan <ArrowRight className="h-4 w-4" />
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
