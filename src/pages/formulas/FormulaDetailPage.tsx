@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, BookmarkCheck, CheckCircle2, RotateCcw, Sparkles, Wand2, Star, GraduationCap, Calculator, ChevronRight, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MathExpression } from "@/components/formulas/MathExpression";
+import { MathInlineText } from "@/components/formulas/MathInlineText";
 import DOMPurify from "isomorphic-dompurify";
 
 export default function FormulaDetailPage() {
