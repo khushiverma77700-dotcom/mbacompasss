@@ -36,7 +36,7 @@ export default function StudentAttempts() {
     if (!user) return;
     (async () => {
       const { data } = await supabase.from("mock_attempts")
-        .select("id, test_id, status, started_at, submitted_at, total_score, max_score, percentile, total_correct, total_attempted, accuracy, sectional_scores, time_spent_seconds, test:mock_tests(name, slug, exam_code, category)")
+        .select("id, test_id, status, started_at, submitted_at, total_score, max_score, percentile, total_correct, total_attempted, accuracy, sectional_scores, time_spent_seconds, test:mock_tests(name, slug, exam_code, category, test_type)")
         .eq("user_id", user.id)
         .order("started_at", { ascending: false });
       setAttempts(data ?? []);
