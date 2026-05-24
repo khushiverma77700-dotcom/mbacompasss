@@ -27,6 +27,7 @@ export default function StudentPersonalizedHub() {
   const [access, setAccess] = useState<any>(null);
   const [todayCount, setTodayCount] = useState(0);
   const [history, setHistory] = useState<any[]>([]);
+  const [showGuide, setShowGuide] = useState(false);
 
   const exam = getExam(examCode);
 
