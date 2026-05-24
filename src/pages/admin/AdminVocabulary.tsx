@@ -217,7 +217,7 @@ export default function AdminVocabulary() {
                   </Button>
                 ))}
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">How many words?</label>
                   <Input type="number" min={1} max={5000} value={bulkCount} onChange={(e) => setBulkCount(Number(e.target.value))} />
@@ -242,7 +242,22 @@ export default function AdminVocabulary() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Exam (past-paper only)</label>
+                  <Select value={bulkExam} onValueChange={setBulkExam}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="any">Any (mixed sources)</SelectItem>
+                      {["CAT","XAT","NMAT","SNAP","IIFT","CMAT","MAT"].map((e) => <SelectItem key={e} value={e}>{e} only</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
+              {bulkExam !== "any" && (
+                <p className="text-xs text-primary">
+                  Only words verified to have appeared in past <b>{bulkExam}</b> papers will be saved. Each word will include the exam name, year, and slot (e.g. "{bulkExam} 2019 Slot 2").
+                </p>
+              )}
               <Button onClick={startBulk} disabled={bulkStarting || (bulkJob && bulkJob.status === "running")} className="gap-2">
                 {bulkStarting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
                 Start AI Generation
