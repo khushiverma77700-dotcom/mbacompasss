@@ -385,7 +385,6 @@ export default function StudentFormulaBook() {
                   <div className="mt-3 rounded-xl border border-slate-800 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4 shadow-inner">
                     <div className="mb-2 flex items-center justify-between">
                       <span className="rounded-full bg-sky-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-300">Formula</span>
-                      <span className="text-[10px] text-slate-500">LaTeX rendered</span>
                     </div>
                     <MathExpression tex={f.expression_latex} plain={f.expression} className="block text-lg text-sky-50" />
                   </div>
