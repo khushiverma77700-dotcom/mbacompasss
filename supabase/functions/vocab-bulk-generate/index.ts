@@ -254,7 +254,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     status: "running",
     provider,
     exam,
-    batch_size: provider === "openai" ? 30 : 20,
+    batch_size: provider === "openai" ? 18 : 14,
     started_at: seed ? undefined : originalStartedAt,
     current_activity: seed ? `Resuming from ${generated}/${total} (${provider})…` : `Warming up (${provider})…`,
   }).eq("id", jobId);
@@ -273,13 +273,14 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     if (Date.now() - startMs > MAX_RUN_MS) {
       await supabase.from("vocab_generation_jobs").update({
         status: "paused",
-        current_activity: `Paused at ${generated}/${total}. Click Resume to continue.`,
+        current_activity: `Continuing automatically from ${generated}/${total} in the next worker slice…`,
         generated, duplicates, failed, attempts, rejected,
         estimated_input_tokens: inputTokens,
         estimated_output_tokens: outputTokens,
         estimated_cost_usd: costUsd,
-        progress_details: { cpu_proxy: 12, throughput_per_min: 0, last_batch_added: 0, last_batch_duplicates: 0, last_batch_rejected: 0, note: "Paused before runtime limit; resume continues safely." },
+        progress_details: { phase: "handoff", cpu_proxy: 12, throughput_per_min: 0, last_batch_added: 0, last_batch_duplicates: 0, last_batch_rejected: 0, note: "Worker slice ended safely; auto-resume is starting." },
       }).eq("id", jobId);
+      await kickNextInvocation(jobId);
       return;
     }
 
