@@ -415,6 +415,49 @@ function QuickLink({ to, icon: Icon, label, sub }: any) {
   );
 }
 
+const FEATURE_TONES: Record<string, { grad: string; ring: string; chip: string; btn: string }> = {
+  amber: {
+    grad: "from-amber-500 via-orange-500 to-rose-500",
+    ring: "ring-amber-200/70 dark:ring-amber-500/30",
+    chip: "bg-amber-50 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200",
+    btn: "bg-white text-amber-700 hover:bg-amber-50",
+  },
+  sky: {
+    grad: "from-sky-500 via-blue-500 to-indigo-500",
+    ring: "ring-sky-200/70 dark:ring-sky-500/30",
+    chip: "bg-sky-50 text-sky-800 dark:bg-sky-500/15 dark:text-sky-200",
+    btn: "bg-white text-sky-700 hover:bg-sky-50",
+  },
+};
+
+function FeatureCard({ to, icon: Icon, label, sub, cta, description, tone }: any) {
+  const t = FEATURE_TONES[tone] || FEATURE_TONES.sky;
+  return (
+    <Link to={to} className="group block">
+      <Card className={`relative h-full overflow-hidden border-0 ring-1 ${t.ring} shadow-md transition-all hover:-translate-y-0.5 hover:shadow-xl`}>
+        <div aria-hidden className={`absolute inset-0 bg-gradient-to-br ${t.grad}`} />
+        <div aria-hidden className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.25),transparent_60%)]" />
+        <CardContent className="relative p-6 text-white">
+          <div className="flex items-start justify-between gap-3">
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/15 ring-1 ring-white/30 backdrop-blur">
+              <Icon className="h-6 w-6" />
+            </div>
+            <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${t.chip}`}>{sub}</span>
+          </div>
+          <div className="mt-4">
+            <div className="font-heading text-2xl font-bold leading-tight">{label}</div>
+            <p className="mt-1 text-sm text-white/85">{description}</p>
+          </div>
+          <div className="mt-5 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-semibold shadow-sm transition-transform group-hover:translate-x-0.5 bg-white/95 text-slate-900">
+            {cta} <ChevronRight className="h-3.5 w-3.5" />
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
+
 function SectionTitle({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
     <div className="mb-3 flex items-end justify-between">
