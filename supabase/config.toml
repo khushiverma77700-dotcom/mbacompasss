@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.bulk-mock-worker]
 verify_jwt = false
+
+[functions.personalized-bulk-worker]
+verify_jwt = false
