@@ -151,16 +151,19 @@ If you cannot fully complete ALL fields with high quality, OMIT the word. Unique
   return Array.isArray(parsed.words) ? parsed.words : [];
 }
 
-async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null, provider: Provider) {
+async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null, provider: Provider, seed?: { generated: number; duplicates: number; failed: number }) {
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const keys = {
     lovable: Deno.env.get("LOVABLE_API_KEY") || "",
     openai: Deno.env.get("OPENAI_API_KEY") || "",
   };
 
-  let generated = 0, duplicates = 0, failed = 0;
+  let generated = seed?.generated || 0;
+  let duplicates = seed?.duplicates || 0;
+  let failed = seed?.failed || 0;
   const seenSlugs = new Set<string>();
   const recentDupes: string[] = [];
+
 
   // Seed exclude list with ALL existing slugs (paginated, so dedupe works for large libraries)
   {
@@ -175,15 +178,28 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     }
   }
 
-  await supabase.from("vocab_generation_jobs").update({ status: "running", current_activity: `Warming up (${provider})…` }).eq("id", jobId);
+  await supabase.from("vocab_generation_jobs").update({ status: "running", current_activity: seed ? `Resuming from ${generated}/${total} (${provider})…` : `Warming up (${provider})…` }).eq("id", jobId);
 
   // OpenAI handles bigger batches reliably -> fewer calls -> lower cost.
   const BATCH = provider === "openai" ? 40 : 25;
   let consecutiveEmpty = 0;
   const MAX_ATTEMPTS = Math.ceil(total / BATCH) * 4 + 10; // safety cap
   let attempts = 0;
+  // Soft wall-clock budget: exit cleanly before the edge runtime kills us.
+  // Mark the job as `paused` so the UI can offer a Resume button.
+  const startMs = Date.now();
+  const MAX_RUN_MS = 4 * 60 * 1000; // 4 minutes per invocation
 
   while (generated < total && attempts < MAX_ATTEMPTS) {
+    if (Date.now() - startMs > MAX_RUN_MS) {
+      await supabase.from("vocab_generation_jobs").update({
+        status: "paused",
+        current_activity: `Paused at ${generated}/${total}. Click Resume to continue.`,
+        generated, duplicates, failed,
+      }).eq("id", jobId);
+      return;
+    }
+
     attempts++;
     const need = Math.min(BATCH, total - generated);
     await supabase.from("vocab_generation_jobs").update({
@@ -338,6 +354,21 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
+
+    // ---- RESUME path ----
+    if (body.resume_job_id) {
+      const { data: existing, error: jErr } = await supabase
+        .from("vocab_generation_jobs").select("*").eq("id", body.resume_job_id).maybeSingle();
+      if (jErr || !existing) return new Response(JSON.stringify({ error: "Job not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (existing.status === "completed") return new Response(JSON.stringify({ job_id: existing.id, status: "completed" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const resumeProvider: Provider = body.provider === "openai" ? "openai" : (body.provider === "lovable" ? "lovable" : "lovable");
+      const resumeExam = body.exam && EXAMS.includes(String(body.exam).toUpperCase()) ? String(body.exam).toUpperCase() : null;
+      await supabase.from("vocab_generation_jobs").update({ status: "running", error: null, current_activity: "Resuming…" }).eq("id", existing.id);
+      // @ts-ignore Edge runtime background tasks
+      EdgeRuntime.waitUntil(runJob(existing.id, existing.requested, existing.category, existing.difficulty, resumeExam, resumeProvider, { generated: existing.generated || 0, duplicates: existing.duplicates || 0, failed: existing.failed || 0 }));
+      return new Response(JSON.stringify({ job_id: existing.id, resumed: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     let count = Number(body.count || 100);
     if (!Number.isFinite(count) || count < 1) count = 100;
     count = Math.min(count, 5000);
@@ -361,6 +392,7 @@ Deno.serve(async (req) => {
     EdgeRuntime.waitUntil(runJob(job.id, count, category, difficulty, exam, provider));
 
     return new Response(JSON.stringify({ job_id: job.id }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
   } catch (e) {
     console.error("vocab-bulk-generate error", e);
     return new Response(JSON.stringify({ error: (e as Error).message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });

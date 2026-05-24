@@ -283,10 +283,39 @@ export default function AdminVocabulary() {
                 </div>
               </div>
 
-              <Button onClick={startBulk} disabled={bulkStarting || (bulkJob && bulkJob.status === "running")} className="gap-2">
-                {bulkStarting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
-                Start AI Generation
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button onClick={startBulk} disabled={bulkStarting || (bulkJob && bulkJob.status === "running")} className="gap-2">
+                  {bulkStarting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                  Start AI Generation
+                </Button>
+                {bulkJob && bulkJob.id && (() => {
+                  const updatedMs = bulkJob.updated_at ? Date.now() - new Date(bulkJob.updated_at).getTime() : 0;
+                  const isStale = bulkJob.status === "running" && updatedMs > 90_000;
+                  const canResume = bulkJob.status === "paused" || bulkJob.status === "failed" || isStale;
+                  const incomplete = (bulkJob.generated || 0) < (bulkJob.requested || 0);
+                  if (!canResume || !incomplete) return null;
+                  return (
+                    <Button
+                      variant="outline"
+                      onClick={async () => {
+                        const { data, error } = await supabase.functions.invoke("vocab-bulk-generate", {
+                          body: { resume_job_id: bulkJob.id, provider: bulkProvider, exam: bulkExam === "any" ? null : bulkExam },
+                        });
+                        if (error || (data as any)?.error) {
+                          toast({ title: "Resume failed", description: error?.message || (data as any)?.error, variant: "destructive" });
+                          return;
+                        }
+                        toast({ title: "Resumed", description: `Continuing from ${bulkJob.generated}/${bulkJob.requested}` });
+                      }}
+                      className="gap-2"
+                    >
+                      <Wand2 className="w-4 h-4" />
+                      Resume ({bulkJob.generated}/{bulkJob.requested})
+                    </Button>
+                  );
+                })()}
+              </div>
+
 
               {bulkJob && (() => {
                 const req = Math.max(1, bulkJob.requested || 0);
