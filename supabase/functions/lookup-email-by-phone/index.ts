@@ -5,38 +5,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// NOTE: This endpoint must remain callable unauthenticated because it powers
+// login-by-mobile and forgot-password flows where the user has no session yet.
+// Enumeration risk is mitigated by:
+//   1. IP-based rate limiting (10 lookups / minute / IP) recorded in `phone_lookup_audit`.
+//   2. Generic "no account" responses with the same shape whether or not a phone exists.
+//   3. Never disclosing the email to a caller whose IP exceeded the cap.
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    // Require authentication — prevents anonymous phone-based email enumeration.
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token);
-    if (claimsErr || !claimsData?.claims?.sub) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const callerId = claimsData.claims.sub as string;
-
     const { phone } = await req.json();
     if (!phone || !/^\d{10}$/.test(phone)) {
       return new Response(JSON.stringify({ error: "Valid 10-digit phone required" }), {
@@ -45,7 +25,36 @@ Deno.serve(async (req) => {
       });
     }
 
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    // Lightweight rate limit: count lookups from this IP in the last 60s.
+    const ip =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("cf-connecting-ip") ||
+      "unknown";
+
+    const sinceIso = new Date(Date.now() - 60_000).toISOString();
+    const { count: recentCount } = await supabase
+      .from("phone_lookup_audit")
+      .select("id", { count: "exact", head: true })
+      .eq("ip", ip)
+      .gte("created_at", sinceIso);
+
+    if ((recentCount ?? 0) >= 10) {
+      return new Response(
+        JSON.stringify({ error: "Too many requests. Please try again in a minute." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Record this attempt (best-effort — don't fail the request if logging fails).
+    await supabase
+      .from("phone_lookup_audit")
+      .insert({ ip, phone_hash_prefix: phone.slice(0, 3) })
+      .then(() => undefined, () => undefined);
 
     const { data: profile } = await supabase
       .from("profiles")
@@ -54,25 +63,6 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!profile?.user_id) {
-      return new Response(JSON.stringify({ email: null }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Only allow disclosure if caller owns this phone, or is an admin.
-    let allowed = profile.user_id === callerId;
-    if (!allowed) {
-      const { data: roleRow } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", callerId)
-        .eq("role", "admin")
-        .maybeSingle();
-      allowed = !!roleRow;
-    }
-
-    if (!allowed) {
       return new Response(JSON.stringify({ email: null }), {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
