@@ -44,7 +44,8 @@ Each question:
 - 4 options
 - Single correct answer (index 0–3)
 - Brief explanation (1–3 sentences)
-- 1–2 word topic tag`;
+- 1–2 word topic tag
+Vary topics, numbers, names, and contexts so questions are clearly different from one another and from any standard textbook questions. Do not reuse stems. Seed: ${crypto.randomUUID()}.`;
 
   const tools = [{
     type: "function",
@@ -155,18 +156,44 @@ async function processOneItem(itemId: string) {
     return;
   }
 
-  const { data: inserted } = await db
+  // Deduplicate within batch by normalized text
+  const seen = new Set<string>();
+  const deduped = rows.filter((r) => {
+    const k = (r.question_text ?? "").trim().toLowerCase();
+    if (!k || seen.has(k)) return false;
+    seen.add(k);
+    return true;
+  });
+
+  // Upsert with ignoreDuplicates so the DB-level unique index on
+  // (exam_code, section, question_hash) drops anything already in the bank.
+  // .select() returns only the rows that were actually inserted.
+  const { data: inserted, error: insErr } = await db
     .from("personalized_questions")
-    .insert(rows)
+    .upsert(deduped, { onConflict: "exam_code,section,question_hash", ignoreDuplicates: true })
     .select("id");
 
+  if (insErr) {
+    await db.from("personalized_bulk_items").update({
+      status: "pending",
+      last_error: insErr.message.slice(0, 500),
+      current_step: "insert failed — will retry",
+      worker_lock_until: new Date(Date.now() + 60_000).toISOString(),
+    }).eq("id", itemId);
+    await db.rpc("rollup_personalized_bulk_job", { _job_id: item.job_id });
+    return;
+  }
+
   const newGen = (item.generated_count ?? 0) + (inserted?.length ?? 0);
+  const dupSkipped = deduped.length - (inserted?.length ?? 0);
   const done = newGen >= item.requested_count;
   await db.from("personalized_bulk_items").update({
     generated_count: newGen,
     status: done ? "completed" : "pending",
     completed_at: done ? new Date().toISOString() : null,
-    current_step: done ? "done" : `${newGen}/${item.requested_count}`,
+    current_step: done
+      ? "done"
+      : `${newGen}/${item.requested_count}${dupSkipped ? ` (skipped ${dupSkipped} dup)` : ""}`,
     last_error: null,
     worker_lock_until: null,
   }).eq("id", itemId);
