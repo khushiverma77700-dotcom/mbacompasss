@@ -124,6 +124,10 @@ export default function StudentLayout() {
   // and route their back / post-submit navigation back into /student/*.
   useEffect(() => {
     markStudentMode();
+    // Aggressively prefetch every student page chunk during idle time so
+    // navigating between tabs is effectively instant — no extra network
+    // round-trip when the user clicks "Mocks", "Performance", etc.
+    preloadAllStudentRoutes();
   }, []);
 
   useEffect(() => {
