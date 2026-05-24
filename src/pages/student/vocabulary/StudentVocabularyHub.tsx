@@ -101,38 +101,38 @@ export default function StudentVocabularyHub() {
   const xpProgress = Math.round((xpInLevel / 500) * 100);
 
   return (
-    <div className="space-y-8 pb-24">
+    <div className="space-y-6 pb-24 md:space-y-8">
       {/* Hero */}
-      <section className="relative overflow-hidden rounded-3xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/60 to-blue-50/40 shadow-[0_8px_30px_-12px_rgba(56,118,191,0.18)]">
+      <section className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/60 to-blue-50/40 shadow-[0_8px_30px_-12px_rgba(56,118,191,0.18)] md:rounded-3xl">
         <div aria-hidden className="pointer-events-none absolute -right-32 -top-32 h-80 w-80 rounded-full bg-sky-200/40 blur-3xl" />
         <div aria-hidden className="pointer-events-none absolute -left-24 bottom-0 h-64 w-64 rounded-full bg-blue-200/30 blur-3xl" />
         <div aria-hidden className="pointer-events-none absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "radial-gradient(currentColor 1px, transparent 1px)", backgroundSize: "22px 22px", color: "#1e3a8a" }} />
 
-        <div className="relative px-6 py-8 md:px-10 md:py-10">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="max-w-2xl">
+        <div className="relative px-4 py-6 sm:px-6 sm:py-8 md:px-10 md:py-10">
+          <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+            <div className="min-w-0 max-w-2xl">
               <div className="inline-flex items-center gap-2 rounded-full border border-sky-200/80 bg-white/70 px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-sky-700 backdrop-blur">
                 <Sparkles className="h-3 w-3" /> B-School Vocabulary
               </div>
-              <h1 className="font-heading mt-3 text-3xl font-bold leading-tight text-slate-900 md:text-4xl">
+              <h1 className="font-heading mt-3 text-2xl font-bold leading-tight text-slate-900 sm:text-3xl md:text-4xl">
                 Speak like a strategist.<br className="hidden md:block" />
                 <span className="bg-gradient-to-r from-sky-600 to-blue-600 bg-clip-text text-transparent">Read like a CEO.</span>
               </h1>
-              <p className="mt-2 max-w-xl text-sm text-slate-600 md:text-base">
+              <p className="mt-2 max-w-xl text-[13px] text-slate-600 sm:text-sm md:text-base">
                 Curated MBA-grade words with native pronunciation, Hindi & Hinglish meaning, past-exam tagging and spaced-repetition revision.
               </p>
-              <div className="mt-5 flex flex-wrap gap-2">
-                <Link to="/student/vocabulary/feed">
-                  <Button size="sm" className="gap-1 bg-gradient-to-r from-sky-600 to-blue-600 shadow-md hover:opacity-95">
-                    <BookOpen className="h-4 w-4" /> Open Daily Feed
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Link to="/student/vocabulary/feed" className="flex-1 sm:flex-none">
+                  <Button size="sm" className="w-full gap-1 bg-gradient-to-r from-sky-600 to-blue-600 shadow-md hover:opacity-95 sm:w-auto">
+                    <BookOpen className="h-4 w-4" /> Daily Feed
                   </Button>
                 </Link>
-                <Link to="/student/vocabulary/quiz">
-                  <Button size="sm" variant="outline" className="gap-1 border-sky-200 bg-white/70 backdrop-blur">
-                    <Brain className="h-4 w-4" /> Start Today's Quiz
+                <Link to="/student/vocabulary/quiz" className="flex-1 sm:flex-none">
+                  <Button size="sm" variant="outline" className="w-full gap-1 border-sky-200 bg-white/70 backdrop-blur sm:w-auto">
+                    <Brain className="h-4 w-4" /> Today's Quiz
                   </Button>
                 </Link>
-                <Link to="/student/vocabulary/search">
+                <Link to="/student/vocabulary/search" className="hidden sm:inline-flex">
                   <Button size="sm" variant="ghost" className="gap-1 text-slate-700">
                     <Search className="h-4 w-4" /> Smart Search
                   </Button>
@@ -141,7 +141,7 @@ export default function StudentVocabularyHub() {
             </div>
 
             {/* Level ring */}
-            <div className="flex items-center gap-4 rounded-2xl border border-white/80 bg-white/70 p-4 shadow-sm backdrop-blur">
+            <div className="flex items-center gap-3 self-start rounded-2xl border border-white/80 bg-white/70 p-3 shadow-sm backdrop-blur sm:p-4">
               <LevelRing percent={xpProgress} level={level} />
               <div className="text-sm">
                 <div className="font-heading text-base font-semibold text-slate-900">Level {level}</div>
@@ -152,11 +152,11 @@ export default function StudentVocabularyHub() {
           </div>
 
           {/* Stat strip */}
-          <div className="mt-7 grid grid-cols-2 gap-3 md:grid-cols-4">
-            <HeroStat icon={Flame} tint="text-orange-500" label="Current streak" value={`${streak?.current_streak || 0}d`} hint={`Best ${streak?.longest_streak || 0}`} />
+          <div className="mt-6 grid grid-cols-2 gap-2.5 sm:gap-3 md:mt-7 md:grid-cols-4">
+            <HeroStat icon={Flame} tint="text-orange-500" label="Streak" value={`${streak?.current_streak || 0}d`} hint={`Best ${streak?.longest_streak || 0}`} />
             <HeroStat icon={Trophy} tint="text-amber-500" label="Total XP" value={xp.toLocaleString()} hint={`Level ${level}`} />
-            <HeroStat icon={Brain} tint="text-sky-600" label="Due to revise" value={dueCount} hint="Spaced repetition" />
-            <HeroStat icon={Target} tint="text-blue-600" label="Today's goal" value={`${goal?.words_done || 0}/${goal?.words_target || 5}`} hint="Words" />
+            <HeroStat icon={Brain} tint="text-sky-600" label="Due" value={dueCount} hint="Revise" />
+            <HeroStat icon={Target} tint="text-blue-600" label="Goal" value={`${goal?.words_done || 0}/${goal?.words_target || 5}`} hint="Words" />
           </div>
         </div>
       </section>
