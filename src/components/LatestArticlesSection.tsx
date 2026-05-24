@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { cdnImage } from "@/lib/imageTransform";
 
 const LatestArticlesSection = () => {
   const { data: articles, isLoading } = useQuery({
