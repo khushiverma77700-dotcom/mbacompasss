@@ -6,8 +6,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CalendarDays, Clock, CheckCircle2, ArrowRight, Flame, Sparkles, Lock, ListChecks, Gauge, TrendingUp, Trophy, Target, AlertCircle, CalendarClock } from "lucide-react";
+import { CalendarDays, Clock, CheckCircle2, ArrowRight, Flame, Sparkles, Lock, ListChecks, Gauge, TrendingUp, Trophy, Target, AlertCircle, CalendarClock, Filter } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useEnrolledBundleFeatures } from "@/hooks/useEnrolledBundleFeatures";
 import UpgradeDialog from "@/components/student/UpgradeDialog";
 
@@ -29,6 +30,7 @@ export default function StudentDailyTest() {
   const [streak, setStreak] = useState(0);
   const [longestStreak, setLongestStreak] = useState(0);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [examFilter, setExamFilter] = useState<string>("All");
 
   const load = async () => {
     if (!user) return;
@@ -39,7 +41,7 @@ export default function StudentDailyTest() {
     const [{ data: t }, { data: hist }, { data: prog }] = await Promise.all([
       supabase.rpc("get_today_daily_test"),
       supabase.from("daily_test_assignments")
-        .select("id, assigned_date, title, note, test:mock_tests(id, name, slug, total_duration_minutes, difficulty)")
+        .select("id, assigned_date, title, note, test:mock_tests(id, name, slug, total_duration_minutes, difficulty, exam_code)")
         .gte("assigned_date", cutoff)
         .lte("assigned_date", future)
         .order("assigned_date", { ascending: false })
@@ -142,10 +144,21 @@ export default function StudentDailyTest() {
     };
   }, [recentAttempts]);
 
+  const examOptions = useMemo(() => {
+    const set = new Set<string>();
+    history.forEach((h: any) => h.test?.exam_code && set.add(h.test.exam_code));
+    return Array.from(set).sort();
+  }, [history]);
+
+  const filteredHistory = useMemo(() => {
+    if (examFilter === "All") return history;
+    return history.filter((h: any) => h.test?.exam_code === examFilter);
+  }, [history, examFilter]);
+
   const todayKey = new Date().toISOString().slice(0, 10);
-  const upcoming = useMemo(() => history.filter(h => h.assigned_date > todayKey).sort((a, b) => a.assigned_date.localeCompare(b.assigned_date)), [history, todayKey]);
-  const missed = useMemo(() => history.filter(h => h.assigned_date < todayKey && !h.progress?.completed_at), [history, todayKey]);
-  const completed = useMemo(() => history.filter(h => h.progress?.completed_at), [history]);
+  const upcoming = useMemo(() => filteredHistory.filter(h => h.assigned_date > todayKey).sort((a, b) => a.assigned_date.localeCompare(b.assigned_date)), [filteredHistory, todayKey]);
+  const missed = useMemo(() => filteredHistory.filter(h => h.assigned_date < todayKey && !h.progress?.completed_at), [filteredHistory, todayKey]);
+  const completed = useMemo(() => filteredHistory.filter(h => h.progress?.completed_at), [filteredHistory]);
 
   if (loading) return <div className="text-muted-foreground">Loading…</div>;
 
@@ -297,7 +310,22 @@ export default function StudentDailyTest() {
       <Card className="p-5">
         <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <h2 className="font-semibold flex items-center gap-2"><Trophy className="h-4 w-4 text-sky-600" /> Daily Test Schedule</h2>
-          <span className="text-xs text-muted-foreground">{completed.length} completed · {missed.length} missed · {upcoming.length} upcoming</span>
+          <div className="flex items-center gap-2">
+            {examOptions.length > 0 && (
+              <Select value={examFilter} onValueChange={setExamFilter}>
+                <SelectTrigger className="h-8 w-36 text-xs bg-white">
+                  <SelectValue placeholder="Filter exam" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="All">All Exams</SelectItem>
+                  {examOptions.map((c) => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <span className="text-xs text-muted-foreground">{completed.length} completed · {missed.length} missed · {upcoming.length} upcoming</span>
+          </div>
         </div>
 
         <Tabs defaultValue="missed" className="w-full">
