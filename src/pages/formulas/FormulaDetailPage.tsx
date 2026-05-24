@@ -14,6 +14,10 @@ import DOMPurify from "isomorphic-dompurify";
 
 export default function FormulaDetailPage() {
   const { slug } = useParams();
+  const location = useLocation();
+  const inStudent = location.pathname.startsWith("/student");
+  const listPath = inStudent ? "/student/formulas" : "/formulas";
+  const detailBase = inStudent ? "/student/formula" : "/formula";
   const { user } = useAuth();
   const { toast } = useToast();
   const [formula, setFormula] = useState<any>(null);
