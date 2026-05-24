@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
+import { render } from "@testing-library/react";
+import { screen, waitFor, fireEvent } from "@testing-library/dom";
 import { MemoryRouter } from "react-router-dom";
 
 // --- Mocks ---------------------------------------------------------------
@@ -36,18 +37,23 @@ vi.mock("@/components/mock/DualFeedbackMarquees", () => ({ DualFeedbackMarquees:
 vi.mock("@/components/mock/DayPlannerShowcase", () => ({ default: () => null }));
 vi.mock("@/components/mock/CoursesCTABand", () => ({ default: () => null }));
 
-// A FREE test — this is the regression case. Before the fix, clicking Buy
-// Now would navigate to /mocks/<slug> and start a mock attempt instead of
-// opening the paid checkout dialog.
-const freeTest = {
-  id: "test-123",
-  slug: "free-mock",
+const paidTest = {
+  id: "test-paid",
+  slug: "paid-mock",
   name: "Distribution & Selection Puzzles 1",
+  price_inr: 999,
+  pricing_type: "paid",
+};
+
+const freeTest = {
+  id: "test-free",
+  slug: "free-mock",
+  name: "Free Sample Mock",
   price_inr: 0,
   pricing_type: "free",
 };
 
-const settings = {
+const baseSettings: any = {
   hero_eyebrow: "Mock Test Series",
   hero_headline: "Crack CAT 2025",
   hero_subheadline: "Subtitle",
@@ -60,40 +66,36 @@ const settings = {
   offer_ends_at: null,
   bundle_title: "Complete CAT Mock Bundle",
   bundle_subtitle: "10 full-length mocks",
-  cta_target_test_id: freeTest.id,
+  cta_target_test_id: paidTest.id,
   trust_students: "12,000+",
   trust_avg_improvement: "+18",
   trust_rating: "4.8",
-  benefits: [],
-  whats_included: [],
-  comparison: [],
-  testimonials: [],
-  faqs: [],
-  meta_pixel_id: null,
-  meta_title: "",
-  meta_description: "",
-  why_us_title: "Why aspirants choose us",
-  why_us_subtitle: "Everything you need",
-  why_us_points: [],
-  auto_testimonials: [],
-  student_analyses: [],
-  student_feedback_text: [],
-  student_feedback_images: [],
-  expert_feedback: [],
-  platform_features: [],
-  ai_report_title: "",
-  ai_report_subtitle: "",
-  day_planner_block: null,
-  courses_cta_block: null,
+  benefits: [], whats_included: [], comparison: [], testimonials: [], faqs: [],
+  meta_pixel_id: null, meta_title: "", meta_description: "",
+  why_us_title: "Why aspirants choose us", why_us_subtitle: "Everything you need",
+  why_us_points: [], auto_testimonials: [], student_analyses: [],
+  student_feedback_text: [], student_feedback_images: [], expert_feedback: [],
+  platform_features: [], ai_report_title: "", ai_report_subtitle: "",
+  day_planner_block: null, courses_cta_block: null,
 };
+
+// Mutable per-test fixtures
+let currentTests = [paidTest];
+let currentSettings: any = baseSettings;
 
 vi.mock("@/integrations/supabase/client", () => {
   const builder = (table: string) => {
     const chain: any = {
       select: () => chain,
       eq: () => chain,
-      order: () => Promise.resolve({ data: table === "mock_tests" ? [freeTest] : [], error: null }),
-      maybeSingle: () => Promise.resolve({ data: table === "mocks_landing_settings" ? settings : null, error: null }),
+      order: () => Promise.resolve({
+        data: table === "mock_tests" ? currentTests : [],
+        error: null,
+      }),
+      maybeSingle: () => Promise.resolve({
+        data: table === "mocks_landing_settings" ? currentSettings : null,
+        error: null,
+      }),
     };
     return chain;
   };
@@ -107,8 +109,9 @@ import MocksListPage from "./MocksListPage";
 beforeEach(() => {
   navigateMock.mockReset();
   dialogCalls.length = 0;
-  // Stub scrollIntoView (jsdom doesn't implement it)
   Element.prototype.scrollIntoView = vi.fn();
+  currentTests = [paidTest];
+  currentSettings = { ...baseSettings, cta_target_test_id: paidTest.id };
 });
 
 const renderPage = () =>
@@ -118,43 +121,67 @@ const renderPage = () =>
     </MemoryRouter>
   );
 
-describe("MocksListPage — Buy Now regression", () => {
-  it("opens the checkout dialog and does NOT start a mock attempt, even for a free underlying test", async () => {
+const clickHeroBuyNow = async () => {
+  const buttons = await screen.findAllByRole("button", { name: /Buy Now/i });
+  const heroBuy = buttons.find((b) => /₹\s*999/.test(b.textContent || ""));
+  expect(heroBuy).toBeTruthy();
+  fireEvent.click(heroBuy!);
+};
+
+describe("MocksListPage — Buy Now behavior", () => {
+  it("paid bundle: opens checkout dialog with bundle title, does not navigate to attempt", async () => {
     renderPage();
-
-    // Wait for hero to render after settings load
-    const buyNowButtons = await screen.findAllByRole("button", { name: /Buy Now/i });
-    expect(buyNowButtons.length).toBeGreaterThan(0);
-
-    // Click the hero "Buy Now ₹999" — wired to startCheckout
-    const heroBuy = buyNowButtons.find((b) => /₹\s*999/.test(b.textContent || ""));
-    expect(heroBuy).toBeTruthy();
-    fireEvent.click(heroBuy!);
-
-    await waitFor(() => {
-      expect(screen.getByTestId("checkout-dialog")).toBeInTheDocument();
-    });
-
-    // Must never navigate to /mocks/<slug> (which would start an attempt)
-    const badNav = navigateMock.mock.calls.find(([arg]) =>
-      typeof arg === "string" && arg.startsWith(`/mocks/${freeTest.slug}`)
-    );
-    expect(badNav).toBeUndefined();
-  });
-
-  it("passes the bundle title (not the underlying mock name) to the checkout dialog", async () => {
-    renderPage();
-    const buyNowButtons = await screen.findAllByRole("button", { name: /Buy Now/i });
-    const heroBuy = buyNowButtons.find((b) => /₹\s*999/.test(b.textContent || ""));
-    fireEvent.click(heroBuy!);
+    await clickHeroBuyNow();
 
     await waitFor(() => {
       expect(screen.getByTestId("checkout-dialog")).toBeInTheDocument();
     });
 
     const lastOpen = [...dialogCalls].reverse().find((p) => p.open);
-    expect(lastOpen.testName).toBe(settings.bundle_title);
-    expect(lastOpen.priceInr).toBe(settings.price_current);
-    expect(lastOpen.testId).toBe(freeTest.id);
+    expect(lastOpen.testName).toBe(baseSettings.bundle_title);
+    expect(lastOpen.priceInr).toBe(baseSettings.price_current);
+    expect(lastOpen.testId).toBe(paidTest.id);
+
+    // Never auto-navigate to mock route
+    expect(navigateMock).not.toHaveBeenCalled();
+  });
+
+  it("free underlying test: routes to mock intro page (no dialog, no auto-start)", async () => {
+    currentTests = [freeTest];
+    currentSettings = { ...baseSettings, cta_target_test_id: freeTest.id };
+
+    renderPage();
+    await clickHeroBuyNow();
+
+    await waitFor(() => {
+      expect(navigateMock).toHaveBeenCalledWith(`/mocks/${freeTest.slug}`);
+    });
+
+    // No paid checkout dialog should appear
+    expect(screen.queryByTestId("checkout-dialog")).toBeNull();
+    expect(dialogCalls.every((p) => !p.open)).toBe(true);
+
+    // Must NOT navigate to the runner/attempt path
+    const startedAttempt = navigateMock.mock.calls.find(([arg]) =>
+      typeof arg === "string" && /\/attempt\//.test(arg)
+    );
+    expect(startedAttempt).toBeUndefined();
+  });
+
+  it("zero bundle price: routes to mock intro (no charge attempted)", async () => {
+    currentTests = [paidTest];
+    currentSettings = { ...baseSettings, price_current: 0, cta_target_test_id: paidTest.id };
+
+    renderPage();
+    const buttons = await screen.findAllByRole("button", { name: /Buy Now/i });
+    // Price label uses ₹0 here
+    const heroBuy = buttons.find((b) => /₹\s*0/.test(b.textContent || ""));
+    expect(heroBuy).toBeTruthy();
+    fireEvent.click(heroBuy!);
+
+    await waitFor(() => {
+      expect(navigateMock).toHaveBeenCalledWith(`/mocks/${paidTest.slug}`);
+    });
+    expect(screen.queryByTestId("checkout-dialog")).toBeNull();
   });
 });

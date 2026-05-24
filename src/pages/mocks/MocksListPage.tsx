@@ -169,8 +169,16 @@ export default function MocksListPage() {
       value: settings?.price_current,
       currency: "INR",
     });
-    // Always open paid checkout for the landing bundle, regardless of the
-    // underlying test's pricing_type. Guest checkout supported via dialog.
+    // Free underlying test OR free bundle price → no payment needed.
+    // Route to the mock intro page where the user can read rules and
+    // manually start the attempt (no auto-start).
+    const isFree =
+      targetTest.pricing_type === "free" || Number(settings?.price_current ?? 0) <= 0;
+    if (isFree) {
+      navigate(`/mocks/${targetTest.slug}`);
+      return;
+    }
+    // Paid bundle → open Razorpay/Stripe checkout dialog.
     setCheckoutTest(targetTest);
   };
 
