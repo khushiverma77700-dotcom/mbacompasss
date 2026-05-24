@@ -123,7 +123,7 @@ export default function FormulaDetailPage() {
   if (!formula) return (
     <div className="mx-auto max-w-3xl p-10 text-center">
       <h1 className="font-heading text-2xl font-bold">Formula not found</h1>
-      <Link to="/student/formulas" className="mt-3 inline-block text-sky-600 underline">Browse formula book</Link>
+      <Link to={listPath} className="mt-3 inline-block text-sky-600 underline">Browse formula book</Link>
     </div>
   );
 
