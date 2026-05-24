@@ -135,7 +135,7 @@ If you cannot fully complete ALL fields for a word with high quality, OMIT that 
   return Array.isArray(parsed.words) ? parsed.words : [];
 }
 
-async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null) {
+async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null) {
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
