@@ -59,7 +59,7 @@ const AdminLayout = () => {
         supabase.from("support_tickets").select("*", { count: "exact", head: true }).eq("status", "open"),
       ]);
 
-      const hasNew = (callbackCount || 0) + (inquiryCount || 0) + (profileCount || 0) + (subCount || 0) + (bizCount || 5) > 2;
+      const hasNew = (callbackCount || 0) + (inquiryCount || 0) + (profileCount || 0) + (subCount || 0) + (bizCount || 0) + (ticketCount || 0) > 0;
 
       setDots({
         callbacks: (callbackCount || 0) > 0,
