@@ -4579,12 +4579,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/courses/topic-wise-varc</loc>
-    <lastmod>2026-05-23</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://mbacompass.in/mba-compass/bsb-xat-series-advance</loc>
     <lastmod>2026-05-24</lastmod>
     <changefreq>weekly</changefreq>
@@ -4645,6 +4639,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://mbacompass.in/mocks/geometry-circles-1</loc>
+    <lastmod>2026-05-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://mbacompass.in/mocks/number-system-3-cat-a8dxzo50-mpha8dzv-1</loc>
     <lastmod>2026-05-23</lastmod>
     <changefreq>weekly</changefreq>
@@ -4657,8 +4657,20 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://mbacompass.in/mocks/geometry-circles-1</loc>
-    <lastmod>2026-05-23</lastmod>
+    <loc>https://mbacompass.in/mocks/daily-test-31-cat-svocto6c-moxsvofe-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-test-30-cat-t12s8qjc-moxt12uh-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-test-34-cat-t3e2uh03-moxt3e59-1</loc>
+    <lastmod>2026-05-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -5029,6 +5041,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://mbacompass.in/mocks/daily-test-cat-su8mlvdv-moxsu8r2-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://mbacompass.in/mocks/bsb-xat-mocks-series-1</loc>
     <lastmod>2026-05-23</lastmod>
     <changefreq>weekly</changefreq>
@@ -5037,6 +5055,96 @@
   <url>
     <loc>https://mbacompass.in/mocks/reading-comprehension-inference-2-3-cat-y6ars12t-mpgy6aw0-3</loc>
     <lastmod>2026-05-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-sprint-test-7-moixbfnk-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-sprint-test-8-moixcckw-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-sprint-test-9-moixdtmu-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-test-35-cat-t69ywukl-moxt6a3f-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-test-37-cat-tan08kmv-moxtan2i-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-test-38-cat-tc6wqcm1-moxtc71b-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-test-33-cat-szkuj0wt-moxszkwr-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-sprint-test-12-moiz40qo-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-sprint-test-13-moizbjth-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-sprint-test-14-moizh3fp-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-sprint-test-15-moizig33-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-sprint-test-3-moiwm08l-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-sprint-test-4-moiwv3pw-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-sprint-test-5-moiwvz5o-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-sprint-test-6-moiwwpxo-1</loc>
+    <lastmod>2026-05-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -5053,6 +5161,18 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://mbacompass.in/mocks/daily-sprint-test-18</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-sprint-test-1-moiw4izh-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://mbacompass.in/mocks/arithmetic-averages-mixtures-alligations-1-cat-xtoye3mm-mpgxtp2q-1</loc>
     <lastmod>2026-05-23</lastmod>
     <changefreq>weekly</changefreq>
@@ -5061,6 +5181,12 @@
   <url>
     <loc>https://mbacompass.in/mocks/reading-comprehension-main-idea-3-2-cat-yc5i97it-mpgyc5mk-2</loc>
     <lastmod>2026-05-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-sprint-test-2</loc>
+    <lastmod>2026-05-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -5151,6 +5277,24 @@
   <url>
     <loc>https://mbacompass.in/mocks/bsb-cat-mocks-series-1</loc>
     <lastmod>2026-05-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-cat-agzrb2dl-moxagzw0-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-cat-ahg66076-moxahgak-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-test-32-cat-sxzsi1hi-moxsxzxj-1</loc>
+    <lastmod>2026-05-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -5511,6 +5655,30 @@
   <url>
     <loc>https://mbacompass.in/mocks/bsb-xat-mocks-series-10</loc>
     <lastmod>2026-05-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-sprint-test-10</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-sprint-test-11-moiyq8z2-1</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-sprint-test-16</loc>
+    <lastmod>2026-05-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://mbacompass.in/mocks/daily-sprint-test-17</loc>
+    <lastmod>2026-05-24</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
