@@ -259,11 +259,20 @@ export default function AdminVocabulary() {
         </TabsContent>
 
         <TabsContent value="words" className="space-y-4">
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap items-center">
             <Input placeholder="Search words…" value={search} onChange={(e) => setSearch(e.target.value)} className="max-w-xs" />
             <Button onClick={() => { setEditing({ category: "general", difficulty: "intermediate", synonyms: [], antonyms: [] }); setOpenForm(true); }} className="gap-1">
               <Plus className="w-4 h-4" /> Add Word
             </Button>
+            <Button onClick={backfillMissing} disabled={backfillRunning} variant="outline" className="gap-1">
+              {backfillRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              Enrich Missing Fields (Hindi · Pronunciation · Examples)
+            </Button>
+            {backfillStatus && (
+              <span className="text-xs text-muted-foreground">
+                Enriched {backfillStatus.processed} · {backfillStatus.remaining} remaining
+              </span>
+            )}
           </div>
 
           {loading ? <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto my-10" /> : (
