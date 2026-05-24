@@ -134,6 +134,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
 
   let generated = 0, duplicates = 0, failed = 0;
   const seenSlugs = new Set<string>();
+  const recentDupes: string[] = [];
 
   // Seed exclude list with ALL existing slugs (paginated, so dedupe works for large libraries)
   {
