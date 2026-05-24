@@ -227,7 +227,11 @@ async function runJob(jobId: string, total: number, category: string | null, dif
         hasText(w.example_email) &&
         hasArr(w.synonyms) &&
         hasArr(w.antonyms) &&
-        hasText(w.part_of_speech);
+        hasText(w.part_of_speech) &&
+        // When an exam is specified, require at least one valid exam appearance for that exam.
+        (!exam || (hasArr(w.exam_appearances) && w.exam_appearances.some((s: any) =>
+          typeof s === "string" && new RegExp(`\\b${exam}\\b`, "i").test(s) && /\b(19|20)\d{2}\b/.test(s)
+        )));
       if (!complete) { rejectedIncomplete++; continue; }
 
       seenSlugs.add(slug);
