@@ -6577,6 +6577,54 @@ export type Database = {
         }
         Relationships: []
       }
+      vocab_generation_jobs: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string | null
+          current_activity: string | null
+          difficulty: string | null
+          duplicates: number
+          error: string | null
+          failed: number
+          generated: number
+          id: string
+          requested: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_activity?: string | null
+          difficulty?: string | null
+          duplicates?: number
+          error?: string | null
+          failed?: number
+          generated?: number
+          id?: string
+          requested: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_activity?: string | null
+          difficulty?: string | null
+          duplicates?: number
+          error?: string | null
+          failed?: number
+          generated?: number
+          id?: string
+          requested?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       vocab_progress: {
         Row: {
           id: string
