@@ -489,21 +489,59 @@ export default function StudentVocabularyFeed() {
         </CardContent>
       </Card>
 
-      {/* FILTERS */}
-      <Card className="border-slate-200 bg-white">
+      {/* SEARCH + FILTERS */}
+      <Card className="border-slate-200 bg-white dark:bg-card">
         <CardContent className="space-y-3 p-4">
+          {/* Search bar (inline expand) */}
+          {!searchOpen ? (
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              className="group flex w-full items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-left text-sm text-slate-500 transition-all hover:border-sky-300 hover:bg-sky-50/50 dark:bg-muted/40"
+            >
+              <Search className="h-4 w-4 text-sky-600" />
+              <span className="flex-1">Search a word… we'll show it in the same card format</span>
+              <kbd className="hidden rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-mono text-slate-500 sm:inline">↵</kbd>
+            </button>
+          ) : (
+            <div className="space-y-2 rounded-xl border-2 border-sky-300 bg-sky-50/40 p-2 dark:bg-sky-500/5">
+              <div className="flex items-center gap-2">
+                <Search className="ml-1 h-4 w-4 text-sky-600" />
+                <Input
+                  autoFocus
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && runSearch()}
+                  placeholder="Type a word, e.g. arbitrage, ubiquitous, prevaricate"
+                  className="h-9 border-0 bg-transparent shadow-none focus-visible:ring-0"
+                />
+                <Button size="sm" onClick={runSearch} disabled={searching || !searchQuery.trim()} className="h-9 gap-1 bg-gradient-to-r from-sky-600 to-blue-600">
+                  {searching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />} Search
+                </Button>
+                <Button size="icon" variant="ghost" className="h-9 w-9" onClick={closeSearch} aria-label="Close">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="px-1 text-[11px] text-slate-500">
+                Searches the library first. If not found, AI will explain & save the word.
+              </div>
+            </div>
+          )}
+
           <div>
             <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-              <Filter className="h-3 w-3" /> Domain
+              <GraduationCap className="h-3 w-3" /> Exam Focus
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {CATS.map((c) => (
-                <Chip key={c.k} active={category === c.k} onClick={() => setFilter("category", c.k)}>{c.l}</Chip>
+              {EXAMS.map((c) => (
+                <Chip key={c.k} active={exam === c.k} onClick={() => setFilter("exam", c.k)}>{c.l}</Chip>
               ))}
             </div>
           </div>
           <div>
-            <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Level</div>
+            <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+              <Filter className="h-3 w-3" /> Level
+            </div>
             <div className="flex flex-wrap gap-1.5">
               {LEVELS.map((c) => (
                 <Chip key={c.k} active={difficulty === c.k} onClick={() => setFilter("difficulty", c.k)}>{c.l}</Chip>
@@ -518,6 +556,7 @@ export default function StudentVocabularyFeed() {
             <span className="text-[11px] text-slate-500">{visible.length} of {words.length}</span>
           </div>
         </CardContent>
+
       </Card>
 
       {/* FEED */}
