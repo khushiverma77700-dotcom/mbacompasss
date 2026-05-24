@@ -147,7 +147,7 @@ const AdminExplanationCleaner = lazyWithPreload(() => import("./pages/admin/Admi
 const AdminMocksLanding = lazyWithPreload(() => import("./pages/admin/AdminMocksLanding"));
 const AdminStudentMocks = lazyWithPreload(() => import("./pages/admin/AdminStudentMocks"));
 const AdminSupportTickets = lazyWithPreload(() => import("./pages/admin/AdminSupportTickets"));
-const AdminStudentAnnouncements = lazyWithPreload(() => import("./pages/admin/AdminStudentAnnouncements"));
+
 const StudentLayout = lazyWithPreload(() => import("./pages/student/StudentLayout"));
 const StudentOverview = lazyWithPreload(() => import("./pages/student/StudentOverview"));
 const StudentMocks = lazyWithPreload(() => import("./pages/student/StudentMocks"));
@@ -156,7 +156,7 @@ const StudentPerformance = lazyWithPreload(() => import("./pages/student/Student
 const StudentWeakAreas = lazyWithPreload(() => import("./pages/student/StudentWeakAreas"));
 const StudentStrengthAreas = lazyWithPreload(() => import("./pages/student/StudentStrengthAreas"));
 const StudentGoals = lazyWithPreload(() => import("./pages/student/StudentGoals"));
-const StudentAnnouncements = lazyWithPreload(() => import("./pages/student/StudentAnnouncements"));
+
 const StudentTools = lazyWithPreload(() => import("./pages/student/StudentTools"));
 const StudentProfile = lazyWithPreload(() => import("./pages/student/StudentProfile"));
 const StudentInstall = lazyWithPreload(() => import("./pages/student/StudentInstall"));
@@ -754,7 +754,7 @@ const App = () => (
               <Route path="personalized-hub" element={<LazyPage><AdminPersonalizedHub /></LazyPage>} />
               <Route path="vocabulary" element={<LazyPage><AdminVocabulary /></LazyPage>} />
               <Route path="formulas" element={<LazyPage><AdminFormulas /></LazyPage>} />
-              <Route path="student-announcements" element={<LazyPage><AdminStudentAnnouncements /></LazyPage>} />
+              
               <Route path="student-notifications" element={<LazyPage><AdminStudentNotificationsBroadcast /></LazyPage>} />
               <Route path="daily-tests" element={<LazyPage><AdminDailyTests /></LazyPage>} />
               <Route path="mba-compass-courses" element={<LazyPage><AdminMBACompassCourses /></LazyPage>} />
@@ -837,7 +837,7 @@ const App = () => (
               <Route path="all-india-rank" element={<InnerLazyPage><StudentPerformance /></InnerLazyPage>} />
               <Route path="performance" element={<InnerLazyPage><StudentPerformance /></InnerLazyPage>} />
               <Route path="goals" element={<InnerLazyPage><StudentGoals /></InnerLazyPage>} />
-              <Route path="announcements" element={<InnerLazyPage><StudentAnnouncements /></InnerLazyPage>} />
+              
               <Route path="tools" element={<InnerLazyPage><StudentTools /></InnerLazyPage>} />
               <Route path="profile" element={<InnerLazyPage><StudentProfile /></InnerLazyPage>} />
               <Route path="install" element={<InnerLazyPage><StudentInstall /></InnerLazyPage>} />

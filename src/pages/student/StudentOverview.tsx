@@ -24,7 +24,6 @@ export default function StudentOverview() {
   const { attempts } = useStudentPerformance();
   const [enrollments, setEnrollments] = useState<any[]>([]);
   const [goals, setGoals] = useState<any[]>([]);
-  const [announcements, setAnnouncements] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [weak, setWeak] = useState<any[]>([]);
@@ -72,11 +71,6 @@ export default function StudentOverview() {
       supabase.from("student_goals").select("*").eq("user_id", user.id).eq("is_completed", false)
         .order("due_date", { ascending: true }).limit(3),
       (g: any) => setGoals(g ?? []),
-    );
-    run(
-      supabase.from("student_announcements").select("*").eq("is_active", true)
-        .order("pinned", { ascending: false }).order("created_at", { ascending: false }).limit(3),
-      (ann: any) => setAnnouncements(ann ?? []),
     );
     run(
       supabase.from("student_study_profile").select("*").eq("user_id", user.id).maybeSingle(),
