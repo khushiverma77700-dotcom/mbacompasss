@@ -238,11 +238,24 @@ Return strictly via the emit_formulas tool. Reject your own output mentally and 
     const rawList: any[] = Array.isArray(parsed.formulas) ? parsed.formulas : [];
     const rejected: { name: string; reason: string }[] = [];
 
+    // Track within-batch duplicates as well
+    const batchNames = new Set<string>();
+    const batchSlugs = new Set<string>();
+    const batchLatex = new Set<string>();
+
     const rows = rawList.map((f: any) => {
       if (!f?.name) { rejected.push({ name: "(no name)", reason: "missing name" }); return null; }
-      if (existingNames.has(String(f.name).toLowerCase())) { rejected.push({ name: f.name, reason: "duplicate" }); return null; }
+      const nNorm = normalizeName(f.name);
+      if (!nNorm) { rejected.push({ name: f.name, reason: "empty normalized name" }); return null; }
+      if (existingNamesNorm.has(nNorm) || batchNames.has(nNorm)) {
+        rejected.push({ name: f.name, reason: "duplicate name (already exists)" }); return null;
+      }
       if (!f.expression_latex || !isLatexValid(f.expression_latex, f.expression || "")) {
         rejected.push({ name: f.name, reason: "invalid LaTeX (missing \\frac/\\sqrt/^ where required)" }); return null;
+      }
+      const latexNorm = normalizeLatex(f.expression_latex);
+      if (latexNorm && (existingLatex.has(latexNorm) || batchLatex.has(latexNorm))) {
+        rejected.push({ name: f.name, reason: "duplicate formula (same LaTeX already exists)" }); return null;
       }
       if (!f.notes || String(f.notes).trim().length < 40) {
         rejected.push({ name: f.name, reason: "usage notes too short" }); return null;
@@ -252,6 +265,12 @@ Return strictly via the emit_formulas tool. Reject your own output mentally and 
       }
       const baseSlug = slugify(f.name);
       const slug = `${topic_slug}-${baseSlug}`.slice(0, 100);
+      if (existingSlugs.has(slug.toLowerCase()) || batchSlugs.has(slug.toLowerCase())) {
+        rejected.push({ name: f.name, reason: "duplicate slug" }); return null;
+      }
+      batchNames.add(nNorm);
+      batchSlugs.add(slug.toLowerCase());
+      if (latexNorm) batchLatex.add(latexNorm);
       return {
         slug, name: f.name,
         expression: f.expression,
