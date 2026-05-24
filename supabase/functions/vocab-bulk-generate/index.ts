@@ -193,7 +193,7 @@ If you cannot fully complete ALL fields with high quality, OMIT the word. Unique
   };
 }
 
-async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null, provider: Provider, seed?: { generated: number; duplicates: number; failed: number }) {
+async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null, provider: Provider, seed?: { generated: number; duplicates: number; failed: number; attempts?: number; rejected?: number; estimated_input_tokens?: number; estimated_output_tokens?: number; estimated_cost_usd?: number }) {
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const keys = {
     lovable: Deno.env.get("LOVABLE_API_KEY") || "",
@@ -203,6 +203,11 @@ async function runJob(jobId: string, total: number, category: string | null, dif
   let generated = seed?.generated || 0;
   let duplicates = seed?.duplicates || 0;
   let failed = seed?.failed || 0;
+  let attempts = seed?.attempts || 0;
+  let rejected = seed?.rejected || 0;
+  let inputTokens = seed?.estimated_input_tokens || 0;
+  let outputTokens = seed?.estimated_output_tokens || 0;
+  let costUsd = Number(seed?.estimated_cost_usd || 0);
   const seenSlugs = new Set<string>();
   const recentDupes: string[] = [];
 
@@ -220,13 +225,20 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     }
   }
 
-  await supabase.from("vocab_generation_jobs").update({ status: "running", current_activity: seed ? `Resuming from ${generated}/${total} (${provider})…` : `Warming up (${provider})…` }).eq("id", jobId);
+  const originalStartedAt = new Date().toISOString();
+  await supabase.from("vocab_generation_jobs").update({
+    status: "running",
+    provider,
+    exam,
+    batch_size: provider === "openai" ? 30 : 20,
+    started_at: seed ? undefined : originalStartedAt,
+    current_activity: seed ? `Resuming from ${generated}/${total} (${provider})…` : `Warming up (${provider})…`,
+  }).eq("id", jobId);
 
   // OpenAI handles bigger batches reliably -> fewer calls -> lower cost.
-  const BATCH = provider === "openai" ? 40 : 25;
+  const BATCH = provider === "openai" ? 30 : 20;
   let consecutiveEmpty = 0;
   const MAX_ATTEMPTS = Math.ceil(total / BATCH) * 4 + 10; // safety cap
-  let attempts = 0;
   // Soft wall-clock budget: exit cleanly before the edge runtime kills us.
   // Mark the job as `paused` so the UI can offer a Resume button.
   const startMs = Date.now();
@@ -237,20 +249,34 @@ async function runJob(jobId: string, total: number, category: string | null, dif
       await supabase.from("vocab_generation_jobs").update({
         status: "paused",
         current_activity: `Paused at ${generated}/${total}. Click Resume to continue.`,
-        generated, duplicates, failed,
+        generated, duplicates, failed, attempts, rejected,
+        estimated_input_tokens: inputTokens,
+        estimated_output_tokens: outputTokens,
+        estimated_cost_usd: costUsd,
+        progress_details: { cpu_proxy: 12, throughput_per_min: 0, last_batch_added: 0, last_batch_duplicates: 0, last_batch_rejected: 0, note: "Paused before runtime limit; resume continues safely." },
       }).eq("id", jobId);
       return;
     }
 
     attempts++;
     const need = Math.min(BATCH, total - generated);
+    const targetWords = pickTargetWords(seenSlugs, need, attempts);
     await supabase.from("vocab_generation_jobs").update({
-      current_activity: `Generating batch ${attempts} via ${provider} (${generated}/${total})…`,
+      current_activity: `Generating advanced CAT-level batch ${attempts} via ${provider} (${generated}/${total})…`,
+      attempts,
+      progress_details: { cpu_proxy: 68, target_words: targetWords.slice(0, 8), phase: "ai_generation" },
     }).eq("id", jobId);
 
     let batch: any[] = [];
+    let batchTokens = { inputTokens: 0, outputTokens: 0 };
+    const batchStarted = Date.now();
     try {
-      batch = await generateBatch(provider, keys, need, category, difficulty, exam, Array.from(seenSlugs), recentDupes);
+      const generatedBatch = await generateBatch(provider, keys, need, category, difficulty, exam, Array.from(seenSlugs), recentDupes, targetWords);
+      batch = generatedBatch.words;
+      batchTokens = { inputTokens: generatedBatch.inputTokens, outputTokens: generatedBatch.outputTokens };
+      inputTokens += batchTokens.inputTokens;
+      outputTokens += batchTokens.outputTokens;
+      costUsd += estimateCostUsd(provider, batchTokens.inputTokens, batchTokens.outputTokens);
     } catch (e) {
       const msg = (e as Error).message;
       console.error("Batch error", msg);
