@@ -335,6 +335,18 @@ export default function AdminVocabulary() {
                 const done = Math.min(bulkJob.generated || 0, req);
                 const pct = Math.min(100, Math.round((done / req) * 100));
                 const remaining = Math.max(0, (bulkJob.requested || 0) - (bulkJob.generated || 0));
+                const details = bulkJob.progress_details || {};
+                const startedAt = bulkJob.started_at || bulkJob.created_at;
+                const finishedAt = bulkJob.finished_at || bulkJob.updated_at || new Date().toISOString();
+                const runtimeMs = startedAt ? new Date(finishedAt).getTime() - new Date(startedAt).getTime() : 0;
+                const activeRuntimeMs = startedAt ? Date.now() - new Date(startedAt).getTime() : runtimeMs;
+                const runtime = bulkJob.status === "running" || bulkJob.status === "pending" ? formatDuration(activeRuntimeMs) : formatDuration(runtimeMs);
+                const cpuProxy = Math.max(0, Math.min(100, Number(details.cpu_proxy || (bulkJob.status === "running" ? 55 : 0))));
+                const throughput = Number(details.throughput_per_min || 0);
+                const duplicateRate = Math.round(((bulkJob.duplicates || 0) / Math.max(1, (bulkJob.generated || 0) + (bulkJob.duplicates || 0))) * 100);
+                const qualityRate = Math.max(0, 100 - Math.round(((bulkJob.rejected || 0) / Math.max(1, (bulkJob.generated || 0) + (bulkJob.rejected || 0))) * 100));
+                const cost = Number(bulkJob.estimated_cost_usd || 0);
+                const tokenTotal = Number(bulkJob.estimated_input_tokens || 0) + Number(bulkJob.estimated_output_tokens || 0);
                 const statusColor =
                   bulkJob.status === "completed" ? "text-emerald-600" :
                   bulkJob.status === "failed" ? "text-destructive" :
