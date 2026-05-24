@@ -28,7 +28,7 @@ function formatDuration(ms: number) {
 
 function metricTone(value: number, dangerAt = 85) {
   if (value >= dangerAt) return "text-destructive";
-  if (value >= 65) return "text-amber-600";
+  if (value >= 65) return "text-foreground";
   return "text-primary";
 }
 
@@ -348,9 +348,9 @@ export default function AdminVocabulary() {
                 const cost = Number(bulkJob.estimated_cost_usd || 0);
                 const tokenTotal = Number(bulkJob.estimated_input_tokens || 0) + Number(bulkJob.estimated_output_tokens || 0);
                 const statusColor =
-                  bulkJob.status === "completed" ? "text-emerald-600" :
+                  bulkJob.status === "completed" ? "text-primary" :
                   bulkJob.status === "failed" ? "text-destructive" :
-                  "text-sky-600";
+                  "text-primary";
                 return (
                   <div className="rounded-xl border border-border bg-card p-5 space-y-5 shadow-sm">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
