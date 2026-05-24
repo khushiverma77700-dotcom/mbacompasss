@@ -484,7 +484,7 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
               ) : t.key === "topic_wise" ? (
                 <TopicWiseView
                   items={buildBucket("topic_wise") as any}
-                  allTopicWise={Object.values(tests).filter((tt) => getKind(tt) === "topic_wise" && matchesExam(tt))}
+                  allTopicWise={Object.values(tests).filter((tt) => getKind(tt) === "topic_wise")}
                   attemptedByTest={attemptedByTest}
                   enrolledTestIds={enrolledTestIds}
                   sections={sectionChips}
@@ -493,7 +493,6 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
                   topics={topicChips}
                   topicFilter={topicFilter}
                   onTopicChange={setTopicFilter}
-                  examFilter={examFilter}
                   onUpgrade={() => setUpgradeOpen(true)}
                 />
               ) : (
