@@ -42,7 +42,11 @@ function renderInline(expr: string): string {
 function normalizeMathExpression(expr: string): string {
   return String(expr || "")
     .replace(/[\u200B-\u200D\uFEFF]/g, "")
-    .replace(/∈/g, "\\in")
+    .replace(/∈\s*N\b/g, "\\in \\mathbb{N}")
+    .replace(/∈\s*Z\b/g, "\\in \\mathbb{Z}")
+    .replace(/∈\s*Q\b/g, "\\in \\mathbb{Q}")
+    .replace(/∈\s*R\b/g, "\\in \\mathbb{R}")
+    .replace(/∈/g, "\\in ")
     .replace(/ℕ/g, "\\mathbb{N}")
     .replace(/ℤ/g, "\\mathbb{Z}")
     .replace(/ℚ/g, "\\mathbb{Q}")
