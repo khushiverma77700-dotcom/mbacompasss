@@ -82,6 +82,7 @@ export default function StudentFormulaBook() {
   const setFilter = (k: string, v: string) => {
     const p = new URLSearchParams(params);
     if (!v || v === "all") p.delete(k); else p.set(k, v);
+    if (k === "section") p.delete("topic"); // reset topic when section changes
     setParams(p);
   };
   const toggleFlag = (k: string) => {
@@ -89,6 +90,13 @@ export default function StudentFormulaBook() {
     if (p.get(k) === "1") p.delete(k); else p.set(k, "1");
     setParams(p);
   };
+
+  const sections = useMemo(() => topics.filter((t) => !t.parent_slug), [topics]);
+  const topicsInSection = useMemo(
+    () => (section === "all" ? [] : topics.filter((t) => t.parent_slug === section)),
+    [topics, section],
+  );
+  const topicSlugsInSection = useMemo(() => new Set(topicsInSection.map((t) => t.slug)), [topicsInSection]);
 
   // Instant smart filter
   const visible = useMemo(() => {
