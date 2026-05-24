@@ -15,9 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { MathExpression } from "@/components/formulas/MathExpression";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Layers as LayersIcon, BookOpen, GraduationCap as GradIcon, Gauge, ListChecks, X } from "lucide-react";
-
-const EXAMS = ["CAT", "XAT", "NMAT", "SNAP", "CMAT", "IIFT", "MAT"];
+import { Layers as LayersIcon, BookOpen, Gauge, ListChecks, X } from "lucide-react";
 const DIFFS = [
   { k: "all", l: "All" },
   { k: "beginner", l: "Beginner" },
@@ -48,7 +46,6 @@ export default function StudentFormulaBook() {
   const q = params.get("q") || "";
   const section = params.get("section") || "all";
   const topic = params.get("topic") || "all";
-  const exam = params.get("exam") || "all";
   const difficulty = params.get("difficulty") || "all";
   const status = params.get("status") || "all";
   const shortcutOnly = params.get("shortcut") === "1";
@@ -107,7 +104,6 @@ export default function StudentFormulaBook() {
         if (f.topic_slug !== section && !topicSlugsInSection.has(f.topic_slug)) return false;
       }
       if (topic !== "all" && f.topic_slug !== topic) return false;
-      if (exam !== "all" && !(f.exam_tags || []).includes(exam)) return false;
       if (difficulty !== "all" && f.difficulty !== difficulty) return false;
       if (shortcutOnly && !f.is_shortcut) return false;
       if (importantOnly && !f.is_high_weightage && f.importance < 4) return false;
@@ -124,7 +120,7 @@ export default function StudentFormulaBook() {
       }
       return true;
     });
-  }, [formulas, q, section, topic, exam, difficulty, status, shortcutOnly, importantOnly, progress, topicSlugsInSection]);
+  }, [formulas, q, section, topic, difficulty, status, shortcutOnly, importantOnly, progress, topicSlugsInSection]);
 
   // Suggestions while typing
   const suggestions = useMemo(() => {
@@ -303,7 +299,7 @@ export default function StudentFormulaBook() {
                   <div className="text-[10px] uppercase tracking-wider text-slate-500">Pick a section, then drill into topics</div>
                 </div>
               </div>
-              {(section !== "all" || topic !== "all" || exam !== "all" || difficulty !== "all" || status !== "all" || shortcutOnly || importantOnly) && (
+              {(section !== "all" || topic !== "all" || difficulty !== "all" || status !== "all" || shortcutOnly || importantOnly) && (
                 <button
                   onClick={() => setParams(new URLSearchParams(q ? { q } : {}))}
                   className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:border-rose-300 hover:text-rose-600"
@@ -313,7 +309,7 @@ export default function StudentFormulaBook() {
               )}
             </div>
 
-            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
               {/* SECTION — primary */}
               <DropdownField
                 primary
@@ -336,14 +332,6 @@ export default function StudentFormulaBook() {
                   { k: "all", l: section === "all" ? "All topics" : "All topics in section" },
                   ...topicsInSection.map((t) => ({ k: t.slug, l: t.name })),
                 ]}
-              />
-              <DropdownField
-                icon={<GradIcon className="h-3.5 w-3.5" />}
-                label="Exam"
-                value={exam}
-                onChange={(v) => setFilter("exam", v)}
-                placeholder="All exams"
-                options={[{ k: "all", l: "All exams" }, ...EXAMS.map((e) => ({ k: e, l: e }))]}
               />
               <DropdownField
                 icon={<Gauge className="h-3.5 w-3.5" />}
