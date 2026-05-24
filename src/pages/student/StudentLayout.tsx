@@ -43,6 +43,7 @@ import BRAND_LOGO_URL from "@/assets/brandLogo";
 import type { FeatureKey } from "@/lib/courseFeatures";
 import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
 import { markStudentMode, clearStudentMode } from "@/lib/studentModeNav";
+import { preloadAllStudentRoutes, preloadStudentRoute } from "@/lib/preloadStudentRoutes";
 
 type NavItem = { to: string; label: string; icon: any; end?: boolean; feature?: FeatureKey };
 
