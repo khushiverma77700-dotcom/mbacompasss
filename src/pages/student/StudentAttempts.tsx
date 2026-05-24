@@ -160,7 +160,7 @@ export default function StudentAttempts() {
   };
 
   const reset = () => {
-    setQ(""); setExam("all"); setStatus("submitted"); setFrom(""); setTo("");
+    setQ(""); setExam("all"); setType("all"); setStatus("submitted"); setFrom(""); setTo("");
     setMinScore(""); setMaxScore(""); setSort("date_desc");
   };
 
