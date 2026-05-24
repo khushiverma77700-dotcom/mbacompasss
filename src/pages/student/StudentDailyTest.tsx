@@ -24,6 +24,7 @@ export default function StudentDailyTest() {
   const dailyEnabled = isEnabled("daily_tests");
   const [today, setToday] = useState<Today | null>(null);
   const [todayMeta, setTodayMeta] = useState<{ qCount: number; difficulty: string | null }>({ qCount: 0, difficulty: null });
+  const [todayAttempt, setTodayAttempt] = useState<any>(null);
   const [history, setHistory] = useState<any[]>([]);
   const [recentAttempts, setRecentAttempts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,6 +88,17 @@ export default function StudentDailyTest() {
         todayRow.my_attempt_id = att.id;
         progByDate[todayRow.assigned_date] = { assigned_date: todayRow.assigned_date, attempt_id: att.id, completed_at: att.submitted_at };
       }
+    }
+
+    // Fetch today's attempt details for score display
+    if (todayRow?.my_attempt_id) {
+      const { data: attDetail } = await supabase.from("mock_attempts")
+        .select("id, total_score, max_score, accuracy, total_correct, total_incorrect, total_attempted, submitted_at")
+        .eq("id", todayRow.my_attempt_id)
+        .maybeSingle();
+      setTodayAttempt(attDetail);
+    } else {
+      setTodayAttempt(null);
     }
 
     const merged = (hist ?? []).map((h: any) => ({ ...h, progress: progByDate[h.assigned_date] ?? null }));
@@ -220,7 +232,13 @@ export default function StudentDailyTest() {
             <div className="flex flex-col gap-2 items-end">
               {today.completed_at ? (
                 <>
-                  <Badge className="bg-emerald-100 text-emerald-700 border-0 gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> Completed</Badge>
+                  <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200 gap-1 px-3 py-1"><CheckCircle2 className="h-3.5 w-3.5" /> Attempted</Badge>
+                  {todayAttempt && (
+                    <div className="text-right text-sky-100 text-sm space-y-0.5">
+                      <div className="font-semibold text-white">{todayAttempt.total_score ?? 2}/{todayAttempt.max_score ?? 1} marks</div>
+                      <div className="text-xs">{Math.round(Number(todayAttempt.accuracy || 0))}% accuracy</div>
+                    </div>
+                  )}
                   {today.my_attempt_id && (
                     <Link to={`/student/daily-test/report/${today.my_attempt_id}`}>
                       <Button size="lg" variant="secondary">View detailed report <ArrowRight className="h-4 w-4 ml-1" /></Button>
@@ -229,7 +247,7 @@ export default function StudentDailyTest() {
                 </>
               ) : dailyEnabled ? (
                 <Link to={`/mocks/${today.test_slug}`}>
-                  <Button size="lg" variant="secondary" className="gap-2">Start daily test <ArrowRight className="h-4 w-4" /></Button>
+                  <Button size="lg" variant="secondary" className="gap-2">Attempt Now <ArrowRight className="h-4 w-4" /></Button>
                 </Link>
               ) : (
                 <Button size="lg" variant="secondary" className="gap-2" onClick={() => setUpgradeOpen(true)}>
