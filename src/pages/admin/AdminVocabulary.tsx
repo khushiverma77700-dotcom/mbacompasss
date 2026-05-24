@@ -67,7 +67,21 @@ export default function AdminVocabulary() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  const loadLatestBulkJob = async () => {
+    const { data } = await supabase
+      .from("vocab_generation_jobs")
+      .select("*")
+      .in("status", ["running", "pending", "paused", "failed"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (data && (data.generated || 0) < (data.requested || 0)) {
+      setBulkJob(data);
+      setBulkJobId(data.id);
+    }
+  };
+
+  useEffect(() => { load(); loadLatestBulkJob(); }, []);
 
   const resumeBulkJob = async (job: any, silent = false) => {
     if (!job?.id) return;
