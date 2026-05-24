@@ -14,6 +14,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { MathExpression } from "@/components/formulas/MathExpression";
+import { MathInlineText } from "@/components/formulas/MathInlineText";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Layers as LayersIcon, BookOpen, Gauge, ListChecks, X } from "lucide-react";
 const DIFFS = [
@@ -473,7 +474,7 @@ export default function StudentFormulaBook() {
                     <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">
                       <BookOpen className="h-3 w-3" /> Explanation
                     </div>
-                    <p className="text-[0.92rem] leading-7 text-slate-700">{f.explanation}</p>
+                    <MathInlineText as="p" text={f.explanation} className="text-[0.92rem] leading-7 text-slate-700" />
                   </div>
 
                   {/* When to Use */}
@@ -482,7 +483,7 @@ export default function StudentFormulaBook() {
                       <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sky-600">
                         <Zap className="h-3 w-3" /> When to Use
                       </div>
-                      <p className="text-[0.85rem] leading-6 text-slate-700">{f.notes}</p>
+                      <MathInlineText as="p" text={f.notes} className="text-[0.85rem] leading-6 text-slate-700" />
                     </div>
                   )}
 
@@ -497,9 +498,9 @@ export default function StudentFormulaBook() {
                           <span className="text-[10px] text-emerald-600/80">+{f.examples.length - 1} more</span>
                         )}
                       </div>
-                      <p className="text-[0.85rem] leading-6 text-slate-700">{f.examples[0].problem}</p>
+                      <MathInlineText as="p" text={f.examples[0].problem} className="text-[0.85rem] leading-6 text-slate-700" />
                       {f.examples[0].answer && (
-                        <p className="mt-2 text-[12px] font-semibold text-emerald-800">Answer: {f.examples[0].answer}</p>
+                        <p className="mt-2 text-[12px] font-semibold text-emerald-800">Answer: <MathInlineText text={String(f.examples[0].answer)} /></p>
                       )}
                     </div>
                   )}

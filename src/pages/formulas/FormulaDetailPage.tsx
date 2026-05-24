@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, BookmarkCheck, CheckCircle2, RotateCcw, Sparkles, Wand2, Star, GraduationCap, Calculator, ChevronRight, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { MathExpression } from "@/components/formulas/MathExpression";
+import { MathInlineText } from "@/components/formulas/MathInlineText";
 import DOMPurify from "isomorphic-dompurify";
 
 export default function FormulaDetailPage() {
@@ -183,11 +184,11 @@ export default function FormulaDetailPage() {
         </TabsList>
 
         <TabsContent value="explain">
-          <Card><CardContent className="p-6 leading-relaxed text-slate-700">{formula.explanation}</CardContent></Card>
+          <Card><CardContent className="p-6"><MathInlineText as="div" text={formula.explanation} className="leading-relaxed text-slate-700" /></CardContent></Card>
         </TabsContent>
 
         <TabsContent value="derive">
-          <Card><CardContent className="p-6 whitespace-pre-line leading-relaxed text-slate-700">{formula.derivation || "Derivation not provided — use AI Assist → Derive step."}</CardContent></Card>
+          <Card><CardContent className="p-6"><MathInlineText as="div" text={formula.derivation || "Derivation not provided — use AI Assist → Derive step."} className="whitespace-pre-line leading-relaxed text-slate-700" /></CardContent></Card>
         </TabsContent>
 
         <TabsContent value="examples">
@@ -199,12 +200,12 @@ export default function FormulaDetailPage() {
               <Card key={i}>
                 <CardContent className="p-5">
                   <div className="text-xs font-semibold uppercase tracking-wider text-sky-700">Example {i + 1}</div>
-                  <p className="mt-1 font-medium text-slate-900">{ex.problem}</p>
+                  <MathInlineText as="p" text={ex.problem} className="mt-1 font-medium text-slate-900" />
                   <ol className="ml-5 mt-3 list-decimal space-y-1 text-sm text-slate-700">
-                    {(ex.steps || []).map((s: string, j: number) => <li key={j}>{s}</li>)}
+                    {(ex.steps || []).map((s: string, j: number) => <MathInlineText as="li" key={j} text={s} />)}
                   </ol>
                   <div className="mt-3 inline-flex items-center gap-2 rounded-lg bg-emerald-50 px-3 py-1.5 text-sm font-semibold text-emerald-800">
-                    Answer: {ex.answer}
+                    Answer: <MathInlineText text={String(ex.answer ?? "")} />
                   </div>
                 </CardContent>
               </Card>
