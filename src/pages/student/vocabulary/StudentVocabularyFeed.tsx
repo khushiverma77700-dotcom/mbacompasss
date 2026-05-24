@@ -14,29 +14,33 @@ import {
 import {
   CheckCircle2, Bookmark, Volume2, GraduationCap, BookOpen, Filter, Sparkles,
   ArrowUpRight, Target, Flame, Trophy, Crown, Zap, TrendingUp, PlusCircle, Settings2, Star,
+  Search, X, Loader2,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-const CATS = [
-  { k: "all", l: "All" },
-  { k: "finance", l: "Finance" },
-  { k: "marketing", l: "Marketing" },
-  { k: "consulting", l: "Consulting" },
-  { k: "hr", l: "HR" },
-  { k: "economics", l: "Economics" },
-  { k: "corp_comm", l: "Corp Comm" },
+// MBA exam-focused filters (CAT + OMETs)
+const EXAMS = [
+  { k: "all", l: "All Exams" },
+  { k: "CAT", l: "CAT" },
+  { k: "XAT", l: "XAT" },
+  { k: "NMAT", l: "NMAT" },
+  { k: "SNAP", l: "SNAP" },
+  { k: "IIFT", l: "IIFT" },
+  { k: "CMAT", l: "CMAT" },
+  { k: "MAT", l: "MAT" },
+  { k: "GDPI", l: "GDPI / WAT" },
 ];
 
 const LEVELS = [
   { k: "all", l: "All Levels" },
-  { k: "beginner", l: "Beginner" },
   { k: "intermediate", l: "Intermediate" },
-  { k: "cat", l: "CAT" },
-  { k: "gdpi", l: "GDPI" },
+  { k: "cat", l: "CAT Level" },
+  { k: "gdpi", l: "GDPI Level" },
 ];
 
 const TARGET_PRESETS = [3, 5, 10, 15, 20];
+
 
 export default function StudentVocabularyFeed() {
   const [params, setParams] = useSearchParams();
@@ -57,7 +61,14 @@ export default function StudentVocabularyFeed() {
   const [targetDraft, setTargetDraft] = useState(5);
   const [celebrated, setCelebrated] = useState(false);
 
-  const category = params.get("category") || "all";
+  // Inline search
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [aiSearching, setAiSearching] = useState(false);
+
+  const exam = params.get("exam") || "all";
   const difficulty = params.get("difficulty") || "all";
 
   document.title = "Vocabulary Feed | MBA Compass";
@@ -71,8 +82,9 @@ export default function StudentVocabularyFeed() {
       .select("*")
       .order("created_at", { ascending: false })
       .limit(120);
-    if (category !== "all") q = q.eq("category", category as any);
+    if (exam !== "all") q = q.overlaps("exam_appearances", [exam]);
     if (difficulty !== "all") q = q.eq("difficulty", difficulty as any);
+
 
     const [{ data: wordsData }, { count: libCount }, { data: newTodayData }, wotdRes] = await Promise.all([
       q,
@@ -120,7 +132,7 @@ export default function StudentVocabularyFeed() {
       setTargetDraft(streakRow?.daily_target_words || 5);
     }
     setLoading(false);
-  }, [category, difficulty, user]);
+  }, [exam, difficulty, user]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -191,10 +203,49 @@ export default function StudentVocabularyFeed() {
     toast({ title: "Daily target updated", description: `Aim for ${clean} words/day` });
   };
 
+  const runSearch = async () => {
+    const q = searchQuery.trim();
+    if (!q) return;
+    setSearching(true);
+    setSearchResults([]);
+    const { data } = await supabase
+      .from("vocab_words")
+      .select("*")
+      .ilike("word", `%${q}%`)
+      .limit(20);
+    setSearching(false);
+
+    if (data && data.length > 0) {
+      setSearchResults(data);
+      return;
+    }
+    // No library hit → ask AI to explain & save in same format
+    setAiSearching(true);
+    try {
+      const { data: ai, error } = await supabase.functions.invoke("vocab-explain", { body: { word: q, save: true } });
+      if (error) throw error;
+      if (ai?.error) throw new Error(ai.error);
+      if (ai?.word) {
+        setSearchResults([ai.word]);
+        toast({ title: "AI explained & added", description: `"${ai.word.word}" is now in your library.` });
+      }
+    } catch (e: any) {
+      toast({ title: "Search failed", description: e?.message || "Try again", variant: "destructive" });
+    }
+    setAiSearching(false);
+  };
+
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setSearchQuery("");
+    setSearchResults([]);
+  };
+
   const visible = useMemo(
     () => (showRead ? words : words.filter((w) => !readIds.has(w.id))),
     [words, showRead, readIds],
   );
+
   const totalRead = readIds.size;
   const totalSaved = bookmarkIds.size;
   const xp = streak?.total_xp || 0;
@@ -477,21 +528,59 @@ export default function StudentVocabularyFeed() {
         </CardContent>
       </Card>
 
-      {/* FILTERS */}
-      <Card className="border-slate-200 bg-white">
+      {/* SEARCH + FILTERS */}
+      <Card className="border-slate-200 bg-white dark:bg-card">
         <CardContent className="space-y-3 p-4">
+          {/* Search bar (inline expand) */}
+          {!searchOpen ? (
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              className="group flex w-full items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2.5 text-left text-sm text-slate-500 transition-all hover:border-sky-300 hover:bg-sky-50/50 dark:bg-muted/40"
+            >
+              <Search className="h-4 w-4 text-sky-600" />
+              <span className="flex-1">Search a word… we'll show it in the same card format</span>
+              <kbd className="hidden rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] font-mono text-slate-500 sm:inline">↵</kbd>
+            </button>
+          ) : (
+            <div className="space-y-2 rounded-xl border-2 border-sky-300 bg-sky-50/40 p-2 dark:bg-sky-500/5">
+              <div className="flex items-center gap-2">
+                <Search className="ml-1 h-4 w-4 text-sky-600" />
+                <Input
+                  autoFocus
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && runSearch()}
+                  placeholder="Type a word, e.g. arbitrage, ubiquitous, prevaricate"
+                  className="h-9 border-0 bg-transparent shadow-none focus-visible:ring-0"
+                />
+                <Button size="sm" onClick={runSearch} disabled={searching || !searchQuery.trim()} className="h-9 gap-1 bg-gradient-to-r from-sky-600 to-blue-600">
+                  {searching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />} Search
+                </Button>
+                <Button size="icon" variant="ghost" className="h-9 w-9" onClick={closeSearch} aria-label="Close">
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="px-1 text-[11px] text-slate-500">
+                Searches the library first. If not found, AI will explain & save the word.
+              </div>
+            </div>
+          )}
+
           <div>
             <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-              <Filter className="h-3 w-3" /> Domain
+              <GraduationCap className="h-3 w-3" /> Exam Focus
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {CATS.map((c) => (
-                <Chip key={c.k} active={category === c.k} onClick={() => setFilter("category", c.k)}>{c.l}</Chip>
+              {EXAMS.map((c) => (
+                <Chip key={c.k} active={exam === c.k} onClick={() => setFilter("exam", c.k)}>{c.l}</Chip>
               ))}
             </div>
           </div>
           <div>
-            <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Level</div>
+            <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+              <Filter className="h-3 w-3" /> Level
+            </div>
             <div className="flex flex-wrap gap-1.5">
               {LEVELS.map((c) => (
                 <Chip key={c.k} active={difficulty === c.k} onClick={() => setFilter("difficulty", c.k)}>{c.l}</Chip>
@@ -506,33 +595,50 @@ export default function StudentVocabularyFeed() {
             <span className="text-[11px] text-slate-500">{visible.length} of {words.length}</span>
           </div>
         </CardContent>
+
       </Card>
 
+      {/* SEARCH RESULTS BANNER */}
+      {searchOpen && searchResults.length > 0 && (
+        <div className="flex items-center justify-between rounded-xl border border-sky-200 bg-sky-50/40 px-3 py-2 text-xs text-sky-800 dark:bg-sky-500/10">
+          <span>Showing <strong>{searchResults.length}</strong> result{searchResults.length > 1 ? "s" : ""} for "<strong>{searchQuery}</strong>"</span>
+          <Button size="sm" variant="ghost" className="h-7 gap-1 px-2 text-xs" onClick={closeSearch}>
+            <X className="h-3 w-3" /> Back to feed
+          </Button>
+        </div>
+      )}
+
       {/* FEED */}
-      {loading ? (
+      {(loading || aiSearching) ? (
         <div className="grid gap-4 md:grid-cols-2">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-64 animate-pulse rounded-2xl bg-slate-100" />
+          {[...Array(aiSearching ? 1 : 4)].map((_, i) => (
+            <div key={i} className="h-64 animate-pulse rounded-2xl bg-slate-100 dark:bg-muted/40" />
           ))}
         </div>
-      ) : visible.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="py-12 text-center">
-            <BookOpen className="mx-auto mb-3 h-8 w-8 text-sky-400" />
-            <p className="text-slate-600">
-              {readIds.size > 0
-                ? "You've read every word in this filter. Switch a filter or toggle 'Show read' to revisit."
-                : "No words match this filter yet."}
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
+      ) : (searchOpen && searchResults.length === 0 && searchQuery && !searching) ? null : (() => {
+        const list = searchOpen && searchResults.length > 0 ? searchResults : visible;
+        if (list.length === 0) {
+          return (
+            <Card className="border-dashed">
+              <CardContent className="py-12 text-center">
+                <BookOpen className="mx-auto mb-3 h-8 w-8 text-sky-400" />
+                <p className="text-slate-600">
+                  {readIds.size > 0
+                    ? "You've read every word in this filter. Switch a filter or toggle 'Show read' to revisit."
+                    : "No words match this filter yet."}
+                </p>
+              </CardContent>
+            </Card>
+          );
+        }
+        return (
         <div className="grid gap-4 md:grid-cols-2">
-          {visible.map((w) => {
+          {list.map((w) => {
             const isRead = readIds.has(w.id);
             const isSaved = bookmarkIds.has(w.id);
             const syllables = (w.pronunciation_syllables || w.word).split(/[-·•\s]+/).filter(Boolean);
             return (
+
               <Card
                 key={w.id}
                 className={cn(
@@ -650,7 +756,9 @@ export default function StudentVocabularyFeed() {
             );
           })}
         </div>
-      )}
+        );
+      })()}
+
     </div>
   );
 }
