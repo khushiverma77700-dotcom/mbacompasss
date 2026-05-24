@@ -30,6 +30,14 @@ export default function AdminVocabulary() {
   const [wotdDate, setWotdDate] = useState(new Date().toISOString().slice(0, 10));
   const [wotdWordId, setWotdWordId] = useState("");
 
+  // Bulk AI generator state
+  const [bulkCount, setBulkCount] = useState(1000);
+  const [bulkCategory, setBulkCategory] = useState<string>("any");
+  const [bulkDifficulty, setBulkDifficulty] = useState<string>("any");
+  const [bulkJobId, setBulkJobId] = useState<string | null>(null);
+  const [bulkJob, setBulkJob] = useState<any>(null);
+  const [bulkStarting, setBulkStarting] = useState(false);
+
   document.title = "Vocabulary Admin | MBA Compass";
 
   const load = async () => {
