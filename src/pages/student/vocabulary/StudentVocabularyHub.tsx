@@ -284,22 +284,26 @@ export default function StudentVocabularyHub() {
       </section>
 
 
-      {/* Categories */}
+      {/* MBA Exam focus */}
       <section>
-        <SectionTitle eyebrow="Curated paths" title="Browse by domain" />
+        <SectionTitle eyebrow="MBA exam focus" title="Browse by target exam" />
+        <p className="-mt-2 mb-3 text-sm text-slate-500">
+          Every word is tagged with the MBA entrance exams it has appeared in. Pick your target to drill the lexicon
+          actually tested in CAT and other OMETs.
+        </p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {CATEGORIES.map((c) => (
-            <Link key={c.key} to={`/student/vocabulary/feed?category=${c.key}`} className="group">
+          {EXAMS.map((e) => (
+            <Link key={e.key} to={`/student/vocabulary/feed?exam=${e.key}`} className="group">
               <Card className="relative h-full overflow-hidden border-slate-200 transition-all hover:-translate-y-0.5 hover:border-sky-300 hover:shadow-md">
-                <div aria-hidden className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${c.accent} opacity-60`} />
+                <div aria-hidden className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${e.accent} opacity-60`} />
                 <CardContent className="relative flex items-center justify-between p-5">
                   <div className="flex items-center gap-3">
                     <div className="grid h-10 w-10 place-items-center rounded-xl bg-white shadow-sm ring-1 ring-sky-100">
-                      <c.icon className="h-5 w-5 text-sky-600" />
+                      <GraduationCap className="h-5 w-5 text-sky-600" />
                     </div>
                     <div>
-                      <div className="font-heading text-[15px] font-semibold text-slate-900">{c.label}</div>
-                      <div className="text-[11px] text-slate-500">Explore words</div>
+                      <div className="font-heading text-[15px] font-semibold text-slate-900">{e.label}</div>
+                      <div className="text-[11px] text-slate-500">{e.hint}</div>
                     </div>
                   </div>
                   <ChevronRight className="h-4 w-4 text-slate-400 transition-transform group-hover:translate-x-1 group-hover:text-sky-600" />
