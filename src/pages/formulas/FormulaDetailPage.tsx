@@ -131,11 +131,11 @@ export default function FormulaDetailPage() {
     <div className="mx-auto max-w-5xl space-y-6 p-4 pb-20 md:p-6">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1 text-xs text-slate-500">
-        <Link to="/" className="hover:text-sky-600">Home</Link>
+        <Link to={inStudent ? "/student" : "/"} className="hover:text-sky-600">Home</Link>
         <ChevronRight className="h-3 w-3" />
-        <Link to="/formulas" className="hover:text-sky-600">Quant Formulas</Link>
+        <Link to={listPath} className="hover:text-sky-600">Quant Formulas</Link>
         <ChevronRight className="h-3 w-3" />
-        <Link to={`/formulas?topic=${formula.topic_slug}`} className="capitalize hover:text-sky-600">{formula.topic_slug?.replace(/-/g, " ")}</Link>
+        <Link to={`${listPath}?topic=${formula.topic_slug}`} className="capitalize hover:text-sky-600">{formula.topic_slug?.replace(/-/g, " ")}</Link>
         <ChevronRight className="h-3 w-3" />
         <span className="truncate text-slate-800">{formula.name}</span>
       </nav>
