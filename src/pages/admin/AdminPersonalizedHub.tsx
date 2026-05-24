@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { EXAMS, DIFFICULTIES } from "@/data/personalizedExams";
-import { Sparkles, AlertTriangle, Database, UserPlus, Trash2 } from "lucide-react";
+import { Sparkles, AlertTriangle, Database, UserPlus, Trash2, Layers } from "lucide-react";
+import PersonalizedBulkQueue from "@/components/admin/PersonalizedBulkQueue";
 
 export default function AdminPersonalizedHub() {
   const [counts, setCounts] = useState<any[]>([]);
