@@ -262,20 +262,20 @@ export default function StudentVocabularyFeed() {
   return (
     <div className="space-y-6 pb-24">
       {/* HERO — Gamified header */}
-      <section className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/70 to-blue-50/50 p-5 md:p-7">
+      <section className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/70 to-blue-50/50 p-4 sm:p-5 md:p-7">
         <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
         <div aria-hidden className="pointer-events-none absolute -left-20 -bottom-20 h-56 w-56 rounded-full bg-blue-200/30 blur-3xl" />
 
-        <div className="relative grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div className="relative grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
           <div className="space-y-4">
             <div>
               <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/80 bg-white/80 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-sky-700 backdrop-blur">
                 <Sparkles className="h-3 w-3" /> B-School Vocabulary
               </div>
-              <h1 className="font-heading mt-2 text-2xl font-bold text-slate-900 md:text-3xl">
+              <h1 className="font-heading mt-2 text-xl font-bold text-slate-900 sm:text-2xl md:text-3xl">
                 Level {level} · {xp.toLocaleString()} XP
               </h1>
-              <p className="mt-1 text-sm text-slate-600">
+              <p className="mt-1 text-[13px] text-slate-600 sm:text-sm">
                 Daily streak builds your CAT/GDPI vocabulary muscle. Hit your target every day.
               </p>
             </div>
@@ -292,7 +292,7 @@ export default function StudentVocabularyFeed() {
             <div>
               <div className="mb-1 flex items-center justify-between text-[11px] font-medium text-slate-600">
                 <span className="inline-flex items-center gap-1"><Zap className="h-3 w-3 text-amber-500" /> Level {level}</span>
-                <span>{xpInLevel} / 500 XP to Lv {level + 1}</span>
+                <span>{xpInLevel} / 500 XP</span>
               </div>
               <div className="h-2 w-full overflow-hidden rounded-full bg-white/70 ring-1 ring-sky-100">
                 <div
@@ -302,6 +302,7 @@ export default function StudentVocabularyFeed() {
               </div>
             </div>
           </div>
+
 
           {/* Target ring */}
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-sky-100 bg-white/70 p-5 backdrop-blur lg:min-w-[240px]">
