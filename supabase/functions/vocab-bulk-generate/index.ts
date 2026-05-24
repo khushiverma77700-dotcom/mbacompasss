@@ -96,10 +96,18 @@ async function runJob(jobId: string, total: number, category: string | null, dif
   let generated = 0, duplicates = 0, failed = 0;
   const seenSlugs = new Set<string>();
 
-  // Seed exclude list with existing slugs (cap so prompt doesn't explode)
-  const { data: existing } = await supabase.from("vocab_words").select("word").limit(2000);
-  const excludeWords: string[] = (existing || []).map((r: any) => r.word).filter(Boolean);
-  for (const w of excludeWords) seenSlugs.add(slugify(w));
+  // Seed exclude list with ALL existing slugs (paginated, so dedupe works for large libraries)
+  {
+    const PAGE = 1000;
+    let from = 0;
+    while (true) {
+      const { data: page } = await supabase.from("vocab_words").select("word").range(from, from + PAGE - 1);
+      if (!page || page.length === 0) break;
+      for (const r of page as any[]) if (r.word) seenSlugs.add(slugify(r.word));
+      if (page.length < PAGE) break;
+      from += PAGE;
+    }
+  }
 
   await supabase.from("vocab_generation_jobs").update({ status: "running", current_activity: "Warming up…" }).eq("id", jobId);
 
