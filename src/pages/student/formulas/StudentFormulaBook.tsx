@@ -561,3 +561,49 @@ function Pill({ icon, label, value, tone }: { icon: React.ReactNode; label: stri
     </div>
   );
 }
+
+function DropdownField({
+  label, value, onChange, options, placeholder, icon, primary, disabled,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: { k: string; l: string }[];
+  placeholder?: string;
+  icon?: React.ReactNode;
+  primary?: boolean;
+  disabled?: boolean;
+}) {
+  const active = value && value !== "all";
+  return (
+    <div>
+      <div className="mb-1 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+        <span className={cn("inline-flex items-center justify-center rounded-md p-0.5", primary ? "bg-sky-600 text-white" : "bg-slate-200 text-slate-600")}>
+          {icon}
+        </span>
+        {label}
+        {primary && <span className="ml-1 rounded-full bg-amber-100 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-amber-700">Start here</span>}
+      </div>
+      <Select value={value} onValueChange={onChange} disabled={disabled}>
+        <SelectTrigger
+          className={cn(
+            "h-10 w-full border-2 bg-white text-sm font-semibold transition-all",
+            primary
+              ? "border-sky-400 ring-2 ring-sky-100 hover:border-sky-500"
+              : active
+                ? "border-sky-300 text-sky-700"
+                : "border-slate-200 hover:border-sky-300",
+            disabled && "opacity-60",
+          )}
+        >
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent className="max-h-72">
+          {options.map((o) => (
+            <SelectItem key={o.k} value={o.k} className="text-sm">{o.l}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
