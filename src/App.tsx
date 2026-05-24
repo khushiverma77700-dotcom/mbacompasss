@@ -191,6 +191,10 @@ const StudentVocabularyRevision = lazyWithPreload(() => import("./pages/student/
 const StudentVocabularyLeaderboard = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyLeaderboard"));
 const StudentVocabularyAnalytics = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyAnalytics"));
 const AdminVocabulary = lazyWithPreload(() => import("./pages/admin/AdminVocabulary"));
+const AdminFormulas = lazyWithPreload(() => import("./pages/admin/AdminFormulas"));
+const StudentFormulaBook = lazyWithPreload(() => import("./pages/student/formulas/StudentFormulaBook"));
+const FormulaDetailPage = lazyWithPreload(() => import("./pages/formulas/FormulaDetailPage"));
+const FormulasListPage = lazyWithPreload(() => import("./pages/formulas/FormulasListPage"));
 const AdminPersonalizedHub = lazyWithPreload(() => import("./pages/admin/AdminPersonalizedHub"));
 const AdminDailyTests = lazyWithPreload(() => import("./pages/admin/AdminDailyTests"));
 const AdminStudentNotificationsBroadcast = lazyWithPreload(() => import("./pages/admin/AdminStudentNotificationsBroadcast"));
@@ -748,6 +752,7 @@ const App = () => (
               <Route path="student-mocks" element={<LazyPage><AdminStudentMocks /></LazyPage>} />
               <Route path="personalized-hub" element={<LazyPage><AdminPersonalizedHub /></LazyPage>} />
               <Route path="vocabulary" element={<LazyPage><AdminVocabulary /></LazyPage>} />
+              <Route path="formulas" element={<LazyPage><AdminFormulas /></LazyPage>} />
               <Route path="student-announcements" element={<LazyPage><AdminStudentAnnouncements /></LazyPage>} />
               <Route path="student-notifications" element={<LazyPage><AdminStudentNotificationsBroadcast /></LazyPage>} />
               <Route path="daily-tests" element={<LazyPage><AdminDailyTests /></LazyPage>} />
@@ -800,6 +805,8 @@ const App = () => (
             <Route path="/courses/:slug" element={<PublicLayout><LazyPage><MBACompassCourseDetailPage /></LazyPage></PublicLayout>} />
             <Route path="/bundles" element={<PublicLayout><LazyPage><MockBundlesListPage /></LazyPage></PublicLayout>} />
             <Route path="/bundles/:slug" element={<PublicLayout><LazyPage><MockBundleDetailPage /></LazyPage></PublicLayout>} />
+            <Route path="/formulas" element={<PublicLayout><LazyPage><FormulasListPage /></LazyPage></PublicLayout>} />
+            <Route path="/formula/:slug" element={<PublicLayout><LazyPage><FormulaDetailPage /></LazyPage></PublicLayout>} />
 
             <Route path="/mocks/:slug" element={<PublicLayout><LazyPage><MockTestIntroPage /></LazyPage></PublicLayout>} />
             <Route path="/mocks/attempt/:attemptId" element={<LazyPage><MockTestRunnerPage /></LazyPage>} />
@@ -858,6 +865,7 @@ const App = () => (
               <Route path="vocabulary/leaderboard" element={<InnerLazyPage><StudentVocabularyLeaderboard /></InnerLazyPage>} />
               <Route path="vocabulary/analytics" element={<InnerLazyPage><StudentVocabularyAnalytics /></InnerLazyPage>} />
               <Route path="vocabulary/word/:slug" element={<InnerLazyPage><StudentVocabularyWord /></InnerLazyPage>} />
+              <Route path="formulas" element={<InnerLazyPage><StudentFormulaBook /></InnerLazyPage>} />
             </Route>
             <Route path="/mba-compass" element={<PublicLayout><LazyPage><MBACompassCoursesPage /></LazyPage></PublicLayout>} />
             <Route path="/mba-compass/compare" element={<PublicLayout><LazyPage><MBACompassComparePage /></LazyPage></PublicLayout>} />

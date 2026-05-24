@@ -15,6 +15,7 @@ export type FeatureKey =
   | "day_planner"
   | "ai_tools"
   | "vocabulary_hub"
+  | "formula_book"
   | "buy_mocks"
   | "support";
 
@@ -32,6 +33,7 @@ export const FEATURE_DEFINITIONS: { key: FeatureKey; label: string; description:
   { key: "day_planner",          label: "My Day Planner",          description: "Daily task tracker + XP rewards" },
   { key: "ai_tools",             label: "AI Tools",                description: "Profile analyzer, college finder, etc." },
   { key: "vocabulary_hub",       label: "B-School Vocabulary Hub", description: "AI MBA vocab builder, daily word, quizzes, revision" },
+  { key: "formula_book",         label: "Quant Formula Book",      description: "AI-powered MBA quant formula revision dashboard" },
   { key: "buy_mocks",            label: "Buy More Mocks",          description: "Access in-app store for add-on mocks" },
   { key: "support",              label: "Support Center",          description: "Ticket-based 1:1 support" },
 ];

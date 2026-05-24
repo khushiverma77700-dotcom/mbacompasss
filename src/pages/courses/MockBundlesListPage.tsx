@@ -65,6 +65,7 @@ const FEATURE_ICON: Record<FeatureKey, any> = {
   day_planner: ListChecks,
   ai_tools: Zap,
   vocabulary_hub: BookOpen,
+  formula_book: BookOpen,
   buy_mocks: ShoppingBag,
   support: ShieldCheck,
 };
