@@ -1,12 +1,8 @@
 // Bulk-generate unique MBA vocabulary words via Lovable AI.
 // POST { count, category?, difficulty? } -> creates job, runs in background, returns { job_id }
 // GET ?job_id=...                         -> returns job row
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 const CATEGORIES = ["finance","marketing","consulting","hr","economics","corp_comm","general"];
 const DIFFICULTIES = ["beginner","intermediate","cat","gdpi"];
@@ -163,20 +159,33 @@ If you cannot fully complete ALL fields with high quality, OMIT the word. Unique
 
   if (!apiKey) throw new Error(provider === "openai" ? "OPENAI_API_KEY not configured" : "LOVABLE_API_KEY not configured");
 
-  const resp = await fetch(endpoint, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-      tools: [toolSchema],
-      tool_choice: { type: "function", function: { name: "emit_vocab_batch" } },
-      ...(provider === "openai" ? { temperature: 0.7 } : {}),
-    }),
-  });
+  const timeoutMs = provider === "openai" ? 55_000 : 50_000;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  let resp: Response;
+  try {
+    resp = await fetch(endpoint, {
+      method: "POST",
+      signal: controller.signal,
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: system },
+          { role: "user", content: user },
+        ],
+        tools: [toolSchema],
+        tool_choice: { type: "function", function: { name: "emit_vocab_batch" } },
+        max_tokens: provider === "openai" ? 6500 : 6000,
+        ...(provider === "openai" ? { temperature: 0.55 } : {}),
+      }),
+    });
+  } catch (e) {
+    if ((e as Error)?.name === "AbortError") throw new Error("AI_TIMEOUT");
+    throw e;
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (resp.status === 429) throw new Error("RATE_LIMIT");
   if (resp.status === 402) throw new Error("CREDITS_EXHAUSTED");
