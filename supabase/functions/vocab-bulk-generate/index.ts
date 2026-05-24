@@ -15,11 +15,29 @@ function slugify(w: string): string {
   return String(w).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
-async function generateBatch(LOVABLE_API_KEY: string, batchSize: number, category: string | null, difficulty: string | null, exclude: string[]) {
+function sampleArray<T>(arr: T[], n: number): T[] {
+  if (arr.length <= n) return arr.slice();
+  const out: T[] = [];
+  const used = new Set<number>();
+  while (out.length < n) {
+    const i = Math.floor(Math.random() * arr.length);
+    if (used.has(i)) continue;
+    used.add(i);
+    out.push(arr[i]);
+  }
+  return out;
+}
+
+async function generateBatch(LOVABLE_API_KEY: string, batchSize: number, category: string | null, difficulty: string | null, exclude: string[], recentDupes: string[]) {
   const catLine = category ? `Restrict every word to the category: ${category}.` : `Cover a wide range of MBA categories: finance, marketing, consulting, HR, economics, corp_comm, general.`;
   const diffLine = difficulty ? `Difficulty: ${difficulty}.` : `Mix difficulty across beginner, intermediate, cat, gdpi.`;
+  // Send a RANDOM sample of the full existing library (not just last 400) so AI sees broad coverage.
+  const sampled = sampleArray(exclude, 600);
+  const dupeLine = recentDupes.length
+    ? ` ESPECIALLY AVOID these recently-rejected duplicates: ${recentDupes.slice(-150).join(", ")}.`
+    : "";
   const excludeBlock = exclude.length
-    ? `STRICT: DO NOT return any of these already-used words (case-insensitive): ${exclude.slice(0, 400).join(", ")}.`
+    ? `STRICT UNIQUENESS RULE: The library already contains ${exclude.length} words. DO NOT return any word (case-insensitive, ignoring punctuation/spaces) from this sample of already-used words: ${sampled.join(", ")}.${dupeLine} Pick fresh, less-common MBA words instead.`
     : "";
 
   const system = `You are an MBA vocabulary curator for Indian aspirants preparing for CAT, XAT, NMAT, SNAP, IIFT, CMAT, MAT, GDPI, WAT, and placements.
