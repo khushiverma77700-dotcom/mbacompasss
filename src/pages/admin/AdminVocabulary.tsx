@@ -166,9 +166,71 @@ export default function AdminVocabulary() {
       <Tabs defaultValue="words">
         <TabsList>
           <TabsTrigger value="words">Words ({words.length})</TabsTrigger>
+          <TabsTrigger value="bulk">AI Bulk Generator</TabsTrigger>
           <TabsTrigger value="wotd">Word of the Day</TabsTrigger>
           <TabsTrigger value="import">CSV Import</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="bulk" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Wand2 className="w-5 h-5 text-primary" /> AI Bulk Word Generator
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Generate up to <b>2000</b> unique MBA / business words in one run. Each word is created with English meaning, Hindi meaning (Devanagari), Hinglish explanation, syllable-broken pronunciation, synonyms, antonyms, business / interview / email examples, and known past-exam appearances. Existing words are automatically skipped so every run only adds 100% new entries.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">How many words?</label>
+                  <Input type="number" min={1} max={2000} value={bulkCount} onChange={(e) => setBulkCount(Number(e.target.value))} />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Category</label>
+                  <Select value={bulkCategory} onValueChange={setBulkCategory}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="any">Mixed (recommended)</SelectItem>
+                      {CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground">Difficulty</label>
+                  <Select value={bulkDifficulty} onValueChange={setBulkDifficulty}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="any">Mixed (recommended)</SelectItem>
+                      {DIFFICULTIES.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <Button onClick={startBulk} disabled={bulkStarting || (bulkJob && bulkJob.status === "running")} className="gap-2">
+                {bulkStarting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                Start AI Generation
+              </Button>
+
+              {bulkJob && (
+                <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium capitalize">Status: {bulkJob.status}</span>
+                    <span className="text-muted-foreground">{bulkJob.generated} / {bulkJob.requested} added</span>
+                  </div>
+                  <Progress value={Math.min(100, Math.round((bulkJob.generated / Math.max(1, bulkJob.requested)) * 100))} />
+                  <p className="text-xs text-muted-foreground">{bulkJob.current_activity || ""}</p>
+                  <div className="flex gap-4 text-xs text-muted-foreground">
+                    <span>Duplicates skipped: <b className="text-foreground">{bulkJob.duplicates}</b></span>
+                    <span>Failed batches: <b className="text-foreground">{bulkJob.failed}</b></span>
+                  </div>
+                  {bulkJob.error && <p className="text-xs text-destructive">{bulkJob.error}</p>}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="words" className="space-y-4">
           <div className="flex gap-2 flex-wrap">
