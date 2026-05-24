@@ -70,11 +70,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Avoid duplicates: pull ALL existing names + slugs + latex for this topic
+    // Avoid duplicates: pull ALL existing names + slugs + latex across the full library.
+    // Topic-level duplicate checks allowed the same basic formulas to be regenerated under other topics.
     const { data: existing } = await admin
       .from("quant_formulas")
       .select("name, slug, expression_latex")
-      .eq("topic_slug", topic_slug);
+      .limit(5000);
 
     const normalizeName = (s: string) =>
       String(s || "")
@@ -91,11 +92,19 @@ Deno.serve(async (req) => {
         .toLowerCase()
         .replace(/\s+/g, "")
         .replace(/\\left|\\right|\\,|\\;|\\!|\\:/g, "")
-        .replace(/[{}]/g, "");
+        .replace(/[{}]/g, "")
+        .replace(/\^(2|3|4|5|6|7|8|9)/g, "^$1");
+
+    const stripMathDelimiters = (s: string) =>
+      String(s || "")
+        .trim()
+        .replace(/^\s*(?:\\\(|\\\[|\$\$?|`)+/, "")
+        .replace(/(?:\\\)|\\\]|\$\$?|`)+\s*$/, "")
+        .trim();
 
     const existingNamesNorm = new Set((existing || []).map((r: any) => normalizeName(r.name)).filter(Boolean));
     const existingSlugs = new Set((existing || []).map((r: any) => String(r.slug || "").toLowerCase()).filter(Boolean));
-    const existingLatex = new Set((existing || []).map((r: any) => normalizeLatex(r.expression_latex)).filter(Boolean));
+    const existingLatex = new Set((existing || []).map((r: any) => normalizeLatex(stripMathDelimiters(r.expression_latex))).filter(Boolean));
     const existingNamesList = (existing || []).map((r: any) => r.name).filter(Boolean);
 
     const OPENAI_API_KEY = await getCredential("OPENAI_API_KEY").catch(() => "") || Deno.env.get("OPENAI_API_KEY");
@@ -133,7 +142,8 @@ LaTeX rules (strict — non-negotiable):
 - Use \\sqrt{x} or \\sqrt[n]{x} for roots. Never use "sqrt(x)" or "√".
 - Use ^{} and _{} for powers and subscripts. Use \\cdot for multiplication (not "*").
 - Use \\sum_{i=1}^{n}, \\prod, \\int, \\log_{b}, \\binom{n}{r}, \\pi, \\theta, \\Delta, \\Rightarrow as needed.
-- NEVER wrap with $ or $$.
+- NEVER wrap any math with $, $$, \\( \\), or \\[ \\] in any field. Store clean LaTeX only.
+- Use LaTeX symbols in prose too: write S_{n}, \\mathbb{N}, \\in, \\leq, \\geq, \\ldots instead of Unicode/Word-style math.
 - expression_latex must render cleanly in KaTeX displayMode.
 
 ANTI-DUPLICATION (CRITICAL):
@@ -156,7 +166,7 @@ Importance 4-5 only for high-frequency formulas.
 
 DEPTH REQUIREMENT: explanation field MUST be at least 400 characters covering every variable's meaning, units, intuition, geometric/algebraic interpretation, and edge cases. notes field MUST be at least 300 characters covering when/how/prerequisites/related formulas.
 
-Return strictly via the emit_formulas tool. Reject your own output mentally and retry if any LaTeX uses "/" for fractions, "sqrt(" for roots, or "**" for powers, or if explanation/notes are shallow.`;
+Return strictly via the emit_formulas tool. Reject your own output mentally and retry if any LaTeX uses "/" for fractions, "sqrt(" for roots, "**" for powers, Unicode math symbols, or math delimiters like \\(S_n\\). Do not create broad/basic duplicates already present in the library.`;
 
       const tool = {
         type: "function",
@@ -286,10 +296,11 @@ Return strictly via the emit_formulas tool. Reject your own output mentally and 
         if (existingNamesNorm.has(nNorm) || batchNames.has(nNorm)) {
           rejected.push({ name: f.name, reason: "duplicate name (already exists)" }); continue;
         }
-        if (!f.expression_latex || !isLatexValid(f.expression_latex, f.expression || "")) {
+        const cleanExpressionLatex = stripMathDelimiters(f.expression_latex);
+        if (!cleanExpressionLatex || !isLatexValid(cleanExpressionLatex, f.expression || "")) {
           rejected.push({ name: f.name, reason: "invalid LaTeX (missing \\frac/\\sqrt/^ where required)" }); continue;
         }
-        const latexNorm = normalizeLatex(f.expression_latex);
+        const latexNorm = normalizeLatex(cleanExpressionLatex);
         if (latexNorm && (existingLatex.has(latexNorm) || batchLatex.has(latexNorm))) {
           rejected.push({ name: f.name, reason: "duplicate formula (same LaTeX already exists)" }); continue;
         }
@@ -313,7 +324,7 @@ Return strictly via the emit_formulas tool. Reject your own output mentally and 
         allRows.push({
           slug, name: f.name,
           expression: f.expression,
-          expression_latex: String(f.expression_latex).trim().replace(/^\$+|\$+$/g, ""),
+          expression_latex: cleanExpressionLatex,
           explanation: f.explanation || "",
           derivation: f.derivation || null,
           shortcuts: Array.isArray(f.shortcuts) ? f.shortcuts : [],

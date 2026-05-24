@@ -1,6 +1,29 @@
 // Small KaTeX wrapper that lazy-loads only when rendered.
 import { useEffect, useState } from "react";
 
+function normalizeDisplayMath(value?: string | null) {
+  return String(value || "")
+    .replace(/[\u200B-\u200D\uFEFF]/g, "")
+    .replace(/^\s*(?:\\\(|\\\[|\$\$?|`)+/, "")
+    .replace(/(?:\\\)|\\\]|\$\$?|`)+\s*$/, "")
+    .replace(/∈\s*N\b/g, "\\in \\mathbb{N}")
+    .replace(/∈\s*Z\b/g, "\\in \\mathbb{Z}")
+    .replace(/∈\s*Q\b/g, "\\in \\mathbb{Q}")
+    .replace(/∈\s*R\b/g, "\\in \\mathbb{R}")
+    .replace(/∈/g, "\\in ")
+    .replace(/ℕ/g, "\\mathbb{N}")
+    .replace(/ℤ/g, "\\mathbb{Z}")
+    .replace(/ℚ/g, "\\mathbb{Q}")
+    .replace(/ℝ/g, "\\mathbb{R}")
+    .replace(/≤/g, "\\leq")
+    .replace(/≥/g, "\\geq")
+    .replace(/≠/g, "\\neq")
+    .replace(/×/g, "\\times")
+    .replace(/÷/g, "\\div")
+    .replace(/…/g, "\\ldots")
+    .trim();
+}
+
 export function MathExpression({ tex, plain, className }: { tex?: string | null; plain?: string | null; className?: string }) {
   const [html, setHtml] = useState<string | null>(null);
 
@@ -18,7 +41,7 @@ export function MathExpression({ tex, plain, className }: { tex?: string | null;
           link.href = "https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css";
           document.head.appendChild(link);
         }
-        const rendered = katex.default.renderToString(tex, {
+        const rendered = katex.default.renderToString(normalizeDisplayMath(tex), {
           throwOnError: false,
           displayMode: true,
         });
