@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Plus, Trash2, Pencil, Sparkles, Upload, BookOpen, Calendar, Wand2 } from "lucide-react";
+import { Loader2, Plus, Trash2, Pencil, Sparkles, BookOpen, Wand2, Cpu, DollarSign, Clock3, Gauge, Database, Zap, ShieldCheck } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,6 +17,19 @@ const DIFFICULTIES = ["beginner","intermediate","cat","gdpi"];
 
 function slugify(w: string): string {
   return w.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
+function formatDuration(ms: number) {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}m ${seconds.toString().padStart(2, "0")}s`;
+}
+
+function metricTone(value: number, dangerAt = 85) {
+  if (value >= dangerAt) return "text-destructive";
+  if (value >= 65) return "text-amber-600";
+  return "text-primary";
 }
 
 export default function AdminVocabulary() {
