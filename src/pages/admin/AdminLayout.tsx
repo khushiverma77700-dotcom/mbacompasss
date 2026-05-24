@@ -239,11 +239,21 @@ const AdminLayout = () => {
                         </span>
                       )}
                       {(item as any).dotKey && dots[(item as any).dotKey] && (
-                        <span className="relative flex h-2.5 w-2.5">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
-                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-destructive" />
-                        </span>
+                        counts[(item as any).dotKey] > 0 ? (
+                          <span className="relative inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold leading-none">
+                            {counts[(item as any).dotKey] > 99 ? "99+" : counts[(item as any).dotKey]}
+                            <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="relative flex h-2.5 w-2.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75" />
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-destructive" />
+                          </span>
+                        )
                       )}
+
                     </Link>
                   ))}
                 </div>
