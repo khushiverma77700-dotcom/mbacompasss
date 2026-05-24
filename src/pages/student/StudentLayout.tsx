@@ -552,6 +552,8 @@ function SidebarContent() {
         </span>
       </NavLink>
 
+      {vocabItem && renderRow(vocabItem)}
+
       {restItems.map((item) => renderRow(item))}
 
       <div className="pt-4 mt-4 border-t border-border space-y-1">
