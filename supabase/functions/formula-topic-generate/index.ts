@@ -114,19 +114,11 @@ Deno.serve(async (req) => {
     let totalReturned = 0;
     const model = "openai/gpt-5-mini";
 
-    for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
-      const remaining = safeCount - allRows.length;
-      if (remaining <= 0) break;
-      const thisBatchCount = Math.min(BATCH_SIZE, remaining);
-
-      // Randomness nonce nudges the model to explore different formulas on each batch
+    // Build a single batch request (returns a fetch promise). All batches run in PARALLEL
+    // so the function finishes inside the edge-runtime wall-time limit even for count=100.
+    const buildBatchRequest = (batchIndex: number, thisBatchCount: number) => {
       const nonce = `${Math.random().toString(36).slice(2, 10)}-b${batchIndex + 1}`;
-
-      // Build full block-list = existing DB + already-accepted in this run
-      const blockNames = [
-        ...existingNamesList,
-        ...allRows.map((r) => r.name),
-      ];
+      const blockNames = existingNamesList;
 
       const system = `You are a senior CAT/MBA quant faculty (15+ years). You produce textbook-grade formula references for "${topic_name}".
 Every formula MUST include FOUR deeply-written sections:
@@ -178,29 +170,27 @@ Return strictly via the emit_formulas tool. Reject your own output mentally and 
                 items: {
                   type: "object",
                   properties: {
-                    name: { type: "string", description: "Short canonical name, e.g. 'Compound Interest', 'Heron's Formula'." },
-                    expression: { type: "string", description: "Plain ASCII form for fallback display." },
-                    expression_latex: { type: "string", description: "Strict LaTeX. Use \\frac, \\sqrt, ^{}, _{}. No $ wrappers." },
-                    explanation: { type: "string", description: "EXHAUSTIVE 6-10 sentence walkthrough (min 400 chars). Define every symbol with units, explain what is computed, the intuition, the geometric/algebraic meaning, and any domain restrictions. Do NOT be terse." },
-                    derivation: { type: "string", description: "Stepwise derivation with 3-6 logical steps showing how the formula is obtained from first principles. Use 'Definition — no derivation' only if truly axiomatic." },
-                    notes: { type: "string", description: "USAGE: 5-8 sentence paragraph (min 300 chars) on WHEN to apply, prerequisites/assumptions, problem-statement triggers in CAT, common variations, and related formulas." },
-                    shortcuts: { type: "array", items: { type: "string" }, description: "2-4 high-leverage exam tricks/mental-math hacks." },
-                    common_mistakes: { type: "array", items: { type: "string" }, description: "2-3 specific pitfalls students make." },
+                    name: { type: "string" },
+                    expression: { type: "string" },
+                    expression_latex: { type: "string" },
+                    explanation: { type: "string" },
+                    derivation: { type: "string" },
+                    notes: { type: "string" },
+                    shortcuts: { type: "array", items: { type: "string" } },
+                    common_mistakes: { type: "array", items: { type: "string" } },
                     difficulty: { type: "string", enum: ["beginner","intermediate","cat","advanced"] },
                     exam_tags: { type: "array", items: { type: "string" }, minItems: 1 },
                     importance: { type: "integer", minimum: 1, maximum: 5 },
                     is_shortcut: { type: "boolean" },
                     is_high_weightage: { type: "boolean" },
                     examples: {
-                      type: "array",
-                      minItems: 2,
-                      description: "SAMPLE USAGE — at least 2 fully worked CAT-level examples.",
+                      type: "array", minItems: 2,
                       items: {
                         type: "object",
                         properties: {
-                          problem: { type: "string", description: "Crisp problem statement with numbers." },
-                          steps: { type: "array", items: { type: "string" }, minItems: 2, description: "Calculation-bearing steps; can include inline LaTeX wrapped in \\( ... \\)." },
-                          answer: { type: "string", description: "Final answer with units if any." },
+                          problem: { type: "string" },
+                          steps: { type: "array", items: { type: "string" }, minItems: 2 },
+                          answer: { type: "string" },
                         },
                         required: ["problem","steps","answer"],
                         additionalProperties: false,
@@ -229,7 +219,7 @@ Return strictly via the emit_formulas tool. Reject your own output mentally and 
         },
       };
 
-      const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      return fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -238,22 +228,37 @@ Return strictly via the emit_formulas tool. Reject your own output mentally and 
           tools: [tool],
           tool_choice: { type: "function", function: { name: "emit_formulas" } },
         }),
-      });
+      }).then(async (resp) => ({ resp, batchIndex }));
+    };
 
+    const batchPromises: Promise<{ resp: Response; batchIndex: number }>[] = [];
+    for (let batchIndex = 0; batchIndex < totalBatches; batchIndex++) {
+      const remaining = safeCount - batchIndex * BATCH_SIZE;
+      const thisBatchCount = Math.min(BATCH_SIZE, remaining);
+      if (thisBatchCount <= 0) break;
+      batchPromises.push(buildBatchRequest(batchIndex, thisBatchCount));
+    }
+
+    const settled = await Promise.allSettled(batchPromises);
+
+    for (const s of settled) {
+      if (s.status !== "fulfilled") {
+        rejected.push({ name: "(batch)", reason: `batch failed: ${String((s as any).reason).slice(0,120)}` });
+        continue;
+      }
+      const { resp, batchIndex } = s.value;
       if (resp.status === 429) {
-        return new Response(JSON.stringify({ error: `Rate limit hit after ${allRows.length} formulas. Wait a minute and retry.`, partial_inserted: 0 }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        rejected.push({ name: `(batch ${batchIndex + 1})`, reason: "rate-limited (429)" });
+        continue;
       }
       if (resp.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits exhausted. Top up in Settings → Usage." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        rejected.push({ name: `(batch ${batchIndex + 1})`, reason: "AI credits exhausted (402)" });
+        continue;
       }
       if (!resp.ok) {
         const t = await resp.text();
         await logAIUsage({ feature: "formula-topic-generate", model, status: "error", errorMsg: t.slice(0,400), latencyMs: Date.now() - started, userId });
-        rejected.push({ name: `(batch ${batchIndex + 1})`, reason: `AI gateway error: ${t.slice(0,120)}` });
+        rejected.push({ name: `(batch ${batchIndex + 1})`, reason: `AI gateway ${resp.status}: ${t.slice(0,120)}` });
         continue;
       }
 
