@@ -378,6 +378,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
       console.log(`Rejected ${rejectedIncomplete} incomplete words in batch ${attempts}`);
     }
 
+    let addedNow = 0;
     if (rows.length) {
       const { data: inserted, error } = await supabase
         .from("vocab_words")
@@ -387,22 +388,52 @@ async function runJob(jobId: string, total: number, category: string | null, dif
         console.error("Upsert error", error);
         failed++;
       } else {
-        const addedNow = inserted?.length || 0;
+        addedNow = inserted?.length || 0;
         generated += addedNow;
         // any rows that didn't insert were duplicates from a race
         duplicates += rows.length - addedNow;
       }
     }
+    rejected += rejectedIncomplete;
+    const elapsedMinutes = Math.max(0.05, (Date.now() - startMs) / 60000);
+    const batchSeconds = Math.max(1, Math.round((Date.now() - batchStarted) / 1000));
+    const throughput = Math.round(generated / elapsedMinutes);
+    const cpuProxy = Math.min(96, Math.max(18, Math.round(35 + (batchSeconds / 45) * 35 + (batch.length / Math.max(need, 1)) * 18)));
 
     await supabase.from("vocab_generation_jobs").update({
-      generated, duplicates, failed,
+      generated, duplicates, failed, attempts, rejected,
+      estimated_input_tokens: inputTokens,
+      estimated_output_tokens: outputTokens,
+      estimated_cost_usd: costUsd,
+      progress_details: {
+        phase: "dedupe_and_save",
+        cpu_proxy: cpuProxy,
+        throughput_per_min: throughput,
+        last_batch_seconds: batchSeconds,
+        last_batch_returned: batch.length,
+        last_batch_candidates: rows.length,
+        last_batch_added: addedNow,
+        last_batch_duplicates: Math.max(0, rows.length - addedNow),
+        last_batch_rejected: rejectedIncomplete,
+        input_tokens_last_batch: batchTokens.inputTokens,
+        output_tokens_last_batch: batchTokens.outputTokens,
+        target_words: targetWords.slice(0, 8),
+      },
     }).eq("id", jobId);
   }
 
+  const finalStatus = generated >= total ? "completed" : "paused";
   await supabase.from("vocab_generation_jobs").update({
-    status: generated >= total ? "completed" : "completed",
-    current_activity: `Done. Added ${generated}, skipped ${duplicates} duplicates, ${failed} failed batches.`,
-    generated, duplicates, failed,
+    status: finalStatus,
+    current_activity: generated >= total
+      ? `Done. Added ${generated}, skipped ${duplicates} duplicates, ${failed} failed batches.`
+      : `Paused at ${generated}/${total}. Need more unique advanced words; click Resume to continue with a fresh target list.`,
+    generated, duplicates, failed, attempts, rejected,
+    estimated_input_tokens: inputTokens,
+    estimated_output_tokens: outputTokens,
+    estimated_cost_usd: costUsd,
+    finished_at: finalStatus === "completed" ? new Date().toISOString() : null,
+    progress_details: { phase: finalStatus, cpu_proxy: finalStatus === "completed" ? 0 : 10, throughput_per_min: 0 },
   }).eq("id", jobId);
 }
 
