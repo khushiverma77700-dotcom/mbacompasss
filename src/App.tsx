@@ -181,6 +181,16 @@ const PersonalizedMockRunnerPage = lazyWithPreload(() => import("./pages/student
 const PersonalizedMockResultPage = lazyWithPreload(() => import("./pages/student/PersonalizedMockResultPage"));
 const StudentLogin = lazyWithPreload(() => import("./pages/student/StudentLogin"));
 const StudentSOPReview = lazyWithPreload(() => import("./pages/student/StudentSOPReview"));
+const StudentVocabularyHub = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyHub"));
+const StudentVocabularyFeed = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyFeed"));
+const StudentVocabularyWord = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyWord"));
+const StudentVocabularySearch = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularySearch"));
+const StudentVocabularyBookmarks = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyBookmarks"));
+const StudentVocabularyQuiz = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyQuiz"));
+const StudentVocabularyRevision = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyRevision"));
+const StudentVocabularyLeaderboard = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyLeaderboard"));
+const StudentVocabularyAnalytics = lazyWithPreload(() => import("./pages/student/vocabulary/StudentVocabularyAnalytics"));
+const AdminVocabulary = lazyWithPreload(() => import("./pages/admin/AdminVocabulary"));
 const AdminPersonalizedHub = lazyWithPreload(() => import("./pages/admin/AdminPersonalizedHub"));
 const AdminDailyTests = lazyWithPreload(() => import("./pages/admin/AdminDailyTests"));
 const AdminStudentNotificationsBroadcast = lazyWithPreload(() => import("./pages/admin/AdminStudentNotificationsBroadcast"));
@@ -737,6 +747,7 @@ const App = () => (
               <Route path="mocks-landing" element={<LazyPage><AdminMocksLanding /></LazyPage>} />
               <Route path="student-mocks" element={<LazyPage><AdminStudentMocks /></LazyPage>} />
               <Route path="personalized-hub" element={<LazyPage><AdminPersonalizedHub /></LazyPage>} />
+              <Route path="vocabulary" element={<LazyPage><AdminVocabulary /></LazyPage>} />
               <Route path="student-announcements" element={<LazyPage><AdminStudentAnnouncements /></LazyPage>} />
               <Route path="student-notifications" element={<LazyPage><AdminStudentNotificationsBroadcast /></LazyPage>} />
               <Route path="daily-tests" element={<LazyPage><AdminDailyTests /></LazyPage>} />
@@ -838,6 +849,15 @@ const App = () => (
               <Route path="personalized-hub/attempt/:attemptId" element={<InnerLazyPage><PersonalizedMockRunnerPage /></InnerLazyPage>} />
               <Route path="personalized-hub/result/:attemptId" element={<InnerLazyPage><PersonalizedMockResultPage /></InnerLazyPage>} />
               <Route path="sop-review" element={<InnerLazyPage><StudentSOPReview /></InnerLazyPage>} />
+              <Route path="vocabulary" element={<InnerLazyPage><StudentVocabularyHub /></InnerLazyPage>} />
+              <Route path="vocabulary/feed" element={<InnerLazyPage><StudentVocabularyFeed /></InnerLazyPage>} />
+              <Route path="vocabulary/search" element={<InnerLazyPage><StudentVocabularySearch /></InnerLazyPage>} />
+              <Route path="vocabulary/bookmarks" element={<InnerLazyPage><StudentVocabularyBookmarks /></InnerLazyPage>} />
+              <Route path="vocabulary/quiz" element={<InnerLazyPage><StudentVocabularyQuiz /></InnerLazyPage>} />
+              <Route path="vocabulary/revision" element={<InnerLazyPage><StudentVocabularyRevision /></InnerLazyPage>} />
+              <Route path="vocabulary/leaderboard" element={<InnerLazyPage><StudentVocabularyLeaderboard /></InnerLazyPage>} />
+              <Route path="vocabulary/analytics" element={<InnerLazyPage><StudentVocabularyAnalytics /></InnerLazyPage>} />
+              <Route path="vocabulary/word/:slug" element={<InnerLazyPage><StudentVocabularyWord /></InnerLazyPage>} />
             </Route>
             <Route path="/mba-compass" element={<PublicLayout><LazyPage><MBACompassCoursesPage /></LazyPage></PublicLayout>} />
             <Route path="/mba-compass/compare" element={<PublicLayout><LazyPage><MBACompassComparePage /></LazyPage></PublicLayout>} />

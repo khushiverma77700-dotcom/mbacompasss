@@ -6518,6 +6518,266 @@ export type Database = {
         }
         Relationships: []
       }
+      vocab_bookmarks: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          user_id: string
+          word_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          user_id: string
+          word_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          user_id?: string
+          word_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vocab_bookmarks_word_id_fkey"
+            columns: ["word_id"]
+            isOneToOne: false
+            referencedRelation: "vocab_words"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vocab_daily_goals: {
+        Row: {
+          on_date: string
+          quiz_done: number
+          quiz_target: number
+          user_id: string
+          words_done: number
+          words_target: number
+        }
+        Insert: {
+          on_date: string
+          quiz_done?: number
+          quiz_target?: number
+          user_id: string
+          words_done?: number
+          words_target?: number
+        }
+        Update: {
+          on_date?: string
+          quiz_done?: number
+          quiz_target?: number
+          user_id?: string
+          words_done?: number
+          words_target?: number
+        }
+        Relationships: []
+      }
+      vocab_progress: {
+        Row: {
+          id: string
+          last_seen_at: string | null
+          mastery: number
+          next_review_at: string
+          times_correct: number
+          times_seen: number
+          updated_at: string
+          user_id: string
+          word_id: string
+        }
+        Insert: {
+          id?: string
+          last_seen_at?: string | null
+          mastery?: number
+          next_review_at?: string
+          times_correct?: number
+          times_seen?: number
+          updated_at?: string
+          user_id: string
+          word_id: string
+        }
+        Update: {
+          id?: string
+          last_seen_at?: string | null
+          mastery?: number
+          next_review_at?: string
+          times_correct?: number
+          times_seen?: number
+          updated_at?: string
+          user_id?: string
+          word_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vocab_progress_word_id_fkey"
+            columns: ["word_id"]
+            isOneToOne: false
+            referencedRelation: "vocab_words"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vocab_quiz_attempts: {
+        Row: {
+          created_at: string
+          id: string
+          is_correct: boolean
+          quiz_type: Database["public"]["Enums"]["vocab_quiz_type"]
+          time_taken_ms: number | null
+          user_id: string
+          word_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_correct: boolean
+          quiz_type: Database["public"]["Enums"]["vocab_quiz_type"]
+          time_taken_ms?: number | null
+          user_id: string
+          word_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_correct?: boolean
+          quiz_type?: Database["public"]["Enums"]["vocab_quiz_type"]
+          time_taken_ms?: number | null
+          user_id?: string
+          word_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vocab_quiz_attempts_word_id_fkey"
+            columns: ["word_id"]
+            isOneToOne: false
+            referencedRelation: "vocab_words"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vocab_streaks: {
+        Row: {
+          badges: Json
+          current_streak: number
+          last_active_date: string | null
+          level: number
+          longest_streak: number
+          total_xp: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          badges?: Json
+          current_streak?: number
+          last_active_date?: string | null
+          level?: number
+          longest_streak?: number
+          total_xp?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          badges?: Json
+          current_streak?: number
+          last_active_date?: string | null
+          level?: number
+          longest_streak?: number
+          total_xp?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      vocab_word_of_day: {
+        Row: {
+          created_at: string
+          on_date: string
+          word_id: string
+        }
+        Insert: {
+          created_at?: string
+          on_date: string
+          word_id: string
+        }
+        Update: {
+          created_at?: string
+          on_date?: string
+          word_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vocab_word_of_day_word_id_fkey"
+            columns: ["word_id"]
+            isOneToOne: false
+            referencedRelation: "vocab_words"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vocab_words: {
+        Row: {
+          antonyms: string[]
+          category: Database["public"]["Enums"]["vocab_category"]
+          created_at: string
+          difficulty: Database["public"]["Enums"]["vocab_difficulty"]
+          example_business: string | null
+          example_email: string | null
+          example_interview: string | null
+          hinglish_meaning: string | null
+          id: string
+          meaning: string
+          part_of_speech: string | null
+          pronunciation: string | null
+          slug: string
+          source: string
+          synonyms: string[]
+          updated_at: string
+          word: string
+        }
+        Insert: {
+          antonyms?: string[]
+          category?: Database["public"]["Enums"]["vocab_category"]
+          created_at?: string
+          difficulty?: Database["public"]["Enums"]["vocab_difficulty"]
+          example_business?: string | null
+          example_email?: string | null
+          example_interview?: string | null
+          hinglish_meaning?: string | null
+          id?: string
+          meaning: string
+          part_of_speech?: string | null
+          pronunciation?: string | null
+          slug: string
+          source?: string
+          synonyms?: string[]
+          updated_at?: string
+          word: string
+        }
+        Update: {
+          antonyms?: string[]
+          category?: Database["public"]["Enums"]["vocab_category"]
+          created_at?: string
+          difficulty?: Database["public"]["Enums"]["vocab_difficulty"]
+          example_business?: string | null
+          example_email?: string | null
+          example_interview?: string | null
+          hinglish_meaning?: string | null
+          id?: string
+          meaning?: string
+          part_of_speech?: string | null
+          pronunciation?: string | null
+          slug?: string
+          source?: string
+          synonyms?: string[]
+          updated_at?: string
+          word?: string
+        }
+        Relationships: []
+      }
       welcome_email_logs: {
         Row: {
           amount: number | null
@@ -6657,6 +6917,25 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      award_vocab_xp: {
+        Args: { _activity_today?: boolean; _xp: number }
+        Returns: {
+          badges: Json
+          current_streak: number
+          last_active_date: string | null
+          level: number
+          longest_streak: number
+          total_xp: number
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "vocab_streaks"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       backfill_personalized_questions_from_mocks: {
         Args: never
         Returns: number
@@ -6786,6 +7065,18 @@ export type Database = {
           title: string
         }[]
       }
+      get_vocab_leaderboard: {
+        Args: { _limit?: number }
+        Returns: {
+          current_streak: number
+          display_name: string
+          is_self: boolean
+          level: number
+          rank: number
+          total_xp: number
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -6871,6 +7162,54 @@ export type Database = {
         Args: { _target_id: string; _target_table: string; _user_id: string }
         Returns: boolean
       }
+      vocab_due_for_review: {
+        Args: { _limit?: number; _user_id: string }
+        Returns: {
+          antonyms: string[]
+          category: Database["public"]["Enums"]["vocab_category"]
+          created_at: string
+          difficulty: Database["public"]["Enums"]["vocab_difficulty"]
+          example_business: string | null
+          example_email: string | null
+          example_interview: string | null
+          hinglish_meaning: string | null
+          id: string
+          meaning: string
+          part_of_speech: string | null
+          pronunciation: string | null
+          slug: string
+          source: string
+          synonyms: string[]
+          updated_at: string
+          word: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "vocab_words"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      vocab_update_progress: {
+        Args: { _correct: boolean; _word_id: string }
+        Returns: {
+          id: string
+          last_seen_at: string | null
+          mastery: number
+          next_review_at: string
+          times_correct: number
+          times_seen: number
+          updated_at: string
+          user_id: string
+          word_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "vocab_progress"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
@@ -6928,6 +7267,16 @@ export type Database = {
       ticket_message_sender: "student" | "admin" | "system"
       ticket_priority: "low" | "medium" | "high"
       ticket_status: "open" | "in_progress" | "resolved" | "closed"
+      vocab_category:
+        | "finance"
+        | "marketing"
+        | "consulting"
+        | "hr"
+        | "economics"
+        | "corp_comm"
+        | "general"
+      vocab_difficulty: "beginner" | "intermediate" | "cat" | "gdpi"
+      vocab_quiz_type: "mcq" | "fill" | "synonym" | "correction" | "context"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -7115,6 +7464,17 @@ export const Constants = {
       ticket_message_sender: ["student", "admin", "system"],
       ticket_priority: ["low", "medium", "high"],
       ticket_status: ["open", "in_progress", "resolved", "closed"],
+      vocab_category: [
+        "finance",
+        "marketing",
+        "consulting",
+        "hr",
+        "economics",
+        "corp_comm",
+        "general",
+      ],
+      vocab_difficulty: ["beginner", "intermediate", "cat", "gdpi"],
+      vocab_quiz_type: ["mcq", "fill", "synonym", "correction", "context"],
     },
   },
 } as const
