@@ -206,44 +206,66 @@ export default function StudentFormulaBook() {
   const ringOffset = ringC - (targetPct / 100) * ringC;
 
   return (
-    <div className="space-y-6 pb-24">
-      {/* HERO */}
-      <section className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/70 to-blue-50/50 p-5 md:p-7">
-        <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-sky-200/40 blur-3xl" />
-        <div className="relative grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
+    <div className="space-y-5 pb-24 md:space-y-6">
+      {/* HERO — premium gradient with mesh */}
+      <section className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/80 to-blue-50/60 p-4 shadow-sm md:rounded-3xl md:p-7">
+        {/* decorative mesh */}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="absolute -right-28 -top-28 h-72 w-72 rounded-full bg-sky-200/50 blur-3xl" />
+          <div className="absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-blue-200/40 blur-3xl" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(14,165,233,0.08)_1px,transparent_0)] [background-size:22px_22px] opacity-60" />
+        </div>
+
+        <div className="relative grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center lg:gap-8">
           <div className="space-y-4">
             <div>
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/80 bg-white/80 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-sky-700 backdrop-blur">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-sky-200/80 bg-white/90 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-sky-700 shadow-sm backdrop-blur">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-75" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-sky-500" />
+                </span>
                 <Calculator className="h-3 w-3" /> Quant Formula Book
               </div>
-              <h1 className="font-heading mt-2 text-2xl font-bold text-slate-900 md:text-3xl">
-                Level {level} · {xp.toLocaleString()} XP
+              <h1 className="font-heading mt-2 text-[1.4rem] font-bold leading-tight text-slate-900 sm:text-2xl md:text-3xl">
+                <span className="bg-gradient-to-r from-slate-900 via-sky-700 to-blue-700 bg-clip-text text-transparent">
+                  Level {level}
+                </span>
+                <span className="text-slate-400"> · </span>
+                <span className="tabular-nums">{xp.toLocaleString()}</span>
+                <span className="ml-1 text-base font-semibold text-slate-500">XP</span>
               </h1>
-              <p className="mt-1 max-w-xl text-sm text-slate-600">
-                Searchable, AI-explained MBA quant formulas. Mark complete, save, and revise daily to lock retention before mocks.
+              <p className="mt-1.5 max-w-xl text-[13px] leading-6 text-slate-600 md:text-sm">
+                Search, master and revise MBA quant formulas. Mark complete, save, and revise daily to lock retention before mocks.
               </p>
             </div>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-              <Pill icon={<Flame className="h-4 w-4" />} label="Day streak" value={streak?.current_streak || 0} tone="orange" />
-              <Pill icon={<CheckCircle2 className="h-4 w-4" />} label="Completed" value={totalDone} tone="emerald" />
-              <Pill icon={<BookmarkCheck className="h-4 w-4" />} label="Saved" value={totalSaved} tone="sky" />
-              <Pill icon={<RotateCcw className="h-4 w-4" />} label="Revise later" value={totalRevise} tone="amber" />
+
+            {/* Stats grid - 4 cols on mobile too, compact */}
+            <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+              <Pill icon={<Flame className="h-3.5 w-3.5" />} label="Streak" value={streak?.current_streak || 0} tone="orange" />
+              <Pill icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Done" value={totalDone} tone="emerald" />
+              <Pill icon={<BookmarkCheck className="h-3.5 w-3.5" />} label="Saved" value={totalSaved} tone="sky" />
+              <Pill icon={<RotateCcw className="h-3.5 w-3.5" />} label="Revise" value={totalRevise} tone="amber" />
             </div>
+
+            {/* XP bar */}
             <div>
               <div className="mb-1 flex items-center justify-between text-[11px] font-medium text-slate-600">
                 <span className="inline-flex items-center gap-1"><Zap className="h-3 w-3 text-amber-500" /> Level {level}</span>
-                <span>{xpInLevel}/500 XP to Lv {level + 1}</span>
+                <span className="tabular-nums">{xpInLevel}/500 XP to Lv {level + 1}</span>
               </div>
-              <div className="h-2 w-full overflow-hidden rounded-full bg-white/70 ring-1 ring-sky-100">
-                <div className="h-full rounded-full bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 transition-all" style={{ width: `${xpPct}%` }} />
+              <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-white/80 ring-1 ring-sky-100">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 shadow-[0_0_12px_rgba(251,146,60,0.45)] transition-all duration-700"
+                  style={{ width: `${xpPct}%` }}
+                />
+                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.5),transparent)] [background-size:200%_100%] animate-[shimmer_3s_infinite]" />
               </div>
             </div>
           </div>
-          <div className="flex flex-col items-center gap-2 rounded-2xl border border-sky-100 bg-white/70 p-5 backdrop-blur lg:min-w-[220px]">
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-              <Target className="h-3.5 w-3.5 text-sky-600" /> Daily Target
-            </span>
-            <div className="relative h-32 w-32">
+
+          {/* Daily target ring */}
+          <div className="relative mx-auto flex w-full max-w-[260px] flex-row items-center gap-4 rounded-2xl border border-sky-100 bg-white/80 p-3 backdrop-blur-md shadow-sm lg:flex-col lg:gap-2 lg:p-5 lg:min-w-[220px]">
+            <div className="relative h-24 w-24 shrink-0 lg:h-32 lg:w-32">
               <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
                 <circle cx="50" cy="50" r={ringR} fill="none" stroke="#e0f2fe" strokeWidth="9" />
                 <circle cx="50" cy="50" r={ringR} fill="none" stroke="url(#fmRingGrad)" strokeWidth="9" strokeLinecap="round" strokeDasharray={ringC} strokeDashoffset={ringOffset} className="transition-all duration-700" />
@@ -252,25 +274,80 @@ export default function StudentFormulaBook() {
                 </defs>
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className="font-heading text-2xl font-bold text-slate-900">{doneToday}<span className="text-base text-slate-400">/{dailyTarget}</span></div>
-                <div className="text-[10px] uppercase tracking-wider text-slate-500">{targetPct}%</div>
+                <div className="font-heading text-xl font-bold leading-none text-slate-900 lg:text-2xl">
+                  {doneToday}<span className="text-sm text-slate-400 lg:text-base">/{dailyTarget}</span>
+                </div>
+                <div className="mt-1 text-[9px] uppercase tracking-wider text-slate-500 lg:text-[10px]">{targetPct}%</div>
               </div>
+            </div>
+            <div className="flex flex-col lg:items-center">
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500 lg:text-[11px]">
+                <Target className="h-3 w-3 text-sky-600" /> Daily Target
+              </span>
+              <span className="mt-0.5 text-[11px] text-slate-600 lg:text-center">
+                {targetPct >= 100 ? "Crushed it today" : `${dailyTarget - doneToday} to go`}
+              </span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* SMART SEARCH */}
-      <Card className="border-slate-200 bg-white">
-        <CardContent className="p-4">
+      {/* QUICK SECTION TABS — mobile-friendly horizontal scroll */}
+      {sections.length > 0 && (
+        <div className="-mx-1 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex min-w-max items-center gap-2 pb-1">
+            <button
+              onClick={() => setFilter("section", "all")}
+              className={cn(
+                "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all",
+                section === "all"
+                  ? "border-transparent bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-md shadow-sky-200"
+                  : "border-slate-200 bg-white text-slate-600 hover:border-sky-300 hover:text-sky-700",
+              )}
+            >
+              <LayersIcon className="h-3.5 w-3.5" /> All
+            </button>
+            {sections.map((s) => {
+              const active = section === s.slug;
+              return (
+                <button
+                  key={s.slug}
+                  onClick={() => setFilter("section", s.slug)}
+                  className={cn(
+                    "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all",
+                    active
+                      ? "border-transparent bg-gradient-to-r from-sky-600 to-blue-600 text-white shadow-md shadow-sky-200"
+                      : "border-slate-200 bg-white text-slate-600 hover:border-sky-300 hover:text-sky-700",
+                  )}
+                >
+                  {s.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* STICKY SMART SEARCH */}
+      <Card className="sticky top-[60px] z-30 border-slate-200 bg-white/95 shadow-sm backdrop-blur-md md:top-4">
+        <CardContent className="p-3 md:p-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               value={q}
               onChange={(e) => setFilter("q", e.target.value)}
               placeholder="Search any formula, concept, shortcut or topic…"
-              className="h-12 pl-9 text-base"
+              className="h-11 rounded-xl border-slate-200 pl-9 pr-9 text-sm md:h-12 md:text-base"
             />
+            {q && (
+              <button
+                onClick={() => setFilter("q", "")}
+                aria-label="Clear search"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
             {suggestions.length > 0 && q.length >= 2 && (
               <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-xl border border-sky-100 bg-white shadow-lg">
                 {suggestions.map((s, i) => (
@@ -289,49 +366,35 @@ export default function StudentFormulaBook() {
             )}
           </div>
 
-          {/* PROMINENT FILTER BAR */}
-          <div className="mt-5 rounded-2xl border-2 border-sky-200 bg-gradient-to-br from-sky-50 via-white to-blue-50/60 p-4 shadow-sm">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          {/* COMPACT FILTERS */}
+          <div className="mt-3 rounded-xl border border-sky-100 bg-gradient-to-br from-sky-50/60 via-white to-blue-50/40 p-3 md:mt-4 md:p-4">
+            <div className="mb-2.5 flex flex-wrap items-center justify-between gap-2">
               <div className="inline-flex items-center gap-2">
-                <div className="rounded-lg bg-gradient-to-br from-sky-600 to-blue-600 p-1.5 text-white shadow">
-                  <Filter className="h-3.5 w-3.5" />
+                <div className="rounded-lg bg-gradient-to-br from-sky-600 to-blue-600 p-1.5 text-white shadow-sm">
+                  <Filter className="h-3 w-3" />
                 </div>
-                <div>
-                  <div className="font-heading text-sm font-bold text-slate-900">Smart Filters</div>
-                  <div className="text-[10px] uppercase tracking-wider text-slate-500">Pick a section, then drill into topics</div>
-                </div>
+                <div className="font-heading text-xs font-bold uppercase tracking-wider text-slate-700 md:text-sm">Refine</div>
               </div>
               {(section !== "all" || topic !== "all" || difficulty !== "all" || status !== "all" || shortcutOnly || importantOnly) && (
                 <button
                   onClick={() => setParams(new URLSearchParams(q ? { q } : {}))}
                   className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:border-rose-300 hover:text-rose-600"
                 >
-                  <X className="h-3 w-3" /> Clear all
+                  <X className="h-3 w-3" /> Clear
                 </button>
               )}
             </div>
 
-            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
-              {/* SECTION — primary */}
-              <DropdownField
-                primary
-                icon={<LayersIcon className="h-3.5 w-3.5" />}
-                label="Section"
-                value={section}
-                onChange={(v) => setFilter("section", v)}
-                placeholder="All sections"
-                options={[{ k: "all", l: "All sections" }, ...sections.map((s) => ({ k: s.slug, l: s.name }))]}
-              />
-              {/* TOPIC — dependent */}
+            <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
               <DropdownField
                 icon={<BookOpen className="h-3.5 w-3.5" />}
                 label="Topic"
                 value={topic}
                 onChange={(v) => setFilter("topic", v)}
-                placeholder={section === "all" ? "Pick a section first" : "All topics"}
+                placeholder={section === "all" ? "Pick section above" : "All topics"}
                 disabled={section === "all" || topicsInSection.length === 0}
                 options={[
-                  { k: "all", l: section === "all" ? "All topics" : "All topics in section" },
+                  { k: "all", l: section === "all" ? "All topics" : "All in section" },
                   ...topicsInSection.map((t) => ({ k: t.slug, l: t.name })),
                 ]}
               />
@@ -351,10 +414,18 @@ export default function StudentFormulaBook() {
                 placeholder="All"
                 options={STATUSES.map((s) => ({ k: s.k, l: s.l }))}
               />
+              <DropdownField
+                icon={<LayersIcon className="h-3.5 w-3.5" />}
+                label="Section"
+                value={section}
+                onChange={(v) => setFilter("section", v)}
+                placeholder="All sections"
+                options={[{ k: "all", l: "All sections" }, ...sections.map((s) => ({ k: s.slug, l: s.name }))]}
+              />
             </div>
 
             <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-sky-100 pt-3">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Quick toggles:</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Quick:</span>
               <Chip active={importantOnly} onClick={() => toggleFlag("important")}>★ High weightage</Chip>
               <Chip active={shortcutOnly} onClick={() => toggleFlag("shortcut")}>⚡ Shortcut</Chip>
             </div>
