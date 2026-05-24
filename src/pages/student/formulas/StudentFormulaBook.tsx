@@ -483,7 +483,7 @@ export default function StudentFormulaBook() {
                       <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-sky-600">
                         <Zap className="h-3 w-3" /> When to Use
                       </div>
-                      <p className="text-[0.85rem] leading-6 text-slate-700">{f.notes}</p>
+                      <MathInlineText as="p" text={f.notes} className="text-[0.85rem] leading-6 text-slate-700" />
                     </div>
                   )}
 
