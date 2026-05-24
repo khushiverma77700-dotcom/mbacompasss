@@ -5116,6 +5116,304 @@ export type Database = {
         }
         Relationships: []
       }
+      quant_formula_progress: {
+        Row: {
+          accuracy_pct: number | null
+          bookmarked: boolean
+          formula_id: string
+          last_revised_at: string | null
+          next_review_at: string | null
+          status: Database["public"]["Enums"]["quant_progress_status"]
+          times_attempted: number
+          times_correct: number
+          times_revised: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accuracy_pct?: number | null
+          bookmarked?: boolean
+          formula_id: string
+          last_revised_at?: string | null
+          next_review_at?: string | null
+          status?: Database["public"]["Enums"]["quant_progress_status"]
+          times_attempted?: number
+          times_correct?: number
+          times_revised?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accuracy_pct?: number | null
+          bookmarked?: boolean
+          formula_id?: string
+          last_revised_at?: string | null
+          next_review_at?: string | null
+          status?: Database["public"]["Enums"]["quant_progress_status"]
+          times_attempted?: number
+          times_correct?: number
+          times_revised?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quant_formula_progress_formula_id_fkey"
+            columns: ["formula_id"]
+            isOneToOne: false
+            referencedRelation: "quant_formulas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quant_formulas: {
+        Row: {
+          common_mistakes: string[]
+          created_at: string
+          derivation: string | null
+          difficulty: Database["public"]["Enums"]["quant_difficulty"]
+          exam_tags: string[]
+          examples: Json
+          explanation: string
+          expression: string
+          expression_latex: string | null
+          faqs: Json
+          frequency_score: number
+          id: string
+          importance: number
+          is_high_weightage: boolean
+          is_shortcut: boolean
+          name: string
+          notes: string | null
+          published: boolean
+          related_slugs: string[]
+          seo_description: string | null
+          seo_keywords: string[]
+          seo_title: string | null
+          shortcuts: string[]
+          slug: string
+          topic_slug: string
+          updated_at: string
+        }
+        Insert: {
+          common_mistakes?: string[]
+          created_at?: string
+          derivation?: string | null
+          difficulty?: Database["public"]["Enums"]["quant_difficulty"]
+          exam_tags?: string[]
+          examples?: Json
+          explanation?: string
+          expression: string
+          expression_latex?: string | null
+          faqs?: Json
+          frequency_score?: number
+          id?: string
+          importance?: number
+          is_high_weightage?: boolean
+          is_shortcut?: boolean
+          name: string
+          notes?: string | null
+          published?: boolean
+          related_slugs?: string[]
+          seo_description?: string | null
+          seo_keywords?: string[]
+          seo_title?: string | null
+          shortcuts?: string[]
+          slug: string
+          topic_slug: string
+          updated_at?: string
+        }
+        Update: {
+          common_mistakes?: string[]
+          created_at?: string
+          derivation?: string | null
+          difficulty?: Database["public"]["Enums"]["quant_difficulty"]
+          exam_tags?: string[]
+          examples?: Json
+          explanation?: string
+          expression?: string
+          expression_latex?: string | null
+          faqs?: Json
+          frequency_score?: number
+          id?: string
+          importance?: number
+          is_high_weightage?: boolean
+          is_shortcut?: boolean
+          name?: string
+          notes?: string | null
+          published?: boolean
+          related_slugs?: string[]
+          seo_description?: string | null
+          seo_keywords?: string[]
+          seo_title?: string | null
+          shortcuts?: string[]
+          slug?: string
+          topic_slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      quant_practice_attempts: {
+        Row: {
+          ai_explanation: string | null
+          correct_index: number
+          created_at: string
+          difficulty: Database["public"]["Enums"]["quant_difficulty"]
+          formula_id: string
+          id: string
+          is_correct: boolean | null
+          options: Json
+          question_text: string
+          user_answer_index: number | null
+          user_id: string
+        }
+        Insert: {
+          ai_explanation?: string | null
+          correct_index: number
+          created_at?: string
+          difficulty?: Database["public"]["Enums"]["quant_difficulty"]
+          formula_id: string
+          id?: string
+          is_correct?: boolean | null
+          options: Json
+          question_text: string
+          user_answer_index?: number | null
+          user_id: string
+        }
+        Update: {
+          ai_explanation?: string | null
+          correct_index?: number
+          created_at?: string
+          difficulty?: Database["public"]["Enums"]["quant_difficulty"]
+          formula_id?: string
+          id?: string
+          is_correct?: boolean | null
+          options?: Json
+          question_text?: string
+          user_answer_index?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quant_practice_attempts_formula_id_fkey"
+            columns: ["formula_id"]
+            isOneToOne: false
+            referencedRelation: "quant_formulas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quant_revision_sessions: {
+        Row: {
+          completed_ids: string[]
+          created_at: string
+          duration_seconds: number
+          formula_ids: string[]
+          id: string
+          session_date: string
+          streak_day: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_ids?: string[]
+          created_at?: string
+          duration_seconds?: number
+          formula_ids?: string[]
+          id?: string
+          session_date?: string
+          streak_day?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_ids?: string[]
+          created_at?: string
+          duration_seconds?: number
+          formula_ids?: string[]
+          id?: string
+          session_date?: string
+          streak_day?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      quant_streaks: {
+        Row: {
+          current_streak: number
+          daily_target_formulas: number
+          last_active_date: string | null
+          level: number
+          longest_streak: number
+          total_xp: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_streak?: number
+          daily_target_formulas?: number
+          last_active_date?: string | null
+          level?: number
+          longest_streak?: number
+          total_xp?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_streak?: number
+          daily_target_formulas?: number
+          last_active_date?: string | null
+          level?: number
+          longest_streak?: number
+          total_xp?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      quant_topics: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          parent_slug: string | null
+          slug: string
+          sort_order: number
+          updated_at: string
+          weightage: number
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          parent_slug?: string | null
+          slug: string
+          sort_order?: number
+          updated_at?: string
+          weightage?: number
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          parent_slug?: string | null
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+          weightage?: number
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           admin_reply: string | null
@@ -6990,6 +7288,25 @@ export type Database = {
         }[]
       }
       assign_admin_by_email: { Args: { _email: string }; Returns: string }
+      award_quant_xp: {
+        Args: { _activity_today?: boolean; _xp: number }
+        Returns: {
+          current_streak: number
+          daily_target_formulas: number
+          last_active_date: string | null
+          level: number
+          longest_streak: number
+          total_xp: number
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "quant_streaks"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       award_student_rewards: {
         Args: {
           _activity_today?: boolean
@@ -7250,6 +7567,8 @@ export type Database = {
         Args: { _generation_id: string }
         Returns: undefined
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       unlock_bundle_mocks: {
         Args: { _bundle_id: string; _user_id: string }
         Returns: number
@@ -7366,6 +7685,8 @@ export type Database = {
         | "topic"
         | "topic_wise"
         | "practice_set"
+      quant_difficulty: "beginner" | "intermediate" | "cat" | "advanced"
+      quant_progress_status: "none" | "completed" | "revise_later" | "mastered"
       ticket_category:
         | "mock_issue"
         | "payment_issue"
@@ -7562,6 +7883,8 @@ export const Constants = {
         "topic_wise",
         "practice_set",
       ],
+      quant_difficulty: ["beginner", "intermediate", "cat", "advanced"],
+      quant_progress_status: ["none", "completed", "revise_later", "mastered"],
       ticket_category: [
         "mock_issue",
         "payment_issue",
