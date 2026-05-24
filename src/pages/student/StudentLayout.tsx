@@ -61,11 +61,11 @@ const mocksGroup: NavItem[] = [
 const navItems: NavItem[] = [
   { to: "/student", label: "Overview", icon: LayoutDashboard, end: true },
   { to: "/student/notifications", label: "Updates", icon: Bell },
+  { to: "/student/day-planner", label: "My Day Planner", icon: CalendarCheck, feature: "day_planner" },
   // "My Mocks" group is rendered separately as an expandable section.
   // "My Insights" group (Strength / Weak / Performance / Leaderboard) is also rendered separately.
   { to: "/student/buy-mocks", label: "Buy Mocks", icon: ShoppingBag, feature: "buy_mocks" },
   // { to: "/student/goals", label: "CAT Score Engine", icon: Target, feature: "study_planner" }, // hidden
-  { to: "/student/day-planner", label: "My Day Planner", icon: CalendarCheck, feature: "day_planner" },
   { to: "/student/orders", label: "My Orders", icon: Receipt },
   { to: "/student/tools", label: "AI Tools", icon: Sparkles, feature: "ai_tools" },
   { to: "/student/vocabulary", label: "B-School Vocabulary", icon: BookOpen, feature: "vocabulary_hub" },
