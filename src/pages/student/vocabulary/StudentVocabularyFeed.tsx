@@ -639,10 +639,6 @@ export default function StudentVocabularyFeed() {
             const syllables = (w.pronunciation_syllables || w.word).split(/[-·•\s]+/).filter(Boolean);
             return (
 
-            const isRead = readIds.has(w.id);
-            const isSaved = bookmarkIds.has(w.id);
-            const syllables = (w.pronunciation_syllables || w.word).split(/[-·•\s]+/).filter(Boolean);
-            return (
               <Card
                 key={w.id}
                 className={cn(
