@@ -68,6 +68,7 @@ const navItems: NavItem[] = [
   { to: "/student/orders", label: "My Orders", icon: Receipt },
   { to: "/student/announcements", label: "Announcements", icon: Bell },
   { to: "/student/tools", label: "AI Tools", icon: Sparkles, feature: "ai_tools" },
+  { to: "/student/vocabulary", label: "B-School Vocabulary", icon: BookOpen },
   { to: "/student/sop-review", label: "AI SOP Review", icon: FileText },
   { to: "/student/support", label: "Support Center", icon: LifeBuoy, feature: "support" },
   { to: "/student/profile", label: "My Profile", icon: UserIcon },
