@@ -2,7 +2,11 @@
 // POST { count, category?, difficulty? } -> creates job, runs in background, returns { job_id }
 // GET ?job_id=...                         -> returns job row
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 const CATEGORIES = ["finance","marketing","consulting","hr","economics","corp_comm","general"];
 const DIFFICULTIES = ["beginner","intermediate","cat","gdpi"];
