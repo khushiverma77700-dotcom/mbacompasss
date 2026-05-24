@@ -309,7 +309,7 @@ export default function StudentFormulaBook() {
               )}
             </div>
 
-            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
+            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
               {/* SECTION — primary */}
               <DropdownField
                 primary
@@ -332,14 +332,6 @@ export default function StudentFormulaBook() {
                   { k: "all", l: section === "all" ? "All topics" : "All topics in section" },
                   ...topicsInSection.map((t) => ({ k: t.slug, l: t.name })),
                 ]}
-              />
-              <DropdownField
-                icon={<GradIcon className="h-3.5 w-3.5" />}
-                label="Exam"
-                value={exam}
-                onChange={(v) => setFilter("exam", v)}
-                placeholder="All exams"
-                options={[{ k: "all", l: "All exams" }, ...EXAMS.map((e) => ({ k: e, l: e }))]}
               />
               <DropdownField
                 icon={<Gauge className="h-3.5 w-3.5" />}
