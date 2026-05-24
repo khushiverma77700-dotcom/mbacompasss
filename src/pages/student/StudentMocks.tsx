@@ -206,13 +206,12 @@ export default function StudentMocks({ fixedType: fixedTypeProp }: StudentMocksP
     const s = new Set<string>();
     Object.values(tests).forEach((t) => {
       if (getKind(t) !== "topic_wise") return;
-      if (!matchesExam(t)) return;
       if (sectionFilter !== "All" && (t.category || "").trim().toUpperCase() !== sectionFilter) return;
       if (t.topic && t.topic.trim()) s.add(t.topic.trim());
     });
     return Array.from(s).sort();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tests, examFilter, sectionFilter]);
+  }, [tests, sectionFilter]);
 
   // Reset topic when section changes and current topic isn't available
   useEffect(() => {
