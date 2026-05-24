@@ -42,7 +42,11 @@ async function generateBatch(
   recentDupes: string[],
 ) {
   const catLine = category ? `Restrict every word to the category: ${category}.` : `Cover finance, marketing, consulting, HR, economics, corp_comm, general.`;
-  const diffLine = difficulty ? `Difficulty: ${difficulty}.` : `Mix difficulty across beginner, intermediate, cat, gdpi.`;
+  // HARD MODE: force CAT/GDPI-tier difficulty by default. Easy tiers only when admin explicitly asks.
+  const allowEasy = difficulty === "beginner" || difficulty === "intermediate";
+  const diffLine = difficulty
+    ? `Difficulty: ${difficulty}.`
+    : `Difficulty: ONLY "cat" or "gdpi". NEVER beginner/intermediate. These must be HARD, exam-grade words an average graduate would NOT know.`;
   const examLine = exam
     ? `EXAM SCOPE: Only words actually appeared in real past ${exam} papers (verbal/RC/vocab/SC/cloze). Each MUST list at least one verifiable "${exam} <YEAR> Slot <N>" appearance. If unsure, OMIT.`
     : "";
@@ -56,8 +60,21 @@ async function generateBatch(
     ? `- exam_appearances: REQUIRED non-empty. Each entry matches "${exam} <YEAR> Slot <N>" or "${exam} <YEAR>". Never fabricate.`
     : `- exam_appearances: real past Indian MBA exam appearances ("CAT 2019 Slot 2"). If unsure, return [].`;
 
+  const hardnessBlock = allowEasy ? "" : `
+DIFFICULTY BAR — STRICT. Every word MUST satisfy ALL of:
+1. CAT/XAT/GRE-tier vocabulary an average Indian graduate would NOT immediately understand.
+2. Minimum 7 letters, ideally Latinate / Greek-rooted, polysyllabic, or literary/idiomatic.
+3. NOT in the common-English top ~10,000 list. NO everyday business jargon.
+
+BANNED — do NOT return these or anything similarly basic (case-insensitive, including plurals/forms):
+market, marketing, profit, revenue, budget, growth, leader, leadership, manager, management, customer, client, brand, branding, sales, price, pricing, cost, value, team, teamwork, goal, vision, mission, target, strategy, plan, planning, product, project, finance, money, bank, banking, loan, invest, investor, investment, asset, equity, debit, credit, debt, share, stock, trade, trader, trading, deal, offer, demand, supply, buyer, seller, retail, wholesale, loss, income, expense, tax, salary, wage, job, work, office, company, business, firm, industry, economy, economic, idea, success, failure, risk, reward, partner, partnership, merge, merger, owner, agent, agency, service, quality, hire, fire, boss, employee, staff, meeting, report, email, chart, graph, data, trend, save, spend, buy, sell, growth, scale, scaling, launch, pitch, deck, startup, founder, network, networking, brand, market, deal, leader, profit.
+
+GOOD EXAMPLES (this difficulty tier): perspicacious, obfuscate, sycophantic, anachronistic, ostentatious, mellifluous, hegemony, ubiquitous, ephemeral, capricious, expostulate, recalcitrant, sanguine, equivocate, vicissitude, perfunctory, ineluctable, propitiate, lugubrious, abrogate, contumacious, pellucid, jejune, supercilious, taciturn, fastidious, surreptitious, magnanimous, perfidious, sagacious, vituperate, quixotic, mendacious, pernicious, fulminate, palliate, mollify, prevaricate, salient, redolent, truculent, vacillate, winnow, abnegation, bowdlerize, calumny, descry, eschew, fecund.
+
+If a word does not clearly meet this bar, OMIT it and return another in its place.`;
+
   // Compact system prompt — saves ~500 input tokens per call vs the old verbose one.
-  const system = `You curate MBA vocabulary for Indian aspirants (CAT/XAT/NMAT/SNAP/IIFT/CMAT/MAT, GDPI, placements).
+  const system = `You curate ADVANCED MBA vocabulary for Indian aspirants (CAT/XAT/NMAT/SNAP/IIFT/CMAT/MAT, GDPI, placements). You ONLY return hard, exam-grade words — never basic business jargon.
 
 EVERY word MUST include EVERY field, fully filled — no nulls, no placeholders:
 - word, part_of_speech (noun/verb/adjective/adverb, lowercase)
@@ -71,10 +88,10 @@ EVERY word MUST include EVERY field, fully filled — no nulls, no placeholders:
 ${examAppearanceRule}
 - category: finance|marketing|consulting|hr|economics|corp_comm|general
 - difficulty: beginner|intermediate|cat|gdpi
-
+${hardnessBlock}
 If you cannot fully complete ALL fields with high quality, OMIT the word. Unique within batch, not in exclude list.`;
 
-  const user = `Generate exactly ${batchSize} unique fully-complete words. ${catLine} ${diffLine} ${examLine} ${excludeBlock}\n\nReturn ONLY via the emit_vocab_batch tool.`;
+  const user = `Generate exactly ${batchSize} unique fully-complete ${allowEasy ? "" : "HARD CAT/GDPI-tier "}words. ${catLine} ${diffLine} ${examLine} ${excludeBlock}\n\nReturn ONLY via the emit_vocab_batch tool.`;
 
   const toolSchema = {
     type: "function",
