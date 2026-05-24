@@ -1,0 +1,1 @@
+ALTER TABLE public.vocab_streaks ADD COLUMN IF NOT EXISTS daily_target_words integer NOT NULL DEFAULT 5;

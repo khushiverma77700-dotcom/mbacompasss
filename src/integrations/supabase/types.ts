@@ -6750,6 +6750,7 @@ export type Database = {
         Row: {
           badges: Json
           current_streak: number
+          daily_target_words: number
           last_active_date: string | null
           level: number
           longest_streak: number
@@ -6760,6 +6761,7 @@ export type Database = {
         Insert: {
           badges?: Json
           current_streak?: number
+          daily_target_words?: number
           last_active_date?: string | null
           level?: number
           longest_streak?: number
@@ -6770,6 +6772,7 @@ export type Database = {
         Update: {
           badges?: Json
           current_streak?: number
+          daily_target_words?: number
           last_active_date?: string | null
           level?: number
           longest_streak?: number
@@ -7018,6 +7021,7 @@ export type Database = {
         Returns: {
           badges: Json
           current_streak: number
+          daily_target_words: number
           last_active_date: string | null
           level: number
           longest_streak: number
