@@ -354,6 +354,21 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
+
+    // ---- RESUME path ----
+    if (body.resume_job_id) {
+      const { data: existing, error: jErr } = await supabase
+        .from("vocab_generation_jobs").select("*").eq("id", body.resume_job_id).maybeSingle();
+      if (jErr || !existing) return new Response(JSON.stringify({ error: "Job not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (existing.status === "completed") return new Response(JSON.stringify({ job_id: existing.id, status: "completed" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      const resumeProvider: Provider = body.provider === "openai" ? "openai" : (body.provider === "lovable" ? "lovable" : "lovable");
+      const resumeExam = body.exam && EXAMS.includes(String(body.exam).toUpperCase()) ? String(body.exam).toUpperCase() : null;
+      await supabase.from("vocab_generation_jobs").update({ status: "running", error: null, current_activity: "Resuming…" }).eq("id", existing.id);
+      // @ts-ignore Edge runtime background tasks
+      EdgeRuntime.waitUntil(runJob(existing.id, existing.requested, existing.category, existing.difficulty, resumeExam, resumeProvider, { generated: existing.generated || 0, duplicates: existing.duplicates || 0, failed: existing.failed || 0 }));
+      return new Response(JSON.stringify({ job_id: existing.id, resumed: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
     let count = Number(body.count || 100);
     if (!Number.isFinite(count) || count < 1) count = 100;
     count = Math.min(count, 5000);
@@ -377,6 +392,7 @@ Deno.serve(async (req) => {
     EdgeRuntime.waitUntil(runJob(job.id, count, category, difficulty, exam, provider));
 
     return new Response(JSON.stringify({ job_id: job.id }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
   } catch (e) {
     console.error("vocab-bulk-generate error", e);
     return new Response(JSON.stringify({ error: (e as Error).message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
