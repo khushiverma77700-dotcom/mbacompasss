@@ -169,15 +169,8 @@ export default function MocksListPage() {
       value: settings?.price_current,
       currency: "INR",
     });
-    if (targetTest.pricing_type === "free") {
-      navigate(`/mocks/${targetTest.slug}`);
-      return;
-    }
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) {
-      navigate(`/auth?redirect=/mocks`);
-      return;
-    }
+    // Always open paid checkout for the landing bundle, regardless of the
+    // underlying test's pricing_type. Guest checkout supported via dialog.
     setCheckoutTest(targetTest);
   };
 
