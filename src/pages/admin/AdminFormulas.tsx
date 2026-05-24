@@ -20,9 +20,11 @@ export default function AdminFormulas() {
   const [editing, setEditing] = useState<any | null>(null);
   const [busy, setBusy] = useState(false);
   const [genTopic, setGenTopic] = useState<string>("");
-  const [genCount, setGenCount] = useState<number>(8);
+  const [genCount, setGenCount] = useState<number>(10);
   const [genDifficulty, setGenDifficulty] = useState<string>("intermediate");
   const [genBusy, setGenBusy] = useState(false);
+  const [topicBusy, setTopicBusy] = useState<string | null>(null);
+  const [lastRun, setLastRun] = useState<{ inserted: number; returned: number; rejected: { name: string; reason: string }[] } | null>(null);
   const [stats, setStats] = useState<{ total: number; published: number }>({ total: 0, published: 0 });
 
   const load = useCallback(async () => {
@@ -89,20 +91,28 @@ export default function AdminFormulas() {
     load();
   };
 
-  const runAiBulk = async () => {
-    const topic = topics.find((t) => t.slug === genTopic);
+  const runAiBulk = async (overrideSlug?: string, overrideCount?: number) => {
+    const slug = overrideSlug || genTopic;
+    const topic = topics.find((t) => t.slug === slug);
     if (!topic) { toast({ title: "Pick a topic" }); return; }
-    setGenBusy(true);
+    const isPerTopic = !!overrideSlug;
+    if (isPerTopic) setTopicBusy(slug); else setGenBusy(true);
     try {
       const { data, error } = await supabase.functions.invoke("formula-topic-generate", {
-        body: { topic_slug: topic.slug, topic_name: topic.name, count: genCount, difficulty: genDifficulty },
+        body: { topic_slug: topic.slug, topic_name: topic.name, count: overrideCount ?? genCount, difficulty: genDifficulty },
       });
       if (error) throw error;
-      toast({ title: `Inserted ${data?.inserted ?? 0} new formulas`, description: `Requested ${genCount}, AI returned ${data?.returned ?? 0}.` });
+      setLastRun({ inserted: data?.inserted ?? 0, returned: data?.returned ?? 0, rejected: data?.rejected || [] });
+      toast({
+        title: `${topic.name}: +${data?.inserted ?? 0} formulas`,
+        description: `AI returned ${data?.returned ?? 0}, ${data?.rejected?.length ?? 0} rejected for quality.`,
+      });
       load();
     } catch (e: any) {
       toast({ title: "AI generation failed", description: e.message, variant: "destructive" });
-    } finally { setGenBusy(false); }
+    } finally {
+      if (isPerTopic) setTopicBusy(null); else setGenBusy(false);
+    }
   };
 
   return (
@@ -187,8 +197,8 @@ export default function AdminFormulas() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-xs">Count (max 15 per run)</Label>
-                  <Input type="number" min={1} max={15} value={genCount} onChange={(e) => setGenCount(Math.min(15, Math.max(1, Number(e.target.value) || 1)))} />
+                  <Label className="text-xs">Count (max 20 per run)</Label>
+                  <Input type="number" min={1} max={20} value={genCount} onChange={(e) => setGenCount(Math.min(20, Math.max(1, Number(e.target.value) || 1)))} />
                 </div>
                 <div>
                   <Label className="text-xs">Default difficulty</Label>
@@ -203,23 +213,82 @@ export default function AdminFormulas() {
                   </Select>
                 </div>
               </div>
-              <Button onClick={runAiBulk} disabled={genBusy} className="bg-gradient-to-r from-sky-600 to-blue-600">
+              <Button onClick={() => runAiBulk()} disabled={genBusy} className="bg-gradient-to-r from-sky-600 to-blue-600">
                 {genBusy ? <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Generating…</> : <><ListPlus className="mr-1 h-4 w-4" /> Generate {genCount} formulas</>}
               </Button>
-              <p className="text-xs text-slate-500">AI deduplicates against existing names within the chosen topic. Inserted formulas are published by default.</p>
+              <p className="text-xs text-slate-500">Every formula is verified for proper LaTeX (\frac, \sqrt, ^), at least 2 worked examples and a complete Usage section. Invalid entries are rejected automatically.</p>
+
+              {lastRun && (
+                <div className="rounded-xl border border-sky-100 bg-sky-50/60 p-3 text-xs">
+                  <div className="font-semibold text-slate-800">Last run: +{lastRun.inserted} inserted · {lastRun.returned} returned · {lastRun.rejected.length} rejected</div>
+                  {lastRun.rejected.length > 0 && (
+                    <ul className="mt-1.5 space-y-0.5 text-slate-600">
+                      {lastRun.rejected.slice(0, 8).map((r, i) => (
+                        <li key={i}>• <span className="font-medium">{r.name}</span> — {r.reason}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="topics">
           <Card>
-            <CardContent className="grid grid-cols-2 gap-2 p-4 md:grid-cols-3">
-              {topics.map((t) => (
-                <div key={t.slug} className="rounded-lg border bg-slate-50 p-2 text-sm">
-                  <div className="font-semibold text-slate-900">{t.name}</div>
-                  <div className="text-[11px] text-slate-500">{t.slug}</div>
-                </div>
-              ))}
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <Sparkles className="h-4 w-4 text-sky-600" /> One-click topic generators
+              </CardTitle>
+              <p className="text-xs text-slate-500">
+                Each button generates 10 textbook-grade formulas for that topic with proper LaTeX (\frac, \sqrt, ^),
+                full Usage notes and 2+ worked CAT-level examples. Duplicates and low-quality entries are auto-rejected.
+              </p>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
+              {topics.map((t) => {
+                const topicCount = formulas.filter((f) => f.topic_slug === t.slug).length;
+                const isBusy = topicBusy === t.slug;
+                return (
+                  <div key={t.slug} className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-gradient-to-br from-white to-sky-50/40 p-3 transition-shadow hover:shadow-md">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="truncate font-semibold text-slate-900">{t.name}</div>
+                        <div className="truncate text-[11px] text-slate-500">{t.slug}</div>
+                      </div>
+                      <Badge variant="outline" className="shrink-0 border-sky-200 text-[10px] text-sky-700">{topicCount} formulas</Badge>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Button
+                        size="sm"
+                        className="h-8 flex-1 gap-1 bg-gradient-to-r from-sky-600 to-blue-600 text-xs"
+                        disabled={isBusy || genBusy}
+                        onClick={() => runAiBulk(t.slug, 10)}
+                      >
+                        {isBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                        {isBusy ? "Generating…" : "Generate 10"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 gap-1 text-xs"
+                        disabled={isBusy || genBusy}
+                        onClick={() => runAiBulk(t.slug, 5)}
+                      >
+                        +5
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 gap-1 text-xs"
+                        onClick={() => setFilter({ topic: t.slug, q: "" })}
+                      >
+                        View
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
             </CardContent>
           </Card>
         </TabsContent>
