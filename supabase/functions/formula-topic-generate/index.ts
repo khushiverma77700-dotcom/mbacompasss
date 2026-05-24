@@ -70,11 +70,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Avoid duplicates: pull ALL existing names + slugs + latex for this topic
+    // Avoid duplicates: pull ALL existing names + slugs + latex across the full library.
+    // Topic-level duplicate checks allowed the same basic formulas to be regenerated under other topics.
     const { data: existing } = await admin
       .from("quant_formulas")
       .select("name, slug, expression_latex")
-      .eq("topic_slug", topic_slug);
+      .limit(5000);
 
     const normalizeName = (s: string) =>
       String(s || "")
@@ -91,11 +92,19 @@ Deno.serve(async (req) => {
         .toLowerCase()
         .replace(/\s+/g, "")
         .replace(/\\left|\\right|\\,|\\;|\\!|\\:/g, "")
-        .replace(/[{}]/g, "");
+        .replace(/[{}]/g, "")
+        .replace(/\^(2|3|4|5|6|7|8|9)/g, "^$1");
+
+    const stripMathDelimiters = (s: string) =>
+      String(s || "")
+        .trim()
+        .replace(/^\s*(?:\\\(|\\\[|\$\$?|`)+/, "")
+        .replace(/(?:\\\)|\\\]|\$\$?|`)+\s*$/, "")
+        .trim();
 
     const existingNamesNorm = new Set((existing || []).map((r: any) => normalizeName(r.name)).filter(Boolean));
     const existingSlugs = new Set((existing || []).map((r: any) => String(r.slug || "").toLowerCase()).filter(Boolean));
-    const existingLatex = new Set((existing || []).map((r: any) => normalizeLatex(r.expression_latex)).filter(Boolean));
+    const existingLatex = new Set((existing || []).map((r: any) => normalizeLatex(stripMathDelimiters(r.expression_latex))).filter(Boolean));
     const existingNamesList = (existing || []).map((r: any) => r.name).filter(Boolean);
 
     const OPENAI_API_KEY = await getCredential("OPENAI_API_KEY").catch(() => "") || Deno.env.get("OPENAI_API_KEY");
