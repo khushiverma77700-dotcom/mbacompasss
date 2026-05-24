@@ -118,10 +118,32 @@ export default function AdminVocabulary() {
 
   const aiEnrich = async (w: any) => {
     toast({ title: "Calling AI…" });
-    const { data, error } = await supabase.functions.invoke("vocab-explain", { body: { word: w.word, save: true } });
+    const { data, error } = await supabase.functions.invoke("vocab-explain", { body: { word: w.word, save: true, force: true } });
     if (error || data?.error) { toast({ title: "Failed", description: error?.message || data?.error, variant: "destructive" }); return; }
     toast({ title: "Enriched" });
     load();
+  };
+
+  const backfillMissing = async () => {
+    setBackfillRunning(true);
+    setBackfillStatus({ processed: 0, remaining: 0 });
+    let totalProcessed = 0;
+    try {
+      // Loop in batches until done
+      // Cap at 30 iterations to avoid runaway
+      for (let i = 0; i < 30; i++) {
+        const { data, error } = await supabase.functions.invoke("vocab-backfill", { body: { batch: 8 } });
+        if (error) { toast({ title: "Backfill error", description: error.message, variant: "destructive" }); break; }
+        if (data?.error) { toast({ title: "Backfill error", description: data.error, variant: "destructive" }); break; }
+        totalProcessed += data?.processed || 0;
+        setBackfillStatus({ processed: totalProcessed, remaining: data?.remaining || 0 });
+        if (data?.done || (data?.processed || 0) === 0) break;
+      }
+      toast({ title: "Backfill complete", description: `Enriched ${totalProcessed} word(s)` });
+      load();
+    } finally {
+      setBackfillRunning(false);
+    }
   };
 
   const importCSV = async () => {
