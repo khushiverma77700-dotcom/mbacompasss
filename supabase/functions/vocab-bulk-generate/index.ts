@@ -479,7 +479,16 @@ Deno.serve(async (req) => {
       const resumeExam = body.exam && EXAMS.includes(String(body.exam).toUpperCase()) ? String(body.exam).toUpperCase() : null;
       await supabase.from("vocab_generation_jobs").update({ status: "running", error: null, current_activity: "Resuming…" }).eq("id", existing.id);
       // @ts-ignore Edge runtime background tasks
-      EdgeRuntime.waitUntil(runJob(existing.id, existing.requested, existing.category, existing.difficulty, resumeExam, resumeProvider, { generated: existing.generated || 0, duplicates: existing.duplicates || 0, failed: existing.failed || 0 }));
+      EdgeRuntime.waitUntil(runJob(existing.id, existing.requested, existing.category, existing.difficulty, resumeExam || existing.exam || null, resumeProvider, {
+        generated: existing.generated || 0,
+        duplicates: existing.duplicates || 0,
+        failed: existing.failed || 0,
+        attempts: existing.attempts || 0,
+        rejected: existing.rejected || 0,
+        estimated_input_tokens: existing.estimated_input_tokens || 0,
+        estimated_output_tokens: existing.estimated_output_tokens || 0,
+        estimated_cost_usd: existing.estimated_cost_usd || 0,
+      }));
       return new Response(JSON.stringify({ job_id: existing.id, resumed: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
@@ -496,7 +505,7 @@ Deno.serve(async (req) => {
     }
 
     const { data: job, error } = await supabase.from("vocab_generation_jobs").insert({
-      requested: count, category, difficulty, status: "pending",
+      requested: count, category, difficulty, provider, exam, status: "pending",
       created_by: user.id,
       current_activity: `Queued (${provider}${exam ? `, ${exam}-only` : ""})`,
     }).select().single();
