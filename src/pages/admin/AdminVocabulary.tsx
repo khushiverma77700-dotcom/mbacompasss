@@ -83,6 +83,7 @@ export default function AdminVocabulary() {
         category: bulkCategory === "any" ? null : bulkCategory,
         difficulty: bulkDifficulty === "any" ? null : bulkDifficulty,
         exam: bulkExam === "any" ? null : bulkExam,
+        provider: bulkProvider,
       },
     });
     setBulkStarting(false);
