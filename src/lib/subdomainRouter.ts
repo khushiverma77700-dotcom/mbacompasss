@@ -27,6 +27,8 @@ const DASHBOARD_ALLOWED_PREFIXES = [
   "/auth",
   "/forgot-password",
   "/reset-password",
+  "/formula",
+  "/formulas",
 ];
 
 const rewriteDashboardMockPath = (pathname: string): string | null => {
