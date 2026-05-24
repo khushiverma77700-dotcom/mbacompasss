@@ -232,7 +232,13 @@ export default function StudentDailyTest() {
             <div className="flex flex-col gap-2 items-end">
               {today.completed_at ? (
                 <>
-                  <Badge className="bg-emerald-100 text-emerald-700 border-0 gap-1"><CheckCircle2 className="h-3.5 w-3.5" /> Completed</Badge>
+                  <Badge className="bg-emerald-100 text-emerald-700 border-1 border-emerald-200 gap-1 px-3 py-1"><CheckCircle2 className="h-3.5 w-3.5" /> Attempted</Badge>
+                  {todayAttempt && (
+                    <div className="text-right text-sky-100 text-sm space-y-0.5">
+                      <div className="font-semibold text-white">{todayAttempt.total_score ?? 2}/{todayAttempt.max_score ?? 1} marks</div>
+                      <div className="text-xs">{Math.round(Number(todayAttempt.accuracy || 0))}% accuracy</div>
+                    </div>
+                  )}
                   {today.my_attempt_id && (
                     <Link to={`/student/daily-test/report/${today.my_attempt_id}`}>
                       <Button size="lg" variant="secondary">View detailed report <ArrowRight className="h-4 w-4 ml-1" /></Button>
@@ -241,7 +247,7 @@ export default function StudentDailyTest() {
                 </>
               ) : dailyEnabled ? (
                 <Link to={`/mocks/${today.test_slug}`}>
-                  <Button size="lg" variant="secondary" className="gap-2">Start daily test <ArrowRight className="h-4 w-4" /></Button>
+                  <Button size="lg" variant="secondary" className="gap-2">Attempt Now <ArrowRight className="h-4 w-4" /></Button>
                 </Link>
               ) : (
                 <Button size="lg" variant="secondary" className="gap-2" onClick={() => setUpgradeOpen(true)}>
