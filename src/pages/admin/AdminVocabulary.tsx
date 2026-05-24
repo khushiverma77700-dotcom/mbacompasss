@@ -206,12 +206,19 @@ export default function AdminVocabulary() {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Generate up to <b>2000</b> unique MBA / business words in one run. Each word is created with English meaning, Hindi meaning (Devanagari), Hinglish explanation, syllable-broken pronunciation, synonyms, antonyms, business / interview / email examples, and known past-exam appearances. Existing words are automatically skipped so every run only adds 100% new entries.
+                Generate up to <b>5000</b> unique MBA / business words in one run. Each word is created with English meaning, Hindi meaning (Devanagari), Hinglish explanation, syllable-broken pronunciation, synonyms, antonyms, business / interview / email examples, and known past-exam appearances. Existing words across the entire library are automatically skipped so every run only adds 100% new entries.
               </p>
+              <div className="flex flex-wrap gap-2">
+                {[100, 500, 1000, 2500, 5000].map((n) => (
+                  <Button key={n} type="button" variant={bulkCount === n ? "default" : "outline"} size="sm" onClick={() => setBulkCount(n)}>
+                    +{n.toLocaleString()} words
+                  </Button>
+                ))}
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">How many words?</label>
-                  <Input type="number" min={1} max={2000} value={bulkCount} onChange={(e) => setBulkCount(Number(e.target.value))} />
+                  <Input type="number" min={1} max={5000} value={bulkCount} onChange={(e) => setBulkCount(Number(e.target.value))} />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">Category</label>
