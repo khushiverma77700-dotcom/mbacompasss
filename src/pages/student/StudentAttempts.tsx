@@ -84,6 +84,15 @@ export default function StudentAttempts() {
       else list = list.filter(a => a.status === status);
     }
     if (exam !== "all") list = list.filter(a => a.test?.exam_code === exam);
+    if (type !== "all") {
+      list = list.filter((a) => {
+        const cat = (a.test?.category || "").toLowerCase();
+        const tt = (a.test?.test_type || "").toLowerCase();
+        if (type === "topic") return cat === "topic" || tt === "topic_wise";
+        if (type === "practice_set") return cat === "practice_set" || tt === "practice_set";
+        return cat === type || tt === type;
+      });
+    }
     if (q) {
       const ql = q.toLowerCase();
       list = list.filter(a => (a.test?.name ?? "").toLowerCase().includes(ql));
@@ -104,7 +113,7 @@ export default function StudentAttempts() {
       case "accuracy_desc": list.sort((a,b)=>cmp(a,b,"accuracy",-1)); break;
     }
     return list;
-  }, [attempts, q, exam, status, from, to, minScore, maxScore, sort]);
+  }, [attempts, q, exam, type, status, from, to, minScore, maxScore, sort]);
 
   // Group by exam_code (sectioned wise)
   const grouped = useMemo(() => {
