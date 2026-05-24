@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
     const allRows: any[] = [];
     const rejected: { name: string; reason: string }[] = [];
     let totalReturned = 0;
-    const model = "openai/gpt-5-mini";
+    const model = "gpt-4o-mini";
 
     // Build a single batch request (returns a fetch promise). All batches run in PARALLEL
     // so the function finishes inside the edge-runtime wall-time limit even for count=100.
