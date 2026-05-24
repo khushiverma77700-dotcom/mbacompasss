@@ -163,6 +163,7 @@ Return strictly via the emit_formulas tool. Reject your own output mentally and 
         function: {
           name: "emit_formulas",
           description: "Return the generated formula list with strict LaTeX, deep explanations, usage notes and worked examples.",
+          strict: true,
           parameters: {
             type: "object",
             properties: {
@@ -180,17 +181,17 @@ Return strictly via the emit_formulas tool. Reject your own output mentally and 
                     shortcuts: { type: "array", items: { type: "string" } },
                     common_mistakes: { type: "array", items: { type: "string" } },
                     difficulty: { type: "string", enum: ["beginner","intermediate","cat","advanced"] },
-                    exam_tags: { type: "array", items: { type: "string" }, minItems: 1 },
+                    exam_tags: { type: "array", items: { type: "string" } },
                     importance: { type: "integer", minimum: 1, maximum: 5 },
                     is_shortcut: { type: "boolean" },
                     is_high_weightage: { type: "boolean" },
                     examples: {
-                      type: "array", minItems: 2,
+                      type: "array",
                       items: {
                         type: "object",
                         properties: {
                           problem: { type: "string" },
-                          steps: { type: "array", items: { type: "string" }, minItems: 2 },
+                          steps: { type: "array", items: { type: "string" } },
                           answer: { type: "string" },
                         },
                         required: ["problem","steps","answer"],
@@ -209,7 +210,12 @@ Return strictly via the emit_formulas tool. Reject your own output mentally and 
                       },
                     },
                   },
-                  required: ["name","expression","expression_latex","explanation","notes","difficulty","exam_tags","importance","examples"],
+                  required: [
+                    "name","expression","expression_latex","explanation","derivation","notes",
+                    "shortcuts","common_mistakes","difficulty","exam_tags","importance",
+                    "is_shortcut","is_high_weightage","examples",
+                    "seo_title","seo_description","seo_keywords","faqs"
+                  ],
                   additionalProperties: false,
                 },
               },
