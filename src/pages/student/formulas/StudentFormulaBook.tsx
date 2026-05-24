@@ -291,31 +291,83 @@ export default function StudentFormulaBook() {
             )}
           </div>
 
-          <div className="mt-4 space-y-3">
-            <FilterRow label="Topic">
-              <Chip active={topic === "all"} onClick={() => setFilter("topic", "all")}>All</Chip>
-              {topics.filter((t) => !t.parent_slug).map((t) => (
-                <Chip key={t.slug} active={topic === t.slug} onClick={() => setFilter("topic", t.slug)}>{t.name}</Chip>
-              ))}
-            </FilterRow>
-            <FilterRow label="Exam">
-              <Chip active={exam === "all"} onClick={() => setFilter("exam", "all")}>All</Chip>
-              {EXAMS.map((e) => (
-                <Chip key={e} active={exam === e} onClick={() => setFilter("exam", e)}>{e}</Chip>
-              ))}
-            </FilterRow>
-            <FilterRow label="Difficulty">
-              {DIFFS.map((d) => (
-                <Chip key={d.k} active={difficulty === d.k} onClick={() => setFilter("difficulty", d.k)}>{d.l}</Chip>
-              ))}
-            </FilterRow>
-            <FilterRow label="Status">
-              {STATUSES.map((s) => (
-                <Chip key={s.k} active={status === s.k} onClick={() => setFilter("status", s.k)}>{s.l}</Chip>
-              ))}
+          {/* PROMINENT FILTER BAR */}
+          <div className="mt-5 rounded-2xl border-2 border-sky-200 bg-gradient-to-br from-sky-50 via-white to-blue-50/60 p-4 shadow-sm">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <div className="inline-flex items-center gap-2">
+                <div className="rounded-lg bg-gradient-to-br from-sky-600 to-blue-600 p-1.5 text-white shadow">
+                  <Filter className="h-3.5 w-3.5" />
+                </div>
+                <div>
+                  <div className="font-heading text-sm font-bold text-slate-900">Smart Filters</div>
+                  <div className="text-[10px] uppercase tracking-wider text-slate-500">Pick a section, then drill into topics</div>
+                </div>
+              </div>
+              {(section !== "all" || topic !== "all" || exam !== "all" || difficulty !== "all" || status !== "all" || shortcutOnly || importantOnly) && (
+                <button
+                  onClick={() => setParams(new URLSearchParams(q ? { q } : {}))}
+                  className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-slate-600 hover:border-rose-300 hover:text-rose-600"
+                >
+                  <X className="h-3 w-3" /> Clear all
+                </button>
+              )}
+            </div>
+
+            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
+              {/* SECTION — primary */}
+              <DropdownField
+                primary
+                icon={<LayersIcon className="h-3.5 w-3.5" />}
+                label="Section"
+                value={section}
+                onChange={(v) => setFilter("section", v)}
+                placeholder="All sections"
+                options={[{ k: "all", l: "All sections" }, ...sections.map((s) => ({ k: s.slug, l: s.name }))]}
+              />
+              {/* TOPIC — dependent */}
+              <DropdownField
+                icon={<BookOpen className="h-3.5 w-3.5" />}
+                label="Topic"
+                value={topic}
+                onChange={(v) => setFilter("topic", v)}
+                placeholder={section === "all" ? "Pick a section first" : "All topics"}
+                disabled={section === "all" || topicsInSection.length === 0}
+                options={[
+                  { k: "all", l: section === "all" ? "All topics" : "All topics in section" },
+                  ...topicsInSection.map((t) => ({ k: t.slug, l: t.name })),
+                ]}
+              />
+              <DropdownField
+                icon={<GradIcon className="h-3.5 w-3.5" />}
+                label="Exam"
+                value={exam}
+                onChange={(v) => setFilter("exam", v)}
+                placeholder="All exams"
+                options={[{ k: "all", l: "All exams" }, ...EXAMS.map((e) => ({ k: e, l: e }))]}
+              />
+              <DropdownField
+                icon={<Gauge className="h-3.5 w-3.5" />}
+                label="Difficulty"
+                value={difficulty}
+                onChange={(v) => setFilter("difficulty", v)}
+                placeholder="All levels"
+                options={DIFFS.map((d) => ({ k: d.k, l: d.l }))}
+              />
+              <DropdownField
+                icon={<ListChecks className="h-3.5 w-3.5" />}
+                label="Status"
+                value={status}
+                onChange={(v) => setFilter("status", v)}
+                placeholder="All"
+                options={STATUSES.map((s) => ({ k: s.k, l: s.l }))}
+              />
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-sky-100 pt-3">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Quick toggles:</span>
               <Chip active={importantOnly} onClick={() => toggleFlag("important")}>★ High weightage</Chip>
               <Chip active={shortcutOnly} onClick={() => toggleFlag("shortcut")}>⚡ Shortcut</Chip>
-            </FilterRow>
+            </div>
           </div>
         </CardContent>
       </Card>
