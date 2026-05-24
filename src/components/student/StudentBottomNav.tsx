@@ -2,6 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { LayoutDashboard, FlaskConical, CalendarCheck, BarChart3, User as UserIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStudentNavBadges } from "@/hooks/useStudentNavBadges";
+import { preloadStudentRoute } from "@/lib/preloadStudentRoutes";
 
 /**
  * Mobile-only bottom tab bar for the student dashboard.
