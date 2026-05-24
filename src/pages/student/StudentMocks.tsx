@@ -670,7 +670,7 @@ function TopicWiseView({
             <Lock className="h-7 w-7 text-sky-600" />
           </div>
           <div className="font-semibold text-base">
-            No Topic-wise{examFilter !== "All" ? ` (${examFilter})` : ""} mocks yet
+            No Topic-wise mocks yet
           </div>
           <p className="text-sm text-muted-foreground mt-1 mb-4 max-w-sm mx-auto">
             Unlock these mocks by upgrading to a course bundle that includes them.
