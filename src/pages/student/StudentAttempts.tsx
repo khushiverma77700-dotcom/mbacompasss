@@ -51,6 +51,32 @@ export default function StudentAttempts() {
     return Array.from(set).sort();
   }, [attempts]);
 
+  const TYPE_LABELS: Record<string, string> = {
+    daily: "Daily Test",
+    full_length: "Full Length",
+    sectional: "Sectional",
+    topic: "Topic Wise",
+    topic_wise: "Topic Wise",
+    practice_set: "Practice Set",
+  };
+
+  const typeOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    attempts.forEach((a) => {
+      const cat = (a.test?.category || "").toLowerCase();
+      const tt = (a.test?.test_type || "").toLowerCase();
+      if (cat === "daily") map.set("daily", TYPE_LABELS["daily"]);
+      if (cat === "full_length") map.set("full_length", TYPE_LABELS["full_length"]);
+      if (cat === "sectional") map.set("sectional", TYPE_LABELS["sectional"]);
+      if (cat === "topic") map.set("topic", TYPE_LABELS["topic"]);
+      if (tt === "full_length") map.set("full_length", TYPE_LABELS["full_length"]);
+      if (tt === "sectional") map.set("sectional", TYPE_LABELS["sectional"]);
+      if (tt === "topic_wise") map.set("topic", TYPE_LABELS["topic"]);
+      if (tt === "practice_set") map.set("practice_set", TYPE_LABELS["practice_set"]);
+    });
+    return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
+  }, [attempts]);
+
   const filtered = useMemo(() => {
     let list = attempts.slice();
     if (status !== "all") {
