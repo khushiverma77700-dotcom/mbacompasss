@@ -1,5 +1,6 @@
 import { useParams, Link, useSearchParams, useNavigate } from "react-router-dom";
 import { useMemo } from "react";
+import DOMPurify from "isomorphic-dompurify";
 import { getLocationImage, isGeneratedBanner } from "@/data/cityImages";
 import { MapPin, ArrowRight, GraduationCap, TrendingUp, Search, Filter, Star, Award, Building2, Users, Monitor, Building, Wifi, ArrowLeft, Share2 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -229,9 +230,9 @@ const CategoryPage = () => {
                 {heroTitle}
               </h1>
               {cityPage?.intro_content ? (
-                <div className="text-primary-foreground/75 max-w-3xl mx-auto prose-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: cityPage.intro_content }} />
+                <div className="text-primary-foreground/75 max-w-3xl mx-auto prose-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(cityPage.intro_content) }} />
               ) : category?.description ? (
-                <div className="text-primary-foreground/85 mb-6 max-w-3xl mx-auto text-base md:text-lg leading-relaxed prose prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: category.description }} />
+                <div className="text-primary-foreground/85 mb-6 max-w-3xl mx-auto text-base md:text-lg leading-relaxed prose prose-invert prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(category.description) }} />
               ) : (
                 <p className="text-primary-foreground/75 mb-6 max-w-2xl mx-auto text-base md:text-lg">{metaDesc}</p>
               )}
@@ -357,10 +358,10 @@ const CategoryPage = () => {
         )}
 
         {cityPage?.detailed_content && (
-          <div className="mt-12 bg-card rounded-2xl border border-border p-8 shadow-sm prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: cityPage.detailed_content }} />
+          <div className="mt-12 bg-card rounded-2xl border border-border p-8 shadow-sm prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(cityPage.detailed_content) }} />
         )}
         {cityPage?.faq_content && (
-          <div className="mt-8 bg-card rounded-2xl border border-border p-8 shadow-sm prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: cityPage.faq_content }} />
+          <div className="mt-8 bg-card rounded-2xl border border-border p-8 shadow-sm prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(cityPage.faq_content) }} />
         )}
         {hasLocationFilter && !cityPage?.detailed_content && !cityPage?.faq_content && (
           <div className="mt-12 bg-card rounded-2xl border border-border p-8 shadow-sm">
