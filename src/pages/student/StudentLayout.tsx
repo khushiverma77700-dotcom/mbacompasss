@@ -421,15 +421,17 @@ function SidebarContent() {
     );
   };
 
-  // Order: Overview → Updates → My Mocks group → My Insights → PerformX → Knowledge Duo → rest.
+  // Order: Overview → Updates → My Day Planner → My Mocks group → My Insights → PerformX → Knowledge Duo → rest.
   const overview = visibleItems.find((i) => i.to === "/student");
   const updates = visibleItems.find((i) => i.to === "/student/notifications");
+  const dayPlanner = visibleItems.find((i) => i.to === "/student/day-planner");
   const vocabItem = visibleItems.find((i) => i.to === "/student/vocabulary");
   const formulaItem = visibleItems.find((i) => i.to === "/student/formulas");
   const restItems = visibleItems.filter(
     (i) =>
       i.to !== "/student" &&
       i.to !== "/student/notifications" &&
+      i.to !== "/student/day-planner" &&
       i.to !== "/student/vocabulary" &&
       i.to !== "/student/formulas"
   );
