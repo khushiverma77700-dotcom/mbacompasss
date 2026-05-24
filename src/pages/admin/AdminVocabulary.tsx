@@ -288,21 +288,65 @@ export default function AdminVocabulary() {
                 Start AI Generation
               </Button>
 
-              {bulkJob && (
-                <div className="rounded-lg border border-border bg-muted/40 p-4 space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium capitalize">Status: {bulkJob.status}</span>
-                    <span className="text-muted-foreground">{bulkJob.generated} / {bulkJob.requested} added</span>
+              {bulkJob && (() => {
+                const req = Math.max(1, bulkJob.requested || 0);
+                const done = Math.min(bulkJob.generated || 0, req);
+                const pct = Math.min(100, Math.round((done / req) * 100));
+                const remaining = Math.max(0, (bulkJob.requested || 0) - (bulkJob.generated || 0));
+                const statusColor =
+                  bulkJob.status === "completed" ? "text-emerald-600" :
+                  bulkJob.status === "failed" ? "text-destructive" :
+                  "text-sky-600";
+                return (
+                  <div className="rounded-xl border border-border bg-gradient-to-br from-sky-50/60 to-white p-5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center gap-1.5 text-sm font-semibold capitalize ${statusColor}`}>
+                          <span className={`w-2 h-2 rounded-full ${bulkJob.status === "running" || bulkJob.status === "pending" ? "bg-sky-500 animate-pulse" : bulkJob.status === "completed" ? "bg-emerald-500" : "bg-destructive"}`} />
+                          {bulkJob.status}
+                        </span>
+                      </div>
+                      <div className="text-2xl font-bold tabular-nums text-foreground">{pct}%</div>
+                    </div>
+
+                    <Progress value={pct} className="h-3" />
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                      <div className="rounded-lg bg-white border border-border p-2.5">
+                        <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Requested</div>
+                        <div className="text-lg font-bold tabular-nums">{bulkJob.requested || 0}</div>
+                      </div>
+                      <div className="rounded-lg bg-white border border-border p-2.5">
+                        <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Added</div>
+                        <div className="text-lg font-bold tabular-nums text-emerald-600">{bulkJob.generated || 0}</div>
+                      </div>
+                      <div className="rounded-lg bg-white border border-border p-2.5">
+                        <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Remaining</div>
+                        <div className="text-lg font-bold tabular-nums text-sky-600">{remaining}</div>
+                      </div>
+                      <div className="rounded-lg bg-white border border-border p-2.5">
+                        <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Duplicates</div>
+                        <div className="text-lg font-bold tabular-nums text-amber-600">{bulkJob.duplicates || 0}</div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-xs">
+                      <p className="text-muted-foreground italic truncate pr-3">
+                        {bulkJob.current_activity || "Working…"}
+                      </p>
+                      {(bulkJob.failed || 0) > 0 && (
+                        <span className="shrink-0 text-destructive">Failed batches: <b>{bulkJob.failed}</b></span>
+                      )}
+                    </div>
+
+                    {bulkJob.error && (
+                      <p className="text-xs text-destructive bg-destructive/5 border border-destructive/20 rounded-md p-2">
+                        {bulkJob.error}
+                      </p>
+                    )}
                   </div>
-                  <Progress value={Math.min(100, Math.round((bulkJob.generated / Math.max(1, bulkJob.requested)) * 100))} />
-                  <p className="text-xs text-muted-foreground">{bulkJob.current_activity || ""}</p>
-                  <div className="flex gap-4 text-xs text-muted-foreground">
-                    <span>Duplicates skipped: <b className="text-foreground">{bulkJob.duplicates}</b></span>
-                    <span>Failed batches: <b className="text-foreground">{bulkJob.failed}</b></span>
-                  </div>
-                  {bulkJob.error && <p className="text-xs text-destructive">{bulkJob.error}</p>}
-                </div>
-              )}
+                );
+              })()}
             </CardContent>
           </Card>
         </TabsContent>
