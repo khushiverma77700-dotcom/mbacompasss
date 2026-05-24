@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Volume2, Bookmark, ArrowLeft, Loader2, CheckCircle2, RefreshCw } from "lucide-react";
+import { Volume2, Bookmark, ArrowLeft, Loader2, CheckCircle2, RefreshCw, GraduationCap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function StudentVocabularyWord() {
@@ -14,6 +14,7 @@ export default function StudentVocabularyWord() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [word, setWord] = useState<any>(null);
+  const [isRead, setIsRead] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [marking, setMarking] = useState(false);
@@ -27,8 +28,8 @@ export default function StudentVocabularyWord() {
       if (user) {
         const { data: bm } = await supabase.from("vocab_bookmarks").select("id").eq("user_id", user.id).eq("word_id", data.id).maybeSingle();
         setBookmarked(!!bm);
-        // record "seen"
-        await supabase.rpc("vocab_update_progress", { _word_id: data.id, _correct: true });
+        const { data: prog } = await supabase.from("vocab_progress").select("is_read").eq("user_id", user.id).eq("word_id", data.id).maybeSingle();
+        setIsRead(!!prog?.is_read);
       }
     }
     setLoading(false);
@@ -58,14 +59,15 @@ export default function StudentVocabularyWord() {
   const markLearned = async () => {
     if (!user || !word) return;
     setMarking(true);
+    await supabase.rpc("vocab_mark_read", { _word_id: word.id, _read: true });
     await supabase.rpc("vocab_update_progress", { _word_id: word.id, _correct: true });
     await supabase.rpc("award_vocab_xp", { _xp: 5, _activity_today: true });
-    // increment today goal
+    setIsRead(true);
     const today = new Date().toISOString().slice(0, 10);
     const { data: g } = await supabase.from("vocab_daily_goals").select("*").eq("user_id", user.id).eq("on_date", today).maybeSingle();
     if (g) await supabase.from("vocab_daily_goals").update({ words_done: (g.words_done || 0) + 1 }).eq("user_id", user.id).eq("on_date", today);
     else await supabase.from("vocab_daily_goals").insert({ user_id: user.id, on_date: today, words_done: 1 });
-    toast({ title: "+5 XP", description: "Marked as learned" });
+    toast({ title: "+5 XP", description: "Marked as read" });
     setMarking(false);
   };
 
