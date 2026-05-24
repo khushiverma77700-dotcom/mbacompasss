@@ -10,6 +10,7 @@ const corsHeaders = {
 
 const CATEGORIES = ["finance","marketing","consulting","hr","economics","corp_comm","general"];
 const DIFFICULTIES = ["beginner","intermediate","cat","gdpi"];
+const EXAMS = ["CAT","XAT","NMAT","SNAP","IIFT","CMAT","MAT"];
 
 function slugify(w: string): string {
   return String(w).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
@@ -28,10 +29,12 @@ function sampleArray<T>(arr: T[], n: number): T[] {
   return out;
 }
 
-async function generateBatch(LOVABLE_API_KEY: string, batchSize: number, category: string | null, difficulty: string | null, exclude: string[], recentDupes: string[]) {
+async function generateBatch(LOVABLE_API_KEY: string, batchSize: number, category: string | null, difficulty: string | null, exam: string | null, exclude: string[], recentDupes: string[]) {
   const catLine = category ? `Restrict every word to the category: ${category}.` : `Cover a wide range of MBA categories: finance, marketing, consulting, HR, economics, corp_comm, general.`;
   const diffLine = difficulty ? `Difficulty: ${difficulty}.` : `Mix difficulty across beginner, intermediate, cat, gdpi.`;
-  // Send a RANDOM sample of the full existing library (not just last 400) so AI sees broad coverage.
+  const examLine = exam
+    ? `CRITICAL EXAM SCOPE: Only return words that have ACTUALLY appeared in real past ${exam} papers (verbal / RC / vocabulary / sentence-correction / cloze sections). For each word you MUST list at least one real, verifiable past ${exam} appearance with the YEAR and SLOT (e.g. "${exam} 2019 Slot 2", "${exam} 2021 Slot 1"). If you are not sure the word genuinely appeared in a real ${exam} paper, OMIT it.`
+    : "";
   const sampled = sampleArray(exclude, 600);
   const dupeLine = recentDupes.length
     ? ` ESPECIALLY AVOID these recently-rejected duplicates: ${recentDupes.slice(-150).join(", ")}.`
@@ -39,6 +42,10 @@ async function generateBatch(LOVABLE_API_KEY: string, batchSize: number, categor
   const excludeBlock = exclude.length
     ? `STRICT UNIQUENESS RULE: The library already contains ${exclude.length} words. DO NOT return any word (case-insensitive, ignoring punctuation/spaces) from this sample of already-used words: ${sampled.join(", ")}.${dupeLine} Pick fresh, less-common MBA words instead.`
     : "";
+
+  const examAppearanceRule = exam
+    ? `- exam_appearances: REQUIRED non-empty array. Each entry must be a string in the EXACT format "${exam} <YEAR> Slot <N>" (e.g. "${exam} 2019 Slot 2") OR "${exam} <YEAR>" if the paper had no slots. At least one entry mandatory. Do NOT fabricate — only include genuine past-paper appearances.`
+    : `- exam_appearances: array of real past Indian MBA entrance exam appearances in the format "EXAM YEAR Slot N" (e.g. "CAT 2019 Slot 2", "XAT 2021"). If unsure, return []. Never fabricate.`;
 
   const system = `You are an MBA vocabulary curator for Indian aspirants preparing for CAT, XAT, NMAT, SNAP, IIFT, CMAT, MAT, GDPI, WAT, and placements.
 
@@ -57,13 +64,13 @@ ABSOLUTE REQUIREMENTS — every single word MUST include EVERY field below, full
 - example_business: one full sentence using the word in a business/board-room context
 - example_interview: one full sentence using the word in an MBA interview answer
 - example_email: one full sentence using the word in a professional email
-- exam_appearances: array of real past Indian MBA entrance exams where this word has actually appeared (e.g. "CAT 2019", "XAT 2021"). If unsure, return []. Never fabricate.
+${examAppearanceRule}
 - category: one of finance, marketing, consulting, hr, economics, corp_comm, general
 - difficulty: one of beginner, intermediate, cat, gdpi
 
 If you cannot fully complete ALL fields for a word with high quality, OMIT that word entirely — do NOT return partial entries. Words must be unique within the batch and must not appear in the exclude list.`;
 
-  const user = `Generate exactly ${batchSize} unique, fully-complete MBA/business vocabulary words. ${catLine} ${diffLine} ${excludeBlock}\n\nReturn ONLY via the emit_vocab_batch tool. Every word must pass all ABSOLUTE REQUIREMENTS above.`;
+  const user = `Generate exactly ${batchSize} unique, fully-complete MBA/business vocabulary words. ${catLine} ${diffLine} ${examLine} ${excludeBlock}\n\nReturn ONLY via the emit_vocab_batch tool. Every word must pass all ABSOLUTE REQUIREMENTS above.`;
 
   const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
@@ -128,7 +135,7 @@ If you cannot fully complete ALL fields for a word with high quality, OMIT that 
   return Array.isArray(parsed.words) ? parsed.words : [];
 }
 
-async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null) {
+async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null) {
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 
@@ -165,7 +172,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
 
     let batch: any[] = [];
     try {
-      batch = await generateBatch(LOVABLE_API_KEY, need, category, difficulty, Array.from(seenSlugs), recentDupes);
+      batch = await generateBatch(LOVABLE_API_KEY, need, category, difficulty, exam, Array.from(seenSlugs), recentDupes);
     } catch (e) {
       const msg = (e as Error).message;
       console.error("Batch error", msg);
@@ -220,7 +227,11 @@ async function runJob(jobId: string, total: number, category: string | null, dif
         hasText(w.example_email) &&
         hasArr(w.synonyms) &&
         hasArr(w.antonyms) &&
-        hasText(w.part_of_speech);
+        hasText(w.part_of_speech) &&
+        // When an exam is specified, require at least one valid exam appearance for that exam.
+        (!exam || (hasArr(w.exam_appearances) && w.exam_appearances.some((s: any) =>
+          typeof s === "string" && new RegExp(`\\b${exam}\\b`, "i").test(s) && /\b(19|20)\d{2}\b/.test(s)
+        )));
       if (!complete) { rejectedIncomplete++; continue; }
 
       seenSlugs.add(slug);
@@ -306,15 +317,17 @@ Deno.serve(async (req) => {
     count = Math.min(count, 5000);
     const category = body.category && CATEGORIES.includes(body.category) ? body.category : null;
     const difficulty = body.difficulty && DIFFICULTIES.includes(body.difficulty) ? body.difficulty : null;
+    const exam = body.exam && EXAMS.includes(String(body.exam).toUpperCase()) ? String(body.exam).toUpperCase() : null;
 
     const { data: job, error } = await supabase.from("vocab_generation_jobs").insert({
       requested: count, category, difficulty, status: "pending",
-      created_by: user.id, current_activity: "Queued",
+      created_by: user.id,
+      current_activity: exam ? `Queued (${exam}-only)` : "Queued",
     }).select().single();
     if (error) throw error;
 
     // @ts-ignore Edge runtime background tasks
-    EdgeRuntime.waitUntil(runJob(job.id, count, category, difficulty));
+    EdgeRuntime.waitUntil(runJob(job.id, count, category, difficulty, exam));
 
     return new Response(JSON.stringify({ job_id: job.id }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
