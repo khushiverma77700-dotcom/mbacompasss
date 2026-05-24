@@ -90,6 +90,17 @@ export default function StudentDailyTest() {
       }
     }
 
+    // Fetch today's attempt details for score display
+    if (todayRow?.my_attempt_id) {
+      const { data: attDetail } = await supabase.from("mock_attempts")
+        .select("id, total_score, max_score, accuracy, total_correct, total_incorrect, total_attempted, submitted_at")
+        .eq("id", todayRow.my_attempt_id)
+        .maybeSingle();
+      setTodayAttempt(attDetail);
+    } else {
+      setTodayAttempt(null);
+    }
+
     const merged = (hist ?? []).map((h: any) => ({ ...h, progress: progByDate[h.assigned_date] ?? null }));
     setHistory(merged);
 
