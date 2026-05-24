@@ -267,7 +267,7 @@ async function runJob(jobId: string, total: number, category: string | null, dif
   // Soft wall-clock budget: exit cleanly before the edge runtime kills us.
   // Mark the job as `paused` so the UI can offer a Resume button.
   const startMs = Date.now();
-  const MAX_RUN_MS = 4 * 60 * 1000; // 4 minutes per invocation
+  const MAX_RUN_MS = 85 * 1000; // short worker slices prevent edge shutdowns during long AI jobs
 
   while (generated < total && attempts < MAX_ATTEMPTS) {
     if (Date.now() - startMs > MAX_RUN_MS) {
@@ -460,6 +460,20 @@ async function runJob(jobId: string, total: number, category: string | null, dif
         target_words: targetWords.slice(0, 8),
       },
     }).eq("id", jobId);
+
+    if (generated < total && Date.now() - startMs > MAX_RUN_MS) {
+      await supabase.from("vocab_generation_jobs").update({
+        status: "paused",
+        current_activity: `Continuing automatically from ${generated}/${total} in the next worker slice…`,
+        generated, duplicates, failed, attempts, rejected,
+        estimated_input_tokens: inputTokens,
+        estimated_output_tokens: outputTokens,
+        estimated_cost_usd: costUsd,
+        progress_details: { phase: "handoff", cpu_proxy: 12, throughput_per_min: throughput, last_batch_added: addedNow, note: "Worker slice ended safely; auto-resume is starting." },
+      }).eq("id", jobId);
+      await kickNextInvocation(jobId);
+      return;
+    }
   }
 
   const finalStatus = generated >= total ? "completed" : "paused";
