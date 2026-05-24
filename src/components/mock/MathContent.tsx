@@ -38,10 +38,68 @@ const renderBlock = (expr: string): string => {
   }
 };
 
+// Strip code fences, JSON wrappers, markdown noise, zero-width chars and
+// other artefacts LLMs sometimes leak into stored question/option HTML.
+const sanitizeArtifacts = (input: string): string => {
+  if (!input) return "";
+  let s = input;
+
+  // Zero-width / BOM / non-printing whitespace
+  s = s.replace(/[\u200B-\u200D\uFEFF]/g, "");
+
+  // Triple-backtick fences:  ```html ... ```   |   ```latex ... ```   |   ``` ... ```
+  s = s.replace(/```(?:html|latex|tex|md|markdown|json|text)?\s*([\s\S]*?)```/gi, "$1");
+  // Stray opening / closing fence
+  s = s.replace(/```+/g, "");
+
+  // Inline code  `foo`  → <code>foo</code>  (only when there's no HTML tag inside)
+  s = s.replace(/`([^`\n<>]+)`/g, "<code>$1</code>");
+
+  // Heading markers at start of line  (### Heading)
+  s = s.replace(/^\s{0,3}#{1,6}\s+/gm, "");
+
+  // Bold:  **text**  or  __text__   → <strong>text</strong>
+  s = s.replace(/\*\*([^\*\n]+?)\*\*/g, "<strong>$1</strong>");
+  s = s.replace(/(^|\s)__([^_\n]+?)__(?=\s|$)/g, "$1<strong>$2</strong>");
+
+  // Italic:  *text*  /  _text_  (single, not adjacent to word chars to avoid \_subscripts_)
+  s = s.replace(/(^|[\s(])\*([^\*\n]+?)\*(?=[\s).,;:!?]|$)/g, "$1<em>$2</em>");
+  s = s.replace(/(^|[\s(])_([^_\n]+?)_(?=[\s).,;:!?]|$)/g, "$1<em>$2</em>");
+
+  // Markdown bullets at line start:  "* item" / "- item" / "• item"  → <li>item</li>
+  // Only convert when the source has no <ul>/<ol>/<li> tag already.
+  if (!/<\/?(?:ul|ol|li)\b/i.test(s)) {
+    const bulletLine = /^[ \t]*(?:[-*•]|\d+\.)\s+(.+)$/gm;
+    if (bulletLine.test(s)) {
+      bulletLine.lastIndex = 0;
+      const items: string[] = [];
+      s = s.replace(bulletLine, (_m, body) => {
+        items.push(`<li>${body.trim()}</li>`);
+        return "\u0001LI\u0001";
+      });
+      // Group consecutive LI placeholders into a single <ul>
+      s = s.replace(/(?:\u0001LI\u0001\s*)+/g, () => {
+        const block = `<ul>${items.splice(0, items.length).join("")}</ul>`;
+        return block;
+      });
+    }
+  }
+
+  // Plain text with newlines but no HTML → wrap line breaks
+  if (!/<[a-z][\s\S]*>/i.test(s) && /\n/.test(s)) {
+    s = s.replace(/\n{2,}/g, "</p><p>").replace(/\n/g, "<br/>");
+    s = `<p>${s}</p>`;
+  }
+
+  return s.trim();
+};
+
 const renderMath = (input: string): string => {
   if (!input) return "";
 
-  let out = input;
+  // 0. Clean code fences / markdown noise BEFORE math parsing so $...$ inside
+  //    a stripped ```html block is still picked up.
+  let out = sanitizeArtifacts(input);
 
   // Normalize: LLMs sometimes emit \\$ or \\(. Collapse double backslashes
   // that precede math delimiters into a single backslash so our regex matches.
@@ -60,9 +118,7 @@ const renderMath = (input: string): string => {
   out = out.replace(/\$([^\$\n<>]+?)\$/g, (m, expr) => {
     const e = String(expr).trim();
     if (!e) return m;
-    // Pure number / currency-looking → leave as-is
     if (/^[\d,]+(?:\.\d+)?$/.test(e)) return m;
-    // Reject if it looks like a price tag with units only e.g. "100 USD"
     if (/^[\d,.\s]+(?:USD|INR|EUR|GBP|Rs\.?)?$/i.test(e)) return m;
     return renderInline(e);
   });
@@ -70,12 +126,19 @@ const renderMath = (input: string): string => {
   // 5. Escaped dollar that wasn't part of math — unescape \$ to $
   out = out.replace(/\\\$/g, "$");
 
-  // 6. Best-effort: auto-wrap obvious unwrapped LaTeX expressions like
-  //    \frac{1}{2} or \sqrt{5} that the model forgot to delimit. We only
-  //    touch chunks that clearly contain LaTeX command tokens.
-  out = out.replace(/(\\(?:frac|sqrt|sum|prod|int|lim|overline|underline|vec)\s*\{[^{}]*\}(?:\s*\{[^{}]*\})?)/g, (m) => {
-    return renderInline(m);
-  });
+  // 6. Auto-wrap obvious unwrapped LaTeX commands like \frac{1}{2}, \sqrt{5},
+  //    \sum_{i=1}^n, \overline{AB} that the model forgot to delimit.
+  out = out.replace(
+    /(\\(?:frac|dfrac|tfrac|sqrt|sum|prod|int|lim|overline|underline|vec|binom)\s*(?:_\{[^{}]*\})?\s*(?:\^\{[^{}]*\})?\s*\{[^{}]*\}(?:\s*\{[^{}]*\})?)/g,
+    (m) => renderInline(m),
+  );
+
+  // 7. Bare superscripts / subscripts not already in math:  x^2, a_n, x^{n+1}
+  //    Wrap only the token so surrounding text stays plain.
+  out = out.replace(
+    /(?<![\\\w])([A-Za-z0-9])(\^|_)(\{[^{}]+\}|[A-Za-z0-9]+)/g,
+    (_m, base, op, exp) => renderInline(`${base}${op}${exp}`),
+  );
 
   return out;
 };
