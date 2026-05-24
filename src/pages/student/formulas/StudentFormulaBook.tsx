@@ -498,9 +498,9 @@ export default function StudentFormulaBook() {
                           <span className="text-[10px] text-emerald-600/80">+{f.examples.length - 1} more</span>
                         )}
                       </div>
-                      <p className="text-[0.85rem] leading-6 text-slate-700">{f.examples[0].problem}</p>
+                      <MathInlineText as="p" text={f.examples[0].problem} className="text-[0.85rem] leading-6 text-slate-700" />
                       {f.examples[0].answer && (
-                        <p className="mt-2 text-[12px] font-semibold text-emerald-800">Answer: {f.examples[0].answer}</p>
+                        <p className="mt-2 text-[12px] font-semibold text-emerald-800">Answer: <MathInlineText text={String(f.examples[0].answer)} /></p>
                       )}
                     </div>
                   )}
