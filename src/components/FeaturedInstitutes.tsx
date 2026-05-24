@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useFeaturedInstitutes } from "@/hooks/useInstitutes";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cdnImage } from "@/lib/imageTransform";
 
 const FeaturedInstitutes = () => {
   const { data: featured = [], isLoading } = useFeaturedInstitutes();
