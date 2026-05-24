@@ -54,6 +54,8 @@ export default function StudentBottomNav() {
               <NavLink
                 to={tab.to}
                 end={tab.end}
+                onTouchStart={() => preloadStudentRoute(tab.to)}
+                onMouseEnter={() => preloadStudentRoute(tab.to)}
                 className={cn(
                   "relative flex flex-col items-center justify-center gap-1 py-2 mx-0.5 rounded-xl text-[10px] font-semibold transition-all duration-200",
                   isActive
