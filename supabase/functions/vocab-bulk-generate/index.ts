@@ -519,7 +519,7 @@ Deno.serve(async (req) => {
         .from("vocab_generation_jobs").select("*").eq("id", body.resume_job_id).maybeSingle();
       if (jErr || !existing) return new Response(JSON.stringify({ error: "Job not found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       if (existing.status === "completed") return new Response(JSON.stringify({ job_id: existing.id, status: "completed" }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      const resumeProvider: Provider = body.provider === "openai" ? "openai" : (body.provider === "lovable" ? "lovable" : "lovable");
+      const resumeProvider: Provider = body.provider === "openai" ? "openai" : (body.provider === "lovable" ? "lovable" : (existing.provider === "openai" ? "openai" : "lovable"));
       const resumeExam = body.exam && EXAMS.includes(String(body.exam).toUpperCase()) ? String(body.exam).toUpperCase() : null;
       await supabase.from("vocab_generation_jobs").update({ status: "running", error: null, current_activity: "Resuming…" }).eq("id", existing.id);
       // @ts-ignore Edge runtime background tasks
