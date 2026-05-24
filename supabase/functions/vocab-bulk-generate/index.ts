@@ -202,6 +202,21 @@ If you cannot fully complete ALL fields with high quality, OMIT the word. Unique
   };
 }
 
+async function kickNextInvocation(jobId: string) {
+  const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/vocab-bulk-generate`;
+  const token = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+  if (!url || !token) return;
+  try {
+    await fetch(url, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, apikey: token, "Content-Type": "application/json" },
+      body: JSON.stringify({ resume_job_id: jobId, internal_worker: true }),
+    });
+  } catch (e) {
+    console.error("Auto-resume kickoff failed", (e as Error).message);
+  }
+}
+
 async function runJob(jobId: string, total: number, category: string | null, difficulty: string | null, exam: string | null, provider: Provider, seed?: { generated: number; duplicates: number; failed: number; attempts?: number; rejected?: number; estimated_input_tokens?: number; estimated_output_tokens?: number; estimated_cost_usd?: number }) {
   const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   const keys = {
