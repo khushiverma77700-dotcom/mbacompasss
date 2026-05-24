@@ -318,219 +318,244 @@ export default function StudentSOPReview() {
   }
 
   return (
-    <div className="space-y-5 max-w-5xl">
-      {/* Premium hero */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-700 p-6 text-white">
-        <div className="absolute inset-0 opacity-20" style={{
-          backgroundImage: "radial-gradient(circle at 20% 20%, white 1px, transparent 1px), radial-gradient(circle at 80% 60%, white 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-        }} />
+    <div className="relative max-w-5xl">
+      {/* Blur overlay */}
+      <div className="absolute inset-1 z-30 rounded-2xl backdrop-blur-[6px] bg-white/30 border border-white/40 shadow-2xl flex flex-col items-center justify-center text-center p-6">
         <div className="relative">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur text-xs font-semibold mb-3">
-            <Sparkles className="h-3.5 w-3.5" /> Premium AI Tool
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold">AI SOP Review</h1>
-          <p className="text-sm sm:text-base text-white/90 mt-1 max-w-2xl">
-            Upload your SOP. Get a deep, quantitative + qualitative report with SWOT, section scores, line-level fixes, and rewrite suggestions.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2 text-xs">
-            <Pill icon={<BarChart3 className="h-3 w-3" />} label="8 dimensions scored" />
-            <Pill icon={<Target className="h-3 w-3" />} label="SWOT analysis" />
-            <Pill icon={<Brain className="h-3 w-3" />} label="GPT-4o powered" />
-            <Pill icon={<Zap className="h-3 w-3" />} label="~30s turnaround" />
+          {/* Decorative glow */}
+          <div className="absolute -inset-10 bg-gradient-to-r from-sky-400/20 via-indigo-400/20 to-blue-400/20 rounded-full blur-2xl" />
+          <div className="relative bg-white/80 backdrop-blur-md rounded-2xl border border-white/60 shadow-xl px-8 py-10 max-w-md">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-sky-500 to-blue-600 text-white text-xs font-semibold mb-4">
+              <Sparkles className="h-3.5 w-3.5" /> Coming Soon
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3">
+              Advanced Version in Progress
+            </h2>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              We are building an advanced version of this feature. It will be completed in the upcoming few days and you will get a notification as well.
+            </p>
+            <div className="mt-5 flex items-center justify-center gap-2 text-xs text-slate-500">
+              <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Stay tuned for updates</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Upload */}
-      <Card className="p-5 space-y-4">
-        <h2 className="font-semibold flex items-center gap-2"><FileText className="h-4 w-4 text-sky-600" /> Step 1: Your SOP <span className="text-xs text-red-600 font-normal">*Required</span></h2>
-        <div className="grid sm:grid-cols-5 gap-3">
-          <label className="sm:col-span-2 border-2 border-dashed border-sky-300 rounded-xl p-5 text-center cursor-pointer hover:bg-sky-50/50 transition group">
-            <div className="h-12 w-12 mx-auto rounded-full bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white mb-2 group-hover:scale-110 transition-transform">
-              <Upload className="h-5 w-5" />
+      <div className="space-y-5 blur-[3px] opacity-60 pointer-events-none select-none">
+        {/* Premium hero */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-700 p-6 text-white">
+          <div className="absolute inset-0 opacity-20" style={{
+            backgroundImage: "radial-gradient(circle at 20% 20%, white 1px, transparent 1px), radial-gradient(circle at 80% 60%, white 1px, transparent 1px)",
+            backgroundSize: "40px 40px",
+          }} />
+          <div className="relative">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur text-xs font-semibold mb-3">
+              <Sparkles className="h-3.5 w-3.5" /> Premium AI Tool
             </div>
-            <div className="text-sm font-semibold">Upload SOP File</div>
-            <div className="text-xs text-muted-foreground mt-1">PDF, DOCX, TXT, MD</div>
-            <div className="text-[10px] text-muted-foreground mt-1">Max 10 MB</div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
-              className="hidden"
-              onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-            />
-          </label>
-          <div className="sm:col-span-3 space-y-2">
-            <Textarea
-              placeholder="...or paste your SOP text here (minimum 200 words)"
-              value={form.sop_text}
-              onChange={(e) => set("sop_text", e.target.value)}
-              className="min-h-[180px] text-sm"
-            />
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">{form.file_name ? `📄 ${form.file_name}` : "No file uploaded"}</span>
-              <span className={wordCount < 200 ? "text-red-600 font-medium" : "text-emerald-600 font-bold"}>
-                {wordCount} words {wordCount < 200 ? `(need ${200 - wordCount} more)` : "✓"}
-              </span>
+            <h1 className="text-2xl sm:text-3xl font-bold">AI SOP Review</h1>
+            <p className="text-sm sm:text-base text-white/90 mt-1 max-w-2xl">
+              Upload your SOP. Get a deep, quantitative + qualitative report with SWOT, section scores, line-level fixes, and rewrite suggestions.
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2 text-xs">
+              <Pill icon={<BarChart3 className="h-3 w-3" />} label="8 dimensions scored" />
+              <Pill icon={<Target className="h-3 w-3" />} label="SWOT analysis" />
+              <Pill icon={<Brain className="h-3 w-3" />} label="GPT-4o powered" />
+              <Pill icon={<Zap className="h-3 w-3" />} label="~30s turnaround" />
             </div>
           </div>
         </div>
-      </Card>
 
-      {/* Required course */}
-      <Card className="p-5 space-y-4">
-        <h2 className="font-semibold">Step 2: Target Course <span className="text-xs text-muted-foreground font-normal">(quick context)</span></h2>
-        <div className="grid sm:grid-cols-3 gap-3">
-          <Field label="Target course">
-            <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={form.target_course} onChange={(e) => set("target_course", e.target.value)}>
-              {COURSES.map((c) => <option key={c}>{c}</option>)}
-            </select>
-          </Field>
-          <Field label="Target college(s)">
-            <Input value={form.target_colleges} onChange={(e) => set("target_colleges", e.target.value)} placeholder="ISB, IIM-A (optional)" />
-          </Field>
-          <Field label="Specialization">
-            <Input value={form.specialization} onChange={(e) => set("specialization", e.target.value)} placeholder="Finance, Marketing... (optional)" />
-          </Field>
-        </div>
-      </Card>
-
-      {/* Optional details — collapsible */}
-      <details className="group">
-        <summary className="cursor-pointer list-none">
-          <Card className="p-4 hover:bg-sky-50/40 transition flex items-center justify-between">
-            <div>
-              <div className="font-semibold text-sm">Step 3: Add more context for a sharper review <span className="text-xs text-muted-foreground font-normal">(all optional)</span></div>
-              <div className="text-xs text-muted-foreground mt-0.5">Goals, background, intent — improves accuracy by up to 35%</div>
-            </div>
-            <ChevronRight className="h-5 w-5 text-sky-600 transition group-open:rotate-90" />
-          </Card>
-        </summary>
-
-        <div className="space-y-4 mt-3">
-          <Card className="p-5 space-y-4">
-            <h3 className="font-semibold text-sm text-slate-700">Background <span className="text-xs text-muted-foreground">(optional)</span></h3>
-            <div className="grid sm:grid-cols-2 gap-3">
-              <Field label="Years of experience">
-                <Input type="number" min={0} step={0.5} value={form.experience_years} onChange={(e) => set("experience_years", e.target.value)} />
-              </Field>
-              <Field label="Current / last role">
-                <Input value={form.current_role} onChange={(e) => set("current_role", e.target.value)} placeholder="e.g. Senior Analyst, Deloitte" />
-              </Field>
-              <Field label="Academic background" full>
-                <Input value={form.academic_background} onChange={(e) => set("academic_background", e.target.value)} placeholder="Degree + College" />
-              </Field>
-              <Field label="Major achievements" full>
-                <Textarea rows={2} value={form.major_achievements} onChange={(e) => set("major_achievements", e.target.value)} placeholder="Awards, promotions, leadership..." />
-              </Field>
-            </div>
-          </Card>
-
-          <Card className="p-5 space-y-4">
-            <h3 className="font-semibold text-sm text-slate-700">Goals & Intent <span className="text-xs text-muted-foreground">(optional)</span></h3>
-            <div className="grid sm:grid-cols-2 gap-3">
-              <Field label="Short-term goals">
-                <Textarea rows={2} value={form.short_term_goals} onChange={(e) => set("short_term_goals", e.target.value)} />
-              </Field>
-              <Field label="Long-term goals">
-                <Textarea rows={2} value={form.long_term_goals} onChange={(e) => set("long_term_goals", e.target.value)} />
-              </Field>
-              <Field label="Why this college?">
-                <Textarea rows={2} value={form.why_college} onChange={(e) => set("why_college", e.target.value)} />
-              </Field>
-              <Field label="Why this course?">
-                <Textarea rows={2} value={form.why_course} onChange={(e) => set("why_course", e.target.value)} />
-              </Field>
-              <Field label="Your strengths">
-                <Textarea rows={2} value={form.strengths} onChange={(e) => set("strengths", e.target.value)} />
-              </Field>
-              <Field label="Your weaknesses">
-                <Textarea rows={2} value={form.weaknesses} onChange={(e) => set("weaknesses", e.target.value)} />
-              </Field>
-            </div>
-          </Card>
-
-          <Card className="p-5 space-y-4">
-            <h3 className="font-semibold text-sm text-slate-700">Highlight Preferences <span className="text-xs text-muted-foreground">(optional)</span></h3>
-            <div>
-              <Label className="mb-2 block text-xs">What should your SOP emphasize?</Label>
-              <div className="flex flex-wrap gap-2">
-                {HIGHLIGHTS.map((h) => {
-                  const on = form.highlight_focus.includes(h);
-                  return (
-                    <button
-                      key={h}
-                      type="button"
-                      onClick={() => toggleHighlight(h)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
-                        on ? "bg-sky-600 text-white border-sky-600" : "bg-white text-slate-700 border-slate-300 hover:border-sky-400"
-                      }`}
-                    >
-                      {h}
-                    </button>
-                  );
-                })}
+        {/* Upload */}
+        <Card className="p-5 space-y-4">
+          <h2 className="font-semibold flex items-center gap-2"><FileText className="h-4 w-4 text-sky-600" /> Step 1: Your SOP <span className="text-xs text-red-600 font-normal">*Required</span></h2>
+          <div className="grid sm:grid-cols-5 gap-3">
+            <label className="sm:col-span-2 border-2 border-dashed border-sky-300 rounded-xl p-5 text-center cursor-pointer hover:bg-sky-50/50 transition group">
+              <div className="h-12 w-12 mx-auto rounded-full bg-gradient-to-br from-sky-500 to-blue-600 grid place-items-center text-white mb-2 group-hover:scale-110 transition-transform">
+                <Upload className="h-5 w-5" />
+              </div>
+              <div className="text-sm font-semibold">Upload SOP File</div>
+              <div className="text-xs text-muted-foreground mt-1">PDF, DOCX, TXT, MD</div>
+              <div className="text-[10px] text-muted-foreground mt-1">Max 10 MB</div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,.docx,.txt,.md,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+              />
+            </label>
+            <div className="sm:col-span-3 space-y-2">
+              <Textarea
+                placeholder="...or paste your SOP text here (minimum 200 words)"
+                value={form.sop_text}
+                onChange={(e) => set("sop_text", e.target.value)}
+                className="min-h-[180px] text-sm"
+              />
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">{form.file_name ? `📄 ${form.file_name}` : "No file uploaded"}</span>
+                <span className={wordCount < 200 ? "text-red-600 font-medium" : "text-emerald-600 font-bold"}>
+                  {wordCount} words {wordCount < 200 ? `(need ${200 - wordCount} more)` : "✓"}
+                </span>
               </div>
             </div>
-            <div>
-              <Label className="mb-2 block text-xs">Tone preference</Label>
-              <div className="flex flex-wrap gap-2">
-                {TONES.map((t) => {
-                  const on = form.tone_preference === t;
-                  return (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => set("tone_preference", t)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
-                        on ? "bg-sky-600 text-white border-sky-600" : "bg-white text-slate-700 border-slate-300 hover:border-sky-400"
-                      }`}
-                    >
-                      {t}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </Card>
-        </div>
-      </details>
-
-      {/* CTA */}
-      <div className="sticky bottom-2 z-10 bg-white/95 backdrop-blur border-2 border-sky-200 rounded-xl p-3 flex items-center justify-between shadow-lg">
-        <div className="text-xs">
-          <div className="font-semibold text-slate-900">Ready when you are</div>
-          <div className="text-muted-foreground">~30s • Premium structured report</div>
-        </div>
-        <Button onClick={submit} disabled={submitting || wordCount < 200} size="lg" className="bg-gradient-to-r from-sky-600 to-blue-700 hover:opacity-90 text-base">
-          {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
-          Review My SOP
-        </Button>
-      </div>
-
-      {history.length > 0 && (
-        <Card className="p-5">
-          <h2 className="font-semibold mb-3 text-sm">Recent Reviews</h2>
-          <div className="space-y-2">
-            {history.map((h) => (
-              <div key={h.id} className="flex items-center justify-between text-sm border-b pb-2 last:border-b-0">
-                <div className="min-w-0">
-                  <div className="font-medium truncate">{h.target_colleges || "Untitled"} — {h.target_course || "—"}</div>
-                  <div className="text-xs text-muted-foreground">{new Date(h.created_at).toLocaleString()}</div>
-                </div>
-                <div className="text-right shrink-0 ml-2">
-                  {h.status === "completed" ? (
-                    <span className="font-bold text-sky-700">{h.overall_score}/100</span>
-                  ) : (
-                    <span className="text-xs uppercase text-muted-foreground">{h.status}</span>
-                  )}
-                </div>
-              </div>
-            ))}
           </div>
         </Card>
-      )}
+
+        {/* Required course */}
+        <Card className="p-5 space-y-4">
+          <h2 className="font-semibold">Step 2: Target Course <span className="text-xs text-muted-foreground font-normal">(quick context)</span></h2>
+          <div className="grid sm:grid-cols-3 gap-3">
+            <Field label="Target course">
+              <select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={form.target_course} onChange={(e) => set("target_course", e.target.value)}>
+                {COURSES.map((c) => <option key={c}>{c}</option>)}
+              </select>
+            </Field>
+            <Field label="Target college(s)">
+              <Input value={form.target_colleges} onChange={(e) => set("target_colleges", e.target.value)} placeholder="ISB, IIM-A (optional)" />
+            </Field>
+            <Field label="Specialization">
+              <Input value={form.specialization} onChange={(e) => set("specialization", e.target.value)} placeholder="Finance, Marketing... (optional)" />
+            </Field>
+          </div>
+        </Card>
+
+        {/* Optional details — collapsible */}
+        <details className="group">
+          <summary className="cursor-pointer list-none">
+            <Card className="p-4 hover:bg-sky-50/40 transition flex items-center justify-between">
+              <div>
+                <div className="font-semibold text-sm">Step 3: Add more context for a sharper review <span className="text-xs text-muted-foreground font-normal">(all optional)</span></div>
+                <div className="text-xs text-muted-foreground mt-0.5">Goals, background, intent — improves accuracy by up to 35%</div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-sky-600 transition group-open:rotate-90" />
+            </Card>
+          </summary>
+
+          <div className="space-y-4 mt-3">
+            <Card className="p-5 space-y-4">
+              <h3 className="font-semibold text-sm text-slate-700">Background <span className="text-xs text-muted-foreground">(optional)</span></h3>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <Field label="Years of experience">
+                  <Input type="number" min={0} step={0.5} value={form.experience_years} onChange={(e) => set("experience_years", e.target.value)} />
+                </Field>
+                <Field label="Current / last role">
+                  <Input value={form.current_role} onChange={(e) => set("current_role", e.target.value)} placeholder="e.g. Senior Analyst, Deloitte" />
+                </Field>
+                <Field label="Academic background" full>
+                  <Input value={form.academic_background} onChange={(e) => set("academic_background", e.target.value)} placeholder="Degree + College" />
+                </Field>
+                <Field label="Major achievements" full>
+                  <Textarea rows={2} value={form.major_achievements} onChange={(e) => set("major_achievements", e.target.value)} placeholder="Awards, promotions, leadership..." />
+                </Field>
+              </div>
+            </Card>
+
+            <Card className="p-5 space-y-4">
+              <h3 className="font-semibold text-sm text-slate-700">Goals & Intent <span className="text-xs text-muted-foreground">(optional)</span></h3>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <Field label="Short-term goals">
+                  <Textarea rows={2} value={form.short_term_goals} onChange={(e) => set("short_term_goals", e.target.value)} />
+                </Field>
+                <Field label="Long-term goals">
+                  <Textarea rows={2} value={form.long_term_goals} onChange={(e) => set("long_term_goals", e.target.value)} />
+                </Field>
+                <Field label="Why this college?">
+                  <Textarea rows={2} value={form.why_college} onChange={(e) => set("why_college", e.target.value)} />
+                </Field>
+                <Field label="Why this course?">
+                  <Textarea rows={2} value={form.why_course} onChange={(e) => set("why_course", e.target.value)} />
+                </Field>
+                <Field label="Your strengths">
+                  <Textarea rows={2} value={form.strengths} onChange={(e) => set("strengths", e.target.value)} />
+                </Field>
+                <Field label="Your weaknesses">
+                  <Textarea rows={2} value={form.weaknesses} onChange={(e) => set("weaknesses", e.target.value)} />
+                </Field>
+              </div>
+            </Card>
+
+            <Card className="p-5 space-y-4">
+              <h3 className="font-semibold text-sm text-slate-700">Highlight Preferences <span className="text-xs text-muted-foreground">(optional)</span></h3>
+              <div>
+                <Label className="mb-2 block text-xs">What should your SOP emphasize?</Label>
+                <div className="flex flex-wrap gap-2">
+                  {HIGHLIGHTS.map((h) => {
+                    const on = form.highlight_focus.includes(h);
+                    return (
+                      <button
+                        key={h}
+                        type="button"
+                        onClick={() => toggleHighlight(h)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+                          on ? "bg-sky-600 text-white border-sky-600" : "bg-white text-slate-700 border-slate-300 hover:border-sky-400"
+                        }`}
+                      >
+                        {h}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <Label className="mb-2 block text-xs">Tone preference</Label>
+                <div className="flex flex-wrap gap-2">
+                  {TONES.map((t) => {
+                    const on = form.tone_preference === t;
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => set("tone_preference", t)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
+                          on ? "bg-sky-600 text-white border-sky-600" : "bg-white text-slate-700 border-slate-300 hover:border-sky-400"
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </Card>
+          </div>
+        </details>
+
+        {/* CTA */}
+        <div className="sticky bottom-2 z-10 bg-white/95 backdrop-blur border-2 border-sky-200 rounded-xl p-3 flex items-center justify-between shadow-lg">
+          <div className="text-xs">
+            <div className="font-semibold text-slate-900">Ready when you are</div>
+            <div className="text-muted-foreground">~30s • Premium structured report</div>
+          </div>
+          <Button onClick={submit} disabled={submitting || wordCount < 200} size="lg" className="bg-gradient-to-r from-sky-600 to-blue-700 hover:opacity-90 text-base">
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+            Review My SOP
+          </Button>
+        </div>
+
+        {history.length > 0 && (
+          <Card className="p-5">
+            <h2 className="font-semibold mb-3 text-sm">Recent Reviews</h2>
+            <div className="space-y-2">
+              {history.map((h) => (
+                <div key={h.id} className="flex items-center justify-between text-sm border-b pb-2 last:border-b-0">
+                  <div className="min-w-0">
+                    <div className="font-medium truncate">{h.target_colleges || "Untitled"} — {h.target_course || "—"}</div>
+                    <div className="text-xs text-muted-foreground">{new Date(h.created_at).toLocaleString()}</div>
+                  </div>
+                  <div className="text-right shrink-0 ml-2">
+                    {h.status === "completed" ? (
+                      <span className="font-bold text-sky-700">{h.overall_score}/100</span>
+                    ) : (
+                      <span className="text-xs uppercase text-muted-foreground">{h.status}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+      </div>
     </div>
   );
 }
