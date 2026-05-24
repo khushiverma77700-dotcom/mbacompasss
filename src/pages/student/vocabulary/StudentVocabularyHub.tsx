@@ -14,13 +14,15 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-const CATEGORIES = [
-  { key: "finance", label: "Finance", icon: LineChart, accent: "from-sky-500/15 to-sky-500/0" },
-  { key: "marketing", label: "Marketing", icon: Megaphone, accent: "from-blue-500/15 to-blue-500/0" },
-  { key: "consulting", label: "Consulting", icon: Briefcase, accent: "from-cyan-500/15 to-cyan-500/0" },
-  { key: "hr", label: "Human Resources", icon: Users, accent: "from-indigo-400/15 to-indigo-400/0" },
-  { key: "economics", label: "Economics", icon: Globe2, accent: "from-sky-400/15 to-sky-400/0" },
-  { key: "corp_comm", label: "Corporate Comm.", icon: MessageSquare, accent: "from-blue-400/15 to-blue-400/0" },
+const EXAMS = [
+  { key: "CAT", label: "CAT", hint: "IIM flagship", accent: "from-sky-500/15 to-sky-500/0" },
+  { key: "XAT", label: "XAT", hint: "XLRI · Decision-making", accent: "from-blue-500/15 to-blue-500/0" },
+  { key: "NMAT", label: "NMAT", hint: "NMIMS · Speed VA", accent: "from-cyan-500/15 to-cyan-500/0" },
+  { key: "SNAP", label: "SNAP", hint: "Symbiosis · Sentence sense", accent: "from-indigo-400/15 to-indigo-400/0" },
+  { key: "IIFT", label: "IIFT", hint: "Trade & business lexicon", accent: "from-sky-400/15 to-sky-400/0" },
+  { key: "CMAT", label: "CMAT", hint: "AICTE · General usage", accent: "from-blue-400/15 to-blue-400/0" },
+  { key: "MAT", label: "MAT", hint: "Multi-window MBA exam", accent: "from-cyan-400/15 to-cyan-400/0" },
+  { key: "GDPI", label: "GDPI / WAT", hint: "Interview & essays", accent: "from-indigo-500/15 to-indigo-500/0" },
 ];
 
 const DIFFICULTIES = [
