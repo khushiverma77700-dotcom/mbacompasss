@@ -69,14 +69,41 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Avoid duplicates: pull existing names
-    const { data: existing } = await admin.from("quant_formulas").select("name").eq("topic_slug", topic_slug);
-    const existingNames = new Set((existing || []).map((r: any) => String(r.name).toLowerCase()));
+    // Avoid duplicates: pull ALL existing names + slugs + latex for this topic
+    const { data: existing } = await admin
+      .from("quant_formulas")
+      .select("name, slug, expression_latex")
+      .eq("topic_slug", topic_slug);
+
+    const normalizeName = (s: string) =>
+      String(s || "")
+        .toLowerCase()
+        .normalize("NFKD")
+        .replace(/['’`]/g, "")
+        .replace(/\b(formula|theorem|identity|rule|law|equation|the)\b/g, "")
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim()
+        .replace(/\s+/g, " ");
+
+    const normalizeLatex = (s: string) =>
+      String(s || "")
+        .toLowerCase()
+        .replace(/\s+/g, "")
+        .replace(/\\left|\\right|\\,|\\;|\\!|\\:/g, "")
+        .replace(/[{}]/g, "");
+
+    const existingNamesNorm = new Set((existing || []).map((r: any) => normalizeName(r.name)).filter(Boolean));
+    const existingSlugs = new Set((existing || []).map((r: any) => String(r.slug || "").toLowerCase()).filter(Boolean));
+    const existingLatex = new Set((existing || []).map((r: any) => normalizeLatex(r.expression_latex)).filter(Boolean));
+    const existingNamesList = (existing || []).map((r: any) => r.name).filter(Boolean);
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const safeCount = Math.min(20, Math.max(1, Number(count) || 8));
+
+    // Randomness nonce nudges the model to explore different formulas on each click
+    const nonce = Math.random().toString(36).slice(2, 10);
 
     const system = `You are a senior CAT/MBA quant faculty (15+ years). You produce textbook-grade formula references for "${topic_name}".
 Every formula MUST include four sections: (1) FORMULA in proper LaTeX (2) EXPLANATION in plain English (3) USAGE — when & how to apply it (4) SAMPLE USAGE — at least 2 fully worked CAT-level numerical examples.
@@ -89,11 +116,18 @@ LaTeX rules (strict — non-negotiable):
 - NEVER wrap with $ or $$.
 - expression_latex must render cleanly in KaTeX displayMode.
 
+ANTI-DUPLICATION (CRITICAL):
+- The following formulas ALREADY EXIST in our library — you MUST NOT regenerate ANY of them, any rename, any trivial variant, or any algebraic rearrangement of the same identity:
+${existingNamesList.length ? existingNamesList.map((n: string) => `  • ${n}`).join("\n") : "  (none yet)"}
+- Pick fresh, NON-OVERLAPPING formulas from less-covered subtopics of "${topic_name}".
+- If you cannot find ${safeCount} genuinely new canonical formulas, return fewer rather than repeating.
+
 Quality bar:
 - Only canonical, exam-relevant formulas — no fabricated/obscure identities.
-- No duplicates of: ${[...existingNames].slice(0, 60).join(", ") || "(none)"}
 - Each example's steps[] must show the actual calculation, not vague text.
-- Use Indian rupee context where natural (₹, lakhs, crores) for Percentages/Profit-Loss/SI-CI/TSD.`;
+- Use Indian rupee context where natural (₹, lakhs, crores) for Percentages/Profit-Loss/SI-CI/TSD.
+
+(diversity-seed:${nonce})`;
 
     const user = `Generate ${safeCount} distinct, must-know formulas for "${topic_name}".
 Default difficulty: ${difficulty}. Tag relevant exams from [CAT, XAT, NMAT, SNAP, CMAT, IIFT, MAT].
@@ -204,11 +238,24 @@ Return strictly via the emit_formulas tool. Reject your own output mentally and 
     const rawList: any[] = Array.isArray(parsed.formulas) ? parsed.formulas : [];
     const rejected: { name: string; reason: string }[] = [];
 
+    // Track within-batch duplicates as well
+    const batchNames = new Set<string>();
+    const batchSlugs = new Set<string>();
+    const batchLatex = new Set<string>();
+
     const rows = rawList.map((f: any) => {
       if (!f?.name) { rejected.push({ name: "(no name)", reason: "missing name" }); return null; }
-      if (existingNames.has(String(f.name).toLowerCase())) { rejected.push({ name: f.name, reason: "duplicate" }); return null; }
+      const nNorm = normalizeName(f.name);
+      if (!nNorm) { rejected.push({ name: f.name, reason: "empty normalized name" }); return null; }
+      if (existingNamesNorm.has(nNorm) || batchNames.has(nNorm)) {
+        rejected.push({ name: f.name, reason: "duplicate name (already exists)" }); return null;
+      }
       if (!f.expression_latex || !isLatexValid(f.expression_latex, f.expression || "")) {
         rejected.push({ name: f.name, reason: "invalid LaTeX (missing \\frac/\\sqrt/^ where required)" }); return null;
+      }
+      const latexNorm = normalizeLatex(f.expression_latex);
+      if (latexNorm && (existingLatex.has(latexNorm) || batchLatex.has(latexNorm))) {
+        rejected.push({ name: f.name, reason: "duplicate formula (same LaTeX already exists)" }); return null;
       }
       if (!f.notes || String(f.notes).trim().length < 40) {
         rejected.push({ name: f.name, reason: "usage notes too short" }); return null;
@@ -218,6 +265,12 @@ Return strictly via the emit_formulas tool. Reject your own output mentally and 
       }
       const baseSlug = slugify(f.name);
       const slug = `${topic_slug}-${baseSlug}`.slice(0, 100);
+      if (existingSlugs.has(slug.toLowerCase()) || batchSlugs.has(slug.toLowerCase())) {
+        rejected.push({ name: f.name, reason: "duplicate slug" }); return null;
+      }
+      batchNames.add(nNorm);
+      batchSlugs.add(slug.toLowerCase());
+      if (latexNorm) batchLatex.add(latexNorm);
       return {
         slug, name: f.name,
         expression: f.expression,
