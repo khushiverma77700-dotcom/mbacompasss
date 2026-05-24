@@ -61,7 +61,14 @@ export default function StudentVocabularyFeed() {
   const [targetDraft, setTargetDraft] = useState(5);
   const [celebrated, setCelebrated] = useState(false);
 
-  const category = params.get("category") || "all";
+  // Inline search
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [aiSearching, setAiSearching] = useState(false);
+
+  const exam = params.get("exam") || "all";
   const difficulty = params.get("difficulty") || "all";
 
   document.title = "Vocabulary Feed | MBA Compass";
@@ -75,8 +82,9 @@ export default function StudentVocabularyFeed() {
       .select("*")
       .order("created_at", { ascending: false })
       .limit(120);
-    if (category !== "all") q = q.eq("category", category as any);
+    if (exam !== "all") q = q.overlaps("exam_appearances", [exam]);
     if (difficulty !== "all") q = q.eq("difficulty", difficulty as any);
+
 
     const [{ data: wordsData }, { count: libCount }, { data: newTodayData }, wotdRes] = await Promise.all([
       q,
