@@ -46,6 +46,7 @@ export default function StudentFormulaBook() {
   const [busyId, setBusyId] = useState<string | null>(null);
 
   const q = params.get("q") || "";
+  const section = params.get("section") || "all";
   const topic = params.get("topic") || "all";
   const exam = params.get("exam") || "all";
   const difficulty = params.get("difficulty") || "all";
