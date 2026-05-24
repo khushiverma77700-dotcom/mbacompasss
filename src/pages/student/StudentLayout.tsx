@@ -423,8 +423,12 @@ function SidebarContent() {
   // Order: Overview → Updates → My Mocks group → rest.
   const overview = visibleItems.find((i) => i.to === "/student");
   const updates = visibleItems.find((i) => i.to === "/student/notifications");
+  const vocabItem = visibleItems.find((i) => i.to === "/student/vocabulary");
   const restItems = visibleItems.filter(
-    (i) => i.to !== "/student" && i.to !== "/student/notifications"
+    (i) =>
+      i.to !== "/student" &&
+      i.to !== "/student/notifications" &&
+      i.to !== "/student/vocabulary"
   );
 
   return (
