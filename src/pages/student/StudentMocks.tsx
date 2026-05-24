@@ -564,7 +564,7 @@ function TopicWiseView({
   items, allTopicWise, attemptedByTest, enrolledTestIds,
   sections, sectionFilter, onSectionChange,
   topics, topicFilter, onTopicChange,
-  examFilter, onUpgrade,
+  onUpgrade,
 }: {
   items: { test: Test; owned: boolean; inProgress: Attempt | null; latestSubmitted: Attempt | null }[];
   allTopicWise: Test[];
@@ -572,7 +572,7 @@ function TopicWiseView({
   enrolledTestIds: Set<string>;
   sections: string[]; sectionFilter: string; onSectionChange: (v: string) => void;
   topics: string[]; topicFilter: string; onTopicChange: (v: string) => void;
-  examFilter: string; onUpgrade: () => void;
+  onUpgrade: () => void;
 }) {
   // Summary across the current exam scope (ignore section/topic filter so it reflects total catalog)
   const summary = useMemo(() => {
