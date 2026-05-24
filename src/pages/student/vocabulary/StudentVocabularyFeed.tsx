@@ -21,8 +21,8 @@ export default function StudentVocabularyFeed() {
     (async () => {
       setLoading(true);
       let q = supabase.from("vocab_words").select("*").order("created_at", { ascending: false }).limit(60);
-      if (category !== "all") q = q.eq("category", category);
-      if (difficulty !== "all") q = q.eq("difficulty", difficulty);
+      if (category !== "all") q = q.eq("category", category as any);
+      if (difficulty !== "all") q = q.eq("difficulty", difficulty as any);
       const { data } = await q;
       setWords(data || []);
       setLoading(false);
