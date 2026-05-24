@@ -178,15 +178,28 @@ async function runJob(jobId: string, total: number, category: string | null, dif
     }
   }
 
-  await supabase.from("vocab_generation_jobs").update({ status: "running", current_activity: `Warming up (${provider})…` }).eq("id", jobId);
+  await supabase.from("vocab_generation_jobs").update({ status: "running", current_activity: seed ? `Resuming from ${generated}/${total} (${provider})…` : `Warming up (${provider})…` }).eq("id", jobId);
 
   // OpenAI handles bigger batches reliably -> fewer calls -> lower cost.
   const BATCH = provider === "openai" ? 40 : 25;
   let consecutiveEmpty = 0;
   const MAX_ATTEMPTS = Math.ceil(total / BATCH) * 4 + 10; // safety cap
   let attempts = 0;
+  // Soft wall-clock budget: exit cleanly before the edge runtime kills us.
+  // Mark the job as `paused` so the UI can offer a Resume button.
+  const startMs = Date.now();
+  const MAX_RUN_MS = 4 * 60 * 1000; // 4 minutes per invocation
 
   while (generated < total && attempts < MAX_ATTEMPTS) {
+    if (Date.now() - startMs > MAX_RUN_MS) {
+      await supabase.from("vocab_generation_jobs").update({
+        status: "paused",
+        current_activity: `Paused at ${generated}/${total}. Click Resume to continue.`,
+        generated, duplicates, failed,
+      }).eq("id", jobId);
+      return;
+    }
+
     attempts++;
     const need = Math.min(BATCH, total - generated);
     await supabase.from("vocab_generation_jobs").update({
