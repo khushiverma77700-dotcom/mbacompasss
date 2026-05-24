@@ -72,7 +72,6 @@ export const adminNavGroups: AdminNavGroup[] = [
       { label: "Quant Formula Book", path: "/admin/formulas", icon: BookOpen },
       { label: "Daily Tests", path: "/admin/daily-tests", icon: ClipboardList },
       { label: "Exam Countdowns", path: "/admin/exam-countdowns", icon: CalendarClock },
-      { label: "Student Announcements", path: "/admin/student-announcements", icon: Bell },
       { label: "Push Notifications", path: "/admin/student-notifications", icon: Bell },
     ],
   },
