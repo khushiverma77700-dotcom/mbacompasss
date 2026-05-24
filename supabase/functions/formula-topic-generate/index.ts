@@ -2,6 +2,7 @@
 // Strict pedagogical schema: Formula (LaTeX), Explanation, Usage (when/how to apply), Sample Usage (worked examples).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.100.1?target=denonext";
 import { logAIUsage } from "../_shared/aiUsageLog.ts";
+import { getCredential } from "../_shared/getCredential.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -97,8 +98,8 @@ Deno.serve(async (req) => {
     const existingLatex = new Set((existing || []).map((r: any) => normalizeLatex(r.expression_latex)).filter(Boolean));
     const existingNamesList = (existing || []).map((r: any) => r.name).filter(Boolean);
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+    const OPENAI_API_KEY = await getCredential("OPENAI_API_KEY").catch(() => "") || Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY not configured");
 
     const safeCount = Math.min(100, Math.max(1, Number(count) || 8));
     const BATCH_SIZE = 10;
@@ -112,7 +113,7 @@ Deno.serve(async (req) => {
     const allRows: any[] = [];
     const rejected: { name: string; reason: string }[] = [];
     let totalReturned = 0;
-    const model = "openai/gpt-5-mini";
+    const model = "gpt-4o-mini";
 
     // Build a single batch request (returns a fetch promise). All batches run in PARALLEL
     // so the function finishes inside the edge-runtime wall-time limit even for count=100.
@@ -219,14 +220,15 @@ Return strictly via the emit_formulas tool. Reject your own output mentally and 
         },
       };
 
-      return fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      return fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${OPENAI_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           model,
           messages: [{ role: "system", content: system }, { role: "user", content: user }],
           tools: [tool],
           tool_choice: { type: "function", function: { name: "emit_formulas" } },
+          temperature: 0.7,
         }),
       }).then(async (resp) => ({ resp, batchIndex }));
     };
