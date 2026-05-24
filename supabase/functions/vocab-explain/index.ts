@@ -13,7 +13,7 @@ function slugify(w: string): string {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const { word, save = true } = await req.json();
+    const { word, save = true, force = false } = await req.json();
     if (!word || typeof word !== "string" || word.length > 80) {
       return new Response(JSON.stringify({ error: "Invalid word" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -23,10 +23,12 @@ Deno.serve(async (req) => {
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const slug = slugify(word);
 
-    // Cache hit
-    const { data: existing } = await supabase.from("vocab_words").select("*").eq("slug", slug).maybeSingle();
-    if (existing) {
-      return new Response(JSON.stringify({ word: existing, cached: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    // Cache hit (skip if force=true so we can backfill new fields)
+    if (!force) {
+      const { data: existing } = await supabase.from("vocab_words").select("*").eq("slug", slug).maybeSingle();
+      if (existing && existing.meaning_hindi && existing.pronunciation_syllables) {
+        return new Response(JSON.stringify({ word: existing, cached: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
     }
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -35,7 +37,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "You are an MBA vocabulary tutor. Always respond using the structured tool. Keep meanings under 25 words. Hinglish meaning should mix simple English and Hindi (Roman script). Provide 3 different example sentences (business context, interview context, professional email context). Use the exact word in each example." },
+          { role: "system", content: "You are an MBA vocabulary tutor for Indian aspirants preparing for CAT, XAT, NMAT, SNAP, IIFT, CMAT, MAT, GDPI, and placements. Always respond using the structured tool. Rules:\n- meaning: clear English explanation, <30 words.\n- meaning_hindi: pure Hindi translation in Devanagari script (no Roman).\n- hinglish_meaning: friendly Hinglish explanation mixing Hindi + English in Roman script, like a senior explaining to a junior.\n- pronunciation: IPA-style phonetic, e.g. /əˈmɔːrtaɪzeɪʃən/.\n- pronunciation_syllables: word broken into easy syllables with hyphens and CAPS on the stressed syllable, e.g. 'uh-MOR-tuh-zay-shun'.\n- 3 example sentences using the EXACT word, in business / interview / professional-email contexts.\n- exam_appearances: list of past Indian MBA entrance exams where this exact word or its variant was known to appear in RC/Verbal sections (format strictly like ['CAT 2019', 'XAT 2021', 'SNAP 2020']). If you are not reasonably sure it has appeared, return an empty array. Do not fabricate." },
           { role: "user", content: `Explain the MBA/business word: "${word}"` },
         ],
         tools: [{
@@ -49,17 +51,20 @@ Deno.serve(async (req) => {
                 word: { type: "string" },
                 part_of_speech: { type: "string" },
                 meaning: { type: "string" },
+                meaning_hindi: { type: "string", description: "Hindi meaning in Devanagari" },
                 hinglish_meaning: { type: "string" },
-                pronunciation: { type: "string", description: "IPA or simple phonetic, e.g. /ə-ˈmȯr-tə-ˌzā-shən/" },
+                pronunciation: { type: "string" },
+                pronunciation_syllables: { type: "string", description: "Hyphenated syllables with stressed syllable in CAPS" },
                 synonyms: { type: "array", items: { type: "string" }, maxItems: 5 },
                 antonyms: { type: "array", items: { type: "string" }, maxItems: 5 },
                 example_business: { type: "string" },
                 example_interview: { type: "string" },
                 example_email: { type: "string" },
+                exam_appearances: { type: "array", items: { type: "string" }, maxItems: 6 },
                 category: { type: "string", enum: ["finance","marketing","consulting","hr","economics","corp_comm","general"] },
                 difficulty: { type: "string", enum: ["beginner","intermediate","cat","gdpi"] },
               },
-              required: ["word","part_of_speech","meaning","hinglish_meaning","synonyms","antonyms","example_business","example_interview","example_email","category","difficulty"],
+              required: ["word","part_of_speech","meaning","meaning_hindi","hinglish_meaning","pronunciation_syllables","synonyms","antonyms","example_business","example_interview","example_email","exam_appearances","category","difficulty"],
               additionalProperties: false,
             },
           },
@@ -86,13 +91,16 @@ Deno.serve(async (req) => {
       slug,
       part_of_speech: parsed.part_of_speech,
       meaning: parsed.meaning,
+      meaning_hindi: parsed.meaning_hindi,
       hinglish_meaning: parsed.hinglish_meaning,
       pronunciation: parsed.pronunciation || null,
+      pronunciation_syllables: parsed.pronunciation_syllables || null,
       synonyms: parsed.synonyms || [],
       antonyms: parsed.antonyms || [],
       example_business: parsed.example_business,
       example_interview: parsed.example_interview,
       example_email: parsed.example_email,
+      exam_appearances: parsed.exam_appearances || [],
       category: parsed.category || "general",
       difficulty: parsed.difficulty || "intermediate",
       source: "ai",
